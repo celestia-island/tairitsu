@@ -1,0 +1,8 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[tasks.build]
+script = '''
+#!@duckscript
+'''
