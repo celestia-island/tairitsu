@@ -1,0 +1,29 @@
+[package]
+name = "tairitsu-utils"
+version = "0.1.0"
+edition = "2021"
+publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+anyhow = "^1"
+chrono = { version = "^0.4", features = [
+  "serde",
+  "wasmbind",
+  "unstable-locales",
+] }
+log = "^0.4"
+serde = { version = "^1", features = ["derive"] }
+strum = "^0.25"
+strum_macros = "^0.25"
+uuid = { version = "^1", features = [
+  'v4',
+  'fast-rng',
+  'macro-diagnostics',
+  'serde',
+] }
+
+bcrypt = "^0.15"
