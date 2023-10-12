@@ -3,7 +3,7 @@ use bytes::Bytes;
 
 use wasmtime_wasi::preview2::{HostInputStream, HostOutputStream, OutputStreamError, StreamState};
 
-use tairitsu_utils::types::message::Msg;
+use tairitsu_utils::types::proto::backend::Msg;
 
 pub struct InputStream {}
 

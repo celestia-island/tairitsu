@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::io;
 
-use tairitsu_utils::types::message::Msg;
+use tairitsu_utils::types::proto::backend::Msg;
 
 fn main() -> Result<()> {
     let mut buffer = String::new();
