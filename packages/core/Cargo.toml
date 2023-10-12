@@ -1,8 +1,9 @@
 [package]
+authors = ["langyo <langyo.china@gmail.com>"]
 name = "tairitsu-core"
+
 version = "0.1.0"
 edition = "2021"
-authors = ["langyo <langyo.china@gmail.com>"]
 publish = false
 
 [dependencies]

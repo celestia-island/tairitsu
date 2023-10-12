@@ -1,8 +1,10 @@
 [package]
 authors = ["langyo <langyo.china@gmail.com>"]
-edition = "2021"
 name = "tairitsu-database"
+
 version = "0.1.0"
+edition = "2021"
+publish = false
 
 [dependencies]
 tairitsu-utils = { path = "../utils", version = "*" }

@@ -1,9 +1,10 @@
 [package]
+authors = ["langyo <langyo.china@gmail.com>"]
 name = "tairitsu-utils"
+
 version = "0.1.0"
 edition = "2021"
 publish = false
-authors = ["langyo <langyo.china@gmail.com>"]
 
 [lib]
 crate-type = ["rlib"]
