@@ -37,13 +37,14 @@ impl WasiView for Ctx {
 pub fn generate_runtime(bin: Bytes) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
+    let engine = &Engine::new(&config)?;
+
+    let adapter_component: Component = unsafe { Component::deserialize(engine, &bin) }?;
 
     use std::time::Instant;
     let start_time = Instant::now();
 
     for _ in 0..1000 {
-        let engine = &Engine::new(&config)?;
-
         let mut linker = Linker::new(engine);
         command::sync::add_to_linker(&mut linker)?;
 
@@ -57,11 +58,7 @@ pub fn generate_runtime(bin: Bytes) -> Result<()> {
 
         let mut store = Store::new(engine, Ctx { wasi, table });
 
-        let (command, _) = Command::instantiate(
-            &mut store,
-            &unsafe { Component::deserialize(engine, &bin) }?,
-            &linker,
-        )?;
+        let (command, _) = Command::instantiate(&mut store, &adapter_component, &linker)?;
 
         command
             .wasi_cli_run()
