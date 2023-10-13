@@ -7,17 +7,24 @@ use tairitsu_utils::types::proto::backend::Msg;
 
 pub struct InputStream {}
 
+impl InputStream {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 #[async_trait::async_trait]
 impl HostInputStream for InputStream {
     fn read(&mut self, size: usize) -> Result<(Bytes, StreamState)> {
         println!("read {} bytes", size);
 
         let ret = Msg {
-            id: 1,
+            id: 233,
             data: "hello".to_string(),
         };
         let ret = ron::to_string(&ret).unwrap() + "\n";
         let ret = Bytes::from(ret);
+
         Ok((ret, StreamState::Open))
     }
 
@@ -27,6 +34,12 @@ impl HostInputStream for InputStream {
 }
 
 pub struct OutputStream {}
+
+impl OutputStream {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 #[async_trait::async_trait]
 impl HostOutputStream for OutputStream {
