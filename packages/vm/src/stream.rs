@@ -1,31 +1,32 @@
 use anyhow::Result;
 use bytes::Bytes;
+use flume::Sender;
+use std::sync::{Arc, Mutex};
 
 use wasmtime_wasi::preview2::{HostInputStream, HostOutputStream, OutputStreamError, StreamState};
 
 use tairitsu_utils::types::proto::backend::Msg;
 
-pub struct InputStream {}
-
-impl InputStream {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub struct InputStream {
+    pub tasks: Arc<Mutex<Vec<Msg>>>,
 }
 
 #[async_trait::async_trait]
 impl HostInputStream for InputStream {
-    fn read(&mut self, size: usize) -> Result<(Bytes, StreamState)> {
-        // println!("read {} bytes", size);
+    fn read(&mut self, _size: usize) -> Result<(Bytes, StreamState)> {
+        loop {
+            {
+                let mut tasks = self.tasks.lock().unwrap();
+                if tasks.len() > 0 {
+                    let ret = tasks.remove(0);
+                    let ret = ron::to_string(&ret).unwrap() + "\n";
+                    let ret = Bytes::from(ret);
 
-        let ret = Msg {
-            id: 233,
-            data: "hello".to_string(),
-        };
-        let ret = ron::to_string(&ret).unwrap() + "\n";
-        let ret = Bytes::from(ret);
-
-        Ok((ret, StreamState::Open))
+                    return Ok((ret, StreamState::Open));
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
 
     async fn ready(&mut self) -> Result<()> {
@@ -33,12 +34,8 @@ impl HostInputStream for InputStream {
     }
 }
 
-pub struct OutputStream {}
-
-impl OutputStream {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub struct OutputStream {
+    pub tx: Sender<Msg>,
 }
 
 #[async_trait::async_trait]
@@ -48,7 +45,9 @@ impl HostOutputStream for OutputStream {
             String::from_utf8(bytes.to_vec()).map_err(|e| OutputStreamError::Trap(e.into()))?;
         let msg = ron::from_str::<Msg>(&msg).map_err(|e| OutputStreamError::Trap(e.into()))?;
 
-        // println!("{:?}", msg);
+        self.tx
+            .send(msg)
+            .map_err(|e| OutputStreamError::Trap(e.into()))?;
         Ok(())
     }
 
@@ -57,6 +56,6 @@ impl HostOutputStream for OutputStream {
     }
 
     async fn write_ready(&mut self) -> Result<usize, OutputStreamError> {
-        Ok(256 * 256)
+        Ok(8192)
     }
 }
