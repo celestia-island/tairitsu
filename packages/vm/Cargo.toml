@@ -17,6 +17,6 @@ serde = { version = "^1", features = ["derive"] }
 reqwest = { version = "^0.11", features = ["blocking"] }
 lazy_static = "^1"
 
-wit-component = "^0.14"
+wit-component = "^0.15"
 wasmtime = { version = "^13", features = ["component-model"] }
 wasmtime-wasi = "^13"
