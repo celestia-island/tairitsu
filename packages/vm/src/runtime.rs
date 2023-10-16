@@ -41,34 +41,25 @@ pub fn generate_runtime(bin: Bytes) -> Result<()> {
 
     let adapter_component: Component = unsafe { Component::deserialize(engine, &bin) }?;
 
-    use std::time::Instant;
-    let start_time = Instant::now();
+    let mut linker = Linker::new(engine);
+    command::sync::add_to_linker(&mut linker)?;
 
-    for _ in 0..1000 {
-        let mut linker = Linker::new(engine);
-        command::sync::add_to_linker(&mut linker)?;
+    let mut table = Table::new();
+    let mut wasi = WasiCtxBuilder::new();
+    wasi.inherit_stderr();
+    wasi.stdin(InputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
+    wasi.stdout(OutputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
 
-        let mut table = Table::new();
-        let mut wasi = WasiCtxBuilder::new();
-        wasi.inherit_stderr();
-        wasi.stdin(InputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
-        wasi.stdout(OutputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
+    let wasi = wasi.build(&mut table)?;
 
-        let wasi = wasi.build(&mut table)?;
+    let mut store = Store::new(engine, Ctx { wasi, table });
 
-        let mut store = Store::new(engine, Ctx { wasi, table });
+    let (command, _) = Command::instantiate(&mut store, &adapter_component, &linker)?;
 
-        let (command, _) = Command::instantiate(&mut store, &adapter_component, &linker)?;
-
-        command
-            .wasi_cli_run()
-            .call_run(&mut store)?
-            .map_err(|()| anyhow!("guest command returned error"))?;
-    }
-
-    let end_time = Instant::now();
-    let elapsed_time = end_time.duration_since(start_time);
-    println!("Elapsed time {}ms on 1000 round", elapsed_time.as_millis());
+    command
+        .wasi_cli_run()
+        .call_run(&mut store)?
+        .map_err(|()| anyhow!("guest command returned error"))?;
 
     Ok(())
 }
