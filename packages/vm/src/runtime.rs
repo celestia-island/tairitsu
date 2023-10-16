@@ -33,33 +33,44 @@ impl WasiView for Ctx {
     }
 }
 
-// TODO - Write a dynamic version of this function
-pub fn generate_runtime(bin: Bytes) -> Result<()> {
-    let mut config = Config::new();
-    config.wasm_component_model(true);
-    let engine = &Engine::new(&config)?;
+#[derive(Clone)]
+pub struct Runtime {
+    engine: Engine,
+    component: Component,
+}
 
-    let adapter_component: Component = unsafe { Component::deserialize(engine, &bin) }?;
+impl Runtime {
+    pub fn new(bin: Bytes) -> Self {
+        let mut config = Config::new();
+        config.wasm_component_model(true);
+        let engine = Engine::new(&config).unwrap();
 
-    let mut linker = Linker::new(engine);
-    command::sync::add_to_linker(&mut linker)?;
+        let component = unsafe { Component::deserialize(&engine, &bin).unwrap() };
 
-    let mut table = Table::new();
-    let mut wasi = WasiCtxBuilder::new();
-    wasi.inherit_stderr();
-    wasi.stdin(InputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
-    wasi.stdout(OutputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
+        Self { engine, component }
+    }
 
-    let wasi = wasi.build(&mut table)?;
+    pub fn run(&mut self) -> Result<()> {
+        let mut linker = Linker::new(&self.engine);
+        command::sync::add_to_linker(&mut linker).unwrap();
 
-    let mut store = Store::new(engine, Ctx { wasi, table });
+        let mut table = Table::new();
+        let mut wasi = WasiCtxBuilder::new();
+        wasi.inherit_stderr();
+        wasi.stdin(InputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
+        wasi.stdout(OutputStream::new(), wasmtime_wasi::preview2::IsATTY::No);
 
-    let (command, _) = Command::instantiate(&mut store, &adapter_component, &linker)?;
+        let wasi = wasi.build(&mut table).unwrap();
 
-    command
-        .wasi_cli_run()
-        .call_run(&mut store)?
-        .map_err(|()| anyhow!("guest command returned error"))?;
+        let mut store = Store::new(&self.engine, Ctx { wasi, table });
 
-    Ok(())
+        let (command, _) = Command::instantiate(&mut store, &self.component, &linker)?;
+
+        command
+            .wasi_cli_run()
+            .call_run(&mut store)?
+            .map_err(|()| anyhow!("guest command returned error"))?;
+
+        Ok(())
+    }
 }

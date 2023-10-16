@@ -16,7 +16,7 @@ impl InputStream {
 #[async_trait::async_trait]
 impl HostInputStream for InputStream {
     fn read(&mut self, size: usize) -> Result<(Bytes, StreamState)> {
-        println!("read {} bytes", size);
+        // println!("read {} bytes", size);
 
         let ret = Msg {
             id: 233,
@@ -48,7 +48,7 @@ impl HostOutputStream for OutputStream {
             String::from_utf8(bytes.to_vec()).map_err(|e| OutputStreamError::Trap(e.into()))?;
         let msg = ron::from_str::<Msg>(&msg).map_err(|e| OutputStreamError::Trap(e.into()))?;
 
-        println!("{:?}", msg);
+        // println!("{:?}", msg);
         Ok(())
     }
 

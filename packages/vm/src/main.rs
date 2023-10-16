@@ -8,12 +8,11 @@ use {
 mod runtime;
 mod stream;
 
-use runtime::generate_runtime;
+use runtime::Runtime;
 
 fn main() -> Result<()> {
     // Transfer the wasm binary to wasm component binary
 
-    println!("Downloading wasi adapter...");
     let adapter = include_bytes!("../res/wasi_snapshot_preview1.command.wasm");
 
     let component = &ComponentEncoder::default()
@@ -35,7 +34,16 @@ fn main() -> Result<()> {
     // Run the prototype demo
 
     println!("Running prototype demo...");
-    generate_runtime(cwasm)?;
+    let entity_base = Runtime::new(cwasm);
+
+    use std::time::Instant;
+
+    let begin = Instant::now();
+    for _ in 0..1000 {
+        entity_base.clone().run()?;
+    }
+    let end = Instant::now();
+    println!("Time elapsed: {:?}", end - begin);
 
     Ok(())
 }
