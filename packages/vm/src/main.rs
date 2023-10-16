@@ -37,25 +37,38 @@ async fn main() -> Result<()> {
     println!("Running prototype demo...");
     let entity_base = Runtime::new(cwasm);
 
-    let mut entity = entity_base.clone();
-    let mut runner = entity.init().unwrap();
+    use std::time::Instant;
+    let now = Instant::now();
 
-    let tx = runner.tx.clone();
-    let rx = runner.rx.clone();
+    let mut threads = Vec::new();
+    for index in 0..10000 {
+        let mut entity = entity_base.clone();
+        threads.push(std::thread::spawn(move || {
+            let mut runner = entity.init().unwrap();
 
-    std::thread::spawn(move || {
-        runner.run().unwrap();
-    });
+            let tx = runner.tx.clone();
+            let rx = runner.rx.clone();
 
-    let data = Msg {
-        id: 233,
-        data: "hello".to_string(),
-    };
-    println!("Sending to vm: {:?}", data);
-    tx.send(data).unwrap();
+            std::thread::spawn(move || {
+                runner.run().unwrap();
+            });
 
-    let msg = rx.recv().unwrap();
-    println!("Received on main: {:?}", msg);
+            let data = Msg {
+                id: 233,
+                data: "hello".to_string(),
+            };
+            println!("#{index} Sending to vm: {:?}", data);
+            tx.send(data).unwrap();
+
+            let msg = rx.recv().unwrap();
+            println!("#{index} Received on main: {:?}", msg);
+        }));
+    }
+
+    for thread in threads {
+        thread.join().unwrap();
+    }
+    println!("Time elapsed: {:?}", now.elapsed());
 
     Ok(())
 }
