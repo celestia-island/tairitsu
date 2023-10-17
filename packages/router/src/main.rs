@@ -1,7 +1,7 @@
 mod routes;
 
+use anyhow::Result;
 use log::info;
-use std::future::Future;
 
 use hyper::server::Server;
 use tower::ServiceBuilder;
@@ -17,7 +17,7 @@ struct Executor {
 
 impl<F> hyper::rt::Executor<F> for Executor
 where
-    F: Future + Send + 'static,
+    F: std::future::Future + Send + 'static,
 {
     fn execute(&self, fut: F) {
         self.inner.spawn_pinned(move || async move {
@@ -26,8 +26,8 @@ where
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[async_std::main]
+async fn main() -> Result<()> {
     env_logger::Builder::new()
         .filter(None, log::LevelFilter::Info)
         .init();

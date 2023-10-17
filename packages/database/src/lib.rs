@@ -2,10 +2,10 @@ pub mod functions;
 pub mod models;
 
 use anyhow::Result;
+use async_std::sync::Mutex;
 use lazy_static::lazy_static;
 use log::info;
 use std::{cell::Cell, time::Duration};
-use tokio::sync::Mutex;
 
 use sea_orm::{ConnectOptions, ConnectionTrait, Database, DatabaseConnection, Schema, Statement};
 
