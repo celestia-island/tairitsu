@@ -62,16 +62,6 @@ async fn main() -> Result<()> {
 
             let msg = rx.recv().unwrap();
             println!("#{index} Received on main: {:?}", msg);
-
-            let data = Msg {
-                id: 23333,
-                data: "hi".to_string(),
-            };
-            println!("#{index} Sending to vm: {:?}", data);
-            tx.send(data).unwrap();
-
-            let msg = rx.recv().unwrap();
-            println!("#{index} Received on main: {:?}", msg);
         }));
     }
 
