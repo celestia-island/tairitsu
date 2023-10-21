@@ -12,3 +12,4 @@ tairitsu-utils = { path = "../utils", version = "*" }
 ron = "^0.8"
 serde = { version = "^1", features = ["derive"] }
 anyhow = "^1"
+tokio_wasi = { version = "^1", features = ["full"] }

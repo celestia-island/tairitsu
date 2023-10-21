@@ -3,7 +3,8 @@ use std::io;
 
 use tairitsu_utils::types::proto::backend::Msg;
 
-fn main() -> Result<()> {
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<()> {
     loop {
         let mut buffer = String::new();
         let stdin = io::stdin();
