@@ -18,6 +18,7 @@ chrono = { version = "^0.4", features = [
 ] }
 log = "^0.4"
 serde = { version = "^1", features = ["derive"] }
+serde_json = { version = "^1" }
 strum = "^0.25"
 strum_macros = "^0.25"
 uuid = { version = "^1", features = [
@@ -28,3 +29,6 @@ uuid = { version = "^1", features = [
 ] }
 
 bcrypt = "^0.15"
+sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
+  "proxy",
+] }

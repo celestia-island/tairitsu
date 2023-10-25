@@ -12,7 +12,7 @@ use wasmtime_wasi::preview2::{
 };
 
 use crate::stream::{HostInputStreamBox, HostOutputStreamBox};
-use tairitsu_utils::types::proto::backend::Msg;
+use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
 
 struct Ctx {
     wasi: WasiCtx,
@@ -45,8 +45,8 @@ pub struct Runner {
     component: Component,
     linker: Linker<Ctx>,
 
-    pub tx: Sender<Msg>,
-    pub rx: Receiver<Msg>,
+    pub tx: Sender<ResponseMsg>,
+    pub rx: Receiver<RequestMsg>,
 }
 
 impl Runtime {

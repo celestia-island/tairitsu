@@ -6,10 +6,10 @@ use wasmtime_wasi::preview2::{
     HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
-use tairitsu_utils::types::proto::backend::Msg;
+use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
 
 pub struct InputStream {
-    pub tasks: Arc<Mutex<Vec<Msg>>>,
+    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
 }
 
 #[async_trait::async_trait]
@@ -25,7 +25,7 @@ impl HostInputStream for InputStream {
                 let mut tasks = self.tasks.lock().unwrap();
                 if tasks.len() > 0 {
                     let ret = tasks.remove(0);
-                    let ret = ron::to_string(&ret).unwrap() + "\n";
+                    let ret = serde_json::to_string(&ret).unwrap() + "\n";
                     let ret = Bytes::from(ret);
 
                     return Ok(ret);
@@ -37,7 +37,7 @@ impl HostInputStream for InputStream {
 }
 
 pub struct OutputStream {
-    pub tx: Sender<Msg>,
+    pub tx: Sender<RequestMsg>,
 }
 
 #[async_trait::async_trait]
@@ -49,7 +49,7 @@ impl Subscribe for OutputStream {
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to parse message");
-        let msg = ron::from_str::<Msg>(&msg).expect("Failed to parse message");
+        let msg = serde_json::from_str::<RequestMsg>(&msg).expect("Failed to parse message");
 
         self.tx.send(msg).expect("Failed to send message");
         Ok(())
@@ -65,7 +65,7 @@ impl HostOutputStream for OutputStream {
 }
 
 pub struct HostInputStreamBox {
-    pub tasks: Arc<Mutex<Vec<Msg>>>,
+    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
 }
 
 impl StdinStream for HostInputStreamBox {
@@ -81,7 +81,7 @@ impl StdinStream for HostInputStreamBox {
 }
 
 pub struct HostOutputStreamBox {
-    pub tx: Sender<Msg>,
+    pub tx: Sender<RequestMsg>,
 }
 
 impl StdoutStream for HostOutputStreamBox {
