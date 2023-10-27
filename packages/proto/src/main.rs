@@ -11,7 +11,7 @@ use sea_orm::{
 };
 
 use entity::post::{ActiveModel, Entity};
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
+use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg, ResponseQueryType};
 
 #[derive(Debug)]
 struct ProxyDb {}
@@ -36,17 +36,38 @@ impl ProxyDatabaseTrait for ProxyDb {
         for row in ret {
             let mut map: BTreeMap<String, sea_orm::Value> = BTreeMap::new();
             for (k, v) in row.iter() {
-                map.insert(k.to_owned(), {
-                    if v.is_string() {
-                        sea_orm::Value::String(Some(Box::new(v.as_str().unwrap().to_string())))
-                    } else if v.is_number() {
-                        sea_orm::Value::BigInt(Some(v.as_i64().unwrap()))
-                    } else if v.is_boolean() {
-                        sea_orm::Value::Bool(Some(v.as_bool().unwrap()))
-                    } else {
-                        unreachable!("Unknown json type")
-                    }
-                });
+                map.insert(
+                    k.to_owned(),
+                    match v {
+                        ResponseQueryType::Boolean(val) => sea_orm::Value::Bool(Some(*val)),
+                        ResponseQueryType::Integer(val) => sea_orm::Value::BigInt(Some(*val)),
+                        ResponseQueryType::Float(val) => sea_orm::Value::Float(Some(*val)),
+                        ResponseQueryType::Text(val) => {
+                            sea_orm::Value::String(Some(Box::new(val.to_owned())))
+                        }
+                        ResponseQueryType::Decimal(val) => {
+                            sea_orm::Value::Decimal(Some(Box::new(val.to_owned().into())))
+                        }
+                        ResponseQueryType::Date(val) => {
+                            sea_orm::Value::ChronoDate(Some(Box::new(val.to_owned().into())))
+                        }
+                        ResponseQueryType::Time(val) => {
+                            sea_orm::Value::ChronoTime(Some(Box::new(val.to_owned().into())))
+                        }
+                        ResponseQueryType::DateTime(val) => {
+                            sea_orm::Value::ChronoDateTime(Some(Box::new(val.to_owned().into())))
+                        }
+                        ResponseQueryType::TimeStamp(val) => {
+                            sea_orm::Value::ChronoDateTimeUtc(Some(Box::new(val.to_owned().into())))
+                        }
+                        ResponseQueryType::ByteA(val) => {
+                            sea_orm::Value::Bytes(Some(Box::new(val.to_owned())))
+                        }
+                        ResponseQueryType::Uuid(val) => {
+                            sea_orm::Value::Uuid(Some(Box::new(val.to_owned())))
+                        }
+                    },
+                );
             }
             rows.push(ProxyRow { values: map });
         }
@@ -101,21 +122,21 @@ async fn main() {
     .unwrap();
 
     let data = ActiveModel {
-        id: Set(11),
         title: Set("Homo".to_owned()),
         text: Set("いいよ、来いよ".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
     let data = ActiveModel {
-        id: Set(45),
         title: Set("Homo".to_owned()),
         text: Set("そうだよ".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
     let data = ActiveModel {
-        id: Set(14),
         title: Set("Homo".to_owned()),
         text: Set("悔い改めて".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
 

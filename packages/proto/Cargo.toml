@@ -13,6 +13,7 @@ serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 anyhow = "^1"
 tokio_wasi = { version = "^1", features = ["full"] }
+uuid = "^1"
 
 sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
   "proxy",

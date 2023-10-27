@@ -27,6 +27,7 @@ uuid = { version = "^1", features = [
   'macro-diagnostics',
   'serde',
 ] }
+rust_decimal = "^1"
 
 bcrypt = "^0.15"
 sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [

@@ -5,13 +5,16 @@ use anyhow::Result;
 use bytes::Bytes;
 use std::collections::BTreeMap;
 
-use gluesql::{memory_storage::MemoryStorage, prelude::Glue};
+use gluesql::{
+    memory_storage::MemoryStorage,
+    prelude::{Glue, Payload},
+};
 use sea_orm::ProxyExecResult;
 use wasmtime::{Config, Engine};
 use wit_component::ComponentEncoder;
 
 use runtime::Runtime;
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
+use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg, ResponseQueryType};
 
 #[async_std::main]
 async fn main() -> Result<()> {
@@ -40,9 +43,11 @@ async fn main() -> Result<()> {
     db.execute(
         r#"
             CREATE TABLE IF NOT EXISTS posts (
-                id INTEGER PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT GENERATE_UUID(),
+                create_at TIMESTAMP DEFAULT NOW(),
+
                 title TEXT NOT NULL,
-                text TEXT NOT NULL
+                text TEXT NOT NULL,
             )
         "#,
     )?;
@@ -65,10 +70,53 @@ async fn main() -> Result<()> {
                 let ret = db.execute(sql)?;
 
                 println!("SQL execute result: {:?}", ret);
-                let ret = ResponseMsg::Execute(ProxyExecResult {
-                    last_insert_id: 1,
-                    rows_affected: 1,
+                let ret = ResponseMsg::Execute(if let Some(ret) = ret.first() {
+                    match ret {
+                        Payload::Insert(num) => ProxyExecResult {
+                            last_insert_id: {
+                                let ret = db.execute(
+                                    "SELECT id FROM posts ORDER BY create_at DESC LIMIT 1",
+                                )?;
+                                if let Some(ret) = ret.first() {
+                                    match ret {
+                                        Payload::Select { rows, .. } => {
+                                            if let Some(column) = rows.first() {
+                                                match column.take_first_value()? {
+                                                    gluesql::prelude::Value::Uuid(val) => {
+                                                        val as u64
+                                                    }
+                                                    _ => unreachable!(
+                                                        "Unsupported value: {:?}",
+                                                        column
+                                                    ),
+                                                }
+                                            } else {
+                                                unreachable!("Empty rows");
+                                            }
+                                        }
+                                        _ => unreachable!("Unsupported payload: {:?}", ret),
+                                    }
+                                } else {
+                                    unreachable!("Empty payload");
+                                }
+                            },
+                            rows_affected: 1,
+                        },
+                        _ => ProxyExecResult {
+                            last_insert_id: 1,
+                            rows_affected: 1,
+                        },
+                    }
+                } else {
+                    ProxyExecResult {
+                        last_insert_id: 0,
+                        rows_affected: 0,
+                    }
                 });
+                println!(
+                    "DEBUG: database content {:?}",
+                    db.execute("SELECT * from posts")?
+                );
                 tx.send(ret)?;
             }
             RequestMsg::Query(sql) => {
@@ -85,10 +133,13 @@ async fn main() -> Result<()> {
                                         label.to_owned(),
                                         match column {
                                             gluesql::prelude::Value::I64(val) => {
-                                                serde_json::Value::Number((*val).into())
+                                                ResponseQueryType::Integer((*val).into())
                                             }
                                             gluesql::prelude::Value::Str(val) => {
-                                                serde_json::Value::String(val.to_owned())
+                                                ResponseQueryType::Text(val.to_owned())
+                                            }
+                                            gluesql::prelude::Value::Uuid(val) => {
+                                                ResponseQueryType::Uuid(uuid::Uuid::from_u128(*val))
                                             }
                                             _ => unreachable!("Unsupported value: {:?}", column),
                                         },
