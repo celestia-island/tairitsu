@@ -10,7 +10,7 @@ publish = false
 tairitsu-utils = { path = "../utils", version = "*" }
 
 serde = { version = "^1", features = ["derive"] }
-serde_json = "^1"
+ron = "^0.8"
 anyhow = "^1"
 tokio_wasi = { version = "^1", features = ["full"] }
 uuid = "^1"

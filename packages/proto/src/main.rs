@@ -19,14 +19,11 @@ struct ProxyDb {}
 impl ProxyDatabaseTrait for ProxyDb {
     fn query(&self, statement: Statement) -> Result<Vec<ProxyRow>, DbErr> {
         let sql = statement.sql.clone();
-        println!(
-            "{}",
-            serde_json::to_string(&RequestMsg::Query(sql)).unwrap()
-        );
+        println!("{}", ron::to_string(&RequestMsg::Query(sql)).unwrap());
 
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        let ret: ResponseMsg = serde_json::from_str(&input).unwrap();
+        let ret: ResponseMsg = ron::from_str(&input).unwrap();
         let ret = match ret {
             ResponseMsg::Query(v) => v,
             _ => unreachable!("Not a query result"),
@@ -96,13 +93,13 @@ impl ProxyDatabaseTrait for ProxyDb {
 
         // Send the query to stdout
         let msg = RequestMsg::Execute(sql);
-        let msg = serde_json::to_string(&msg).unwrap();
+        let msg = ron::to_string(&msg).unwrap();
         println!("{}", msg);
 
         // Get the result from stdin
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        let ret: ResponseMsg = serde_json::from_str(&input).unwrap();
+        let ret: ResponseMsg = ron::from_str(&input).unwrap();
         let ret = match ret {
             ResponseMsg::Execute(v) => v,
             _ => unreachable!(),
@@ -143,6 +140,6 @@ async fn main() {
     let list = Entity::find().all(&db).await.unwrap().to_vec();
     println!(
         "{}",
-        serde_json::to_string(&RequestMsg::Debug(format!("{:?}", list))).unwrap()
+        ron::to_string(&RequestMsg::Debug(format!("{:?}", list))).unwrap()
     );
 }

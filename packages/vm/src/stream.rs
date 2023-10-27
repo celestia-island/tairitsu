@@ -25,7 +25,7 @@ impl HostInputStream for InputStream {
                 let mut tasks = self.tasks.lock().unwrap();
                 if tasks.len() > 0 {
                     let ret = tasks.remove(0);
-                    let ret = serde_json::to_string(&ret).unwrap() + "\n";
+                    let ret = ron::to_string(&ret).unwrap() + "\n";
                     let ret = Bytes::from(ret);
 
                     return Ok(ret);
@@ -49,7 +49,7 @@ impl Subscribe for OutputStream {
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to parse message");
-        let msg = serde_json::from_str::<RequestMsg>(&msg).expect("Failed to parse message");
+        let msg = ron::from_str::<RequestMsg>(&msg).expect("Failed to parse message");
 
         self.tx.send(msg).expect("Failed to send message");
         Ok(())

@@ -9,7 +9,7 @@ use gluesql::{
     memory_storage::MemoryStorage,
     prelude::{Glue, Payload},
 };
-use sea_orm::ProxyExecResult;
+use sea_orm::{ProxyExecResult, ProxyExecResultIdType};
 use wasmtime::{Config, Engine};
 use wit_component::ComponentEncoder;
 
@@ -72,51 +72,42 @@ async fn main() -> Result<()> {
                 println!("SQL execute result: {:?}", ret);
                 let ret = ResponseMsg::Execute(if let Some(ret) = ret.first() {
                     match ret {
-                        Payload::Insert(num) => ProxyExecResult {
-                            last_insert_id: {
-                                let ret = db.execute(
-                                    "SELECT id FROM posts ORDER BY create_at DESC LIMIT 1",
-                                )?;
-                                if let Some(ret) = ret.first() {
-                                    match ret {
-                                        Payload::Select { rows, .. } => {
-                                            if let Some(column) = rows.first() {
-                                                match column.take_first_value()? {
-                                                    gluesql::prelude::Value::Uuid(val) => {
-                                                        val as u64
-                                                    }
-                                                    _ => unreachable!(
-                                                        "Unsupported value: {:?}",
-                                                        column
-                                                    ),
-                                                }
-                                            } else {
-                                                unreachable!("Empty rows");
+                        Payload::Insert(num) => ProxyExecResult::Inserted({
+                            db.execute(format!(
+                                "SELECT id FROM posts ORDER BY create_at DESC LIMIT {num}"
+                            ))?
+                            .iter()
+                            .map(|ret| match ret {
+                                Payload::Select { rows, .. } => {
+                                    if let Some(column) = rows.first() {
+                                        match column
+                                            .to_owned()
+                                            .take_first_value()
+                                            .expect("Empty rows")
+                                        {
+                                            gluesql::prelude::Value::Uuid(val) => {
+                                                let ret = ProxyExecResultIdType::Uuid(
+                                                    uuid::Uuid::from_u128(val),
+                                                );
+                                                ret
+                                            }
+                                            _ => {
+                                                unreachable!("Unsupported value: {:?}", column)
                                             }
                                         }
-                                        _ => unreachable!("Unsupported payload: {:?}", ret),
+                                    } else {
+                                        unreachable!("Empty rows");
                                     }
-                                } else {
-                                    unreachable!("Empty payload");
                                 }
-                            },
-                            rows_affected: 1,
-                        },
-                        _ => ProxyExecResult {
-                            last_insert_id: 1,
-                            rows_affected: 1,
-                        },
+                                _ => unreachable!("Unsupported payload: {:?}", ret),
+                            })
+                            .collect::<Vec<ProxyExecResultIdType>>()
+                        }),
+                        _ => ProxyExecResult::Conflicted,
                     }
                 } else {
-                    ProxyExecResult {
-                        last_insert_id: 0,
-                        rows_affected: 0,
-                    }
+                    ProxyExecResult::Empty
                 });
-                println!(
-                    "DEBUG: database content {:?}",
-                    db.execute("SELECT * from posts")?
-                );
                 tx.send(ret)?;
             }
             RequestMsg::Query(sql) => {
