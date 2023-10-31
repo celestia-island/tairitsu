@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
                 let ret = ResponseMsg::Execute(match ret.last().expect("Failed to get result") {
                     Payload::Insert(_) => {
                         // Get the count of all the rows
-                        let count = db.execute("SELECT COUNT(*) FROM posts")?;
+                        let count = db.execute("SELECT id FROM posts ORDER BY id DESC LIMIT 1")?;
                         let count = match count.last().expect("Failed to get count") {
                             Payload::Select { rows, .. } => {
                                 match rows.first().unwrap().0.first().unwrap() {
@@ -83,6 +83,7 @@ async fn main() -> Result<()> {
                             }
                             _ => unreachable!(),
                         };
+                        let count = count + 1;
 
                         // Rewrite the last insert id
                         db.execute(format!("UPDATE posts SET id = {} WHERE id = 0", count))?;
