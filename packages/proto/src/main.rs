@@ -101,21 +101,21 @@ async fn main() {
     .unwrap();
 
     let data = ActiveModel {
-        id: Set(11),
         title: Set("Homo".to_owned()),
         text: Set("いいよ、来いよ".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
     let data = ActiveModel {
-        id: Set(45),
         title: Set("Homo".to_owned()),
         text: Set("そうだよ".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
     let data = ActiveModel {
-        id: Set(14),
         title: Set("Homo".to_owned()),
         text: Set("悔い改めて".to_owned()),
+        ..Default::default()
     };
     Entity::insert(data).exec(&db).await.unwrap();
 

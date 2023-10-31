@@ -5,7 +5,10 @@ use anyhow::Result;
 use bytes::Bytes;
 use std::collections::BTreeMap;
 
-use gluesql::{memory_storage::MemoryStorage, prelude::Glue};
+use gluesql::{
+    memory_storage::MemoryStorage,
+    prelude::{Glue, Payload},
+};
 use sea_orm::ProxyExecResult;
 use wasmtime::{Config, Engine};
 use wit_component::ComponentEncoder;
@@ -40,9 +43,11 @@ async fn main() -> Result<()> {
     db.execute(
         r#"
             CREATE TABLE IF NOT EXISTS posts (
-                id INTEGER PRIMARY KEY,
+                id INTEGER NOT NULL UNIQUE DEFAULT 0,
                 title TEXT NOT NULL,
-                text TEXT NOT NULL
+                text TEXT NOT NULL,
+
+                _timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
             )
         "#,
     )?;
@@ -65,9 +70,29 @@ async fn main() -> Result<()> {
                 let ret = db.execute(sql)?;
 
                 println!("SQL execute result: {:?}", ret);
-                let ret = ResponseMsg::Execute(ProxyExecResult {
-                    last_insert_id: 1,
-                    rows_affected: 1,
+                let ret = ResponseMsg::Execute(match ret.last().expect("Failed to get result") {
+                    Payload::Insert(_) => {
+                        // Get the count of all the rows
+                        let count = db.execute("SELECT COUNT(*) FROM posts")?;
+                        let count = match count.last().expect("Failed to get count") {
+                            Payload::Select { rows, .. } => {
+                                match rows.first().unwrap().0.first().unwrap() {
+                                    gluesql::prelude::Value::I64(val) => *val,
+                                    _ => unreachable!(),
+                                }
+                            }
+                            _ => unreachable!(),
+                        };
+
+                        // Rewrite the last insert id
+                        db.execute(format!("UPDATE posts SET id = {} WHERE id = 0", count))?;
+
+                        ProxyExecResult {
+                            last_insert_id: count as u64,
+                            rows_affected: 1,
+                        }
+                    }
+                    _ => todo!("Unsupported result"),
                 });
                 tx.send(ret)?;
             }
