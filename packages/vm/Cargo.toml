@@ -18,8 +18,9 @@ reqwest = { version = "^0.11", features = ["blocking"] }
 lazy_static = "^1"
 flume = "^0.11"
 async-std = { version = "^1", features = ["attributes", "tokio1"] }
+uuid = "^1"
 
-wit-component = "^0.16"
+wit-component = "^0.17"
 wasmtime = { version = "^14", features = ["component-model"] }
 wasmtime-wasi = "^14"
 sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [

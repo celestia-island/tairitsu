@@ -1,6 +1,8 @@
 use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use flume::{Receiver, Sender};
+use lazy_static::lazy_static;
+use std::sync::{Arc, Mutex};
 
 use wasmtime::{
     component::{Component, Linker},
@@ -10,16 +12,22 @@ use wasmtime_wasi::preview2::{
     command::{self, sync::Command},
     Table, WasiCtx, WasiCtxBuilder, WasiView,
 };
+use wit_component::ComponentEncoder;
 
 use crate::stream::{HostInputStreamBox, HostOutputStreamBox};
 use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
 
-struct Ctx {
+lazy_static! {
+    static ref ADAPTER: Bytes =
+        Bytes::from_static(include_bytes!("../res/wasi_snapshot_preview1.command.wasm"));
+}
+
+pub struct WasiContext {
     wasi: WasiCtx,
     table: Table,
 }
 
-impl WasiView for Ctx {
+impl WasiView for WasiContext {
     fn ctx(&self) -> &WasiCtx {
         &self.wasi
     }
@@ -35,32 +43,60 @@ impl WasiView for Ctx {
 }
 
 #[derive(Clone)]
-pub struct Runtime {
-    engine: Engine,
-    component: Component,
+pub struct Image {
+    pub engine: Engine,
+    pub component: Component,
 }
 
-pub struct Runner {
-    store: Store<Ctx>,
-    component: Component,
-    linker: Linker<Ctx>,
+impl std::fmt::Debug for Image {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("<Runtime>").finish()
+    }
+}
+
+#[derive(Clone)]
+pub struct Container {
+    pub store: Arc<Mutex<Store<WasiContext>>>,
+    pub component: Component,
+    pub linker: Linker<WasiContext>,
 
     pub tx: Sender<ResponseMsg>,
     pub rx: Receiver<RequestMsg>,
 }
 
-impl Runtime {
+impl std::fmt::Debug for Container {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("<Runner>").finish()
+    }
+}
+
+impl Image {
     pub fn new(bin: Bytes) -> Self {
         let mut config = Config::new();
         config.wasm_component_model(true);
-        let engine = Engine::new(&config).unwrap();
+        let engine = Engine::new(&config).expect("Cannot create engine");
 
-        let component = unsafe { Component::deserialize(&engine, &bin).unwrap() };
+        // Transfer the wasm binary to wasm component binary
+        let component = ComponentEncoder::default()
+            .module(bin.as_ref())
+            .expect("Cannot parse module binary")
+            .validate(true)
+            .adapter("wasi_snapshot_preview1", ADAPTER.as_ref())
+            .expect("Cannot find adapter")
+            .encode()
+            .expect("Cannot encode the wasm component");
+
+        let cwasm = Bytes::from(
+            engine
+                .precompile_component(component.as_ref())
+                .expect("Cannot compile module"),
+        );
+        let component = unsafe { Component::deserialize(&engine, &cwasm.as_ref()).unwrap() };
 
         Self { engine, component }
     }
 
-    pub fn init(&mut self) -> Result<Runner> {
+    pub fn init(&self) -> Result<Container> {
         let mut linker = Linker::new(&self.engine);
         command::sync::add_to_linker(&mut linker).unwrap();
 
@@ -88,10 +124,10 @@ impl Runtime {
 
         let wasi = wasi.build();
         let table = Table::new();
-        let store = Store::new(&self.engine, Ctx { wasi, table });
+        let store = Store::new(&self.engine, WasiContext { wasi, table });
 
-        Ok(Runner {
-            store,
+        Ok(Container {
+            store: Arc::new(Mutex::new(store)),
             component: self.component.clone(),
             linker,
 
@@ -101,13 +137,14 @@ impl Runtime {
     }
 }
 
-impl Runner {
+impl Container {
     pub fn run(&mut self) -> Result<()> {
-        let (command, _) = Command::instantiate(&mut self.store, &self.component, &self.linker)?;
+        let mut store = self.store.lock().unwrap();
+        let (command, _) = Command::instantiate(&mut *store, &self.component, &self.linker)?;
 
         command
             .wasi_cli_run()
-            .call_run(&mut self.store)?
+            .call_run(&mut *store)?
             .map_err(|()| anyhow!("guest command returned error"))?;
 
         Ok(())
