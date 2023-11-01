@@ -26,4 +26,4 @@ wasmtime-wasi = "^14"
 sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
   "proxy",
 ] }
-gluesql = "^0.13"
+gluesql = { git = "https://github.com/gluesql/gluesql" }

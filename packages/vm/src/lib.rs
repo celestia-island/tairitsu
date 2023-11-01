@@ -38,7 +38,8 @@ mod test {
                 _timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
             )
         "#,
-        )?;
+        )
+        .await?;
 
         // Run the prototype demo
         println!("Running prototype demo...");
@@ -55,18 +56,19 @@ mod test {
             match msg {
                 RequestMsg::Execute(sql) => {
                     println!("SQL execute: {:?}", sql);
-                    let ret = db.execute(sql)?;
+                    let ret = db.execute(sql).await?;
 
                     println!("SQL execute result: {:?}", ret);
                     let ret =
                         ResponseMsg::Execute(match ret.last().expect("Failed to get result") {
                             Payload::Insert(_) => {
                                 // Get the count of all the rows
-                                let count =
-                                    db.execute("SELECT id FROM posts ORDER BY id DESC LIMIT 1")?;
+                                let count = db
+                                    .execute("SELECT id FROM posts ORDER BY id DESC LIMIT 1")
+                                    .await?;
                                 let count = match count.last().expect("Failed to get count") {
                                     Payload::Select { rows, .. } => {
-                                        match rows.first().unwrap().0.first().unwrap() {
+                                        match rows.first().unwrap().first().unwrap() {
                                             gluesql::prelude::Value::I64(val) => *val,
                                             _ => unreachable!(),
                                         }
@@ -76,10 +78,8 @@ mod test {
                                 let count = count + 1;
 
                                 // Rewrite the last insert id
-                                db.execute(format!(
-                                    "UPDATE posts SET id = {} WHERE id = 0",
-                                    count
-                                ))?;
+                                db.execute(format!("UPDATE posts SET id = {} WHERE id = 0", count))
+                                    .await?;
 
                                 ProxyExecResult {
                                     last_insert_id: count as u64,
@@ -94,7 +94,7 @@ mod test {
                     println!("SQL query: {:?}", sql);
 
                     let mut ret = vec![];
-                    for payload in db.execute(sql)?.iter() {
+                    for payload in db.execute(sql).await?.iter() {
                         match payload {
                             gluesql::prelude::Payload::Select { labels, rows } => {
                                 for row in rows.iter() {
