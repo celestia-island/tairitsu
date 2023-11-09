@@ -13,8 +13,8 @@ use stylist::manager::{render_static, StyleManager};
 use yew::ServerRenderer;
 
 use hikari_web::{
-    app::ServerApp,
-    utils::{app_props::AppProps, contexts::app_props::AppPageProps},
+    app::{AppProps, ServerApp},
+    utils::contexts::app_props::AppPageProps,
 };
 
 pub async fn render(req: Request<Body>, props: AppPageProps) -> Result<impl IntoResponse> {
