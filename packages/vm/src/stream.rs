@@ -7,25 +7,25 @@ use wasmtime_wasi::preview2::{
     HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
-pub struct InputStream<'a, Res>
+pub struct InputStream<Res>
 where
-    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Res: Clone + Serialize + Send + Sync,
 {
-    pub tasks: Arc<Mutex<Vec<&'a Res>>>,
+    pub tasks: Arc<Mutex<Vec<Res>>>,
 }
 
 #[async_trait::async_trait]
-impl<'a, Res> Subscribe for InputStream<'static, Res>
+impl<Res> Subscribe for InputStream<Res>
 where
-    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Res: Clone + Serialize + Send + Sync,
 {
     async fn ready(&mut self) {}
 }
 
 #[async_trait::async_trait]
-impl<'a, Res> HostInputStream for InputStream<'static, Res>
+impl<Res> HostInputStream for InputStream<Res>
 where
-    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Res: Clone + Serialize + Send + Sync,
 {
     fn read(&mut self, _size: usize) -> StreamResult<Bytes> {
         loop {
@@ -33,7 +33,7 @@ where
                 let mut tasks = self.tasks.lock().unwrap();
                 if tasks.len() > 0 {
                     let ret = tasks.remove(0);
-                    let ret = serde_json::to_string(ret).unwrap() + "\n";
+                    let ret = serde_json::to_string(&ret).unwrap() + "\n";
                     let ret = Bytes::from(ret);
 
                     return Ok(ret);
@@ -44,29 +44,30 @@ where
     }
 }
 
-pub struct OutputStream<'a, Req>
+pub struct OutputStream<'de, Req>
 where
-    Req: 'a + Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Deserialize<'de> + Send + Sync,
 {
     pub tx: Sender<Req>,
-    phantom: std::marker::PhantomData<&'a Req>,
+    phantom: std::marker::PhantomData<&'de ()>,
 }
 
 #[async_trait::async_trait]
-impl<'a, Req> Subscribe for OutputStream<'static, Req>
+impl<'de, Req> Subscribe for OutputStream<'de, Req>
 where
-    Req: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Deserialize<'de> + Send + Sync,
 {
     async fn ready(&mut self) {}
 }
 
 #[async_trait::async_trait]
-impl<'a, Req> HostOutputStream for OutputStream<'static, Req>
+impl<'de, Req> HostOutputStream for OutputStream<'de, Req>
 where
-    Req: Clone + Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Clone + Deserialize<'de> + Send + Sync,
 {
-    fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
-        let msg = serde_json::from_slice::<Req>(&bytes.to_vec()).expect("Failed to parse message");
+    fn write<'a>(&mut self, bytes: Bytes) -> StreamResult<()> {
+        let bytes = bytes.clone();
+        let msg = serde_json::from_slice::<Req>(&bytes.as_ref()).expect("Failed to parse message");
 
         self.tx.send(msg).expect("Failed to send message");
         Ok(())
@@ -81,16 +82,16 @@ where
     }
 }
 
-pub struct HostInputStreamBox<'a, Res>
+pub struct HostInputStreamBox<Res>
 where
-    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Res: Clone + Serialize + Send + Sync,
 {
-    pub tasks: Arc<Mutex<Vec<&'a Res>>>,
+    pub tasks: Arc<Mutex<Vec<Res>>>,
 }
 
-impl<'a, Res> StdinStream for HostInputStreamBox<'static, Res>
+impl<Res> StdinStream for HostInputStreamBox<Res>
 where
-    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Res: Clone + Serialize + Send + Sync,
 {
     fn stream(&self) -> Box<dyn HostInputStream> {
         Box::new(InputStream {
@@ -103,21 +104,34 @@ where
     }
 }
 
-pub struct HostOutputStreamBox<Req>
+pub struct HostOutputStreamBox<'de, Req>
 where
-    Req: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Deserialize<'de> + Send + Sync,
 {
     pub tx: Sender<Req>,
+    phantom: std::marker::PhantomData<&'de ()>,
 }
 
-impl<Req> StdoutStream for HostOutputStreamBox<Req>
+impl<'de, Req> HostOutputStreamBox<'de, Req>
 where
-    Req: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Deserialize<'de> + Send + Sync,
+{
+    pub fn new(tx: Sender<Req>) -> Self {
+        Self {
+            tx,
+            phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<'de, Req> StdoutStream for HostOutputStreamBox<'de, Req>
+where
+    Req: Clone + Deserialize<'de> + Send + Sync,
 {
     fn stream(&self) -> Box<dyn HostOutputStream> {
         Box::new(OutputStream {
             tx: self.tx.clone(),
-            phantom: std::marker::PhantomData::default(),
+            phantom: std::marker::PhantomData,
         })
     }
 

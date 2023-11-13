@@ -98,10 +98,10 @@ impl Image {
 }
 
 impl Image {
-    pub fn init<'a, Res, Req>(&self) -> Result<Container<Res, Req>>
+    pub fn init<Res, Req>(&self) -> Result<Container<Res, Req>>
     where
-        Res: 'a + Clone + Serialize + Deserialize<'static> + Send + Sync,
-        Req: 'a + Clone + Serialize + Deserialize<'static> + Send + Sync,
+        Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+        Req: Clone + Serialize + Deserialize<'static> + Send + Sync,
     {
         let mut linker = Linker::new(&self.engine);
         command::sync::add_to_linker(&mut linker).unwrap();
@@ -115,13 +115,13 @@ impl Image {
         let input_stream = HostInputStreamBox::<Res> {
             tasks: Default::default(),
         };
-        let output_stream = HostOutputStreamBox::<Req> { tx: tx_out };
+        let output_stream = HostOutputStreamBox::<Req>::new(tx_out);
 
         let rx = rx_in.clone();
         let tasks = input_stream.tasks.clone();
         std::thread::spawn(move || {
             while let Ok(msg) = rx.recv() {
-                tasks.lock().unwrap().push(&msg);
+                tasks.lock().unwrap().push(msg);
             }
         });
 
@@ -143,7 +143,11 @@ impl Image {
     }
 }
 
-impl<Res: Serialize, Req: Serialize> Container<Res, Req> {
+impl<Res, Req> Container<Res, Req>
+where
+    Res: Clone + Serialize + Deserialize<'static> + Send + Sync,
+    Req: Clone + Serialize + Deserialize<'static> + Send + Sync,
+{
     pub fn run(&mut self) -> Result<()> {
         let mut store = self.store.lock().unwrap();
         let (command, _) = Command::instantiate(&mut *store, &self.component, &self.linker)?;

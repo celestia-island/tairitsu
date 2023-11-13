@@ -2,6 +2,7 @@ mod runtime;
 mod stream;
 
 pub use runtime::{Container, Image};
+pub use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
 
 #[cfg(test)]
 mod test {
@@ -44,7 +45,7 @@ mod test {
         // Run the prototype demo
         println!("Running prototype demo...");
         let image = Image::new(bin);
-        let mut container = image.init()?;
+        let mut container = image.init::<ResponseMsg, RequestMsg>()?;
 
         let tx = container.tx.clone();
         let rx = container.rx.clone();
