@@ -100,8 +100,8 @@ impl Image {
 impl Image {
     pub fn init<'a, Res, Req>(&self) -> Result<Container<Res, Req>>
     where
-        Res: Serialize + Deserialize<'static> + Send + Sync,
-        Req: Serialize + Deserialize<'static> + Send + Sync,
+        Res: 'a + Clone + Serialize + Deserialize<'static> + Send + Sync,
+        Req: 'a + Clone + Serialize + Deserialize<'static> + Send + Sync,
     {
         let mut linker = Linker::new(&self.engine);
         command::sync::add_to_linker(&mut linker).unwrap();
@@ -109,8 +109,8 @@ impl Image {
         let mut wasi = WasiCtxBuilder::new();
         wasi.inherit_stderr();
 
-        let (tx_in, rx_in) = flume::unbounded::<&'a Res>();
-        let (tx_out, rx_out) = flume::unbounded::<&'a Req>();
+        let (tx_in, rx_in) = flume::unbounded::<Res>();
+        let (tx_out, rx_out) = flume::unbounded::<Req>();
 
         let input_stream = HostInputStreamBox::<Res> {
             tasks: Default::default(),
