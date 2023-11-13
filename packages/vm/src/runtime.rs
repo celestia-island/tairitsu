@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use flume::{Receiver, Sender};
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 use wasmtime::{
@@ -15,7 +16,6 @@ use wasmtime_wasi::preview2::{
 use wit_component::ComponentEncoder;
 
 use crate::stream::{HostInputStreamBox, HostOutputStreamBox};
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
 
 lazy_static! {
     static ref ADAPTER: Bytes =
@@ -55,16 +55,16 @@ impl std::fmt::Debug for Image {
 }
 
 #[derive(Clone)]
-pub struct Container {
+pub struct Container<Res: Serialize, Req: Serialize> {
     pub store: Arc<Mutex<Store<WasiContext>>>,
     pub component: Component,
     pub linker: Linker<WasiContext>,
 
-    pub tx: Sender<ResponseMsg>,
-    pub rx: Receiver<RequestMsg>,
+    pub tx: Sender<Res>,
+    pub rx: Receiver<Req>,
 }
 
-impl std::fmt::Debug for Container {
+impl<Res: Serialize, Req: Serialize> std::fmt::Debug for Container<Res, Req> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("<Runner>").finish()
     }
@@ -95,27 +95,33 @@ impl Image {
 
         Self { engine, component }
     }
+}
 
-    pub fn init(&self) -> Result<Container> {
+impl Image {
+    pub fn init<'a, Res, Req>(&self) -> Result<Container<Res, Req>>
+    where
+        Res: Serialize + Deserialize<'static> + Send + Sync,
+        Req: Serialize + Deserialize<'static> + Send + Sync,
+    {
         let mut linker = Linker::new(&self.engine);
         command::sync::add_to_linker(&mut linker).unwrap();
 
         let mut wasi = WasiCtxBuilder::new();
         wasi.inherit_stderr();
 
-        let (tx_in, rx_in) = flume::unbounded();
-        let (tx_out, rx_out) = flume::unbounded();
+        let (tx_in, rx_in) = flume::unbounded::<&'a Res>();
+        let (tx_out, rx_out) = flume::unbounded::<&'a Req>();
 
-        let input_stream = HostInputStreamBox {
+        let input_stream = HostInputStreamBox::<Res> {
             tasks: Default::default(),
         };
-        let output_stream = HostOutputStreamBox { tx: tx_out };
+        let output_stream = HostOutputStreamBox::<Req> { tx: tx_out };
 
         let rx = rx_in.clone();
         let tasks = input_stream.tasks.clone();
         std::thread::spawn(move || {
             while let Ok(msg) = rx.recv() {
-                tasks.lock().unwrap().push(msg);
+                tasks.lock().unwrap().push(&msg);
             }
         });
 
@@ -137,7 +143,7 @@ impl Image {
     }
 }
 
-impl Container {
+impl<Res: Serialize, Req: Serialize> Container<Res, Req> {
     pub fn run(&mut self) -> Result<()> {
         let mut store = self.store.lock().unwrap();
         let (command, _) = Command::instantiate(&mut *store, &self.component, &self.linker)?;

@@ -37,17 +37,17 @@ async fn main() -> Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(23333);
 
-    tairitsu_database::init(tairitsu_database::DatabaseNetworkConfig {
-        host: std::env::var("DB_HOST").unwrap_or("localhost".into()),
-        port: std::env::var("DB_PORT")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(3306),
-        username: std::env::var("DB_USERNAME").unwrap_or("root".into()),
-        password: std::env::var("DB_PASSWORD").unwrap_or("root".into()),
-        database: std::env::var("DB_DATABASE").unwrap_or("hikari".into()),
-    })
-    .await?;
+    // tairitsu_database::init(tairitsu_database::DatabaseNetworkConfig {
+    //     host: std::env::var("DB_HOST").unwrap_or("localhost".into()),
+    //     port: std::env::var("DB_PORT")
+    //         .ok()
+    //         .and_then(|s| s.parse().ok())
+    //         .unwrap_or(3306),
+    //     username: std::env::var("DB_USERNAME").unwrap_or("root".into()),
+    //     password: std::env::var("DB_PASSWORD").unwrap_or("root".into()),
+    //     database: std::env::var("DB_DATABASE").unwrap_or("hikari".into()),
+    // })
+    // .await?;
 
     let middleware_stack = ServiceBuilder::new()
         .layer(TraceLayer::new_for_http())

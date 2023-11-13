@@ -1,31 +1,39 @@
 use bytes::Bytes;
 use flume::Sender;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 use wasmtime_wasi::preview2::{
     HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
-
-pub struct InputStream {
-    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
+pub struct InputStream<'a, Res>
+where
+    Res: Serialize + Deserialize<'static> + Send + Sync,
+{
+    pub tasks: Arc<Mutex<Vec<&'a Res>>>,
 }
 
 #[async_trait::async_trait]
-impl Subscribe for InputStream {
+impl<'a, Res> Subscribe for InputStream<'static, Res>
+where
+    Res: Serialize + Deserialize<'static> + Send + Sync,
+{
     async fn ready(&mut self) {}
 }
 
 #[async_trait::async_trait]
-impl HostInputStream for InputStream {
+impl<'a, Res> HostInputStream for InputStream<'static, Res>
+where
+    Res: Serialize + Deserialize<'static> + Send + Sync,
+{
     fn read(&mut self, _size: usize) -> StreamResult<Bytes> {
         loop {
             {
                 let mut tasks = self.tasks.lock().unwrap();
                 if tasks.len() > 0 {
                     let ret = tasks.remove(0);
-                    let ret = serde_json::to_string(&ret).unwrap() + "\n";
+                    let ret = serde_json::to_string(ret).unwrap() + "\n";
                     let ret = Bytes::from(ret);
 
                     return Ok(ret);
@@ -36,22 +44,31 @@ impl HostInputStream for InputStream {
     }
 }
 
-pub struct OutputStream {
-    pub tx: Sender<RequestMsg>,
+pub struct OutputStream<'a, Req>
+where
+    Req: Serialize + Deserialize<'static> + Send + Sync,
+{
+    pub tx: Sender<&'a Req>,
 }
 
 #[async_trait::async_trait]
-impl Subscribe for OutputStream {
+impl<'a, Req> Subscribe for OutputStream<'static, Req>
+where
+    Req: Serialize + Deserialize<'static> + Send + Sync,
+{
     async fn ready(&mut self) {}
 }
 
 #[async_trait::async_trait]
-impl HostOutputStream for OutputStream {
+impl<'a, Req> HostOutputStream for OutputStream<'static, Req>
+where
+    Req: Serialize + Deserialize<'static> + Send + Sync,
+{
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to parse message");
-        let msg = serde_json::from_str::<RequestMsg>(&msg).expect("Failed to parse message");
+        let msg = serde_json::from_str::<Req>(&msg).expect("Failed to parse message");
 
-        self.tx.send(msg).expect("Failed to send message");
+        self.tx.send(&msg).expect("Failed to send message");
         Ok(())
     }
 
@@ -64,11 +81,17 @@ impl HostOutputStream for OutputStream {
     }
 }
 
-pub struct HostInputStreamBox {
-    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
+pub struct HostInputStreamBox<'a, Res>
+where
+    Res: Serialize + Deserialize<'static> + Send + Sync,
+{
+    pub tasks: Arc<Mutex<Vec<&'a Res>>>,
 }
 
-impl StdinStream for HostInputStreamBox {
+impl<'a, Res> StdinStream for HostInputStreamBox<'a, Res>
+where
+    Res: Serialize + Deserialize<'static> + Send + Sync,
+{
     fn stream(&self) -> Box<dyn HostInputStream> {
         Box::new(InputStream {
             tasks: self.tasks.clone(),
@@ -80,11 +103,14 @@ impl StdinStream for HostInputStreamBox {
     }
 }
 
-pub struct HostOutputStreamBox {
-    pub tx: Sender<RequestMsg>,
+pub struct HostOutputStreamBox<'a, Req: Serialize> {
+    pub tx: Sender<&'a Req>,
 }
 
-impl StdoutStream for HostOutputStreamBox {
+impl<'a, Req> StdoutStream for HostOutputStreamBox<'a, Req>
+where
+    Req: Serialize + Deserialize<'static> + Send + Sync,
+{
     fn stream(&self) -> Box<dyn HostOutputStream> {
         Box::new(OutputStream {
             tx: self.tx.clone(),
