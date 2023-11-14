@@ -15,7 +15,7 @@ use wasmtime_wasi::preview2::{
 use wit_component::ComponentEncoder;
 
 use crate::stream::{HostInputStreamBox, HostOutputStreamBox};
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
+use tairitsu_utils::types::proto::backend::Msg;
 
 lazy_static! {
     static ref ADAPTER: Bytes =
@@ -60,8 +60,8 @@ pub struct Container {
     pub component: Component,
     pub linker: Linker<WasiContext>,
 
-    pub tx: Sender<ResponseMsg>,
-    pub rx: Receiver<RequestMsg>,
+    pub tx: Sender<Msg>,
+    pub rx: Receiver<Msg>,
 }
 
 impl std::fmt::Debug for Container {

@@ -1,20 +1,20 @@
-use std::collections::BTreeMap;
-
-use sea_orm::ProxyExecResult;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum RequestMsg {
-    Query(String),
-    Execute(String),
-
-    Debug(String),
+pub struct Msg {
+    pub id: Uuid,
+    pub command: String,
+    pub data: Value,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum ResponseMsg {
-    Query(Vec<BTreeMap<String, serde_json::Value>>),
-    Execute(ProxyExecResult),
-
-    None,
+impl Msg {
+    pub fn new(command: impl ToString, data: impl Into<Value>) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            command: command.to_string(),
+            data: data.into(),
+        }
+    }
 }

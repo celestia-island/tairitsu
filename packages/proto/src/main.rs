@@ -1,5 +1,6 @@
 mod entity;
 
+use serde_json::Value;
 use std::{
     collections::BTreeMap,
     sync::{Arc, Mutex},
@@ -11,7 +12,7 @@ use sea_orm::{
 };
 
 use entity::post::{ActiveModel, Entity};
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
+use tairitsu_utils::types::proto::backend::Msg;
 
 #[derive(Debug)]
 struct ProxyDb {}
@@ -21,15 +22,25 @@ impl ProxyDatabaseTrait for ProxyDb {
         let sql = statement.sql.clone();
         println!(
             "{}",
-            serde_json::to_string(&RequestMsg::Query(sql)).unwrap()
+            serde_json::to_string(&Msg::new("query", sql)).unwrap()
         );
 
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        let ret: ResponseMsg = serde_json::from_str(&input).unwrap();
-        let ret = match ret {
-            ResponseMsg::Query(v) => v,
-            _ => unreachable!("Not a query result"),
+        let ret: Msg = serde_json::from_str(&input).unwrap();
+        let ret: Vec<BTreeMap<String, Value>> = if ret.command == "query" {
+            match ret.data {
+                Value::Array(v) => v
+                    .into_iter()
+                    .map(|v| match v {
+                        Value::Object(v) => v.into_iter().collect::<BTreeMap<String, Value>>(),
+                        _ => unreachable!("Not a query result"),
+                    })
+                    .collect::<Vec<BTreeMap<String, Value>>>(),
+                _ => unreachable!("Not a query result"),
+            }
+        } else {
+            unreachable!("Not a query result")
         };
 
         let mut rows: Vec<ProxyRow> = vec![];
@@ -74,17 +85,24 @@ impl ProxyDatabaseTrait for ProxyDb {
         };
 
         // Send the query to stdout
-        let msg = RequestMsg::Execute(sql);
+        let msg = Msg::new("execute", sql);
         let msg = serde_json::to_string(&msg).unwrap();
         println!("{}", msg);
 
         // Get the result from stdin
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        let ret: ResponseMsg = serde_json::from_str(&input).unwrap();
-        let ret = match ret {
-            ResponseMsg::Execute(v) => v,
-            _ => unreachable!(),
+        let ret: Msg = serde_json::from_str(&input).unwrap();
+        let ret = if ret.command == "execute" {
+            match ret.data {
+                Value::Object(v) => ProxyExecResult {
+                    last_insert_id: v["last_insert_id"].as_u64().unwrap(),
+                    rows_affected: v["rows_affected"].as_u64().unwrap(),
+                },
+                _ => unreachable!("Not an execute result"),
+            }
+        } else {
+            unreachable!("Not an execute result")
         };
 
         Ok(ret)
@@ -122,6 +140,6 @@ async fn main() {
     let list = Entity::find().all(&db).await.unwrap().to_vec();
     println!(
         "{}",
-        serde_json::to_string(&RequestMsg::Debug(format!("{:?}", list))).unwrap()
+        serde_json::to_string(&Msg::new("debug", format!("{:?}", list))).unwrap()
     );
 }

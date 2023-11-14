@@ -6,10 +6,10 @@ use wasmtime_wasi::preview2::{
     HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
-use tairitsu_utils::types::proto::backend::{RequestMsg, ResponseMsg};
+use tairitsu_utils::types::proto::backend::Msg;
 
 pub struct InputStream {
-    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
+    pub tasks: Arc<Mutex<Vec<Msg>>>,
 }
 
 #[async_trait::async_trait]
@@ -37,7 +37,7 @@ impl HostInputStream for InputStream {
 }
 
 pub struct OutputStream {
-    pub tx: Sender<RequestMsg>,
+    pub tx: Sender<Msg>,
 }
 
 #[async_trait::async_trait]
@@ -49,7 +49,7 @@ impl Subscribe for OutputStream {
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to parse message");
-        let msg = serde_json::from_str::<RequestMsg>(&msg).expect("Failed to parse message");
+        let msg = serde_json::from_str::<Msg>(&msg).expect("Failed to parse message");
 
         self.tx.send(msg).expect("Failed to send message");
         Ok(())
@@ -65,7 +65,7 @@ impl HostOutputStream for OutputStream {
 }
 
 pub struct HostInputStreamBox {
-    pub tasks: Arc<Mutex<Vec<ResponseMsg>>>,
+    pub tasks: Arc<Mutex<Vec<Msg>>>,
 }
 
 impl StdinStream for HostInputStreamBox {
@@ -81,7 +81,7 @@ impl StdinStream for HostInputStreamBox {
 }
 
 pub struct HostOutputStreamBox {
-    pub tx: Sender<RequestMsg>,
+    pub tx: Sender<Msg>,
 }
 
 impl StdoutStream for HostOutputStreamBox {
