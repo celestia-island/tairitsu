@@ -28,7 +28,7 @@ pub async fn render(req: Request<Body>, props: AppPageProps) -> Result<impl Into
         let style_manager = StyleManager::builder().writer(writer).build().unwrap();
         AppProps {
             style_manager,
-            url: uri.into(),
+            uri: uri.into(),
             queries: req.uri().query().map_or_else(HashMap::new, |q| {
                 url::form_urlencoded::parse(q.as_bytes())
                     .into_owned()

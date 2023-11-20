@@ -48,7 +48,9 @@ impl Subscribe for OutputStream {
 #[async_trait::async_trait]
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
-        let msg = String::from_utf8(bytes.to_vec()).expect("Failed to parse message");
+        // TODO - Add the buffer to deal the messages what are too long.
+
+        let msg = String::from_utf8(bytes.to_vec()).expect("Failed to receive message");
         let msg = serde_json::from_str::<Msg>(&msg).expect("Failed to parse message");
 
         self.tx.send(msg).expect("Failed to send message");
