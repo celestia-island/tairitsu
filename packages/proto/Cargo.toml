@@ -22,3 +22,6 @@ yew = { git = "https://github.com/langyo/yew", branch = "wasi-support-test", fea
   "hydration",
   "wasi",
 ] }
+yew-router = { git = "https://github.com/langyo/yew", branch = "wasi-support-test", features = [
+  "wasi",
+] }

@@ -1,12 +1,40 @@
+#![allow(unused_imports)]
+#![allow(non_snake_case)]
+
 use anyhow::Result;
 
-use yew::{function_component, prelude::*, ServerRenderer};
+use yew::prelude::*;
+use yew::{function_component, ServerRenderer};
+
+use super::router::{switch, Route};
+
+#[function_component]
+fn Content() -> Html {
+    use yew_router::prelude::*;
+
+    html! {
+        <>
+            <h1>{"Yew WASI SSR demo"}</h1>
+            <Switch<Route> render={switch} />
+        </>
+    }
+}
 
 #[function_component]
 fn App() -> Html {
+    use yew_router::{
+        history::{AnyHistory, History, MemoryHistory},
+        prelude::*,
+    };
+
+    let history = AnyHistory::from(MemoryHistory::new());
+    history.push("/");
+
     html! {
         <div>
-            {"Hello, World!"}
+            <Router history={history}>
+                <Content />
+            </Router>
         </div>
     }
 }
