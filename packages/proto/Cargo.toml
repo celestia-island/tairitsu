@@ -17,3 +17,8 @@ tokio_wasi = { version = "^1", features = ["full"] }
 sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
   "proxy",
 ] }
+yew = { git = "https://github.com/langyo/yew", branch = "wasi-support-test", features = [
+  "ssr",
+  "hydration",
+  "wasi",
+] }
