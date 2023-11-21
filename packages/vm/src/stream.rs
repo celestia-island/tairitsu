@@ -38,6 +38,7 @@ impl HostInputStream for InputStream {
 
 pub struct OutputStream {
     pub tx: Sender<Msg>,
+    pub buffer: String,
 }
 
 #[async_trait::async_trait]
@@ -48,12 +49,14 @@ impl Subscribe for OutputStream {
 #[async_trait::async_trait]
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
-        // TODO - Add the buffer to deal the messages what are too long.
-
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to receive message");
-        let msg = serde_json::from_str::<Msg>(&msg).expect("Failed to parse message");
+        self.buffer.push_str(&msg);
+        if let Ok(msg) = serde_json::from_str::<Msg>(&self.buffer) {
+            self.tx.send(msg).expect("Failed to send message");
+            self.buffer.clear();
+            return Ok(());
+        }
 
-        self.tx.send(msg).expect("Failed to send message");
         Ok(())
     }
 
@@ -62,7 +65,8 @@ impl HostOutputStream for OutputStream {
     }
 
     fn check_write(&mut self) -> StreamResult<usize> {
-        Ok(8192)
+        // Fixed by wasmtime's wasi implementation.
+        Ok(4096)
     }
 }
 
@@ -90,6 +94,7 @@ impl StdoutStream for HostOutputStreamBox {
     fn stream(&self) -> Box<dyn HostOutputStream> {
         Box::new(OutputStream {
             tx: self.tx.clone(),
+            buffer: String::new(),
         })
     }
 
