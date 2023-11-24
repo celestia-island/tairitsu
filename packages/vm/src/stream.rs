@@ -3,7 +3,8 @@ use flume::Sender;
 use std::sync::{Arc, Mutex};
 
 use wasmtime_wasi::preview2::{
-    HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
+    HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamError, StreamResult,
+    Subscribe,
 };
 
 use tairitsu_utils::types::proto::backend::Msg;
@@ -51,13 +52,19 @@ impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
         let msg = String::from_utf8(bytes.to_vec()).expect("Failed to receive message");
         self.buffer.push_str(&msg);
-        if let Ok(msg) = serde_json::from_str::<Msg>(&self.buffer) {
-            self.tx.send(msg).expect("Failed to send message");
-            self.buffer.clear();
+
+        // Check if the last character is '\n'
+        if !self.buffer.ends_with('\n') {
             return Ok(());
         }
 
-        Ok(())
+        if let Ok(msg) = serde_json::from_str::<Msg>(&self.buffer) {
+            self.tx.send(msg).expect("Failed to send message");
+            self.buffer.clear();
+            Ok(())
+        } else {
+            Err(StreamError::LastOperationFailed(anyhow::anyhow!("Failed to parse message")).into())
+        }
     }
 
     fn flush(&mut self) -> StreamResult<()> {
