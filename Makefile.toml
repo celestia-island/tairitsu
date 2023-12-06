@@ -2,10 +2,10 @@
 default_to_workspace = false
 skip_core_tasks = true
 
-[tasks.build]
+[tasks.run]
 script = '''
 #!@duckscript
 
-exec cargo build --target wasm32-wasi --release --package tairitsu-proto
-exec cargo build --package tairitsu-vm
+exec cargo build --target wasm32-wasi --release --package tairitsu-example-guest-side
+exec cargo run --package tairitsu-example-host-side
 '''
