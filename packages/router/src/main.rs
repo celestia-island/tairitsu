@@ -2,8 +2,9 @@ mod routes;
 
 use anyhow::Result;
 use log::info;
+use tokio::net::TcpListener;
 
-use hyper::server::Server;
+use axum::serve;
 use tower::ServiceBuilder;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use yew::platform::Runtime;
@@ -56,11 +57,11 @@ async fn main() -> Result<()> {
 
     let router = route().await?.layer(middleware_stack);
 
-    info!("Site will run on port {}", port);
-
-    Server::bind(&format!("0.0.0.0:{}", port).parse()?)
-        .serve(router.into_make_service())
-        .await?;
+    info!("Site will run on port {port}");
+    let listener = TcpListener::bind(format!("0.0.0.0:{port}"))
+        .await
+        .expect("Failed to bind");
+    serve(listener, router).await?;
 
     Ok(())
 }

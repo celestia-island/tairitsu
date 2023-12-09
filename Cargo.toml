@@ -9,5 +9,4 @@ codegen-units = 1
 panic = "abort"
 
 [patch.crates-io]
-gloo = { git = "https://github.com/langyo/gloo", branch = "wasi-fix" }
 prokio = { git = "https://github.com/langyo/prokio", branch = "wasi-fix" }
