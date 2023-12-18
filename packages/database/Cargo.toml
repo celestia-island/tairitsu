@@ -7,7 +7,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-tairitsu-utils = { path = "../utils", version = "*" }
+tairitsu-utils = { path = "../utils" }
 
 anyhow = "^1"
 chrono = { version = "^0.4", features = ["serde", "unstable-locales"] }
