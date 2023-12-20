@@ -23,7 +23,5 @@ uuid = "^1"
 wit-component = "^0.19"
 wasmtime = { version = "^15", features = ["component-model"] }
 wasmtime-wasi = "^15"
-sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
-  "proxy",
-] }
+sea-orm = { version = "^0.12", features = ["proxy"] }
 gluesql = { version = "^0.15" }

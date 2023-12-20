@@ -15,8 +15,6 @@ anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt", "time"] }
 
 sqlparser = "^0.40"
-sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "proxy-conn", features = [
-  "proxy",
-] }
+sea-orm = { version = "^0.12", features = ["proxy"] }
 yew = { version = "^0.21", features = ["ssr"] }
 yew-router = "^0.18"
