@@ -6,7 +6,7 @@ use tairitsu_utils::types::proto::{ResponsePackage, ResponseStruct};
 
 pub fn generate_ok_message() -> Result<String, (StatusCode, String)> {
     let ret = ResponsePackage::Data(vec![ResponseStruct::Ok]);
-    to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+    to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
 }
 
 pub fn generate_error_message(message: String) -> (StatusCode, String) {

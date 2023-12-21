@@ -63,7 +63,9 @@ impl HostOutputStream for OutputStream {
             self.buffer.clear();
             Ok(())
         } else {
-            Err(StreamError::LastOperationFailed(anyhow::anyhow!("Failed to parse message")).into())
+            Err(StreamError::LastOperationFailed(anyhow::anyhow!(
+                "Failed to parse message"
+            )))
         }
     }
 

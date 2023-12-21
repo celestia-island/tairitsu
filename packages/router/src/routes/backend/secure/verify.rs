@@ -19,12 +19,12 @@ pub async fn verify(Json(item): Json<RequestPackage>) -> Result<String, (StatusC
 
     let storage = functions::filter_by_name(item.name)
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
     if item.token == storage.token {
         let ret = ResponsePackage::Data(vec![ResponseType(UuidData {
             uuid: storage.token,
         })]);
-        to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+        to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
     } else {
         Err(generate_error_message("Invalid token".to_string()))
     }

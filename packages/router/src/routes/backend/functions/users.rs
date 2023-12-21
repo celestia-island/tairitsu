@@ -18,20 +18,20 @@ async fn query(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode, 
 
     let ret = functions::query(item.uuid)
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
 
     let ret = ResponsePackage::Data(vec![ResponseStruct::UserInfo(ret.into())]);
-    to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+    to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
 }
 
 async fn count() -> Result<String, (StatusCode, String)> {
     let ret = functions::count()
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
     let ret = Count { count: ret };
 
     let ret = ResponsePackage::Data(vec![ResponseStruct::Count(ret)]);
-    to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+    to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
 }
 
 async fn list(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode, String)> {
@@ -42,14 +42,14 @@ async fn list(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode, S
 
     let ret = functions::list(cond.offset, cond.limit)
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
 
     let ret = ResponsePackage::Data(
         ret.iter()
             .map(|item| ResponseStruct::UserInfo(item.clone().into()))
             .collect(),
     );
-    to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+    to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
 }
 
 async fn update(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode, String)> {
@@ -60,7 +60,7 @@ async fn update(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode,
 
     functions::update(item.into())
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
 
     generate_ok_message()
 }
@@ -73,7 +73,7 @@ async fn delete(Json(item): Json<RequestPackage>) -> Result<String, (StatusCode,
 
     functions::delete(item.uuid)
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
 
     generate_ok_message()
 }

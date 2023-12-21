@@ -116,7 +116,7 @@ async fn main() -> Result<()> {
                                     },
                                 );
                             }
-                            ret.push(map.into());
+                            ret.push(map);
                         }
                     }
                     _ => unreachable!("Unsupported payload: {:?}", payload),

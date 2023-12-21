@@ -91,7 +91,7 @@ impl Image {
                 .precompile_component(component.as_ref())
                 .expect("Cannot compile module"),
         );
-        let component = unsafe { Component::deserialize(&engine, &cwasm.as_ref()).unwrap() };
+        let component = unsafe { Component::deserialize(&engine, cwasm.as_ref()).unwrap() };
 
         Self { engine, component }
     }

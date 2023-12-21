@@ -21,7 +21,7 @@ lazy_static! {
     static ref ROOT_DIR: PathBuf = {
         let root_dir = std::env::var("ROOT_DIR")
             .ok()
-            .and_then(|dir| Some(Path::new(&dir).to_path_buf()))
+            .map(|dir| Path::new(&dir).to_path_buf())
             .unwrap_or(std::env::current_dir().unwrap().join("packages/router/res"));
         info!(r#"Root dir is "{}""#, root_dir.display());
         root_dir

@@ -26,18 +26,18 @@ pub async fn login(Json(item): Json<RequestPackage>) -> Result<String, (StatusCo
 
     let mut storage = functions::filter_by_name(item.name)
         .await
-        .or_else(|e| Err(generate_error_message(e.to_string())))?;
+        .map_err(|e| generate_error_message(e.to_string()))?;
     if crypt_verify(item.password_hash, storage.password_hash.clone())
-        .or_else(|e| Err(generate_error_message(e.to_string())))?
+        .map_err(|e| generate_error_message(e.to_string()))?
     {
         let new_token = Uuid::new_v4();
-        storage.token = new_token.clone();
+        storage.token = new_token.to_owned();
         functions::update(storage)
             .await
-            .or_else(|e| Err(generate_error_message(e.to_string())))?;
+            .map_err(|e| generate_error_message(e.to_string()))?;
 
         let ret = ResponsePackage::Data(vec![ResponseType(UuidData { uuid: new_token })]);
-        to_string(&ret).or_else(|e| Err(generate_error_message(e.to_string())))
+        to_string(&ret).map_err(|e| generate_error_message(e.to_string()))
     } else {
         Err(generate_error_message("Wrong password".to_string()))
     }
