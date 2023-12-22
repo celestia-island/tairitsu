@@ -3,8 +3,7 @@ use flume::Sender;
 use std::sync::{Arc, Mutex};
 
 use wasmtime_wasi::preview2::{
-    HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamError, StreamResult,
-    Subscribe,
+    HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
 use tairitsu_utils::types::proto::backend::Msg;
@@ -39,7 +38,7 @@ impl HostInputStream for InputStream {
 
 pub struct OutputStream {
     pub tx: Sender<Msg>,
-    pub buffer: String,
+    pub buffer: Vec<Bytes>,
 }
 
 #[async_trait::async_trait]
@@ -50,23 +49,22 @@ impl Subscribe for OutputStream {
 #[async_trait::async_trait]
 impl HostOutputStream for OutputStream {
     fn write(&mut self, bytes: Bytes) -> StreamResult<()> {
-        let msg = String::from_utf8(bytes.to_vec()).expect("Failed to receive message");
-        self.buffer.push_str(&msg);
+        self.buffer.push(bytes);
 
-        // Check if the last character is '\n'
-        if !self.buffer.ends_with('\n') {
-            return Ok(());
+        if let Some(last) = self.buffer.last() {
+            // Check if the last character is '\n'
+            if last.last() == Some(&b'\n') {
+                let bytes_combined = Bytes::from(self.buffer.concat());
+                let buffer = String::from_utf8(bytes_combined.to_vec()).unwrap();
+
+                self.buffer.clear();
+                if let Ok(msg) = serde_json::from_str::<Msg>(&buffer) {
+                    self.tx.send(msg).expect("Failed to send message");
+                }
+            }
         }
 
-        if let Ok(msg) = serde_json::from_str::<Msg>(&self.buffer) {
-            self.tx.send(msg).expect("Failed to send message");
-            self.buffer.clear();
-            Ok(())
-        } else {
-            Err(StreamError::LastOperationFailed(anyhow::anyhow!(
-                "Failed to parse message"
-            )))
-        }
+        Ok(())
     }
 
     fn flush(&mut self) -> StreamResult<()> {
@@ -103,7 +101,7 @@ impl StdoutStream for HostOutputStreamBox {
     fn stream(&self) -> Box<dyn HostOutputStream> {
         Box::new(OutputStream {
             tx: self.tx.clone(),
-            buffer: String::new(),
+            buffer: vec![],
         })
     }
 
