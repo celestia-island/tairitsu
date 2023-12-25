@@ -18,3 +18,25 @@ impl Msg {
         }
     }
 }
+
+pub mod wasi {
+    use super::Msg;
+    use anyhow::Result;
+
+    pub fn read() -> Result<Msg> {
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input).unwrap();
+        let msg: Msg = serde_json::from_str(&input).unwrap();
+
+        Ok(msg)
+    }
+
+    pub fn write(channel: impl ToString, content: impl ToString) -> Result<()> {
+        println!(
+            "{}",
+            serde_json::to_string(&Msg::new(channel.to_string(), content.to_string()))?
+        );
+
+        Ok(())
+    }
+}
