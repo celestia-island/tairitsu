@@ -19,8 +19,7 @@ chrono = { version = "^0.4", features = [
 log = "^0.4"
 serde = { version = "^1", features = ["derive"] }
 serde_json = { version = "^1" }
-strum = "^0.25"
-strum_macros = "^0.25"
+strum = { version = "^0.26", features = ["derive"] }
 uuid = { version = "^1", features = [
   'v4',
   'fast-rng',
@@ -29,4 +28,4 @@ uuid = { version = "^1", features = [
 ] }
 
 bcrypt = "^0.15"
-sea-orm = { version = "^0.12", features = ["proxy"] }
+sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tairitsu_utils::types::functions::{Permission as DTOPermission, UserType as DTO};
 
 #[derive(Clone, Debug, PartialEq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
-#[sea_orm(rs_type = "String", db_type = "String(Some(1))")]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::N(16))")]
 pub enum Permission {
     #[sea_orm(string_value = "root")]
     Root,

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use strum_macros::{Display, EnumIter};
+use strum::{Display, EnumIter};
 use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug, PartialEq, EnumIter, Deserialize, Serialize, Display)]

@@ -11,11 +11,10 @@ tairitsu-utils = { path = "../utils" }
 
 anyhow = "^1"
 chrono = { version = "^0.4", features = ["serde", "unstable-locales"] }
-env_logger = "^0.10"
+env_logger = "^0.11"
 lazy_static = "*"
 log = "^0.4"
-strum = "^0.25"
-strum_macros = "^0.25"
+strum = { version = "^0.26", features = ["derive"] }
 uuid = { version = "^1", features = [
   'v4',
   'fast-rng',
@@ -23,7 +22,7 @@ uuid = { version = "^1", features = [
   'serde',
 ] }
 
-sea-orm-migration = "^0.12"
+sea-orm-migration = "1.0.0-rc.3"
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 async-std = { version = "^1", features = ["attributes", "tokio1"] }
@@ -36,4 +35,4 @@ features = [
   "with-chrono",
   "with-json",
 ]
-version = "^0.12"
+version = "1.0.0-rc.3"

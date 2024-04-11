@@ -20,7 +20,7 @@ pub struct LimitOffset {
 
 pub mod filter {
     use serde::{Deserialize, Serialize};
-    use strum_macros::{Display, EnumString};
+    use strum::{Display, EnumString};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct FilterPackage {

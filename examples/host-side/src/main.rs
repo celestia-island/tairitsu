@@ -13,9 +13,10 @@ use tairitsu_vm::Image;
 
 #[async_std::main]
 async fn main() -> Result<()> {
-    let bin = Bytes::from_static(include_bytes!(
-        "../../../target/wasm32-wasi/release/tairitsu-example-guest-side.wasm"
-    ));
+    let bin = Bytes::from(std::fs::read(format!(
+        "{}/../../target/wasm32-wasi/release/tairitsu-example-guest-side.wasm",
+        env!("CARGO_MANIFEST_DIR")
+    ))?);
 
     // Create the database connection
     println!("Creating database connection...");
@@ -41,8 +42,8 @@ async fn main() -> Result<()> {
 
     let tx = container.tx.clone();
     let rx = container.rx.clone();
-    std::thread::spawn(move || {
-        container.run().unwrap();
+    async_std::task::spawn(async move {
+        container.run().await.unwrap();
     });
 
     while let Ok(msg) = rx.recv() {
@@ -138,8 +139,11 @@ async fn main() -> Result<()> {
             };
 
             println!("VM Debug: {}", msg);
+        } else {
+            unreachable!("Unknown command: {:?}", msg.command);
         }
     }
 
+    println!("Will exit...");
     Ok(())
 }
