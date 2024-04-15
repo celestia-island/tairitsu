@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
     let tx = container.tx.clone();
     let rx = container.rx.clone();
     async_std::task::spawn(async move {
-        container.run().await.unwrap();
+        container.run().unwrap();
     });
 
     while let Ok(msg) = rx.recv() {

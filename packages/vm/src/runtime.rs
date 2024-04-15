@@ -8,9 +8,9 @@ use wasmtime::{
     component::{Component, Linker},
     Config, Engine, Store,
 };
-use wasmtime_wasi::preview2::{
+use wasmtime_wasi::{
     command::{self, sync::Command},
-    Table, WasiCtx, WasiCtxBuilder, WasiView,
+    ResourceTable, WasiCtx, WasiCtxBuilder, WasiView,
 };
 use wit_component::ComponentEncoder;
 
@@ -24,20 +24,14 @@ lazy_static! {
 
 pub struct WasiContext {
     wasi: WasiCtx,
-    table: Table,
+    table: ResourceTable,
 }
 
 impl WasiView for WasiContext {
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
 }
@@ -123,7 +117,7 @@ impl Image {
         wasi.stdout(output_stream);
 
         let wasi = wasi.build();
-        let table = Table::new();
+        let table = ResourceTable::new();
         let store = Store::new(&self.engine, WasiContext { wasi, table });
 
         Ok(Container {

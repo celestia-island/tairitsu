@@ -2,7 +2,7 @@ use bytes::Bytes;
 use flume::Sender;
 use std::sync::{Arc, Mutex};
 
-use wasmtime_wasi::preview2::{
+use wasmtime_wasi::{
     HostInputStream, HostOutputStream, StdinStream, StdoutStream, StreamResult, Subscribe,
 };
 
