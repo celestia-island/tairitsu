@@ -25,3 +25,5 @@ wasmtime = { version = "^19", features = ["component-model", "async"] }
 wasmtime-wasi = "^19"
 sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }
 gluesql = { version = "^0.15" }
+
+cap-std = "^3"

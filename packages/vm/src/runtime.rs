@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use bytes::Bytes;
+use cap_std::ambient_authority;
 use flume::{Receiver, Sender};
 use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
@@ -10,7 +11,7 @@ use wasmtime::{
 };
 use wasmtime_wasi::{
     command::{self, sync::Command},
-    ResourceTable, WasiCtx, WasiCtxBuilder, WasiView,
+    DirPerms, FilePerms, ResourceTable, WasiCtx, WasiCtxBuilder, WasiView,
 };
 use wit_component::ComponentEncoder;
 
@@ -115,6 +116,19 @@ impl Image {
 
         wasi.stdin(input_stream);
         wasi.stdout(output_stream);
+
+        // TODO - This is a temporary solution to make the example work
+
+        wasi.preopened_dir(
+            cap_std::fs::Dir::open_ambient_dir("./target", ambient_authority()).unwrap(),
+            DirPerms::all(),
+            FilePerms::all(),
+            "/tmp",
+        );
+        wasi.inherit_network();
+        wasi.allow_ip_name_lookup(true);
+        wasi.allow_tcp(true);
+        wasi.allow_udp(true);
 
         let wasi = wasi.build();
         let table = ResourceTable::new();

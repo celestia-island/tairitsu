@@ -18,3 +18,5 @@ sqlparser = "^0.40"
 sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }
 yew = { version = "^0.21", features = ["ssr"] }
 yew-router = "^0.18"
+
+wasi = "0.13.0+wasi-0.2.0"
