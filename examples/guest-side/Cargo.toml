@@ -14,9 +14,9 @@ serde_json = "^1"
 anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt", "time"] }
 
-sqlparser = "^0.40"
+sqlparser = "^0.45"
 sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }
 yew = { version = "^0.21", features = ["ssr"] }
 yew-router = "^0.18"
 
-wasi = "0.13.0+wasi-0.2.0"
+wasi = "0.13.0"

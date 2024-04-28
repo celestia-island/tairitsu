@@ -1,6 +1,5 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 use bytes::Bytes;
-use cap_std::ambient_authority;
 use flume::{Receiver, Sender};
 use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
@@ -10,8 +9,8 @@ use wasmtime::{
     Config, Engine, Store,
 };
 use wasmtime_wasi::{
-    command::{self, sync::Command},
-    DirPerms, FilePerms, ResourceTable, WasiCtx, WasiCtxBuilder, WasiView,
+    add_to_linker_sync, bindings::sync::Command, DirPerms, FilePerms, ResourceTable, WasiCtx,
+    WasiCtxBuilder, WasiView,
 };
 use wit_component::ComponentEncoder;
 
@@ -93,7 +92,7 @@ impl Image {
 
     pub fn init(&self) -> Result<Container> {
         let mut linker = Linker::new(&self.engine);
-        command::sync::add_to_linker(&mut linker).unwrap();
+        add_to_linker_sync(&mut linker)?;
 
         let mut wasi = WasiCtxBuilder::new();
         wasi.inherit_stderr();
@@ -119,12 +118,7 @@ impl Image {
 
         // TODO - This is a temporary solution to make the example work
 
-        wasi.preopened_dir(
-            cap_std::fs::Dir::open_ambient_dir("./target", ambient_authority()).unwrap(),
-            DirPerms::all(),
-            FilePerms::all(),
-            "/tmp",
-        );
+        wasi.preopened_dir("./target/tmp", "/tmp", DirPerms::all(), FilePerms::all())?;
         wasi.inherit_network();
         wasi.allow_ip_name_lookup(true);
         wasi.allow_tcp(true);
@@ -148,12 +142,13 @@ impl Image {
 impl Container {
     pub fn run(&mut self) -> Result<()> {
         let mut store = self.store.lock().unwrap();
-        let (command, _) = Command::instantiate(&mut *store, &self.component, &self.linker)?;
+        let (command, _instance) =
+            Command::instantiate(&mut *store, &self.component, &mut self.linker)?;
 
-        command
+        let _ = command
             .wasi_cli_run()
-            .call_run(&mut *store)?
-            .map_err(|()| anyhow!("guest command returned error"))?;
+            .call_run(&mut *store)
+            .context("Failed to run the command")?;
 
         Ok(())
     }

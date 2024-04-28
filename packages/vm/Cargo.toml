@@ -21,8 +21,8 @@ async-std = { version = "^1", features = ["attributes", "tokio1"] }
 uuid = "^1"
 
 wit-component = "*"
-wasmtime = { version = "^19", features = ["component-model", "async"] }
-wasmtime-wasi = "^19"
+wasmtime = { version = "^20", features = ["component-model", "async"] }
+wasmtime-wasi = "^20"
 sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }
 gluesql = { version = "^0.15" }
 
