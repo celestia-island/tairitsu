@@ -23,7 +23,7 @@ uuid = "^1"
 wit-component = "*"
 wasmtime = { version = "^20", features = ["component-model", "async"] }
 wasmtime-wasi = "^20"
-sea-orm = { version = "1.0.0-rc.3", features = ["proxy"] }
+sea-orm = { version = "1.0.0-rc.4", features = ["proxy"] }
 gluesql = { version = "^0.15" }
 
 cap-std = "^3"
