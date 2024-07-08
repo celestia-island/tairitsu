@@ -13,3 +13,4 @@ yew = { git = "https://github.com/langyo/yew", branch = "wasi-support-test" }
 yew-router = { git = "https://github.com/langyo/yew", branch = "wasi-support-test" }
 stylist = { git = "https://github.com/langyo/stylist-rs", branch = "wasi-support" }
 prokio = { git = "https://github.com/langyo/prokio", branch = "wasi-fix" }
+sea-orm = { git = "https://github.com/langyo/sea-orm", branch = "async-proxy-conn" }
