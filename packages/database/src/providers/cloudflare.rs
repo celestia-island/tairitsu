@@ -21,7 +21,11 @@ impl std::fmt::Debug for ProxyDb {
 }
 
 impl ProxyDb {
-    async fn do_query(env: Arc<Env>, statement: Statement) -> Result<Vec<ProxyRow>> {
+    async fn do_query(
+        env: Arc<Env>,
+        db_name: String,
+        statement: Statement,
+    ) -> Result<Vec<ProxyRow>> {
         let sql = statement.sql.clone();
         let values = match statement.values {
             Some(Values(values)) => values
@@ -63,7 +67,7 @@ impl ProxyDb {
         };
 
         let ret = env
-            .d1(self.db_name.clone())?
+            .d1(db_name.as_str())?
             .prepare(sql)
             .bind(&values)?
             .all()
@@ -105,7 +109,11 @@ impl ProxyDb {
         Ok(ret)
     }
 
-    async fn do_execute(env: Arc<Env>, statement: Statement) -> Result<ProxyExecResult> {
+    async fn do_execute(
+        env: Arc<Env>,
+        db_name: String,
+        statement: Statement,
+    ) -> Result<ProxyExecResult> {
         let sql = statement.sql.clone();
         let values = match statement.values {
             Some(Values(values)) => values
@@ -147,7 +155,7 @@ impl ProxyDb {
         };
 
         let ret = env
-            .d1(self.db_name.clone())?
+            .d1(db_name.as_str())?
             .prepare(sql)
             .bind(&values)?
             .run()
@@ -174,9 +182,10 @@ impl ProxyDb {
 impl ProxyDatabaseTrait for ProxyDb {
     async fn query(&self, statement: Statement) -> Result<Vec<ProxyRow>, DbErr> {
         let env = self.env.clone();
+        let db_name = self.db_name.clone();
         let (tx, rx) = oneshot::channel();
         wasm_bindgen_futures::spawn_local(async move {
-            let ret = Self::do_query(env, statement).await;
+            let ret = Self::do_query(env, db_name, statement).await;
             tx.send(ret).unwrap();
         });
 
@@ -186,9 +195,10 @@ impl ProxyDatabaseTrait for ProxyDb {
 
     async fn execute(&self, statement: Statement) -> Result<ProxyExecResult, DbErr> {
         let env = self.env.clone();
+        let db_name = self.db_name.clone();
         let (tx, rx) = oneshot::channel();
         wasm_bindgen_futures::spawn_local(async move {
-            let ret = Self::do_execute(env, statement).await;
+            let ret = Self::do_execute(env, db_name, statement).await;
             tx.send(ret).unwrap();
         });
 
