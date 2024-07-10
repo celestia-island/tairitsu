@@ -25,6 +25,8 @@ uuid = { version = "^1", features = [
   'macro-diagnostics',
   'serde',
 ] }
+
+async-trait = "^0.1"
 oneshot = "^0.1"
 
 [dependencies.sea-orm]
