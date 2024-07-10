@@ -10,11 +10,13 @@ use worker::Env;
 
 struct ProxyDb {
     env: Arc<Env>,
+    db_name: String,
 }
 
 impl std::fmt::Debug for ProxyDb {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ProxyDb").finish()
+        f.debug_struct(format!("[ProxyDb] {}", self.db_name).as_str())
+            .finish()
     }
 }
 
@@ -60,7 +62,12 @@ impl ProxyDb {
             None => Vec::new(),
         };
 
-        let ret = env.d1("test-d1")?.prepare(sql).bind(&values)?.all().await?;
+        let ret = env
+            .d1(self.db_name.clone())?
+            .prepare(sql)
+            .bind(&values)?
+            .all()
+            .await?;
         if let Some(message) = ret.error() {
             return Err(anyhow!(message.to_string()));
         }
@@ -140,7 +147,7 @@ impl ProxyDb {
         };
 
         let ret = env
-            .d1("test-d1")?
+            .d1(self.db_name.clone())?
             .prepare(sql)
             .bind(&values)?
             .run()
@@ -190,10 +197,13 @@ impl ProxyDatabaseTrait for ProxyDb {
     }
 }
 
-pub async fn init_db(env: Arc<Env>) -> Result<DatabaseConnection> {
-    let db = Database::connect_proxy(DbBackend::Sqlite, Arc::new(Box::new(ProxyDb { env })))
-        .await
-        .context("Failed to connect to database")?;
+pub async fn init_db(env: Arc<Env>, db_name: String) -> Result<DatabaseConnection> {
+    let db = Database::connect_proxy(
+        DbBackend::Sqlite,
+        Arc::new(Box::new(ProxyDb { env, db_name })),
+    )
+    .await
+    .context("Failed to connect to database")?;
 
     Ok(db)
 }
