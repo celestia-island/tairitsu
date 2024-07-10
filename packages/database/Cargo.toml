@@ -43,5 +43,4 @@ cloudflare = [
   "dep:wasm-bindgen-futures",
   "dep:worker",
   "sea-orm/proxy",
-  "sea-orm/sqlx-sqlite",
 ]
