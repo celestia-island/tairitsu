@@ -98,7 +98,7 @@ impl ProxyDb {
                             serde_json::Value::String(val) => {
                                 Value::String(Some(Box::new(val.clone())))
                             }
-                            _ => unreachable!("Unsupported JSON value"),
+                            _ => Value::Json(Some(Box::new(value.clone()))),
                         },
                     );
                 }
