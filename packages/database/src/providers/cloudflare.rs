@@ -59,6 +59,15 @@ impl ProxyDb {
                     Value::ChronoDateTimeLocal(Some(val)) => JsValue::from(val.to_string()),
                     Value::ChronoDateTimeUtc(Some(val)) => JsValue::from(val.to_string()),
                     Value::ChronoDateTimeWithTimeZone(Some(val)) => JsValue::from(val.to_string()),
+                    Value::ChronoTime(Some(val)) => JsValue::from(val.to_string()),
+                    Value::TimeDate(Some(val)) => JsValue::from(val.to_string()),
+                    Value::TimeDateTime(Some(val)) => JsValue::from(val.to_string()),
+                    Value::TimeDateTimeWithTimeZone(Some(val)) => JsValue::from(val.to_string()),
+                    Value::TimeTime(Some(val)) => JsValue::from(val.to_string()),
+
+                    Value::BigDecimal(Some(val)) => JsValue::from(val.to_string()),
+                    Value::Decimal(Some(val)) => JsValue::from(val.to_string()),
+                    Value::Uuid(Some(val)) => JsValue::from(val.to_string()),
 
                     _ => JsValue::NULL,
                 })
