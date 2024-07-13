@@ -12,8 +12,11 @@ pub use sled::*;
 #[cfg(feature = "wasi")]
 pub use wasmtime_wasi::*;
 
+use anyhow::Result;
+
+#[async_trait::async_trait]
 pub trait KVStore {
-    async fn get(&self, key: impl ToString) -> Option<String>;
-    async fn set(&self, key: impl ToString, value: impl ToString);
-    async fn delete(&self, key: impl ToString);
+    async fn get(&self, key: String) -> Result<Option<String>>;
+    async fn set(&self, key: String, value: String) -> Result<()>;
+    async fn delete(&self, key: String) -> Result<()>;
 }

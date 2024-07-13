@@ -40,7 +40,7 @@ wasm-bindgen-futures = { version = "^0.4", optional = true }
 worker = { version = "0.3.0", features = ["d1"], optional = true }
 
 [features]
-default = []
+default = ["cloudflare"]
 cloudflare = [
   "dep:wasm-bindgen",
   "dep:wasm-bindgen-futures",
