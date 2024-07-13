@@ -1,22 +1,28 @@
-pub mod entity;
-
+use anyhow::{Context, Result};
 use serde_json::Value;
 use std::{collections::BTreeMap, sync::Arc};
 
 use sea_orm::{
-    ActiveValue::Set, Database, DbBackend, DbErr, EntityTrait, ProxyDatabaseTrait, ProxyExecResult,
-    ProxyRow, Statement,
+    Database, DatabaseConnection, DbBackend, DbErr, ProxyDatabaseTrait, ProxyExecResult, ProxyRow,
+    RuntimeErr, Statement,
 };
+use sqlparser::ast::Insert;
 
-use entity::post::{ActiveModel, Entity};
 use tairitsu_utils::types::proto::backend::Msg;
 
-#[derive(Debug)]
-struct ProxyDb {}
+struct ProxyDb {
+    db_name: String,
+}
 
-#[async_trait::async_trait]
-impl ProxyDatabaseTrait for ProxyDb {
-    async fn query(&self, statement: Statement) -> Result<Vec<ProxyRow>, DbErr> {
+impl std::fmt::Debug for ProxyDb {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct(format!("[ProxyDb] {}", self.db_name).as_str())
+            .finish()
+    }
+}
+
+impl ProxyDb {
+    async fn do_query(statement: Statement) -> Result<Vec<ProxyRow>> {
         let sql = statement.sql.clone();
         println!(
             "{}",
@@ -63,7 +69,7 @@ impl ProxyDatabaseTrait for ProxyDb {
         Ok(rows)
     }
 
-    async fn execute(&self, statement: Statement) -> Result<ProxyExecResult, DbErr> {
+    async fn do_execute(statement: Statement) -> Result<ProxyExecResult> {
         let sql = {
             if let Some(values) = statement.values {
                 // Replace all the '?' with the statement values
@@ -74,9 +80,9 @@ impl ProxyDatabaseTrait for ProxyDb {
                 let dialect = GenericDialect {};
                 let mut ast = Parser::parse_sql(&dialect, statement.sql.as_str()).unwrap();
                 match &mut ast[0] {
-                    sqlparser::ast::Statement::Insert {
+                    sqlparser::ast::Statement::Insert(Insert {
                         columns, source, ..
-                    } => {
+                    }) => {
                         for item in columns.iter_mut() {
                             item.quote_style = Some('"');
                         }
@@ -146,33 +152,30 @@ impl ProxyDatabaseTrait for ProxyDb {
     }
 }
 
-pub async fn init() {
-    let db = Database::connect_proxy(DbBackend::Sqlite, Arc::new(Box::new(ProxyDb {})))
-        .await
-        .unwrap();
+#[async_trait::async_trait]
+impl ProxyDatabaseTrait for ProxyDb {
+    async fn query(&self, statement: Statement) -> Result<Vec<ProxyRow>, DbErr> {
+        let ret = Self::do_query(statement).await;
 
-    let data = ActiveModel {
-        title: Set("Homo".to_owned()),
-        text: Set("いいよ、来いよ".to_owned()),
-        ..Default::default()
-    };
-    Entity::insert(data).exec(&db).await.unwrap();
-    let data = ActiveModel {
-        title: Set("Homo".to_owned()),
-        text: Set("そうだよ".to_owned()),
-        ..Default::default()
-    };
-    Entity::insert(data).exec(&db).await.unwrap();
-    let data = ActiveModel {
-        title: Set("Homo".to_owned()),
-        text: Set("悔い改めて".to_owned()),
-        ..Default::default()
-    };
-    Entity::insert(data).exec(&db).await.unwrap();
+        ret.map_err(|err| DbErr::Conn(RuntimeErr::Internal(err.to_string())))
+    }
 
-    let list = Entity::find().all(&db).await.unwrap().to_vec();
-    println!(
-        "{}",
-        serde_json::to_string(&Msg::new("debug", format!("{:?}", list))).unwrap()
-    );
+    async fn execute(&self, statement: Statement) -> Result<ProxyExecResult, DbErr> {
+        let ret = Self::do_execute(statement).await;
+
+        ret.map_err(|err| DbErr::Conn(RuntimeErr::Internal(err.to_string())))
+    }
+}
+
+pub async fn init_db(db_name: impl ToString) -> Result<DatabaseConnection> {
+    let db = Database::connect_proxy(
+        DbBackend::Sqlite,
+        Arc::new(Box::new(ProxyDb {
+            db_name: db_name.to_string(),
+        })),
+    )
+    .await
+    .context("Failed to connect to database")?;
+
+    Ok(db)
 }

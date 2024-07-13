@@ -13,10 +13,11 @@ serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 anyhow = "^1"
 tokio = { version = "^1", features = ["macros", "rt", "time"] }
+async-trait = "^0.1"
 
 sqlparser = "^0.45"
 sea-orm = { version = "1.0.0-rc.7", features = ["proxy"] }
 yew = { version = "^0.21", features = ["ssr"] }
 yew-router = "^0.18"
 
-wasi = "0.13.0"
+wasi = "0.13.1"

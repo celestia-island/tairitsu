@@ -29,20 +29,23 @@ uuid = { version = "^1", features = [
 async-trait = "^0.1"
 oneshot = "^0.1"
 
-[dependencies.sea-orm]
-features = ["with-uuid", "with-chrono", "with-json"]
-version = "1.0.0-rc.7"
+tokio = { version = "^1", optional = true }
+wasi = { version = "0.13.1", optional = true }
 
-[target.'cfg(all(target_arch = "wasm32", not(target_os = "wasi")))'.dependencies]
+sea-orm = "1.0.0-rc.7"
+sqlparser = { version = "^0.48", optional = true }
+
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "^0.4", optional = true }
 worker = { version = "0.3.0", features = ["d1"], optional = true }
 
 [features]
-default = ["cloudflare"]
+default = []
 cloudflare = [
   "dep:wasm-bindgen",
   "dep:wasm-bindgen-futures",
   "dep:worker",
   "sea-orm/proxy",
 ]
+native = ["sea-orm/sqlx-sqlite", "sea-orm/runtime-async-std-rustls"]
+wasi = ["dep:sqlparser", "dep:wasi", "sea-orm/proxy"]
