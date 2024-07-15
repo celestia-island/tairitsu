@@ -25,6 +25,7 @@ uuid = { version = "^1", features = [
   'macro-diagnostics',
   'serde',
 ] }
+bytes = "^1"
 
 async-trait = "^0.1"
 oneshot = "^0.1"
@@ -39,6 +40,9 @@ wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "^0.4", optional = true }
 worker = { version = "0.3.0", features = ["d1"], optional = true }
 
+sled = { version = "^0.34", optional = true }
+moka = { version = "^0.12", optional = true }
+
 [features]
 default = ["cloudflare"]
 cloudflare = [
@@ -47,5 +51,10 @@ cloudflare = [
   "dep:worker",
   "sea-orm/proxy",
 ]
-native = ["sea-orm/sqlx-sqlite", "sea-orm/runtime-async-std-rustls"]
+native = [
+  "dep:sled",
+  "dep:moka",
+  "sea-orm/sqlx-sqlite",
+  "sea-orm/runtime-async-std-rustls",
+]
 wasi = ["dep:sqlparser", "dep:wasi", "sea-orm/proxy"]
