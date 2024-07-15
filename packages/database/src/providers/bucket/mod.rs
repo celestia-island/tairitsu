@@ -1,14 +1,14 @@
 #[cfg(feature = "cloudflare")]
 pub mod cloudflare;
 #[cfg(feature = "native")]
-pub mod sled;
+pub mod moka;
 #[cfg(feature = "wasi")]
 pub mod wasmtime_wasi;
 
 #[cfg(feature = "cloudflare")]
 pub use cloudflare::*;
 #[cfg(feature = "native")]
-pub use sled::*;
+pub use moka::*;
 #[cfg(feature = "wasi")]
 pub use wasmtime_wasi::*;
 

@@ -6,13 +6,13 @@ use worker::{send::SendFuture, Env};
 
 use super::BucketStore;
 
-pub struct ProxyKV {
+pub struct ProxyBucket {
     env: Arc<Env>,
     bucket_name: String,
 }
 
 #[async_trait::async_trait]
-impl BucketStore for ProxyKV {
+impl BucketStore for ProxyBucket {
     async fn set(&self, key: String, value: Bytes) -> Result<()> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
@@ -64,4 +64,11 @@ impl BucketStore for ProxyKV {
 
         Ok(())
     }
+}
+
+pub async fn init_bucket(env: Arc<Env>, bucket_name: impl ToString) -> Result<ProxyBucket> {
+    Ok(ProxyBucket {
+        env,
+        bucket_name: bucket_name.to_string(),
+    })
 }

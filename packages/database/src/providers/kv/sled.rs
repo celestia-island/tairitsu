@@ -18,3 +18,9 @@ impl KVStore for ProxyKV {
         todo!()
     }
 }
+
+pub async fn init_kv(path: impl ToString) -> Result<ProxyKV> {
+    Ok(ProxyKV {
+        path: path.to_string(),
+    })
+}

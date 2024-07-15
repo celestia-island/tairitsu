@@ -16,3 +16,7 @@ impl KVStore for ProxyKV {
         todo!()
     }
 }
+
+pub async fn init_kv() -> Result<ProxyKV> {
+    Ok(ProxyKV {})
+}
