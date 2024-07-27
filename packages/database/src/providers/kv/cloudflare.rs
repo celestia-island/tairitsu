@@ -56,6 +56,44 @@ impl KVStore for ProxyKV {
 
         Ok(())
     }
+
+    async fn list_by_prefix(
+        &self,
+        prefix: String,
+        limit: Option<usize>,
+        cursor: Option<String>,
+    ) -> Result<Vec<String>> {
+        let env = self.env.kv(self.kv_name.as_str())?;
+
+        let ret = SendFuture::new(async move {
+            let ret = env.list().prefix(prefix);
+
+            let ret = if let Some(limit) = limit {
+                ret.limit(limit as u64)
+            } else {
+                ret
+            };
+
+            let ret = if let Some(cursor) = cursor {
+                ret.cursor(cursor)
+            } else {
+                ret
+            };
+
+            ret.execute()
+                .await
+                .map_err(|err| anyhow!("Failed to list key-value pair: {:?}", err))
+                .map(|ret| {
+                    ret.keys
+                        .iter()
+                        .map(|key| key.name.to_owned())
+                        .collect::<Vec<_>>()
+                })
+        })
+        .await;
+
+        ret
+    }
 }
 
 pub async fn init_kv(env: Arc<Env>, kv_name: impl ToString) -> Result<ProxyKV> {

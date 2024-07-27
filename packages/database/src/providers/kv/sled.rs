@@ -17,6 +17,15 @@ impl KVStore for ProxyKV {
     async fn delete(&self, key: impl ToString) {
         todo!()
     }
+
+    async fn list_by_prefix(
+        &self,
+        prefix: impl ToString,
+        limit: Option<usize>,
+        cursor: Option<String>,
+    ) -> Vec<String> {
+        todo!()
+    }
 }
 
 pub async fn init_kv(path: impl ToString) -> Result<ProxyKV> {

@@ -44,7 +44,6 @@ sled = { version = "^0.34", optional = true }
 moka = { version = "^0.12", features = ["future"], optional = true }
 
 [features]
-default = ["cloudflare"]
 cloudflare = [
   "dep:wasm-bindgen",
   "dep:wasm-bindgen-futures",
