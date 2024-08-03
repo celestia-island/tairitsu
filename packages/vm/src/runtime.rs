@@ -142,8 +142,7 @@ impl Image {
 impl Container {
     pub fn run(&mut self) -> Result<()> {
         let mut store = self.store.lock().unwrap();
-        let (command, _instance) =
-            Command::instantiate(&mut *store, &self.component, &mut self.linker)?;
+        let command = Command::instantiate(&mut *store, &self.component, &mut self.linker)?;
 
         let _ = command
             .wasi_cli_run()
