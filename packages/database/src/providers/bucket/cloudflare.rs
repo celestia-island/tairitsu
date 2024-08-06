@@ -107,9 +107,8 @@ impl BucketStore<ProxyBucketMultipartUploader> for ProxyBucket {
     }
 }
 
-#[derive(Clone)]
 pub struct ProxyBucketMultipartUploader {
-    inner: Arc<Box<worker::MultipartUpload>>,
+    inner: worker::MultipartUpload,
 }
 
 unsafe impl Send for ProxyBucketMultipartUploader {}
@@ -117,26 +116,24 @@ unsafe impl Sync for ProxyBucketMultipartUploader {}
 
 impl ProxyBucketMultipartUploader {
     pub fn new(inner: worker::MultipartUpload) -> Self {
-        Self {
-            inner: Arc::new(Box::new(inner)),
-        }
+        Self { inner }
     }
 }
 
 #[async_trait::async_trait]
 impl BucketMultipartUploader for ProxyBucketMultipartUploader {
-    async fn upload_id(&self) -> Result<String> {
-        let env = self.inner.clone();
+    async fn upload_id(self) -> Result<String> {
+        let env = self.inner;
 
         SendFuture::new(async move { Ok(env.upload_id().await) }).await
     }
 
     async fn upload_part(
-        &self,
+        self,
         part_number: u16,
         data: Bytes,
     ) -> Result<BucketMultipartUploadePart> {
-        let env = self.inner.clone();
+        let env = self.inner;
 
         let ret = SendFuture::new(async move {
             match env
@@ -159,7 +156,7 @@ impl BucketMultipartUploader for ProxyBucketMultipartUploader {
         self,
         parts: Vec<BucketMultipartUploadePart>,
     ) -> Result<BucketMultipartUploadResult> {
-        let env = self.inner.to_owned();
+        let env = self.inner;
 
         let ret = SendFuture::new(async move {
             let parts = parts
@@ -167,45 +164,37 @@ impl BucketMultipartUploader for ProxyBucketMultipartUploader {
                 .map(|part| worker::UploadedPart::new(part.part_number, part.etag))
                 .collect::<Vec<_>>();
 
-            if let Ok(ret) = Arc::try_unwrap(env) {
-                match ret.complete(parts).await {
-                    Ok(data) => Ok(BucketMultipartUploadResult {
-                        key: data.key().to_string(),
-                        version: data.version().to_string(),
-                        size: data.size() as usize,
+            match env.complete(parts).await {
+                Ok(data) => Ok(BucketMultipartUploadResult {
+                    key: data.key().to_string(),
+                    version: data.version().to_string(),
+                    size: data.size() as usize,
 
-                        etag: data.etag().to_string(),
-                        http_etag: data.http_etag().to_string(),
-                        uploaded: DateTime::from_timestamp_millis(
-                            data.uploaded().as_millis() as i64
-                        )
+                    etag: data.etag().to_string(),
+                    http_etag: data.http_etag().to_string(),
+                    uploaded: DateTime::from_timestamp_millis(data.uploaded().as_millis() as i64)
                         .unwrap_or_default()
                         .to_utc(),
 
-                        http_metadata: {
-                            let obj = data.http_metadata();
+                    http_metadata: {
+                        let obj = data.http_metadata();
 
-                            BucketMultipartUploadResultHttpMetadata {
-                                content_type: obj.content_type.map(|s| s.to_string()),
-                                content_language: obj.content_language.map(|s| s.to_string()),
-                                content_disposition: obj.content_disposition.map(|s| s.to_string()),
-                                content_encoding: obj.content_encoding.map(|s| s.to_string()),
-                                cache_control: obj.cache_control.map(|s| s.to_string()),
-                                cache_expiry: obj.cache_expiry.map(|ts| {
-                                    DateTime::from_timestamp_millis(ts.as_millis() as i64)
-                                        .unwrap_or_default()
-                                        .to_utc()
-                                }),
-                            }
-                        },
-                        custom_metadata: data.custom_metadata().unwrap_or_default(),
-                    }),
-                    Err(err) => Err(anyhow!("Failed to complete multipart upload: {:?}", err)),
-                }
-            } else {
-                Err(anyhow!(
-                    "Failed to complete multipart upload: Inner Arc is not unique"
-                ))
+                        BucketMultipartUploadResultHttpMetadata {
+                            content_type: obj.content_type.map(|s| s.to_string()),
+                            content_language: obj.content_language.map(|s| s.to_string()),
+                            content_disposition: obj.content_disposition.map(|s| s.to_string()),
+                            content_encoding: obj.content_encoding.map(|s| s.to_string()),
+                            cache_control: obj.cache_control.map(|s| s.to_string()),
+                            cache_expiry: obj.cache_expiry.map(|ts| {
+                                DateTime::from_timestamp_millis(ts.as_millis() as i64)
+                                    .unwrap_or_default()
+                                    .to_utc()
+                            }),
+                        }
+                    },
+                    custom_metadata: data.custom_metadata().unwrap_or_default(),
+                }),
+                Err(err) => Err(anyhow!("Failed to complete multipart upload: {:?}", err)),
             }
         })
         .await;
@@ -213,8 +202,8 @@ impl BucketMultipartUploader for ProxyBucketMultipartUploader {
         ret
     }
 
-    async fn abort(&self) -> Result<()> {
-        let env = self.inner.clone();
+    async fn abort(self) -> Result<()> {
+        let env = self.inner;
 
         let ret = SendFuture::new(async move {
             match env.abort().await {

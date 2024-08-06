@@ -31,17 +31,14 @@ pub trait BucketStore<T: BucketMultipartUploader> {
 
 #[async_trait::async_trait]
 pub trait BucketMultipartUploader {
-    async fn upload_id(&self) -> Result<String>;
-    async fn upload_part(
-        &self,
-        part_number: u16,
-        data: Bytes,
-    ) -> Result<BucketMultipartUploadePart>;
+    async fn upload_id(self) -> Result<String>;
+    async fn upload_part(self, part_number: u16, data: Bytes)
+        -> Result<BucketMultipartUploadePart>;
     async fn complete(
         self,
         parts: Vec<BucketMultipartUploadePart>,
     ) -> Result<BucketMultipartUploadResult>;
-    async fn abort(&self) -> Result<()>;
+    async fn abort(self) -> Result<()>;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
