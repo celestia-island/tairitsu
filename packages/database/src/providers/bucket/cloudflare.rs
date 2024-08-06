@@ -17,7 +17,7 @@ pub struct ProxyBucket {
 }
 
 #[async_trait::async_trait]
-impl BucketStore for ProxyBucket {
+impl BucketStore<ProxyBucketMultipartUploader> for ProxyBucket {
     async fn set(&self, key: String, value: Bytes) -> Result<()> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
@@ -70,15 +70,12 @@ impl BucketStore for ProxyBucket {
         Ok(())
     }
 
-    async fn create_multipart_upload(
-        &self,
-        key: String,
-    ) -> Result<Box<dyn BucketMultipartUploader>> {
+    async fn create_multipart_upload(&self, key: String) -> Result<ProxyBucketMultipartUploader> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
         let ret = SendFuture::new(async move {
             match env.create_multipart_upload(key.clone()).execute().await {
-                Ok(data) => Ok(Box::new(ProxyBucketMultipartUploader::new(data))),
+                Ok(data) => Ok(ProxyBucketMultipartUploader::new(data)),
                 Err(err) => Err(anyhow!(
                     "Failed to create multipart upload for key '{}': {:?}",
                     key,
@@ -88,19 +85,18 @@ impl BucketStore for ProxyBucket {
         })
         .await;
 
-        ret.map(|ret| ret as Box<dyn BucketMultipartUploader>)
+        ret
     }
 
     async fn resume_multipart_upload(
         &self,
         key: String,
         upload_id: String,
-    ) -> Result<Box<dyn BucketMultipartUploader>> {
+    ) -> Result<ProxyBucketMultipartUploader> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
         match env.resume_multipart_upload(key.clone(), upload_id.clone()) {
-            Ok(data) => Ok(Box::new(ProxyBucketMultipartUploader::new(data))
-                as Box<dyn BucketMultipartUploader>),
+            Ok(data) => Ok(ProxyBucketMultipartUploader::new(data)),
             Err(err) => Err(anyhow!(
                 "Failed to resume multipart upload for key '{}' with upload id '{}': {:?}",
                 key,
@@ -129,6 +125,12 @@ impl ProxyBucketMultipartUploader {
 
 #[async_trait::async_trait]
 impl BucketMultipartUploader for ProxyBucketMultipartUploader {
+    async fn upload_id(&self) -> Result<String> {
+        let env = self.inner.clone();
+
+        SendFuture::new(async move { Ok(env.upload_id().await) }).await
+    }
+
     async fn upload_part(
         &self,
         part_number: u16,

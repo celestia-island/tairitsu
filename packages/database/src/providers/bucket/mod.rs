@@ -20,24 +20,18 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
-pub trait BucketStore {
+pub trait BucketStore<T: BucketMultipartUploader> {
     async fn get(&self, key: String) -> Result<Option<Bytes>>;
     async fn set(&self, key: String, value: Bytes) -> Result<()>;
     async fn delete(&self, key: String) -> Result<()>;
 
-    async fn create_multipart_upload(
-        &self,
-        key: String,
-    ) -> Result<Box<dyn BucketMultipartUploader>>;
-    async fn resume_multipart_upload(
-        &self,
-        key: String,
-        upload_id: String,
-    ) -> Result<Box<dyn BucketMultipartUploader>>;
+    async fn create_multipart_upload(&self, key: String) -> Result<T>;
+    async fn resume_multipart_upload(&self, key: String, upload_id: String) -> Result<T>;
 }
 
 #[async_trait::async_trait]
 pub trait BucketMultipartUploader {
+    async fn upload_id(&self) -> Result<String>;
     async fn upload_part(
         &self,
         part_number: u16,
