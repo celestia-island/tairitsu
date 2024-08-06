@@ -1,5 +1,6 @@
 use super::KVStore;
 
+#[derive(Clone)]
 pub struct ProxyKV {
     path: String,
 }

@@ -10,6 +10,7 @@ use sqlparser::ast::Insert;
 
 use tairitsu_utils::types::proto::backend::Msg;
 
+#[derive(Clone)]
 struct ProxyDb {
     db_name: String,
 }

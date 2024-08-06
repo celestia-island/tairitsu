@@ -8,6 +8,7 @@ use sea_orm::{
 };
 use worker::Env;
 
+#[derive(Clone)]
 struct ProxyDb {
     env: Arc<Env>,
     db_name: String,

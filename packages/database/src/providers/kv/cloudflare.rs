@@ -5,6 +5,7 @@ use worker::{send::SendFuture, Env};
 
 use super::KVStore;
 
+#[derive(Clone)]
 pub struct ProxyKV {
     env: Arc<Env>,
     kv_name: String,
