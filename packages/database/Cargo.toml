@@ -38,7 +38,7 @@ sqlparser = { version = "^0.48", optional = true }
 
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "^0.4", optional = true }
-worker = { version = "0.3.0", features = ["d1"], optional = true }
+worker = { version = "^0.3", features = ["d1"], optional = true }
 
 sled = { version = "^0.34", optional = true }
 moka = { version = "^0.12", features = ["future"], optional = true }
