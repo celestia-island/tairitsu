@@ -28,4 +28,4 @@ uuid = { version = "^1", features = [
 ] }
 
 bcrypt = "^0.15"
-sea-orm = { version = "1.0.0-rc.7", features = ["proxy"] }
+sea-orm = { version = "1.1.0-rc.1", features = ["proxy"] }
