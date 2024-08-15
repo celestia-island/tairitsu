@@ -7,7 +7,7 @@ use tairitsu_database_types::providers::bucket::*;
 pub struct ProxyBucket {}
 
 #[async_trait::async_trait]
-impl BucketStore<ProxyBucketMultipartUploader> for ProxyBucket {
+impl BucketStore for ProxyBucket {
     async fn set(&self, _key: String, _value: Bytes) -> Result<()> {
         todo!()
     }
@@ -17,52 +17,6 @@ impl BucketStore<ProxyBucketMultipartUploader> for ProxyBucket {
     }
 
     async fn delete(&self, _key: String) -> Result<()> {
-        todo!()
-    }
-
-    async fn create_multipart_upload(&self, _key: String) -> Result<ProxyBucketMultipartUploader> {
-        todo!()
-    }
-
-    async fn resume_multipart_upload(
-        &self,
-        _key: String,
-        _upload_id: String,
-    ) -> Result<ProxyBucketMultipartUploader> {
-        todo!()
-    }
-}
-
-pub struct ProxyBucketMultipartUploader {}
-
-impl ProxyBucketMultipartUploader {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-#[async_trait::async_trait]
-impl BucketMultipartUploader for ProxyBucketMultipartUploader {
-    async fn upload_id(self) -> Result<String> {
-        todo!()
-    }
-
-    async fn upload_part(
-        self,
-        _part_number: u16,
-        _data: Bytes,
-    ) -> Result<BucketMultipartUploadePart> {
-        todo!()
-    }
-
-    async fn complete(
-        self,
-        _parts: Vec<BucketMultipartUploadePart>,
-    ) -> Result<BucketMultipartUploadResult> {
-        todo!()
-    }
-
-    async fn abort(self) -> Result<()> {
         todo!()
     }
 }

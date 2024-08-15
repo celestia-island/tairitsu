@@ -10,6 +10,28 @@ resolver = "2"
 [dependencies]
 tairitsu-database-types = { path = "../database_types" }
 
+anyhow = "^1"
+chrono = { version = "^0.4", features = [
+    "serde",
+    "wasmbind",
+    "unstable-locales",
+] }
+log = "^0.4"
+serde = { version = "^1", features = ["derive"] }
+serde_json = { version = "^1" }
+strum = { version = "^0.26", features = ["derive"] }
+uuid = { version = "^1", features = [
+    'v4',
+    'fast-rng',
+    'macro-diagnostics',
+    'serde',
+] }
+bytes = "^1"
+
+async-trait = "^0.1"
+sea-orm = "1.1.0-rc.1"
+worker = "^0.3"
+
 # [target.'cfg(all(any(target_arch = "wasm32", target_arch = "wasm64"), not(target_os = "wasi")))'.dependencies]
 tairitsu-database-driver-cloudflare = { path = "../database_driver_cloudflare" }
 
