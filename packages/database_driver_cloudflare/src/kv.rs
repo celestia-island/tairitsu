@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use worker::{send::SendFuture, Env};
 
-use super::KVStore;
+use tairitsu_database_types::providers::kv::*;
 
 #[derive(Clone)]
 pub struct ProxyKV {

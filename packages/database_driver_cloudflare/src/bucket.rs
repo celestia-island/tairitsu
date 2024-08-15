@@ -5,10 +5,7 @@ use std::sync::Arc;
 
 use worker::{send::SendFuture, Env};
 
-use super::{
-    BucketMultipartUploadResult, BucketMultipartUploadResultHttpMetadata,
-    BucketMultipartUploadePart, BucketMultipartUploader, BucketStore,
-};
+use tairitsu_database_types::providers::bucket::*;
 
 #[derive(Clone)]
 pub struct ProxyBucket {

@@ -1,18 +1,4 @@
-#[cfg(feature = "cloudflare")]
-pub mod cloudflare;
-#[cfg(feature = "native")]
-pub mod moka;
-#[cfg(feature = "wasi")]
-pub mod wasmtime_wasi;
-
 use std::collections::HashMap;
-
-#[cfg(feature = "cloudflare")]
-pub use cloudflare::*;
-#[cfg(feature = "native")]
-pub use moka::*;
-#[cfg(feature = "wasi")]
-pub use wasmtime_wasi::*;
 
 use anyhow::Result;
 use bytes::Bytes;

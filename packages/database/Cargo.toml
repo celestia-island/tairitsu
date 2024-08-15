@@ -5,55 +5,22 @@ name = "tairitsu-database"
 version = "0.1.0"
 edition = "2021"
 publish = false
+resolver = "2"
 
 [dependencies]
-tairitsu-utils = { path = "../utils" }
+tairitsu-database-types = { path = "../database_types" }
 
-anyhow = "^1"
-chrono = { version = "^0.4", features = [
-  "serde",
-  "wasmbind",
-  "unstable-locales",
-] }
-log = "^0.4"
-serde = { version = "^1", features = ["derive"] }
-serde_json = { version = "^1" }
-strum = { version = "^0.26", features = ["derive"] }
-uuid = { version = "^1", features = [
-  'v4',
-  'fast-rng',
-  'macro-diagnostics',
-  'serde',
-] }
-bytes = "^1"
+# [target.'cfg(all(any(target_arch = "wasm32", target_arch = "wasm64"), not(target_os = "wasi")))'.dependencies]
+tairitsu-database-driver-cloudflare = { path = "../database_driver_cloudflare" }
 
-async-trait = "^0.1"
-oneshot = "^0.1"
+[target.'cfg(not(any(target_arch = "wasm32", target_arch = "wasm64")))'.dependencies]
+tairitsu-database-driver-native = { path = "../database_driver_native" }
 
-tokio = { version = "^1", optional = true }
-wasi = { version = "0.13.1", optional = true }
-
-sea-orm = "1.1.0-rc.1"
-sqlparser = { version = "^0.48", optional = true }
-
-wasm-bindgen = { version = "0.2.87", optional = true }
-wasm-bindgen-futures = { version = "^0.4", optional = true }
-worker = { version = "^0.3", features = ["d1"], optional = true }
-
-sled = { version = "^0.34", optional = true }
-moka = { version = "^0.12", features = ["future"], optional = true }
+# [target.'cfg(all(any(target_arch = "wasm32", target_arch = "wasm64"), target_os = "wasi"))'.dependencies]
+tairitsu-database-driver-wasi = { path = "../database_driver_wasi" }
 
 [features]
-cloudflare = [
-  "dep:wasm-bindgen",
-  "dep:wasm-bindgen-futures",
-  "dep:worker",
-  "sea-orm/proxy",
-]
-native = [
-  "dep:sled",
-  "dep:moka",
-  "sea-orm/sqlx-sqlite",
-  "sea-orm/runtime-async-std-rustls",
-]
-wasi = ["dep:sqlparser", "dep:wasi", "sea-orm/proxy"]
+default = []
+cloudflare = []
+native = []
+wasi = []
