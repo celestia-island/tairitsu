@@ -2,7 +2,7 @@
 #![allow(ambiguous_glob_reexports)]
 
 pub mod init;
-mod mock;
+pub mod mock;
 
 pub mod prelude {
     #[allow(unused_imports)]
@@ -26,16 +26,16 @@ pub mod prelude {
         let param: InitSQLParams = param.into();
         param.init().await
     }
+
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "cloudflare")] {
+            pub use tairitsu_database_driver_cloudflare::{kv::ProxyKV, bucket::ProxyBucket};
+        } else if #[cfg(feature = "native")] {
+            pub use tairitsu_database_driver_native::{kv::ProxyKV, bucket::ProxyBucket};
+        } else if #[cfg(feature = "wasi")] {
+            pub use tairitsu_database_driver_wasi::{kv::ProxyKV, bucket::ProxyBucket};
+        } else {
+            pub use crate::mock::{kv::ProxyKV, bucket::ProxyBucket};
+        }
+    }
 }
-
-#[cfg(feature = "cloudflare")]
-pub use tairitsu_database_driver_cloudflare::*;
-
-#[cfg(feature = "native")]
-pub use tairitsu_database_driver_native::*;
-
-#[cfg(feature = "wasi")]
-pub use tairitsu_database_driver_wasi::*;
-
-#[cfg(not(any(feature = "cloudflare", feature = "native", feature = "wasi")))]
-pub use mock::*;
