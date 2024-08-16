@@ -19,14 +19,13 @@ impl BucketStore for ProxyBucket {
     async fn set(&self, key: String, value: Bytes) -> Result<()> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
-        SendFuture::new(async move {
-            let _ = env
-                .put(key.to_string().as_str(), worker::Data::Bytes(value.into()))
+        let _ = SendFuture::new(async move {
+            env.put(key.to_string().as_str(), worker::Data::Bytes(value.into()))
                 .execute()
                 .await
-                .map_err(|err| anyhow!("Failed to set key-value pair: {:?}", err));
+                .map_err(|err| anyhow!("Failed to set key-value pair: {:?}", err))
         })
-        .await;
+        .await?;
 
         Ok(())
     }
@@ -49,9 +48,9 @@ impl BucketStore for ProxyBucket {
                 Err(err) => Err(anyhow!("Failed to get key-value pair: {:?}", err)),
             }
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 
     async fn delete(&self, key: String) -> Result<()> {
@@ -62,9 +61,9 @@ impl BucketStore for ProxyBucket {
                 .await
                 .map_err(|err| anyhow!("Failed to delete key-value pair: {:?}", err))
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 
     async fn create_multipart_upload(&self) -> Result<String> {
@@ -90,9 +89,9 @@ impl BucketStore for ProxyBucket {
                 Err(err) => Err(anyhow!("Failed to create multipart upload: {:?}", err)),
             }
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 
     async fn append_multipart_upload(&self, upload_id: String, data: Bytes) -> Result<()> {
@@ -148,9 +147,9 @@ impl BucketStore for ProxyBucket {
                 Err(err) => Err(anyhow!("Failed to resume multipart upload: {:?}", err)),
             }
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 
     async fn complete_multipart_upload(
@@ -231,9 +230,9 @@ impl BucketStore for ProxyBucket {
                 Err(err) => Err(anyhow!("Failed to resume multipart upload: {:?}", err)),
             }
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 
     async fn abort_multipart_upload(&self, upload_id: String) -> Result<()> {
@@ -259,9 +258,9 @@ impl BucketStore for ProxyBucket {
                 Err(err) => Err(anyhow!("Failed to resume multipart upload: {:?}", err)),
             }
         })
-        .await;
+        .await?;
 
-        ret
+        Ok(ret)
     }
 }
 

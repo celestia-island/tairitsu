@@ -19,6 +19,26 @@ impl BucketStore for ProxyBucket {
     async fn delete(&self, _key: String) -> Result<()> {
         todo!()
     }
+
+    async fn create_multipart_upload(&self) -> Result<String> {
+        todo!()
+    }
+
+    async fn append_multipart_upload(&self, _upload_id: String, _data: Bytes) -> Result<()> {
+        todo!()
+    }
+
+    async fn complete_multipart_upload(
+        &self,
+        _upload_id: String,
+        _final_data_key: Option<String>,
+    ) -> Result<BucketMultipartUploadResult> {
+        todo!()
+    }
+
+    async fn abort_multipart_upload(&self, _upload_id: String) -> Result<()> {
+        todo!()
+    }
 }
 
 pub async fn init_bucket() -> Result<ProxyBucket> {

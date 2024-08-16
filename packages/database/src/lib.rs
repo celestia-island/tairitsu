@@ -12,12 +12,12 @@ pub mod prelude {
     pub use super::init::*;
     pub use tairitsu_database_types::providers::{bucket::*, kv::*};
 
-    pub async fn init_bucket(param: impl Into<InitBucketParams>) -> Result<Box<dyn BucketStore>> {
+    pub async fn init_bucket(param: impl Into<InitBucketParams>) -> Result<Box<ProxyBucket>> {
         let param: InitBucketParams = param.into();
         param.init().await
     }
 
-    pub async fn init_kv(param: impl Into<InitKVParams>) -> Result<Box<dyn KVStore>> {
+    pub async fn init_kv(param: impl Into<InitKVParams>) -> Result<Box<ProxyKV>> {
         let param: InitKVParams = param.into();
         param.init().await
     }

@@ -217,7 +217,7 @@ impl ProxyDatabaseTrait for ProxyDb {
     }
 }
 
-pub async fn init_db(env: Arc<Env>, db_name: impl ToString) -> Result<DatabaseConnection> {
+pub async fn init_sql(env: Arc<Env>, db_name: impl ToString) -> Result<DatabaseConnection> {
     let db = Database::connect_proxy(
         DbBackend::Sqlite,
         Arc::new(Box::new(ProxyDb {

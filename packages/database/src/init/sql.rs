@@ -15,41 +15,40 @@ pub enum InitSQLParams {
 #[allow(unused_variables)]
 impl Init<Box<DatabaseConnection>> for InitSQLParams {
     async fn init(self) -> Result<Box<DatabaseConnection>> {
-        match self {
-            InitSQLParams::Cloudflare((env, bucket_name)) => {
-                #[cfg(feature = "cloudflare")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_cloudflare::sql::init_db(env, bucket_name).await?,
-                    ))
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "cloudflare")] {
+                match self {
+                    InitSQLParams::Cloudflare((env, db_name)) => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_cloudflare::sql::init_sql(env, db_name)
+                                .await?,
+                        ))
+                    }
+
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
+            } else if #[cfg(feature = "native")] {
+                match self {
+                    InitSQLParams::Native(db_name) => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_native::sql::init_sql(db_name).await?,
+                        ))
+                    }
 
-                #[cfg(not(feature = "cloudflare"))]
-                Err(anyhow!("Cloudflare feature not enabled"))
-            }
-
-            InitSQLParams::Native(bucket_name) => {
-                #[cfg(feature = "native")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_native::sql::init_db(bucket_name).await?,
-                    ))
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
+            } else if #[cfg(feature = "wasi")] {
+                match self {
+                    InitSQLParams::WASI => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_wasi::sql::init_sql().await?,
+                        ))
+                    }
 
-                #[cfg(not(feature = "native"))]
-                Err(anyhow!("Native feature not enabled"))
-            }
-
-            InitSQLParams::WASI => {
-                #[cfg(feature = "wasi")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_wasi::sql::init_db().await?,
-                    ))
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
-
-                #[cfg(not(feature = "wasi"))]
-                Err(anyhow!("WASI feature not enabled"))
+            } else {
+                Err(anyhow!("No platform feature enabled"))
             }
         }
     }

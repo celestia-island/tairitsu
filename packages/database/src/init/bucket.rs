@@ -13,44 +13,42 @@ pub enum InitBucketParams {
 
 #[async_trait::async_trait]
 #[allow(unused_variables)]
-impl Init<Box<dyn BucketStore>> for InitBucketParams {
-    async fn init(self) -> Result<Box<dyn BucketStore>> {
-        match self {
-            InitBucketParams::Cloudflare((env, bucket_name)) => {
-                #[cfg(feature = "cloudflare")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_cloudflare::bucket::init_bucket(env, bucket_name)
-                            .await?,
-                    ))
+impl Init<Box<crate::prelude::ProxyBucket>> for InitBucketParams {
+    async fn init(self) -> Result<Box<crate::prelude::ProxyBucket>> {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "cloudflare")] {
+                match self {
+                    InitBucketParams::Cloudflare((env, bucket_name)) => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_cloudflare::bucket::init_bucket(env, bucket_name)
+                                .await?,
+                        ))
+                    }
+
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
+            } else if #[cfg(feature = "native")] {
+                match self {
+                    InitBucketParams::Native(bucket_name) => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_native::bucket::init_bucket(bucket_name).await?,
+                        ))
+                    }
 
-                #[cfg(not(feature = "cloudflare"))]
-                Err(anyhow!("Cloudflare feature not enabled"))
-            }
-
-            InitBucketParams::Native(bucket_name) => {
-                #[cfg(feature = "native")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_native::bucket::init_bucket(bucket_name).await?,
-                    ))
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
+            } else if #[cfg(feature = "wasi")] {
+                match self {
+                    InitBucketParams::WASI(bucket_name) => {
+                        Ok(Box::new(
+                            tairitsu_database_driver_wasi::bucket::init_bucket(bucket_name).await?,
+                        ))
+                    }
 
-                #[cfg(not(feature = "native"))]
-                Err(anyhow!("Native feature not enabled"))
-            }
-
-            InitBucketParams::WASI(bucket_name) => {
-                #[cfg(feature = "wasi")]
-                {
-                    Ok(Box::new(
-                        tairitsu_database_driver_wasi::bucket::init_bucket(bucket_name).await?,
-                    ))
+                    _ => Err(anyhow!("Only allow one platform at a time")),
                 }
-
-                #[cfg(not(feature = "wasi"))]
-                Err(anyhow!("WASI feature not enabled"))
+            } else {
+                Err(anyhow!("No platform feature enabled"))
             }
         }
     }
