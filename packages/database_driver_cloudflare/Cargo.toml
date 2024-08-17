@@ -19,7 +19,6 @@ log = "^0.4"
 serde = { version = "^1", features = ["derive"] }
 serde_json = { version = "^1" }
 strum = { version = "^0.26", features = ["derive"] }
-postcard = { version = "^1", features = ["alloc"] }
 uuid = { version = "^1", features = [
     'v4',
     'fast-rng',

@@ -6,7 +6,7 @@ use tairitsu_database_types::providers::bucket::BucketStore;
 
 #[derive(Clone)]
 pub enum InitBucketParams {
-    Cloudflare((Arc<worker::Env>, String)),
+    Cloudflare((Arc<worker::Env>, String, String)),
     Native(String),
     WASI(String),
 }
@@ -18,10 +18,13 @@ impl Init<Box<crate::prelude::ProxyBucket>> for InitBucketParams {
         cfg_if::cfg_if! {
             if #[cfg(feature = "cloudflare")] {
                 match self {
-                    InitBucketParams::Cloudflare((env, bucket_name)) => {
+                    InitBucketParams::Cloudflare((env, bucket_name, multipart_kv_name)) => {
                         Ok(Box::new(
-                            tairitsu_database_driver_cloudflare::bucket::init_bucket(env, bucket_name)
-                                .await?,
+                            tairitsu_database_driver_cloudflare::bucket::init_bucket(
+                                env,
+                                bucket_name,
+                                multipart_kv_name
+                            ).await?,
                         ))
                     }
 
