@@ -1,5 +1,6 @@
 use anyhow::Result;
 use bytes::Bytes;
+use std::ops::RangeInclusive;
 
 use tairitsu_database_types::providers::bucket::*;
 
@@ -15,7 +16,15 @@ impl BucketStore for ProxyBucket {
         todo!()
     }
 
-    async fn get(&self, _key: String) -> Result<Option<Bytes>> {
+    async fn get(
+        &self,
+        _key: String,
+        _range: Option<RangeInclusive<usize>>,
+    ) -> Result<Option<Bytes>> {
+        todo!()
+    }
+
+    async fn get_metadata(&self, _key: String) -> Result<BucketItemMetadata> {
         todo!()
     }
 
@@ -35,7 +44,7 @@ impl BucketStore for ProxyBucket {
         &self,
         _upload_id: String,
         _final_data_key: Option<String>,
-    ) -> Result<BucketMultipartUploadResult> {
+    ) -> Result<BucketItemMetadata> {
         todo!()
     }
 

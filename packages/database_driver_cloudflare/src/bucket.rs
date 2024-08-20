@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use chrono::DateTime;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{ops::RangeInclusive, sync::Arc};
 use uuid::Uuid;
 
 use worker::{send::SendFuture, Env};
@@ -39,11 +39,25 @@ impl BucketStore for ProxyBucket {
         Ok(())
     }
 
-    async fn get(&self, key: String) -> Result<Option<Bytes>> {
+    async fn get(
+        &self,
+        key: String,
+        range: Option<RangeInclusive<usize>>,
+    ) -> Result<Option<Bytes>> {
         let env = self.env.bucket(self.bucket_name.as_str())?;
 
         let ret = SendFuture::new(async move {
-            match env.get(key.to_string().as_str()).execute().await {
+            let handle = env.get(key.to_string().as_str());
+            let handle = if let Some(range) = range {
+                handle.range(worker::Range::OffsetWithLength {
+                    offset: *range.start() as u64,
+                    length: (*range.end() - *range.start()) as u64,
+                })
+            } else {
+                handle
+            };
+
+            match handle.execute().await {
                 Ok(data) => match data {
                     Some(data) => match data.body() {
                         Some(body) => match body.bytes().await {
@@ -53,6 +67,23 @@ impl BucketStore for ProxyBucket {
                         None => Ok(None),
                     },
                     None => Ok(None),
+                },
+                Err(err) => Err(anyhow!("Failed to get key-value pair: {:?}", err)),
+            }
+        })
+        .await?;
+
+        Ok(ret)
+    }
+
+    async fn get_metadata(&self, key: String) -> Result<BucketItemMetadata> {
+        let env = self.env.bucket(self.bucket_name.as_str())?;
+
+        let ret = SendFuture::new(async move {
+            match env.head(key.to_string().as_str()).await {
+                Ok(data) => match data {
+                    Some(data) => Ok(into_metadata(data)),
+                    None => Err(anyhow!("Failed to get key-value pair: key not found.")),
                 },
                 Err(err) => Err(anyhow!("Failed to get key-value pair: {:?}", err)),
             }
@@ -166,7 +197,7 @@ impl BucketStore for ProxyBucket {
         &self,
         key: String,
         final_data_key: Option<String>,
-    ) -> Result<BucketMultipartUploadResult> {
+    ) -> Result<BucketItemMetadata> {
         if final_data_key.is_some() {
             unimplemented!("final_data_key is not supported yet");
         }
@@ -204,39 +235,7 @@ impl BucketStore for ProxyBucket {
                                 anyhow!("Failed to delete multipart upload metadata: {:?}", err)
                             })?;
 
-                        Ok(BucketMultipartUploadResult {
-                            key: data.key().to_string(),
-                            version: data.version().to_string(),
-                            size: data.size() as usize,
-
-                            etag: data.etag().to_string(),
-                            http_etag: data.http_etag().to_string(),
-                            uploaded: DateTime::from_timestamp_millis(
-                                data.uploaded().as_millis() as i64
-                            )
-                            .unwrap_or_default()
-                            .to_utc(),
-
-                            http_metadata: {
-                                let obj = data.http_metadata();
-
-                                BucketMultipartUploadResultHttpMetadata {
-                                    content_type: obj.content_type.map(|s| s.to_string()),
-                                    content_language: obj.content_language.map(|s| s.to_string()),
-                                    content_disposition: obj
-                                        .content_disposition
-                                        .map(|s| s.to_string()),
-                                    content_encoding: obj.content_encoding.map(|s| s.to_string()),
-                                    cache_control: obj.cache_control.map(|s| s.to_string()),
-                                    cache_expiry: obj.cache_expiry.map(|ts| {
-                                        DateTime::from_timestamp_millis(ts.as_millis() as i64)
-                                            .unwrap_or_default()
-                                            .to_utc()
-                                    }),
-                                }
-                            },
-                            custom_metadata: data.custom_metadata().unwrap_or_default(),
-                        })
+                        Ok(into_metadata(data))
                     }
                     Err(err) => Err(anyhow!("Failed to append multipart upload: {:?}", err)),
                 },
@@ -280,6 +279,38 @@ impl BucketStore for ProxyBucket {
         .await?;
 
         Ok(ret)
+    }
+}
+
+pub fn into_metadata(data: worker::Object) -> BucketItemMetadata {
+    BucketItemMetadata {
+        key: data.key().to_string(),
+        version: data.version().to_string(),
+        size: data.size() as usize,
+
+        etag: data.etag().to_string(),
+        http_etag: data.http_etag().to_string(),
+        uploaded: DateTime::from_timestamp_millis(data.uploaded().as_millis() as i64)
+            .unwrap_or_default()
+            .to_utc(),
+
+        http_metadata: {
+            let obj = data.http_metadata();
+
+            BucketItemHTTPMetadata {
+                content_type: obj.content_type.map(|s| s.to_string()),
+                content_language: obj.content_language.map(|s| s.to_string()),
+                content_disposition: obj.content_disposition.map(|s| s.to_string()),
+                content_encoding: obj.content_encoding.map(|s| s.to_string()),
+                cache_control: obj.cache_control.map(|s| s.to_string()),
+                cache_expiry: obj.cache_expiry.map(|ts| {
+                    DateTime::from_timestamp_millis(ts.as_millis() as i64)
+                        .unwrap_or_default()
+                        .to_utc()
+                }),
+            }
+        },
+        custom_metadata: data.custom_metadata().unwrap_or_default(),
     }
 }
 
