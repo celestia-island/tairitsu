@@ -6,8 +6,8 @@ use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]
 pub enum InitSQLParams {
-    Cloudflare((Arc<worker::Env>, String)),
-    Native(String),
+    Cloudflare { env: Arc<worker::Env>, name: String },
+    Native { url: String },
     WASI,
 }
 
@@ -18,9 +18,9 @@ impl Init<Box<DatabaseConnection>> for InitSQLParams {
         cfg_if::cfg_if! {
             if #[cfg(feature = "cloudflare")] {
                 match self {
-                    InitSQLParams::Cloudflare((env, db_name)) => {
+                    InitSQLParams::Cloudflare { env, name } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_cloudflare::sql::init_sql(env, db_name)
+                            tairitsu_database_driver_cloudflare::sql::init_sql(env, name)
                                 .await?,
                         ))
                     }
@@ -29,9 +29,9 @@ impl Init<Box<DatabaseConnection>> for InitSQLParams {
                 }
             } else if #[cfg(feature = "native")] {
                 match self {
-                    InitSQLParams::Native(db_name) => {
+                    InitSQLParams::Native { url } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_native::sql::init_sql(db_name).await?,
+                            tairitsu_database_driver_native::sql::init_sql(url).await?,
                         ))
                     }
 

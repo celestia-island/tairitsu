@@ -6,9 +6,9 @@ use tairitsu_database_types::providers::kv::KVStore;
 
 #[derive(Clone)]
 pub enum InitKVParams {
-    Cloudflare((Arc<worker::Env>, String)),
-    Native(String),
-    WASI(String),
+    Cloudflare { env: Arc<worker::Env>, name: String },
+    Native { path: String },
+    WASI { name: String },
 }
 
 #[async_trait::async_trait]
@@ -18,9 +18,9 @@ impl Init<Box<crate::prelude::ProxyKV>> for InitKVParams {
         cfg_if::cfg_if! {
             if #[cfg(feature = "cloudflare")] {
                 match self {
-                    InitKVParams::Cloudflare((env, kv_name)) => {
+                    InitKVParams::Cloudflare { env, name } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_cloudflare::kv::init_kv(env, kv_name)
+                            tairitsu_database_driver_cloudflare::kv::init_kv(env, name)
                                 .await?,
                         ))
                     }
@@ -29,9 +29,9 @@ impl Init<Box<crate::prelude::ProxyKV>> for InitKVParams {
                 }
             } else if #[cfg(feature = "native")] {
                 match self {
-                    InitKVParams::Native(kv_name) => {
+                    InitKVParams::Native { path } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_native::kv::init_kv(kv_name).await?,
+                            tairitsu_database_driver_native::kv::init_kv(path).await?,
                         ))
                     }
 
@@ -39,9 +39,9 @@ impl Init<Box<crate::prelude::ProxyKV>> for InitKVParams {
                 }
             } else if #[cfg(feature = "wasi")] {
                 match self {
-                    InitKVParams::WASI(kv_name) => {
+                    InitKVParams::WASI { name } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_wasi::kv::init_kv(kv_name).await?,
+                            tairitsu_database_driver_wasi::kv::init_kv(name).await?,
                         ))
                     }
 

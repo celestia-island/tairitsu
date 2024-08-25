@@ -6,9 +6,17 @@ use tairitsu_database_types::providers::bucket::BucketStore;
 
 #[derive(Clone)]
 pub enum InitBucketParams {
-    Cloudflare((Arc<worker::Env>, String, String)),
-    Native(String),
-    WASI(String),
+    Cloudflare {
+        env: Arc<worker::Env>,
+        bucket_name: String,
+        multipart_kv_name: String,
+    },
+    Native {
+        path: String,
+    },
+    WASI {
+        name: String,
+    },
 }
 
 #[async_trait::async_trait]
@@ -18,7 +26,7 @@ impl Init<Box<crate::prelude::ProxyBucket>> for InitBucketParams {
         cfg_if::cfg_if! {
             if #[cfg(feature = "cloudflare")] {
                 match self {
-                    InitBucketParams::Cloudflare((env, bucket_name, multipart_kv_name)) => {
+                    InitBucketParams::Cloudflare { env, bucket_name, multipart_kv_name } => {
                         Ok(Box::new(
                             tairitsu_database_driver_cloudflare::bucket::init_bucket(
                                 env,
@@ -32,9 +40,9 @@ impl Init<Box<crate::prelude::ProxyBucket>> for InitBucketParams {
                 }
             } else if #[cfg(feature = "native")] {
                 match self {
-                    InitBucketParams::Native(bucket_name) => {
+                    InitBucketParams::Native { path } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_native::bucket::init_bucket(bucket_name).await?,
+                            tairitsu_database_driver_native::bucket::init_bucket(path).await?,
                         ))
                     }
 
@@ -42,9 +50,9 @@ impl Init<Box<crate::prelude::ProxyBucket>> for InitBucketParams {
                 }
             } else if #[cfg(feature = "wasi")] {
                 match self {
-                    InitBucketParams::WASI(bucket_name) => {
+                    InitBucketParams::WASI { name } => {
                         Ok(Box::new(
-                            tairitsu_database_driver_wasi::bucket::init_bucket(bucket_name).await?,
+                            tairitsu_database_driver_wasi::bucket::init_bucket(name).await?,
                         ))
                     }
 
