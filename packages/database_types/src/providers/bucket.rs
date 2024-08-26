@@ -36,7 +36,7 @@ pub struct BucketItemMetadata {
     pub custom_metadata: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct BucketItemHTTPMetadata {
     pub content_type: Option<String>,
     pub content_language: Option<String>,
