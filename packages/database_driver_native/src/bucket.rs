@@ -152,7 +152,7 @@ impl BucketStore for ProxyBucket {
         let data = upload.concat();
         let data = Bytes::from(data);
 
-        let key = final_data_key.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        let key = final_data_key.unwrap_or_else(|| upload_id.to_string());
         check_key(&key)?;
 
         self.set(key.clone(), data.clone()).await?;
