@@ -16,7 +16,7 @@ tokio = { version = "^1", features = ["macros", "rt", "time"] }
 async-trait = "^0.1"
 
 sqlparser = "^0.45"
-sea-orm = { version = "1.1.0-rc.1", features = ["proxy"] }
+sea-orm = { version = "^1", features = ["proxy"] }
 yew = { version = "^0.21", features = ["ssr"] }
 yew-router = "^0.18"
 

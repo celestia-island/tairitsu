@@ -27,4 +27,4 @@ uuid = { version = "^1", features = [
 bytes = "^1"
 
 async-trait = "^0.1"
-sea-orm = "1.1.0-rc.1"
+sea-orm = "^1"
