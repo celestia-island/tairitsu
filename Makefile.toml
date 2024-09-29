@@ -6,6 +6,6 @@ skip_core_tasks = true
 script = '''
 #!@duckscript
 
-exec cargo build --target wasm32-wasi --release --package tairitsu-example-guest-side
+exec cargo build --target wasm32-wasip1 --release --package tairitsu-example-guest-side
 exec cargo run --package tairitsu-example-host-side
 '''

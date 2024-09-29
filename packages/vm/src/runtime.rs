@@ -123,6 +123,7 @@ impl Image {
         wasi.allow_ip_name_lookup(true);
         wasi.allow_tcp(true);
         wasi.allow_udp(true);
+        wasi.allow_blocking_current_thread(true);
 
         let wasi = wasi.build();
         let table = ResourceTable::new();

@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         "{}",
         serde_json::to_string(&Msg::new("debug", "Try to send ip lookup")).unwrap()
     );
-    let request = resolve_addresses(&instance_network(), "localhost")?;
+    let request = resolve_addresses(&instance_network(), "httpbin.org")?;
     let ip = loop {
         if let Ok(ret) = request.resolve_next_address() {
             println!(
@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
                 &instance_network(),
                 IpSocketAddress::Ipv4(Ipv4SocketAddress {
                     address: ip,
-                    port: 8080,
+                    port: 80,
                 }),
             )
             .is_ok()
@@ -67,12 +67,16 @@ async fn main() -> Result<()> {
             break ret;
         }
     };
-    output.write(b"GET / HTTP/1.1\r\n")?;
-    output.write(b"Host: localhost\r\n")?;
+    output.write(b"GET /get HTTP/1.1\r\n")?;
+    output.write(b"Host: httpbin.org\r\n")?;
     output.write(b"\r\n")?;
     output.flush()?;
+    println!(
+        "{}",
+        serde_json::to_string(&Msg::new("debug", format!("Sent request"))).unwrap()
+    );
     let response = loop {
-        // FIXME - Only read 100000 bytes at first
+        // FIXME: Only read 100000 bytes at first
         let response = input.read(100000)?;
         if response.len() > 0 && response[0] != 0 {
             break response;

@@ -14,7 +14,7 @@ use tairitsu_vm::Image;
 #[async_std::main]
 async fn main() -> Result<()> {
     let bin = Bytes::from(std::fs::read(format!(
-        "{}/../../target/wasm32-wasi/release/tairitsu-example-guest-side.wasm",
+        "{}/../../target/wasm32-wasip1/release/tairitsu-example-guest-side.wasm",
         env!("CARGO_MANIFEST_DIR")
     ))?);
 
