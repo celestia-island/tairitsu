@@ -6,7 +6,6 @@ use std::{
     fs::File,
     io::{Read, Seek, SeekFrom},
     ops::RangeInclusive,
-    os::windows::fs::MetadataExt,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
@@ -97,12 +96,12 @@ impl BucketStore for ProxyBucket {
 
         Ok(BucketItemMetadata {
             key: key.clone(),
-            version: metadata.last_write_time().to_string(),
+            version: DateTime::<Utc>::from(metadata.modified()?).to_rfc3339(),
             size: metadata.len() as usize,
 
             etag: "".to_string(),
             http_etag: "".to_string(),
-            uploaded: DateTime::from_timestamp_nanos(metadata.creation_time() as i64),
+            uploaded: DateTime::from(metadata.created()?),
 
             http_metadata: Default::default(),
             custom_metadata: Default::default(),
