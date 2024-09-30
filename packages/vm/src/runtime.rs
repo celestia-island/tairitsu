@@ -2,15 +2,24 @@ use anyhow::{Context, Result};
 use bytes::Bytes;
 use flume::{Receiver, Sender};
 use lazy_static::lazy_static;
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
+use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use wasmtime::{
     component::{Component, Linker},
     Config, Engine, Store,
 };
 use wasmtime_wasi::{
-    add_to_linker_sync, bindings::sync::Command, DirPerms, FilePerms, ResourceTable, WasiCtx,
-    WasiCtxBuilder, WasiView,
+    bindings::sync::Command, DirPerms, FilePerms, ResourceTable, WasiCtx, WasiCtxBuilder, WasiView,
+};
+use wasmtime_wasi_http::{
+    bindings::http::outgoing_handler::FutureIncomingResponse,
+    body::HyperOutgoingBody,
+    types::{IncomingResponse, OutgoingRequestConfig},
+    HttpResult, WasiHttpCtx, WasiHttpView,
 };
 use wit_component::ComponentEncoder;
 
@@ -25,14 +34,45 @@ lazy_static! {
 pub struct WasiContext {
     wasi: WasiCtx,
     table: ResourceTable,
+    http: WasiHttpCtx,
 }
 
 impl WasiView for WasiContext {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
+
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
+    }
+}
+
+impl WasiHttpView for WasiContext {
+    fn ctx(&mut self) -> &mut WasiHttpCtx {
+        &mut self.http
+    }
+
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+
+    fn send_request(
+        &mut self,
+        request: hyper::Request<HyperOutgoingBody>,
+        _config: OutgoingRequestConfig,
+    ) -> HttpResult<FutureIncomingResponse> {
+        println!("Sending request: {:?}", request);
+
+        HttpResult::Ok(FutureIncomingResponse::Ready(Ok(Ok(IncomingResponse {
+            resp: hyper::Response::builder()
+                .status(200)
+                .body(BoxBody::new(
+                    Full::new(Bytes::from_static(b"Hello!")).map_err(|_| unreachable!()),
+                ))
+                .unwrap(),
+            worker: None,
+            between_bytes_timeout: Duration::from_micros(1),
+        }))))
     }
 }
 
@@ -92,7 +132,8 @@ impl Image {
 
     pub fn init(&self) -> Result<Container> {
         let mut linker = Linker::new(&self.engine);
-        add_to_linker_sync(&mut linker)?;
+        wasmtime_wasi::add_to_linker_sync(&mut linker)?;
+        wasmtime_wasi_http::add_only_http_to_linker_sync(&mut linker)?;
 
         let mut wasi = WasiCtxBuilder::new();
         wasi.inherit_stderr();
@@ -127,7 +168,14 @@ impl Image {
 
         let wasi = wasi.build();
         let table = ResourceTable::new();
-        let store = Store::new(&self.engine, WasiContext { wasi, table });
+        let mut store = Store::new(
+            &self.engine,
+            WasiContext {
+                wasi,
+                table,
+                http: WasiHttpCtx::new(),
+            },
+        );
 
         Ok(Container {
             store: Arc::new(Mutex::new(store)),
