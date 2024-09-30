@@ -2,6 +2,7 @@ mod html;
 mod model;
 
 use anyhow::Result;
+use std::io::Read;
 use wasi::sockets::{
     instance_network::instance_network,
     ip_name_lookup::{resolve_addresses, IpAddress},
@@ -62,7 +63,7 @@ async fn main() -> Result<()> {
             break;
         }
     }
-    let (input, output) = loop {
+    let (mut input, output) = loop {
         if let Ok(ret) = request.finish_connect() {
             break ret;
         }
@@ -75,14 +76,11 @@ async fn main() -> Result<()> {
         "{}",
         serde_json::to_string(&Msg::new("debug", format!("Sent request"))).unwrap()
     );
-    let response = loop {
-        // FIXME: Only read 100000 bytes at first
-        let response = input.read(100000)?;
-        if response.len() > 0 && response[0] != 0 {
-            break response;
-        }
+    let response = {
+        let mut ret = "".to_string();
+        input.read_to_string(&mut ret)?;
+        ret
     };
-    let response = String::from_utf8_lossy(&response).to_string();
     println!(
         "{}",
         serde_json::to_string(&Msg::new("debug", format!("Response: {:?}", response))).unwrap()
