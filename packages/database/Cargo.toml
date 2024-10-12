@@ -31,7 +31,7 @@ bytes = "^1"
 async-trait = "^0.1"
 cfg-if = "^1"
 sea-orm = "^1"
-worker = "^0.3"
+worker = "^0.4"
 
 # [target.'cfg(all(any(target_arch = "wasm32", target_arch = "wasm64"), not(target_os = "wasi")))'.dependencies]
 tairitsu-database-driver-cloudflare = { path = "../database_driver_cloudflare" }
