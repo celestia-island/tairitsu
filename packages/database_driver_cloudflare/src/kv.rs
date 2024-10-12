@@ -33,15 +33,13 @@ impl KVStore for ProxyKV {
     async fn get(&self, key: String) -> Result<Option<String>> {
         let env = self.env.kv(self.kv_name.as_str())?;
 
-        let ret = SendFuture::new(async move {
+        SendFuture::new(async move {
             env.get(key.to_string().as_str())
                 .text()
                 .await
                 .map_err(|err| anyhow!("Failed to get key-value pair: {:?}", err))
         })
-        .await;
-
-        ret
+        .await
     }
 
     async fn delete(&self, key: String) -> Result<()> {
@@ -66,7 +64,7 @@ impl KVStore for ProxyKV {
     ) -> Result<Vec<String>> {
         let env = self.env.kv(self.kv_name.as_str())?;
 
-        let ret = SendFuture::new(async move {
+        SendFuture::new(async move {
             let ret = env.list().prefix(prefix);
 
             let ret = if let Some(limit) = limit {
@@ -91,9 +89,7 @@ impl KVStore for ProxyKV {
                         .collect::<Vec<_>>()
                 })
         })
-        .await;
-
-        ret
+        .await
     }
 }
 

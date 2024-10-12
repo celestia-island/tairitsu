@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use std::{collections::BTreeMap, sync::Arc};
+use std::{collections::BTreeMap, fmt::Write, sync::Arc};
 use wasm_bindgen::JsValue;
 
 use sea_orm::{
@@ -47,9 +47,10 @@ impl ProxyDb {
                     Value::Bool(Some(val)) => JsValue::from(*val),
                     Value::Bytes(Some(val)) => JsValue::from(format!(
                         "X'{}'",
-                        val.iter()
-                            .map(|byte| format!("{:02x}", byte))
-                            .collect::<String>()
+                        val.iter().fold("".to_string(), |mut acc, byte| {
+                            let _ = write!(&mut acc, "{:02x}", byte);
+                            acc
+                        })
                     )),
                     Value::Char(Some(val)) => JsValue::from(val.to_string()),
                     Value::Json(Some(val)) => JsValue::from(val.to_string()),
@@ -144,9 +145,10 @@ impl ProxyDb {
                     Value::Bool(Some(val)) => JsValue::from(*val),
                     Value::Bytes(Some(val)) => JsValue::from(format!(
                         "X'{}'",
-                        val.iter()
-                            .map(|byte| format!("{:02x}", byte))
-                            .collect::<String>()
+                        val.iter().fold("".to_string(), |mut acc, byte| {
+                            let _ = write!(&mut acc, "{:02x}", byte);
+                            acc
+                        })
                     )),
                     Value::Char(Some(val)) => JsValue::from(val.to_string()),
                     Value::Json(Some(val)) => JsValue::from(val.to_string()),

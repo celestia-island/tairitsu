@@ -74,7 +74,7 @@ async fn main() -> Result<()> {
     output.flush()?;
     println!(
         "{}",
-        serde_json::to_string(&Msg::new("debug", format!("Sent request"))).unwrap()
+        serde_json::to_string(&Msg::new("debug", "Sent request".to_string())).unwrap()
     );
     let response = {
         let mut ret = "".to_string();

@@ -44,7 +44,7 @@ impl KVStore for ProxyKV {
             .scan_prefix(prefix.as_bytes())
             .keys()
             .skip(cursor.map_or(0, |cursor| cursor.parse().unwrap_or(0)))
-            .take(limit.unwrap_or(std::usize::MAX))
+            .take(limit.unwrap_or(usize::MAX))
             .map(|key| {
                 key.map(|key| String::from_utf8(key.to_vec()).unwrap_or_default())
                     .map_err(|err| anyhow!("{}", err))

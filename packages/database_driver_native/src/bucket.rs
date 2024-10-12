@@ -61,7 +61,7 @@ impl BucketStore for ProxyBucket {
                 file.seek(SeekFrom::Start(start as u64))
                     .map_err(|err| anyhow!("Failed to seek in file '{}': {}", key, err))?;
 
-                let mut data = vec![0; (end - start) as usize];
+                let mut data = vec![0; end - start];
                 file.read_exact(&mut data)
                     .map_err(|err| anyhow!("Failed to read from file '{}': {}", key, err))?;
 
