@@ -10,7 +10,7 @@
 
 <div align="center">
   <!-- CI status -->
-  <a href="https://github.com/async-rs/async-std/actions">
+  <a href="https://github.com/celestia-island/tairitsu/actions">
     <img src="https://img.shields.io/github/actions/workflow/status/celestia-island/tairitsu/ci.yml?branch=main"
       alt="CI Status" />
   </a>
