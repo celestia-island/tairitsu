@@ -56,6 +56,9 @@ impl KVStore for ProxyKV {
 
 pub async fn init_kv(path: impl ToString) -> Result<ProxyKV> {
     Ok(ProxyKV {
-        db: sled::open(path.to_string())?,
+        db: sled::Config::default()
+            .cache_capacity(10 * 1024 * 1024) // 10 MiB
+            .path(path.to_string())
+            .open()?,
     })
 }
