@@ -25,4 +25,13 @@ jobs:
             --no-confirm \
             --no-verify \
             --execute \
-            -p tairitsu-macros -p tairitsu
+            -p tairitsu-macros
+      - run: |-
+          cargo release \
+            publish \
+            --all-features \
+            --allow-branch HEAD \
+            --no-confirm \
+            --no-verify \
+            --execute \
+            -p tairitsu
