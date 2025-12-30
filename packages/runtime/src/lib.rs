@@ -29,7 +29,7 @@
 //!     .with_guest_initializer(|ctx| {
 //!         // Register your WIT interface
 //!         MyWit::add_to_linker(ctx.linker, |state| &mut state.my_data)?;
-//!         let instance = MyWit::instantiate(ctx.store, image.component(), ctx.linker)?;
+//!         let instance = MyWit::instantiate(ctx.store, ctx.component, ctx.linker)?;
 //!         Ok(GuestInstance::new(instance))
 //!     })?
 //!     .build()?;
@@ -52,8 +52,8 @@
 pub mod container;
 mod image;
 pub mod registry;
-pub mod wit_registry;
 pub mod wit_helper;
+pub mod wit_registry;
 
 pub use container::{Container, GuestHandlerContext, GuestInstance, HostState, HostStateImpl};
 pub use image::Image;

@@ -48,22 +48,21 @@ macro_rules! impl_wit_interface {
 /// ```
 #[macro_export]
 macro_rules! simple_handler {
-    ($command_type:ty, $handler:expr) => {
-        {
-            struct Handler;
+    ($command_type:ty, $handler:expr) => {{
+        struct Handler;
 
-            impl $crate::wit_registry::WitCommandHandler<$command_type> for Handler {
-                fn execute(&mut self, command: &$command_type) -> Result<
-                    <$command_type as $crate::wit_registry::WitCommand>::Response,
-                    String,
-                > {
-                    $handler(command)
-                }
+        impl $crate::wit_registry::WitCommandHandler<$command_type> for Handler {
+            fn execute(
+                &mut self,
+                command: &$command_type,
+            ) -> Result<<$command_type as $crate::wit_registry::WitCommand>::Response, String>
+            {
+                $handler(command)
             }
-
-            Box::new(Handler) as Box<dyn $crate::wit_registry::WitCommandHandler<$command_type>>
         }
-    };
+
+        Box::new(Handler) as Box<dyn $crate::wit_registry::WitCommandHandler<$command_type>>
+    }};
 }
 
 /// Macro to quickly create stateful command handlers
@@ -85,22 +84,21 @@ macro_rules! simple_handler {
 /// ```
 #[macro_export]
 macro_rules! stateful_handler {
-    ($state_type:ty, $command_type:ty, $handler:expr) => {
-        {
-            struct Handler(std::sync::Arc<std::sync::Mutex<$state_type>>);
+    ($state_type:ty, $command_type:ty, $handler:expr) => {{
+        struct Handler(std::sync::Arc<std::sync::Mutex<$state_type>>);
 
-            impl $crate::wit_registry::WitCommandHandler<$command_type> for Handler {
-                fn execute(&mut self, command: &$command_type) -> Result<
-                    <$command_type as $crate::wit_registry::WitCommand>::Response,
-                    String,
-                > {
-                    let mut state = self.0.lock().unwrap();
-                    $handler(&mut state, command)
-                }
+        impl $crate::wit_registry::WitCommandHandler<$command_type> for Handler {
+            fn execute(
+                &mut self,
+                command: &$command_type,
+            ) -> Result<<$command_type as $crate::wit_registry::WitCommand>::Response, String>
+            {
+                let mut state = self.0.lock().unwrap();
+                $handler(&mut state, command)
             }
-
-            let state = std::sync::Arc::new(std::sync::Mutex::new(state));
-            Box::new(Handler(state)) as Box<dyn $crate::wit_registry::WitCommandHandler<$command_type>>
         }
-    };
+
+        let state = std::sync::Arc::new(std::sync::Mutex::new(state));
+        Box::new(Handler(state)) as Box<dyn $crate::wit_registry::WitCommandHandler<$command_type>>
+    }};
 }

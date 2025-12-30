@@ -36,9 +36,10 @@ path = "src/demo.rs"
 name = "simple-host"
 path = "src/host.rs"
 
-[[bin]]
-name = "simple-wasm-host"
-path = "src/wasm_host.rs"
+# TODO: Re-enable after implementing the missing APIs (GuestCommands, HostCommands, etc.)
+# [[bin]]
+# name = "simple-wasm-host"
+# path = "src/wasm_host.rs"
 
 [features]
 default = []

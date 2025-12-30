@@ -5,8 +5,8 @@
 
 use anyhow::{Context, Result};
 
-use wasmtime::{component::Linker, Store};
-use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime::{component::Component, component::Linker, Store};
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::Image;
 
@@ -61,12 +61,11 @@ impl Default for HostState {
 }
 
 impl WasiView for HostState {
-    fn ctx(&mut self) -> &mut WasiCtx {
-        &mut self.wasi
-    }
-
-    fn table(&mut self) -> &mut ResourceTable {
-        &mut self.table
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.wasi,
+            table: &mut self.table,
+        }
     }
 }
 
@@ -113,16 +112,25 @@ impl GuestInstance {
 
 /// Context for building guest instances
 ///
-/// Provides Linker and Store, allowing users to register their own WIT interfaces
+/// Provides Linker, Store, and Component, allowing users to register their own WIT interfaces
 pub struct GuestHandlerContext<'a, T: HostStateImpl> {
     pub linker: &'a mut Linker<T>,
     pub store: &'a mut Store<T>,
+    pub component: &'a Component,
 }
 
 impl<'a, T: HostStateImpl> GuestHandlerContext<'a, T> {
     /// Create new context
-    pub fn new(linker: &'a mut Linker<T>, store: &'a mut Store<T>) -> Self {
-        Self { linker, store }
+    pub fn new(
+        linker: &'a mut Linker<T>,
+        store: &'a mut Store<T>,
+        component: &'a Component,
+    ) -> Self {
+        Self {
+            linker,
+            store,
+            component,
+        }
     }
 }
 
@@ -132,11 +140,10 @@ impl<'a, T: HostStateImpl> GuestHandlerContext<'a, T> {
 pub struct ContainerBuilder<T: HostStateImpl> {
     image: Image,
     host_state: T,
+    #[allow(clippy::type_complexity)]
     guest_initializer: Option<
         Box<
-            dyn for<'a> FnOnce(
-                    GuestHandlerContext<'a, T>,
-                ) -> Result<GuestInstance, anyhow::Error>
+            dyn for<'a> FnOnce(GuestHandlerContext<'a, T>) -> Result<GuestInstance, anyhow::Error>
                 + Send,
         >,
     >,
@@ -176,7 +183,7 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     ///         MyWit::add_to_linker(ctx.linker, |state| &mut state.my_state)?;
     ///
     ///         // Instantiate component
-    ///         let instance = MyWit::instantiate(ctx.store, component, ctx.linker)?;
+    ///         let instance = MyWit::instantiate(ctx.store, ctx.component, ctx.linker)?;
     ///
     ///         Ok(GuestInstance::new(instance))
     ///     })?
@@ -194,14 +201,14 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
 
     /// Build container
     pub fn build(self) -> Result<Container<T>> {
-        let mut store = Store::new(&self.image.engine(), self.host_state);
+        let mut store = Store::new(self.image.engine(), self.host_state);
 
-        let mut linker = Linker::new(&self.image.engine());
-        wasmtime_wasi::add_to_linker_sync(&mut linker)
+        let mut linker = Linker::new(self.image.engine());
+        wasmtime_wasi::p2::add_to_linker_sync(&mut linker)
             .context("Failed to add WASI to linker")?;
 
         let guest_instance = if let Some(initializer) = self.guest_initializer {
-            let ctx = GuestHandlerContext::new(&mut linker, &mut store);
+            let ctx = GuestHandlerContext::new(&mut linker, &mut store, self.image.component());
             initializer(ctx)?
         } else {
             return Err(anyhow::anyhow!(

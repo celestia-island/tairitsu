@@ -12,6 +12,6 @@ tairitsu-macros = "0.2.0"
 anyhow = "^1"
 bytes = "^1"
 
-wasmtime = { version = "^25", features = ["component-model"] }
+wasmtime = { version = "^40", features = ["component-model"] }
 wasmtime-wasi = "^40"
 wit-component = "^0.243"

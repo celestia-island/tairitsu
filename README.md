@@ -70,7 +70,7 @@ let container = Container::builder(image)?
         // Instantiate the component
         let instance = MyWit::instantiate(
             ctx.store,
-            image.component(),
+            ctx.component,
             ctx.linker
         )?;
 
@@ -154,7 +154,7 @@ let container = Container::builder(image)?
     .with_guest_initializer(|ctx| {
         // Use the generated bindings
         MyApp::add_to_linker(ctx.linker, |state| &mut state.data)?;
-        let instance = MyApp::instantiate(ctx.store, image.component(), ctx.linker)?;
+        let instance = MyApp::instantiate(ctx.store, ctx.component, ctx.linker)?;
         Ok(GuestInstance::new(instance))
     })?
     .build()?;

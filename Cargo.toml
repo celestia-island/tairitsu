@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/runtime", "examples/minimal-example"]
+members = ["packages/runtime", "examples/wit-native-macro", "examples/wit-native-simple"]
 resolver = "2"
 
 [patch.crates-io]
