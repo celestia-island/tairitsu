@@ -41,7 +41,8 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
     fn execute(&mut self, command: &FilesystemCommands) -> Result<FilesystemResponse, String> {
         match command {
             FilesystemCommands::Read { path } => {
-                let data = self.storage
+                let data = self
+                    .storage
                     .get(path)
                     .cloned()
                     .ok_or_else(|| format!("File not found: {}", path))?;
@@ -52,12 +53,14 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
                 Ok(FilesystemResponse::Write(Ok(())))
             }
             FilesystemCommands::Delete { path } => {
-                self.storage.remove(path)
+                self.storage
+                    .remove(path)
                     .ok_or_else(|| format!("File not found: {}", path))?;
                 Ok(FilesystemResponse::Delete(Ok(())))
             }
             FilesystemCommands::List { directory } => {
-                let files: Vec<String> = self.storage
+                let files: Vec<String> = self
+                    .storage
                     .keys()
                     .filter(|k| k.starts_with(directory))
                     .cloned()
@@ -76,7 +79,10 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
         match command {
             NetworkCommands::Http_get { url } => {
                 // Mock implementation
-                Ok(NetworkResponse::Http_get(Ok(format!("Response from {}", url))))
+                Ok(NetworkResponse::Http_get(Ok(format!(
+                    "Response from {}",
+                    url
+                ))))
             }
             NetworkCommands::Http_post { url, body } => {
                 // Mock implementation

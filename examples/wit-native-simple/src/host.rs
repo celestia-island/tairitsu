@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
-use tairitsu::{WitCommand, WitCommandHandler, WitInterface, CompositeWitInterface};
+use tairitsu::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
 
 // ============================================================================
 // Define WIT-Compatible Command Types (Zero Serialization)
@@ -23,7 +23,7 @@ pub enum FileSystemCommands {
 
 impl WitCommand for FileSystemCommands {
     type Response = Result<Vec<u8>, String>;
-    
+
     fn command_name(&self) -> &'static str {
         match self {
             Self::Read { .. } => "fs_read",
@@ -32,7 +32,7 @@ impl WitCommand for FileSystemCommands {
             Self::List { .. } => "fs_list",
         }
     }
-    
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -47,14 +47,14 @@ pub enum NetworkCommands {
 
 impl WitCommand for NetworkCommands {
     type Response = Result<Vec<u8>, String>;
-    
+
     fn command_name(&self) -> &'static str {
         match self {
             Self::HttpGet { .. } => "net_http_get",
             Self::HttpPost { .. } => "net_http_post",
         }
     }
-    
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -78,25 +78,29 @@ impl FileSystemHandler {
 }
 
 impl WitCommandHandler<FileSystemCommands> for FileSystemHandler {
-    fn execute(&mut self, command: &FileSystemCommands) -> Result<<FileSystemCommands as WitCommand>::Response, String> {
+    fn execute(
+        &mut self,
+        command: &FileSystemCommands,
+    ) -> Result<<FileSystemCommands as WitCommand>::Response, String> {
         match command {
-            FileSystemCommands::Read { path } => {
-                self.storage.get(path)
-                    .cloned()
-                    .map(Ok)
-                    .ok_or_else(|| format!("File not found: {}", path))
-            }
+            FileSystemCommands::Read { path } => self
+                .storage
+                .get(path)
+                .cloned()
+                .map(Ok)
+                .ok_or_else(|| format!("File not found: {}", path)),
             FileSystemCommands::Write { path, data } => {
                 self.storage.insert(path.clone(), data.clone());
                 Ok(Ok(b"Written successfully".to_vec()))
             }
-            FileSystemCommands::Delete { path } => {
-                self.storage.remove(path)
-                    .map(|_| Ok(b"Deleted successfully".to_vec()))
-                    .ok_or_else(|| format!("File not found: {}", path))
-            }
+            FileSystemCommands::Delete { path } => self
+                .storage
+                .remove(path)
+                .map(|_| Ok(b"Deleted successfully".to_vec()))
+                .ok_or_else(|| format!("File not found: {}", path)),
             FileSystemCommands::List { directory } => {
-                let files: Vec<String> = self.storage
+                let files: Vec<String> = self
+                    .storage
                     .keys()
                     .filter(|k| k.starts_with(directory))
                     .cloned()
@@ -112,7 +116,10 @@ impl WitCommandHandler<FileSystemCommands> for FileSystemHandler {
 struct NetworkHandler;
 
 impl WitCommandHandler<NetworkCommands> for NetworkHandler {
-    fn execute(&mut self, command: &NetworkCommands) -> Result<<NetworkCommands as WitCommand>::Response, String> {
+    fn execute(
+        &mut self,
+        command: &NetworkCommands,
+    ) -> Result<<NetworkCommands as WitCommand>::Response, String> {
         match command {
             NetworkCommands::HttpGet { url } => {
                 // Mock HTTP GET
@@ -120,11 +127,9 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
             }
             NetworkCommands::HttpPost { url, body } => {
                 // Mock HTTP POST
-                Ok(Ok(format!(
-                    "POST to {} with {} bytes",
-                    url,
-                    body.len()
-                ).into_bytes()))
+                Ok(Ok(
+                    format!("POST to {} with {} bytes", url, body.len()).into_bytes()
+                ))
             }
         }
     }
@@ -134,6 +139,7 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
 // WIT Interface Implementations
 // ============================================================================
 
+#[allow(dead_code)]
 struct FileSystemInterface {
     handler: FileSystemHandler,
 }
@@ -144,7 +150,8 @@ impl FileSystemInterface {
             handler: FileSystemHandler::new(),
         }
     }
-    
+
+    #[allow(dead_code)]
     fn handler_mut(&mut self) -> &mut FileSystemHandler {
         &mut self.handler
     }
@@ -154,7 +161,7 @@ impl WitInterface for FileSystemInterface {
     fn interface_name(&self) -> &'static str {
         "filesystem"
     }
-    
+
     fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
         println!("[Interface] Registered: {}", self.interface_name());
     }
@@ -166,7 +173,7 @@ impl WitInterface for NetworkInterface {
     fn interface_name(&self) -> &'static str {
         "network"
     }
-    
+
     fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
         println!("[Interface] Registered: {}", self.interface_name());
     }
@@ -178,96 +185,115 @@ impl WitInterface for NetworkInterface {
 
 fn main() -> Result<()> {
     println!("=== Approach B: Trait-Based WIT Integration with Container ===\n");
-    
+
     // Step 1: Create composite interface combining multiple WIT implementations
     let mut composite = CompositeWitInterface::new();
-    
+
     println!("Step 1: Building composite interface");
     composite.add_interface(Box::new(FileSystemInterface::new()));
     composite.add_interface(Box::new(NetworkInterface));
     println!("  ✓ Added filesystem interface");
     println!("  ✓ Added network interface\n");
-    
+
     // Step 2: Create dispatcher and register all handlers
     let mut dispatcher = tairitsu::WitCommandDispatcher::new();
     composite.register_all(&mut dispatcher);
-    
+
     // Step 3: Demonstrate zero-serialization command execution
     println!("Step 2: Executing commands with zero serialization overhead\n");
-    
+
     // Create handler instances (in real implementation, these would be in the container)
     let mut fs_handler = FileSystemHandler::new();
     let mut net_handler = NetworkHandler;
-    
+
     // File system operations
     println!("--- File System Operations ---");
-    
+
     let write_cmd = FileSystemCommands::Write {
         path: "/data/config.json".to_string(),
         data: b"{\"name\":\"tairitsu\",\"version\":\"0.1.0\"}".to_vec(),
     };
     println!("Command: {:?}", write_cmd);
-    match fs_handler.execute(&write_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match fs_handler
+        .execute(&write_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(result) => println!("  ✓ Result: {}\n", String::from_utf8_lossy(&result)),
         Err(e) => println!("  ✗ Error: {}\n", e),
     }
-    
+
     let read_cmd = FileSystemCommands::Read {
         path: "/data/config.json".to_string(),
     };
     println!("Command: {:?}", read_cmd);
-    match fs_handler.execute(&read_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match fs_handler
+        .execute(&read_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
             println!("  ✓ Read: {}\n", content);
         }
         Err(e) => println!("  ✗ Error: {}\n", e),
     }
-    
+
     // Write more files
-    fs_handler.execute(&FileSystemCommands::Write {
-        path: "/data/file1.txt".to_string(),
-        data: b"Content 1".to_vec(),
-    }).map_err(|e| anyhow::anyhow!(e))?;
-    fs_handler.execute(&FileSystemCommands::Write {
-        path: "/data/file2.txt".to_string(),
-        data: b"Content 2".to_vec(),
-    }).map_err(|e| anyhow::anyhow!(e))?;
-    
+    let _ = fs_handler
+        .execute(&FileSystemCommands::Write {
+            path: "/data/file1.txt".to_string(),
+            data: b"Content 1".to_vec(),
+        })
+        .map_err(|e| anyhow::anyhow!(e))?;
+    let _ = fs_handler
+        .execute(&FileSystemCommands::Write {
+            path: "/data/file2.txt".to_string(),
+            data: b"Content 2".to_vec(),
+        })
+        .map_err(|e| anyhow::anyhow!(e))?;
+
     let list_cmd = FileSystemCommands::List {
         directory: "/data".to_string(),
     };
     println!("Command: {:?}", list_cmd);
-    match fs_handler.execute(&list_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match fs_handler
+        .execute(&list_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(files) => {
             let files_str = String::from_utf8_lossy(&files);
             println!("  ✓ Files: {}\n", files_str);
         }
         Err(e) => println!("  ✗ Error: {}\n", e),
     }
-    
+
     // Network operations
     println!("--- Network Operations ---");
-    
+
     let get_cmd = NetworkCommands::HttpGet {
         url: "https://api.example.com/data".to_string(),
     };
     println!("Command: {:?}", get_cmd);
-    match net_handler.execute(&get_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match net_handler
+        .execute(&get_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(response) => println!("  ✓ Response: {}\n", String::from_utf8_lossy(&response)),
         Err(e) => println!("  ✗ Error: {}\n", e),
     }
-    
+
     let post_cmd = NetworkCommands::HttpPost {
         url: "https://api.example.com/submit".to_string(),
         body: b"{\"action\":\"test\"}".to_vec(),
     };
     println!("Command: {:?}", post_cmd);
-    match net_handler.execute(&post_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match net_handler
+        .execute(&post_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(response) => println!("  ✓ Response: {}\n", String::from_utf8_lossy(&response)),
         Err(e) => println!("  ✗ Error: {}\n", e),
     }
-    
+
     // Summary
     println!("=== Architecture Benefits ===");
     println!("✓ Zero serialization overhead - Direct function calls");
@@ -282,6 +308,6 @@ fn main() -> Result<()> {
     println!("3. Host dispatches to appropriate trait handlers");
     println!("4. Responses flow back through WIT without serialization");
     println!("\nFor WASM integration example, see: examples/hybrid");
-    
+
     Ok(())
 }

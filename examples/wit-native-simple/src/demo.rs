@@ -1,10 +1,12 @@
 //! Approach B: Trait-based composable WIT interfaces demo
-//! 
+//!
 //! This demonstrates how to use trait objects and dynamic dispatch
 //! to compose multiple WIT interfaces without runtime serialization.
 
-use tairitsu::{WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface, CompositeWitInterface};
 use std::collections::HashMap;
+use tairitsu::{
+    CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
+};
 
 // ============================================================================
 // File System Interface - Basic Operations
@@ -19,7 +21,7 @@ pub enum FileSystemBasicCommands {
 
 impl WitCommand for FileSystemBasicCommands {
     type Response = Result<Vec<u8>, String>;
-    
+
     fn command_name(&self) -> &'static str {
         match self {
             Self::Read { .. } => "fs_read",
@@ -27,7 +29,7 @@ impl WitCommand for FileSystemBasicCommands {
             Self::Delete { .. } => "fs_delete",
         }
     }
-    
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -47,23 +49,26 @@ impl FileSystemBasicHandler {
 }
 
 impl WitCommandHandler<FileSystemBasicCommands> for FileSystemBasicHandler {
-    fn execute(&mut self, command: &FileSystemBasicCommands) -> Result<<FileSystemBasicCommands as WitCommand>::Response, String> {
+    fn execute(
+        &mut self,
+        command: &FileSystemBasicCommands,
+    ) -> Result<<FileSystemBasicCommands as WitCommand>::Response, String> {
         match command {
-            FileSystemBasicCommands::Read { path } => {
-                self.storage.get(path)
-                    .cloned()
-                    .map(Ok)
-                    .ok_or_else(|| format!("File not found: {}", path))
-            }
+            FileSystemBasicCommands::Read { path } => self
+                .storage
+                .get(path)
+                .cloned()
+                .map(Ok)
+                .ok_or_else(|| format!("File not found: {}", path)),
             FileSystemBasicCommands::Write { path, data } => {
                 self.storage.insert(path.clone(), data.clone());
                 Ok(Ok(vec![]))
             }
-            FileSystemBasicCommands::Delete { path } => {
-                self.storage.remove(path)
-                    .map(|_| Ok(vec![]))
-                    .ok_or_else(|| format!("File not found: {}", path))
-            }
+            FileSystemBasicCommands::Delete { path } => self
+                .storage
+                .remove(path)
+                .map(|_| Ok(vec![]))
+                .ok_or_else(|| format!("File not found: {}", path)),
         }
     }
 }
@@ -81,7 +86,7 @@ pub enum FileSystemAdvancedCommands {
 
 impl WitCommand for FileSystemAdvancedCommands {
     type Response = Result<Vec<String>, String>;
-    
+
     fn command_name(&self) -> &'static str {
         match self {
             Self::List { .. } => "fs_list",
@@ -89,7 +94,7 @@ impl WitCommand for FileSystemAdvancedCommands {
             Self::Copy { .. } => "fs_copy",
         }
     }
-    
+
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -107,10 +112,15 @@ impl FileSystemAdvancedHandler {
 }
 
 impl WitCommandHandler<FileSystemAdvancedCommands> for FileSystemAdvancedHandler {
-    fn execute(&mut self, command: &FileSystemAdvancedCommands) -> Result<<FileSystemAdvancedCommands as WitCommand>::Response, String> {
+    fn execute(
+        &mut self,
+        command: &FileSystemAdvancedCommands,
+    ) -> Result<<FileSystemAdvancedCommands as WitCommand>::Response, String> {
         match command {
             FileSystemAdvancedCommands::List { directory } => {
-                let files: Vec<String> = self.basic_handler.storage
+                let files: Vec<String> = self
+                    .basic_handler
+                    .storage
                     .keys()
                     .filter(|k| k.starts_with(directory))
                     .cloned()
@@ -147,7 +157,7 @@ impl WitInterface for FileSystemBasicInterface {
     fn interface_name(&self) -> &'static str {
         "filesystem-basic"
     }
-    
+
     fn register_handlers(&self, _dispatcher: &mut WitCommandDispatcher) {
         // In a real implementation, this would register the actual handlers
         println!("Registered handlers for: {}", self.interface_name());
@@ -160,7 +170,7 @@ impl WitInterface for FileSystemAdvancedInterface {
     fn interface_name(&self) -> &'static str {
         "filesystem-advanced"
     }
-    
+
     fn register_handlers(&self, _dispatcher: &mut WitCommandDispatcher) {
         println!("Registered handlers for: {}", self.interface_name());
     }
@@ -172,90 +182,108 @@ impl WitInterface for FileSystemAdvancedInterface {
 
 fn main() -> anyhow::Result<()> {
     println!("=== Approach B: Trait-Based Composable WIT Interfaces ===\n");
-    
+
     // Create composite interface
     let mut composite = CompositeWitInterface::new();
-    
+
     // Add basic filesystem interface
     composite.add_interface(Box::new(FileSystemBasicInterface));
     println!("✓ Added basic filesystem interface");
-    
-    // Add advanced filesystem interface  
+
+    // Add advanced filesystem interface
     composite.add_interface(Box::new(FileSystemAdvancedInterface));
     println!("✓ Added advanced filesystem interface");
-    
+
     // Create dispatcher and register all handlers
     let mut dispatcher = WitCommandDispatcher::new();
     composite.register_all(&mut dispatcher);
-    
+
     println!("\n=== Demonstrating Type-Safe Commands ===\n");
-    
+
     // Create handlers manually for demo
     let mut basic_handler = FileSystemBasicHandler::new();
-    
+
     // Demonstrate basic operations
     let write_cmd = FileSystemBasicCommands::Write {
         path: "/test.txt".to_string(),
         data: b"Hello, WIT!".to_vec(),
     };
     println!("Command: {:?}", write_cmd);
-    match basic_handler.execute(&write_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match basic_handler
+        .execute(&write_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(_) => println!("✓ Write successful\n"),
         Err(e) => println!("✗ Write failed: {}\n", e),
     }
-    
+
     let read_cmd = FileSystemBasicCommands::Read {
         path: "/test.txt".to_string(),
     };
     println!("Command: {:?}", read_cmd);
-    match basic_handler.execute(&read_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match basic_handler
+        .execute(&read_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
             println!("✓ Read successful: {}\n", content);
         }
         Err(e) => println!("✗ Read failed: {}\n", e),
     }
-    
+
     // Demonstrate advanced operations
     let mut advanced_handler = FileSystemAdvancedHandler::new(basic_handler);
-    
+
     // Write more files
-    advanced_handler.basic_handler.execute(&FileSystemBasicCommands::Write {
-        path: "/dir/file1.txt".to_string(),
-        data: b"File 1".to_vec(),
-    }).map_err(|e| anyhow::anyhow!(e))?;
-    advanced_handler.basic_handler.execute(&FileSystemBasicCommands::Write {
-        path: "/dir/file2.txt".to_string(),
-        data: b"File 2".to_vec(),
-    }).map_err(|e| anyhow::anyhow!(e))?;
-    
+    let _ = advanced_handler
+        .basic_handler
+        .execute(&FileSystemBasicCommands::Write {
+            path: "/dir/file1.txt".to_string(),
+            data: b"File 1".to_vec(),
+        })
+        .map_err(|e| anyhow::anyhow!(e))?;
+    let _ = advanced_handler
+        .basic_handler
+        .execute(&FileSystemBasicCommands::Write {
+            path: "/dir/file2.txt".to_string(),
+            data: b"File 2".to_vec(),
+        })
+        .map_err(|e| anyhow::anyhow!(e))?;
+
     let list_cmd = FileSystemAdvancedCommands::List {
         directory: "/dir".to_string(),
     };
     println!("Command: {:?}", list_cmd);
-    match advanced_handler.execute(&list_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match advanced_handler
+        .execute(&list_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(files) => {
             println!("✓ List successful: {:?}\n", files);
         }
         Err(e) => println!("✗ List failed: {}\n", e),
     }
-    
+
     let copy_cmd = FileSystemAdvancedCommands::Copy {
         from: "/dir/file1.txt".to_string(),
         to: "/dir/file1_copy.txt".to_string(),
     };
     println!("Command: {:?}", copy_cmd);
-    match advanced_handler.execute(&copy_cmd).map_err(|e| anyhow::anyhow!(e))? {
+    match advanced_handler
+        .execute(&copy_cmd)
+        .map_err(|e| anyhow::anyhow!(e))?
+    {
         Ok(result) => println!("✓ Copy successful: {:?}\n", result),
         Err(e) => println!("✗ Copy failed: {}\n", e),
     }
-    
+
     println!("=== Key Benefits ===");
     println!("✓ No runtime serialization overhead");
     println!("✓ Compile-time type safety");
     println!("✓ Composable interfaces via traits");
     println!("✓ Each interface can extend/build on others");
     println!("✓ Zero-cost abstractions");
-    
+
     Ok(())
 }

@@ -63,35 +63,35 @@ impl GuestApi for GuestImpl {
         tairitsu::core::host_api::log("info", "Guest module initialized (Approach A - Macros)");
 
         // Call host using type-safe command
-        tairitsu::core::host_api::log(
-            "info",
-            "Testing macro-generated type-safe command...",
-        );
+        tairitsu::core::host_api::log("info", "Testing macro-generated type-safe command...");
 
         // Execute GetInfo command on host
         let cmd = HostCommands::GetInfo;
-        let cmd_json = serde_json::to_string(&cmd).map_err(|e| format!("Serialization error: {}", e))?;
+        let cmd_json =
+            serde_json::to_string(&cmd).map_err(|e| format!("Serialization error: {}", e))?;
 
         match tairitsu::core::host_api::execute(&cmd_json, "") {
-            Ok(response_json) => {
-                match serde_json::from_str::<HostResponse>(&response_json) {
-                    Ok(HostResponse::Info { name, version, status }) => {
-                        tairitsu::core::host_api::log(
-                            "info",
-                            &format!("Host info: {} v{} ({})", name, version, status),
-                        );
-                    }
-                    Ok(HostResponse::Text(text)) => {
-                        tairitsu::core::host_api::log(
-                            "info",
-                            &format!("Host response: {}", text),
-                        );
-                    }
-                    Err(e) => {
-                        tairitsu::core::host_api::log("error", &format!("Failed to parse host response: {}", e));
-                    }
+            Ok(response_json) => match serde_json::from_str::<HostResponse>(&response_json) {
+                Ok(HostResponse::Info {
+                    name,
+                    version,
+                    status,
+                }) => {
+                    tairitsu::core::host_api::log(
+                        "info",
+                        &format!("Host info: {} v{} ({})", name, version, status),
+                    );
                 }
-            }
+                Ok(HostResponse::Text(text)) => {
+                    tairitsu::core::host_api::log("info", &format!("Host response: {}", text));
+                }
+                Err(e) => {
+                    tairitsu::core::host_api::log(
+                        "error",
+                        &format!("Failed to parse host response: {}", e),
+                    );
+                }
+            },
             Err(e) => {
                 tairitsu::core::host_api::log("error", &format!("Failed to get host info: {}", e));
             }
@@ -101,10 +101,7 @@ impl GuestApi for GuestImpl {
     }
 
     fn handle_command(command: String, _payload: String) -> Result<String, String> {
-        tairitsu::core::host_api::log(
-            "info",
-            &format!("Guest received command: '{}'", command),
-        );
+        tairitsu::core::host_api::log("info", &format!("Guest received command: '{}'", command));
 
         // Deserialize the command
         let cmd: GuestCommands = serde_json::from_str(&command)
@@ -112,12 +109,10 @@ impl GuestApi for GuestImpl {
 
         // Handle commands using pattern matching
         let response = match cmd {
-            GuestCommands::Greet(name) => {
-                GuestResponse::Text(format!(
-                    "Hello from Approach A (macro-generated)! You said: {}",
-                    name
-                ))
-            }
+            GuestCommands::Greet(name) => GuestResponse::Text(format!(
+                "Hello from Approach A (macro-generated)! You said: {}",
+                name
+            )),
 
             GuestCommands::Compute(input) => {
                 let word_count = input.split_whitespace().count();
@@ -143,15 +138,13 @@ impl GuestApi for GuestImpl {
                 match tairitsu::core::host_api::execute(&host_cmd_json, "") {
                     Ok(host_response_json) => {
                         match serde_json::from_str::<HostResponse>(&host_response_json) {
-                            Ok(HostResponse::Text(text)) => {
-                                GuestResponse::Text(format!(
-                                    "Host echoed back (via macro-generated commands): {}",
-                                    text
-                                ))
-                            }
-                            Ok(HostResponse::Info { .. }) => {
-                                GuestResponse::Text("Unexpected Info response from Echo".to_string())
-                            }
+                            Ok(HostResponse::Text(text)) => GuestResponse::Text(format!(
+                                "Host echoed back (via macro-generated commands): {}",
+                                text
+                            )),
+                            Ok(HostResponse::Info { .. }) => GuestResponse::Text(
+                                "Unexpected Info response from Echo".to_string(),
+                            ),
                             Err(e) => return Err(format!("Failed to parse host response: {}", e)),
                         }
                     }
@@ -165,8 +158,7 @@ impl GuestApi for GuestImpl {
         };
 
         // Serialize the response
-        serde_json::to_string(&response)
-            .map_err(|e| format!("Failed to serialize response: {}", e))
+        serde_json::to_string(&response).map_err(|e| format!("Failed to serialize response: {}", e))
     }
 }
 

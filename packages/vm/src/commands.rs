@@ -6,6 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Trait for commands that can be executed by the host
+#[allow(dead_code)]
 pub trait HostCommand: Serialize + for<'de> Deserialize<'de> + Send + Sync {
     /// The response type for this command
     type Response: Serialize + for<'de> Deserialize<'de> + Send + Sync;
@@ -15,6 +16,7 @@ pub trait HostCommand: Serialize + for<'de> Deserialize<'de> + Send + Sync {
 }
 
 /// Trait for commands that can be executed by the guest
+#[allow(dead_code)]
 pub trait GuestCommand: Serialize + for<'de> Deserialize<'de> + Send + Sync {
     /// The response type for this command
     type Response: Serialize + for<'de> Deserialize<'de> + Send + Sync;

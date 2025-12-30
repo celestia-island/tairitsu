@@ -24,18 +24,12 @@ impl GuestApi for GuestImpl {
         tairitsu::core::host_api::log("info", "Guest module initialized (Approach B - Traits)");
 
         // Demonstrate trait-based type-safe communication
-        tairitsu::core::host_api::log(
-            "info",
-            "Testing trait-based type-safe command...",
-        );
+        tairitsu::core::host_api::log("info", "Testing trait-based type-safe command...");
 
         // Execute GetInfo command on host
         match tairitsu::core::host_api::execute("get_info", "{}") {
             Ok(response) => {
-                tairitsu::core::host_api::log(
-                    "info",
-                    &format!("Host info received: {}", response),
-                );
+                tairitsu::core::host_api::log("info", &format!("Host info received: {}", response));
             }
             Err(e) => {
                 tairitsu::core::host_api::log("error", &format!("Failed to get host info: {}", e));
@@ -57,10 +51,8 @@ impl GuestApi for GuestImpl {
         // Handle commands using trait-based pattern matching
         match command.as_str() {
             "greet" => {
-                let response = format!(
-                    "Hello from Approach B (trait-based)! You said: {}",
-                    payload
-                );
+                let response =
+                    format!("Hello from Approach B (trait-based)! You said: {}", payload);
                 Ok(response)
             }
 
@@ -109,7 +101,10 @@ impl GuestApi for GuestImpl {
                 // Demonstrate network interface (trait-based)
                 tairitsu::core::host_api::log(
                     "info",
-                    &format!("Making network request via trait-based interface: {}", payload),
+                    &format!(
+                        "Making network request via trait-based interface: {}",
+                        payload
+                    ),
                 );
 
                 // Simulate calling host's network interface

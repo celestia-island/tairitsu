@@ -2,7 +2,7 @@
 //!
 //! This shows how the wit_interface! macro generates enums with zero boilerplate
 
-use tairitsu::wit_registry::{WitCommand, WitCommandHandler};
+use tairitsu::wit_registry::WitCommandHandler;
 use tairitsu_macros::wit_interface;
 
 // Generate three separate interfaces using the macro
@@ -46,7 +46,8 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
     fn execute(&mut self, command: &FilesystemCommands) -> Result<FilesystemResponse, String> {
         match command {
             FilesystemCommands::Read { path } => {
-                let data = self.storage
+                let data = self
+                    .storage
                     .get(path)
                     .cloned()
                     .ok_or_else(|| format!("File not found: {}", path))?;
@@ -58,13 +59,15 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
                 Ok(FilesystemResponse::Write(Ok(())))
             }
             FilesystemCommands::Delete { path } => {
-                self.storage.remove(path)
+                self.storage
+                    .remove(path)
                     .ok_or_else(|| format!("File not found: {}", path))?;
                 println!("[FS] Deleted {}", path);
                 Ok(FilesystemResponse::Delete(Ok(())))
             }
             FilesystemCommands::List { directory } => {
-                let files: Vec<String> = self.storage
+                let files: Vec<String> = self
+                    .storage
                     .keys()
                     .filter(|k| k.starts_with(directory))
                     .cloned()
@@ -109,7 +112,7 @@ impl WitCommandHandler<DatabaseCommands> for DatabaseHandler {
             DatabaseCommands::Query { sql } => {
                 println!("[DB] Query: {}", sql);
                 Ok(DatabaseResponse::Query(Ok(
-                    "[[\"id\",1],[\"name\",\"test\"]]".to_string()
+                    "[[\"id\",1],[\"name\",\"test\"]]".to_string(),
                 )))
             }
             DatabaseCommands::Execute { sql } => {
