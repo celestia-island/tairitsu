@@ -3,7 +3,7 @@ members = ["packages/runtime", "examples/minimal-example"]
 resolver = "2"
 
 [patch.crates-io]
-# 在开发时使用本地版本，方便调试
+# Local development version for easier debugging
 tairitsu-macros = { path = "packages/macros" }
 
 [profile.release]

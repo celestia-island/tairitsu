@@ -2,6 +2,7 @@
 name = "tairitsu-example-wit-native-macro"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 # This example demonstrates proc-macro based automatic WIT enum generation
 # Includes both standalone demos and full WASM bidirectional communication
@@ -17,7 +18,9 @@ tairitsu = { path = "../../packages/runtime" }
 
 # For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "^0.39", default-features = false, features = ["macros"] }
+wit-bindgen = { version = "^0.39", default-features = false, features = [
+  "macros",
+] }
 
 [lib]
 # Library is used for the WASM guest side

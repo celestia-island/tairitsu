@@ -20,7 +20,9 @@ tairitsu = { path = "../../packages/runtime" }
 
 # For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]
-wit-bindgen = { version = "^0.39", default-features = false, features = ["macros"] }
+wit-bindgen = { version = "^0.39", default-features = false, features = [
+  "macros",
+] }
 
 [lib]
 # Library is used for the WASM guest side

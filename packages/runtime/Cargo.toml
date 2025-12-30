@@ -2,17 +2,16 @@
 authors = ["langyo <langyo.china@gmail.com>"]
 name = "tairitsu"
 
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 publish = false
 
 [dependencies]
+tairitsu-macros = "0.2.0"
+
 anyhow = "^1"
 bytes = "^1"
 
 wasmtime = { version = "^25", features = ["component-model"] }
-wasmtime-wasi = "^25"
-wit-component = "^0.222"
-
-# 重新导出 macros（使用正式版本，通过 patch 指向本地）
-tairitsu-macros = "0.1.0"
+wasmtime-wasi = "^40"
+wit-component = "^0.243"
