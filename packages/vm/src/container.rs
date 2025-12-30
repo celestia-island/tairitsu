@@ -8,6 +8,10 @@ use wasmtime::{
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
+use crate::commands::{
+    deserialize_command, serialize_command, GuestCommands, GuestResponse, HostCommands,
+    HostResponse, LogLevel,
+};
 use crate::Image;
 
 bindgen!({
@@ -18,11 +22,11 @@ bindgen!({
 
 use self::tairitsu::core::host_api::Host as HostApiTrait;
 
-/// Type alias for execute handler
-type ExecuteHandler = Arc<dyn Fn(String, String) -> Result<String, String> + Send + Sync>;
+/// Type alias for execute handler with typed commands
+type ExecuteHandler = Arc<dyn Fn(HostCommands) -> Result<HostResponse, String> + Send + Sync>;
 
 /// Type alias for log handler
-type LogHandler = Arc<dyn Fn(String, String) + Send + Sync>;
+type LogHandler = Arc<dyn Fn(LogLevel, String) + Send + Sync>;
 
 /// Host state that implements the host-api interface
 pub struct HostState {
@@ -46,18 +50,29 @@ impl WasiView for HostState {
 
 impl HostApiTrait for HostState {
     fn execute(&mut self, command: String, payload: String) -> Result<String, String> {
+        // Deserialize the command from JSON
+        let cmd: HostCommands = deserialize_command(&command).or_else(|_| {
+            // Fallback for legacy string-based commands
+            Ok::<HostCommands, String>(HostCommands::Custom {
+                name: command.clone(),
+                data: payload.clone(),
+            })
+        })?;
+
         if let Some(handler) = &self.execute_handler {
-            handler(command, payload)
+            let response = handler(cmd)?;
+            serialize_command(&response)
         } else {
             Err("No execute handler registered".to_string())
         }
     }
 
     fn log(&mut self, level: String, message: String) {
+        let log_level = LogLevel::from(level.as_str());
         if let Some(handler) = &self.log_handler {
-            handler(level, message);
+            handler(log_level, message);
         } else {
-            eprintln!("[{}] {}", level, message);
+            eprintln!("[{}] {}", log_level, message);
         }
     }
 }
@@ -100,19 +115,19 @@ impl Container {
         Ok(Self { store, bindings })
     }
 
-    /// Set the execute command handler
+    /// Set the execute command handler with typed commands
     pub fn on_execute<F>(&mut self, handler: F) -> &mut Self
     where
-        F: Fn(String, String) -> Result<String, String> + Send + Sync + 'static,
+        F: Fn(HostCommands) -> Result<HostResponse, String> + Send + Sync + 'static,
     {
         self.store.data_mut().execute_handler = Some(Arc::new(handler));
         self
     }
 
-    /// Set the log message handler
+    /// Set the log message handler with typed log levels
     pub fn on_log<F>(&mut self, handler: F) -> &mut Self
     where
-        F: Fn(String, String) + Send + Sync + 'static,
+        F: Fn(LogLevel, String) + Send + Sync + 'static,
     {
         self.store.data_mut().log_handler = Some(Arc::new(handler));
         self
@@ -127,7 +142,24 @@ impl Container {
             .map_err(|e| anyhow::anyhow!("Guest init failed: {}", e))
     }
 
-    /// Send a command to the guest module
+    /// Send a typed command to the guest module
+    pub fn send_command(&mut self, command: GuestCommands) -> Result<GuestResponse> {
+        let cmd_str = serialize_command(&command)
+            .map_err(|e| anyhow::anyhow!("Serialization error: {}", e))?;
+        let payload = String::new(); // Payload is embedded in the command
+
+        let response_str = self
+            .bindings
+            .tairitsu_core_guest_api()
+            .call_handle_command(&mut self.store, &cmd_str, &payload)
+            .context("Failed to call guest handle_command")?
+            .map_err(|e| anyhow::anyhow!("Guest handle_command failed: {}", e))?;
+
+        deserialize_command(&response_str)
+            .map_err(|e| anyhow::anyhow!("Failed to deserialize response: {}", e))
+    }
+
+    /// Send a command to the guest module (legacy string-based interface)
     pub fn handle_command(&mut self, command: &str, payload: &str) -> Result<String> {
         self.bindings
             .tairitsu_core_guest_api()

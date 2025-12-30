@@ -3,10 +3,10 @@
 
 use anyhow::Result;
 use bytes::Bytes;
-use tairitsu::{Container, Registry};
+use tairitsu::{Container, GuestCommands, HostCommands, HostResponse, LogLevel, Registry};
 
 fn main() -> Result<()> {
-    println!("=== Tairitsu Hybrid Example - Host Side ===\n");
+    println!("=== Tairitsu Hybrid Example - Host Side (Type-Safe Commands) ===\n");
 
     // Load the WASM module (the same crate compiled to wasm32-wasip1)
     let wasm_path = format!(
@@ -43,46 +43,52 @@ fn main() -> Result<()> {
     println!("Creating container from image...\n");
     let mut container = Container::new(&image)?;
 
-    // Set up host-side handlers
-    container.on_execute(|command: String, payload: String| {
-        println!(
-            "[Host] Received execute request: command='{}', payload='{}'",
-            command, payload
-        );
-        match command.as_str() {
-            "get_info" => {
-                Ok(r#"{"name":"Tairitsu Host","version":"0.1.0","status":"running"}"#.to_string())
+    // Set up host-side handlers with typed commands
+    container.on_execute(|command: HostCommands| {
+        println!("[Host] Received execute request: {:?}", command);
+        match command {
+            HostCommands::GetInfo => Ok(HostResponse::Info {
+                name: "Tairitsu Host".to_string(),
+                version: "0.1.0".to_string(),
+                status: "running".to_string(),
+            }),
+            HostCommands::Echo(msg) => Ok(HostResponse::Text(msg)),
+            HostCommands::Custom { name, data } => {
+                // Fallback for legacy commands
+                Ok(HostResponse::Text(format!(
+                    "Custom command '{}' with data: {}",
+                    name, data
+                )))
             }
-            "echo" => Ok(payload),
-            _ => Err(format!("Unknown host command: {}", command)),
         }
     });
 
-    container.on_log(|level: String, message: String| {
-        println!("[Guest Log][{}] {}", level.to_uppercase(), message);
+    container.on_log(|level: LogLevel, message: String| {
+        println!(
+            "[Guest Log][{}] {}",
+            level.to_string().to_uppercase(),
+            message
+        );
     });
 
     // Initialize the guest module
     println!("=== Initializing Guest Module ===");
     container.init()?;
 
-    println!("\n=== Sending Commands to Guest ===");
+    println!("\n=== Sending Typed Commands to Guest ===");
 
-    // Send various commands to the guest
+    // Send type-safe commands to the guest
     let commands = vec![
-        ("greet", "Tairitsu Framework"),
-        ("compute", "Hello World"),
-        ("call_host", "This message goes to host and back"),
+        GuestCommands::Greet("Tairitsu Framework".to_string()),
+        GuestCommands::Compute("Hello World".to_string()),
+        GuestCommands::CallHost("This message goes to host and back".to_string()),
     ];
 
-    for (cmd, payload) in commands {
-        println!(
-            "\n[Host] Sending command: '{}' with payload: '{}'",
-            cmd, payload
-        );
-        match container.handle_command(cmd, payload) {
+    for cmd in commands {
+        println!("\n[Host] Sending typed command: {:?}", cmd);
+        match container.send_command(cmd) {
             Ok(response) => {
-                println!("[Host] Guest response: {}", response);
+                println!("[Host] Guest response: {:?}", response);
             }
             Err(e) => {
                 eprintln!("[Host] Guest error: {}", e);
@@ -94,10 +100,11 @@ fn main() -> Result<()> {
     println!("\nThis example demonstrated:");
     println!("1. Loading a WASM module into an Image (like docker pull/build)");
     println!("2. Creating a Container from the Image (like docker run)");
-    println!("3. Bidirectional communication:");
-    println!("   - Host calling Guest (via handle_command)");
-    println!("   - Guest calling Host (via execute API)");
-    println!("4. Shared WIT interface definitions for type-safe communication");
+    println!("3. Type-safe bidirectional communication:");
+    println!("   - Host calling Guest with enum-based commands");
+    println!("   - Guest calling Host with enum-based commands");
+    println!("   - Compile-time type safety for all commands and responses");
+    println!("4. Shared enum definitions for type-safe communication");
 
     Ok(())
 }
