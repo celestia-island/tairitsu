@@ -34,10 +34,9 @@ path = "src/demo.rs"
 name = "macro-host"
 path = "src/host.rs"
 
-# TODO: Re-enable after implementing the missing APIs (GuestCommands, HostCommands, etc.)
-# [[bin]]
-# name = "macro-wasm-host"
-# path = "src/wasm_host.rs"
+[[bin]]
+name = "macro-wasm-host"
+path = "src/wasm_host.rs"
 
 [features]
 default = []

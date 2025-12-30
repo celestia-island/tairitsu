@@ -1,104 +1,139 @@
-//! Approach A: WASM Host - Loading and communicating with macro-generated WASM guest
-//! This demonstrates the full bidirectional communication cycle with type-safe commands
+//! Simplified WASM Host example for macro-based approach
+//!
+//! This demonstrates how to use the current Container API with macro-generated WIT interfaces.
+//!
+//! # API Usage Example
+//!
+//! ## 1. Define your WIT interface using macros
+//! ```rust,ignore
+//! wit_interface! {{");
+//!     interface filesystem {{");
+//!         read: func(path: String) -> Result<Vec<u8>, String>;");
+//!         write: func(path: String, data: Vec<u8>) -> Result<(), String>;");
+//!     }}");
+//! }}");
+//! ```
+//!
+//! ## 2. Create an Image from WASM binary
+//! ```rust,ignore
+//! let image = Image::new(wasm_bytes)?;
+//! ```
+//!
+//! ## 3. Build a Container with macro-generated bindings
+//! ```rust,ignore
+//! let container = Container::builder(image)")
+//!     .with_guest_initializer(|ctx| {{");
+//!         // Register your macro-generated interface");
+//!         Filesystem::add_to_linker(");
+//!             ctx.linker,");
+//!             |state| &mut state.filesystem");
+//!         )?;");
+//!         ");
+//!         // Instantiate the component");
+//!         let instance = Filesystem::instantiate(");
+//!             ctx.store,");
+//!             ctx.component,");
+//!             ctx.linker");
+//!         )?;");
+//!         ");
+//!         Ok(GuestInstance::new(instance))");
+//!     }})?;");
+//!     .build()?;");
+//! ```
+//!
+//! # Key Advantages
+//!
+//! * Automatic WIT-to-Rust enum generation
+//! * Zero boilerplate with macros
+//! * Type-safe commands at compile time
+//! * No runtime serialization overhead
+//! * Easy composable interfaces
 
 use anyhow::Result;
 use std::path::PathBuf;
 
-use tairitsu::{Container, GuestCommands, HostCommands, HostResponse, LogLevel, Registry};
+use tairitsu::{Container, Registry};
 
 fn main() -> Result<()> {
-    println!("=== Approach A: Macro-Generated Type-Safe WASM Communication ===\n");
+    println!("=== Macro-Based WASM Host Example ===\n");
 
     // Build the WASM path
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let wasm_path =
-        manifest_dir.join("../../target/wasm32-wasip1/release/tairitsu_example_wit_native_a.wasm");
+        manifest_dir.join("../../target/wasm32-wasip1/tairitsu_example_wit_native_macro.wasm");
 
-    println!("Loading WASM module from: {}", wasm_path.display());
+    println!("Looking for WASM module at: {}", wasm_path.display());
 
-    // Load the WASM binary
-    let wasm_binary = std::fs::read(&wasm_path).map_err(|e| {
-        eprintln!("\nError: Could not load WASM file: {}", e);
-        eprintln!("Please build the WASM module first with:");
-        eprintln!("  cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-a --lib");
-        e
-    })?;
+    // Try to load the WASM binary if it exists
+    let wasm_binary = match std::fs::read(&wasm_path) {
+        Ok(binary) => binary,
+        Err(e) => {
+            eprintln!("\nWASM file not found: {}", e);
+            eprintln!("\nThis example requires a WASM guest module.");
+            eprintln!("\nTo build it, run:");
+            eprintln!("  cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-macro --lib");
+            eprintln!("\nFor now, this example will demonstrate the API usage without actual WASM execution.\n");
+
+            println!("See the top of this file for detailed API usage examples.");
+            println!("\nKey advantages:");
+            println!("  • Automatic WIT-to-Rust enum generation");
+            println!("  • Zero boilerplate with macros");
+            println!("  • Type-safe commands at compile time");
+            println!("  • No runtime serialization overhead");
+            println!("  • Easy composable interfaces");
+
+            return Ok(());
+        }
+    };
 
     println!("WASM module loaded ({} bytes)\n", wasm_binary.len());
 
     // Create registry and register the WASM module
     let registry = Registry::new();
-    registry.register_image("wit-native-a:latest", wasm_binary.into())?;
+    registry.register_image("wit-native-macro:latest", wasm_binary.into())?;
 
-    // Get the image and create a container
+    // Get the image
     let image = registry
-        .get_image("wit-native-a:latest")
+        .get_image("wit-native-macro:latest")
         .expect("Image should be registered");
 
     println!("Creating container from image...\n");
-    let mut container = Container::new(&image)?;
 
-    // Set up host-side handlers with macro-generated type-safe commands
-    container.on_execute(|command: HostCommands| {
-        println!("[Host] Received execute request: {:?}", command);
-        match command {
-            HostCommands::GetInfo => Ok(HostResponse::Info {
-                name: "Tairitsu Host (Approach A)".to_string(),
-                version: "0.1.0".to_string(),
-                status: "running with macro-generated commands".to_string(),
-            }),
-            HostCommands::Echo(msg) => {
-                println!("[Host] Echoing message: {}", msg);
-                Ok(HostResponse::Text(msg))
-            }
-            HostCommands::Custom { name, data } => Ok(HostResponse::Text(format!(
-                "Custom command '{}' with data: {}",
-                name, data
-            ))),
+    // Create container using the builder pattern
+    let container = Container::builder(image)
+        .with_guest_initializer(|_ctx| {
+            // In a real example, you would:
+            // 1. Use wit-interface! macro to generate your WIT bindings
+            // 2. Add your generated interface to the linker
+            // 3. Instantiate the component
+            // 4. Return the instance wrapped in GuestInstance
+
+            // For this demonstration, we'll show the structure:
+            println!("[Guest Initializer] Called with context");
+            println!("[Guest Initializer] Would register macro-generated WIT bindings here");
+            println!("[Guest Initializer] Would instantiate component here");
+
+            // This is a placeholder - in real usage you'd return an actual GuestInstance
+            Err(anyhow::anyhow!(
+                "WIT bindings not implemented - this is a demonstration"
+            ))
+        })
+        .build();
+
+    match container {
+        Ok(_container) => {
+            println!("Container created successfully!");
+            println!("\n=== Container Ready ===");
+            println!("In a real example, you could now:");
+            println!("  - Call guest functions through the instance");
+            println!("  - Use macro-generated type-safe commands");
+            println!("  - Interact bidirectionally with the WASM module");
         }
-    });
-
-    container.on_log(|level: LogLevel, message: String| {
-        println!(
-            "[Guest Log][{}] {}",
-            level.to_string().to_uppercase(),
-            message
-        );
-    });
-
-    // Initialize the guest module
-    println!("=== Initializing Guest Module ===");
-    container.init()?;
-
-    println!("\n=== Sending Typed Commands to Guest ===");
-
-    // Send type-safe commands to the guest (using macro-generated enums)
-    let commands = vec![
-        GuestCommands::Greet("Tairitsu with Approach A".to_string()),
-        GuestCommands::Compute("The quick brown fox jumps over the lazy dog".to_string()),
-        GuestCommands::CallHost("Test nested bidirectional call".to_string()),
-    ];
-
-    for cmd in commands {
-        println!("\n[Host] Sending macro-generated typed command: {:?}", cmd);
-        match container.send_command(cmd) {
-            Ok(response) => {
-                println!("[Host] Guest response: {:?}", response);
-            }
-            Err(e) => {
-                eprintln!("[Host] Guest error: {}", e);
-            }
+        Err(e) => {
+            println!("Container creation failed (expected in this demo): {}", e);
+            println!("\n=== API Usage Demonstrated ===");
         }
     }
-
-    println!("\n=== Example Complete ===");
-    println!("\nApproach A demonstrated:");
-    println!("  ✓ Macro-generated type-safe command enums");
-    println!("  ✓ Zero boilerplate - WIT defines everything");
-    println!("  ✓ Host → Guest bidirectional communication");
-    println!("  ✓ Guest → Host bidirectional communication");
-    println!("  ✓ Nested calls (Guest calling Host during Host's request)");
-    println!("  ✓ Compile-time type safety across WASM boundary");
 
     Ok(())
 }
