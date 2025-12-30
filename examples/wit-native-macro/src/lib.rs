@@ -45,8 +45,7 @@ pub mod guest {
 
     /// Get guest information
     pub fn get_info() -> tairitsu::GuestInfo {
-        tairitsu::GuestInfo::new("tairitsu-macro-guest", "0.1.0")
-            .with_feature("wit-native-macro")
+        tairitsu::GuestInfo::new("tairitsu-macro-guest", "0.1.0").with_feature("wit-native-macro")
     }
 }
 
@@ -73,10 +72,7 @@ impl Guest {
         GuestInfo {
             name: "tairitsu-macro-wasm-guest".to_string(),
             version: "0.1.0".to_string(),
-            features: vec![
-                "wit-native-macro".to_string(),
-                "wasm".to_string(),
-            ],
+            features: vec!["wit-native-macro".to_string(), "wasm".to_string()],
         }
     }
 }

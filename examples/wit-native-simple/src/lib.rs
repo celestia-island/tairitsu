@@ -74,10 +74,7 @@ impl Guest {
         GuestInfo {
             name: "tairitsu-simple-wasm-guest".to_string(),
             version: "0.1.0".to_string(),
-            features: vec![
-                "wit-native-simple".to_string(),
-                "wasm".to_string(),
-            ],
+            features: vec!["wit-native-simple".to_string(), "wasm".to_string()],
         }
     }
 }
