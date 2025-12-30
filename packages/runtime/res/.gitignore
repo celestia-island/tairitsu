@@ -1,2 +1,0 @@
-# Ignore WASI adapter files (they will be downloaded by the build script)
-*.wasm
