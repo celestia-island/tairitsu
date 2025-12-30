@@ -1,0 +1,17 @@
+[package]
+authors = ["langyo <langyo.china@gmail.com>"]
+name = "tairitsu"
+
+version = "0.2.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+tairitsu-macros = "0.2.0"
+
+anyhow = "^1"
+bytes = "^1"
+
+wasmtime = { version = "^40", features = ["component-model"] }
+wasmtime-wasi = "^40"
+wit-component = "^0.243"

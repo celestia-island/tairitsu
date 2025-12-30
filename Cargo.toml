@@ -1,14 +1,13 @@
 [workspace]
-members = ["packages/*", "examples/*"]
+members = ["packages/runtime", "examples/wit-native-macro", "examples/wit-native-simple"]
 resolver = "2"
+
+[patch.crates-io]
+# Local development version for easier debugging
+tairitsu-macros = { path = "packages/macros" }
 
 [profile.release]
 lto = true
 opt-level = 'z'
 codegen-units = 1
 panic = "abort"
-
-[patch.crates-io]
-yew = { git = "https://github.com/langyo/yew", branch = "wasi-support-test" }
-yew-router = { git = "https://github.com/langyo/yew", branch = "wasi-support-test" }
-stylist = { git = "https://github.com/langyo/stylist-rs", branch = "wasi-support" }

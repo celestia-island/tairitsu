@@ -1,0 +1,46 @@
+[package]
+name = "tairitsu-example-wit-native-simple"
+version = "0.1.0"
+edition = "2021"
+authors = ["langyo <langyo.china@gmail.com>"]
+publish = false
+
+# This example demonstrates simple trait-based composable WIT interfaces
+# without runtime serialization
+# Includes both standalone demos and full WASM bidirectional communication
+
+[dependencies]
+anyhow = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+
+# For native builds (host and native testing)
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tairitsu = { path = "../../packages/runtime" }
+wit-bindgen = { version = "^0.39" }
+wit-component = { version = "^0.243" }
+
+# For WASM guest builds
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.39", default-features = false, features = [
+  "macros",
+] }
+
+[lib]
+# Library is used for the WASM guest side
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "simple-demo"
+path = "src/demo.rs"
+
+[[bin]]
+name = "simple-host"
+path = "src/host.rs"
+
+[[bin]]
+name = "simple-wasm-host"
+path = "src/wasm_host.rs"
+
+[features]
+default = []

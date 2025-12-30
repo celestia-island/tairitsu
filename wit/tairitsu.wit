@@ -1,0 +1,49 @@
+/// Tairitsu WIT interfaces for bidirectional host-guest communication
+///
+/// This file defines the core interfaces that Tairitsu uses for:
+/// 1. Host calling guest functions (guest-api)
+/// 2. Guest calling host functions (host-api)
+
+package tairitsu:core;
+
+/// World that represents the complete Tairitsu environment
+world tairitsu {
+    /// Import host APIs that guest can call
+    import host-api;
+
+    /// Export guest APIs that host can call
+    export guest-api;
+}
+
+/// Host API - functions provided by host that guest can call
+interface host-api {
+    /// Log a message from the guest
+    log: func(message: string);
+
+    /// Execute a command and get result
+    execute-command: func(command: string, args: list<string>) -> result<string, string>;
+}
+
+/// Guest API - functions provided by guest that host can call
+interface guest-api {
+    /// Initialize the guest module
+    init: func() -> result<_, string>;
+
+    /// Process a request
+    process: func(input: string) -> result<string, string>;
+
+    /// Get guest information
+    get-info: func() -> Info;
+}
+
+/// Guest information
+record Info {
+    /// Guest name
+    name: string,
+
+    /// Guest version
+    version: string,
+
+    /// Supported features
+    features: list<string>,
+}
