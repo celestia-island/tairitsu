@@ -70,10 +70,11 @@ cargo make run
 
 ### Basic Usage
 
-```rust
-use tairitsu::{Registry, Container, Image};
+```rust,no_run
+use tairitsu::{Registry, Container};
 use bytes::Bytes;
 
+# fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Create a registry (like Docker daemon)
 let registry = Registry::new();
 
@@ -87,17 +88,19 @@ let mut container = Container::new(&image)?;
 
 // Set up bidirectional communication handlers
 container
-    .on_execute(|cmd, payload| {
+    .on_execute(|cmd: String, payload: String| {
         // Handle guest requests to the host
         Ok(format!("Host processed: {}", cmd))
     })
-    .on_log(|level, msg| {
+    .on_log(|level: String, msg: String| {
         println!("[Guest][{}] {}", level, msg);
     });
 
 // Initialize and communicate with the guest
 container.init()?;
 let response = container.handle_command("greet", "Hello")?;
+# Ok(())
+# }
 ```
 
 ## Architecture

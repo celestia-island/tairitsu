@@ -18,7 +18,7 @@ impl GuestApi for GuestImpl {
     fn init() -> Result<(), String> {
         // Log initialization via host API
         tairitsu::core::host_api::log("info", "Guest module initialized");
-        
+
         // Try to execute a command on the host
         match tairitsu::core::host_api::execute("get_info", "{}") {
             Ok(response) => {
@@ -31,11 +31,14 @@ impl GuestApi for GuestImpl {
             }
         }
     }
-    
+
     fn handle_command(command: String, payload: String) -> Result<String, String> {
         // Log the received command
-        tairitsu::core::host_api::log("info", &format!("Received command: {} with payload: {}", command, payload));
-        
+        tairitsu::core::host_api::log(
+            "info",
+            &format!("Received command: {} with payload: {}", command, payload),
+        );
+
         // Handle different commands
         match command.as_str() {
             "greet" => {
@@ -50,15 +53,11 @@ impl GuestApi for GuestImpl {
             "call_host" => {
                 // Demonstrate calling back to the host
                 match tairitsu::core::host_api::execute("echo", &payload) {
-                    Ok(host_response) => {
-                        Ok(format!("Host echoed: {}", host_response))
-                    }
-                    Err(e) => Err(format!("Host call failed: {}", e))
+                    Ok(host_response) => Ok(format!("Host echoed: {}", host_response)),
+                    Err(e) => Err(format!("Host call failed: {}", e)),
                 }
             }
-            _ => {
-                Err(format!("Unknown command: {}", command))
-            }
+            _ => Err(format!("Unknown command: {}", command)),
         }
     }
 }

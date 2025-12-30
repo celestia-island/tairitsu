@@ -3,10 +3,10 @@
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use wasmtime::{
-    component::{Linker, bindgen},
+    component::{bindgen, Linker},
     Store,
 };
-use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView, ResourceTable};
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
 use crate::Image;
 
@@ -16,23 +16,29 @@ bindgen!({
     async: false,
 });
 
-use tairitsu::core::host_api::Host as HostApiTrait;
+use self::tairitsu::core::host_api::Host as HostApiTrait;
+
+/// Type alias for execute handler
+type ExecuteHandler = Arc<dyn Fn(String, String) -> Result<String, String> + Send + Sync>;
+
+/// Type alias for log handler
+type LogHandler = Arc<dyn Fn(String, String) + Send + Sync>;
 
 /// Host state that implements the host-api interface
 pub struct HostState {
     wasi: WasiCtx,
     table: ResourceTable,
     /// Callback for handling execute commands from the guest
-    execute_handler: Option<Arc<dyn Fn(String, String) -> Result<String, String> + Send + Sync>>,
+    execute_handler: Option<ExecuteHandler>,
     /// Callback for handling log messages from the guest
-    log_handler: Option<Arc<dyn Fn(String, String) + Send + Sync>>,
+    log_handler: Option<LogHandler>,
 }
 
 impl WasiView for HostState {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
-    
+
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
@@ -46,7 +52,7 @@ impl HostApiTrait for HostState {
             Err("No execute handler registered".to_string())
         }
     }
-    
+
     fn log(&mut self, level: String, message: String) {
         if let Some(handler) = &self.log_handler {
             handler(level, message);
@@ -67,35 +73,33 @@ impl Container {
     /// Create a new Container from an Image
     pub fn new(image: &Image) -> Result<Self> {
         let mut wasi = WasiCtxBuilder::new();
-        wasi.inherit_stdio()
-            .inherit_network();
-        
+        wasi.inherit_stdio().inherit_network();
+
         let wasi = wasi.build();
         let table = ResourceTable::new();
-        
+
         let host_state = HostState {
             wasi,
             table,
             execute_handler: None,
             log_handler: None,
         };
-        
+
         let mut store = Store::new(image.engine(), host_state);
-        
+
         let mut linker = Linker::new(image.engine());
-        wasmtime_wasi::add_to_linker_sync(&mut linker)
-            .context("Failed to add WASI to linker")?;
-        
+        wasmtime_wasi::add_to_linker_sync(&mut linker).context("Failed to add WASI to linker")?;
+
         // Add host API implementation
         Tairitsu::add_to_linker(&mut linker, |state: &mut HostState| state)
             .context("Failed to add host API to linker")?;
-        
+
         let bindings = Tairitsu::instantiate(&mut store, image.component(), &linker)
             .context("Failed to instantiate component")?;
-        
+
         Ok(Self { store, bindings })
     }
-    
+
     /// Set the execute command handler
     pub fn on_execute<F>(&mut self, handler: F) -> &mut Self
     where
@@ -104,7 +108,7 @@ impl Container {
         self.store.data_mut().execute_handler = Some(Arc::new(handler));
         self
     }
-    
+
     /// Set the log message handler
     pub fn on_log<F>(&mut self, handler: F) -> &mut Self
     where
@@ -113,7 +117,7 @@ impl Container {
         self.store.data_mut().log_handler = Some(Arc::new(handler));
         self
     }
-    
+
     /// Initialize the guest module
     pub fn init(&mut self) -> Result<()> {
         self.bindings
@@ -122,7 +126,7 @@ impl Container {
             .context("Failed to call guest init")?
             .map_err(|e| anyhow::anyhow!("Guest init failed: {}", e))
     }
-    
+
     /// Send a command to the guest module
     pub fn handle_command(&mut self, command: &str, payload: &str) -> Result<String> {
         self.bindings
@@ -135,7 +139,6 @@ impl Container {
 
 impl std::fmt::Debug for Container {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Container")
-            .finish()
+        f.debug_struct("Container").finish()
     }
 }
