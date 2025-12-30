@@ -1,0 +1,31 @@
+// Tairitsu WIT Interface Definitions
+// This interface defines the bidirectional communication between host and guest
+
+package tairitsu:core@0.1.0;
+
+/// Guest interface - functions that the guest (WASM module) exports and host calls
+interface guest-api {
+    /// Initialize the guest module
+    init: func() -> result<_, string>;
+    
+    /// Handle a command from the host
+    handle-command: func(command: string, payload: string) -> result<string, string>;
+}
+
+/// Host interface - functions that the host provides and guest can call
+interface host-api {
+    /// Execute a command on the host
+    execute: func(command: string, payload: string) -> result<string, string>;
+    
+    /// Log a message to the host
+    log: func(level: string, message: string);
+}
+
+/// The main world for Tairitsu components
+world tairitsu {
+    /// Guest imports the host API
+    import host-api;
+    
+    /// Guest exports its API
+    export guest-api;
+}

@@ -6,6 +6,22 @@ skip_core_tasks = true
 script = '''
 #!@duckscript
 
-exec cargo build --target wasm32-wasip1 --release --package tairitsu-example-guest-side
-exec cargo run --package tairitsu-example-host-side
+echo "Building WASM guest module..."
+exec cargo build --target wasm32-wasip1 --release --package tairitsu-example-hybrid
+
+echo ""
+echo "Running native host..."
+exec cargo run --package tairitsu-example-hybrid --bin host
+'''
+
+[tasks.build]
+script = '''
+#!@duckscript
+
+echo "Building WASM guest module..."
+exec cargo build --target wasm32-wasip1 --release --package tairitsu-example-hybrid
+
+echo ""
+echo "Building native host..."
+exec cargo build --release --package tairitsu-example-hybrid --bin host
 '''

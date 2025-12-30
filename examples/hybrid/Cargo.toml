@@ -1,0 +1,39 @@
+[package]
+name = "tairitsu-example-hybrid"
+version = "0.1.0"
+edition = "2021"
+authors = ["langyo <langyo.china@gmail.com>"]
+publish = false
+
+# This example demonstrates a hybrid architecture where the same crate
+# can be compiled to both native and WASM targets, with bidirectional communication
+
+[dependencies]
+anyhow = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+
+# For the native (host) build
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tairitsu = { path = "../../packages/vm" }
+bytes = "^1"
+
+# For the WASM (guest) build
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.39", default-features = false, features = ["macros"] }
+
+[lib]
+# Library is used for the WASM guest side
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+# Binary is used for the native host side
+name = "host"
+path = "src/host.rs"
+# Only build the binary for native targets (not WASM)
+required-features = ["host-binary"]
+
+[features]
+default = []
+# Feature flag to enable building the host binary
+host-binary = []
