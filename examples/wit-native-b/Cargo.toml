@@ -1,0 +1,21 @@
+[package]
+name = "tairitsu-example-wit-native-b"
+version = "0.1.0"
+edition = "2021"
+authors = ["langyo <langyo.china@gmail.com>"]
+publish = false
+
+# This example demonstrates Approach B: trait-based composable WIT interfaces
+# without runtime serialization
+
+[dependencies]
+tairitsu = { path = "../../packages/vm" }
+anyhow = "^1"
+
+[[bin]]
+name = "approach-b-host"
+path = "src/host.rs"
+
+[[bin]]
+name = "approach-b-demo"
+path = "src/demo.rs"

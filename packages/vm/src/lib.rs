@@ -7,6 +7,7 @@ mod commands;
 mod container;
 mod image;
 mod registry;
+pub mod wit_registry;
 
 pub use commands::{
     deserialize_command, serialize_command, GuestCommands, GuestResponse, HostCommands,
@@ -15,6 +16,7 @@ pub use commands::{
 pub use container::Container;
 pub use image::Image;
 pub use registry::Registry;
+pub use wit_registry::{CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface};
 
 // Re-export common types
 pub use anyhow::{Error, Result};

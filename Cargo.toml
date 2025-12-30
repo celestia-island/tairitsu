@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/vm", "examples/hybrid"]
+members = ["packages/vm", "examples/hybrid", "examples/wit-native-b"]
 resolver = "2"
 
 [profile.release]
