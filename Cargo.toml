@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/vm", "examples/hybrid", "examples/wit-native-b", "packages/tairitsu-macros", "examples/wit-native-a"]
+members = ["packages/vm", "examples/wit-native-simple", "packages/macros", "examples/wit-native-macro"]
 resolver = "2"
 
 [profile.release]

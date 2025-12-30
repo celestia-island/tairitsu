@@ -1,24 +1,24 @@
 [package]
-name = "tairitsu-example-hybrid"
+name = "tairitsu-example-wit-native-simple"
 version = "0.1.0"
 edition = "2021"
 authors = ["langyo <langyo.china@gmail.com>"]
 publish = false
 
-# This example demonstrates a hybrid architecture where the same crate
-# can be compiled to both native and WASM targets, with bidirectional communication
+# This example demonstrates simple trait-based composable WIT interfaces
+# without runtime serialization
+# Includes both standalone demos and full WASM bidirectional communication
 
 [dependencies]
 anyhow = "^1"
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 
-# For the native (host) build
+# For native builds
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tairitsu = { path = "../../packages/vm" }
-bytes = "^1"
 
-# For the WASM (guest) build
+# For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { version = "^0.39", default-features = false, features = ["macros"] }
 
@@ -27,13 +27,16 @@ wit-bindgen = { version = "^0.39", default-features = false, features = ["macros
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-# Binary is used for the native host side
-name = "host"
+name = "simple-demo"
+path = "src/demo.rs"
+
+[[bin]]
+name = "simple-host"
 path = "src/host.rs"
-# Only build the binary for native targets (not WASM)
-required-features = ["host-binary"]
+
+[[bin]]
+name = "simple-wasm-host"
+path = "src/wasm_host.rs"
 
 [features]
 default = []
-# Feature flag to enable building the host binary
-host-binary = []

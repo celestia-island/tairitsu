@@ -1,4 +1,4 @@
-# Approach A: Proc-Macro Based WIT Interface Generation
+# Proc-Macro Based WIT Interface Generation
 
 **Status**: ✅ **Fully Implemented**
 
@@ -6,7 +6,7 @@ This example demonstrates automatic generation of type-safe WIT command enums us
 
 ## Overview
 
-Approach A uses procedural macros to automatically generate command enums and response types from WIT-like interface definitions. This provides:
+This approach uses procedural macros to automatically generate command enums and response types from WIT-like interface definitions. This provides:
 
 - **Zero boilerplate**: Write WIT interface once, get enums automatically
 - **Single source of truth**: WIT definition drives all code generation
@@ -16,7 +16,7 @@ Approach A uses procedural macros to automatically generate command enums and re
 
 ## Architecture
 
-### Macro System (`packages/tairitsu-macros`)
+### Macro System (`packages/macros`)
 
 Two main procedural macros:
 
@@ -47,8 +47,8 @@ wit_interface! {
 }
 
 // Macro automatically generates:
-// - FileSystemCommands enum with Read, Write, Delete, List variants
-// - FileSystemResponse enum with corresponding response types
+// - FilesystemCommands enum with Read, Write, Delete, List variants
+// - FilesystemResponse enum with corresponding response types
 // - WitCommand trait implementation
 // - Command name mapping
 ```
@@ -57,24 +57,32 @@ wit_interface! {
 
 ### Demo - Basic Interface Examples
 
-Demonstrates automatic enum generation for FileSystem and Network interfaces:
+Demonstrates automatic enum generation for Filesystem and Network interfaces:
 
 ```bash
-cargo run --package tairitsu-example-wit-native-a --bin approach-a-demo
+just run-macro-demo
 ```
 
 ### Host - Full Integration Example
 
-Demonstrates composition of multiple macro-generated interfaces (FileSystem, Network, Database):
+Demonstrates composition of multiple macro-generated interfaces (Filesystem, Network, Database):
 
 ```bash
-cargo run --package tairitsu-example-wit-native-a --bin approach-a-host
+just run-macro-host
 ```
 
-## Benefits Over Manual Implementation
+### WASM Integration
 
-| Feature | Manual (Approach B) | Macro (Approach A) |
-|---------|--------------------|--------------------|
+Demonstrates real bidirectional communication with WASM:
+
+```bash
+just run-macro-wasm
+```
+
+## Benefits
+
+| Feature | Manual | Macro (This Approach) |
+|---------|--------|-----------------------|
 | Boilerplate | ~50 lines per interface | 0 lines |
 | Type Safety | ✅ | ✅ |
 | Serialization | ❌ None | ❌ None |
@@ -82,22 +90,9 @@ cargo run --package tairitsu-example-wit-native-a --bin approach-a-host
 | Single Source | No | Yes (WIT) |
 | Refactoring | Manual | Automatic |
 
-## Comparison with Approach B
+## When to Use This Approach
 
-| Aspect | Approach A (Macros) | Approach B (Traits) |
-|--------|---------------------|---------------------|
-| **Boilerplate** | None | Some |
-| **Setup Cost** | Medium (macro crate) | Low |
-| **Runtime Cost** | Zero | Zero |
-| **Type Safety** | ✅ Compile-time | ✅ Compile-time |
-| **Composability** | ✅ Via traits | ✅ Via traits |
-| **IDE Support** | ✅ Full | ✅ Full |
-| **Maintainability** | ✅ Excellent | ✅ Good |
-| **Learning Curve** | Medium | Low |
-
-## When to Use Approach A
-
-Use Approach A when:
+Use macro-based generation when:
 
 - ✅ You have many WIT interfaces (> 5)
 - ✅ WIT definitions change frequently
