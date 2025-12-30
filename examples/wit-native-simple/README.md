@@ -5,7 +5,9 @@ This example demonstrates a simple trait-based approach to composing multiple WI
 ## Key Concepts
 
 ### 1. WitCommand Trait
+
 Defines the interface for type-safe commands that can be dispatched:
+
 ```rust
 pub trait WitCommand: Send + Sync + 'static {
     type Response: Send + Sync + 'static;
@@ -15,7 +17,9 @@ pub trait WitCommand: Send + Sync + 'static {
 ```
 
 ### 2. WitCommandHandler Trait
+
 Handlers implement this trait to execute commands:
+
 ```rust
 pub trait WitCommandHandler<C: WitCommand>: Send + Sync {
     fn execute(&mut self, command: &C) -> Result<C::Response, String>;
@@ -23,7 +27,9 @@ pub trait WitCommandHandler<C: WitCommand>: Send + Sync {
 ```
 
 ### 3. Composable Interfaces
+
 Multiple WIT interfaces can be combined:
+
 ```rust
 let mut composite = CompositeWitInterface::new();
 composite.add_interface(Box::new(FileSystemBasicInterface));
@@ -35,7 +41,7 @@ composite.add_interface(Box::new(FileSystemAdvancedInterface));
 ✅ **No serialization overhead** - Direct function calls, no JSON/serde
 ✅ **Compile-time type safety** - Rust type system enforces correctness
 ✅ **Composable** - Multiple interfaces can be combined
-✅ **Extensible** - New interfaces can build on existing ones  
+✅ **Extensible** - New interfaces can build on existing ones
 ✅ **Zero-cost abstractions** - Trait dispatch is optimized away
 
 ## Running the Examples
@@ -55,25 +61,21 @@ just run-simple-wasm
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────┐
-│         CompositeWitInterface                    │
-│  ┌──────────────────┐  ┌──────────────────┐   │
-│  │ FileSystem Basic │  │FileSystem Advanced│   │
-│  │   Interface      │  │    Interface      │   │
-│  └──────────────────┘  └──────────────────┘   │
-└─────────────────────────────────────────────────┘
-                    ↓
-        ┌───────────────────────┐
-        │  WitCommandDispatcher  │
-        │  ┌─────────────────┐  │
-        │  │  Trait Objects  │  │
-        │  │  (dyn Handler)  │  │
-        │  └─────────────────┘  │
-        └───────────────────────┘
-                    ↓
-         Direct function calls
-          (no serialization)
+```mermaid
+graph TD
+    subgraph Composite["CompositeWitInterface"]
+        Basic["FileSystem Basic Interface"]
+        Advanced["FileSystem Advanced Interface"]
+    end
+
+    Composite --> Dispatcher["WitCommandDispatcher"]
+    Dispatcher --> TraitObjects["Trait Objects<br/>(dyn Handler)"]
+    TraitObjects --> DirectCalls["Direct function calls<br/>(no serialization)"]
+
+    style Composite fill:#e1f5ff
+    style Dispatcher fill:#fff4e1
+    style TraitObjects fill:#f0e1ff
+    style DirectCalls fill:#e1ffe1
 ```
 
 ## Composability Example

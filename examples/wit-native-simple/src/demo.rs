@@ -4,6 +4,7 @@
 //! to compose multiple WIT interfaces without runtime serialization.
 
 use std::collections::HashMap;
+
 use tairitsu::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };

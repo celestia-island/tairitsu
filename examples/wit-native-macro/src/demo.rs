@@ -3,8 +3,7 @@
 //! This example demonstrates the proc-macro based approach where WIT interfaces
 //! are automatically converted to type-safe Rust enums without manual boilerplate.
 
-use tairitsu::wit_registry::{WitCommand, WitCommandHandler};
-use tairitsu_macros::wit_interface;
+use tairitsu::{wit_interface, wit_registry::WitCommandHandler};
 
 // Automatically generate FilesystemCommands and FilesystemResponse from WIT-like syntax
 wit_interface! {

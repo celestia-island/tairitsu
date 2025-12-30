@@ -1,6 +1,10 @@
 [workspace]
-members = ["packages/vm", "examples/wit-native-simple", "packages/macros", "examples/wit-native-macro"]
+members = ["packages/runtime", "examples/minimal-example"]
 resolver = "2"
+
+[patch.crates-io]
+# 在开发时使用本地版本，方便调试
+tairitsu-macros = { path = "packages/macros" }
 
 [profile.release]
 lto = true

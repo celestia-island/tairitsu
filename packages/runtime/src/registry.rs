@@ -1,14 +1,17 @@
-//! Registry - Manages Images and Containers (like a Docker registry/daemon)
+//! Registry - Manages Images and Containers (similar to Docker registry/daemon)
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use crate::{Container, Image};
 
-/// A Registry manages Images and running Containers
-/// Similar to Docker's daemon, it keeps track of available images and running containers
+/// Registry manages images and containers
+///
+/// Similar to Docker's daemon, it tracks available images and running containers
 pub struct Registry {
     images: Arc<Mutex<HashMap<String, Image>>>,
     containers: Arc<Mutex<HashMap<String, Container>>>,
@@ -23,11 +26,11 @@ impl Registry {
         }
     }
 
-    /// Register an Image with a name (like docker pull/build)
+    /// Register an image with a name (similar to docker pull/build)
     ///
     /// # Arguments
-    /// * `name` - A unique name for the image (e.g., "my-app:v1.0")
-    /// * `wasm_binary` - The WASM binary to create the image from
+    /// * `name` - Unique name for the image (e.g., "my-app:v1.0")
+    /// * `wasm_binary` - WASM binary file to create the image from
     pub fn register_image(&self, name: impl Into<String>, wasm_binary: Bytes) -> Result<()> {
         let name = name.into();
         let image =
@@ -39,7 +42,7 @@ impl Registry {
         Ok(())
     }
 
-    /// Register a pre-compiled WIT component as an Image
+    /// Register a pre-compiled WIT component as an image
     pub fn register_component(
         &self,
         name: impl Into<String>,
@@ -55,34 +58,17 @@ impl Registry {
         Ok(())
     }
 
-    /// Get an Image by name
+    /// Get image by name
     pub fn get_image(&self, name: &str) -> Option<Image> {
         let images = self.images.lock().unwrap();
         images.get(name).cloned()
     }
 
-    /// Create and start a Container from an Image (like docker run)
+    /// Get mutable reference to container by name
     ///
     /// # Arguments
-    /// * `image_name` - The name of the image to instantiate
-    /// * `container_name` - A unique name for the container
-    pub fn run_container(&self, image_name: &str, container_name: impl Into<String>) -> Result<()> {
-        let container_name = container_name.into();
-
-        let image = self
-            .get_image(image_name)
-            .context(format!("Image '{}' not found", image_name))?;
-
-        let container = Container::new(&image)
-            .context(format!("Failed to create container '{}'", container_name))?;
-
-        let mut containers = self.containers.lock().unwrap();
-        containers.insert(container_name, container);
-
-        Ok(())
-    }
-
-    /// Get a mutable reference to a Container
+    /// * `name` - Container name
+    /// * `f` - Callback function to execute on the container
     pub fn get_container_mut<F, R>(&self, name: &str, f: F) -> Option<R>
     where
         F: FnOnce(&mut Container) -> R,
@@ -91,7 +77,7 @@ impl Registry {
         containers.get_mut(name).map(f)
     }
 
-    /// Stop and remove a Container (like docker stop/rm)
+    /// Stop and remove container (similar to docker stop/rm)
     pub fn stop_container(&self, name: &str) -> Option<Container> {
         let mut containers = self.containers.lock().unwrap();
         containers.remove(name)
@@ -109,7 +95,7 @@ impl Registry {
         containers.keys().cloned().collect()
     }
 
-    /// Remove an Image by name
+    /// Remove image by name
     pub fn remove_image(&self, name: &str) -> Option<Image> {
         let mut images = self.images.lock().unwrap();
         images.remove(name)

@@ -2,6 +2,7 @@
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
+
 use wasmtime::{component::Component, Config, Engine};
 use wit_component::ComponentEncoder;
 
