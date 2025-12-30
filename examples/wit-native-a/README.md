@@ -1,162 +1,106 @@
-# Approach A: Proc-Macro Generated WIT Commands
+# Approach A: Proc-Macro Based WIT Interface Generation
 
-This approach uses procedural macros to automatically generate type-safe command enums from WIT interface definitions.
+**Status**: ✅ **Fully Implemented**
+
+This example demonstrates automatic generation of type-safe WIT command enums using procedural macros, eliminating all manual boilerplate while maintaining compile-time type safety.
 
 ## Overview
 
-Approach A automatically parses WIT definitions and generates Rust enums with full type safety, eliminating boilerplate code.
+Approach A uses procedural macros to automatically generate command enums and response types from WIT-like interface definitions. This provides:
 
-## Planned Features
-
-### 1. Automatic Enum Generation
-```rust
-// Given a WIT interface:
-// interface filesystem {
-//     read: func(path: string) -> result<list<u8>, string>;
-//     write: func(path: string, data: list<u8>) -> result<_, string>;
-// }
-
-// The macro generates:
-#[wit_commands(interface = "filesystem")]
-pub enum FileSystemCommands {} // Auto-populated
-
-// Expands to:
-pub enum FileSystemCommands {
-    Read { path: String },
-    Write { path: String, data: Vec<u8> },
-}
-```
-
-### 2. Composable Enums
-```rust
-// Combine multiple interfaces
-#[wit_compose]
-pub enum AllCommands {
-    #[from(filesystem_basic)]
-    FileSystem(FileSystemBasicCommands),
-    
-    #[from(filesystem_advanced)]
-    FileSystemAdvanced(FileSystemAdvancedCommands),
-}
-```
-
-### 3. Automatic Handler Trait Implementation
-```rust
-// The macro also generates the handler trait
-impl WitCommandHandler<FileSystemCommands> for MyHandler {
-    // Auto-generated dispatch logic
-}
-```
+- **Zero boilerplate**: Write WIT interface once, get enums automatically
+- **Single source of truth**: WIT definition drives all code generation
+- **Compile-time type safety**: Full Rust type system enforcement
+- **No runtime overhead**: Zero serialization, direct function calls
+- **IDE integration**: Full autocomplete, type hints, and refactoring support
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────┐
-│          WIT Definition (world.wit)           │
-└──────────────────────────────────────────────┘
-                    ↓
-        ┌───────────────────────┐
-        │   wit_bindgen parse   │
-        └───────────────────────┘
-                    ↓
-┌──────────────────────────────────────────────┐
-│     Procedural Macro (tairitsu-macros)        │
-│  • Parse wit_bindgen output                  │
-│  • Generate command enums                    │
-│  • Generate handler traits                   │
-│  • Generate composition helpers              │
-└──────────────────────────────────────────────┘
-                    ↓
-┌──────────────────────────────────────────────┐
-│        Type-Safe Rust Enums + Traits         │
-│  • Zero runtime overhead                     │
-│  • Full IDE support                          │
-│  • Compile-time verification                 │
-└──────────────────────────────────────────────┘
-```
+### Macro System (`packages/tairitsu-macros`)
 
-## Implementation Plan
+Two main procedural macros:
 
-### Phase 1: Basic Macro
-- [ ] Create `tairitsu-macros` crate
-- [ ] Parse WIT interface definitions
-- [ ] Generate basic command enums
-- [ ] Generate WitCommand trait implementations
+1. **`#[derive(WitCommand)]`**: Automatically implements `WitCommand` trait for enums
+   - Generates `command_name()` mapping from enum variants
+   - Supports custom response types via `#[wit_response(Type)]`
+   - Automatic kebab-case conversion (e.g., `HttpGet` → `http-get`)
 
-### Phase 2: Composition
-- [ ] Support multiple interfaces
-- [ ] Generate composite enums
-- [ ] Implement enum flattening/nesting strategies
+2. **`wit_interface!`**: Generates complete command/response enums from WIT syntax
+   - Parses WIT-like function definitions
+   - Generates Commands enum with all variants
+   - Generates Response enum with associated types
+   - Automatically implements `WitCommand` trait
 
-### Phase 3: Advanced Features
-- [ ] Custom derive macros for handlers
-- [ ] Automatic dispatcher generation
-- [ ] Error handling improvements
-
-## Usage Example (When Implemented)
+### Example Usage
 
 ```rust
-use tairitsu_macros::wit_commands;
+use tairitsu_macros::wit_interface;
 
-// Automatically generate from WIT
-#[wit_commands(
-    wit_file = "../../wit/world.wit",
-    interface = "guest-api"
-)]
-pub enum GuestCommands {}
-
-// The macro expands this to:
-// pub enum GuestCommands {
-//     Init,
-//     HandleCommand { command: String, payload: String },
-// }
-
-// With automatic trait implementations:
-impl WitCommand for GuestCommands {
-    // Generated implementation
+// Define interface using WIT-like syntax
+wit_interface! {
+    interface filesystem {
+        read: func(path: String) -> Result<Vec<u8>, String>;
+        write: func(path: String, data: Vec<u8>) -> Result<(), String>;
+        delete: func(path: String) -> Result<(), String>;
+        list: func(directory: String) -> Result<Vec<String>, String>;
+    }
 }
+
+// Macro automatically generates:
+// - FileSystemCommands enum with Read, Write, Delete, List variants
+// - FileSystemResponse enum with corresponding response types
+// - WitCommand trait implementation
+// - Command name mapping
 ```
 
-## Benefits
+## Running the Examples
 
-✅ **Zero boilerplate** - Macros generate everything from WIT
-✅ **Type safety** - Rust compiler checks everything
-✅ **IDE support** - Full autocomplete and navigation
-✅ **WIT as source of truth** - Changes propagate automatically
-✅ **Composable** - Multiple interfaces combine seamlessly
-✅ **No serialization** - Direct type mappings
+### Demo - Basic Interface Examples
+
+Demonstrates automatic enum generation for FileSystem and Network interfaces:
+
+```bash
+cargo run --package tairitsu-example-wit-native-a --bin approach-a-demo
+```
+
+### Host - Full Integration Example
+
+Demonstrates composition of multiple macro-generated interfaces (FileSystem, Network, Database):
+
+```bash
+cargo run --package tairitsu-example-wit-native-a --bin approach-a-host
+```
+
+## Benefits Over Manual Implementation
+
+| Feature | Manual (Approach B) | Macro (Approach A) |
+|---------|--------------------|--------------------|
+| Boilerplate | ~50 lines per interface | 0 lines |
+| Type Safety | ✅ | ✅ |
+| Serialization | ❌ None | ❌ None |
+| Maintainability | Good | Excellent |
+| Single Source | No | Yes (WIT) |
+| Refactoring | Manual | Automatic |
 
 ## Comparison with Approach B
 
-| Feature | Approach A (This) | Approach B (Trait-Based) |
-|---------|-------------------|--------------------------|
-| Code Generation | Automatic | Manual |
-| Boilerplate | None | Some |
-| Flexibility | Very High | High |
-| Setup Complexity | Medium | Low |
-| WIT Integration | Native | Separate |
-| Composition | Enum-based | Trait-based |
+| Aspect | Approach A (Macros) | Approach B (Traits) |
+|--------|---------------------|---------------------|
+| **Boilerplate** | None | Some |
+| **Setup Cost** | Medium (macro crate) | Low |
+| **Runtime Cost** | Zero | Zero |
+| **Type Safety** | ✅ Compile-time | ✅ Compile-time |
+| **Composability** | ✅ Via traits | ✅ Via traits |
+| **IDE Support** | ✅ Full | ✅ Full |
+| **Maintainability** | ✅ Excellent | ✅ Good |
+| **Learning Curve** | Medium | Low |
 
-## Current Status
+## When to Use Approach A
 
-⚠️ **This is a design document for future implementation.**
+Use Approach A when:
 
-Approach A requires creating a procedural macro crate which is a larger undertaking. The design is documented here for reference. See Approach B for a working implementation that achieves similar goals with a different trade-off.
-
-To implement Approach A, we would need to:
-1. Create `packages/tairitsu-macros` crate
-2. Implement WIT parser (or use wit-parser crate)
-3. Generate enum definitions from parsed WIT
-4. Generate trait implementations
-5. Implement composition macros
-
-## Next Steps
-
-If you want to implement Approach A:
-1. Review the design in this document
-2. Create the `tairitsu-macros` crate structure
-3. Implement the proc-macro in phases as outlined above
-4. Add integration tests
-5. Update examples to use the new macros
-
-For now, **use Approach B** which provides similar functionality with manual enum definitions and trait-based composition.
+- ✅ You have many WIT interfaces (> 5)
+- ✅ WIT definitions change frequently
+- ✅ You want zero boilerplate
+- ✅ Single source of truth is important
+- ✅ You're building a plugin system with extensible interfaces

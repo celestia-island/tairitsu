@@ -82,3 +82,27 @@ watch:
 # Check project size and statistics
 stats:
     @python3 scripts/project_stats.py
+
+# Run Approach B demo (trait-based composable WIT interfaces)
+run-approach-b-demo:
+    @echo "Running Approach B demo (trait-based composition)..."
+    cargo run --package tairitsu-example-wit-native-b --bin approach-b-demo
+
+# Run Approach B host (full integration example)
+run-approach-b-host:
+    @echo "Running Approach B host (full integration)..."
+    cargo run --package tairitsu-example-wit-native-b --bin approach-b-host
+
+# Run Approach A demo (macro-generated WIT interfaces)
+run-approach-a-demo:
+    @echo "Running Approach A demo (macro-generated enums)..."
+    cargo run --package tairitsu-example-wit-native-a --bin approach-a-demo
+
+# Run Approach A host (full integration example)
+run-approach-a-host:
+    @echo "Running Approach A host (macro-generated enums)..."
+    cargo run --package tairitsu-example-wit-native-a --bin approach-a-host
+
+# Run all WIT native examples
+run-wit-native: run-approach-b-demo run-approach-b-host run-approach-a-demo run-approach-a-host
+    @echo "✓ All WIT native examples completed"

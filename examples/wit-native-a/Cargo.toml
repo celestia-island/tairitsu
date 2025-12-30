@@ -1,0 +1,16 @@
+[package]
+name = "tairitsu-example-wit-native-a"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "approach-a-demo"
+path = "src/demo.rs"
+
+[[bin]]
+name = "approach-a-host"
+path = "src/host.rs"
+
+[dependencies]
+tairitsu = { path = "../../packages/vm" }
+tairitsu-macros = { path = "../../packages/tairitsu-macros" }
