@@ -15,8 +15,8 @@
       alt="CI Status" />
   </a>
   <!-- Built with -->
-  <a href="https://sagiegurari.github.io/cargo-make">
-    <img src="https://sagiegurari.github.io/cargo-make/assets/badges/cargo-make.svg" alt="Built with cargo-make">
+  <a href="https://github.com/casey/just">
+    <img src="https://img.shields.io/badge/built%20with-just-blue" alt="Built with just">
   </a>
 </div>
 
@@ -62,10 +62,10 @@ cargo build --target wasm32-wasip1 --release --package tairitsu-example-hybrid
 cargo run --package tairitsu-example-hybrid --bin host
 ```
 
-Or use cargo-make:
+Or use just:
 
 ```bash
-cargo make run
+just run
 ```
 
 ### Basic Usage

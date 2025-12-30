@@ -55,7 +55,7 @@ cargo run --package tairitsu-example-hybrid --bin host
 Or use the shortcut:
 
 ```bash
-cargo make run
+just run
 ```
 
 ## How It Works
