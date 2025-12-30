@@ -3,6 +3,28 @@ name = "tairitsu-example-wit-native-a"
 version = "0.1.0"
 edition = "2021"
 
+# This example demonstrates Approach A: proc-macro based automatic WIT enum generation
+# Includes both standalone demos and full WASM bidirectional communication
+
+[dependencies]
+anyhow = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+
+# For native builds
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tairitsu = { path = "../../packages/vm" }
+tairitsu-macros = { path = "../../packages/tairitsu-macros" }
+
+# For WASM guest builds
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.39", default-features = false, features = ["macros"] }
+tairitsu-macros = { path = "../../packages/tairitsu-macros" }
+
+[lib]
+# Library is used for the WASM guest side
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "approach-a-demo"
 path = "src/demo.rs"
@@ -11,6 +33,9 @@ path = "src/demo.rs"
 name = "approach-a-host"
 path = "src/host.rs"
 
-[dependencies]
-tairitsu = { path = "../../packages/vm" }
-tairitsu-macros = { path = "../../packages/tairitsu-macros" }
+[[bin]]
+name = "approach-a-wasm-host"
+path = "src/wasm_host.rs"
+
+[features]
+default = []

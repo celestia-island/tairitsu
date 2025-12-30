@@ -103,6 +103,32 @@ run-approach-a-host:
     @echo "Running Approach A host (macro-generated enums)..."
     cargo run --package tairitsu-example-wit-native-a --bin approach-a-host
 
-# Run all WIT native examples
-run-wit-native: run-approach-b-demo run-approach-b-host run-approach-a-demo run-approach-a-host
+# Build WASM module for Approach A
+build-wit-native-a-wasm:
+    @echo "Building Approach A WASM module..."
+    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-a --lib
+
+# Build WASM module for Approach B
+build-wit-native-b-wasm:
+    @echo "Building Approach B WASM module..."
+    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-b --lib
+
+# Run Approach A with WASM (full bidirectional communication)
+run-wit-native-a-wasm: build-wit-native-a-wasm
+    @echo ""
+    @echo "Running Approach A WASM host..."
+    cargo run --package tairitsu-example-wit-native-a --bin approach-a-wasm-host
+
+# Run Approach B with WASM (full bidirectional communication)
+run-wit-native-b-wasm: build-wit-native-b-wasm
+    @echo ""
+    @echo "Running Approach B WASM host..."
+    cargo run --package tairitsu-example-wit-native-b --bin approach-b-wasm-host
+
+# Run all WASM examples (includes hybrid + both approaches with real WASM)
+run-all-wasm-examples: run run-wit-native-a-wasm run-wit-native-b-wasm
+    @echo "✓ All WASM integration examples completed"
+
+# Run all WIT native examples (standalone demos + full WASM integration)
+run-wit-native: run-approach-b-demo run-approach-b-host run-approach-a-demo run-approach-a-host run-wit-native-a-wasm run-wit-native-b-wasm
     @echo "✓ All WIT native examples completed"
