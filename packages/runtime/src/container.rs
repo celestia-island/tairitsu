@@ -5,7 +5,10 @@
 
 use anyhow::{Context, Result};
 
-use wasmtime::{component::Component, component::Linker, Store};
+use wasmtime::{
+    component::{Component, Linker},
+    Store,
+};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::Image;

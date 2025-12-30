@@ -34,6 +34,8 @@
 
 <br/>
 
+A WebAssembly runtime for running component-model based WASM modules.
+
 ## Features
 
 - 🐳 **Docker-like Architecture**: Image/Container model for managing WASM modules

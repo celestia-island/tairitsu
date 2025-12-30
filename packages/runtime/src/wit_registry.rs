@@ -3,8 +3,7 @@
 //! This module provides a trait-based system for registering and composing multiple
 //! WIT interface implementations without runtime serialization.
 
-use std::any::Any;
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
 
 /// Trait for WIT command types
 ///

@@ -3,6 +3,12 @@ name = "tairitsu-macros"
 version = "0.2.0"
 edition = "2021"
 
+publish = true
+authors = ["langyo <langyo.china@gmail.com>"]
+description = "A WebAssembly runtime for running component-model based WASM modules"
+license = "Apache-2.0"
+repository = "https://github.com/celestia-island/tairitsu"
+
 [lib]
 proc-macro = true
 
