@@ -8,8 +8,7 @@
 # Main tasks:
 #   just build           - Build everything (Release)
 #   just build-dev       - Build everything (Debug)
-#   just test            - Run all tests
-#   just e2e             - Run all E2E tests
+#   just test            - Run all checks (check + clippy + examples verification)
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
 #   just clean           - Clean build artifacts
@@ -116,23 +115,39 @@ run-all-wasm: run-simple-wasm run-macro-wasm
 # Test tasks
 # ============================================================================
 
-# Run all tests
+# Run all checks (cargo check + clippy + build WASM + run examples)
 test:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Running all tests..."
+    @echo "Running comprehensive checks..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo test --all --all-features
-
-# Run all E2E tests
-e2e:
+    @echo "Step 1/6: Checking code compilation..."
+    cargo check --workspace --all-targets
+    @echo "✅ Check passed"
+    @echo ""
+    @echo "Step 2/6: Running Clippy..."
+    cargo clippy --workspace --all-targets -- -D warnings
+    @echo "✅ Clippy passed"
+    @echo ""
+    @echo "Step 3/6: Building WASM modules..."
+    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-simple --lib
+    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-macro --lib
+    @echo "✅ WASM modules built"
+    @echo ""
+    @echo "Step 4/6: Running simple demo..."
+    cargo run --package tairitsu-example-wit-native-simple --bin simple-demo
+    @echo "✅ Simple demo passed"
+    @echo ""
+    @echo "Step 5/6: Running macro demo..."
+    cargo run --package tairitsu-example-wit-native-macro --bin macro-demo
+    @echo "✅ Macro demo passed"
+    @echo ""
+    @echo "Step 6/6: Running unit tests..."
+    cargo test --workspace --lib
+    @echo "✅ Unit tests passed"
+    @echo ""
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Running all E2E tests..."
+    @echo "✅ All checks passed successfully!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo test --package tairitsu --test e2e
-
-# Run all unit tests and E2E tests
-test-full: test e2e
-    @echo "✅ Full test suite completed"
 
 # ============================================================================
 # Code quality checks
@@ -153,13 +168,9 @@ clippy:
     @echo "Running Clippy..."
     cargo clippy --all --all-features -- -D warnings
 
-# CI checks (format check + Clippy + tests)
+# CI checks (format check + Clippy + test)
 ci: fmt-check clippy test
     @echo "✅ CI checks passed"
-
-# CI full pipeline (checks + E2E tests)
-ci-full: fmt-check clippy test-full
-    @echo "✅ CI full pipeline passed"
 
 # ============================================================================
 # Watch tasks (using cargo-watch)

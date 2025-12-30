@@ -58,6 +58,7 @@ pub mod wit_registry;
 pub use container::{Container, GuestHandlerContext, GuestInstance, HostState, HostStateImpl};
 pub use image::Image;
 pub use registry::Registry;
+pub use wit_helper::GuestInfo;
 pub use wit_registry::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };
@@ -66,7 +67,7 @@ pub use wit_registry::{
 pub use anyhow::{Error, Result};
 
 // Re-export procedural macros
-pub use tairitsu_macros::{wit_interface, WitCommand};
+pub use tairitsu_macros::{export_wit, wit_guest_impl, wit_interface, WitCommand};
 
 // Re-export wasmtime types for user convenience
 pub use wasmtime::{Engine, Store};

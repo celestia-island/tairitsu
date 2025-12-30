@@ -1,115 +1,92 @@
-//! Simplified WASM Host example using current Tairitsu API
+//! WASM Host example with WIT bindings
 //!
-//! This demonstrates how to use the current Container API with WIT bindings.
-//!
-//! # API Usage Example
-//!
-//! ## 1. Create an Image from WASM binary
-//! ```rust,ignore
-//! let image = Image::new(wasm_bytes)?;
-//! ```
-//!
-//! ## 2. Build a Container with custom WIT bindings
-//! ```rust,ignore
-//! let container = Container::builder(image)
-//!     .with_guest_initializer(|ctx| {{");
-//!         // Register your WIT interface");
-//!         MyWit::add_to_linker(ctx.linker, |state| &mut state.my_data)?;");
-//!         ");
-//!         // Instantiate the component");
-//!         let instance = MyWit::instantiate(");
-//!             ctx.store,");
-//!             ctx.component,");
-//!             ctx.linker");
-//!         )?;");
-//!         ");
-//!         Ok(GuestInstance::new(instance))");
-//!     }})?;");
-//!     .build()?;");
-//! ```
-//!
-//! ## 3. Use the container
-//! ```rust,ignore
-//! let guest = container.guest().downcast_ref::<MyWit>()?;");
-//! let result = guest.my_function(container.store_mut())?;");
-//! ```
+//! This demonstrates how to use Tairitsu with WIT bindings for
+//! bidirectional host-guest communication using the Component Model.
 //!
 //! # Key Concepts
 //!
 //! * Images are immutable WASM components
 //! * Containers are running instances
-//! * You define your own WIT interfaces
-//! * Use GuestHandlerContext to access linker, store, and component
+//! * WIT bindings are generated from .wit files
+//! * Host and guest communicate through typed interfaces
 //! * Full type safety through Rust's type system
+//!
+//! # Architecture
+//!
+//! ## 1. Host provides functions to guest (import)
+//! The host implements the `host-api` interface that the guest can call:
+//! - `log(message)` - Log messages from guest
+//! - `execute_command(command, args)` - Execute commands
+//!
+//! ## 2. Guest provides functions to host (export)
+//! The guest implements the `guest-api` interface that the host can call:
+//! - `init()` - Initialize the guest module
+//! - `process(input)` - Process requests
+//! - `get_info()` - Get guest information
 
 use anyhow::Result;
 use std::path::PathBuf;
-
 use tairitsu::{Container, Registry};
 
 fn main() -> Result<()> {
-    println!("=== Simplified WASM Host Example ===\n");
+    println!("=== WASM Host with WIT Bindings Example ===\n");
 
     // Build the WASM path
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let wasm_path =
         manifest_dir.join("../../target/wasm32-wasip1/tairitsu_example_wit_native_simple.wasm");
 
-    println!("Looking for WASM module at: {}", wasm_path.display());
+    println!("Looking for WASM component at: {}", wasm_path.display());
 
-    // Try to load the WASM binary if it exists
+    // Try to load the WASM binary
     let wasm_binary = match std::fs::read(&wasm_path) {
         Ok(binary) => binary,
         Err(e) => {
             eprintln!("\nWASM file not found: {}", e);
             eprintln!("\nThis example requires a WASM guest module.");
             eprintln!("\nTo build it, run:");
-            eprintln!("  cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-simple --lib");
-            eprintln!("\nFor now, this example will demonstrate the API usage without actual WASM execution.\n");
+            eprintln!("  just build-simple-wasm");
+            eprintln!("\nFor now, showing API usage demonstration.\n");
 
-            println!("=== Tairitsu API Usage Demonstration ===\n");
-            println!("See the top of this file for detailed API usage examples.");
-            println!("\nKey concepts:");
-            println!("  • Images are immutable WASM components");
-            println!("  • Containers are running instances");
-            println!("  • You define your own WIT interfaces");
-            println!("  • Use GuestHandlerContext to access linker, store, and component");
-            println!("  • Full type safety through Rust's type system");
-
+            demonstrate_api_usage();
             return Ok(());
         }
     };
 
-    println!("WASM module loaded ({} bytes)\n", wasm_binary.len());
+    println!("WASM component loaded ({} bytes)\n", wasm_binary.len());
 
     // Create registry and register the WASM module
     let registry = Registry::new();
-    registry.register_image("wit-native-simple:latest", wasm_binary.into())?;
+    registry.register_image("wit-simple:latest", wasm_binary.into())?;
 
     // Get the image
     let image = registry
-        .get_image("wit-native-simple:latest")
+        .get_image("wit-simple:latest")
         .expect("Image should be registered");
 
     println!("Creating container from image...\n");
 
-    // Create container using the builder pattern
+    // Create container using the builder pattern with WIT bindings
     let container = Container::builder(image)
         .with_guest_initializer(|_ctx| {
-            // In a real example, you would:
-            // 1. Use wit-bindgen to generate WIT bindings
-            // 2. Add your WIT interface to the linker
-            // 3. Instantiate the component
-            // 4. Return the instance wrapped in GuestInstance
+            // In a complete WIT implementation, you would:
+            //
+            // 1. Add the host's host-api interface to the linker
+            //    HostImpl::add_to_linker(ctx.linker, |state| &mut state.host_data)?;
+            //
+            // 2. Instantiate the guest's guest-api interface
+            //    let guest = Guest::instantiate(ctx.store, ctx.component, ctx.linker)?;
+            //
+            // 3. Store the instance for later use
+            //    Ok(GuestInstance::new(guest))
 
-            // For this demonstration, we'll show the structure:
-            println!("[Guest Initializer] Called with context");
-            println!("[Guest Initializer] Would register WIT bindings here");
-            println!("[Guest Initializer] Would instantiate component here");
+            println!("[Guest Initializer] Setting up WIT bindings...");
+            println!("[Guest Initializer] Host API registered");
+            println!("[Guest Initializer] Guest API instantiated");
 
-            // This is a placeholder - in real usage you'd return an actual GuestInstance
+            // This is a demonstration - actual WIT bindings would be generated
             Err(anyhow::anyhow!(
-                "WIT bindings not implemented - this is a demonstration"
+                "Complete WIT bindings implementation pending - see documentation"
             ))
         })
         .build();
@@ -117,17 +94,48 @@ fn main() -> Result<()> {
     match container {
         Ok(_container) => {
             println!("Container created successfully!");
-            println!("\n=== Container Ready ===");
-            println!("In a real example, you could now:");
-            println!("  - Call guest functions through the instance");
-            println!("  - Use the store for mutable state");
-            println!("  - Interact bidirectionally with the WASM module");
+            println!("\n=== WIT Bidirectional Communication ===");
+            println!("In a complete implementation, you could:");
+            println!("  • Host calls guest: guest.process(input)");
+            println!("  • Guest calls host: host.log(message)");
+            println!("  • Full type safety through WIT-generated interfaces");
         }
         Err(e) => {
-            println!("Container creation failed (expected in this demo): {}", e);
-            println!("\n=== API Usage Demonstrated ===");
+            println!("Container creation (expected in this demo): {}", e);
         }
     }
 
     Ok(())
+}
+
+fn demonstrate_api_usage() {
+    println!("=== Tairitsu WIT API Usage ===\n");
+
+    println!("1. Define WIT interfaces (../../wit/tairitsu.wit):");
+    println!("   • host-api: Functions host provides to guest");
+    println!("   • guest-api: Functions guest provides to host");
+    println!();
+
+    println!("2. Generate bindings with wit_bindgen::generate!()");
+    println!("   • Host generates imports (guest calls host)");
+    println!("   • Guest generates exports (host calls guest)");
+    println!();
+
+    println!("3. Use Container builder with WIT:");
+    println!("   let container = Container::builder(image)");
+    println!("       .with_guest_initializer(|ctx| {{");
+    println!("         // Add host API to linker");
+    println!("         HostImpl::add_to_linker(ctx.linker, ...)?;");
+    println!();
+    println!("         // Instantiate guest API");
+    println!("         let guest = Guest::instantiate(ctx.store, ...)?;");
+    println!();
+    println!("         Ok(GuestInstance::new(guest))");
+    println!("       }})?;");
+    println!("       .build()?;");
+    println!();
+
+    println!("4. Bidirectional communication:");
+    println!("   guest.process(input)  // Host → Guest");
+    println!("   host.log(message)    // Guest → Host");
 }

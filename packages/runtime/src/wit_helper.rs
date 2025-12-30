@@ -1,6 +1,37 @@
-//! WIT binding helper macros
+//! WIT binding helper macros and types
 //!
-//! This module provides macros that simplify WIT interface definitions, reducing user code.
+//! This module provides macros and types that simplify WIT interface definitions,
+//! reducing user code and providing common types for guest modules.
+
+/// Guest information structure
+#[derive(Debug, Clone)]
+pub struct GuestInfo {
+    /// Guest module name
+    pub name: String,
+
+    /// Guest module version
+    pub version: String,
+
+    /// Supported features
+    pub features: Vec<String>,
+}
+
+impl GuestInfo {
+    /// Create a new GuestInfo
+    pub fn new(name: impl Into<String>, version: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            version: version.into(),
+            features: Vec::new(),
+        }
+    }
+
+    /// Add a feature
+    pub fn with_feature(mut self, feature: impl Into<String>) -> Self {
+        self.features.push(feature.into());
+        self
+    }
+}
 
 /// Helper macro to implement `WitInterface` trait for a single WIT interface
 ///
