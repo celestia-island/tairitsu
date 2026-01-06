@@ -43,7 +43,9 @@ fn main() -> Result<()> {
                     let names: Vec<&str> = exports.iter().map(|f| f.name.as_str()).collect();
                     info!("Exported functions: {}", names.join(", "));
                 } else {
-                    info!("No exported functions found (interface export might not be supported yet)");
+                    info!(
+                        "No exported functions found (interface export might not be supported yet)"
+                    );
                 }
 
                 let imports = loader.list_imports(world);
@@ -62,7 +64,9 @@ fn main() -> Result<()> {
             info!("This is expected - using mock data for demonstration");
 
             info!("Mock world: tairitsu:core/tairitsu");
-            info!("Mock exports: init, process, getname, getversion, getfeatures, shutdown, notify");
+            info!(
+                "Mock exports: init, process, getname, getversion, getfeatures, shutdown, notify"
+            );
             info!("Mock imports: log, execute, timestamp, configset, configget");
 
             return Ok(());
@@ -115,7 +119,13 @@ fn test_function_detection(
 ) -> Result<()> {
     // Test exported functions
     let expected_exports = vec![
-        "init", "process", "getname", "getversion", "getfeatures", "shutdown", "notify",
+        "init",
+        "process",
+        "getname",
+        "getversion",
+        "getfeatures",
+        "shutdown",
+        "notify",
     ];
 
     info!("Checking exported functions:");
@@ -144,13 +154,21 @@ fn test_function_detection(
     // Display function signatures
     info!("Exported function signatures:");
     for func in exports.iter().take(3) {
-        let params: Vec<String> = func.params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect();
+        let params: Vec<String> = func
+            .params
+            .iter()
+            .map(|(n, t)| format!("{}: {}", n, t))
+            .collect();
         info!("  • {}({})", func.name, params.join(", "));
     }
 
     info!("Imported function signatures:");
     for func in imports.iter().take(3) {
-        let params: Vec<String> = func.params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect();
+        let params: Vec<String> = func
+            .params
+            .iter()
+            .map(|(n, t)| format!("{}: {}", n, t))
+            .collect();
         info!("  • {}({})", func.name, params.join(", "));
     }
 
@@ -176,10 +194,7 @@ fn test_random_data_simulation() -> Result<()> {
         let b = rng.gen_range(1..1000);
         let result = a + b;
 
-        info!(
-            "  Iteration {}: {} + {} = {} (passed)",
-            i, a, b, result
-        );
+        info!("  Iteration {}: {} + {} = {} (passed)", i, a, b, result);
     }
 
     info!("✓ All random data tests passed");

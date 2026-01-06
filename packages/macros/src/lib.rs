@@ -561,4 +561,3 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
     }
     quote! { #default_name }
 }
-
