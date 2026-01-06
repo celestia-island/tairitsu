@@ -1,9 +1,9 @@
-name: Clippy
+name: Tests
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/clippy.yml'
+      - '.github/workflows/test.yml'
       - 'packages/**/*'
       - 'examples/**/*'
       - 'Cargo.toml'
@@ -11,7 +11,7 @@ on:
     branches: [master]
 
 jobs:
-  clippy:
+  test:
     name: Test
     runs-on: ubuntu-latest
     strategy:
@@ -28,12 +28,30 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
+          targets: wasm32-wasip2
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Run unit test
+      - name: Run unit tests
         run: |
           cargo test \
             --all-targets \
             --all-features \
-            --no-fail-fast
+            --no-fail-fast \
+            --workspace
+
+      - name: Build WASM modules
+        run: |
+          cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
+          cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
+
+      - name: Run examples
+        run: |
+          # Run non-WASM example demos
+          cargo run --package tairitsu-example-wit-compile-time --bin compile-time-demo
+          cargo run --package tairitsu-example-wit-runtime --bin runtime-demo
+          cargo run --package tairitsu-example-wit-dynamic --bin dynamic-demo
+
+          # Run WASM host examples (using pre-built WASM modules)
+          cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
+          cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host

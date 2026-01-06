@@ -21,7 +21,16 @@ interface host-api {
     log: func(message: string);
 
     /// Execute a command and get result
-    execute-command: func(command: string, args: list<string>) -> result<string, string>;
+    execute: func(command: string, args: list<string>) -> result<string, string>;
+
+    /// Get the current timestamp
+    timestamp: func() -> u64;
+
+    /// Set a configuration value
+    configset: func(key: string, value: string) -> result<_, string>;
+
+    /// Get a configuration value
+    configget: func(key: string) -> result<string, string>;
 }
 
 /// Guest API - functions provided by guest that host can call
@@ -32,18 +41,18 @@ interface guest-api {
     /// Process a request
     process: func(input: string) -> result<string, string>;
 
-    /// Get guest information
-    get-info: func() -> Info;
-}
+    /// Get guest name
+    getname: func() -> string;
 
-/// Guest information
-record Info {
-    /// Guest name
-    name: string,
+    /// Get guest version
+    getversion: func() -> string;
 
-    /// Guest version
-    version: string,
+    /// Get guest features
+    getfeatures: func() -> list<string>;
 
-    /// Supported features
-    features: list<string>,
+    /// Shutdown the guest module
+    shutdown: func() -> result<_, string>;
+
+    /// Handle a notification
+    notify: func(event: string, data: string) -> result<_, string>;
 }

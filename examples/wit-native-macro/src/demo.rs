@@ -3,6 +3,8 @@
 //! This example demonstrates the proc-macro based approach where WIT interfaces
 //! are automatically converted to type-safe Rust enums without manual boilerplate.
 
+use log::info;
+use rand::Rng;
 use tairitsu::{wit_interface, wit_registry::WitCommandHandler, WitCommand};
 
 // Automatically generate FilesystemCommands and FilesystemResponse from WIT-like syntax
@@ -96,59 +98,108 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
 }
 
 fn main() -> Result<(), String> {
-    println!("=== Approach A: Automatic WIT Enum Generation Demo ===\n");
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    info!("=== Approach A: Automatic WIT Enum Generation Demo ===");
 
     // Create handlers
     let mut fs_handler = FilesystemHandler::new();
     let mut net_handler = NetworkHandler;
 
-    println!("Testing Filesystem Interface:");
-    println!("------------------------------");
+    info!("Testing Filesystem Interface:");
 
     // Write operation
     let write_cmd = FilesystemCommands::Write {
         path: "/data/config.json".to_string(),
         data: b"{\"name\":\"tairitsu\",\"version\":\"0.1.0\"}".to_vec(),
     };
-    println!("Command: {:?}", write_cmd.command_name());
+    info!("Command: {:?}", write_cmd.command_name());
     let write_result = fs_handler.execute(&write_cmd)?;
-    println!("Result: {:?}\n", write_result);
+    info!("Result: {:?}", write_result);
 
     // Read operation
     let read_cmd = FilesystemCommands::Read {
         path: "/data/config.json".to_string(),
     };
-    println!("Command: {:?}", read_cmd.command_name());
+    info!("Command: {:?}", read_cmd.command_name());
     let read_result = fs_handler.execute(&read_cmd)?;
     if let FilesystemResponse::Read(Ok(data)) = read_result {
-        println!("Read {} bytes\n", data.len());
+        info!("Read {} bytes", data.len());
     }
 
     // List operation
     let list_cmd = FilesystemCommands::List {
         directory: "/data/".to_string(),
     };
-    println!("Command: {:?}", list_cmd.command_name());
+    info!("Command: {:?}", list_cmd.command_name());
     let list_result = fs_handler.execute(&list_cmd)?;
-    println!("Result: {:?}\n", list_result);
+    info!("Result: {:?}", list_result);
 
-    println!("Testing Network Interface:");
-    println!("---------------------------");
+    info!("Testing Network Interface:");
 
     // HTTP GET operation
     let get_cmd = NetworkCommands::Http_get {
         url: "https://api.example.com/data".to_string(),
     };
-    println!("Command: {:?}", get_cmd.command_name());
+    info!("Command: {:?}", get_cmd.command_name());
     let get_result = net_handler.execute(&get_cmd)?;
-    println!("Result: {:?}\n", get_result);
+    info!("Result: {:?}", get_result);
 
-    println!("\n=== Key Features Demonstrated ===");
-    println!("✓ Zero boilerplate - WIT definitions automatically generate enums");
-    println!("✓ Compile-time type safety - Invalid commands caught at compile time");
-    println!("✓ No runtime serialization - Direct function calls");
-    println!("✓ IDE support - Full autocomplete and type hints");
-    println!("✓ Single source of truth - WIT interface defines everything");
+    info!("=== Key Features Demonstrated ===");
+    info!("Zero boilerplate - WIT definitions automatically generate enums");
+    info!("Compile-time type safety - Invalid commands caught at compile time");
+    info!("No runtime serialization - Direct function calls");
+    info!("IDE support - Full autocomplete and type hints");
+    info!("Single source of truth - WIT interface defines everything");
 
+    info!("=== Random Data Testing ===");
+    test_random_operations(&mut fs_handler)?;
+
+    Ok(())
+}
+
+/// Test operations with random data
+fn test_random_operations(handler: &mut FilesystemHandler) -> Result<(), String> {
+    let mut rng = rand::thread_rng();
+
+    info!("Testing filesystem operations with random data...");
+
+    for i in 1..=5 {
+        let random_id: u32 = rng.gen();
+        let random_size: usize = rng.gen_range(10..100);
+
+        let path = format!("/random/test_{}.dat", random_id);
+        let random_data: Vec<u8> = (0..random_size).map(|_| rng.gen()).collect();
+
+        let write_cmd = FilesystemCommands::Write {
+            path: path.clone(),
+            data: random_data.clone(),
+        };
+
+        info!("  [{}] Writing {} bytes to {}", i, random_data.len(), path);
+        match handler.execute(&write_cmd)? {
+            FilesystemResponse::Write(Ok(())) => info!("    ✓ Write successful"),
+            FilesystemResponse::Write(Err(e)) => info!("    ✗ Write failed: {}", e),
+            _ => info!("    ✗ Unexpected response"),
+        }
+
+        let read_cmd = FilesystemCommands::Read { path };
+        info!("  [{}] Reading back", i);
+        match handler.execute(&read_cmd)? {
+            FilesystemResponse::Read(Ok(data)) => {
+                if data == random_data {
+                    info!("    ✓ Read verified: {} bytes match", data.len());
+                } else {
+                    info!("    ✗ Read verification failed");
+                }
+            }
+            FilesystemResponse::Read(Err(e)) => info!("    ✗ Read failed: {}", e),
+            _ => info!("    ✗ Unexpected response"),
+        }
+    }
+
+    info!("✓ Random data tests passed");
     Ok(())
 }

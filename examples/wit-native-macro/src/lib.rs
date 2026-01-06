@@ -5,36 +5,30 @@
 
 #![cfg_attr(not(target_family = "wasm"), allow(dead_code))]
 
-// For WASM targets, use WIT bindings
+// For WASM targets, use WIT bindings with proper Component Model export
 #[cfg(target_family = "wasm")]
-wit_bindgen::generate!({
-    inline: "
-        package tairitsu:core;
+mod guest {
+    use super::Guest;
 
-        world tairitsu {
-            import host-api;
-            export guest-api;
-        }
+    // Generate WIT bindings from wit/tairitsu.wit
+    // This generates the bindings and the export!() macro
+    wit_bindgen::generate!({
+        path: "wit",
+        world: "tairitsu",
+    });
 
-        interface host-api {
-            log: func(message: string);
-            execute-command: func(command: string, args: list<string>) -> result<string, string>;
-        }
-
-        interface guest-api {
-            init: func() -> result<_, string>;
-            process: func(input: string) -> result<string, string>;
-            get-info: func() -> (name: string, version: string, features: list<string>);
-        }
-    ",
-});
+    // Export the Guest implementation using the generated macro
+    export!(Guest);
+}
 
 // For non-WASM targets (native/testing), provide simple implementations
 #[cfg(not(target_family = "wasm"))]
 pub mod guest {
+    use log::info;
+
     /// Initialize the guest module
     pub fn init() -> Result<(), String> {
-        println!("[Guest Native - Macro] Initializing...");
+        info!("[Guest Native - Macro] Initializing...");
         Ok(())
     }
 
@@ -53,34 +47,41 @@ pub mod guest {
 #[cfg(target_family = "wasm")]
 pub struct Guest;
 
+// Implement the generated guest_api::Guest trait
 #[cfg(target_family = "wasm")]
-impl Guest {
+impl guest::exports::tairitsu::core::guest_api::Guest for Guest {
     /// Initialize the guest module
-    pub fn init() -> Result<(), String> {
+    fn init() -> Result<(), String> {
         Ok(())
     }
 
     /// Process a request
-    pub fn process(input: String) -> Result<String, String> {
-        // In a real implementation, you could use the macro-generated
-        // command types here for type-safe dispatch
+    fn process(input: String) -> Result<String, String> {
         Ok(format!("Processed from WASM guest (macro): {}", input))
     }
 
-    /// Get guest information
-    pub fn get_info() -> GuestInfo {
-        GuestInfo {
-            name: "tairitsu-macro-wasm-guest".to_string(),
-            version: "0.1.0".to_string(),
-            features: vec!["wit-native-macro".to_string(), "wasm".to_string()],
-        }
+    /// Get guest name
+    fn getname() -> String {
+        "tairitsu-macro-wasm-guest".to_string()
     }
-}
 
-// Type that matches WIT definition
-#[cfg(target_family = "wasm")]
-pub struct GuestInfo {
-    pub name: String,
-    pub version: String,
-    pub features: Vec<String>,
+    /// Get guest version
+    fn getversion() -> String {
+        "0.1.0".to_string()
+    }
+
+    /// Get guest features
+    fn getfeatures() -> Vec<String> {
+        vec!["wit-native-macro".to_string(), "wasm".to_string()]
+    }
+
+    /// Shutdown the guest module
+    fn shutdown() -> Result<(), String> {
+        Ok(())
+    }
+
+    /// Handle a notification
+    fn notify(_event: String, _data: String) -> Result<(), String> {
+        Ok(())
+    }
 }
