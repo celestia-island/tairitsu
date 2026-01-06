@@ -13,6 +13,7 @@ repository = "https://github.com/celestia-island/tairitsu"
 proc-macro = true
 
 [dependencies]
-syn = { version = "^2", features = ["full", "parsing"] }
-quote = "^1"
+# Basic language and tools
 proc-macro2 = "^1"
+quote = "^1"
+syn = { version = "^2", features = ["full", "parsing"] }

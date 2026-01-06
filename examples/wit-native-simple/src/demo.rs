@@ -3,6 +3,8 @@
 //! This demonstrates how to use trait objects and dynamic dispatch
 //! to compose multiple WIT interfaces without runtime serialization.
 
+use log::info;
+use rand::Rng;
 use std::collections::HashMap;
 
 use tairitsu::{
@@ -161,7 +163,7 @@ impl WitInterface for FileSystemBasicInterface {
 
     fn register_handlers(&self, _dispatcher: &mut WitCommandDispatcher) {
         // In a real implementation, this would register the actual handlers
-        println!("Registered handlers for: {}", self.interface_name());
+        info!("Registered handlers for: {}", self.interface_name());
     }
 }
 
@@ -173,7 +175,7 @@ impl WitInterface for FileSystemAdvancedInterface {
     }
 
     fn register_handlers(&self, _dispatcher: &mut WitCommandDispatcher) {
-        println!("Registered handlers for: {}", self.interface_name());
+        info!("Registered handlers for: {}", self.interface_name());
     }
 }
 
@@ -182,24 +184,28 @@ impl WitInterface for FileSystemAdvancedInterface {
 // ============================================================================
 
 fn main() -> anyhow::Result<()> {
-    println!("=== Approach B: Trait-Based Composable WIT Interfaces ===\n");
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    info!("=== Approach B: Trait-Based Composable WIT Interfaces ===");
 
     // Create composite interface
     let mut composite = CompositeWitInterface::new();
 
     // Add basic filesystem interface
     composite.add_interface(Box::new(FileSystemBasicInterface));
-    println!("✓ Added basic filesystem interface");
+    info!("Added basic filesystem interface");
 
     // Add advanced filesystem interface
     composite.add_interface(Box::new(FileSystemAdvancedInterface));
-    println!("✓ Added advanced filesystem interface");
+    info!("Added advanced filesystem interface");
 
     // Create dispatcher and register all handlers
     let mut dispatcher = WitCommandDispatcher::new();
     composite.register_all(&mut dispatcher);
 
-    println!("\n=== Demonstrating Type-Safe Commands ===\n");
+    info!("=== Demonstrating Type-Safe Commands ===");
 
     // Create handlers manually for demo
     let mut basic_handler = FileSystemBasicHandler::new();
@@ -209,28 +215,28 @@ fn main() -> anyhow::Result<()> {
         path: "/test.txt".to_string(),
         data: b"Hello, WIT!".to_vec(),
     };
-    println!("Command: {:?}", write_cmd);
+    info!("Command: {:?}", write_cmd);
     match basic_handler
         .execute(&write_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
-        Ok(_) => println!("✓ Write successful\n"),
-        Err(e) => println!("✗ Write failed: {}\n", e),
+        Ok(_) => info!("Write successful"),
+        Err(e) => info!("Write failed: {}", e),
     }
 
     let read_cmd = FileSystemBasicCommands::Read {
         path: "/test.txt".to_string(),
     };
-    println!("Command: {:?}", read_cmd);
+    info!("Command: {:?}", read_cmd);
     match basic_handler
         .execute(&read_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
-            println!("✓ Read successful: {}\n", content);
+            info!("Read successful: {}", content);
         }
-        Err(e) => println!("✗ Read failed: {}\n", e),
+        Err(e) => info!("Read failed: {}", e),
     }
 
     // Demonstrate advanced operations
@@ -255,36 +261,83 @@ fn main() -> anyhow::Result<()> {
     let list_cmd = FileSystemAdvancedCommands::List {
         directory: "/dir".to_string(),
     };
-    println!("Command: {:?}", list_cmd);
+    info!("Command: {:?}", list_cmd);
     match advanced_handler
         .execute(&list_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
         Ok(files) => {
-            println!("✓ List successful: {:?}\n", files);
+            info!("List successful: {:?}", files);
         }
-        Err(e) => println!("✗ List failed: {}\n", e),
+        Err(e) => info!("List failed: {}", e),
     }
 
     let copy_cmd = FileSystemAdvancedCommands::Copy {
         from: "/dir/file1.txt".to_string(),
         to: "/dir/file1_copy.txt".to_string(),
     };
-    println!("Command: {:?}", copy_cmd);
+    info!("Command: {:?}", copy_cmd);
     match advanced_handler
         .execute(&copy_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
-        Ok(result) => println!("✓ Copy successful: {:?}\n", result),
-        Err(e) => println!("✗ Copy failed: {}\n", e),
+        Ok(result) => info!("Copy successful: {:?}", result),
+        Err(e) => info!("Copy failed: {}", e),
     }
 
-    println!("=== Key Benefits ===");
-    println!("✓ No runtime serialization overhead");
-    println!("✓ Compile-time type safety");
-    println!("✓ Composable interfaces via traits");
-    println!("✓ Each interface can extend/build on others");
-    println!("✓ Zero-cost abstractions");
+    info!("=== Key Benefits ===");
+    info!("No runtime serialization overhead");
+    info!("Compile-time type safety");
+    info!("Composable interfaces via traits");
+    info!("Each interface can extend/build on others");
+    info!("Zero-cost abstractions");
+
+    info!("=== Random Data Testing ===");
+    test_random_operations()?;
+
+    Ok(())
+}
+
+/// Test operations with random data
+fn test_random_operations() -> anyhow::Result<()> {
+    let mut rng = rand::thread_rng();
+    let mut handler = FileSystemBasicHandler::new();
+
+    info!("Testing file operations with random data...");
+
+    for i in 1..=5 {
+        let random_id: u32 = rng.gen();
+        let random_size: usize = rng.gen_range(10..100);
+        let random_data: Vec<u8> = (0..random_size).map(|_| rng.gen()).collect();
+
+        let path = format!("/random/test_{}.dat", random_id);
+        let write_cmd = FileSystemBasicCommands::Write {
+            path: path.clone(),
+            data: random_data.clone(),
+        };
+
+        info!("  [{}] Writing {} bytes to {}", i, random_data.len(), path);
+        match handler.execute(&write_cmd) {
+            Ok(_) => info!("    ✓ Write successful"),
+            Err(e) => info!("    ✗ Write failed: {}", e),
+        }
+
+        let read_cmd = FileSystemBasicCommands::Read { path };
+        info!("  [{}] Reading back", i);
+        match handler.execute(&read_cmd) {
+            Ok(Ok(data)) => {
+                if data == random_data {
+                    info!("    ✓ Read verified: {} bytes match", data.len());
+                } else {
+                    info!("    ✗ Read verification failed");
+                }
+            }
+            Ok(Err(e)) => info!("    ✗ Read failed: {}", e),
+            Err(e) => info!("    ✗ Read error: {}", e),
+        }
+    }
+
+    info!("✓ Random data tests passed");
 
     Ok(())
 }

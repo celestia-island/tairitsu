@@ -5,6 +5,7 @@
 //! while maintaining full compile-time type safety.
 
 use anyhow::Result;
+use log::info;
 use std::collections::HashMap;
 
 use tairitsu::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
@@ -164,7 +165,7 @@ impl WitInterface for FileSystemInterface {
     }
 
     fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
-        println!("[Interface] Registered: {}", self.interface_name());
+        info!("[Interface] Registered: {}", self.interface_name());
     }
 }
 
@@ -176,7 +177,7 @@ impl WitInterface for NetworkInterface {
     }
 
     fn register_handlers(&self, _dispatcher: &mut tairitsu::WitCommandDispatcher) {
-        println!("[Interface] Registered: {}", self.interface_name());
+        info!("[Interface] Registered: {}", self.interface_name());
     }
 }
 
@@ -185,57 +186,61 @@ impl WitInterface for NetworkInterface {
 // ============================================================================
 
 fn main() -> Result<()> {
-    println!("=== Approach B: Trait-Based WIT Integration with Container ===\n");
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    info!("=== Approach B: Trait-Based WIT Integration with Container ===");
 
     // Step 1: Create composite interface combining multiple WIT implementations
     let mut composite = CompositeWitInterface::new();
 
-    println!("Step 1: Building composite interface");
+    info!("Step 1: Building composite interface");
     composite.add_interface(Box::new(FileSystemInterface::new()));
     composite.add_interface(Box::new(NetworkInterface));
-    println!("  ✓ Added filesystem interface");
-    println!("  ✓ Added network interface\n");
+    info!("  ✓ Added filesystem interface");
+    info!("  ✓ Added network interface");
 
     // Step 2: Create dispatcher and register all handlers
     let mut dispatcher = tairitsu::WitCommandDispatcher::new();
     composite.register_all(&mut dispatcher);
 
     // Step 3: Demonstrate zero-serialization command execution
-    println!("Step 2: Executing commands with zero serialization overhead\n");
+    info!("Step 2: Executing commands with zero serialization overhead");
 
     // Create handler instances (in real implementation, these would be in the container)
     let mut fs_handler = FileSystemHandler::new();
     let mut net_handler = NetworkHandler;
 
     // File system operations
-    println!("--- File System Operations ---");
+    info!("--- File System Operations ---");
 
     let write_cmd = FileSystemCommands::Write {
         path: "/data/config.json".to_string(),
         data: b"{\"name\":\"tairitsu\",\"version\":\"0.1.0\"}".to_vec(),
     };
-    println!("Command: {:?}", write_cmd);
+    info!("Command: {:?}", write_cmd);
     match fs_handler
         .execute(&write_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
-        Ok(result) => println!("  ✓ Result: {}\n", String::from_utf8_lossy(&result)),
-        Err(e) => println!("  ✗ Error: {}\n", e),
+        Ok(result) => info!("  ✓ Result: {}", String::from_utf8_lossy(&result)),
+        Err(e) => info!("  ✗ Error: {}", e),
     }
 
     let read_cmd = FileSystemCommands::Read {
         path: "/data/config.json".to_string(),
     };
-    println!("Command: {:?}", read_cmd);
+    info!("Command: {:?}", read_cmd);
     match fs_handler
         .execute(&read_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
         Ok(data) => {
             let content = String::from_utf8_lossy(&data);
-            println!("  ✓ Read: {}\n", content);
+            info!("  ✓ Read: {}", content);
         }
-        Err(e) => println!("  ✗ Error: {}\n", e),
+        Err(e) => info!("  ✗ Error: {}", e),
     }
 
     // Write more files
@@ -255,60 +260,60 @@ fn main() -> Result<()> {
     let list_cmd = FileSystemCommands::List {
         directory: "/data".to_string(),
     };
-    println!("Command: {:?}", list_cmd);
+    info!("Command: {:?}", list_cmd);
     match fs_handler
         .execute(&list_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
         Ok(files) => {
             let files_str = String::from_utf8_lossy(&files);
-            println!("  ✓ Files: {}\n", files_str);
+            info!("  ✓ Files: {}", files_str);
         }
-        Err(e) => println!("  ✗ Error: {}\n", e),
+        Err(e) => info!("  ✗ Error: {}", e),
     }
 
     // Network operations
-    println!("--- Network Operations ---");
+    info!("--- Network Operations ---");
 
     let get_cmd = NetworkCommands::HttpGet {
         url: "https://api.example.com/data".to_string(),
     };
-    println!("Command: {:?}", get_cmd);
+    info!("Command: {:?}", get_cmd);
     match net_handler
         .execute(&get_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
-        Ok(response) => println!("  ✓ Response: {}\n", String::from_utf8_lossy(&response)),
-        Err(e) => println!("  ✗ Error: {}\n", e),
+        Ok(response) => info!("  ✓ Response: {}", String::from_utf8_lossy(&response)),
+        Err(e) => info!("  ✗ Error: {}", e),
     }
 
     let post_cmd = NetworkCommands::HttpPost {
         url: "https://api.example.com/submit".to_string(),
         body: b"{\"action\":\"test\"}".to_vec(),
     };
-    println!("Command: {:?}", post_cmd);
+    info!("Command: {:?}", post_cmd);
     match net_handler
         .execute(&post_cmd)
         .map_err(|e| anyhow::anyhow!(e))?
     {
-        Ok(response) => println!("  ✓ Response: {}\n", String::from_utf8_lossy(&response)),
-        Err(e) => println!("  ✗ Error: {}\n", e),
+        Ok(response) => info!("  ✓ Response: {}", String::from_utf8_lossy(&response)),
+        Err(e) => info!("  ✗ Error: {}", e),
     }
 
     // Summary
-    println!("=== Architecture Benefits ===");
-    println!("✓ Zero serialization overhead - Direct function calls");
-    println!("✓ Compile-time type safety - Rust type system enforces correctness");
-    println!("✓ Composable interfaces - Multiple WIT implementations combined");
-    println!("✓ Interface extension - Handlers can build on each other");
-    println!("✓ Dynamic dispatch - trait objects enable runtime flexibility");
-    println!("\n=== Integration with WASM Container ===");
-    println!("This approach can be integrated with the Container system by:");
-    println!("1. Container maintains a CompositeWitInterface");
-    println!("2. WASM guest calls host functions via WIT bindgen");
-    println!("3. Host dispatches to appropriate trait handlers");
-    println!("4. Responses flow back through WIT without serialization");
-    println!("\nFor WASM integration example, see: examples/hybrid");
+    info!("=== Architecture Benefits ===");
+    info!("Zero serialization overhead - Direct function calls");
+    info!("Compile-time type safety - Rust type system enforces correctness");
+    info!("Composable interfaces - Multiple WIT implementations combined");
+    info!("Interface extension - Handlers can build on each other");
+    info!("Dynamic dispatch - trait objects enable runtime flexibility");
+    info!("=== Integration with WASM Container ===");
+    info!("This approach can be integrated with the Container system by:");
+    info!("1. Container maintains a CompositeWitInterface");
+    info!("2. WASM guest calls host functions via WIT bindgen");
+    info!("3. Host dispatches to appropriate trait handlers");
+    info!("4. Responses flow back through WIT without serialization");
+    info!("For WASM integration example, see: examples/hybrid");
 
     Ok(())
 }

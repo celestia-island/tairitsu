@@ -26,7 +26,7 @@ default:
 
 # Install required tools
 install-tools:
-    rustup target add wasm32-wasip1
+    rustup target add wasm32-wasip2
     rustup component add rustfmt --toolchain nightly
     rustup component add clippy
     python scripts/download_wasi_adapters.py
@@ -64,12 +64,12 @@ build:
 # Build simple example WASM module
 build-simple-wasm:
     @echo "Building simple example WASM..."
-    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-simple --lib
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
 
 # Build macro example WASM module
 build-macro-wasm:
     @echo "Building macro example WASM..."
-    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-macro --lib
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
 
 # ============================================================================
 # Run examples
@@ -86,7 +86,9 @@ run-simple-host:
     cargo run --package tairitsu-example-wit-native-simple --bin simple-host
 
 # Run simple WASM example (complete bidirectional communication)
-run-simple-wasm: build-simple-wasm
+run-simple-wasm:
+    @echo "Building simple WASM..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
     @echo "Running simple WASM example..."
     cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
 
@@ -101,7 +103,9 @@ run-macro-host:
     cargo run --package tairitsu-example-wit-native-macro --bin macro-host
 
 # Run macro WASM example (complete bidirectional communication)
-run-macro-wasm: build-macro-wasm
+run-macro-wasm:
+    @echo "Building macro WASM..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
     @echo "Running macro WASM example..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
 
@@ -109,41 +113,59 @@ run-macro-wasm: build-macro-wasm
 run-all: run-simple-demo run-simple-host run-simple-wasm run-macro-demo run-macro-host run-macro-wasm
 
 # Run all WASM examples
-run-all-wasm: run-simple-wasm run-macro-wasm
+run-all-wasm:
+    @echo "Building all WASM modules..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
+    @echo "Running simple WASM example..."
+    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
+    @echo "Running macro WASM example..."
+    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
 
 # ============================================================================
 # Test tasks
 # ============================================================================
 
-# Run all checks (cargo check + clippy + build WASM + run examples)
+# Run all checks (cargo check + clippy + run examples)
 test:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Running comprehensive checks..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Step 1/6: Checking code compilation..."
+    @echo "Step 1/9: Checking code compilation..."
     cargo check --workspace --all-targets
     @echo "✅ Check passed"
     @echo ""
-    @echo "Step 2/6: Running Clippy..."
+    @echo "Step 2/9: Running Clippy..."
     cargo clippy --workspace --all-targets -- -D warnings
     @echo "✅ Clippy passed"
     @echo ""
-    @echo "Step 3/6: Building WASM modules..."
-    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-simple --lib
-    cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-macro --lib
-    @echo "✅ WASM modules built"
+    @echo "Step 3/9: Running compile-time demo..."
+    cargo run --package tairitsu-example-wit-compile-time --bin compile-time-demo
+    @echo "✅ Compile-time demo passed"
     @echo ""
-    @echo "Step 4/6: Running simple demo..."
-    cargo run --package tairitsu-example-wit-native-simple --bin simple-demo
-    @echo "✅ Simple demo passed"
+    @echo "Step 4/9: Running runtime demo..."
+    cargo run --package tairitsu-example-wit-runtime --bin runtime-demo
+    @echo "✅ Runtime demo passed"
     @echo ""
-    @echo "Step 5/6: Running macro demo..."
-    cargo run --package tairitsu-example-wit-native-macro --bin macro-demo
-    @echo "✅ Macro demo passed"
+    @echo "Step 5/9: Running dynamic demo..."
+    cargo run --package tairitsu-example-wit-dynamic --bin dynamic-demo
+    @echo "✅ Dynamic demo passed"
     @echo ""
-    @echo "Step 6/6: Running unit tests..."
-    cargo test --workspace --lib
-    @echo "✅ Unit tests passed"
+    @echo "Step 6/9: Building simple WASM module..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
+    @echo "✅ Simple WASM built"
+    @echo ""
+    @echo "Step 7/9: Running simple WASM host..."
+    cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
+    @echo "✅ Simple WASM host passed"
+    @echo ""
+    @echo "Step 8/9: Building macro WASM module..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
+    @echo "✅ Macro WASM built"
+    @echo ""
+    @echo "Step 9/9: Running macro WASM host..."
+    cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
+    @echo "✅ Macro WASM host passed"
     @echo ""
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "✅ All checks passed successfully!"

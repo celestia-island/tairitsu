@@ -385,3 +385,180 @@ impl syn::parse::Parse for WitGuestImpl {
         Ok(WitGuestImpl {})
     }
 }
+
+/// Helper macro to simplify wasmtime component bindgen usage
+///
+/// This macro wraps wasmtime::component::bindgen! with a simpler interface.
+/// Note: This is a procedural macro placeholder. For actual bindgen functionality,
+/// use wasmtime::component::bindgen! directly.
+///
+/// # Example
+/// ```ignore
+/// use tairitsu_macros::wit_world;
+///
+/// // This will generate the bindings for the specified world
+/// wit_world!("my-package:my-world", "./wit");
+/// ```
+#[proc_macro]
+pub fn wit_world(input: TokenStream) -> TokenStream {
+    // Parse input: "package:world", "./wit/path"
+    let input_str = input.to_string();
+
+    // Remove quotes if present
+    let input_str = input_str.trim_matches('"').trim_matches('\'');
+
+    // Split by comma to get world and path
+    let parts: Vec<&str> = input_str.split(',').collect();
+    let world = parts.first().map(|s| s.trim()).unwrap_or("");
+    let wit_path = parts.get(1).map(|s| s.trim()).unwrap_or("./wit");
+
+    // Generate code that uses wasmtime::component::bindgen!
+    let _world_ident = syn::Ident::new(
+        &world.replace([':', '-'], "_"),
+        proc_macro2::Span::call_site(),
+    );
+
+    let expanded = quote! {
+        // This is a placeholder. In a real implementation, this would
+        // invoke wasmtime::component::bindgen! with the appropriate parameters.
+        //
+        // For now, users should use wasmtime::component::bindgen! directly:
+        //
+        // wasmtime::component::bindgen!({
+        //     path: #wit_path,
+        //     world: #world,
+        // });
+        //
+        // Or generate the bindings using wit-bindgen-cli:
+        // wit-bindgen rust --out-dir bindings #wit_path
+
+        compile_error!(concat!(
+            "wit_world! macro is a placeholder. Use wasmtime::component::bindgen! directly:\n",
+            "wasmtime::component::bindgen!({\n",
+            "    path: \"",
+            #wit_path,
+            "\",\n",
+            "    world: \"",
+            #world,
+            "\",\n",
+            "});"
+        ));
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Helper macro to automatically generate add_to_linker calls
+///
+/// This macro simplifies the process of registering host functions with the linker.
+///
+/// # Example
+/// ```ignore
+/// use tairitsu_macros::register_host;
+///
+/// struct MyHost {
+///     // your host state
+/// }
+///
+/// register_host! {
+///     MyHost,
+///     functions: {
+///         my_function: |state, arg1, arg2| {
+///             // implementation
+///             Ok(())
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn register_host(input: TokenStream) -> TokenStream {
+    let _input = parse_macro_input!(input as syn::ItemStruct);
+
+    // Parse the struct to extract host type and functions
+    // For now, this is a placeholder that shows the intended usage
+
+    let expanded = quote! {
+        // This is a placeholder implementation.
+        //
+        // A full implementation would:
+        // 1. Parse the host struct and its methods
+        // 2. Generate trait implementations for WIT interfaces
+        // 3. Generate add_to_linker boilerplate
+        //
+        // For now, users should manually implement the WIT traits
+        // and call add_to_linker themselves:
+        //
+        // impl MyWit for MyHost {
+        //     fn my_function(&mut self, arg1: String, arg2: u32) -> Result<(), String> {
+        //         // implementation
+        //     }
+        // }
+        //
+        // Then use:
+        // MyWit::add_to_linker(&mut linker, |state| &mut state.my_data)?;
+
+        compile_error!(
+            "register_host! macro is a placeholder. \
+             Manually implement WIT traits and use add_to_linker for now."
+        );
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Derive macro to automatically implement Tool for a struct
+///
+/// This derive macro implements the Tool trait for structs that have
+/// an invoke_json method.
+///
+/// # Example
+/// ```ignore
+/// use tairitsu_macros::Tool;
+/// use tairitsu::json::Tool;
+///
+/// #[derive(Tool)]
+/// struct MyTool {
+///     // fields
+/// }
+///
+/// impl MyTool {
+///     fn invoke_json(&self, json: &str) -> Result<String> {
+///         // implementation
+///     }
+/// }
+/// ```
+#[proc_macro_derive(AsTool, attributes(tool_name))]
+pub fn derive_as_tool(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    // Extract tool name from attribute or use struct name
+    let tool_name = extract_tool_name(&input.attrs, &name.to_string());
+
+    let expanded = quote! {
+        impl tairitsu::json::Tool for #name {
+            fn invoke_json(&self, json: &str) -> anyhow::Result<String> {
+                // Delegate to the struct's invoke_json method
+                self.invoke_json(json)
+            }
+
+            fn name(&self) -> &str {
+                #tool_name
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
+    for attr in attrs {
+        if attr.path().is_ident("tool_name") {
+            if let Ok(lit) = attr.parse_args::<syn::LitStr>() {
+                return quote! { #lit };
+            }
+        }
+    }
+    quote! { #default_name }
+}
+

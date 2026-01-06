@@ -50,54 +50,60 @@
 //! * Easy composable interfaces
 
 use anyhow::Result;
+use log::info;
 use std::path::PathBuf;
 
 use tairitsu::{Container, Registry};
 
 fn main() -> Result<()> {
-    println!("=== Macro-Based WASM Host Example ===\n");
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    info!("=== Macro-Based WASM Host Example ===");
 
     // Build the WASM path
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let wasm_path =
-        manifest_dir.join("../../target/wasm32-wasip1/tairitsu_example_wit_native_macro.wasm");
+        manifest_dir.join("../../target/wasm32-wasip2/release/tairitsu_example_wit_native_macro.wasm");
 
-    println!("Looking for WASM module at: {}", wasm_path.display());
+    info!("Looking for WASM module at: {}", wasm_path.display());
 
     // Try to load the WASM binary if it exists
     let wasm_binary = match std::fs::read(&wasm_path) {
         Ok(binary) => binary,
         Err(e) => {
-            eprintln!("\nWASM file not found: {}", e);
-            eprintln!("\nThis example requires a WASM guest module.");
-            eprintln!("\nTo build it, run:");
-            eprintln!("  cargo build --target wasm32-wasip1 --release --package tairitsu-example-wit-native-macro --lib");
-            eprintln!("\nFor now, this example will demonstrate the API usage without actual WASM execution.\n");
+            info!("WASM file not found: {}", e);
+            info!("This example requires a WASM guest module.");
+            info!("To build it, run:");
+            info!("  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib");
+            info!("For now, this example will demonstrate the API usage without actual WASM execution.");
 
-            println!("See the top of this file for detailed API usage examples.");
-            println!("\nKey advantages:");
-            println!("  • Automatic WIT-to-Rust enum generation");
-            println!("  • Zero boilerplate with macros");
-            println!("  • Type-safe commands at compile time");
-            println!("  • No runtime serialization overhead");
-            println!("  • Easy composable interfaces");
+            info!("See the top of this file for detailed API usage examples.");
+            info!("Key advantages:");
+            info!("  • Automatic WIT-to-Rust enum generation");
+            info!("  • Zero boilerplate with macros");
+            info!("  • Type-safe commands at compile time");
+            info!("  • No runtime serialization overhead");
+            info!("  • Easy composable interfaces");
 
             return Ok(());
         }
     };
 
-    println!("WASM module loaded ({} bytes)\n", wasm_binary.len());
+    info!("WASM module loaded ({} bytes)", wasm_binary.len());
 
-    // Create registry and register the WASM module
+    // Create registry and register the WASM component
+    // Use register_component() for wasip2 builds (Component Model)
     let registry = Registry::new();
-    registry.register_image("wit-native-macro:latest", wasm_binary.into())?;
+    registry.register_component("wit-native-macro:latest", wasm_binary.into())?;
 
     // Get the image
     let image = registry
         .get_image("wit-native-macro:latest")
         .expect("Image should be registered");
 
-    println!("Creating container from image...\n");
+    info!("Creating container from image...");
 
     // Create container using the builder pattern
     let container = Container::builder(image)
@@ -109,9 +115,9 @@ fn main() -> Result<()> {
             // 4. Return the instance wrapped in GuestInstance
 
             // For this demonstration, we'll show the structure:
-            println!("[Guest Initializer] Called with context");
-            println!("[Guest Initializer] Would register macro-generated WIT bindings here");
-            println!("[Guest Initializer] Would instantiate component here");
+            info!("[Guest Initializer] Called with context");
+            info!("[Guest Initializer] Would register macro-generated WIT bindings here");
+            info!("[Guest Initializer] Would instantiate component here");
 
             // This is a placeholder - in real usage you'd return an actual GuestInstance
             Err(anyhow::anyhow!(
@@ -122,16 +128,16 @@ fn main() -> Result<()> {
 
     match container {
         Ok(_container) => {
-            println!("Container created successfully!");
-            println!("\n=== Container Ready ===");
-            println!("In a real example, you could now:");
-            println!("  - Call guest functions through the instance");
-            println!("  - Use macro-generated type-safe commands");
-            println!("  - Interact bidirectionally with the WASM module");
+            info!("Container created successfully!");
+            info!("=== Container Ready ===");
+            info!("In a real example, you could now:");
+            info!("  - Call guest functions through the instance");
+            info!("  - Use macro-generated type-safe commands");
+            info!("  - Interact bidirectionally with the WASM module");
         }
         Err(e) => {
-            println!("Container creation failed (expected in this demo): {}", e);
-            println!("\n=== API Usage Demonstrated ===");
+            info!("Container creation failed (expected in this demo): {}", e);
+            info!("=== API Usage Demonstrated ===");
         }
     }
 

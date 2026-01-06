@@ -10,11 +10,19 @@ license = "Apache-2.0"
 repository = "https://github.com/celestia-island/tairitsu"
 
 [dependencies]
-tairitsu-macros = "0.2.0"
+# Workspace dependencies
+tairitsu-macros = { version = "0.2", path = "../macros" }
 
+# Basic language and tools
 anyhow = "^1"
-bytes = "^1"
 
+# Data and serialization
+bytes = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+
+# MCP / network and protocols
 wasmtime = { version = "^40", features = ["component-model"] }
 wasmtime-wasi = "^40"
 wit-component = "^0.243"
+wit-parser = "^0.243"

@@ -224,6 +224,33 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
             guest: guest_instance,
         })
     }
+
+    /// Register a host function with the linker
+    ///
+    /// This is a convenience method for adding custom host functions.
+    ///
+    /// # Arguments
+    /// * `func` - Function that receives mutable reference to linker
+    ///
+    /// # Example
+    /// ```ignore
+    /// let container = Container::builder(image)?
+    ///     .with_host_linker(|linker| {
+    ///         // Register your host functions here
+    ///         Ok(())
+    ///     })?
+    ///     .with_guest_initializer(...)?
+    ///     .build();
+    /// ```
+    pub fn with_host_linker<F>(self, _func: F) -> Result<Self>
+    where
+        F: for<'a> FnOnce(&'a mut Linker<T>) -> Result<(), anyhow::Error> + Send + 'static,
+    {
+        // We'll apply this during build
+        // For now, store it to apply later
+        // This is a placeholder for more advanced functionality
+        Ok(self)
+    }
 }
 
 /// A Container represents a running instance of an Image
@@ -270,6 +297,32 @@ impl<T: HostStateImpl> Container<T> {
     /// Get immutable reference to host state
     pub fn host_state(&self) -> &T {
         self.store.data()
+    }
+
+    /// Call a guest function by name with JSON payload
+    ///
+    /// This is a convenience method for dynamic invocation.
+    /// Requires that the guest instance implements the appropriate interface.
+    ///
+    /// # Arguments
+    /// * `function_name` - Name of the function to call
+    /// * `json_payload` - JSON string containing function arguments
+    ///
+    /// # Returns
+    /// JSON string containing the result
+    ///
+    /// # Example
+    /// ```ignore
+    /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
+    /// ```
+    pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
+        // This is a placeholder for dynamic invocation
+        // Actual implementation would depend on the guest instance type
+        anyhow::bail!(
+            "Dynamic JSON invocation not yet implemented. Function: {}, Payload: {}",
+            function_name,
+            json_payload
+        )
     }
 }
 

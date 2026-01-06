@@ -2,6 +2,7 @@
 //!
 //! This shows how the wit_interface! macro generates enums with zero boilerplate
 
+use log::info;
 use tairitsu::{wit_interface, wit_registry::WitCommandHandler};
 
 // Generate three separate interfaces using the macro
@@ -54,14 +55,14 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
             }
             FilesystemCommands::Write { path, data } => {
                 self.storage.insert(path.clone(), data.clone());
-                println!("[FS] Wrote {} bytes to {}", data.len(), path);
+                info!("[FS] Wrote {} bytes to {}", data.len(), path);
                 Ok(FilesystemResponse::Write(Ok(())))
             }
             FilesystemCommands::Delete { path } => {
                 self.storage
                     .remove(path)
                     .ok_or_else(|| format!("File not found: {}", path))?;
-                println!("[FS] Deleted {}", path);
+                info!("[FS] Deleted {}", path);
                 Ok(FilesystemResponse::Delete(Ok(())))
             }
             FilesystemCommands::List { directory } => {
@@ -71,7 +72,7 @@ impl WitCommandHandler<FilesystemCommands> for FilesystemHandler {
                     .filter(|k| k.starts_with(directory))
                     .cloned()
                     .collect();
-                println!("[FS] Listed {} files in {}", files.len(), directory);
+                info!("[FS] Listed {} files in {}", files.len(), directory);
                 Ok(FilesystemResponse::List(Ok(files)))
             }
         }
@@ -85,14 +86,14 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
     fn execute(&mut self, command: &NetworkCommands) -> Result<NetworkResponse, String> {
         match command {
             NetworkCommands::Http_get { url } => {
-                println!("[NET] HTTP GET {}", url);
+                info!("[NET] HTTP GET {}", url);
                 Ok(NetworkResponse::Http_get(Ok(format!(
                     "{{\"status\":\"ok\",\"url\":\"{}\"}}",
                     url
                 ))))
             }
             NetworkCommands::Http_post { url, body } => {
-                println!("[NET] HTTP POST {} ({} bytes)", url, body.len());
+                info!("[NET] HTTP POST {} ({} bytes)", url, body.len());
                 Ok(NetworkResponse::Http_post(Ok(format!(
                     "{{\"status\":\"ok\",\"posted\":{}}}",
                     body.len()
@@ -109,13 +110,13 @@ impl WitCommandHandler<DatabaseCommands> for DatabaseHandler {
     fn execute(&mut self, command: &DatabaseCommands) -> Result<DatabaseResponse, String> {
         match command {
             DatabaseCommands::Query { sql } => {
-                println!("[DB] Query: {}", sql);
+                info!("[DB] Query: {}", sql);
                 Ok(DatabaseResponse::Query(Ok(
                     "[[\"id\",1],[\"name\",\"test\"]]".to_string(),
                 )))
             }
             DatabaseCommands::Execute { sql } => {
-                println!("[DB] Execute: {}", sql);
+                info!("[DB] Execute: {}", sql);
                 Ok(DatabaseResponse::Execute(Ok(1)))
             }
         }
@@ -123,15 +124,18 @@ impl WitCommandHandler<DatabaseCommands> for DatabaseHandler {
 }
 
 fn main() -> Result<(), String> {
-    println!("=== Approach A: Macro-Generated WIT Interfaces ===\n");
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
+    info!("=== Approach A: Macro-Generated WIT Interfaces ===");
 
     // Create handlers for each interface
     let mut fs_handler = FilesystemHandler::new();
     let mut net_handler = NetworkHandler;
     let mut db_handler = DatabaseHandler;
 
-    println!("Demonstrating Filesystem Interface:");
-    println!("------------------------------------");
+    info!("Demonstrating Filesystem Interface:");
 
     // Test filesystem operations
     let write_cmd = FilesystemCommands::Write {
@@ -145,37 +149,35 @@ fn main() -> Result<(), String> {
     };
     let result = fs_handler.execute(&read_cmd)?;
     if let FilesystemResponse::Read(Ok(data)) = result {
-        println!("Read config: {} bytes\n", data.len());
+        info!("Read config: {} bytes", data.len());
     }
 
-    println!("Demonstrating Network Interface:");
-    println!("---------------------------------");
+    info!("Demonstrating Network Interface:");
 
     // Test network operations
     let get_cmd = NetworkCommands::Http_get {
         url: "https://api.tairitsu.dev/status".to_string(),
     };
     let result = net_handler.execute(&get_cmd)?;
-    println!("Response: {:?}\n", result);
+    info!("Response: {:?}", result);
 
-    println!("Demonstrating Database Interface:");
-    println!("----------------------------------");
+    info!("Demonstrating Database Interface:");
 
     // Test database operations
     let query_cmd = DatabaseCommands::Query {
         sql: "SELECT * FROM users WHERE active = true".to_string(),
     };
     let result = db_handler.execute(&query_cmd)?;
-    println!("Query result: {:?}\n", result);
+    info!("Query result: {:?}", result);
 
-    println!("\n=== Architecture Highlights ===");
-    println!("✓ Zero boilerplate - Macros generate all enum code from WIT syntax");
-    println!("✓ Compile-time type safety - Rust type system enforces correctness");
-    println!("✓ No runtime serialization - Direct function calls");
-    println!("✓ Three independent interfaces - Filesystem, Network, Database");
-    println!("✓ Single source of truth - WIT interface definitions drive everything");
-    println!("✓ Automatic command routing - Enum variants map to function names");
-    println!("✓ IDE integration - Full autocomplete and type hints for all commands");
+    info!("=== Architecture Highlights ===");
+    info!("Zero boilerplate - Macros generate all enum code from WIT syntax");
+    info!("Compile-time type safety - Rust type system enforces correctness");
+    info!("No runtime serialization - Direct function calls");
+    info!("Three independent interfaces - Filesystem, Network, Database");
+    info!("Single source of truth - WIT interface definitions drive everything");
+    info!("Automatic command routing - Enum variants map to function names");
+    info!("IDE integration - Full autocomplete and type hints for all commands");
 
     Ok(())
 }
