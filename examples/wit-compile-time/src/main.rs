@@ -85,7 +85,13 @@ fn test_function_detection(
 ) -> Result<()> {
     // Test exported functions
     let expected_exports = vec![
-        "init", "process", "getname", "getversion", "getfeatures", "shutdown", "notify",
+        "init",
+        "process",
+        "getname",
+        "getversion",
+        "getfeatures",
+        "shutdown",
+        "notify",
     ];
 
     info!("Checking exported functions:");
@@ -114,13 +120,21 @@ fn test_function_detection(
     // Display function signatures
     info!("Exported function signatures:");
     for func in exports.iter().take(3) {
-        let params: Vec<String> = func.params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect();
+        let params: Vec<String> = func
+            .params
+            .iter()
+            .map(|(n, t)| format!("{}: {}", n, t))
+            .collect();
         info!("  • {}({})", func.name, params.join(", "));
     }
 
     info!("Imported function signatures:");
     for func in imports.iter().take(3) {
-        let params: Vec<String> = func.params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect();
+        let params: Vec<String> = func
+            .params
+            .iter()
+            .map(|(n, t)| format!("{}: {}", n, t))
+            .collect();
         info!("  • {}({})", func.name, params.join(", "));
     }
 
@@ -146,10 +160,7 @@ fn test_random_data() -> Result<()> {
         let b = rng.gen_range(1..1000);
         let result = a + b;
 
-        info!(
-            "  Iteration {}: {} + {} = {} (passed)",
-            i, a, b, result
-        );
+        info!("  Iteration {}: {} + {} = {} (passed)", i, a, b, result);
     }
 
     info!("✓ All random data tests passed");

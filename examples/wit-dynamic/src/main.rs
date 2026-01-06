@@ -8,7 +8,7 @@ use log::{debug, error, info, warn};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tairitsu::{json::Tool, JsonBinding, ToolRegistry, typed_tool};
+use tairitsu::{json::Tool, typed_tool, JsonBinding, ToolRegistry};
 
 // ============================================================================
 // Define Tool Data Types
@@ -269,12 +269,7 @@ fn test_random_calculator(registry: &ToolRegistry) -> Result<()> {
 
 /// Test tool existence detection
 fn test_tool_detection(registry: &ToolRegistry) -> Result<()> {
-    let expected_tools = vec![
-        "fs-read",
-        "fs-write",
-        "string-process",
-        "calculator",
-    ];
+    let expected_tools = vec!["fs-read", "fs-write", "string-process", "calculator"];
 
     info!("Checking tool existence:");
     for expected in &expected_tools {

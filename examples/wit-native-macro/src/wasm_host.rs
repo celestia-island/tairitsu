@@ -64,8 +64,8 @@ fn main() -> Result<()> {
 
     // Build the WASM path
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let wasm_path =
-        manifest_dir.join("../../target/wasm32-wasip2/release/tairitsu_example_wit_native_macro.wasm");
+    let wasm_path = manifest_dir
+        .join("../../target/wasm32-wasip2/release/tairitsu_example_wit_native_macro.wasm");
 
     info!("Looking for WASM module at: {}", wasm_path.display());
 

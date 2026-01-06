@@ -129,9 +129,7 @@ impl WitLoader {
     /// # Ok::<(), anyhow::Error>(())
     /// ```
     pub fn list_exports(&self, world_name: &str) -> Vec<FunctionInfo> {
-        let (package_name, world_part) = world_name
-            .split_once(':')
-            .unwrap_or(("", world_name));
+        let (package_name, world_part) = world_name.split_once(':').unwrap_or(("", world_name));
 
         // world_part might be "namespace/world" or just "world"
         // Extract the actual world name (last part after /)
@@ -151,7 +149,9 @@ impl WitLoader {
                     // pkg.name is "namespace:name" like "tairitsu:core"
                     // package_name input might be just "tairitsu" or full "tairitsu:core"
                     // So we check if pkg_name starts with package_name
-                    if !pkg_name.starts_with(&format!("{}:", package_name)) && pkg_name != package_name {
+                    if !pkg_name.starts_with(&format!("{}:", package_name))
+                        && pkg_name != package_name
+                    {
                         continue;
                     }
                 } else {
@@ -190,9 +190,7 @@ impl WitLoader {
                                     // Lookup interface by name - use id from WorldItem
                                     *id
                                 }
-                                wit_parser::WorldKey::Interface(k) => {
-                                    *k
-                                }
+                                wit_parser::WorldKey::Interface(k) => *k,
                             };
 
                             if let Some(interface) = self.resolve.interfaces.get(interface_id) {
@@ -228,9 +226,7 @@ impl WitLoader {
     /// # Arguments
     /// * `world_name` - World name in format "package:world-name"
     pub fn list_imports(&self, world_name: &str) -> Vec<FunctionInfo> {
-        let (package_name, world_part) = world_name
-            .split_once(':')
-            .unwrap_or(("", world_name));
+        let (package_name, world_part) = world_name.split_once(':').unwrap_or(("", world_name));
 
         // world_part might be "namespace/world" or just "world"
         // Extract the actual world name (last part after /)
@@ -249,7 +245,9 @@ impl WitLoader {
                     // pkg.name is "namespace:name" like "tairitsu:core"
                     // package_name input might be just "tairitsu" or full "tairitsu:core"
                     // So we check if pkg_name starts with package_name
-                    if !pkg_name.starts_with(&format!("{}:", package_name)) && pkg_name != package_name {
+                    if !pkg_name.starts_with(&format!("{}:", package_name))
+                        && pkg_name != package_name
+                    {
                         continue;
                     }
                 } else {
@@ -286,9 +284,7 @@ impl WitLoader {
                                     // Lookup interface by name - use id from WorldItem
                                     *id
                                 }
-                                wit_parser::WorldKey::Interface(k) => {
-                                    *k
-                                }
+                                wit_parser::WorldKey::Interface(k) => *k,
                             };
 
                             if let Some(interface) = self.resolve.interfaces.get(interface_id) {
@@ -346,16 +342,28 @@ impl WitLoader {
                         format!("Option<{}>", self.format_type(ty))
                     }
                     wit_parser::TypeDefKind::Result(r) => {
-                        let ok = r.ok.as_ref().map(|ty| self.format_type(ty)).unwrap_or_else(|| "()".to_string());
-                        let err = r.err.as_ref().map(|ty| self.format_type(ty)).unwrap_or_else(|| "()".to_string());
+                        let ok =
+                            r.ok.as_ref()
+                                .map(|ty| self.format_type(ty))
+                                .unwrap_or_else(|| "()".to_string());
+                        let err = r
+                            .err
+                            .as_ref()
+                            .map(|ty| self.format_type(ty))
+                            .unwrap_or_else(|| "()".to_string());
                         format!("Result<{}, {}>", ok, err)
                     }
                     wit_parser::TypeDefKind::Tuple(t) => {
-                        let types: Vec<String> = t.types.iter().map(|ty| self.format_type(ty)).collect();
+                        let types: Vec<String> =
+                            t.types.iter().map(|ty| self.format_type(ty)).collect();
                         format!("({})", types.join(", "))
                     }
                     wit_parser::TypeDefKind::Type(ty) => self.format_type(ty),
-                    _ => type_def.name.as_ref().cloned().unwrap_or_else(|| "Unknown".to_string()),
+                    _ => type_def
+                        .name
+                        .as_ref()
+                        .cloned()
+                        .unwrap_or_else(|| "Unknown".to_string()),
                 }
             }
         }
