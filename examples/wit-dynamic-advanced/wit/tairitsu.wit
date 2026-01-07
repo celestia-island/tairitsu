@@ -1,0 +1,53 @@
+/// Tairitsu Dynamic Advanced Example Interface
+///
+/// This WIT interface defines the functions that the guest WASM component
+/// will export for testing dynamic invocation.
+
+package tairitsu:examples@0.1.0
+
+interface calculator {
+    /// Add two numbers
+    add: func(a: s32, b: s32) -> s32
+
+    /// Subtract two numbers
+    sub: func(a: s32, b: s32) -> s32
+
+    /// Multiply two numbers
+    mul: func(a: s32, b: s32) -> s32
+
+    /// Divide two numbers (may fail with division by zero)
+    div: func(a: s32, b: s32) -> result<s32, string>
+}
+
+interface string-ops {
+    /// Convert string to uppercase
+    to-upper: func(text: string) -> string
+
+    /// Convert string to lowercase
+    to-lower: func(text: string) -> string
+
+    /// Reverse a string
+    reverse: func(text: string) -> string
+
+    /// Get string length
+    length: func(text: string) -> u32
+}
+
+interface data-processing {
+    /// Process a list of numbers
+    process-numbers: func(numbers: list<u32>) -> list<u32>
+
+    /// Transform data
+    transform: func(input: string, multiplier: u32) -> string
+}
+
+world tairitsu-dynamic {
+    export calculator
+    export string-ops
+    export data-processing
+
+    import host-logger: interface {
+        /// Log a message from guest to host
+        log: func(level: string, message: string)
+    }
+}

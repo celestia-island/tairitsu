@@ -3,7 +3,7 @@
 use anyhow::{Context, Result};
 use bytes::Bytes;
 
-use wasmtime::{component::Component, Config, Engine};
+use wasmtime::{Config, Engine, component::Component};
 use wit_component::ComponentEncoder;
 
 // Include the WASI adapter binary at compile time

@@ -8,7 +8,8 @@ use log::{debug, error, info, warn};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tairitsu::{json::Tool, typed_tool, JsonBinding, ToolRegistry};
+
+use tairitsu::{JsonBinding, ToolRegistry, json::Tool, typed_tool};
 
 // ============================================================================
 // Define Tool Data Types

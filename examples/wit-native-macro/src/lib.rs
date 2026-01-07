@@ -8,7 +8,8 @@
 // For WASM targets, use WIT bindings with proper Component Model export
 #[cfg(target_family = "wasm")]
 mod guest {
-    use super::Guest;
+
+use super::Guest;
 
     // Generate WIT bindings from wit/tairitsu.wit
     // This generates the bindings and the export!() macro

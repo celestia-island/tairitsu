@@ -5,13 +5,12 @@
 
 use anyhow::{Context, Result};
 
-use wasmtime::{
-    component::{Component, Linker},
-    Store,
-};
+use wasmtime::{Store, component::{Component, Linker}};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::Image;
+#[cfg(feature = "dynamic")]
+use crate::dynamic::host_imports::HostImportRegistry;
 
 /// Base trait for host state
 ///
@@ -86,6 +85,10 @@ pub struct GuestInstance {
     // The actual WIT binding instance is provided by the user when building Container
     // Box is used here to store any type
     inner: Box<dyn std::any::Any + Send + Sync>,
+
+    // Dynamic instance reference (optional, controlled by cfg feature)
+    #[cfg(feature = "dynamic")]
+    dynamic_instance: Option<wasmtime::component::Instance>,
 }
 
 impl GuestInstance {
@@ -96,6 +99,8 @@ impl GuestInstance {
     pub fn new<T: 'static + Send + Sync>(instance: T) -> Self {
         Self {
             inner: Box::new(instance),
+            #[cfg(feature = "dynamic")]
+            dynamic_instance: None,
         }
     }
 
@@ -110,6 +115,26 @@ impl GuestInstance {
     /// Get mutable reference to the underlying instance
     pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
         self.inner.downcast_mut::<T>()
+    }
+
+    /// Get export function for dynamic invocation (requires `dynamic` feature)
+    #[cfg(feature = "dynamic")]
+    pub fn get_export_func<T: HostStateImpl>(
+        &self,
+        _store: &mut Store<T>,
+        _func_name: &str,
+    ) -> Result<Option<wasmtime::component::Func>> {
+        if let Some(ref instance) = self.dynamic_instance {
+            Ok(instance.get_func(_store, _func_name))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get the dynamic instance reference (for internal use during Container build)
+    #[cfg(feature = "dynamic")]
+    pub(crate) fn get_dynamic_instance_ref(&self) -> Option<&wasmtime::component::Instance> {
+        self.dynamic_instance.as_ref()
     }
 }
 
@@ -210,8 +235,12 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
         wasmtime_wasi::p2::add_to_linker_sync(&mut linker)
             .context("Failed to add WASI to linker")?;
 
+        // Clone the component for type introspection
+        // Component is reference-counted internally, so this is cheap
+        let component = self.image.component().clone();
+
         let guest_instance = if let Some(initializer) = self.guest_initializer {
-            let ctx = GuestHandlerContext::new(&mut linker, &mut store, self.image.component());
+            let ctx = GuestHandlerContext::new(&mut linker, &mut store, &component);
             initializer(ctx)?
         } else {
             return Err(anyhow::anyhow!(
@@ -219,9 +248,18 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
             ));
         };
 
+        // Extract dynamic instance from guest_instance if available
+        #[cfg(feature = "dynamic")]
+        let dynamic_instance = guest_instance.get_dynamic_instance_ref().cloned();
+
         Ok(Container {
             store,
             guest: guest_instance,
+            component,
+            #[cfg(feature = "dynamic")]
+            dynamic_instance,
+            #[cfg(feature = "dynamic")]
+            host_imports: None,
         })
     }
 
@@ -259,6 +297,15 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
 pub struct Container<T: HostStateImpl = HostState> {
     store: Store<T>,
     guest: GuestInstance,
+    component: Component,
+
+    /// Dynamic instance for runtime function invocation (duplicated from guest for easier access)
+    #[cfg(feature = "dynamic")]
+    dynamic_instance: Option<wasmtime::component::Instance>,
+
+    /// Host import registry for dynamic host function invocation
+    #[cfg(feature = "dynamic")]
+    host_imports: Option<HostImportRegistry>,
 }
 
 impl Container {
@@ -316,14 +363,338 @@ impl<T: HostStateImpl> Container<T> {
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
     pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
-        // This is a placeholder for dynamic invocation
-        // Actual implementation would depend on the guest instance type
+        // Placeholder - use raw_desc instead for better Rust type support
         anyhow::bail!(
-            "Dynamic JSON invocation not yet implemented. Function: {}, Payload: {}",
+            "JSON invocation deprecated. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
             function_name,
             json_payload
         )
     }
+
+    /// Call a guest function by name with raw descriptor payload
+    ///
+    /// This is the preferred method for dynamic invocation using type descriptors at runtime.
+    /// Requires the `dynamic` feature to be enabled.
+    ///
+    /// Uses RON format for serialization which provides better Rust type compatibility than JSON.
+    ///
+    /// # Arguments
+    /// * `function_name` - Name of the function to call
+    /// * `raw_desc_payload` - RON string containing function arguments (using type descriptors)
+    ///
+    /// # Returns
+    /// RON string containing the result
+    ///
+    /// # Example
+    /// ```ignore
+    /// let result = container.call_guest_raw_desc("process", r#"Request { input: "hello", count: 42 }"#)?;
+    /// ```
+    #[cfg(feature = "dynamic")]
+    pub fn call_guest_raw_desc(&mut self, function_name: &str, raw_desc_payload: &str) -> Result<String> {
+        use wasmtime::component::Val;
+        use crate::dynamic::{val_to_ron, ron_to_val};
+
+        // Get the function (direct field access avoids borrow checker issues)
+        let instance = self.dynamic_instance.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
+
+        let func = instance
+            .get_func(&mut self.store, function_name)
+            .ok_or_else(|| anyhow::anyhow!("Export function not found: {}", function_name))?;
+
+        // Get function type info
+        let func_ty = func.ty(&self.store);
+        let param_types: Vec<_> = func_ty.params().collect();
+        let result_types: Vec<_> = func_ty.results().collect();
+
+        // Convert raw descriptor → Val
+        let mut args = Vec::new();
+
+        if param_types.len() == 1 {
+            // Single parameter - direct parsing
+            // Extract just the type from the (name, type) tuple
+            let param_type = &param_types[0].1;
+            args.push(ron_to_val(raw_desc_payload, param_type)?);
+        } else {
+            // Multiple parameters - parse as sequence/array
+            let ron_array = if raw_desc_payload.trim().starts_with('[') {
+                raw_desc_payload.to_string()
+            } else if raw_desc_payload.trim().starts_with('(') {
+                // RON treats tuples differently, convert to array syntax
+                raw_desc_payload.to_string()
+            } else {
+                format!("[{}]", raw_desc_payload)
+            };
+
+            use ron::Value as RonValue;
+            let ron_value: RonValue = ron::from_str(&ron_array)?;
+
+            if let RonValue::Seq(items) = ron_value {
+                if items.len() != param_types.len() {
+                    anyhow::bail!(
+                        "Parameter count mismatch: expected {}, got {}",
+                        param_types.len(),
+                        items.len()
+                    );
+                }
+                for (ron_val, (_param_name, param_type)) in items.into_iter().zip(param_types.iter()) {
+                    args.push(ron_value_to_val(ron_val, param_type)?);
+                }
+            } else {
+                anyhow::bail!("Invalid raw descriptor payload for function with multiple parameters");
+            }
+        }
+
+        // Call the function
+        let mut results = vec![Val::Bool(false); result_types.len()];
+        func.call(&mut self.store, &args, &mut results)
+            .context("Function call failed")?;
+
+        // Convert Val → raw descriptor (RON)
+        let output_ron: Result<Vec<_>> = results.iter().map(val_to_ron).collect();
+        let output_ron = output_ron.context("Failed to convert result to RON")?;
+
+        // Format output based on return value count
+        let output = match output_ron.len() {
+            0 => "()".to_string(),
+            1 => output_ron[0].clone(),
+            _ => format!("({})", output_ron.join(", ")),
+        };
+
+        Ok(output)
+    }
+
+    /// Call a guest function by name with binary payload
+    ///
+    /// This is the high-performance path using canonical ABI directly.
+    /// Requires the `dynamic` feature to be enabled.
+    ///
+    /// # Arguments
+    /// * `function_name` - Name of the function to call
+    /// * `args` - Arguments as Val types
+    ///
+    /// # Returns
+    /// Results as Val types
+    ///
+    /// # Example
+    /// ```ignore
+    /// use wasmtime::component::Val;
+    /// let args = vec![Val::String("hello".to_string()), Val::U32(42)];
+    /// let results = container.call_guest_binary("process", &args)?;
+    /// ```
+    #[cfg(feature = "dynamic")]
+    pub fn call_guest_binary(
+        &mut self,
+        function_name: &str,
+        args: &[wasmtime::component::Val],
+    ) -> Result<Vec<wasmtime::component::Val>> {
+        use wasmtime::component::Val;
+
+        // Get the function (direct field access avoids borrow checker issues)
+        let instance = self.dynamic_instance.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
+
+        let func = instance
+            .get_func(&mut self.store, function_name)
+            .ok_or_else(|| anyhow::anyhow!("Export function not found: {}", function_name))?;
+
+        // Get function type info
+        let func_ty = func.ty(&self.store);
+        let num_results = func_ty.results().count();
+
+        // Call the function
+        let mut results = vec![Val::Bool(false); num_results];
+        func.call(&mut self.store, args, &mut results)
+            .context("Function call failed")?;
+
+        Ok(results)
+    }
+
+    /// Set the host import registry
+    ///
+    /// # Arguments
+    /// * `registry` - Host import registry to use
+    #[cfg(feature = "dynamic")]
+    pub fn with_host_import_registry(&mut self, registry: HostImportRegistry) {
+        self.host_imports = Some(registry);
+    }
+
+    /// Get mutable reference to host import registry
+    #[cfg(feature = "dynamic")]
+    pub fn host_imports_mut(&mut self) -> Option<&mut HostImportRegistry> {
+        self.host_imports.as_mut()
+    }
+
+    /// Call a host import function by name with raw descriptor payload
+    ///
+    /// This allows dynamically calling host functions that the WASM component imports.
+    /// Requires the `dynamic` feature to be enabled.
+    ///
+    /// # Arguments
+    /// * `function_name` - Name of the host import function to call
+    /// * `raw_desc_payload` - RON string containing function arguments
+    ///
+    /// # Returns
+    /// RON string containing the result
+    ///
+    /// # Example
+    /// ```ignore
+    /// let result = container.call_host_import_raw_desc("log", r#"LogMessage { level: "info", msg: "hello" }"#)?;
+    /// ```
+    #[cfg(feature = "dynamic")]
+    pub fn call_host_import_raw_desc(
+        &mut self,
+        function_name: &str,
+        raw_desc_payload: &str,
+    ) -> Result<String> {
+        use crate::dynamic::{val_to_ron, ron_to_val};
+
+        let registry = self
+            .host_imports
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Host import registry not initialized"))?;
+
+        // Get function signature
+        let (params, _results) = registry
+            .get_signature(function_name)
+            .ok_or_else(|| anyhow::anyhow!("Host import not found: {}", function_name))?;
+
+        // Convert raw descriptor → Val
+        let mut args = Vec::new();
+        if params.len() == 1 {
+            args.push(ron_to_val(raw_desc_payload, &params[0])?);
+        } else {
+            // Multiple parameters - parse as sequence/array
+            let ron_array = if raw_desc_payload.trim().starts_with('[') {
+                raw_desc_payload.to_string()
+            } else if raw_desc_payload.trim().starts_with('(') {
+                raw_desc_payload.to_string()
+            } else {
+                format!("[{}]", raw_desc_payload)
+            };
+
+            use ron::Value as RonValue;
+            let ron_value: RonValue = ron::from_str(&ron_array)?;
+
+            if let RonValue::Seq(items) = ron_value {
+                if items.len() != params.len() {
+                    anyhow::bail!(
+                        "Parameter count mismatch: expected {}, got {}",
+                        params.len(),
+                        items.len()
+                    );
+                }
+                for (ron_val, param_type) in items.into_iter().zip(params.iter()) {
+                    args.push(ron_value_to_val(ron_val, param_type)?);
+                }
+            } else {
+                anyhow::bail!("Invalid raw descriptor payload for function with multiple parameters");
+            }
+        }
+
+        // Call the function
+        let result_vals = registry.call(function_name, &args)?;
+
+        // Convert Val → raw descriptor (RON)
+        let output_ron: Result<Vec<_>> = result_vals.iter().map(val_to_ron).collect();
+        let output_ron = output_ron.context("Failed to convert result to RON")?;
+        let output = match output_ron.len() {
+            0 => "()".to_string(),
+            1 => output_ron[0].clone(),
+            _ => format!("({})", output_ron.join(", ")),
+        };
+
+        Ok(output)
+    }
+
+    /// List all guest export functions
+    ///
+    /// Returns information about all functions exported by the WASM component.
+    /// Requires the `dynamic` feature to be enabled.
+    ///
+    /// # Returns
+    /// Vector of export information including function names and types
+    ///
+    /// # Example
+    /// ```ignore
+    /// let exports = container.list_guest_exports()?;
+    /// for export in exports {
+    ///     println!("Function: {}", export.name);
+    ///     println!("  Params: {:?}", export.params);
+    ///     println!("  Results: {:?}", export.results);
+    /// }
+    /// ```
+    #[cfg(feature = "dynamic")]
+    pub fn list_guest_exports(&self) -> Result<Vec<ExportInfo>> {
+        // Note: Component Model type introspection requires Instance, not Component
+        // This is a simplified placeholder that returns empty results
+        // A full implementation would need to:
+        // 1. Store the Instance (not just Component) in Container
+        // 2. Use Instance::get_export() to iterate exports
+        // 3. Extract type information from each export
+
+        // For now, return empty vector
+        // TODO: Implement proper export discovery using Instance type info
+        Ok(Vec::new())
+    }
+
+    /// List all host import functions
+    ///
+    /// Returns information about all registered host import functions.
+    /// Requires the `dynamic` feature to be enabled.
+    ///
+    /// # Returns
+    /// Vector of import information including function names and types
+    ///
+    /// # Example
+    /// ```ignore
+    /// if let Some(imports) = container.list_host_imports()? {
+    ///     for import in imports {
+    ///         println!("Function: {}", import.name);
+    ///     }
+    /// }
+    /// ```
+    #[cfg(feature = "dynamic")]
+    pub fn list_host_imports(&self) -> Result<Vec<ImportInfo>> {
+        if let Some(ref registry) = self.host_imports {
+            let imports = registry.list_imports();
+            imports.into_iter().map(|name| {
+                let (params, results) = registry.get_signature(name).unwrap();
+                Ok(ImportInfo {
+                    name: name.to_string(),
+                    params,
+                    results,
+                })
+            }).collect()
+        } else {
+            Ok(Vec::new())
+        }
+    }
+}
+
+/// Export function information
+#[derive(Debug, Clone)]
+pub struct ExportInfo {
+    pub name: String,
+    pub params: Vec<(String, wasmtime::component::Type)>,
+    pub results: Vec<wasmtime::component::Type>,
+}
+
+/// Import function information
+#[derive(Debug, Clone)]
+pub struct ImportInfo {
+    pub name: String,
+    pub params: Vec<wasmtime::component::Type>,
+    pub results: Vec<wasmtime::component::Type>,
+}
+
+/// Helper: RON Value to Val (for use in Container)
+#[cfg(feature = "dynamic")]
+fn ron_value_to_val(ron_value: ron::Value, target_type: &wasmtime::component::Type) -> Result<wasmtime::component::Val> {
+    use crate::dynamic::ron_to_val;
+    // Convert ron::Value to RON string, then use ron_to_val
+    let ron_str = ron::to_string(&ron_value)?;
+    ron_to_val(&ron_str, target_type)
 }
 
 impl<T: HostStateImpl> std::fmt::Debug for Container<T> {

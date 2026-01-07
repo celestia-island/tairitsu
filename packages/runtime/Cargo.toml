@@ -1,6 +1,6 @@
 [package]
 name = "tairitsu"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 
 publish = true
@@ -8,6 +8,11 @@ authors = ["langyo <langyo.china@gmail.com>"]
 description = "A WebAssembly runtime for running component-model based WASM modules"
 license = "Apache-2.0"
 repository = "https://github.com/celestia-island/tairitsu"
+
+[features]
+default = []
+# Dynamic invocation feature - enables dynamic WASM export/import calling
+dynamic = []
 
 [dependencies]
 # Workspace dependencies
@@ -20,6 +25,9 @@ anyhow = "^1"
 bytes = "^1"
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
+
+# RON serialization (always available, recommended over JSON for Rust types)
+ron = "^0.8"
 
 # MCP / network and protocols
 wasmtime = { version = "^40", features = ["component-model"] }

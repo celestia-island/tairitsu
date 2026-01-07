@@ -1,0 +1,30 @@
+[package]
+name = "tairitsu-example-wit-dynamic-advanced"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# Workspace dependencies
+tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
+
+# Basic language and tools
+anyhow = "^1"
+
+# Data and serialization
+bytes = "^1"
+serde = { version = "^1", features = ["derive"] }
+
+# WASM dependencies (re-exported by tairitsu, but needed for direct use)
+wasmtime = { version = "^40", features = ["component-model"] }
+wasmtime-wasi = "^40"
+
+# Logging
+env_logger = "^0.11"
+log = { version = "^0.4", features = ["std"] }
+
+[workspace]
+
+[[bin]]
+name = "dynamic-advanced-demo"
+path = "src/main.rs"

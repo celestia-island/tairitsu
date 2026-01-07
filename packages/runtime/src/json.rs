@@ -1,13 +1,14 @@
 //! JSON serialization layer for WIT interfaces
 //!
-//! This module provides JSON-based serialization/deserialization support
-//! for dynamic invocation scenarios where you need to call WIT functions
-//! with JSON payloads.
+//! For better Rust type compatibility, consider using the `ron` module instead.
 
+// Re-export RON types for convenience (when ron feature is enabled)
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
+
+#[cfg(feature = "dynamic")]
+pub use crate::ron::{RonBinding as RonBindingExport, RonTool, RonToolRegistry, typed_ron_tool};
 
 /// JSON binding utilities for WIT types
 pub struct JsonBinding;
