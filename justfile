@@ -169,48 +169,44 @@ test-full: build-test-wasm test-unit test-unit-dynamic test-integration
     @echo "✅ Full test suite completed!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Run all checks (cargo check + clippy + run examples)
+# Run all checks (cargo check + run examples)
 test:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Running comprehensive checks..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Step 1/10: Checking code compilation..."
+    @echo "Step 1/9: Checking code compilation..."
     cargo check --workspace --all-targets
     @echo "✅ Check passed"
     @echo ""
-    @echo "Step 2/10: Running Clippy..."
-    cargo clippy --workspace --all-targets -- -D warnings
-    @echo "✅ Clippy passed"
-    @echo ""
-    @echo "Step 3/10: Running compile-time demo..."
+    @echo "Step 2/9: Running compile-time demo..."
     cargo run --package tairitsu-example-wit-compile-time --bin compile-time-demo
     @echo "✅ Compile-time demo passed"
     @echo ""
-    @echo "Step 4/10: Running runtime demo..."
+    @echo "Step 3/9: Running runtime demo..."
     cargo run --package tairitsu-example-wit-runtime --bin runtime-demo
     @echo "✅ Runtime demo passed"
     @echo ""
-    @echo "Step 5/10: Running dynamic advanced demo..."
+    @echo "Step 4/9: Running dynamic advanced demo..."
     cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
     @echo "✅ Dynamic advanced demo passed"
     @echo ""
-    @echo "Step 6/10: Building simple WASM module..."
+    @echo "Step 5/9: Building simple WASM module..."
     cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
     @echo "✅ Simple WASM built"
     @echo ""
-    @echo "Step 7/10: Running simple WASM host..."
+    @echo "Step 6/9: Running simple WASM host..."
     cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
     @echo "✅ Simple WASM host passed"
     @echo ""
-    @echo "Step 8/10: Building macro WASM module..."
+    @echo "Step 7/9: Building macro WASM module..."
     cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
     @echo "✅ Macro WASM built"
     @echo ""
-    @echo "Step 9/10: Running macro WASM host..."
+    @echo "Step 8/9: Running macro WASM host..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
     @echo "✅ Macro WASM host passed"
     @echo ""
-    @echo "Step 10/10: Running unit tests..."
+    @echo "Step 9/9: Running unit tests..."
     cargo test --workspace --lib --features dynamic
     @echo "✅ Unit tests passed"
     @echo ""
@@ -222,6 +218,11 @@ test:
 # Code quality checks
 # ============================================================================
 
+# Run Clippy linter (requires clippy component)
+clippy:
+    @echo "Running Clippy..."
+    cargo clippy --workspace --all-targets -- -D warnings
+
 # Run formatting check
 fmt-check:
     @echo "Checking code formatting..."
@@ -232,13 +233,8 @@ fmt:
     @echo "Formatting all code..."
     cargo +nightly fmt --all -- --unstable-features
 
-# Run Clippy checks
-clippy:
-    @echo "Running Clippy..."
-    cargo clippy --all --all-features -- -D warnings
-
-# CI checks (format check + Clippy + test)
-ci: fmt-check clippy test
+# CI checks (format check + test)
+ci: fmt-check test
     @echo "✅ CI checks passed"
 
 # ============================================================================
