@@ -7,9 +7,7 @@ use log::info;
 use rand::Rng;
 use std::collections::HashMap;
 
-use tairitsu::{
-    CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
-};
+use tairitsu::{CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface};
 
 // ============================================================================
 // File System Interface - Basic Operations

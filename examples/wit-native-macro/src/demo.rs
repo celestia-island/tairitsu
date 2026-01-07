@@ -5,7 +5,8 @@
 
 use log::info;
 use rand::Rng;
-use tairitsu::{wit_interface, wit_registry::WitCommandHandler, WitCommand};
+
+use tairitsu::{WitCommand, wit_interface, wit_registry::WitCommandHandler};
 
 // Automatically generate FilesystemCommands and FilesystemResponse from WIT-like syntax
 wit_interface! {

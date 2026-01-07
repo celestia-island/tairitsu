@@ -52,14 +52,28 @@
 pub mod container;
 mod image;
 pub mod json;
+pub mod ron;
 pub mod registry;
 pub mod wit;
 pub mod wit_helper;
 pub mod wit_registry;
 
-pub use container::{Container, GuestHandlerContext, GuestInstance, HostState, HostStateImpl};
+// Dynamic invocation module (requires 'dynamic' feature)
+#[cfg(feature = "dynamic")]
+pub mod dynamic;
+
+pub use container::{Container, GuestHandlerContext, GuestInstance, HostState, HostStateImpl, ExportInfo, ImportInfo};
 pub use image::Image;
 pub use json::{typed_tool, FunctionTool, JsonBinding, Tool, ToolRegistry};
+
+// RON types (always exported, but only usable when 'ron' dependency is available)
+pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};
+
+// Dynamic invocation exports (requires 'dynamic' feature)
+#[cfg(feature = "dynamic")]
+pub use dynamic::{ron_to_val, val_to_ron};
+#[cfg(feature = "dynamic")]
+pub use dynamic::host_imports::{HostImport, HostImportRegistry};
 pub use registry::Registry;
 pub use wit::{FunctionInfo, WitLoader};
 pub use wit_helper::GuestInfo;

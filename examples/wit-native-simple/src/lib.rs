@@ -8,7 +8,8 @@
 // For non-WASM targets (native/testing), provide simple implementations
 #[cfg(not(target_family = "wasm"))]
 pub mod guest {
-    use log::info;
+
+use log::info;
 
     /// Initialize the guest module
     pub fn init() -> Result<(), String> {
