@@ -4,9 +4,9 @@
 //! to Wasmtime Component Model `Val` types, with full support for nested
 //! complex types.
 
-use anyhow::{Context, Result, bail, anyhow};
-use wasmtime::component::{Type, Val};
+use anyhow::{anyhow, bail, Context, Result};
 use ron::Value as RonValue;
+use wasmtime::component::{Type, Val};
 
 /// Convert RON string to Wasmtime Val (requires type information)
 ///
@@ -38,8 +38,7 @@ use ron::Value as RonValue;
 /// ```
 pub fn ron_to_val(ron: &str, target_type: &Type) -> Result<Val> {
     // Parse RON to generic value first
-    let ron_value: RonValue = ron::from_str(ron)
-        .context("Failed to parse RON")?;
+    let ron_value: RonValue = ron::from_str(ron).context("Failed to parse RON")?;
 
     ron_value_to_val(ron_value, target_type)
 }
@@ -76,7 +75,8 @@ pub fn ron_value_to_val(ron_value: RonValue, target_type: &Type) -> Result<Val> 
         // Fallback - capture types before moving
         (ron, ty) => bail!(
             "Type mismatch or unsupported: ron_value={:?}, target_type={:?}",
-            ron, ty
+            ron,
+            ty
         ),
     }
 }
@@ -279,7 +279,10 @@ mod complex {
                 .map(|(_, v)| v)
                 .ok_or_else(|| anyhow!("Missing field: {}", field_name))?;
 
-            field_vals.push((field_name.to_string(), deserialize(val.clone(), &field_type)?));
+            field_vals.push((
+                field_name.to_string(),
+                deserialize(val.clone(), &field_type)?,
+            ));
         }
 
         Ok(Val::Record(field_vals))

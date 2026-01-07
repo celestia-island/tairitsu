@@ -2,7 +2,10 @@
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use crate::{Container, Image};
 

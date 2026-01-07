@@ -9,7 +9,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use tairitsu::{JsonBinding, ToolRegistry, json::Tool, typed_tool};
+use tairitsu::{json::Tool, typed_tool, JsonBinding, ToolRegistry};
 
 // ============================================================================
 // Define Tool Data Types

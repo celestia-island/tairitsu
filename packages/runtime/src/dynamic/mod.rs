@@ -29,12 +29,12 @@
 pub mod host_imports;
 
 // Re-export modular serialization/deserialization
-pub mod serialize;
 pub mod deserialize;
+pub mod serialize;
 
 // Public API
-pub use serialize::val_to_ron;
 pub use deserialize::{ron_to_val, ron_value_to_val};
+pub use serialize::val_to_ron;
 
 #[cfg(test)]
 mod tests {
@@ -45,21 +45,27 @@ mod tests {
     fn test_val_to_ron_basic_types() {
         assert_eq!(val_to_ron(&Val::Bool(true)).unwrap(), "true");
         assert_eq!(val_to_ron(&Val::U32(42)).unwrap(), "42");
-        assert_eq!(val_to_ron(&Val::String("hello".to_string())).unwrap(), "\"hello\"");
+        assert_eq!(
+            val_to_ron(&Val::String("hello".to_string())).unwrap(),
+            "\"hello\""
+        );
     }
 
     #[test]
     fn test_val_to_ron_float_types() {
-        let ron = val_to_ron(&Val::Float32(3.14_f32)).unwrap();
+        let ron = val_to_ron(&Val::Float32(std::f32::consts::FRAC_PI_4)).unwrap();
         assert!(ron.contains("e")); // Scientific notation
-        let ron = val_to_ron(&Val::Float64(2.718_f64)).unwrap();
+        let ron = val_to_ron(&Val::Float64(std::f64::consts::LN_2)).unwrap();
         assert!(ron.contains("e"));
     }
 
     #[test]
     fn test_val_to_ron_option() {
         assert_eq!(val_to_ron(&Val::Option(None)).unwrap(), "None");
-        assert_eq!(val_to_ron(&Val::Option(Some(Box::new(Val::U32(42))))).unwrap(), "Some(42)");
+        assert_eq!(
+            val_to_ron(&Val::Option(Some(Box::new(Val::U32(42))))).unwrap(),
+            "Some(42)"
+        );
     }
 
     #[test]
@@ -111,5 +117,4 @@ mod tests {
     // are in integration_test.rs where we can extract types from actual
     // WASM component functions. The wasmtime 40 API doesn't provide
     // public constructors for List, Tuple, OptionType, ResultType.
-
 }

@@ -5,12 +5,15 @@
 
 use anyhow::{Context, Result};
 
-use wasmtime::{Store, component::{Component, Linker}};
+use wasmtime::{
+    component::{Component, Linker},
+    Store,
+};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
-use crate::Image;
 #[cfg(feature = "dynamic")]
 use crate::dynamic::host_imports::HostImportRegistry;
+use crate::Image;
 
 /// Base trait for host state
 ///
@@ -297,6 +300,7 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
 pub struct Container<T: HostStateImpl = HostState> {
     store: Store<T>,
     guest: GuestInstance,
+    #[allow(dead_code)] // Reserved for future use
     component: Component,
 
     /// Dynamic instance for runtime function invocation (duplicated from guest for easier access)
@@ -390,12 +394,18 @@ impl<T: HostStateImpl> Container<T> {
     /// let result = container.call_guest_raw_desc("process", r#"Request { input: "hello", count: 42 }"#)?;
     /// ```
     #[cfg(feature = "dynamic")]
-    pub fn call_guest_raw_desc(&mut self, function_name: &str, raw_desc_payload: &str) -> Result<String> {
+    pub fn call_guest_raw_desc(
+        &mut self,
+        function_name: &str,
+        raw_desc_payload: &str,
+    ) -> Result<String> {
+        use crate::dynamic::{ron_to_val, val_to_ron};
         use wasmtime::component::Val;
-        use crate::dynamic::{val_to_ron, ron_to_val};
 
         // Get the function (direct field access avoids borrow checker issues)
-        let instance = self.dynamic_instance.as_ref()
+        let instance = self
+            .dynamic_instance
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
 
         let func = instance
@@ -437,11 +447,15 @@ impl<T: HostStateImpl> Container<T> {
                         items.len()
                     );
                 }
-                for (ron_val, (_param_name, param_type)) in items.into_iter().zip(param_types.iter()) {
+                for (ron_val, (_param_name, param_type)) in
+                    items.into_iter().zip(param_types.iter())
+                {
                     args.push(ron_value_to_val(ron_val, param_type)?);
                 }
             } else {
-                anyhow::bail!("Invalid raw descriptor payload for function with multiple parameters");
+                anyhow::bail!(
+                    "Invalid raw descriptor payload for function with multiple parameters"
+                );
             }
         }
 
@@ -491,7 +505,9 @@ impl<T: HostStateImpl> Container<T> {
         use wasmtime::component::Val;
 
         // Get the function (direct field access avoids borrow checker issues)
-        let instance = self.dynamic_instance.as_ref()
+        let instance = self
+            .dynamic_instance
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Dynamic instance not available"))?;
 
         let func = instance
@@ -547,7 +563,7 @@ impl<T: HostStateImpl> Container<T> {
         function_name: &str,
         raw_desc_payload: &str,
     ) -> Result<String> {
-        use crate::dynamic::{val_to_ron, ron_to_val};
+        use crate::dynamic::{ron_to_val, val_to_ron};
 
         let registry = self
             .host_imports
@@ -565,9 +581,8 @@ impl<T: HostStateImpl> Container<T> {
             args.push(ron_to_val(raw_desc_payload, &params[0])?);
         } else {
             // Multiple parameters - parse as sequence/array
-            let ron_array = if raw_desc_payload.trim().starts_with('[') {
-                raw_desc_payload.to_string()
-            } else if raw_desc_payload.trim().starts_with('(') {
+            let payload = raw_desc_payload.trim();
+            let ron_array = if payload.starts_with('[') || payload.starts_with('(') {
                 raw_desc_payload.to_string()
             } else {
                 format!("[{}]", raw_desc_payload)
@@ -588,7 +603,9 @@ impl<T: HostStateImpl> Container<T> {
                     args.push(ron_value_to_val(ron_val, param_type)?);
                 }
             } else {
-                anyhow::bail!("Invalid raw descriptor payload for function with multiple parameters");
+                anyhow::bail!(
+                    "Invalid raw descriptor payload for function with multiple parameters"
+                );
             }
         }
 
@@ -626,8 +643,6 @@ impl<T: HostStateImpl> Container<T> {
     /// ```
     #[cfg(feature = "dynamic")]
     pub fn list_guest_exports(&mut self) -> Result<Vec<ExportInfo>> {
-        use wasmtime::component::Func;
-
         if let Some(instance) = &self.dynamic_instance {
             let mut exports = Vec::new();
 
@@ -635,10 +650,23 @@ impl<T: HostStateImpl> Container<T> {
             // This is a pragmatic approach since we can't easily iterate all exports
             // without knowing their names beforehand
             let potential_exports = vec![
-                "init", "process", "getname", "getversion", "getfeatures",
-                "shutdown", "notify", "add", "sub", "mul", "div",
-                "to-upper", "to-lower", "reverse", "length",
-                "process-numbers", "transform",
+                "init",
+                "process",
+                "getname",
+                "getversion",
+                "getfeatures",
+                "shutdown",
+                "notify",
+                "add",
+                "sub",
+                "mul",
+                "div",
+                "to-upper",
+                "to-lower",
+                "reverse",
+                "length",
+                "process-numbers",
+                "transform",
             ];
 
             for export_name in potential_exports {
@@ -694,14 +722,17 @@ impl<T: HostStateImpl> Container<T> {
     pub fn list_host_imports(&self) -> Result<Vec<ImportInfo>> {
         if let Some(ref registry) = self.host_imports {
             let imports = registry.list_imports();
-            imports.into_iter().map(|name| {
-                let (params, results) = registry.get_signature(name).unwrap();
-                Ok(ImportInfo {
-                    name: name.to_string(),
-                    params,
-                    results,
+            imports
+                .into_iter()
+                .map(|name| {
+                    let (params, results) = registry.get_signature(name).unwrap();
+                    Ok(ImportInfo {
+                        name: name.to_string(),
+                        params,
+                        results,
+                    })
                 })
-            }).collect()
+                .collect()
         } else {
             Ok(Vec::new())
         }
@@ -726,7 +757,10 @@ pub struct ImportInfo {
 
 /// Helper: RON Value to Val (for use in Container)
 #[cfg(feature = "dynamic")]
-fn ron_value_to_val(ron_value: ron::Value, target_type: &wasmtime::component::Type) -> Result<wasmtime::component::Val> {
+fn ron_value_to_val(
+    ron_value: ron::Value,
+    target_type: &wasmtime::component::Type,
+) -> Result<wasmtime::component::Val> {
     use crate::dynamic::ron_to_val;
     // Convert ron::Value to RON string, then use ron_to_val
     let ron_str = ron::to_string(&ron_value)?;
