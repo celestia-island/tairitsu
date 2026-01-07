@@ -44,6 +44,9 @@ A WebAssembly runtime for running component-model based WASM modules.
 - 🔌 **WIT-based**: Type-safe communication via WebAssembly Interface Types
 - 🦀 **Pure Rust**: Built on Wasmtime with the Component Model
 - 📦 **Macros**: Helper macros to reduce boilerplate
+- 🚀 **Dynamic Invocation**: Runtime WASM function calls with RON and binary canonical ABI
+- 🔤 **RON Support**: Rust-friendly serialization for better type compatibility
+- ⚡ **Dual Calling Paths**: RON (convenient) + Binary (high-performance) for dynamic invocation
 
 ## Quick Start
 
@@ -95,16 +98,18 @@ Manual trait implementation for maximum flexibility:
 - Zero-cost abstractions
 - Interface extension support
 
-### 3. **wit-dynamic** - Dynamic JSON Invocation
+### 3. **wit-dynamic-advanced** - Dynamic WASM Component Invocation
 
-Fully dynamic function calls with JSON serialization:
+Advanced dynamic invocation with actual WASM Components:
 
 **Features:**
 
-- Runtime function discovery
-- Type-safe tool wrapping
-- Tool registry for dynamic management
-- RPC and plugin system support
+- 🚀 Runtime guest export calls (RON + Binary)
+- 📥 Host import registration and invocation
+- 🔍 Runtime function discovery
+- 🔤 RON serialization for Rust-friendly types
+- ⚡ Binary canonical ABI for high performance
+- ✅ Full support for basic and complex nested types
 
 ### 4. **wit-compile-time** - Compile-Time WIT Binding
 
@@ -136,7 +141,7 @@ See [examples/README.md](examples/README.md) for detailed documentation of each 
 | :--- | :--- | :--- | :--- | :--- |
 | **Macro** | Full | Best | Medium | Most use cases |
 | **Trait** | Full | Best | High | Complex interfaces |
-| **Dynamic JSON** | Runtime | Medium | Highest | APIs, RPC |
+| **Dynamic RON/WASM** | Runtime | Best (Binary) | Highest | Plugin systems, hot-reload |
 | **Compile-time** | Full | Best | Low | Fixed interfaces |
 | **Runtime** | Partial | Good | High | Plugin systems |
 
@@ -339,37 +344,70 @@ impl WitCommandHandler<MyCommands> for MyHandler {
 }
 ```
 
-### Dynamic JSON Invocation
+### Dynamic RON Invocation
 
-For scenarios requiring runtime flexibility, use the JSON-based approach:
+For scenarios requiring both Rust-friendly types and high performance:
 
 ```rust
-use tairitsu::{json::Tool, ToolRegistry, typed_tool};
-use serde::{Deserialize, Serialize};
+use tairitsu::{ron::{typed_ron_tool, RonToolRegistry}, Container, Image};
 
-#[derive(Deserialize)]
-struct MyInput {
-    param: String,
+// RON provides Rust-native type support
+#[derive(Deserialize, Serialize)]
+struct CalculatorRequest {
+    a: i32,
+    b: i32,
 }
 
-#[derive(Serialize)]
-struct MyOutput {
-    result: String,
+#[derive(Deserialize, Serialize)]
+struct CalculatorResponse {
+    result: i32,
 }
 
-// Create a type-safe tool
-let tool = typed_tool("my-function", |input: MyInput| -> MyOutput {
-    MyOutput {
-        result: format!("Processed: {}", input.param),
+// Create a type-safe tool with RON
+let tool = typed_ron_tool("calculator", |input: CalculatorRequest| -> CalculatorResponse {
+    CalculatorResponse {
+        result: input.a + input.b,
     }
 });
 
-// Register and invoke
-let mut registry = ToolRegistry::new();
-registry.register("my-function".to_string(), tool);
+// Register and invoke with RON syntax
+let mut registry = RonToolRegistry::new();
+registry.register("calculator".to_string(), tool);
 
-let result = registry.invoke("my-function", r#"{"param":"test"}"#)?;
+// RON uses Rust-like syntax
+let result = registry.invoke("calculator", "(a: 42, b: 58)")?;
+
+// For WASM Components, use the dynamic invocation API
+let mut container = Container::builder(image)?
+    .with_guest_initializer(|ctx| {
+        // ... setup WIT bindings
+        Ok(GuestInstance::new(instance))
+    })?
+    .build()?;
+
+// RON path - convenient and readable
+let result = container.call_guest_raw_desc(
+    "add",
+    r#"(a: 42, b: 58)"#
+)?;
+
+// Binary path - high performance
+use wasmtime::component::Val;
+let args = vec![Val::S32(42), Val::S32(58)];
+let results = container.call_guest_binary("add", &args)?;
 ```
+
+**RON Type Support:**
+
+| Type | RON Syntax | Description |
+| ---- | ---------- | ----------- |
+| **Struct** | `Struct { field: value }` | Named fields |
+| **Tuple** | `(value1, value2)` | Ordered values |
+| **Enum** | `Variant(value)` | Enum with payload |
+| **Option** | `Some(value)` / `None` | Optional values |
+| **Result** | `Ok(value)` / `Err(error)` | Fallible operations |
+| **List** | `[item1, item2]` | Homogeneous arrays |
+| **Unit** | `()` | Empty tuple |
 
 ### Composable Interfaces
 
@@ -438,12 +476,20 @@ This makes Tairitsu suitable for **any** WASM component-based application.
 - Type safety is a priority
 - Building a closed system
 
-**Dynamic (JSON-based)** - Use when:
+**Dynamic RON/WASM** - Use when:
 
-- Building HTTP APIs or RPC servers
-- Integrating with external systems
-- Runtime function discovery needed
-- Flexibility is more important than performance
+- Plugin systems with hot-reload required
+- Performance-critical dynamic calls needed
+- Rust-friendly serialization preferred
+- Full bidirectional guest-host communication
+
+**Choosing Between RON and Binary Paths:**
+
+| Path | Type Safety | Performance | Use Case |
+| ---- | ----------- | ----------- | -------- |
+| **RON** | Runtime | Good | Convenient, debugging, cross-language |
+| **Binary** | Runtime | Best | Hot loops, frequent calls, zero-copy |
+| **Static** | Compile-time | Best | Known interfaces, maximum type safety |
 
 ### When to Use Each Approach
 
@@ -461,21 +507,51 @@ This makes Tairitsu suitable for **any** WASM component-based application.
 - ✅ Can optimize for specific use cases
 - ❌ More boilerplate to maintain
 
-#### Dynamic JSON Approach (`wit-dynamic`)
+#### Dynamic RON/WASM Approach (`wit-dynamic-advanced`)
 
-- ✅ Ideal for API servers and RPC
-- ✅ Supports runtime discovery
-- ✅ Language-agnostic integration
-- ❌ Runtime serialization overhead
-- ❌ Loses compile-time type checking
+- ✅ Ideal for plugin systems with hot-reload
+- ✅ Supports actual WASM Component execution
+- ✅ RON for Rust-friendly serialization
+- ✅ Binary path for high-performance calls
+- ✅ Bidirectional guest-host communication
+- ❌ More complex than static approaches
+- ❌ Requires WASM Components (not just tools)
 
 ## Best Practices
 
 1. **Start with the macro approach** - It's the easiest way to get started
 2. **Use traits for composition** - Combine multiple interfaces using `CompositeWitInterface`
-3. **Prefer native approaches** - Only use dynamic JSON when necessary
-4. **Define clear interfaces** - Well-designed WIT interfaces make your system more maintainable
-5. **Test in isolation** - Test handlers independently before integrating with WASM
+3. **Prefer native approaches** - Use static API for known interfaces
+4. **Use RON for dynamic calls** - Rust-friendly types with runtime flexibility
+5. **Use binary path for hot loops** - When performance is critical
+6. **Define clear interfaces** - Well-designed WIT interfaces make your system more maintainable
+7. **Test in isolation** - Test handlers independently before integrating with WASM
+
+## What's New in 0.3.0
+
+- 🚀 **Dynamic WASM Component Invocation**
+  - Runtime guest export calls with `call_guest_raw_desc()` (RON)
+  - High-performance binary calls with `call_guest_binary()`
+  - Host import registration and invocation
+  - Runtime function discovery
+
+- 🔤 **RON Serialization Support**
+  - `RonBinding` and `RonToolRegistry` for Rust-friendly types
+  - Native Rust enum, tuple, option, and result support
+  - `typed_ron_tool!` macro for type-safe tools
+
+- ⚡ **Dual Calling Paths**
+  - RON path: Convenient, human-readable serialization
+  - Binary path: Zero-copy, canonical ABI performance
+
+- ✅ **Complete Type Support**
+  - All basic types (Bool, Integers, Floats, String, Char)
+  - Complex types (List, Tuple, Record, Variant, Result, Option)
+  - Full nested type support (e.g., `List<List<T>>`, `Option<Result<T, E>>`)
+
+- 📦 **New Example**: `wit-dynamic-advanced` showcasing all new features
+
+See [examples/README.md](examples/README.md) for migration guide and detailed examples.
 
 ## What is Tairitsu?
 

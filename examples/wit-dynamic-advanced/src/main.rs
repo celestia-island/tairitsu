@@ -1,6 +1,6 @@
 //! Dynamic WASM Component Invocation Example
 //!
-//! This example demonstrates the new dynamic invocation features in Tairitsu 0.2.2:
+//! This example demonstrates the new dynamic invocation features in Tairitsu 0.3.0:
 //! - Runtime dynamic calling of guest exports using RON serialization
 //! - Binary canonical ABI calling for high performance
 //! - Host import registration and invocation
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
         .init();
 
     info!("╔════════════════════════════════════════════════════════════╗");
-    info!("║  Tairitsu 0.2.2 Dynamic Invocation Example                ║");
+    info!("║  Tairitsu 0.3.0 Dynamic Invocation Example                ║");
     info!("╚════════════════════════════════════════════════════════════╝");
 
     // ========================================================================

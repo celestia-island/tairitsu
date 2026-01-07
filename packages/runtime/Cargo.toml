@@ -1,6 +1,6 @@
 [package]
 name = "tairitsu"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 
 publish = true
@@ -16,7 +16,7 @@ dynamic = []
 
 [dependencies]
 # Workspace dependencies
-tairitsu-macros = { version = "0.2", path = "../macros" }
+tairitsu-macros = { version = "0.3", path = "../macros" }
 
 # Basic language and tools
 anyhow = "^1"

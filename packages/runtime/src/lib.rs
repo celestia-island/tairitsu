@@ -51,7 +51,6 @@
 
 pub mod container;
 mod image;
-pub mod json;
 pub mod registry;
 pub mod ron;
 pub mod wit;
@@ -66,7 +65,6 @@ pub use container::{
     Container, ExportInfo, GuestHandlerContext, GuestInstance, HostState, HostStateImpl, ImportInfo,
 };
 pub use image::Image;
-pub use json::{typed_tool, FunctionTool, JsonBinding, Tool, ToolRegistry};
 
 // RON types (always exported, but only usable when 'ron' dependency is available)
 pub use ron::{typed_ron_tool, RonBinding, RonFunctionTool, RonTool, RonToolRegistry};

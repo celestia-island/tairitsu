@@ -58,34 +58,7 @@ cargo run --bin runtime-demo
 
 ---
 
-### 3. wit-dynamic - Dynamic JSON Invocation
-
-Demonstrates how to use JSON serialization layer for fully dynamic WIT function calls.
-
-**Features:**
-
-- 🔄 Fully dynamic function calls
-- 🔄 JSON serialization/deserialization
-- 🔄 Type-safe tool wrapping
-- 🔄 Flexible registry management
-
-**Run the example:**
-
-```bash
-cd examples/wit-dynamic
-cargo run --bin dynamic-demo
-```
-
-**Use cases:**
-
-- HTTP API servers
-- Message queue processing
-- Command-line tools
-- Cross-language communication
-
----
-
-### 4. wit-dynamic-advanced - Dynamic WASM Component Invocation (NEW in 0.2.2)
+### 3. wit-dynamic-advanced - Dynamic WASM Component Invocation
 
 Demonstrates the new dynamic invocation features for runtime WASM Component function calls with both RON and binary canonical ABI support.
 
@@ -123,7 +96,7 @@ cargo run --bin dynamic-advanced-demo
 
 ---
 
-### 5. wit-native-simple - Simple Trait Implementation
+### 4. wit-native-simple - Simple Trait Implementation
 
 Demonstrates basic trait-based WIT interface implementation.
 
@@ -166,15 +139,15 @@ cargo run --bin macro-host
 
 ### Compile-time vs Runtime vs Dynamic
 
-| Feature | Compile-time | Runtime | Dynamic JSON | Dynamic WASM |
-| ------- | ----------- | ------- | ------------ | ------------ |
-| Type Safety | Full | Partial | Runtime | Runtime |
-| Performance | Best | Good | Medium | Best (Binary) |
-| Flexibility | Low | High | Highest | Highest |
-| Complexity | Low | Medium | Medium | High |
-| Debug Difficulty | Low | Medium | Medium | Medium |
-| WASM Components | No | No | No | **Yes** |
-| Bidirectional Calls | No | No | No | **Yes** |
+| Feature | Compile-time | Runtime | Dynamic WASM |
+| ------- | ----------- | ------- | ------------ |
+| Type Safety | Full | Partial | Runtime |
+| Performance | Best | Good | Best (Binary) |
+| Flexibility | Low | High | Highest |
+| Complexity | Low | Medium | High |
+| Debug Difficulty | Low | Medium | Medium |
+| WASM Components | No | No | **Yes** |
+| Bidirectional Calls | No | No | **Yes** |
 
 ### Recommended Use Cases
 
@@ -192,14 +165,7 @@ cargo run --bin macro-host
 - Multiple versions coexistence
 - Microservices architecture
 
-**Dynamic JSON (`wit-dynamic`)**
-
-- HTTP APIs
-- Message queues
-- Cross-language calls
-- External integrations
-
-**Dynamic WASM (`wit-dynamic-advanced`)** ⭐ **NEW in 0.2.2**
+**Dynamic WASM (`wit-dynamic-advanced`)**
 
 - Plugin systems with WASM sandboxing
 - Hot-reloadable components
@@ -219,17 +185,13 @@ cargo run --bin macro-host
    - Understand runtime loading
    - Master interface discovery
 
-3. **Advanced**: Explore `wit-dynamic`
-   - Implement dynamic invocation
-   - Build flexible systems
-
-4. **Expert**: Master `wit-dynamic-advanced` ⭐ **NEW**
+3. **Advanced**: Master `wit-dynamic-advanced`
    - Dynamic WASM component invocation
    - RON and binary calling paths
    - Host import management
    - Runtime function discovery
 
-5. **Production**: Reference `wit-native-*`
+4. **Production**: Reference `wit-native-*`
    - Complete WASM integration
    - Production environment examples
 
@@ -265,7 +227,7 @@ Each example contains:
 New examples are welcome! Suggested example topics:
 
 - **Dynamic WASM**: Real-world plugin system examples
-- **Performance**: Benchmarking RON vs JSON vs Binary paths
+- **Performance**: Benchmarking RON vs Binary paths
 - **Complete web services**: HTTP + WASM integration
 - **Database integration**: WASM components with database access
 - **Filesystem operations**: Secure sandboxed file I/O
@@ -275,13 +237,14 @@ New examples are welcome! Suggested example topics:
 
 ---
 
-## ✨ What's New in 0.2.2
+## ✨ What's New in 0.3.0
 
 - **New Example**: `wit-dynamic-advanced` showcasing dynamic WASM component invocation
-- **RON Support**: Rust-friendly serialization replacing JSON for better type compatibility
+- **RON Support**: Rust-friendly serialization with native type support
 - **Binary Path**: High-performance canonical ABI calling
 - **Host Imports**: Bidirectional guest-host communication
 - **Runtime Discovery**: Query available functions at runtime
+- **Removed**: `wit-dynamic` example (use `wit-dynamic-advanced` instead)
 
 ---
 
