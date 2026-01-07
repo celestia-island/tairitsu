@@ -9,16 +9,20 @@
 use anyhow::Result;
 use log::{debug, error, info, warn};
 
-use wasmtime::component::Type;
-
-use tairitsu::{Container, HostState, Image, dynamic::host_imports::HostImportRegistry, ron::{RonBinding, RonToolRegistry, typed_ron_tool}};
+use tairitsu::{
+    dynamic::host_imports::HostImportRegistry,
+    ron::{typed_ron_tool, RonBinding, RonToolRegistry},
+    Container, Image,
+};
 
 // ============================================================================
 // Host Import Implementation
 // ============================================================================
 
+#[allow(dead_code)]
 struct LoggerImport;
 
+#[allow(dead_code)]
 impl LoggerImport {
     fn log(level: String, message: String) -> String {
         println!("[{}] {}", level, message);
@@ -150,10 +154,19 @@ fn main() -> Result<()> {
         },
     );
 
-    info!("Registered host imports: {:?}", host_registry.list_imports());
+    info!(
+        "Registered host imports: {:?}",
+        host_registry.list_imports()
+    );
 
     // Test host import call
-    match host_registry.call("host-add", &[wasmtime::component::Val::S32(10), wasmtime::component::Val::S32(32)]) {
+    match host_registry.call(
+        "host-add",
+        &[
+            wasmtime::component::Val::S32(10),
+            wasmtime::component::Val::S32(32),
+        ],
+    ) {
         Ok(results) => {
             if let Some(wasmtime::component::Val::S32(result)) = results.first() {
                 info!("host-add result: 10 + 32 = {}", result);
@@ -183,26 +196,19 @@ fn main() -> Result<()> {
     // ========================================================================
     info!("\n🧪 Scenario 6: Complex Type Support Verification");
 
+    use tairitsu::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::Val;
-    use tairitsu::dynamic::{val_to_ron, ron_to_val};
 
     // Test 1: List type
     info!("\n  [Test 1] List type (Vec<u32>)");
-    let list_val = Val::List(vec![
-        Val::U32(1),
-        Val::U32(2),
-        Val::U32(3),
-    ]);
+    let list_val = Val::List(vec![Val::U32(1), Val::U32(2), Val::U32(3)]);
     let list_ron = val_to_ron(&list_val)?;
     info!("    Serialized: {}", list_ron);
     assert_eq!(list_ron, "[1, 2, 3]");
 
     // Test 2: Tuple type
     info!("\n  [Test 2] Tuple type (String, u32)");
-    let tuple_val = Val::Tuple(vec![
-        Val::String("hello".to_string()),
-        Val::U32(42),
-    ]);
+    let tuple_val = Val::Tuple(vec![Val::String("hello".to_string()), Val::U32(42)]);
     let tuple_ron = val_to_ron(&tuple_val)?;
     info!("    Serialized: {}", tuple_ron);
     assert_eq!(tuple_ron, "(\"hello\", 42)");
@@ -257,14 +263,14 @@ fn main() -> Result<()> {
 
     // Test 9: Float32 type
     info!("\n  [Test 9] Float32 type");
-    let f32_val = Val::Float32(3.14159_f32);
+    let f32_val = Val::Float32(std::f32::consts::FRAC_PI_4);
     let f32_ron = val_to_ron(&f32_val)?;
     info!("    Serialized: {}", f32_ron);
     assert!(f32_ron.contains("e")); // Scientific notation
 
     // Test 10: Float64 type
     info!("\n  [Test 10] Float64 type");
-    let f64_val = Val::Float64(2.71828_f64);
+    let f64_val = Val::Float64(std::f64::consts::LN_2);
     let f64_ron = val_to_ron(&f64_val)?;
     info!("    Serialized: {}", f64_ron);
     assert!(f64_ron.contains("e")); // Scientific notation
@@ -295,12 +301,12 @@ fn main() -> Result<()> {
     info!("    ✓ Deserialized string");
 
     info!("\n  [Test 4] Float type - Float32");
-    let f32_result = ron_to_val("3.14", &Type::Float32)?;
+    let f32_result = ron_to_val("1.5", &Type::Float32)?;
     assert!(matches!(f32_result, Val::Float32(_)));
     info!("    ✓ Deserialized Float32");
 
     info!("\n  [Test 5] Float type - Float64");
-    let f64_result = ron_to_val("2.718", &Type::Float64)?;
+    let f64_result = ron_to_val("1.0", &Type::Float64)?;
     assert!(matches!(f64_result, Val::Float64(_)));
     info!("    ✓ Deserialized Float64");
 

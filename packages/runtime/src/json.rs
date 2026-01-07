@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
 #[cfg(feature = "dynamic")]
-pub use crate::ron::{RonBinding as RonBindingExport, RonTool, RonToolRegistry, typed_ron_tool};
+pub use crate::ron::{typed_ron_tool, RonBinding as RonBindingExport, RonTool, RonToolRegistry};
 
 /// JSON binding utilities for WIT types
 pub struct JsonBinding;

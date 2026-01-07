@@ -3,7 +3,7 @@
 //! This module provides conversion from Wasmtime Component Model `Val` types
 //! to RON (Rust Object Notation), with full support for nested complex types.
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use wasmtime::component::Val;
 
 /// Convert Wasmtime Val to RON string
@@ -171,7 +171,11 @@ mod complex {
     /// # Examples
     /// - Some(42) -> "Some(42)"
     /// - None -> "None" (unit variant)
-    pub fn serialize_variant(case_name: &str, val: &Option<Box<Val>>, serialize: Serializer) -> Result<String> {
+    pub fn serialize_variant(
+        case_name: &str,
+        val: &Option<Box<Val>>,
+        serialize: Serializer,
+    ) -> Result<String> {
         match val {
             Some(v) => Ok(format!("{}({})", case_name, serialize(v)?)),
             None => Ok(case_name.to_string()),
@@ -184,7 +188,10 @@ mod complex {
     /// - Ok(42) -> "Ok(42)"
     /// - Err("error") -> "Err(\"error\")"
     /// - Ok(()) -> "Ok(())" (unit type)
-    pub fn serialize_result(r: &Result<Option<Box<Val>>, Option<Box<Val>>>, serialize: Serializer) -> Result<String> {
+    pub fn serialize_result(
+        r: &Result<Option<Box<Val>>, Option<Box<Val>>>,
+        serialize: Serializer,
+    ) -> Result<String> {
         match r {
             Ok(Some(v)) => Ok(format!("Ok({})", serialize(v)?)),
             Err(Some(e)) => Ok(format!("Err({})", serialize(e)?)),
@@ -214,15 +221,18 @@ mod tests {
     fn test_serialize_basic_types() {
         assert_eq!(val_to_ron(&Val::Bool(true)).unwrap(), "true");
         assert_eq!(val_to_ron(&Val::U32(42)).unwrap(), "42");
-        assert_eq!(val_to_ron(&Val::String("hello".to_string())).unwrap(), "\"hello\"");
+        assert_eq!(
+            val_to_ron(&Val::String("hello".to_string())).unwrap(),
+            "\"hello\""
+        );
     }
 
     #[test]
     fn test_serialize_float_types() {
-        let ron = val_to_ron(&Val::Float32(3.14159_f32)).unwrap();
+        let ron = val_to_ron(&Val::Float32(std::f32::consts::PI)).unwrap();
         assert!(ron.contains("e")); // Scientific notation
 
-        let ron = val_to_ron(&Val::Float64(2.71828_f64)).unwrap();
+        let ron = val_to_ron(&Val::Float64(std::f64::consts::E)).unwrap();
         assert!(ron.contains("e"));
     }
 

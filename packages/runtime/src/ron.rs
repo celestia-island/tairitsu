@@ -30,8 +30,7 @@ impl RonBinding {
     /// Convert RON bytes back to parameters
     pub fn ron_bytes_to_params<'de, T: Deserialize<'de>>(ron: &'de [u8]) -> Result<T> {
         // Convert bytes to string, then parse as RON
-        let ron_str = std::str::from_utf8(ron)
-            .context("RON bytes are not valid UTF-8")?;
+        let ron_str = std::str::from_utf8(ron).context("RON bytes are not valid UTF-8")?;
         ron::from_str(ron_str).map_err(Into::into)
     }
 }

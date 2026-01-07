@@ -8,14 +8,16 @@ use std::path::PathBuf;
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_real_wasm_component_dynamic_invocation() {
-    use tairitsu::Image;
     use bytes::Bytes;
+    use tairitsu::Image;
 
     // Build the WASM component first
     // Note: This test requires the WASM component to be pre-built
     // Run: cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
 
-    let wasm_path = PathBuf::from("../../../target/wasm32-wasip2/release/tairitsu_example_wit_native_simple.wasm");
+    let wasm_path = PathBuf::from(
+        "../../../target/wasm32-wasip2/release/tairitsu_example_wit_native_simple.wasm",
+    );
 
     if !wasm_path.exists() {
         eprintln!("WASM component not found at: {:?}", wasm_path);
@@ -25,13 +27,11 @@ fn test_real_wasm_component_dynamic_invocation() {
     }
 
     // Load WASM binary
-    let wasm_binary = std::fs::read(&wasm_path)
-        .expect("Failed to read WASM file");
+    let wasm_binary = std::fs::read(&wasm_path).expect("Failed to read WASM file");
 
     let wasm_size = wasm_binary.len();
 
-    let _image = Image::new(Bytes::from(wasm_binary))
-        .expect("Failed to create image");
+    let _image = Image::new(Bytes::from(wasm_binary)).expect("Failed to create image");
 
     // Note: For full integration test, we need to implement proper guest initializer
     // For now, this is a placeholder showing the structure
@@ -42,26 +42,19 @@ fn test_real_wasm_component_dynamic_invocation() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_complex_type_serialization_roundtrip() {
-    use tairitsu::dynamic::{val_to_ron, ron_to_val};
+    use tairitsu::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::{Type, Val};
 
     // Test 1: Simple List
     println!("\n=== Testing List serialization ===");
-    let list_val = Val::List(vec![
-        Val::U32(1),
-        Val::U32(2),
-        Val::U32(3),
-    ]);
+    let list_val = Val::List(vec![Val::U32(1), Val::U32(2), Val::U32(3)]);
     let list_ron = val_to_ron(&list_val).expect("Failed to serialize list");
     println!("List → RON: {}", list_ron);
     assert_eq!(list_ron, "[1, 2, 3]");
 
     // Test 2: Simple Tuple
     println!("\n=== Testing Tuple serialization ===");
-    let tuple_val = Val::Tuple(vec![
-        Val::String("test".to_string()),
-        Val::U32(42),
-    ]);
+    let tuple_val = Val::Tuple(vec![Val::String("test".to_string()), Val::U32(42)]);
     let tuple_ron = val_to_ron(&tuple_val).expect("Failed to serialize tuple");
     println!("Tuple → RON: {}", tuple_ron);
     assert_eq!(tuple_ron, "(\"test\", 42)");
@@ -92,12 +85,12 @@ fn test_complex_type_serialization_roundtrip() {
 
     // Test 5: Float types
     println!("\n=== Testing Float serialization ===");
-    let f32_val = Val::Float32(3.14159_f32);
+    let f32_val = Val::Float32(std::f32::consts::FRAC_PI_4);
     let f32_ron = val_to_ron(&f32_val).expect("Failed to serialize f32");
     println!("Float32 → RON: {}", f32_ron);
     assert!(f32_ron.contains("e")); // Scientific notation
 
-    let f64_val = Val::Float64(2.71828_f64);
+    let f64_val = Val::Float64(std::f64::consts::LN_2);
     let f64_ron = val_to_ron(&f64_val).expect("Failed to serialize f64");
     println!("Float64 → RON: {}", f64_ron);
     assert!(f64_ron.contains("e")); // Scientific notation
@@ -118,8 +111,8 @@ fn test_complex_type_serialization_roundtrip() {
 #[test]
 #[cfg(feature = "dynamic")]
 fn test_nested_complex_types() {
-    use tairitsu::dynamic::{val_to_ron, ron_to_val};
-    use wasmtime::component::{Type, Val};
+    use tairitsu::dynamic::val_to_ron;
+    use wasmtime::component::Val;
 
     println!("\n=== Testing Nested Complex Types ===");
 

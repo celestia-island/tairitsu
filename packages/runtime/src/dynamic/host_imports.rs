@@ -3,10 +3,10 @@
 //! This module provides a registry for host functions that WASM components import,
 //! allowing dynamic invocation similar to guest exports.
 
-use std::{collections::HashMap, sync::Arc};
 use anyhow::Result;
+use std::{collections::HashMap, sync::Arc};
 
-use wasmtime::component::{Val, Type};
+use wasmtime::component::{Type, Val};
 
 /// Host import function registry
 pub struct HostImportRegistry {
@@ -21,13 +21,8 @@ impl HostImportRegistry {
     }
 
     /// Register a host import function
-    pub fn register<F>(
-        &mut self,
-        name: String,
-        params: Vec<Type>,
-        results: Vec<Type>,
-        handler: F,
-    ) where
+    pub fn register<F>(&mut self, name: String, params: Vec<Type>, results: Vec<Type>, handler: F)
+    where
         F: Fn(&[Val]) -> Result<Vec<Val>> + Send + Sync + 'static,
     {
         let import = HostImport {
@@ -56,7 +51,9 @@ impl HostImportRegistry {
 
     /// Get function signature
     pub fn get_signature(&self, name: &str) -> Option<(Vec<Type>, Vec<Type>)> {
-        self.imports.get(name).map(|i| (i.params.clone(), i.results.clone()))
+        self.imports
+            .get(name)
+            .map(|i| (i.params.clone(), i.results.clone()))
     }
 }
 
@@ -66,12 +63,16 @@ impl Default for HostImportRegistry {
     }
 }
 
+/// Type alias for host import handler function to reduce type complexity
+type HostImportHandler = Arc<dyn Fn(&[Val]) -> Result<Vec<Val>> + Send + Sync>;
+
 /// Host import function descriptor
 pub struct HostImport {
+    #[allow(dead_code)] // Reserved for future use (e.g., listing imports)
     name: String,
     params: Vec<Type>,
     results: Vec<Type>,
-    handler: Arc<dyn Fn(&[Val]) -> Result<Vec<Val>> + Send + Sync>,
+    handler: HostImportHandler,
 }
 
 #[cfg(test)]
@@ -83,12 +84,7 @@ mod tests {
         let mut registry = HostImportRegistry::new();
 
         // Register a simple function
-        registry.register(
-            "test-func".to_string(),
-            vec![],
-            vec![],
-            |_args| Ok(vec![]),
-        );
+        registry.register("test-func".to_string(), vec![], vec![], |_args| Ok(vec![]));
 
         assert!(registry.list_imports().contains(&"test-func"));
     }
