@@ -109,8 +109,13 @@ run-macro-wasm:
     @echo "Running macro WASM example..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
 
+# Run dynamic advanced demo (RON + complex types)
+run-dynamic-advanced:
+    @echo "Running dynamic advanced example..."
+    cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
+
 # Run all examples
-run-all: run-simple-demo run-simple-host run-simple-wasm run-macro-demo run-macro-host run-macro-wasm
+run-all: run-simple-demo run-simple-host run-simple-wasm run-macro-demo run-macro-host run-macro-wasm run-dynamic-advanced
 
 # Run all WASM examples
 run-all-wasm:
@@ -126,46 +131,92 @@ run-all-wasm:
 # Test tasks
 # ============================================================================
 
+# Run all unit tests
+test-unit:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Running unit tests..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo test --workspace --lib
+
+# Run all unit tests with dynamic feature
+test-unit-dynamic:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Running unit tests with dynamic feature..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo test --workspace --lib --features dynamic
+
+# Run integration tests
+test-integration:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Running integration tests..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo test --package tairitsu --test integration_test --features dynamic
+
+# Build all WASM components for testing
+build-test-wasm:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Building test WASM components..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Building wit-native-simple WASM..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
+    @echo "Building wit-native-macro WASM..."
+    cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
+    @echo "✅ All test WASM components built"
+
+# Run full test suite (unit + integration + WASM)
+test-full: build-test-wasm test-unit test-unit-dynamic test-integration
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ Full test suite completed!"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 # Run all checks (cargo check + clippy + run examples)
 test:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Running comprehensive checks..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Step 1/9: Checking code compilation..."
+    @echo "Step 1/11: Checking code compilation..."
     cargo check --workspace --all-targets
     @echo "✅ Check passed"
     @echo ""
-    @echo "Step 2/9: Running Clippy..."
+    @echo "Step 2/11: Running Clippy..."
     cargo clippy --workspace --all-targets -- -D warnings
     @echo "✅ Clippy passed"
     @echo ""
-    @echo "Step 3/9: Running compile-time demo..."
+    @echo "Step 3/11: Running compile-time demo..."
     cargo run --package tairitsu-example-wit-compile-time --bin compile-time-demo
     @echo "✅ Compile-time demo passed"
     @echo ""
-    @echo "Step 4/9: Running runtime demo..."
+    @echo "Step 4/11: Running runtime demo..."
     cargo run --package tairitsu-example-wit-runtime --bin runtime-demo
     @echo "✅ Runtime demo passed"
     @echo ""
-    @echo "Step 5/9: Running dynamic demo..."
+    @echo "Step 5/11: Running dynamic demo..."
     cargo run --package tairitsu-example-wit-dynamic --bin dynamic-demo
     @echo "✅ Dynamic demo passed"
     @echo ""
-    @echo "Step 6/9: Building simple WASM module..."
+    @echo "Step 6/11: Running dynamic advanced demo..."
+    cargo run --package tairitsu-example-wit-dynamic-advanced --bin dynamic-advanced-demo
+    @echo "✅ Dynamic advanced demo passed"
+    @echo ""
+    @echo "Step 7/11: Building simple WASM module..."
     cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
     @echo "✅ Simple WASM built"
     @echo ""
-    @echo "Step 7/9: Running simple WASM host..."
+    @echo "Step 8/11: Running simple WASM host..."
     cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
     @echo "✅ Simple WASM host passed"
     @echo ""
-    @echo "Step 8/9: Building macro WASM module..."
+    @echo "Step 9/11: Building macro WASM module..."
     cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
     @echo "✅ Macro WASM built"
     @echo ""
-    @echo "Step 9/9: Running macro WASM host..."
+    @echo "Step 10/11: Running macro WASM host..."
     cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
     @echo "✅ Macro WASM host passed"
+    @echo ""
+    @echo "Step 11/11: Running unit tests..."
+    cargo test --workspace --lib --features dynamic
+    @echo "✅ Unit tests passed"
     @echo ""
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "✅ All checks passed successfully!"
