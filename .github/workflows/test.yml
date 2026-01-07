@@ -7,6 +7,7 @@ on:
       - 'packages/**/*'
       - 'examples/**/*'
       - 'Cargo.toml'
+      - 'justfile'
   push:
     branches: [master]
 
@@ -32,26 +33,10 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Run unit tests
-        run: |
-          cargo test \
-            --all-targets \
-            --all-features \
-            --no-fail-fast \
-            --workspace
+      - name: Install just
+        uses: extractions/setup-just@v3
 
-      - name: Build WASM modules
+      - name: Run tests
         run: |
-          cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib
-          cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib
+          just test
 
-      - name: Run examples
-        run: |
-          # Run non-WASM example demos
-          cargo run --package tairitsu-example-wit-compile-time --bin compile-time-demo
-          cargo run --package tairitsu-example-wit-runtime --bin runtime-demo
-          cargo run --package tairitsu-example-wit-dynamic --bin dynamic-demo
-
-          # Run WASM host examples (using pre-built WASM modules)
-          cargo run --package tairitsu-example-wit-native-simple --bin simple-wasm-host
-          cargo run --package tairitsu-example-wit-native-macro --bin macro-wasm-host
