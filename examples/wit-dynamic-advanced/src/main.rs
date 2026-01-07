@@ -178,7 +178,137 @@ fn main() -> Result<()> {
     // ========================================================================
     // Scenario 6: API Usage Patterns (Pseudo-code Examples)
     // ========================================================================
-    info!("\n📚 Scenario 6: API Usage Patterns");
+    // ========================================================================
+    // Scenario 6: Complex Type Support Verification
+    // ========================================================================
+    info!("\n🧪 Scenario 6: Complex Type Support Verification");
+
+    use wasmtime::component::Val;
+    use tairitsu::dynamic::{val_to_ron, ron_to_val};
+
+    // Test 1: List type
+    info!("\n  [Test 1] List type (Vec<u32>)");
+    let list_val = Val::List(vec![
+        Val::U32(1),
+        Val::U32(2),
+        Val::U32(3),
+    ]);
+    let list_ron = val_to_ron(&list_val)?;
+    info!("    Serialized: {}", list_ron);
+    assert_eq!(list_ron, "[1, 2, 3]");
+
+    // Test 2: Tuple type
+    info!("\n  [Test 2] Tuple type (String, u32)");
+    let tuple_val = Val::Tuple(vec![
+        Val::String("hello".to_string()),
+        Val::U32(42),
+    ]);
+    let tuple_ron = val_to_ron(&tuple_val)?;
+    info!("    Serialized: {}", tuple_ron);
+    assert_eq!(tuple_ron, "(\"hello\", 42)");
+
+    // Test 3: Option type - Some
+    info!("\n  [Test 3] Option type - Some(u32)");
+    let some_val = Val::Option(Some(Box::new(Val::U32(100))));
+    let some_ron = val_to_ron(&some_val)?;
+    info!("    Serialized: {}", some_ron);
+    assert_eq!(some_ron, "Some(100)");
+
+    // Test 4: Option type - None
+    info!("\n  [Test 4] Option type - None");
+    let none_val = Val::Option(None);
+    let none_ron = val_to_ron(&none_val)?;
+    info!("    Serialized: {}", none_ron);
+    assert_eq!(none_ron, "None");
+
+    // Test 5: Result type - Ok
+    info!("\n  [Test 5] Result type - Ok(u32)");
+    let ok_val = Val::Result(Ok(Some(Box::new(Val::U32(200)))));
+    let ok_ron = val_to_ron(&ok_val)?;
+    info!("    Serialized: {}", ok_ron);
+    assert_eq!(ok_ron, "Ok(200)");
+
+    // Test 6: Result type - Err
+    info!("\n  [Test 6] Result type - Err(string)");
+    let err_val = Val::Result(Err(Some(Box::new(Val::String("error".to_string())))));
+    let err_ron = val_to_ron(&err_val)?;
+    info!("    Serialized: {}", err_ron);
+    assert_eq!(err_ron, "Err(\"error\")");
+
+    // Test 7: Result type - Ok with unit
+    info!("\n  [Test 7] Result type - Ok with unit");
+    let ok_unit_val = Val::Result(Ok(None));
+    let ok_unit_ron = val_to_ron(&ok_unit_val)?;
+    info!("    Serialized: {}", ok_unit_ron);
+    assert_eq!(ok_unit_ron, "Ok(())");
+
+    // Test 8: Record type
+    info!("\n  [Test 8] Record type");
+    let record_val = Val::Record(vec![
+        ("name".to_string(), Val::String("test".to_string())),
+        ("value".to_string(), Val::U32(999)),
+    ]);
+    let record_ron = val_to_ron(&record_val)?;
+    info!("    Serialized: {}", record_ron);
+    assert!(record_ron.contains("name"));
+    assert!(record_ron.contains("test"));
+    assert!(record_ron.contains("value"));
+    assert!(record_ron.contains("999"));
+
+    // Test 9: Float32 type
+    info!("\n  [Test 9] Float32 type");
+    let f32_val = Val::Float32(3.14159_f32);
+    let f32_ron = val_to_ron(&f32_val)?;
+    info!("    Serialized: {}", f32_ron);
+    assert!(f32_ron.contains("e")); // Scientific notation
+
+    // Test 10: Float64 type
+    info!("\n  [Test 10] Float64 type");
+    let f64_val = Val::Float64(2.71828_f64);
+    let f64_ron = val_to_ron(&f64_val)?;
+    info!("    Serialized: {}", f64_ron);
+    assert!(f64_ron.contains("e")); // Scientific notation
+
+    info!("\n  ✅ All complex type serialization tests passed!");
+
+    // ========================================================================
+    // Scenario 7: RON Deserialization Tests
+    // ========================================================================
+    info!("\n🔄 Scenario 7: RON Deserialization");
+
+    use wasmtime::component::Type;
+
+    // Test basic type deserialization
+    info!("\n  [Test 1] Basic type - Bool");
+    let bool_result = ron_to_val("true", &Type::Bool)?;
+    assert!(matches!(bool_result, Val::Bool(true)));
+    info!("    ✓ Deserialized true");
+
+    info!("\n  [Test 2] Basic type - U32");
+    let u32_result = ron_to_val("42", &Type::U32)?;
+    assert!(matches!(u32_result, Val::U32(42)));
+    info!("    ✓ Deserialized 42");
+
+    info!("\n  [Test 3] Basic type - String");
+    let str_result = ron_to_val("\"hello\"", &Type::String)?;
+    assert!(matches!(str_result, Val::String(_)));
+    info!("    ✓ Deserialized string");
+
+    info!("\n  [Test 4] Float type - Float32");
+    let f32_result = ron_to_val("3.14", &Type::Float32)?;
+    assert!(matches!(f32_result, Val::Float32(_)));
+    info!("    ✓ Deserialized Float32");
+
+    info!("\n  [Test 5] Float type - Float64");
+    let f64_result = ron_to_val("2.718", &Type::Float64)?;
+    assert!(matches!(f64_result, Val::Float64(_)));
+    info!("    ✓ Deserialized Float64");
+
+    info!("\n  ✅ All deserialization tests passed!");
+
+    // ========================================================================
+    // Scenario 8: API Usage Patterns
+    // ========================================================================
 
     info!("\n--- Pattern 1: Guest Export with RON ---");
     info!("let result = container.call_guest_raw_desc(");
@@ -207,9 +337,9 @@ fn main() -> Result<()> {
     info!("}}");
 
     // ========================================================================
-    // Scenario 7: Error Handling
+    // Scenario 9: Error Handling
     // ========================================================================
-    info!("\n⚠️  Scenario 7: Error Handling");
+    info!("\n⚠️  Scenario 9: Error Handling");
 
     // Test calling non-existent tool
     match ron_registry.invoke("non-existent", "test") {

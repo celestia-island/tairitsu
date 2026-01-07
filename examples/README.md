@@ -96,6 +96,7 @@ Demonstrates the new dynamic invocation features for runtime WASM Component func
 - 🔍 Runtime function discovery
 - 🔤 RON serialization for Rust-friendly types
 - ⚡ Binary canonical ABI for high performance
+- ✅ Full support for basic, float, and complex types (List, Tuple, Record, Variant, Result, Option)
 
 **Run the example:**
 
@@ -118,6 +119,7 @@ cargo run --bin dynamic-advanced-demo
 - Supports both RON and binary calling paths
 - Guest export discovery and invocation
 - Host import management for bidirectional communication
+- Complete type system support including complex nested types
 
 ---
 

@@ -212,21 +212,23 @@ let result = container.call_guest_raw_desc(
 **Supported:**
 
 - ✅ Basic types: Bool, Integers (U8-S64), String, Char
+- ✅ Floating point types: Float32, Float64
+- ✅ Complex types: List, Tuple, Record, Variant, Result, Option
 - ✅ Guest export dynamic invocation
 - ✅ Host import registration and invocation
 - ✅ Runtime discovery for host imports
+- ✅ Full bidirectional RON serialization/deserialization
 
 **Not Yet Supported:**
 
-- ⚠️ Complex types: List, Tuple, Record, Variant, Result, Option
 - ⚠️ Runtime discovery for guest exports (placeholder implementation)
-- ⚠️ Floating point types (F32, F64)
+- ⚠️ Nested complex types (e.g., List<List<T>>, Record containing Lists, etc.)
 
 **Planned for Future Versions:**
 
-- 📋 Full complex type support
-- 📋 Complete guest export discovery
-- 📋 Performance optimizations
+- 📋 Complete guest export discovery with type information
+- 📋 Nested complex type support
+- 📋 Performance optimizations for hot paths
 
 ## 🐛 Troubleshooting
 
