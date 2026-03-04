@@ -5,7 +5,7 @@ use tracing::trace;
 
 thread_local! {
     static DEPENDENCIES: RefCell<Vec<Rc<RefCell<dyn Any>>>> = RefCell::new(Vec::new());
-    static BATCHING: RefCell<bool> = RefCell::new(false);
+    static BATCHING: RefCell<bool> = const { RefCell::new(false) };
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
 }
 

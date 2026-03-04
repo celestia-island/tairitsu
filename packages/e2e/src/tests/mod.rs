@@ -4,16 +4,18 @@ pub use basic_components::BasicComponentsTests;
 
 use thirtyfour::WebDriver;
 use anyhow::Result;
-use tracing::info;
 
-pub trait Test {
+pub trait Test: Send + Sync {
     fn name(&self) -> &str;
     
     fn setup(&self) -> Result<()> {
         Ok(())
     }
     
-    async fn run_with_driver(&self, driver: &WebDriver) -> Result<TestResult>;
+    fn run_with_driver(
+        &self,
+        driver: &WebDriver,
+    ) -> impl std::future::Future<Output = Result<TestResult>> + Send;
     
     fn teardown(&self) -> Result<()> {
         Ok(())

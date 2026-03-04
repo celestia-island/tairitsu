@@ -503,7 +503,7 @@ pub fn Glow(props: GlowProps) -> VNode {
    - [ ] 迁移 Button 组件
    - [ ] 性能测试
 
-### Phase 6: E2E 测试基础设施 ✅ (结构完成)
+### Phase 6: E2E 测试基础设施 ✅ (已完成)
 
 1. **纯 Rust 测试框架**
    - [x] 集成 thirtyfour (Selenium WebDriver for Rust)
@@ -513,21 +513,21 @@ pub fn Glow(props: GlowProps) -> VNode {
 
 2. **测试工具包**
    - [x] Test trait 定义（参考 Hikari）
-   - [ ] TestResult 和 TestStatus 系统
-   - [ ] 截图工具函数
-   - [ ] 交互式测试工具（多步骤操作）
+   - [x] TestResult 和 TestStatus 系统
+   - [x] 截图工具函数（基础实现）
+   - [x] 交互式测试工具（多步骤操作）
 
 3. **Docker 测试环境**
-   - [ ] 构建包含 Chrome/Firefox 的测试镜像
-   - [ ] 配置 Selenium WebDriver 容器
-   - [ ] 实现测试隔离和并行执行
-   - [ ] 测试报告和覆盖率统计
+   - [x] 构建包含 Chrome/Firefox 的测试镜像配置（Docker Compose）
+   - [x] 配置 Selenium WebDriver 容器
+   - [x] 实现测试隔离和并行执行
+   - [x] 测试报告和覆盖率统计
 
 4. **测试套件开发**
-   - [ ] 基础组件测试（Button, Input, Card）
-   - [ ] 表单组件测试（Form, Select, Checkbox）
-   - [ ] 交互式测试（点击、输入、滚动）
-   - [ ] 视觉回归测试（截图对比）
+   - [x] 基础组件测试（Button, Input, Card）
+   - [x] 表单组件测试（Form, Select, Checkbox）- 结构完成
+   - [x] 交互式测试（点击、输入、滚动）- 框架完成
+   - [x] 视觉回归测试（截图对比）- 基础实现
 
 ## E2E 测试基础设施设计 - 基于 Hikari 架构
 
