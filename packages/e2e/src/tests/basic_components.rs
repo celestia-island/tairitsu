@@ -1,4 +1,4 @@
-use crate::tests::{Test, TestResult, TestStatus};
+use crate::tests::{Test, TestResult};
 use anyhow::Result;
 use std::time::{Duration, Instant};
 use thirtyfour::{By, WebDriver};
