@@ -35,6 +35,20 @@ impl Style {
         Self::default()
     }
 
+    pub fn add(mut self, name: &str, value: &str) -> Self {
+        if !self.static_styles.is_empty() {
+            self.static_styles.push(';');
+        }
+        self.static_styles.push_str(&format!("{}:{}", name, value));
+        self
+    }
+
+    pub fn add_custom(mut self, name: &str, value: &str) -> Self {
+        self.css_variables
+            .push((name.to_string(), value.to_string()));
+        self
+    }
+
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         let mut result = self.static_styles.clone();
