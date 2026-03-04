@@ -1,0 +1,19 @@
+[package]
+name = "tairitsu-hooks"
+version = "0.1.0"
+description = "Hooks system for Tairitsu"
+authors = ["Tairitsu Contributors"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[dependencies]
+tairitsu-vdom = { path = "../vdom" }
+
+# Basic language and tools
+anyhow = "^1"
+
+# Logging and tracing
+tracing = "^0.1"
+
+[dev-dependencies]
+tokio = { version = "^1", features = ["full"] }
