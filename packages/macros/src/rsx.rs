@@ -78,19 +78,15 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 
     let mut class_value = String::new();
     let mut style_value = String::new();
-    let mut id_value = String::new();
-    let mut onclick_value = String::new();
     let mut other_attrs = Vec::new();
 
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(v) => class_value = v.value(),
             RsxAttr::Style(v) => style_value = v.value(),
-            RsxAttr::Id(v) => id_value = v.value(),
-            RsxAttr::Onclick(v) => onclick_value = v.value(),
-            RsxAttr::Other { name, value } => {
-                other_attrs.push((name.to_string(), value.value()));
-            }
+            RsxAttr::Id(v) => other_attrs.push(("id".to_string(), v.value())),
+            RsxAttr::Onclick(v) => other_attrs.push(("onclick".to_string(), v.value())),
+            RsxAttr::Other { name, value } => other_attrs.push((name.to_string(), value.value())),
         }
     }
 
