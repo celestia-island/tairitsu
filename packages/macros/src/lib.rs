@@ -2,6 +2,27 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput};
 
+mod rsx;
+use rsx::{expand_rsx, RsxElement};
+
+/// RSX macro for declarative UI construction
+///
+/// # Example
+/// ```ignore
+/// rsx! {
+///     div {
+///         class: "container",
+///         "Hello, world!"
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn rsx(input: TokenStream) -> TokenStream {
+    let element = syn::parse_macro_input!(input as RsxElement);
+    let expanded = expand_rsx(element);
+    TokenStream::from(expanded)
+}
+
 /// Derives WitCommand trait for an enum, automatically generating Response type and command routing
 ///
 /// # Example
@@ -379,9 +400,10 @@ struct WitGuestImpl {
 }
 
 impl syn::parse::Parse for WitGuestImpl {
-    fn parse(_input: syn::parse::ParseStream) -> syn::Result<Self> {
-        // For now, just succeed without parsing
-        // TODO: Implement proper parsing of the macro syntax
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        // Parse the macro input for wit_guest_impl
+        // Accept any token stream as valid input
+        input.parse::<proc_macro2::TokenStream>()?;
         Ok(WitGuestImpl {})
     }
 }
