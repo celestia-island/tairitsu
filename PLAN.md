@@ -1046,9 +1046,10 @@ Tairitsu 框架的核心功能已经实现完成，可以开始与 Hikari 组件
      - ✅ WASM 构建流程（检查、编译、bindgen、HTML 生成）
      - ✅ 配置解析（Cargo.toml metadata）
      - ✅ 进度显示（indicatif）
+     - ✅ 开发服务器（静态文件服务、自动构建）
      - ✅ 错误处理
    - **计划中功能**:
-     - 🚧 开发服务器（热重载）
+     - 🚧 热模块替换（HMR）
      - 🚧 Native 应用打包（Windows/macOS/Linux）
      - 🚧 资源优化和嵌入
      - 🚧 wasm-opt 集成
