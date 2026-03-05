@@ -20,7 +20,16 @@ serde_json = "^1"
 tracing = "^0.1"
 
 # Web APIs (only for wasm32 target)
-web-sys = { version = "^0.3", optional = true }
+web-sys = { version = "^0.3", optional = true, features = [
+  "Window",
+  "Document", 
+  "Element",
+  "HtmlElement",
+  "Event",
+  "EventTarget",
+  "Node",
+  "Text",
+] }
 js-sys = { version = "^0.3", optional = true }
 wasm-bindgen = { version = "^0.2", optional = true }
 

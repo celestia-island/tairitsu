@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tairitsu Demo Index</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .demo-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+        
+        .demo-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .demo-card .tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+        
+        .main-demo {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .main-demo h3,
+        .main-demo p {
+            color: white;
+        }
+        
+        .main-demo .tag {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Tairitsu Demos</h1>
+    <p class="subtitle">Simple HTML/CSS examples for testing</p>
+    
+    <div class="demo-grid">
+        <a href="../index.html" class="demo-card main-demo">
+            <h3>🚀 Main Demo</h3>
+            <p>Full Tairitsu Web Demo with WASM - Virtual DOM, Hooks, and rsx! macro</p>
+            <div class="tags">
+                <span class="tag">WASM</span>
+                <span class="tag">Rust</span>
+                <span class="tag">Virtual DOM</span>
+                <span class="tag">Hooks</span>
+            </div>
+        </a>
+        
+        <a href="counter.html" class="demo-card">
+            <h3>🔢 Counter</h3>
+            <p>Simple counter with increment, decrement, and reset buttons</p>
+            <div class="tags">
+                <span class="tag">JavaScript</span>
+                <span class="tag">State</span>
+            </div>
+        </a>
+        
+        <a href="hover.html" class="demo-card">
+            <h3>🎨 Hover Effects</h3>
+            <p>Interactive cards with CSS hover animations and gradients</p>
+            <div class="tags">
+                <span class="tag">CSS</span>
+                <span class="tag">Animation</span>
+            </div>
+        </a>
+        
+        <a href="form.html" class="demo-card">
+            <h3>📝 Form Components</h3>
+            <p>Various form inputs: text, select, checkbox, radio, switch</p>
+            <div class="tags">
+                <span class="tag">Forms</span>
+                <span class="tag">Inputs</span>
+            </div>
+        </a>
+    </div>
+    
+    <div style="text-align: center; margin-top: 40px; color: white;">
+        <p>Press <code style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 4px;">just dev</code> to start the main demo</p>
+    </div>
+</body>
+</html>

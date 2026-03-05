@@ -1,6 +1,11 @@
 use anyhow::Result;
 
 #[cfg(feature = "web")]
+use tairitsu_vdom::{ElementHandle, Platform};
+#[cfg(feature = "web")]
+use wasm_bindgen::JsCast;
+
+#[cfg(feature = "web")]
 pub struct WebPlatform {
     document: web_sys::Document,
 }
