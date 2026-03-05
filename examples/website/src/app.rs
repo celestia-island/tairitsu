@@ -1,14 +1,9 @@
-use anyhow::Result;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
 pub struct App;
 
 impl App {
-    pub fn new() -> Self {
-        Self
-    }
-
     pub fn render(&self) -> VNode {
         rsx! {
             div {
@@ -26,6 +21,24 @@ impl App {
                     }
                     p {
                         "This demonstrates the declarative UI syntax"
+                    }
+                }
+                div {
+                    class: "demo-section",
+                    h2 {
+                        "Reactive System"
+                    }
+                    p {
+                        "Fine-grained reactivity with Signals and Effects"
+                    }
+                }
+                div {
+                    class: "demo-section",
+                    h2 {
+                        "Builder System"
+                    }
+                    p {
+                        "Type-safe style and class builders"
                     }
                 }
             }

@@ -1,9 +1,11 @@
+#[allow(dead_code)]
 use tairitsu_hooks::use_signal;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+#[allow(dead_code)]
 pub fn reactive() -> VNode {
-    let count = use_signal(0);
+    let _count = use_signal(0);
 
     rsx! {
         div {
