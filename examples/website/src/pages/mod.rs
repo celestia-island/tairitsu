@@ -1,4 +1,4 @@
-pub mod home;
-pub mod rsx_demo;
 pub mod builders;
+pub mod home;
 pub mod reactive;
+pub mod rsx_demo;

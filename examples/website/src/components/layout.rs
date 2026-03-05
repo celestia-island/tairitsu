@@ -5,7 +5,8 @@ pub fn layout(children: Vec<VNode>) -> VNode {
     rsx! {
         div {
             class: "layout",
-            {children}
+            // Note: Dynamic children insertion not yet supported in rsx!
+            // This is a placeholder for future enhancement
         }
     }
 }
