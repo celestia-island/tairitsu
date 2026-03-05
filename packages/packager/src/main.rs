@@ -1,4 +1,4 @@
-use tairitsu_package::cli::run;
+use tairitsu_packager::cli::run;
 
 #[tokio::main]
 async fn main() {

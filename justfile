@@ -253,35 +253,23 @@ watch:
 # Web development
 # ============================================================================
 
-# Start web demo development server (requires tairitsu-package)
+# Start web demo development server (using tairitsu-packager)
 dev:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "⚠️  tairitsu-package is not yet implemented"
+    @echo "Starting Tairitsu Web Demo with tairitsu-packager..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    @echo "To use this command, you need to:"
-    @echo "1. Implement tairitsu-package CLI tool"
-    @echo "2. Or temporarily use trunk with manual HTML:"
-    @echo ""
-    @echo "   # Create index.html manually"
-    @echo "   cd examples/web-demo"
-    @echo "   trunk serve --port 3000"
-    @echo ""
-    @echo "See PLAN.md Phase 7 for tairitsu-package design"
+    cd examples/web-demo && cargo run --package tairitsu-packager -- dev --open
 
-# Build web demo for production (requires tairitsu-package)
+# Build web demo for production (using tairitsu-packager)
 build-web:
-    @echo "⚠️  tairitsu-package is not yet implemented"
-    @echo "Use trunk temporarily:"
-    @echo "  cd examples/web-demo"
-    @echo "  trunk build --release"
+    @echo "Building web demo with tairitsu-packager..."
+    cd examples/web-demo && cargo run --package tairitsu-packager -- build --release
 
 # Serve web demo (production build)
-serve-web:
-    @echo "⚠️  tairitsu-package is not yet implemented"
-    @echo "Use python HTTP server:"
-    @echo "  cd examples/web-demo/dist"
-    @echo "  python3 -m http.server 3000"
+serve-web: build-web
+    @echo "Serving production build..."
+    cd examples/web-demo/dist && python3 -m http.server 3000
 
 # ============================================================================
 # Documentation tasks

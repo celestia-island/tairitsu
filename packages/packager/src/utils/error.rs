@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum TairitsuPackageError {
+pub enum TairitsuPackagerError {
     #[error("Configuration file not found: {0}")]
     ConfigNotFound(String),
 
@@ -21,4 +21,4 @@ pub enum TairitsuPackageError {
     JsonError(#[from] serde_json::Error),
 }
 
-pub type Result<T> = std::result::Result<T, TairitsuPackageError>;
+pub type Result<T> = std::result::Result<T, TairitsuPackagerError>;
