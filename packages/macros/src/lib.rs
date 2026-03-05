@@ -2,8 +2,34 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput};
 
+mod component;
 mod rsx;
+use component::expand_component;
 use rsx::{expand_rsx, RsxElement};
+
+/// Component macro for automatic Props generation
+///
+/// # Example
+/// ```ignore
+/// #[component]
+/// fn Button(
+///     variant: ButtonVariant,
+///     #[children] children: Vec<VNode>,
+///     #[default] onclick: Option<Box<dyn FnMut(Box<dyn EventData>)>>,
+/// ) -> VNode {
+///     rsx! {
+///         button {
+///             class: "button",
+///             onclick: onclick,
+///             ..children
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn component(attr: TokenStream, item: TokenStream) -> TokenStream {
+    expand_component(attr, item)
+}
 
 /// RSX macro for declarative UI construction
 ///
