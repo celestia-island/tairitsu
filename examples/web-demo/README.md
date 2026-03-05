@@ -13,7 +13,7 @@ cd examples/web-demo
 trunk serve --open
 ```
 
-The demo will be available at http://localhost:8080
+The demo will be available at http://localhost:3000
 
 ## Available Examples
 
@@ -104,6 +104,13 @@ rustup target add wasm32-unknown-unknown
 cargo install trunk
 cargo install just
 ```
+
+### Ports
+
+- Development server: http://localhost:3000
+- Production build server: http://localhost:3000
+
+(Consistent with Hikari project)
 
 ### Hot Reload
 
