@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 #[cfg(feature = "web")]
-use tairitsu_vdom::{ElementHandle, EventHandle, Platform};
+use tairitsu_vdom::{ElementHandle, EventData, EventHandle, MouseEvent, Platform};
 #[cfg(feature = "web")]
 use wasm_bindgen::JsCast;
 
@@ -108,13 +108,32 @@ impl Platform for WebPlatform {
         element.0.set_attribute("class", class).unwrap();
     }
 
-    fn add_event_listener(&self, element: &Self::Element, event: &str, handler: Box<dyn FnMut()>) {
+    fn add_event_listener(
+        &self,
+        element: &Self::Element,
+        event: &str,
+        handler: Box<dyn FnMut(Box<dyn EventData>)>,
+    ) {
         use wasm_bindgen::closure::Closure;
 
         let handler = Rc::new(RefCell::new(handler));
-        let closure = Closure::wrap(Box::new(move || {
-            handler.borrow_mut()();
-        }) as Box<dyn FnMut()>);
+        let closure = Closure::wrap(Box::new(move |e: web_sys::Event| {
+            let event_data: Box<dyn EventData> = match event {
+                "click" | "mousedown" | "mouseup" | "mousemove" => {
+                    if let Some(mouse_event) = e.dyn_ref::<web_sys::MouseEvent>() {
+                        Box::new(
+                            MouseEvent::new()
+                                .client_x(mouse_event.client_x())
+                                .client_y(mouse_event.client_y()),
+                        )
+                    } else {
+                        Box::new(MouseEvent::new())
+                    }
+                }
+                _ => Box::new(MouseEvent::new()),
+            };
+            handler.borrow_mut()(event_data);
+        }) as Box<dyn FnMut(web_sys::Event)>);
 
         let closure_js = closure.as_ref().clone();
 

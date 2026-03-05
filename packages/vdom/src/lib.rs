@@ -1,9 +1,11 @@
 pub mod diff;
+pub mod events;
 pub mod patch;
 pub mod platform;
 pub mod reactive;
 pub mod vnode;
 
+pub use events::{ChangeEvent, EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent};
 pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};
 pub use reactive::{batch, create_effect, EffectHandle, Signal};

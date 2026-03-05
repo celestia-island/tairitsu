@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse::Parse, parse::ParseStream, Ident, LitStr, Token};
+use syn::{parse::Parse, parse::ParseStream, Expr, Ident, LitStr, Token};
 
 pub struct RsxElement {
     pub tag: Ident,
@@ -9,16 +9,17 @@ pub struct RsxElement {
 }
 
 pub enum RsxAttr {
-    Class(LitStr),
-    Style(LitStr),
-    Id(LitStr),
-    Onclick(LitStr),
-    Other { name: Ident, value: LitStr },
+    Class(Expr),
+    Style(Expr),
+    Id(Expr),
+    Onclick(Expr),
+    Other { name: Ident, value: Expr },
 }
 
 pub enum RsxChild {
     Text(LitStr),
     Element(RsxElement),
+    Dynamic(Expr),
 }
 
 impl Parse for RsxElement {
@@ -27,20 +28,21 @@ impl Parse for RsxElement {
         let mut attrs = Vec::new();
         let mut children = Vec::new();
 
-        // Parse attributes { ... }
         if input.peek(syn::token::Brace) {
             let content;
             syn::braced!(content in input);
 
             while !content.is_empty() {
                 if content.peek(LitStr) {
-                    // Text child
                     let text: LitStr = content.parse()?;
                     children.push(RsxChild::Text(text));
                 } else if content.peek(Token![,]) {
                     content.parse::<Token![,]>()?;
+                } else if content.peek(Token![..]) {
+                    content.parse::<Token![..]>()?;
+                    let expr: Expr = content.parse()?;
+                    children.push(RsxChild::Dynamic(expr));
                 } else if content.peek2(Token![:]) {
-                    // Attribute
                     let name: Ident = content.parse()?;
                     content.parse::<Token![:]>()?;
 
@@ -56,7 +58,6 @@ impl Parse for RsxElement {
                     };
                     attrs.push(attr);
                 } else if content.peek(Ident) {
-                    // Nested element
                     let elem: RsxElement = content.parse()?;
                     children.push(RsxChild::Element(elem));
                 } else {
@@ -76,17 +77,36 @@ impl Parse for RsxElement {
 pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let tag = element.tag.to_string();
 
-    let mut class_value = String::new();
-    let mut style_value = String::new();
+    let mut class_code = quote! { tairitsu_vdom::Classes::new() };
+    let mut style_code = quote! { tairitsu_vdom::Style::new() };
+    let mut event_handlers = Vec::new();
     let mut other_attrs = Vec::new();
 
     for attr in element.attrs {
         match attr {
-            RsxAttr::Class(v) => class_value = v.value(),
-            RsxAttr::Style(v) => style_value = v.value(),
-            RsxAttr::Id(v) => other_attrs.push(("id".to_string(), v.value())),
-            RsxAttr::Onclick(v) => other_attrs.push(("onclick".to_string(), v.value())),
-            RsxAttr::Other { name, value } => other_attrs.push((name.to_string(), value.value())),
+            RsxAttr::Class(expr) => {
+                class_code = quote! { #expr };
+            }
+            RsxAttr::Style(expr) => {
+                style_code = quote! { #expr };
+            }
+            RsxAttr::Id(expr) => {
+                let value = expr;
+                other_attrs.push(quote! { .attr("id", #value) });
+            }
+            RsxAttr::Onclick(expr) => {
+                let handler = expr;
+                event_handlers.push(quote! { .on_event("click", move |e| { (#handler)(e); }) });
+            }
+            RsxAttr::Other { name, value } => {
+                let name_str = name.to_string();
+                if let Some(event_name) = name_str.strip_prefix("on") {
+                    event_handlers
+                        .push(quote! { .on_event(#event_name, move |e| { (#value)(e); }) });
+                } else {
+                    other_attrs.push(quote! { .attr(#name_str, #value) });
+                }
+            }
         }
     }
 
@@ -96,46 +116,27 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             RsxChild::Text(text) => {
                 let text_value = text.value();
                 children_code.push(quote! {
-                    tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))
+                    .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)))
                 });
             }
             RsxChild::Element(elem) => {
                 let child_code = expand_rsx(elem);
-                children_code.push(child_code);
+                children_code.push(quote! { .child(#child_code) });
+            }
+            RsxChild::Dynamic(expr) => {
+                children_code.push(quote! { .children(#expr) });
             }
         }
     }
-
-    let class_code = if class_value.is_empty() {
-        quote! { tairitsu_vdom::Classes::new() }
-    } else {
-        quote! { tairitsu_vdom::Classes::new().add(#class_value) }
-    };
-
-    let style_code = if style_value.is_empty() {
-        quote! { tairitsu_vdom::Style::new() }
-    } else {
-        quote! { tairitsu_vdom::Style::new().add("", #style_value) }
-    };
-
-    let attr_code: Vec<_> = other_attrs
-        .iter()
-        .map(|(name, value)| {
-            let name = name.as_str();
-            let value = value.as_str();
-            quote! { .attr(#name, #value) }
-        })
-        .collect();
 
     quote! {
         tairitsu_vdom::VNode::Element(
             tairitsu_vdom::VElement::new(#tag)
                 .class(#class_code)
                 .style(#style_code)
-                #(#attr_code)*
-                #(
-                    .child(#children_code)
-                )*
+                #(#other_attrs)*
+                #(#event_handlers)*
+                #(#children_code)*
         )
     }
 }
