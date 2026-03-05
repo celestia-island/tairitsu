@@ -1274,3 +1274,410 @@ rsx! {
 1. 设计 #[component] 宏
 2. 添加更多 Hooks
 3. 验证 Hikari 组件迁移
+
+---
+
+## Phase C: 完善生态系统 (🟡 进行中)
+
+### 目标
+完善 Tairitsu 的样式系统和构建工具，支持 Hikari 的完整组件生态迁移。
+
+### 1. Portal 系统 🔴 (优先级: 最高)
+
+**目的**: 支持 Modal、Toast、Tooltip、Select 等需要渲染到 body 根节点的组件。
+
+#### 架构设计
+
+\`\`\`rust
+// packages/vdom/src/portal/mod.rs
+
+/// Portal 容器
+pub struct Portal {
+    /// Portal ID
+    pub id: String,
+    /// 目标容器 (通常是 body)
+    pub target: String,
+    /// Portal 内容
+    pub content: VNode,
+    /// 位置策略
+    pub position: PortalPosition,
+    /// 遮罩模式
+    pub mask: PortalMaskMode,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PortalPosition {
+    /// 跟随触发元素
+    FollowTrigger,
+    /// 固定位置 (center, top, etc.)
+    Fixed(FixedPosition),
+    /// 自定义坐标
+    Custom(i32, i32),
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PortalMaskMode {
+    /// 无遮罩
+    None,
+    /// 透明遮罩 (点击可关闭)
+    Transparent,
+    /// 半透明遮罩
+    SemiTransparent,
+    /// 完全遮罩
+    Full,
+}
+
+/// Portal Manager (全局)
+pub struct PortalManager {
+    portals: RefCell<Vec<Portal>>,
+}
+\`\`\`
+
+#### 实现计划
+
+- [ ] **Week 1**: Portal 核心系统
+  - [ ] Portal 数据结构
+  - [ ] PortalManager 全局状态
+  - [ ] Portal 生命周期管理
+  
+- [ ] **Week 2**: Web 平台集成
+  - [ ] Portal DOM 渲染
+  - [ ] 位置计算算法
+  - [ ] 遮罩层管理
+  - [ ] 点击外部检测
+  
+- [ ] **Week 3**: 高级功能
+  - [ ] Focus Trap (Modal)
+  - [ ] 键盘事件处理 (Escape)
+  - [ ] 动画支持
+  - [ ] 多层 Portal (Toast stack)
+
+### 2. 样式系统集成 🔴 (优先级: 最高)
+
+**目的**: 将 Hikari 的样式构建系统迁移到 Tairitsu，统一样式管理。
+
+#### 2.1 StyleBuilder 迁移
+
+**源位置**: \`hikari/packages/animation/src/style/\`
+
+**目标位置**: \`tairitsu/packages/style/\`
+
+\`\`\`rust
+// packages/style/src/builder.rs
+
+/// CSS 属性枚举 (类型安全)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CssProperty {
+    // 布局
+    Display, Position, Top, Right, Bottom, Left,
+    // 尺寸
+    Width, Height, MinWidth, MaxWidth, MinHeight, MaxHeight,
+    // 间距
+    Margin, MarginTop, Padding, PaddingTop,
+    // 文本
+    Color, FontSize, FontWeight, TextAlign,
+    // 背景
+    Background, BackgroundColor, BackgroundImage, BackgroundPosition, BackgroundSize,
+    // 边框
+    Border, BorderRadius, BorderColor,
+    // 效果
+    BoxShadow, Opacity, Transform, Transition, Animation,
+    // 其他
+    ZIndex, Overflow, Cursor, PointerEvents,
+}
+
+/// StyleBuilder - 流畅的样式构建器
+pub struct StyleBuilder {
+    properties: Vec<(CssProperty, String)>,
+    custom_properties: Vec<(String, String)>,
+}
+
+impl StyleBuilder {
+    pub fn new() -> Self { /* ... */ }
+    pub fn add(mut self, property: CssProperty, value: &str) -> Self { /* ... */ }
+    pub fn add_custom(mut self, name: &str, value: &str) -> Self { /* ... */ }
+    pub fn add_px(self, property: CssProperty, pixels: u32) -> Self { /* ... */ }
+    pub fn build(self) -> String { /* ... */ }
+    pub fn build_clean(self) -> String { /* ... */ }
+}
+\`\`\`
+
+#### 2.2 ClassesBuilder 迁移
+
+**源位置**: \`hikari/packages/palette/src/classes/\`
+
+**目标位置**: \`tairitsu/packages/style/classes/\`
+
+\`\`\`rust
+// packages/style/classes/mod.rs
+
+/// Base trait for all utility classes
+pub trait UtilityClass {
+    fn as_suffix(&self) -> &'static str;
+    fn as_class(&self) -> String {
+        format!("hi-{}", self.as_suffix())
+    }
+}
+
+/// Builder for constructing class strings
+pub struct ClassesBuilder {
+    classes: Vec<String>,
+}
+
+impl ClassesBuilder {
+    pub fn new() -> Self { /* ... */ }
+    pub fn add(mut self, class: impl UtilityClass) -> Self { /* ... */ }
+    pub fn add_if<T: UtilityClass>(mut self, class: T, condition: impl Fn() -> bool) -> Self { /* ... */ }
+    pub fn add_raw(mut self, class: &str) -> Self { /* ... */ }
+    pub fn build(self) -> String { /* ... */ }
+}
+\`\`\`
+
+#### 实现计划
+
+- [ ] **Week 1**: StyleBuilder 核心
+  - [ ] CssProperty 枚举
+  - [ ] StyleBuilder 基础实现
+  - [ ] 字符串构建
+  - [ ] Web 平台集成
+  
+- [ ] **Week 2**: ClassesBuilder
+  - [ ] UtilityClass trait
+  - [ ] ClassesBuilder 实现
+  - [ ] 迁移所有工具类枚举
+  - [ ] 组件特定类
+  
+- [ ] **Week 3**: AnimationBuilder
+  - [ ] AnimationBuilder 核心
+  - [ ] AnimationContext
+  - [ ] AnimationState
+  - [ ] 连续动画支持
+
+### 3. CSS-in-JS 系统 🟡 (优先级: 高)
+
+**目的**: 提供编译时 CSS-in-JS 宏，支持样式局部化和类型安全。
+
+#### 3.1 scss! 宏
+
+\`\`\`rust
+// packages/macros/src/scss.rs
+
+/// scss! 宏 - 内嵌 SCSS 样式
+/// 
+/// # 示例
+/// 
+/// \`\`\`rust
+/// use tairitsu_macros::scss;
+/// 
+/// let styles = scss! {
+///     .button {
+///         background: var(--hi-primary);
+///         color: white;
+///         padding: 8px 16px;
+///         border-radius: 4px;
+///         
+///         &:hover {
+///             background: var(--hi-primary-dark);
+///         }
+///         
+///         &.disabled {
+///             opacity: 0.5;
+///             cursor: not-allowed;
+///         }
+///     }
+/// };
+/// \`\`\`
+#[proc_macro]
+pub fn scss(input: TokenStream) -> TokenStream {
+    // 1. 解析 SCSS 语法
+    // 2. 编译 SCSS 为 CSS
+    // 3. 生成 CSS 字符串常量
+}
+\`\`\`
+
+#### 3.2 classes! 宏
+
+\`\`\`rust
+// packages/macros/src/classes.rs
+
+/// classes! 宏 - 类型安全的类名组合
+/// 
+/// # 示例
+/// 
+/// \`\`\`rust
+/// use tairitsu_macros::classes;
+/// use tairitsu_style::classes::*;
+/// 
+/// let class = classes! {
+///     Display::Flex,
+///     FlexDirection::Row,
+///     Gap::Gap4,
+///     if is_active => ButtonClass::Active,
+///     custom: "my-custom-class",
+/// };
+/// // 输出: "hi-flex hi-flex-row hi-gap-4 hi-button-active my-custom-class"
+/// \`\`\`
+#[proc_macro]
+pub fn classes(input: TokenStream) -> TokenStream {
+    // 1. 解析类名列表
+    // 2. 转换为字符串
+    // 3. 生成代码
+}
+\`\`\`
+
+#### 实现计划
+
+- [ ] **Week 1**: scss! 宏基础
+  - [ ] SCSS 解析器
+  - [ ] 基础嵌套支持
+  - [ ] 变量插值
+  - [ ] CSS 输出
+  
+- [ ] **Week 2**: classes! 宏
+  - [ ] 类名解析
+  - [ ] 条件类名
+  - [ ] 类型检查
+  - [ ] 字符串生成
+
+### 4. SCSS 构建设施 🟡 (优先级: 高)
+
+**目的**: 在 tairitsu-packager 中实现完整的 SCSS 构建流程。
+
+#### 4.1 架构设计
+
+\`\`\`
+packages/packager/
+└── src/
+    └── styles/         # 样式构建 🆕
+        ├── mod.rs
+        ├── scss_compiler.rs    # SCSS 编译器
+        ├── css_optimizer.rs    # CSS 优化器
+        ├── css_extractor.rs    # 从 Rust 代码提取 CSS
+        └── runtime_injector.rs # 运行时注入器
+\`\`\`
+
+#### 4.2 构建流程
+
+1. **收集样式源**
+   - 独立 SCSS 文件
+   - Rust 代码中的 scss! 宏
+   - 组件样式
+
+2. **编译 SCSS**
+   - 使用 grass 编译器
+   - 支持 @import
+   - 支持变量
+
+3. **优化 CSS**
+   - 压缩
+   - 去重
+   - 自动前缀
+
+4. **注入运行时**
+   - 生成注入代码
+   - 使用 CSSOM API
+   - 支持热重载
+
+#### 4.3 CLI 命令
+
+\`\`\`bash
+# 开发模式 (热重载)
+tairitsu dev
+
+# 生产构建
+tairitsu build --release
+
+# 仅编译样式
+tairitsu build:css
+
+# 监听样式变化
+tairitsu watch:css
+
+# 分析 CSS 大小
+tairitsu analyze:css
+\`\`\`
+
+#### 实现计划
+
+- [ ] **Week 1**: SCSS 编译器集成
+  - [ ] grass 编译器集成
+  - [ ] 基础 SCSS 编译
+  - [ ] @import 支持
+  
+- [ ] **Week 2**: CSS 提取和优化
+  - [ ] 从 Rust 代码提取 scss! 宏
+  - [ ] CSS 压缩
+  - [ ] 去重
+  
+- [ ] **Week 3**: 运行时注入
+  - [ ] 注入代码生成
+  - [ ] CSSOM API 支持
+  - [ ] 热重载支持
+
+### 5. 实施时间表
+
+#### Week 1-2: Portal 系统 🔴
+- **优先级**: 最高 (阻塞 Modal/Toast/Select)
+- **目标**: 完整的 Portal 系统可用
+- **验收**: Modal 组件迁移成功
+
+#### Week 3-5: 样式系统迁移 🔴
+- **优先级**: 最高 (阻塞所有组件样式)
+- **目标**: StyleBuilder + ClassesBuilder 可用
+- **验收**: Button/Card 组件样式正常
+
+#### Week 6-7: CSS-in-JS 宏 🟡
+- **优先级**: 高 (提升开发体验)
+- **目标**: scss! + classes! 宏可用
+- **验收**: 组件开发体验提升
+
+#### Week 8-10: SCSS 构建系统 🟡
+- **优先级**: 高 (生产构建必需)
+- **目标**: 完整的 SCSS 构建流程
+- **验收**: 生产构建正常
+
+### 6. 相关资源
+
+- **Hikari 源码**:
+  - AnimationBuilder: \`/mnt/sdb1/hikari/packages/animation/src/builder/\`
+  - StyleBuilder: \`/mnt/sdb1/hikari/packages/animation/src/style/\`
+  - ClassesBuilder: \`/mnt/sdb1/hikari/packages/palette/src/classes/\`
+
+- **参考实现**:
+  - grass (SCSS 编译器): https://github.com/connorskees/grass
+  - emotion (CSS-in-JS): https://emotion.sh/
+
+- **文档**:
+  - CSSOM API: https://developer.mozilla.org/en-US/docs/Web/API/CSS_Object_Model
+  - Constructable Stylesheets: https://web.dev/constructable-stylesheets/
+
+### 7. 下一步行动
+
+**立即开始** (2026-03-05):
+
+1. **Portal 系统** 🔴
+   - [ ] 创建 \`packages/vdom/src/portal/\` 模块
+   - [ ] 实现 PortalManager
+   - [ ] Web 平台集成
+   - [ ] 测试 Modal 组件
+
+2. **StyleBuilder** 🔴
+   - [ ] 创建 \`packages/style/\` 包
+   - [ ] 迁移 CssProperty 枚举
+   - [ ] 实现 StyleBuilder
+   - [ ] 集成到 VNode
+
+3. **ClassesBuilder** 🔴
+   - [ ] 迁移所有工具类枚举
+   - [ ] 实现 ClassesBuilder
+   - [ ] 集成到 VNode
+
+4. **SCSS 构建** 🟡
+   - [ ] 创建 \`packages/packager/src/styles/\` 模块
+   - [ ] 集成 grass 编译器
+   - [ ] 实现 CSS 提取
+   - [ ] 测试构建流程
+
+---
+
+*最后更新: 2026-03-05 21:00*
