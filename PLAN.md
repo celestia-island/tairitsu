@@ -157,6 +157,51 @@ packages/
 │       ├── events.rs          # 事件系统
 │       └── wrapper.rs         # web-sys wrapper
 │
+├── package/          # 构建和打包工具 (替代 trunk/tauri-build)
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs
+│       ├── cli.rs             # CLI 入口
+│       │
+│       │  # === WASM 打包 ===
+│       ├── wasm/
+│       │   ├── mod.rs
+│       │   ├── builder.rs     # WASM 构建器
+│       │   ├── bundler.rs     # 资源打包
+│       │   ├── optimizer.rs   # WASM 优化
+│       │   └── server.rs      # 开发服务器
+│       │
+│       │  # === Native 打包 ===
+│       ├── native/
+│       │   ├── mod.rs
+│       │   ├── packager.rs    # 应用打包
+│       │   ├── installer.rs   # 安装程序生成
+│       │   └── signer.rs      # 代码签名
+│       │
+│       │  # === 配置管理 ===
+│       ├── config/
+│       │   ├── mod.rs
+│       │   ├── tairitsu.config.rs  # 配置文件解析
+│       │   └── manifest.rs    # 项目清单
+│       │
+│       │  # === 插件系统 ===
+│       ├── plugins/
+│       │   ├── mod.rs
+│       │   ├── base.rs        # 插件 trait
+│       │   └── builtin/       # 内置插件
+│       │       ├── html.rs    # HTML 处理
+│       │       ├── css.rs     # CSS 处理
+│       │       └── assets.rs  # 资源处理
+│       │
+│       │  # === 工具 ===
+│       ├── utils/
+│       │   ├── mod.rs
+│       │   ├── watcher.rs     # 文件监听
+│       │   └── logger.rs      # 日志系统
+│       │
+│       └── bin/
+│           └── tairitsu.rs    # CLI 可执行文件
+│
 ├── hooks/            # Hooks 系统
 │   ├── Cargo.toml
 │   └── src/
@@ -489,6 +534,377 @@ pub fn Glow(props: GlowProps) -> VNode {
 - ✅ Docker Compose 测试环境配置
 - 📝 可扩展更多测试用例
 
+### Phase 7: tairitsu-package 🚧 (计划中)
+
+**定位**: 统一构建和打包工具，替代 trunk 和 tauri-build
+
+**设计理念**: 通过 Cargo.toml 自定义字段配置，无需 HTML 模板
+
+#### 核心功能
+
+1. **WASM 打包**（替代 trunk）
+   - [ ] WASM 编译和优化
+   - [ ] JS 绑定生成（wasm-bindgen）
+   - [ ] 资源内联和哈希（从 Cargo.toml 读取）
+   - [ ] Source map 支持
+   - [ ] 自动生成 HTML 入口
+
+2. **Native 打包**（类似 electron-packager）
+   - [ ] Windows 打包（.exe, .msi）
+   - [ ] macOS 打包（.app, .dmg）
+   - [ ] Linux 打包（.deb, .rpm, .AppImage）
+   - [ ] 代码签名（可选）
+
+3. **开发服务器**（类似 Vite）
+   - [ ] 极速冷启动
+   - [ ] 热模块替换（HMR）
+   - [ ] 按需编译
+   - [ ] 自动刷新
+   - [ ] 错误覆盖层
+
+4. **插件系统**
+   - [ ] 资源处理插件
+   - [ ] 自定义插件 API
+
+#### CLI 使用
+
+```bash
+# 开发模式
+tairitsu dev
+
+# 构建 WASM
+tairitsu build --target wasm
+
+# 构建 Native
+tairitsu build --target native
+
+# 打包应用
+tairitsu package --platform all
+```
+
+#### 配置方式：Cargo.toml 自定义字段
+
+**无需 HTML 模板**，所有配置通过 Cargo.toml 的 `[package.metadata.tairitsu]` 字段：
+
+```toml
+[package]
+name = "my-app"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tairitsu-vdom = "0.1"
+tairitsu-hooks = "0.1"
+tairitsu-macros = "0.1"
+
+# Tairitsu 配置（替代 HTML 模板）
+[package.metadata.tairitsu]
+# 应用信息
+app-name = "My Application"
+title = "My App - Built with Tairitsu"
+description = "A modern web application"
+
+# 构建配置
+[package.metadata.tairitsu.build]
+target = "wasm"                    # wasm | native
+output-dir = "dist"
+optimize = true
+sourcemap = true
+
+# 开发服务器
+[package.metadata.tairitsu.dev]
+port = 3000
+hot-reload = true
+open-browser = true
+
+# 静态资源嵌入
+[package.metadata.tairitsu.assets]
+# 内联资源（小于此大小会被内联为 base64）
+inline-limit = 8192                # 8KB
+# 资源目录
+include = [
+    "assets/**",
+    "images/**",
+    "fonts/**",
+]
+# 排除文件
+exclude = [
+    "**/*.md",
+    "**/.gitignore",
+]
+
+# HTML 生成配置（自动生成，无需手写）
+[package.metadata.tairitsu.html]
+lang = "zh-CN"
+charset = "UTF-8"
+viewport = "width=device-width, initial-scale=1.0"
+favicon = "assets/favicon.ico"
+# 额外的 head 内容
+head = """
+<meta name="theme-color" content="#667eea">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+"""
+# body 属性
+body-class = "dark-theme"
+
+# CSS 配置
+[package.metadata.tairitsu.css]
+# CSS 文件
+files = ["styles/main.css"]
+# 自动添加浏览器前缀
+autoprefixer = true
+# 压缩
+minify = true
+
+# JavaScript 配置
+[package.metadata.tairitsu.javascript]
+# 额外的 JS 文件（在 WASM 之前加载）
+preload = ["scripts/setup.js"]
+# 额外的 JS 文件（在 WASM 之后加载）
+postload = ["scripts/analytics.js"]
+
+# Native 打包配置
+[package.metadata.tairitsu.native]
+identifier = "com.example.myapp"
+icon = "assets/icon.png"
+copyright = "Copyright 2024"
+# 平台特定配置
+[package.metadata.tairitsu.native.windows]
+installer = "msi"                 # msi | nsis
+[package.metadata.tairitsu.native.macos]
+category = "public.app-category.productivity"
+minimum-system-version = "10.13"
+[package.metadata.tairitsu.native.linux]
+categories = ["Utility", "Development"]
+
+# 环境变量（构建时注入）
+[package.metadata.tairitsu.env]
+API_URL = "https://api.example.com"
+VERSION = "${CARGO_PKG_VERSION}"
+```
+
+#### 资源嵌入方式
+
+**1. 代码中引用资源（自动处理）**
+
+```rust
+// 图片会自动处理：小图内联，大图复制
+let logo = include_asset!("assets/logo.png");
+
+// CSS 自动注入
+include_css!("styles/main.css");
+
+// JSON 配置文件
+let config = include_json!("config/app.json");
+```
+
+**2. 运行时加载**
+
+```rust
+use tairitsu_package::assets;
+
+// 动态加载资源
+let image = assets::load("images/photo.jpg").await?;
+
+// 获取资源 URL
+let url = assets::url("fonts/roboto.woff2");
+```
+
+#### 构建流程
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Cargo.toml 解析                     │
+│  [package.metadata.tairitsu]                        │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│                   资源收集                           │
+│  - 扫描 assets/ 目录                                 │
+│  - 处理 include/exclude 规则                        │
+│  - 生成资源清单                                      │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│                 WASM 编译                            │
+│  - cargo build --target wasm32-unknown-unknown     │
+│  - wasm-bindgen 生成 JS 绑定                        │
+│  - wasm-opt 优化（可选）                            │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│                 资源处理                             │
+│  - 小文件内联（base64）                             │
+│  - 大文件复制 + 哈希                                │
+│  - CSS 压缩和前缀                                   │
+│  - 图片优化                                         │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│                HTML 自动生成                         │
+│  - 根据 metadata 生成 index.html                    │
+│  - 注入 WASM 加载脚本                               │
+│  - 添加 meta 标签                                   │
+│  - 引用处理后的资源                                 │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│                  输出                                │
+│  dist/                                              │
+│  ├── index.html        (自动生成)                   │
+│  ├── {hash}.js         (WASM 绑定)                  │
+│  ├── {hash}_bg.wasm    (WASM 二进制)                │
+│  ├── assets/           (静态资源)                   │
+│  │   ├── logo-{hash}.png                            │
+│  │   └── main-{hash}.css                            │
+│  └── manifest.json     (资源清单)                   │
+└─────────────────────────────────────────────────────┘
+```
+
+#### 生成的 HTML 示例
+
+```html
+<!DOCTYPE html>
+<!-- 自动生成，请勿手动修改 -->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A modern web application">
+    <meta name="theme-color" content="#667eea">
+    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>My App - Built with Tairitsu</title>
+    <link rel="stylesheet" href="/assets/main-a1b2c3d4.css">
+</head>
+<body class="dark-theme">
+    <div id="app">Loading...</div>
+    <script type="module">
+        import init from '/assets/my_app-e5f6g7h8.js';
+        init().then(() => {
+            console.log('Tairitsu app loaded');
+        });
+    </script>
+</body>
+</html>
+```
+
+#### 与 trunk 的区别
+
+| 特性 | Trunk | Tairitsu Package |
+|------|-------|------------------|
+| 配置方式 | HTML 模板 | Cargo.toml metadata |
+| 资源引用 | `<link data-trunk>` | 自动扫描 + 配置 |
+| HTML 控制 | 手动编写 | 自动生成 |
+| Rust 风格 | 部分符合 | 完全符合 |
+| 类型安全 | ❌ | ✅ (编译时检查) |
+| IDE 支持 | ❌ | ✅ (Cargo.toml schema) |
+
+#### 实现细节
+
+**1. Cargo.toml 解析器**
+
+```rust
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct TairitsuMetadata {
+    app_name: Option<String>,
+    title: Option<String>,
+    build: BuildConfig,
+    dev: DevConfig,
+    assets: AssetsConfig,
+    html: HtmlConfig,
+    // ...
+}
+
+fn parse_cargo_toml() -> Result<TairitsuMetadata> {
+    let content = std::fs::read_to_string("Cargo.toml")?;
+    let manifest: toml::Value = toml::from_str(&content)?;
+    
+    let metadata = manifest
+        .get("package")
+        .and_then(|p| p.get("metadata"))
+        .and_then(|m| m.get("tairitsu"))
+        .ok_or_else(|| anyhow!("No tairitsu metadata found"))?;
+    
+    Ok(metadata.clone().try_into()?)
+}
+```
+
+**2. 资源处理器**
+
+```rust
+pub struct AssetProcessor {
+    config: AssetsConfig,
+    manifest: HashMap<String, String>,
+}
+
+impl AssetProcessor {
+    pub fn process(&mut self, path: &Path) -> Result<ProcessedAsset> {
+        let content = std::fs::read(path)?;
+        let size = content.len();
+        
+        if size < self.config.inline_limit {
+            // 内联为 base64
+            let base64 = base64::encode(&content);
+            Ok(ProcessedAsset::Inline(base64))
+        } else {
+            // 复制并添加哈希
+            let hash = sha256(&content);
+            let filename = format!("{}-{}.{}", 
+                path.stem(), 
+                &hash[..8], 
+                path.extension()
+            );
+            Ok(ProcessedAsset::File(filename))
+        }
+    }
+}
+```
+
+**3. HTML 生成器**
+
+```rust
+pub struct HtmlGenerator {
+    config: HtmlConfig,
+}
+
+impl HtmlGenerator {
+    pub fn generate(&self, wasm_js: &str, assets: &[Asset]) -> String {
+        format!(r#"<!DOCTYPE html>
+<html lang="{}">
+<head>
+    <meta charset="{}">
+    <meta name="viewport"{}">
+    {}
+    <title>{}</title>
+    {}
+</head>
+<body class="{}">
+    <div id="app"></div>
+    <script type="module">
+        import init from '/{}';
+        init();
+    </script>
+</body>
+</html>"#,
+            self.config.lang,
+            self.config.charset,
+            self.config.viewport,
+            self.config.head,
+            self.config.title,
+            self.generate_asset_links(assets),
+            self.config.body_class,
+            wasm_js,
+        )
+    }
+}
+```
+
 ## E2E 测试基础设施 - 设计理念
 
 > **技术选型**: 纯 Rust 实现，参考 Hikari 的成功实践
@@ -556,6 +972,7 @@ Tairitsu 框架的核心功能已经实现完成，可以开始与 Hikari 组件
 | Phase 4: Hooks | ✅ 完成 | 100% | use_state/signal/effect/style |
 | Phase 5: 集成测试 | 📝 待外部 | 0% | 需要 Hikari 项目支持 |
 | Phase 6: E2E 测试 | ✅ 完成 | 80% | 基础框架完成 |
+| Phase 7: Package | 🚧 计划中 | 0% | 构建打包工具 |
 
 ### 质量保证
 
@@ -600,6 +1017,22 @@ Tairitsu 框架的核心功能已经实现完成，可以开始与 Hikari 组件
    - WebDriver 集成
    - 截图支持
    - Docker Compose 配置
+
+### 计划中的包
+
+6. **tairitsu-package** - 构建和打包工具 🚧
+   - **定位**: 替代 trunk 和 tauri-build
+   - **配置方式**: Cargo.toml metadata（无 HTML 模板）
+   - **核心功能**:
+     - WASM 打包和优化
+     - Native 应用打包（Windows/macOS/Linux）
+     - 开发服务器（HMR）
+     - 资源嵌入和处理
+   - **特点**:
+     - 纯 Rust 配置
+     - 自动生成 HTML
+     - 类型安全
+     - IDE 友好
 
 ### 下一步计划
 
