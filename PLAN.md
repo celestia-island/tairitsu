@@ -1089,202 +1089,86 @@ Tairitsu 框架的核心功能已经实现完成，可以开始与 Hikari 组件
 
 在尝试将 Hikari 从 Dioxus 迁移到 Tairitsu 时，发现以下关键功能缺失，导致无法完成组件迁移。
 
-### 阻塞问题详解
+### ✅ Phase A: 核心功能（已完成）
 
-#### 1. 动态 Children 支持
+**完成日期**: 2026-03-05
 
-**当前状态**: ❌ 不支持
+#### 1. 动态 Children 支持 ✅
 
-**问题描述**:
+**当前状态**: ✅ 已实现
+
+**实现方式**:
 ```rust
-// 期望的用法（Dioxus 风格）
+// 使用 ..children 语法
 rsx! {
     div {
         class: "container",
-        {children}  // ❌ 编译错误：unexpected token
+        ..children  // ✅ 支持 Vec<VNode> 展开
     }
 }
 ```
 
-**需要实现**:
-- rsx! 宏支持 `{children}` 语法
-- VNode 支持 Vec<VNode> 作为子节点
-- Diff 算法处理动态子节点
+**实现细节**:
+- ✅ rsx! 宏支持 `..children` 语法
+- ✅ VElement 添加 `children()` 方法支持 Vec<VNode>
+- ✅ Diff 算法已支持动态子节点
 
-**优先级**: 🔴 高（阻塞组件迁移）
+#### 2. 事件参数类型系统 ✅
 
-**预计工作量**: 3-5 天
+**当前状态**: ✅ 已实现
 
-**技术方案**:
+**实现方式**:
 ```rust
-// 方案1: 修改 rsx! 宏语法
-rsx! {
-    div {
-        class: "container",
-        ..children  // 展开语法
-    }
-}
-
-// 方案2: 添加特殊属性
-rsx! {
-    div {
-        class: "container",
-        children: children,  // 显式传递
-    }
-}
-```
-
-#### 2. 事件参数类型系统
-
-**当前状态**: ⚠️ 部分支持（只有 `FnMut()`）
-
-**问题描述**:
-```rust
-// Dioxus（期望）
-button {
-    onclick: move |e: MouseEvent| {
-        println!("Click at: {:?}", e.client_coordinates());
-    }
-}
-
-// Tairitsu（当前）
-button {
-    onclick: move || {  // ❌ 缺少事件参数
-        web_sys::console::log_1(&"clicked".into());
-    }
-}
-```
-
-**需要实现**:
-- 添加 `MouseEvent`, `KeyboardEvent`, `FocusEvent` 等类型
-- 事件参数传递到回调函数
-- 类型安全的事件处理
-
-**优先级**: 🔴 高（阻塞组件迁移）
-
-**预计工作量**: 2-3 天
-
-**技术方案**:
-```rust
-// 定义事件类型
-pub struct MouseEvent {
-    inner: web_sys::MouseEvent,
-}
-
-impl MouseEvent {
-    pub fn client_x(&self) -> i32 {
-        self.inner.client_x()
-    }
-    
-    pub fn client_y(&self) -> i32 {
-        self.inner.client_y()
-    }
-    
-    pub fn prevent_default(&self) {
-        self.inner.prevent_default();
-    }
-}
-
-// rsx! 宏支持
+// 事件处理器接收类型化的事件参数
 rsx! {
     button {
-        onclick: move |e: MouseEvent| {
-            println!("Click at ({}, {})", e.client_x(), e.client_y());
+        onclick: move |e| {
+            // e 是 Box<dyn EventData>，可以向下转型为具体事件类型
+            if let Some(mouse_event) = e.as_any().downcast_ref::<MouseEvent>() {
+                println!("Click at ({}, {})", mouse_event.client_x, mouse_event.client_y);
+            }
         }
     }
 }
 ```
 
-#### 3. 组件 Props 宏
+**实现细节**:
+- ✅ 定义事件类型：`MouseEvent`, `KeyboardEvent`, `FocusEvent`, `InputEvent`, `ChangeEvent`
+- ✅ 修改 Platform trait 支持带参数的事件处理器
+- ✅ WebPlatform 实现事件参数转换
+- ✅ rsx! 宏支持所有 `on*` 事件属性
+- ✅ VElement 添加 `on_event()` 方法
+- ✅ Diff/Patch 模块支持事件处理器管理
 
-**当前状态**: ❌ 不支持
+#### 3. 灵活的 Class 和 Style 支持 ✅
 
-**问题描述**:
+**当前状态**: ✅ 已实现
+
+**实现方式**:
 ```rust
-// Dioxus 风格
-#[component]
-pub fn Button(
-    variant: ButtonVariant,
-    children: Element,
-    onclick: EventHandler<MouseEvent>,
-) -> Element {
-    // ...
-}
-
-// Tairitsu（当前）
-pub fn Button(
-    variant: ButtonVariant,
-    children: Vec<VNode>,
-    onclick: impl FnMut() + 'static,
-) -> VNode {
-    // ... 手动处理 props
-}
-```
-
-**需要实现**:
-- `#[component]` 宏或类似功能
-- 自动生成 Props struct
-- 支持 children 和事件处理器
-
-**优先级**: 🟡 中（可用手动替代，但影响开发体验）
-
-**预计工作量**: 3-4 天
-
-**技术方案**:
-```rust
-// 方案1: component 宏
-#[component]
-pub fn Button(
-    variant: ButtonVariant = ButtonVariant::Primary,
-    #[children] children: Vec<VNode>,
-    onclick: Option<Box<dyn FnMut(MouseEvent)>>,
-) -> VNode {
-    rsx! {
-        button {
-            class: "button",
-            onclick: onclick,
-            ..children
-        }
+// 方式1: 字符串字面量（自动转换）
+rsx! {
+    div {
+        class: "container active",
+        style: "max-width: 800px; margin: 0 auto;",
     }
 }
 
-// 自动生成
-pub struct ButtonProps {
-    pub variant: ButtonVariant,
-    pub children: Vec<VNode>,
-    pub onclick: Option<Box<dyn FnMut(MouseEvent)>>,
-}
-
-impl ButtonProps {
-    pub fn new() -> Self { ... }
-    pub fn variant(mut self, variant: ButtonVariant) -> Self { ... }
-    pub fn children(mut self, children: Vec<VNode>) -> Self { ... }
-    // ...
+// 方式2: Builder 模式
+rsx! {
+    div {
+        class: Classes::new().add("container").add_if("active", is_active),
+        style: Style::new().add("max-width", "800px").add_custom("--custom-var", "value"),
+    }
 }
 ```
 
-### 功能增强计划
+**实现细节**:
+- ✅ 实现 `From<&str>` for `Classes` 和 `Style`
+- ✅ VElement 的 `class()` 和 `style()` 方法接受 `impl Into<T>`
+- ✅ 兼容字符串和 Builder 两种模式
 
-#### Phase A: 核心功能（阻塞项）
-
-**优先级**: 🔴 最高
-**预计时间**: 1 周
-
-1. **动态 Children 支持**
-   - [ ] 修改 rsx! 宏解析器
-   - [ ] VNode 支持 Vec<VNode>
-   - [ ] Diff 算法适配
-   - [ ] 测试用例
-   - [ ] 文档更新
-
-2. **事件参数类型**
-   - [ ] 定义 MouseEvent/KeyboardEvent/FocusEvent
-   - [ ] 修改 Platform trait 事件签名
-   - [ ] WebPlatform 实现
-   - [ ] rsx! 宏支持
-   - [ ] 测试用例
-
-#### Phase B: 开发体验增强
+### Phase B: 开发体验增强（进行中）
 
 **优先级**: 🟡 中
 **预计时间**: 3-4 天
@@ -1302,7 +1186,7 @@ impl ButtonProps {
    - [ ] use_context
    - [ ] use_ref
 
-#### Phase C: 优化和工具
+### Phase C: 优化和工具
 
 **优先级**: 🟢 低
 **预计时间**: 持续进行
@@ -1317,27 +1201,9 @@ impl ButtonProps {
    - [ ] 调试工具
    - [ ] 性能分析
 
-### 迁移路径
-
-```mermaid
-graph TD
-    A[当前状态] --> B[Phase A: 核心功能]
-    B -->|1周| C[验证 Hikari Button 迁移]
-    C -->|成功| D[Phase B: 开发体验]
-    C -->|失败| B
-    D -->|3-4天| E[迁移更多 Hikari 组件]
-    E --> F[Phase C: 优化]
-    F --> G[完成集成]
-    
-    B -->|包含| B1[动态 Children]
-    B -->|包含| B2[事件参数]
-    D -->|包含| D1[组件 Props 宏]
-    D -->|包含| D2[更多 Hooks]
-```
-
 ### 验收标准
 
-#### Phase A 完成标准
+#### Phase A 验收 ✅
 
 能够成功迁移以下 Hikari 组件：
 
@@ -1345,11 +1211,12 @@ graph TD
 // Button 组件迁移测试
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
+use tairitsu_vdom::MouseEvent;
 
 pub fn Button(
     variant: ButtonVariant,
     children: Vec<VNode>,
-    onclick: impl FnMut(MouseEvent) + 'static,
+    onclick: impl FnMut(Box<dyn EventData>) + 'static,
 ) -> VNode {
     rsx! {
         button {
@@ -1364,7 +1231,7 @@ pub fn Button(
 rsx! {
     Button {
         variant: ButtonVariant::Primary,
-        onclick: |e: MouseEvent| {  // ✅ 事件参数
+        onclick: |e| {  // ✅ 事件参数
             println!("Clicked!");
         },
         "Click Me"  // ✅ children
@@ -1374,9 +1241,9 @@ rsx! {
 
 ### 优先级排序
 
-1. 🔴 **Phase A** - 立即开始（阻塞 Hikari 迁移）
-   - 动态 Children 支持
-   - 事件参数类型
+1. ~~🔴 **Phase A** - 立即开始（阻塞 Hikari 迁移）~~ ✅ 已完成
+   - ✅ 动态 Children 支持
+   - ✅ 事件参数类型
 
 2. 🟡 **Phase B** - Phase A 完成后
    - 组件 Props 宏
@@ -1394,11 +1261,9 @@ rsx! {
 
 ### 下一步行动
 
-**立即开始**:
-1. 实现动态 Children 支持
-2. 添加事件参数类型系统
-3. 验证 Hikari Button 组件迁移
+**Phase A 已完成** ✅
 
-**目标**: 1 周内完成 Phase A，解除 Hikari 迁移阻塞
-
-
+**立即开始 Phase B**:
+1. 设计 #[component] 宏
+2. 添加更多 Hooks
+3. 验证 Hikari 组件迁移
