@@ -51,7 +51,7 @@ tower-http = { version = "^0.6", features = ["fs"], optional = true }
 wasm-bindgen-cli-support = { version = "0.2", optional = true }
 
 [features]
-default = ["wasm"]
+default = ["wasm", "dev-server"]
 wasm = ["wasm-bindgen-cli-support"]
 native = []
 dev-server = ["axum", "tower-http", "notify"]

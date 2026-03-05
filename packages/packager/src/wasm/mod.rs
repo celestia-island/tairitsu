@@ -133,24 +133,69 @@ fn generate_html(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
-pub async fn dev_server(config: &Config, port: u16, _open: bool) -> crate::Result<()> {
-    println!("Development server starting on http://localhost:{}", port);
+pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result<()> {
+    use axum::{
+        routing::get,
+        Router,
+        response::Html,
+    };
+    use std::net::SocketAddr;
+    use tower_http::services::ServeDir;
+    
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("  Tairitsu Development Server");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!();
+    
+    // Build WASM first
+    println!("[1/3] Building WASM...");
+    build(config, false)?;
+    
+    let dist_dir = config.build.output_dir.clone();
+    
+    println!("\n[2/3] Starting development server...");
+    
+    // Check if index.html exists
+    let index_path = dist_dir.join("index.html");
+    let index_content = if index_path.exists() {
+        std::fs::read_to_string(&index_path)?
+    } else {
+        format!(
+            "<!DOCTYPE html><html><head><title>{}</title></head><body><div id=\"app\">Loading...</div><script type=\"module\" src=\"./{}_bg.js\"></script></body></html>",
+            config.package.name,
+            config.package.name.replace('-', "_")
+        )
+    };
+    
+    // Setup static file server
+    let index_html = index_content.clone();
+    let app = Router::new()
+        .route("/", get(move || async move { 
+            Html(index_html.clone())
+        }))
+        .fallback_service(ServeDir::new(dist_dir));
+    
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    println!("\n[3/3] Server ready!");
+    println!();
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("🌍 Local:   http://localhost:{}", port);
+    println!("📁 Serving: {}", config.build.output_dir.display());
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!();
     println!("Press Ctrl+C to stop");
     
-    if _open {
+    // Open browser if requested
+    if open {
         let url = format!("http://localhost:{}", port);
         match webbrowser::open(&url) {
-            Ok(_) => println!("Opening browser..."),
-            Err(e) => eprintln!("Failed to open browser: {}", e),
+            Ok(_) => println!("✓ Opening browser..."),
+            Err(e) => eprintln!("⚠ Failed to open browser: {}", e),
         }
     }
-
-    println!("\nDev server with hot reload is not yet implemented");
-    println!("For now, use trunk directly:");
-    println!("  cd {} && trunk serve --port {}", config.build.output_dir.display(), port);
-
-    // Keep the server running
-    tokio::signal::ctrl_c().await?;
+    
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
     
     Ok(())
 }

@@ -1,3 +1,11 @@
+# ⚠️ DEPRECATED
+
+This example is deprecated and will be removed once the new `examples/website/` project is complete.
+
+**Please use the new website demo at**: `examples/website/`
+
+---
+
 # Tairitsu Web Demo
 
 Simple web demo showcasing Tairitsu's Virtual DOM, Hooks, and rsx! macro.
