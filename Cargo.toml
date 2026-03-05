@@ -1,6 +1,20 @@
 [workspace]
-members = ["packages/*", "examples/*"]
-exclude = ["examples/website"]
+members = [
+    "packages/runtime",
+    "packages/macros",
+    "packages/vdom",
+    "packages/web",
+    "packages/hooks",
+    "packages/packager",
+    "packages/e2e",
+    "examples/wit-compile-time",
+    "examples/wit-runtime",
+    "examples/wit-dynamic-advanced",
+    "examples/wit-native-simple",
+    "examples/wit-native-macro",
+    "examples/web-demo",
+    "examples/website",
+]
 resolver = "2"
 
 [patch.crates-io]
