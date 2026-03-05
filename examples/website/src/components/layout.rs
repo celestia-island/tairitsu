@@ -1,7 +1,9 @@
+#[allow(dead_code)]
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
-pub fn layout(children: Vec<VNode>) -> VNode {
+#[allow(dead_code)]
+pub fn layout(_children: Vec<VNode>) -> VNode {
     rsx! {
         div {
             class: "layout",

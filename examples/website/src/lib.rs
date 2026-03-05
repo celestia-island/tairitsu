@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tairitsu_vdom::VNode;
 use tairitsu_web::WebPlatform;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
@@ -26,8 +25,7 @@ pub fn run() -> Result<(), JsValue> {
         .get_element_by_id("app")
         .ok_or_else(|| JsValue::from_str("No #app element"))?;
 
-    let app = App::new();
-    let _vnode = app.render();
+    let _vnode = App.render();
 
     console::log_1(&"Tairitsu Website Demo loaded!".into());
     Ok(())
