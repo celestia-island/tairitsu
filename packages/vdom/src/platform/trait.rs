@@ -1,4 +1,5 @@
 use super::{ElementHandle, EventHandle};
+use crate::EventData;
 
 pub trait Platform: Sized + 'static {
     type Element: ElementHandle;
@@ -12,6 +13,11 @@ pub trait Platform: Sized + 'static {
     fn remove_attribute(&self, element: &Self::Element, name: &str);
     fn set_style(&self, element: &Self::Element, name: &str, value: &str);
     fn set_class(&self, element: &Self::Element, class: &str);
-    fn add_event_listener(&self, element: &Self::Element, event: &str, handler: Box<dyn FnMut()>);
+    fn add_event_listener(
+        &self,
+        element: &Self::Element,
+        event: &str,
+        handler: Box<dyn FnMut(Box<dyn EventData>)>,
+    );
     fn remove_event_listener(&self, element: &Self::Element, event: &str);
 }

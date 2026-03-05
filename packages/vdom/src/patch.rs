@@ -1,7 +1,6 @@
 use crate::vnode::{Classes, Style, VNode};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum Patch {
     CreateNode { node: VNode },
     RemoveNode,
@@ -15,6 +14,9 @@ pub enum Patch {
     InsertChild { index: usize, node: VNode },
     RemoveChild { index: usize },
     UpdateChild { index: usize, patches: Vec<Patch> },
+    AddEvent { name: String },
+    UpdateEvent { name: String },
+    RemoveEvent { name: String },
 }
 
 impl Patch {

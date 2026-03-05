@@ -1,14 +1,20 @@
-use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt;
+use std::rc::Rc;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use crate::EventData;
+
+#[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum VNode {
     Element(VElement),
     Text(VText),
     Fragment(Vec<VNode>),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+pub type EventHandler = Rc<RefCell<dyn FnMut(Box<dyn EventData>)>>;
+
 pub struct VElement {
     pub tag: String,
     pub key: Option<String>,
@@ -16,15 +22,46 @@ pub struct VElement {
     pub children: Vec<VNode>,
     pub style: Style,
     pub class: Classes,
-    pub event_handlers: Vec<String>,
+    pub event_handlers: HashMap<String, EventHandler>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl fmt::Debug for VElement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VElement")
+            .field("tag", &self.tag)
+            .field("key", &self.key)
+            .field("attributes", &self.attributes)
+            .field("children", &self.children)
+            .field("style", &self.style)
+            .field("class", &self.class)
+            .field(
+                "event_handlers",
+                &self.event_handlers.keys().collect::<Vec<_>>(),
+            )
+            .finish()
+    }
+}
+
+impl Clone for VElement {
+    fn clone(&self) -> Self {
+        Self {
+            tag: self.tag.clone(),
+            key: self.key.clone(),
+            attributes: self.attributes.clone(),
+            children: self.children.clone(),
+            style: self.style.clone(),
+            class: self.class.clone(),
+            event_handlers: self.event_handlers.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct VText {
     pub text: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default)]
 pub struct Style {
     pub static_styles: String,
     pub css_variables: Vec<(String, String)>,
@@ -62,7 +99,7 @@ impl Style {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default)]
 pub struct Classes {
     pub static_classes: String,
 }
@@ -103,7 +140,7 @@ impl VElement {
             children: Vec::new(),
             style: Style::new(),
             class: Classes::new(),
-            event_handlers: Vec::new(),
+            event_handlers: HashMap::new(),
         }
     }
 
@@ -122,14 +159,62 @@ impl VElement {
         self
     }
 
-    pub fn style(mut self, style: Style) -> Self {
-        self.style = style;
+    pub fn children(mut self, children: Vec<VNode>) -> Self {
+        self.children.extend(children);
         self
     }
 
-    pub fn class(mut self, class: Classes) -> Self {
-        self.class = class;
+    pub fn style(mut self, style: impl Into<Style>) -> Self {
+        self.style = style.into();
         self
+    }
+
+    pub fn class(mut self, class: impl Into<Classes>) -> Self {
+        self.class = class.into();
+        self
+    }
+
+    pub fn on_event(
+        mut self,
+        event: &str,
+        handler: impl FnMut(Box<dyn EventData>) + 'static,
+    ) -> Self {
+        self.event_handlers
+            .insert(event.to_string(), Rc::new(RefCell::new(handler)));
+        self
+    }
+}
+
+impl From<&str> for Classes {
+    fn from(s: &str) -> Self {
+        Classes::new().add(s)
+    }
+}
+
+impl From<String> for Classes {
+    fn from(s: String) -> Self {
+        Classes::new().add(&s)
+    }
+}
+
+impl From<&str> for Style {
+    fn from(s: &str) -> Self {
+        let mut style = Style::new();
+        for part in s.split(';') {
+            let part = part.trim();
+            if !part.is_empty() {
+                if let Some((name, value)) = part.split_once(':') {
+                    style = style.add(name.trim(), value.trim());
+                }
+            }
+        }
+        style
+    }
+}
+
+impl From<String> for Style {
+    fn from(s: String) -> Self {
+        Self::from(s.as_str())
     }
 }
 

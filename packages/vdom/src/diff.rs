@@ -79,6 +79,26 @@ fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
         });
     }
 
+    for event_name in new.event_handlers.keys() {
+        if !old.event_handlers.contains_key(event_name) {
+            patches.push(Patch::AddEvent {
+                name: event_name.clone(),
+            });
+        } else {
+            patches.push(Patch::UpdateEvent {
+                name: event_name.clone(),
+            });
+        }
+    }
+
+    for event_name in old.event_handlers.keys() {
+        if !new.event_handlers.contains_key(event_name) {
+            patches.push(Patch::RemoveEvent {
+                name: event_name.clone(),
+            });
+        }
+    }
+
     diff_children(&old.children, &new.children, patches);
 }
 
