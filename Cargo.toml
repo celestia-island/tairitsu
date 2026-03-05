@@ -7,6 +7,7 @@ members = [
     "packages/hooks",
     "packages/packager",
     "packages/e2e",
+    "packages/style",
     "examples/wit-compile-time",
     "examples/wit-runtime",
     "examples/wit-dynamic-advanced",
