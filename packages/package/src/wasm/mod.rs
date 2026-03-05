@@ -99,8 +99,7 @@ fn generate_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let js_file = format!("{}_bg.js", pkg_name.replace('-', "_"));
 
-    let title = config.html.title.as_ref()
-        .map(|s| s.as_str())
+    let title = config.html.title.as_deref()
         .unwrap_or(&config.package.name);
 
     let html_content = format!(r#"<!DOCTYPE html>
