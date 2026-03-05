@@ -256,20 +256,28 @@ watch:
 # Start web demo development server (using tairitsu-packager)
 dev:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Starting Tairitsu Web Demo with tairitsu-packager..."
+    @echo "Starting Tairitsu Website Demo with tairitsu-packager..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo ""
+    cd examples/website && cargo run --package tairitsu-packager -- dev --open
+
+# Start old web-demo (deprecated)
+dev-old:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "⚠️  Starting OLD web-demo (deprecated, use 'just dev' instead)"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
     cd examples/web-demo && cargo run --package tairitsu-packager -- dev --open
 
 # Build web demo for production (using tairitsu-packager)
 build-web:
-    @echo "Building web demo with tairitsu-packager..."
-    cd examples/web-demo && cargo run --package tairitsu-packager -- build --release
+    @echo "Building website demo with tairitsu-packager..."
+    cd examples/website && cargo run --package tairitsu-packager -- build --release
 
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/web-demo/dist && python3 -m http.server 3000
+    cd examples/website/dist && python3 -m http.server 3000
 
 # ============================================================================
 # Documentation tasks
@@ -304,7 +312,8 @@ info:
     @just --version
     @echo ""
     @echo "Available examples:"
-    @echo "  - web-demo:         Simple web demo (run with 'just dev')"
+    @echo "  - website:           New website demo (run with 'just dev')"
+    @echo "  - web-demo:          Old web demo (deprecated, run with 'just dev-old')"
     @echo "  - wit-native-simple: trait-based composable WIT interfaces"
     @echo "  - wit-native-macro: macro-generated WIT interfaces"
     @echo ""
