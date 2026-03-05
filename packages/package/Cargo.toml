@@ -1,0 +1,57 @@
+[package]
+name = "tairitsu-package"
+version = "0.1.0"
+edition = "2021"
+description = "Build and packaging tool for Tairitsu applications"
+authors = ["Tairitsu Contributors"]
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "tairitsu"
+path = "src/main.rs"
+
+[dependencies]
+# Workspace dependencies
+tairitsu-vdom = { path = "../vdom", optional = true }
+
+# Basic language and tools
+anyhow = "^1"
+thiserror = "^2"
+
+# Data and serialization
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+toml = "^0.8"
+
+# Async runtime
+tokio = { version = "^1", features = ["full"] }
+
+# Logging and tracing
+tracing = "^0.1"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+
+# CLI
+clap = { version = "^4", features = ["derive"] }
+
+# Progress bars
+indicatif = "^0.17"
+
+# Browser opener
+webbrowser = "^1"
+
+# File system
+walkdir = "^2"
+notify = { version = "^6", optional = true }
+
+# HTTP server (for dev server)
+axum = { version = "^0.8", optional = true }
+tower-http = { version = "^0.6", features = ["fs"], optional = true }
+
+# WASM tools (optional)
+wasm-bindgen-cli-support = { version = "0.2", optional = true }
+
+[features]
+default = ["wasm"]
+wasm = ["wasm-bindgen-cli-support"]
+native = []
+dev-server = ["axum", "tower-http", "notify"]
