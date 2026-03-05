@@ -1,7 +1,4 @@
 use anyhow::Result;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
 
 #[cfg(feature = "web")]
 use tairitsu_vdom::{ElementHandle, EventHandle, Platform};
