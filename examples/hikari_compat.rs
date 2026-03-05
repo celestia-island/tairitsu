@@ -1,13 +1,12 @@
 use tairitsu_hooks::{use_effect, use_state};
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{Classes, Style, VNode};
+use tairitsu_vdom::{Classes, EventData, MouseEvent, Style, VNode};
 
 /// Glow 组件 - 类似 Hikari 的 Glow 组件
-pub fn glow_component(intensity: f32, children: VNode) -> VNode {
+pub fn glow_component(intensity: f32, children: Vec<VNode>) -> VNode {
     let (hovered, set_hovered) = use_state(false);
 
     use_effect(move || {
-        // 当 hovered 状态变化时执行副作用
         let _ = hovered;
     });
 
@@ -21,20 +20,21 @@ pub fn glow_component(intensity: f32, children: VNode) -> VNode {
 
     rsx! {
         div {
-            class: "hi-glow-wrapper hi-glow-soft",
-            style: "--glow-intensity: 0.5",
-
-            // 子内容
+            class: class,
+            style: style,
+            onmouseenter: move |_e| set_hovered(true),
+            onmouseleave: move |_e| set_hovered(false),
+            ..children
         }
     }
 }
 
-/// Button 组件 - 类似 Hikari 的 Button 组件
+/// Button 组件 - 类似 Hikari 的 Button 组件（支持事件参数和动态 children）
 pub fn button_component(
     variant: ButtonVariant,
     size: ButtonSize,
-    label: &str,
-    on_click: impl Fn() + 'static,
+    children: Vec<VNode>,
+    onclick: impl FnMut(Box<dyn EventData>) + 'static,
 ) -> VNode {
     let variant_class = match variant {
         ButtonVariant::Primary => "hi-button-primary",
@@ -55,7 +55,9 @@ pub fn button_component(
 
     rsx! {
         button {
-            class: "hi-button hi-button-primary hi-button-md",
+            class: class,
+            onclick: onclick,
+            ..children
         }
     }
 }
@@ -133,14 +135,15 @@ mod tests {
 
     #[test]
     fn test_glow_component() {
-        let node = glow_component(
-            0.5,
-            tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new("Test")),
-        );
+        let children = vec![VNode::Text(tairitsu_vdom::VText::new("Test"))];
+        let node = glow_component(0.5, children);
 
         match node {
             VNode::Element(elem) => {
                 assert!(elem.class.to_string().contains("glow"));
+                assert_eq!(elem.children.len(), 1);
+                assert!(elem.event_handlers.contains_key("mouseenter"));
+                assert!(elem.event_handlers.contains_key("mouseleave"));
             }
             _ => panic!("Expected element"),
         }
@@ -148,16 +151,25 @@ mod tests {
 
     #[test]
     fn test_button_component() {
+        let children = vec![VNode::Text(tairitsu_vdom::VText::new("Click me"))];
+        let click_count = std::cell::Cell::new(0);
+        let onclick = move |_e: Box<dyn EventData>| {
+            click_count.set(click_count.get() + 1);
+        };
+
         let node = button_component(
             ButtonVariant::Primary,
             ButtonSize::Medium,
-            "Click me",
-            || {},
+            children,
+            onclick,
         );
 
         match node {
             VNode::Element(elem) => {
                 assert!(elem.class.to_string().contains("button"));
+                assert!(elem.class.to_string().contains("primary"));
+                assert_eq!(elem.children.len(), 1);
+                assert!(elem.event_handlers.contains_key("click"));
             }
             _ => panic!("Expected button element"),
         }
@@ -182,8 +194,23 @@ mod tests {
         match node {
             VNode::Element(elem) => {
                 assert!(elem.class.to_string().contains("alert"));
+                assert!(elem.class.to_string().contains("info"));
             }
             _ => panic!("Expected alert element"),
+        }
+    }
+
+    #[test]
+    fn test_event_data_downcast() {
+        let event = MouseEvent::new().client_x(100).client_y(200);
+
+        let boxed: Box<dyn EventData> = Box::new(event);
+
+        if let Some(mouse_event) = boxed.as_any().downcast_ref::<MouseEvent>() {
+            assert_eq!(mouse_event.client_x, 100);
+            assert_eq!(mouse_event.client_y, 200);
+        } else {
+            panic!("Failed to downcast to MouseEvent");
         }
     }
 }
