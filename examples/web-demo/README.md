@@ -2,122 +2,136 @@
 
 Simple web demo showcasing Tairitsu's Virtual DOM, Hooks, and rsx! macro.
 
+**配置方式**: 使用 Cargo.toml metadata，无需 HTML 模板
+
 ## Quick Start
 
 ```bash
-# Start development server with hot reload
-just dev
+# 安装 tairitsu-package（构建工具）
+cargo install --path ../../packages/package
 
-# Or use trunk directly
-cd examples/web-demo
-trunk serve --open
+# 启动开发服务器
+tairitsu dev
+
+# 或使用 just
+just dev
 ```
 
 The demo will be available at http://localhost:3000
 
-## Available Examples
+## 配置说明
 
-### Main Demo (WASM)
-- **Location**: `index.html`
-- **Description**: Full Tairitsu demo with Virtual DOM, Hooks, and rsx! macro
-- **Technologies**: Rust, WASM, tairitsu-vdom, tairitsu-hooks, tairitsu-macros
+### Cargo.toml 配置
 
-### Simple HTML/CSS Examples
+所有配置都在 `Cargo.toml` 的 `[package.metadata.tairitsu]` 中：
 
-These are pure HTML/CSS/JavaScript examples for quick testing:
+```toml
+[package.metadata.tairitsu]
+app-name = "Tairitsu Web Demo"
+title = "Tairitsu Demo"
 
-1. **Counter** (`examples/counter.html`)
-   - Simple counter with increment/decrement/reset
-   - JavaScript state management
-   - Basic animations
+[package.metadata.tairitsu.build]
+target = "wasm"
+output-dir = "dist"
 
-2. **Hover Effects** (`examples/hover.html`)
-   - CSS hover animations
-   - Gradient backgrounds
-   - Responsive grid layout
+[package.metadata.tairitsu.dev]
+port = 3000
+hot-reload = true
 
-3. **Form Components** (`examples/form.html`)
-   - Various form inputs
-   - Text, email, select, textarea
-   - Checkbox, radio, switch components
+[package.metadata.tairitsu.html]
+lang = "zh-CN"
+charset = "UTF-8"
+viewport = "width=device-width, initial-scale=1.0"
+head = """
+<style>
+  body { /* 自定义样式 */ }
+</style>
+"""
+```
 
-4. **Demo Index** (`examples/index.html`)
-   - Overview of all available demos
-   - Quick navigation
+### 自动生成的 HTML
+
+`tairitsu build` 会根据配置自动生成 `dist/index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <title>Tairitsu Demo</title>
+    <style>/* 配置中的样式 */</style>
+</head>
+<body class="app-container">
+    <div id="app"></div>
+    <script type="module" src="/tairitsu_web_demo.js"></script>
+</body>
+</html>
+```
 
 ## Building for Production
 
 ```bash
-# Build optimized WASM
-just build-web
+# 构建优化版本
+tairitsu build
 
-# Or manually
-cd examples/web-demo
-trunk build --release
+# 或使用 just
+just build-web
 ```
 
-Output will be in `examples/web-demo/dist/`
+Output will be in `dist/`
 
 ## Project Structure
 
 ```
 examples/web-demo/
-├── Cargo.toml          # Rust dependencies
+├── Cargo.toml          # 包含所有配置（无需 HTML）
 ├── src/
-│   └── lib.rs          # Main WASM entry point
-├── index.html          # Main demo HTML
-├── examples/           # Simple HTML/CSS examples
-│   ├── index.html      # Demo overview
-│   ├── counter.html    # Counter example
-│   ├── hover.html      # Hover effects
-│   └── form.html       # Form components
-└── README.md           # This file
+│   └── lib.rs          # WASM 入口
+├── assets/             # 静态资源（可选）
+└── README.md           # 本文件
 ```
 
 ## Features Demonstrated
 
 ### Main Demo
 - ✅ Virtual DOM rendering
-- ✅ Reactive state management (use_state)
-- ✅ Effect hooks (use_effect)
 - ✅ rsx! macro for declarative UI
-- ✅ Dynamic styles
-- ✅ Event handling
-
-### Simple Examples
-- ✅ Pure HTML/CSS/JavaScript
-- ✅ No build step required
-- ✅ Easy to understand and modify
-- ✅ Good for testing and prototyping
+- ✅ WASM compilation
+- ✅ Cargo.toml 配置（无 HTML 模板）
+- ✅ 自动生成 HTML
 
 ## Development
 
 ### Prerequisites
 
 - Rust (with wasm32-unknown-unknown target)
-- trunk (WASM bundler)
+- tairitsu-package (构建工具)
 - just (command runner)
 
 ```bash
 # Install prerequisites
 rustup target add wasm32-unknown-unknown
-cargo install trunk
+cargo install --path ../../packages/package
 cargo install just
 ```
-
-### Ports
-
-- Development server: http://localhost:3000
-- Production build server: http://localhost:3000
-
-(Consistent with Hikari project)
 
 ### Hot Reload
 
 The development server automatically reloads when you make changes to:
 - Rust code (`.rs` files)
-- HTML templates
-- Assets (CSS, images, etc.)
+- Assets in configured directories
+
+## 与 Trunk 的区别
+
+| 特性 | Trunk | Tairitsu Package |
+|------|-------|------------------|
+| 配置方式 | HTML 模板 | Cargo.toml metadata |
+| HTML 文件 | 需要手动编写 | 自动生成 |
+| 资源引用 | `<link data-trunk>` | 配置文件 |
+| 类型安全 | ❌ | ✅ 编译时检查 |
+| IDE 支持 | ❌ | ✅ TOML schema |
 
 ## Browser Support
 
@@ -125,27 +139,8 @@ The development server automatically reloads when you make changes to:
 - Firefox 78+
 - Safari 14+
 
-## Troubleshooting
-
-### "trunk not found"
-```bash
-cargo install trunk
-```
-
-### "wasm32-unknown-unknown target not found"
-```bash
-rustup target add wasm32-unknown-unknown
-```
-
-### Build errors
-```bash
-# Clean and rebuild
-cargo clean
-cargo build
-```
-
 ## Related Documentation
 
 - [Main README](../../README.md)
 - [Examples README](../README.md)
-- [PLAN.md](../../PLAN.md)
+- [PLAN.md - tairitsu-package](../../PLAN.md#phase-7-tairitsu-package-)
