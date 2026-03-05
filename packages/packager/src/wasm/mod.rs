@@ -40,7 +40,7 @@ fn check_wasm_target() -> crate::Result<()> {
 
     let targets = String::from_utf8_lossy(&output.stdout);
     if !targets.contains("wasm32-unknown-unknown") {
-        return Err(crate::TairitsuPackageError::BuildError(
+        return Err(crate::TairitsuPackagerError::BuildError(
             "wasm32-unknown-unknown target not installed. Run: rustup target add wasm32-unknown-unknown".to_string()
         ));
     }
@@ -58,7 +58,7 @@ fn build_wasm(release: bool) -> crate::Result<()> {
 
     let status = cmd.status()?;
     if !status.success() {
-        return Err(crate::TairitsuPackageError::BuildError(
+        return Err(crate::TairitsuPackagerError::BuildError(
             "Cargo build failed".to_string()
         ));
     }
@@ -68,7 +68,7 @@ fn build_wasm(release: bool) -> crate::Result<()> {
 
 fn run_wasm_bindgen(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
-    let profile = if true { "release" } else { "debug" };
+    let profile = if config.build.optimize { "release" } else { "debug" };
     let wasm_path = format!("target/wasm32-unknown-unknown/{}/{}.wasm", profile, pkg_name.replace('-', "_"));
 
     // Create output directory
@@ -87,7 +87,7 @@ fn run_wasm_bindgen(config: &Config) -> crate::Result<()> {
 
     let status = cmd.status()?;
     if !status.success() {
-        return Err(crate::TairitsuPackageError::BuildError(
+        return Err(crate::TairitsuPackagerError::BuildError(
             "wasm-bindgen failed".to_string()
         ));
     }

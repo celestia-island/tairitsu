@@ -32,7 +32,7 @@ pub fn parse_metadata(manifest: &toml::Value) -> crate::Result<TairitsuMetadata>
     match metadata {
         Some(value) => {
             let metadata: TairitsuMetadata = value.clone().try_into().map_err(|e| {
-                crate::TairitsuPackageError::InvalidConfig(format!(
+                crate::TairitsuPackagerError::InvalidConfig(format!(
                     "Invalid tairitsu metadata: {}",
                     e
                 ))

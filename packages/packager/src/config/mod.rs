@@ -159,7 +159,7 @@ impl Config {
         };
 
         if !cargo_toml_path.exists() {
-            return Err(crate::TairitsuPackageError::ConfigNotFound(
+            return Err(crate::TairitsuPackagerError::ConfigNotFound(
                 cargo_toml_path.display().to_string(),
             ));
         }
@@ -169,7 +169,7 @@ impl Config {
 
         // Extract package info
         let package = manifest.get("package").ok_or_else(|| {
-            crate::TairitsuPackageError::InvalidConfig("Missing [package] section".to_string())
+            crate::TairitsuPackagerError::InvalidConfig("Missing [package] section".to_string())
         })?;
 
         let name = package
