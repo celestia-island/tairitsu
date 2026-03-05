@@ -1,7 +1,9 @@
 #[cfg(feature = "web")]
 use anyhow::Result;
 #[cfg(feature = "web")]
-use tairitsu_vdom::{FixedPosition, Portal, PortalManager, PortalPosition, VNode};
+use tairitsu_vdom::{FixedPosition, Platform, Portal, PortalManager, PortalPosition, VNode};
+#[cfg(feature = "web")]
+use wasm_bindgen::JsCast;
 
 #[cfg(feature = "web")]
 use crate::WebPlatform;
@@ -39,22 +41,29 @@ impl PortalRenderer {
             .ok_or_else(|| anyhow::anyhow!("No document"))?;
 
         let target = document
-            .query_selector(&portal.target)?
+            .query_selector(&portal.target)
+            .map_err(|e| anyhow::anyhow!("Query failed: {:?}", e))?
             .ok_or_else(|| anyhow::anyhow!("Target not found: {}", portal.target))?;
 
         if portal.mask != tairitsu_vdom::PortalMaskMode::None {
             self.render_mask(&portal.id, portal.mask, &target)?;
         }
 
-        let container = document.create_element("div")?;
+        let container = document
+            .create_element("div")
+            .map_err(|e| anyhow::anyhow!("Create element failed: {:?}", e))?;
         container.set_class_name("tairitsu-portal");
-        container.set_attribute("data-portal-id", &portal.id)?;
+        container
+            .set_attribute("data-portal-id", &portal.id)
+            .map_err(|e| anyhow::anyhow!("Set attribute failed: {:?}", e))?;
 
         self.apply_position(&container, &portal.position)?;
 
         self.render_vnode(&portal.content, &container)?;
 
-        target.append_child(&container)?;
+        target
+            .append_child(&container)
+            .map_err(|e| anyhow::anyhow!("Append child failed: {:?}", e))?;
 
         self.portal_containers
             .borrow_mut()
@@ -66,13 +75,17 @@ impl PortalRenderer {
     pub fn remove_portal(&self, id: &str) -> Result<()> {
         if let Some(container) = self.portal_containers.borrow_mut().remove(id) {
             if let Some(parent) = container.parent_element() {
-                parent.remove_child(&container)?;
+                parent
+                    .remove_child(&container)
+                    .map_err(|e| anyhow::anyhow!("Remove child failed: {:?}", e))?;
             }
         }
 
         if let Some(mask) = self.mask_elements.borrow_mut().remove(id) {
             if let Some(parent) = mask.parent_element() {
-                parent.remove_child(&mask)?;
+                parent
+                    .remove_child(&mask)
+                    .map_err(|e| anyhow::anyhow!("Remove child failed: {:?}", e))?;
             }
         }
 
@@ -87,9 +100,12 @@ impl PortalRenderer {
     ) -> Result<()> {
         let document = target.owner_document().unwrap();
 
-        let mask = document.create_element("div")?;
+        let mask = document
+            .create_element("div")
+            .map_err(|e| anyhow::anyhow!("Create element failed: {:?}", e))?;
         mask.set_class_name("tairitsu-portal-mask");
-        mask.set_attribute("data-portal-mask-for", portal_id)?;
+        mask.set_attribute("data-portal-mask-for", portal_id)
+            .map_err(|e| anyhow::anyhow!("Set attribute failed: {:?}", e))?;
 
         let opacity = match mask_mode {
             tairitsu_vdom::PortalMaskMode::Transparent => "0",
@@ -98,12 +114,18 @@ impl PortalRenderer {
             _ => "0",
         };
 
-        mask.set_attribute("style", &format!(
-            "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,{});z-index:9998;",
-            opacity
-        ))?;
+        mask.set_attribute(
+            "style",
+            &format!(
+                "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,{});z-index:9998;",
+                opacity
+            ),
+        )
+        .map_err(|e| anyhow::anyhow!("Set attribute failed: {:?}", e))?;
 
-        target.append_child(&mask)?;
+        target
+            .append_child(&mask)
+            .map_err(|e| anyhow::anyhow!("Append child failed: {:?}", e))?;
 
         self.mask_elements
             .borrow_mut()
@@ -122,59 +144,115 @@ impl PortalRenderer {
             .ok_or_else(|| anyhow::anyhow!("Container is not HtmlElement"))?
             .style();
 
-        style.set_property("position", "fixed")?;
-        style.set_property("z-index", "9999")?;
+        style
+            .set_property("position", "fixed")
+            .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+        style
+            .set_property("z-index", "9999")
+            .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
 
         match position {
             PortalPosition::Fixed(fixed) => match fixed {
                 FixedPosition::Center => {
-                    style.set_property("top", "50%")?;
-                    style.set_property("left", "50%")?;
-                    style.set_property("transform", "translate(-50%, -50%)")?;
+                    style
+                        .set_property("top", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("transform", "translate(-50%, -50%)")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::Top => {
-                    style.set_property("top", "0")?;
-                    style.set_property("left", "50%")?;
-                    style.set_property("transform", "translateX(-50%)")?;
+                    style
+                        .set_property("top", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("transform", "translateX(-50%)")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::TopLeft => {
-                    style.set_property("top", "0")?;
-                    style.set_property("left", "0")?;
+                    style
+                        .set_property("top", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::TopRight => {
-                    style.set_property("top", "0")?;
-                    style.set_property("right", "0")?;
+                    style
+                        .set_property("top", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("right", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::Bottom => {
-                    style.set_property("bottom", "0")?;
-                    style.set_property("left", "50%")?;
-                    style.set_property("transform", "translateX(-50%)")?;
+                    style
+                        .set_property("bottom", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("transform", "translateX(-50%)")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::BottomLeft => {
-                    style.set_property("bottom", "0")?;
-                    style.set_property("left", "0")?;
+                    style
+                        .set_property("bottom", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::BottomRight => {
-                    style.set_property("bottom", "0")?;
-                    style.set_property("right", "0")?;
+                    style
+                        .set_property("bottom", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("right", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::Left => {
-                    style.set_property("top", "50%")?;
-                    style.set_property("left", "0")?;
-                    style.set_property("transform", "translateY(-50%)")?;
+                    style
+                        .set_property("top", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("left", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("transform", "translateY(-50%)")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
                 FixedPosition::Right => {
-                    style.set_property("top", "50%")?;
-                    style.set_property("right", "0")?;
-                    style.set_property("transform", "translateY(-50%)")?;
+                    style
+                        .set_property("top", "50%")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("right", "0")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                    style
+                        .set_property("transform", "translateY(-50%)")
+                        .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
                 }
             },
             PortalPosition::Custom(x, y) => {
-                style.set_property("top", &format!("{}px", y))?;
-                style.set_property("left", &format!("{}px", x))?;
+                style
+                    .set_property("top", &format!("{}px", y))
+                    .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
+                style
+                    .set_property("left", &format!("{}px", x))
+                    .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
             }
             PortalPosition::FollowTrigger => {
-                style.set_property("position", "absolute")?;
+                style
+                    .set_property("position", "absolute")
+                    .map_err(|e| anyhow::anyhow!("Set property failed: {:?}", e))?;
             }
         }
 
@@ -215,11 +293,15 @@ impl PortalRenderer {
                     self.render_vnode(child, &element.0)?;
                 }
 
-                parent.append_child(&element.0)?;
+                parent
+                    .append_child(&element.0)
+                    .map_err(|e| anyhow::anyhow!("Append child failed: {:?}", e))?;
             }
             VNode::Text(vtext) => {
                 let text_node = self.platform.create_text_node(&vtext.text);
-                parent.append_child(&text_node.0)?;
+                parent
+                    .append_child(&text_node.0)
+                    .map_err(|e| anyhow::anyhow!("Append child failed: {:?}", e))?;
             }
             VNode::Fragment(children) => {
                 for child in children {
