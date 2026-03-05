@@ -250,6 +250,30 @@ watch:
     cargo watch -x check
 
 # ============================================================================
+# Web development
+# ============================================================================
+
+# Start web demo development server (with hot reload)
+dev:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Starting Tairitsu Web Demo development server..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Open http://localhost:8080 in your browser"
+    @echo "Press Ctrl+C to stop"
+    @echo ""
+    cd examples/web-demo && trunk serve --open
+
+# Build web demo for production
+build-web:
+    @echo "Building web demo for production..."
+    cd examples/web-demo && trunk build --release
+
+# Serve web demo (production build)
+serve-web: build-web
+    @echo "Serving production build..."
+    cd examples/web-demo/dist && python3 -m http.server 8080
+
+# ============================================================================
 # Documentation tasks
 # ============================================================================
 
@@ -282,8 +306,13 @@ info:
     @just --version
     @echo ""
     @echo "Available examples:"
+    @echo "  - web-demo:         Simple web demo (run with 'just dev')"
     @echo "  - wit-native-simple: trait-based composable WIT interfaces"
     @echo "  - wit-native-macro: macro-generated WIT interfaces"
+    @echo ""
+    @echo "Quick start:"
+    @echo "  just dev            - Start web demo with hot reload"
+    @echo "  just build-web      - Build web demo for production"
     @echo ""
     @echo "Package structure:"
     @echo "  - packages/runtime: Tairitsu core runtime (includes macro re-exports)"

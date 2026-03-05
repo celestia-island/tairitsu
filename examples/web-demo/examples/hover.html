@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hover Effects - Tairitsu Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+        
+        .card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .card-blue:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-blue:hover h3,
+        .card-blue:hover p {
+            color: white;
+        }
+        
+        .card-green:hover {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .card-green:hover h3,
+        .card-green:hover p {
+            color: white;
+        }
+        
+        .card-orange:hover {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .card-orange:hover h3,
+        .card-orange:hover p {
+            color: white;
+        }
+        
+        .card-cyan:hover {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .card-cyan:hover h3,
+        .card-cyan:hover p {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Hover Effects Demo</h1>
+    
+    <div class="card-container">
+        <div class="card card-blue">
+            <h3>Card 1</h3>
+            <p>Hover over me to see the magic happen! I'll change color and float up.</p>
+        </div>
+        
+        <div class="card card-green">
+            <h3>Card 2</h3>
+            <p>Each card has a different gradient effect. CSS transitions make it smooth.</p>
+        </div>
+        
+        <div class="card card-orange">
+            <h3>Card 3</h3>
+            <p>Pure CSS hover effects - no JavaScript needed for these animations!</p>
+        </div>
+        
+        <div class="card card-cyan">
+            <h3>Card 4</h3>
+            <p>Responsive grid layout that adapts to different screen sizes.</p>
+        </div>
+    </div>
+</body>
+</html>
