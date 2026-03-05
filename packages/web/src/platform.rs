@@ -1,6 +1,13 @@
 use anyhow::Result;
 
 #[cfg(feature = "web")]
+use std::cell::RefCell;
+#[cfg(feature = "web")]
+use std::collections::HashMap;
+#[cfg(feature = "web")]
+use std::rc::Rc;
+
+#[cfg(feature = "web")]
 use tairitsu_vdom::{ElementHandle, EventHandle, Platform};
 #[cfg(feature = "web")]
 use wasm_bindgen::JsCast;

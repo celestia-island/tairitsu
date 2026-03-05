@@ -1,5 +1,6 @@
 [workspace]
 members = ["packages/*", "examples/*"]
+exclude = ["examples/website"]
 resolver = "2"
 
 [patch.crates-io]
