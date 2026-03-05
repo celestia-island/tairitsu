@@ -1,0 +1,16 @@
+[package]
+name = "tairitsu-style"
+version = "0.1.0"
+edition = "2021"
+description = "Type-safe CSS property builders for Tairitsu framework"
+license = "MIT"
+
+[dependencies]
+# Workspace dependencies
+tairitsu-vdom = { path = "../vdom" }
+
+# Basic language and tools
+thiserror = "^2"
+
+[features]
+default = []
