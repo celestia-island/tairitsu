@@ -1,9 +1,45 @@
 use anyhow::Result;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 #[cfg(feature = "web")]
-use tairitsu_vdom::{ElementHandle, Platform};
+use tairitsu_vdom::{ElementHandle, EventHandle, Platform};
 #[cfg(feature = "web")]
 use wasm_bindgen::JsCast;
+
+#[cfg(feature = "web")]
+thread_local! {
+    static EVENT_LISTENERS: RefCell<HashMap<usize, HashMap<String, wasm_bindgen::JsValue>>> = RefCell::new(HashMap::new());
+}
+
+#[cfg(feature = "web")]
+fn get_element_id(element: &web_sys::Element) -> usize {
+    let element_ptr = element as &wasm_bindgen::JsValue;
+    element_ptr.as_f64().unwrap_or(0.0) as usize
+}
+
+#[cfg(feature = "web")]
+#[derive(Clone)]
+pub struct WebElement(pub web_sys::Element);
+
+#[cfg(feature = "web")]
+impl ElementHandle for WebElement {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+#[cfg(feature = "web")]
+#[derive(Clone)]
+pub struct WebEvent(pub web_sys::Event);
+
+#[cfg(feature = "web")]
+impl EventHandle for WebEvent {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
 
 #[cfg(feature = "web")]
 pub struct WebPlatform {
@@ -24,36 +60,39 @@ impl WebPlatform {
 
 #[cfg(feature = "web")]
 impl Platform for WebPlatform {
-    type Element = web_sys::Element;
-    type Event = web_sys::Event;
+    type Element = WebElement;
+    type Event = WebEvent;
 
     fn create_element(&self, tag: &str) -> Self::Element {
-        self.document.create_element(tag).unwrap()
+        WebElement(self.document.create_element(tag).unwrap())
     }
 
     fn create_text_node(&self, text: &str) -> Self::Element {
-        self.document.create_text_node(text).unwrap().into()
+        let text_node = self.document.create_text_node(text);
+        WebElement(web_sys::Element::from(
+            text_node.unchecked_into::<wasm_bindgen::JsValue>(),
+        ))
     }
 
     fn append_child(&self, parent: &Self::Element, child: &Self::Element) {
-        parent.append_child(child).unwrap();
+        parent.0.append_child(&child.0).unwrap();
     }
 
     fn remove_child(&self, parent: &Self::Element, child: &Self::Element) {
-        parent.remove_child(child).unwrap();
+        parent.0.remove_child(&child.0).unwrap();
     }
 
     fn set_attribute(&self, element: &Self::Element, name: &str, value: &str) {
-        element.set_attribute(name, value).unwrap();
+        element.0.set_attribute(name, value).unwrap();
     }
 
     fn remove_attribute(&self, element: &Self::Element, name: &str) {
-        element.remove_attribute(name).unwrap();
+        element.0.remove_attribute(name).unwrap();
     }
 
     fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-        use wasm_bindgen::JsCast;
         element
+            .0
             .dyn_ref::<web_sys::HtmlElement>()
             .unwrap()
             .style()
@@ -62,12 +101,10 @@ impl Platform for WebPlatform {
     }
 
     fn set_class(&self, element: &Self::Element, class: &str) {
-        element.set_attribute("class", class).unwrap();
+        element.0.set_attribute("class", class).unwrap();
     }
 
     fn add_event_listener(&self, element: &Self::Element, event: &str, handler: Box<dyn FnMut()>) {
-        use std::cell::RefCell;
-        use std::rc::Rc;
         use wasm_bindgen::closure::Closure;
 
         let handler = Rc::new(RefCell::new(handler));
@@ -75,17 +112,44 @@ impl Platform for WebPlatform {
             handler.borrow_mut()();
         }) as Box<dyn FnMut()>);
 
+        let closure_js = closure.as_ref().clone();
+
         element
+            .0
             .add_event_listener_with_callback(event, closure.as_ref().unchecked_ref())
             .unwrap();
+
+        let element_id = get_element_id(&element.0);
+        EVENT_LISTENERS.with(|listeners| {
+            let mut listeners = listeners.borrow_mut();
+            listeners
+                .entry(element_id)
+                .or_insert_with(HashMap::new)
+                .insert(event.to_string(), closure_js);
+        });
 
         closure.forget();
     }
 
     fn remove_event_listener(&self, element: &Self::Element, event: &str) {
-        element
-            .set_attribute(&format!("data-remove-{}", event), "")
-            .ok();
+        let element_id = get_element_id(&element.0);
+
+        let closure_js = EVENT_LISTENERS.with(|listeners| {
+            let mut listeners = listeners.borrow_mut();
+            if let Some(element_listeners) = listeners.get_mut(&element_id) {
+                element_listeners.remove(event)
+            } else {
+                None
+            }
+        });
+
+        if let Some(closure) = closure_js {
+            let callback = wasm_bindgen::JsCast::unchecked_ref::<js_sys::Function>(&closure);
+            element
+                .0
+                .remove_event_listener_with_callback(event, callback)
+                .ok();
+        }
     }
 }
 
@@ -96,12 +160,5 @@ pub struct WebPlatform;
 impl WebPlatform {
     pub fn new() -> Result<Self> {
         Ok(Self)
-    }
-}
-
-#[cfg(feature = "web")]
-impl ElementHandle for web_sys::Element {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
     }
 }

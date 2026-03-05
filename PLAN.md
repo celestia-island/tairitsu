@@ -534,7 +534,7 @@ pub fn Glow(props: GlowProps) -> VNode {
 - ✅ Docker Compose 测试环境配置
 - 📝 可扩展更多测试用例
 
-### Phase 7: tairitsu-package ✅ (基础实现完成)
+### Phase 7: tairitsu-packager ✅ (基础实现完成)
 
 **定位**: 统一构建和打包工具，替代 trunk 和 tauri-build
 
@@ -1038,7 +1038,7 @@ Tairitsu 框架的核心功能已经实现完成，可以开始与 Hikari 组件
 
 ### 计划中的包
 
-6. **tairitsu-package** - 构建和打包工具 🚧
+6. **tairitsu-packager** - 构建和打包工具 🚧
    - **定位**: 替代 trunk 和 tauri-build
    - **配置方式**: Cargo.toml metadata（无 HTML 模板）
    - **核心功能**:
