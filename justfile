@@ -258,10 +258,10 @@ dev:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Starting Tairitsu Web Demo development server..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Open http://localhost:8080 in your browser"
+    @echo "Open http://localhost:3000 in your browser"
     @echo "Press Ctrl+C to stop"
     @echo ""
-    cd examples/web-demo && trunk serve --open
+    cd examples/web-demo && trunk serve --port 3000 --open
 
 # Build web demo for production
 build-web:
@@ -271,7 +271,7 @@ build-web:
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/web-demo/dist && python3 -m http.server 8080
+    cd examples/web-demo/dist && python3 -m http.server 3000
 
 # ============================================================================
 # Documentation tasks
