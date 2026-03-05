@@ -7,8 +7,8 @@ Simple web demo showcasing Tairitsu's Virtual DOM, Hooks, and rsx! macro.
 ## Quick Start
 
 ```bash
-# 安装 tairitsu-package（构建工具）
-cargo install --path ../../packages/package
+# 安装 tairitsu-packager（构建工具）
+cargo install --path ../../packages/packager
 
 # 启动开发服务器
 tairitsu dev
@@ -107,13 +107,13 @@ examples/web-demo/
 ### Prerequisites
 
 - Rust (with wasm32-unknown-unknown target)
-- tairitsu-package (构建工具)
+- tairitsu-packager (构建工具)
 - just (command runner)
 
 ```bash
 # Install prerequisites
 rustup target add wasm32-unknown-unknown
-cargo install --path ../../packages/package
+cargo install --path ../../packages/packager
 cargo install just
 ```
 
@@ -123,15 +123,7 @@ The development server automatically reloads when you make changes to:
 - Rust code (`.rs` files)
 - Assets in configured directories
 
-## 与 Trunk 的区别
-
-| 特性 | Trunk | Tairitsu Package |
-|------|-------|------------------|
-| 配置方式 | HTML 模板 | Cargo.toml metadata |
-| HTML 文件 | 需要手动编写 | 自动生成 |
-| 资源引用 | `<link data-trunk>` | 配置文件 |
-| 类型安全 | ❌ | ✅ 编译时检查 |
-| IDE 支持 | ❌ | ✅ TOML schema |
+**注意**: 热重载功能正在开发中，当前开发服务器会显示提示信息。
 
 ## Browser Support
 
@@ -143,4 +135,4 @@ The development server automatically reloads when you make changes to:
 
 - [Main README](../../README.md)
 - [Examples README](../README.md)
-- [PLAN.md - tairitsu-package](../../PLAN.md#phase-7-tairitsu-package-)
+- [PLAN.md - tairitsu-packager](../../PLAN.md)
