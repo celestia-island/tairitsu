@@ -19,6 +19,9 @@ pub enum TairitsuPackagerError {
 
     #[error("JSON error: {0}")]
     JsonError(#[from] serde_json::Error),
+
+    #[error("{0:#}")]
+    Other(#[from] anyhow::Error),
 }
 
 pub type Result<T> = std::result::Result<T, TairitsuPackagerError>;

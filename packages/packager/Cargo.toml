@@ -13,6 +13,8 @@ path = "src/main.rs"
 [dependencies]
 # Workspace dependencies
 tairitsu-vdom = { path = "../vdom", optional = true }
+tairitsu-browser-wit-resolver = { path = "../browser-wit-resolver" }
+tairitsu-browser-worlds = { path = "../browser-worlds" }
 
 # Basic language and tools
 anyhow = "^1"

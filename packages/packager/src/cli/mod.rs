@@ -63,6 +63,35 @@ enum Commands {
         #[arg(short, long)]
         name: Option<String>,
     },
+
+    /// Manage WIT browser world packages (fetch, verify, list)
+    Wit {
+        #[command(subcommand)]
+        action: WitCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum WitCommands {
+    /// Fetch WIT packages from the registry and store in target/tairitsu-wit
+    Fetch {
+        /// Package specs to fetch, e.g. `tairitsu-browser:dom@0.1.0`.
+        /// Omit to fetch all default browser-world packages.
+        specs: Vec<String>,
+
+        /// Force cache-only mode (fail if package is not already cached)
+        #[arg(long)]
+        offline: bool,
+    },
+
+    /// Verify integrity of cached WIT packages
+    Verify {
+        /// Package specs to verify. Omit to verify all cached packages.
+        specs: Vec<String>,
+    },
+
+    /// List all WIT packages in the local cache
+    List,
 }
 
 pub async fn run() -> crate::Result<()> {
@@ -74,7 +103,7 @@ pub async fn run() -> crate::Result<()> {
         1 => tracing::Level::DEBUG,
         _ => tracing::Level::TRACE,
     };
-    
+
     tracing_subscriber::fmt()
         .with_max_level(log_level)
         .with_target(false)
@@ -82,15 +111,16 @@ pub async fn run() -> crate::Result<()> {
 
     // Load configuration
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
-    let config = crate::config::Config::load(&manifest_path)?;
 
     match cli.command {
         Commands::Dev { port, open } => {
+            let config = crate::config::Config::load(&manifest_path)?;
             info!("Starting development server...");
             let port = port.unwrap_or(config.dev.port);
             crate::wasm::dev_server(&config, port, open).await?;
         }
         Commands::Build { target, release } => {
+            let config = crate::config::Config::load(&manifest_path)?;
             info!("Building for {}...", target);
             match target.as_str() {
                 "wasm" => crate::wasm::build(&config, release)?,
@@ -121,6 +151,19 @@ pub async fn run() -> crate::Result<()> {
             let name = name.unwrap_or_else(|| "my-tairitsu-app".to_string());
             crate::utils::init_project(&name)?;
         }
+        Commands::Wit { action } => match action {
+            WitCommands::Fetch { specs, offline } => {
+                info!("Fetching WIT packages...");
+                crate::wit_cmd::cmd_fetch(&manifest_path, &specs, offline)?;
+            }
+            WitCommands::Verify { specs } => {
+                info!("Verifying WIT package cache...");
+                crate::wit_cmd::cmd_verify(&manifest_path, &specs)?;
+            }
+            WitCommands::List => {
+                crate::wit_cmd::cmd_list(&manifest_path)?;
+            }
+        },
     }
 
     Ok(())

@@ -1,6 +1,168 @@
-# Tairitsu - 全栈 SaaS 服务框架
+# Tairitsu — WIT-First Browser Interface Architecture
 
-## 项目完成声明 ✅
+## Initiative Overview
+
+**Status**: 🚧 In Progress  
+**Last Updated**: 2026-03-06  
+**Goal**: Decouple browser/W3C API bindings from `wasm-bindgen` version lockstep by using WIT worlds as the protocol framework. The build tooling (`tairitsu` CLI / `build.rs`) resolves versioned WIT packages, fetches declarations from the cloud, caches them locally under `target/tairitsu-wit`, and supports fully-offline builds from cache.
+
+---
+
+## Architecture Summary
+
+```
+packages/
+├── browser-wit-resolver/   🚧 WIT version resolution, cloud fetch, local cache
+├── browser-worlds/         🚧 WIT world definitions (dom, events, fetch, canvas …)
+├── browser-glue/           🚧 TypeScript/JS adaptor glue (SWC-built)
+├── packager/               ✅ CLI extended with `wit` subcommand (fetch / verify)
+├── runtime/                ✅ Core WASM component runtime
+├── web/                    ✅ Web platform implementation (wasm-bindgen today)
+└── …                       (other existing packages unchanged)
+
+target/tairitsu-wit/        (git-ignored) versioned WIT cache directory
+  └── <namespace>/<name>/<version>/
+        ├── manifest.json
+        └── *.wit
+```
+
+**Key insight**: `wasm-bindgen`/`web-sys` are retained as a _compatibility shim_ for the current release. The new WIT worlds define the canonical interface surface. Over time, code generation from WIT worlds replaces `web-sys` direct usage.
+
+---
+
+## Phased Work Plan
+
+### Phase 0 — Foundation (this PR) ✅
+- [x] Replace `PLAN.md` with this document
+- [x] Create `packages/browser-wit-resolver` crate — resolver, cache, fetch stub
+- [x] Create `packages/browser-worlds` crate — initial WIT world files (dom, events, fetch, canvas, browser-full)
+- [x] Create `packages/browser-glue` JS/TS package — SWC setup, TypeScript stubs
+- [x] Extend `packages/packager` CLI with `wit` subcommand (`fetch`, `verify`, `list`)
+- [x] Update root `Cargo.toml` workspace members
+
+### Phase 1 — Resolver & Cache (next)
+- [ ] Implement real HTTP fetch in `browser-wit-resolver::fetch` (reqwest, with timeout)
+- [ ] Implement cache integrity check (SHA-256 of WIT content vs. manifest)
+- [ ] Add offline-mode detection: if network unavailable, fall back to cache; hard error if cache also absent
+- [ ] Integrate resolver into `packages/packager` `build.rs` hook
+- [ ] Add `TAIRITSU_WIT_REGISTRY` environment variable override for private registries
+
+### Phase 2 — WIT World Coverage
+- [ ] Expand `dom.wit` to cover Element, HTMLElement, Document, Window, NodeList
+- [ ] Expand `events.wit` to cover all `Event` subtypes (MouseEvent, KeyboardEvent, etc.)
+- [ ] Add `storage.wit` (localStorage/sessionStorage)
+- [ ] Add `workers.wit` (Web Workers / SharedWorker)
+- [ ] Add `websocket.wit`
+- [ ] Add `streams.wit` (WHATWG Streams)
+- [ ] Reach parity with `wasm-bindgen-cli` surface (≥ 90% coverage target)
+
+### Phase 3 — Glue Code Generation
+- [ ] Build Rust-side WIT→Rust binding generator (extend `browser-wit-resolver`)
+- [ ] Build TS-side WIT→TypeScript stub generator in `browser-glue`
+- [ ] Wire generated bindings into `tairitsu-web` as an alternative to `web-sys`
+- [ ] CI job that validates generated bindings compile against real browser environments (wasm-pack + headless browser)
+
+### Phase 4 — Migration & Compatibility
+- [ ] Deprecation path: feature flag `wit-bindings` in `tairitsu-web`
+- [ ] Provide migration guide from `web-sys` to WIT-generated bindings
+- [ ] Ensure `wasm-bindgen` version can be bumped independently of WIT world version
+- [ ] Document versioning strategy (see below)
+
+---
+
+## Versioning Strategy
+
+WIT world packages are versioned independently of the Tairitsu crate version:
+
+```
+tairitsu-browser:dom@0.1.0      — initial DOM subset
+tairitsu-browser:events@0.1.0   — initial Event subset
+tairitsu-browser:fetch@0.1.0    — Fetch API
+tairitsu-browser:canvas@0.1.0   — Canvas 2D API
+tairitsu-browser:full@0.1.0     — union world (includes all above)
+```
+
+Consumers pin a world version in their `Cargo.toml` (or `tairitsu.toml`):
+
+```toml
+[tairitsu.browser-worlds]
+version = "0.1.0"
+```
+
+The resolver maps this to a URL pattern:
+
+```
+https://wit.tairitsu.dev/<namespace>/<name>/<version>/<file>.wit
+```
+
+(During development / offline mode: served from the embedded fallback in `browser-worlds/wit/`.)
+
+---
+
+## Cache Behaviour
+
+| Scenario | Behaviour |
+|----------|-----------|
+| First fetch (online) | Download → write `target/tairitsu-wit/<ns>/<name>/<ver>/` |
+| Subsequent build (cache hit) | Read from cache, skip network |
+| Offline + cache hit | Read from cache |
+| Offline + cache miss | Hard error with actionable message |
+| `--offline` flag | Force cache-only mode |
+| `TAIRITSU_WIT_REGISTRY` set | Use custom URL base |
+
+Cache entries include a `manifest.json` with content hashes for integrity verification.
+
+---
+
+## Compatibility Strategy
+
+1. **Short term**: `tairitsu-web` keeps `wasm-bindgen`/`web-sys` as default. WIT worlds are additive.
+2. **Medium term**: Feature flag `wit-bindings` uses generated WIT bindings instead of `web-sys`.
+3. **Long term**: `web-sys` dependency removed; WIT worlds are the sole browser API surface.
+
+`wasm-bindgen-cli` interface surface is the coverage target (≥ 90%) but we are not bound to its versioning.
+
+---
+
+## Risks
+
+| Risk | Mitigation |
+|------|------------|
+| WIT world API churn | Version pinning + compatibility shims |
+| Network unavailability in CI | Embedded fallback WIT in `browser-worlds` crate |
+| Large WIT surface area | Incremental: start with DOM+Events, expand per phase |
+| SWC/TS build fragility | Lock SWC version; test in CI |
+| Adoption friction | Keep `web-sys` path working until Phase 4 |
+
+---
+
+## Deliverables for This PR (Phase 0)
+
+- `packages/browser-wit-resolver/` — Rust crate with resolver, cache, and fetch stub
+- `packages/browser-worlds/` — WIT world files for `dom`, `events`, `fetch`, `canvas`, `browser-full`
+- `packages/browser-glue/` — JS/TS package with SWC config and TypeScript stubs
+- Updated `Cargo.toml` workspace
+- Extended `tairitsu` CLI (`packager`) with `wit` subcommand
+- This `PLAN.md`
+
+---
+
+## Prior Project Status (Archived)
+
+The following phases were completed before this initiative and are retained for reference:
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1: Core vdom | ✅ Done | vdom, reactive system, Diff/Patch |
+| Phase 2: Web backend | ✅ Done | WebPlatform, DOM ops, event management |
+| Phase 3: Macro system | ✅ Done | rsx!, component, WIT macros |
+| Phase 4: Hooks | ✅ Done | use_state/signal/effect/style/context/ref/animation |
+| Phase 6: E2E test | ✅ Done (80%) | Test framework complete |
+| Phase 7: Packager | ✅ Done (40%) | WASM build, HTML generation |
+
+---
+
+*Plan owner: Tairitsu contributors — update inline as work progresses.*
 
 **最后更新**: 2026-03-06 00:00  
 **项目状态**: 核心功能完整实现，已准备就绪

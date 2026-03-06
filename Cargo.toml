@@ -8,12 +8,13 @@ members = [
     "packages/packager",
     "packages/e2e",
     "packages/style",
+    "packages/browser-wit-resolver",
+    "packages/browser-worlds",
     "examples/wit-compile-time",
     "examples/wit-runtime",
     "examples/wit-dynamic-advanced",
     "examples/wit-native-simple",
     "examples/wit-native-macro",
-    "examples/web-demo",
     "examples/website",
 ]
 resolver = "2"
