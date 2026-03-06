@@ -86,7 +86,7 @@ function buildInit(request: RequestDescriptor): RequestInit {
   if (request.body.tag === "text") {
     body = request.body.value;
   } else if (request.body.tag === "bytes") {
-    body = request.body.value;
+    body = request.body.value as BodyInit;
   }
   return { method, headers, body };
 }
