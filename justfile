@@ -12,6 +12,11 @@
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
 #   just clean           - Clean build artifacts
+#
+# WIT generation (W3C WebIDL → WIT):
+#   just wit-gen         - Full pipeline: fetch 50 specs + generate 18 domain WIT files
+#   just wit-stats       - Show per-domain interface coverage statistics
+#   just gen-wit-all     - Alternative pipeline (simpler, fewer specs, idl-cache/)
 
 # Configure Windows to use PowerShell (UTF-8 encoding)
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
@@ -29,7 +34,7 @@ install-tools:
     rustup target add wasm32-wasip2
     rustup component add rustfmt --toolchain nightly
     rustup component add clippy
-    python scripts/download_wasi_adapters.py
+    python3 scripts/download_wasi_adapters.py
 
 # Development environment setup (install tools and build)
 setup: install-tools
@@ -42,6 +47,46 @@ setup: install-tools
 # Clean all build artifacts
 clean:
     cargo clean
+
+# Clean the downloaded WebIDL cache (forces re-fetch on next gen-wit-fetch)
+clean-idl-cache:
+    @echo "Removing IDL cache..."
+    rm -rf scripts/idl-cache
+
+# ============================================================================
+# W3C WebIDL → WIT generation
+# ============================================================================
+
+# Fetch WebIDL specs from W3C WebRef (https://github.com/w3c/webref, curated branch)
+# Downloads IDL files for: dom, fetch, html, websockets, streams, service-workers,
+# file-api, indexed-db, geolocation, observers, web-animations, and more.
+# Output: scripts/idl-cache/*.idl
+gen-wit-fetch:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Fetching W3C WebIDL specs from webref..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/fetch_w3c_idl.py
+
+# Re-fetch all specs (ignore cache)
+gen-wit-fetch-force:
+    python3 scripts/fetch_w3c_idl.py --force
+
+# Generate WIT interface files from cached WebIDL specs.
+# Reads:  scripts/idl-cache/*.idl
+# Writes: packages/browser-worlds/wit/generated/*.wit
+# Run gen-wit-fetch first if the cache is empty.
+gen-wit:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Generating WIT interfaces from W3C WebIDL..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/webidl_to_wit.py
+
+# Full pipeline: fetch WebIDL specs then generate WIT files.
+gen-wit-all: gen-wit-fetch gen-wit
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ WebIDL → WIT pipeline complete!"
+    @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ============================================================================
 # Build tasks
@@ -280,6 +325,51 @@ serve-web: build-web
     cd examples/website/dist && python3 -m http.server 3000
 
 # ============================================================================
+# WIT generation — W3C WebIDL → WIT interface pipeline
+# ============================================================================
+
+# Fetch WebIDL specs from w3c/webref + generate WIT (full pipeline)
+# Requires internet access on the first run; subsequent runs use the cached files.
+# Cached WebIDL: target/tairitsu-wit/webidl-cache/  (git-ignored)
+# Generated WIT: packages/browser-worlds/wit/generated/  (committed to git)
+wit-gen:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "WIT generation pipeline (WebIDL → WIT)"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/gen_wit_from_webidl.py
+
+# Step 1: Fetch W3C/WHATWG WebIDL spec files into target/tairitsu-wit/webidl-cache/
+wit-fetch-idl:
+    @echo "Fetching WebIDL specs from w3c/webref..."
+    python3 scripts/fetch_webidl.py
+
+# Step 2: Parse cached WebIDL and generate WIT files under packages/browser-worlds/wit/generated/
+wit-gen-wit:
+    @echo "Generating WIT from cached WebIDL..."
+    python3 scripts/generate_browser_wit.py
+
+# Re-download all WebIDL specs (force even if cached)
+wit-fetch-force:
+    @echo "Force re-fetching all WebIDL specs..."
+    python3 scripts/fetch_webidl.py --force
+
+# Show WIT generation coverage statistics
+wit-stats:
+    python3 scripts/generate_browser_wit.py --stats
+
+# Show all W3C data sources used by the pipeline
+wit-sources:
+    python3 scripts/gen_wit_from_webidl.py --list-sources
+
+# List all target WebIDL specs and their cache status
+wit-list-specs:
+    python3 scripts/fetch_webidl.py --list-specs
+
+# Dry-run: show what the pipeline would do without downloading/writing
+wit-dry-run:
+    python3 scripts/gen_wit_from_webidl.py --dry-run
+
+# ============================================================================
 # Documentation tasks
 # ============================================================================
 
@@ -321,8 +411,17 @@ info:
     @echo "  just dev            - Start web demo with hot reload"
     @echo "  just build-web      - Build web demo for production"
     @echo ""
+    @echo "WIT generation (W3C WebIDL → WIT):"
+    @echo "  just wit-gen        - Full pipeline: fetch + generate"
+    @echo "  just wit-fetch-idl  - Only download WebIDL spec files"
+    @echo "  just wit-gen-wit    - Only generate WIT from cache"
+    @echo "  just wit-stats      - Show interface coverage statistics"
+    @echo "  just wit-sources    - Show data source information"
+    @echo ""
     @echo "Package structure:"
-    @echo "  - packages/runtime: Tairitsu core runtime (includes macro re-exports)"
-    @echo "  - packages/macros:  Procedural macros (internal package, re-exported via runtime)"
-    @echo "  - examples/wit-native-simple:  Simple example"
-    @echo "  - examples/wit-native-macro:   Macro example"
+    @echo "  - packages/runtime:               Tairitsu core runtime"
+    @echo "  - packages/macros:                Procedural macros"
+    @echo "  - packages/browser-wit-resolver:  WIT package resolution + cache"
+    @echo "  - packages/browser-worlds:        WIT world definitions (0.1.x hand-written,"
+    @echo "                                    0.2.x generated from W3C WebIDL)"
+    @echo "  - packages/browser-glue:          TypeScript/SWC browser API glue"

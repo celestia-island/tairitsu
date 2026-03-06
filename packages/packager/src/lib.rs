@@ -7,6 +7,7 @@ pub mod cli;
 pub mod config;
 pub mod wasm;
 pub mod utils;
+pub mod wit_cmd;
 
 pub use cli::run;
 pub use config::{Config, TairitsuMetadata};

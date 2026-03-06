@@ -1,0 +1,34 @@
+[package]
+name = "tairitsu-browser-wit-resolver"
+version = "0.1.0"
+edition = "2021"
+description = "WIT package version resolution, cloud fetch, and local cache for Tairitsu browser worlds"
+authors = ["Tairitsu Contributors"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Basic language and tools
+anyhow = "^1"
+thiserror = "^2"
+
+# Data and serialization
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+
+# Logging and tracing
+tracing = "^0.1"
+
+# HTTP fetch (optional; disabled for offline/build-only use)
+reqwest = { version = "^0.12", features = ["blocking", "json"], optional = true }
+
+# Hashing for cache integrity
+sha2 = "^0.10"
+hex = "^0.4"
+
+[features]
+default = []
+# Enable live network fetch of WIT packages from the registry
+fetch = ["reqwest"]
+
+[dev-dependencies]
+tempfile = "^3"
