@@ -16,3 +16,20 @@ examples/web-demo/dist/
 **/__pycache__/
 *.pyc
 *.pyo
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+*.js.map
+*.d.ts.map
+.cache/
+
+# IDE
+.DS_Store
+Thumbs.db
