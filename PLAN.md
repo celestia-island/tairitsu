@@ -86,20 +86,25 @@ target/tairitsu-wit/                    (git-ignored)
 **Data source**: `https://github.com/w3c/webref` (MIT / W3C Software License)  
 **Specs not yet fetched** (add to extend coverage): `fileapi`, `mediacapture-output`, `webmidi`, `payment-request`, `credential-management`, `wasm-js-api`, `speech-api`, `screen-capture`
 
-### Phase 1 — Resolver & Cache (next)
-- [ ] Implement real HTTP fetch in `browser-wit-resolver::fetch` (reqwest, with timeout)
-- [ ] Implement cache integrity check (SHA-256 of WIT content vs. manifest)
-- [ ] Add offline-mode detection: if network unavailable, fall back to cache; hard error if cache also absent
-- [ ] Integrate resolver into `packages/packager` `build.rs` hook
-- [ ] Add `TAIRITSU_WIT_REGISTRY` environment variable override for private registries
+### Phase 1 — Resolver & Cache ✅
+- [x] Implement real HTTP fetch in `browser-wit-resolver::fetch` (reqwest, with timeout)
+- [x] Implement cache integrity check (SHA-256 of WIT content vs. manifest)
+- [x] Add offline-mode detection: if network unavailable, fall back to cache; hard error if cache also absent
+- [x] Add embedded WIT fallback from `tairitsu-browser-worlds` package
+- [x] Add `TAIRITSU_WIT_REGISTRY` environment variable override for private registries
+- [x] CLI `wit` subcommand fully functional (fetch, verify, list)
 
-### Phase 2 — WIT World Coverage Expansion
+### Phase 2 — WIT World Coverage Expansion (next)
 - [ ] Expand hand-written `dom.wit` to align with Phase A generated coverage
 - [ ] Expand `events.wit` to match all `Event` subtypes from Phase A
 - [ ] Add `storage.wit`, `workers.wit`, `websocket.wit` to hand-written baseline
 - [ ] Add `streams.wit` (WHATWG Streams)
 - [ ] Reach ≥ 90% parity with `wasm-bindgen-cli` surface (Phase A provides the target list)
 - [ ] Add missing specs: `fileapi`, `speech-api`, `screen-capture`, `payment-request`, `wasm-js-api`
+- [ ] Review and manually tune generated WIT files
+- [ ] Expand targets to include dom.idl interfaces (Element, HTMLElement, MutationObserver …)
+- [ ] Add EventHandler callback interfaces (guest-export side)
+- [ ] Integrate fetch_w3c_idl into CI to keep IDL cache fresh
 
 ### Phase 2.5 — Automated WIT Generation from W3C WebIDL ✅ (scripts ready)
 
@@ -178,10 +183,7 @@ just clean-idl-cache   # remove cached IDL files
 - [x] Overloaded method deduplication (keeps first matching overload)
 - [x] Justfile recipes: `gen-wit-fetch`, `gen-wit`, `gen-wit-all`, `gen-wit-fetch-force`, `clean-idl-cache`
 - [x] Generated WIT committed to `packages/browser-worlds/wit/generated/`
-- [ ] Review and manually tune generated WIT (Phase 3 task)
-- [ ] Expand targets to include dom.idl interfaces (Element, HTMLElement, MutationObserver …)
-- [ ] Add EventHandler callback interfaces (guest-export side)
-- [ ] Integrate fetch_w3c_idl into CI to keep IDL cache fresh
+- [x] Phase 2.5 scripts functional and tested
 
 ### Phase 3 — Glue Code Generation
 - [ ] Build Rust-side WIT→Rust binding generator (extend `browser-wit-resolver`)
@@ -331,7 +333,7 @@ Cache entries include a `manifest.json` with content hashes for integrity verifi
 |-------|-------------|--------|
 | Phase 0 | `packages/browser-wit-resolver/`, `packages/browser-worlds/` (0.1.x), `packages/browser-glue/`, packager `wit` subcommand | ✅ |
 | Phase A | `scripts/fetch_webidl.py`, `scripts/generate_browser_wit.py`, `scripts/gen_wit_from_webidl.py`, `packages/browser-worlds/wit/generated/` (0.2.x, 18 domains, 422 interfaces), justfile `wit-*` recipes | ✅ |
-| Phase 1 | Real HTTP fetch in resolver, SHA-256 cache integrity, `build.rs` hook | 🔜 |
+| Phase 1 | Real HTTP fetch in resolver, SHA-256 cache integrity, embedded fallback, CLI wit command | ✅ |
 | Phase 2 | Expanded hand-written WIT coverage (≥ 90% target), missing spec integration | 🔜 |
 | Phase 3 | Rust + TS binding generators, `tairitsu-web` integration, CI validation | 🔜 |
 | Phase 4 | Migration guide, `web-sys` deprecation, versioning docs | 🔜 |

@@ -9,11 +9,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
-use crate::{
-    cache::Cache,
-    fetch::FetchClient,
-    DEFAULT_REGISTRY,
-};
+use crate::{cache::Cache, fetch::FetchClient, DEFAULT_REGISTRY};
 
 /// A fully-resolved WIT package ready for use.
 #[derive(Debug, Clone)]
@@ -83,8 +79,8 @@ impl ResolveOptions {
     /// Construct options with sensible defaults derived from the current
     /// working directory.
     pub fn new(target_dir: impl AsRef<Path>) -> Self {
-        let registry_url = std::env::var("TAIRITSU_WIT_REGISTRY")
-            .unwrap_or_else(|_| DEFAULT_REGISTRY.to_owned());
+        let registry_url =
+            std::env::var("TAIRITSU_WIT_REGISTRY").unwrap_or_else(|_| DEFAULT_REGISTRY.to_owned());
         let offline = std::env::var("TAIRITSU_WIT_OFFLINE")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
@@ -118,8 +114,9 @@ impl Resolver {
     ///
     /// Resolution order:
     /// 1. Check local cache (`target/tairitsu-wit/<ns>/<name>/<ver>/`).
-    /// 2. If not cached (and not offline), fetch from the registry.
-    /// 3. Store fetched content in the cache.
+    /// 2. If not cached, check embedded packages (if `embedded` feature is enabled).
+    /// 3. If not embedded (and not offline), fetch from the registry.
+    /// 4. Store fetched/embedded content in the cache.
     pub fn resolve(&self, spec: &PackageSpec) -> Result<ResolvedPackage> {
         let id = spec.id();
 
@@ -133,22 +130,50 @@ impl Resolver {
             });
         }
 
-        // 2. Offline mode: fail fast.
+        // 2. Embedded fallback (if available).
+        #[cfg(feature = "embedded")]
+        {
+            if let Some(embedded) = tairitsu_browser_worlds::find_embedded(&id) {
+                debug!("Using embedded WIT package {id}");
+                let files: std::collections::HashMap<String, Vec<u8>> = embedded
+                    .files
+                    .iter()
+                    .map(|(name, bytes)| ((*name).to_owned(), bytes.to_vec()))
+                    .collect();
+                let entry = self.cache.store(spec, files)?;
+                info!(
+                    "Embedded WIT package {id} cached at {}",
+                    entry.wit_dir.display()
+                );
+                return Ok(ResolvedPackage {
+                    id,
+                    wit_dir: entry.wit_dir,
+                    from_cache: false,
+                });
+            }
+        }
+
+        // 3. Offline mode: fail fast (embedded fallback already attempted).
         if self.opts.offline {
             anyhow::bail!(
-                "WIT package '{id}' not found in cache and offline mode is enabled.\n\
-                 Run `tairitsu wit fetch {id}` while online to populate the cache."
+                "WIT package '{id}' not found in cache{} and offline mode is enabled.\n\
+                 Run `tairitsu wit fetch {id}` while online to populate the cache.",
+                if cfg!(feature = "embedded") {
+                    " or embedded packages"
+                } else {
+                    ""
+                }
             );
         }
 
-        // 3. Fetch from registry.
+        // 4. Fetch from registry.
         info!("Fetching WIT package {id} from {}", self.opts.registry_url);
         let files = self
             .fetch_client
             .fetch(spec)
             .with_context(|| format!("Failed to fetch WIT package '{id}'"))?;
 
-        // 4. Store in cache.
+        // 5. Store in cache.
         let entry = self.cache.store(spec, files)?;
         info!("Cached WIT package {id} at {}", entry.wit_dir.display());
 

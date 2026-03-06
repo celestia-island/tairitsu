@@ -5,7 +5,7 @@
 //! - `verify` — check cache integrity
 //! - `list`   — list cached packages
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use tracing::{error, info};
@@ -17,7 +17,7 @@ use tairitsu_browser_wit_resolver::{
 };
 
 /// Determine the workspace target directory.
-fn resolve_target_dir(workspace_root: &PathBuf) -> PathBuf {
+fn resolve_target_dir(workspace_root: &Path) -> PathBuf {
     // Prefer $CARGO_TARGET_DIR, then fall back to <workspace_root>/target.
     if let Ok(dir) = std::env::var("CARGO_TARGET_DIR") {
         return PathBuf::from(dir);
@@ -30,7 +30,7 @@ fn resolve_target_dir(workspace_root: &PathBuf) -> PathBuf {
 /// `specs` is a list of package identifiers in the form
 /// `namespace:name@version` (e.g. `tairitsu-browser:dom@0.1.0`).
 /// Pass an empty slice to fetch all known browser-world packages.
-pub fn cmd_fetch(workspace_root: &PathBuf, specs: &[String], offline: bool) -> Result<()> {
+pub fn cmd_fetch(workspace_root: &Path, specs: &[String], offline: bool) -> Result<()> {
     let target_dir = resolve_target_dir(workspace_root);
     let mut opts = ResolveOptions::new(&target_dir);
     if offline {
@@ -80,7 +80,7 @@ pub fn cmd_fetch(workspace_root: &PathBuf, specs: &[String], offline: bool) -> R
 }
 
 /// Verify cache integrity for all or selected packages.
-pub fn cmd_verify(workspace_root: &PathBuf, specs: &[String]) -> Result<()> {
+pub fn cmd_verify(workspace_root: &Path, specs: &[String]) -> Result<()> {
     let target_dir = resolve_target_dir(workspace_root);
     let cache = Cache::new(target_dir.join(CACHE_DIR_NAME));
 
@@ -130,13 +130,16 @@ pub fn cmd_verify(workspace_root: &PathBuf, specs: &[String]) -> Result<()> {
 }
 
 /// List all packages currently in the local cache.
-pub fn cmd_list(workspace_root: &PathBuf) -> Result<()> {
+pub fn cmd_list(workspace_root: &Path) -> Result<()> {
     let target_dir = resolve_target_dir(workspace_root);
     let cache = Cache::new(target_dir.join(CACHE_DIR_NAME));
     let ids = cache.list()?;
 
     if ids.is_empty() {
-        println!("No WIT packages cached in {}", target_dir.join(CACHE_DIR_NAME).display());
+        println!(
+            "No WIT packages cached in {}",
+            target_dir.join(CACHE_DIR_NAME).display()
+        );
     } else {
         println!("Cached WIT packages ({}):", ids.len());
         for id in &ids {
