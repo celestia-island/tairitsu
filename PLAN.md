@@ -101,6 +101,88 @@ target/tairitsu-wit/                    (git-ignored)
 - [ ] Reach ≥ 90% parity with `wasm-bindgen-cli` surface (Phase A provides the target list)
 - [ ] Add missing specs: `fileapi`, `speech-api`, `screen-capture`, `payment-request`, `wasm-js-api`
 
+### Phase 2.5 — Automated WIT Generation from W3C WebIDL ✅ (scripts ready)
+
+**Goal**: Instead of hand-authoring WIT files, automatically crawl and convert
+W3C / WHATWG WebIDL specifications into WIT interface files.
+
+#### Data source confirmed: W3C WebRef
+
+After online verification, the authoritative machine-readable source is:
+
+| Source | URL | Notes |
+|--------|-----|-------|
+| **W3C WebRef** (primary) | https://github.com/w3c/webref | `curated` branch; auto-updated every 6 h; covers all browser-spec IDL |
+| IDL file format | `https://raw.githubusercontent.com/w3c/webref/curated/ed/idl/<spec>.idl` | Accessibility confirmed ✅ |
+| Coverage | dom, fetch, html, websockets, streams, service-workers, file-api, indexed-db, geolocation, web-animations, observers … | 23+ configured specs |
+
+**Why W3C WebRef?**
+- Maintained by W3C Devices and Sensors WG and browser-specs community
+- IDL is curated (validity + consistency guaranteed), not raw
+- Published as `@webref/idl` npm package for broader ecosystem use
+- Updated automatically from living standards (WHATWG DOM, Fetch, HTML, etc.)
+
+#### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/fetch_w3c_idl.py` | Download IDL files from W3C WebRef → `scripts/idl-cache/` |
+| `scripts/webidl_to_wit.py` | Parse WebIDL, apply handle-pattern transformation → `packages/browser-worlds/wit/generated/*.wit` |
+
+**IDL → WIT transformation rules:**
+- `interface X` with instance methods → `interface x { type x-handle = u64; … }` (opaque handle pattern)
+- Constructors → `new-x: func(…) -> result<x-handle, string>`
+- `attribute T foo` → `foo: func(handle) -> T` getter (+ setter if non-readonly)
+- `undefined method(…)` → `method: func(handle, …)` (no return type)
+- `EventHandler` attributes → skipped (callbacks interface, future work)
+- `Promise<T>` → skipped with comment (async future work)
+- `optional T?` → `option<T>` in record fields; omitted in function params
+- `sequence<T>` / `FrozenArray<T>` → `list<T>`
+- `DOMString` / `USVString` / `ByteString` → `string`
+- `unsigned long` / `unsigned short` / etc. → `u32` / `u16` / etc.
+- camelCase → kebab-case for all WIT identifiers
+
+#### Generated WIT packages (Phase 2.5 output)
+
+| Package | Source spec | File |
+|---------|-------------|------|
+| `tairitsu-browser:websocket@0.1.0` | websockets.idl | `generated/websockets.wit` |
+| `tairitsu-browser:streams@0.1.0` | streams.idl | `generated/streams.wit` |
+| `tairitsu-browser:storage@0.1.0` | html.idl | `generated/html.wit` |
+| `tairitsu-browser:workers@0.1.0` | service-workers.idl | `generated/service-workers.wit` |
+| `tairitsu-browser:file-api@0.1.0` | FileAPI.idl | `generated/file-api.wit` |
+| `tairitsu-browser:indexed-db@0.1.0` | IndexedDB.idl | `generated/indexed-db.wit` |
+| `tairitsu-browser:geolocation@0.1.0` | geolocation.idl | `generated/geolocation.wit` |
+| `tairitsu-browser:intersection-observer@0.1.0` | intersection-observer.idl | `generated/intersection-observer.wit` |
+| `tairitsu-browser:resize-observer@0.1.0` | resize-observer.idl | `generated/resize-observer.wit` |
+| `tairitsu-browser:web-animations@0.1.0` | web-animations.idl | `generated/web-animations.wit` |
+
+#### Build integration (`justfile`)
+
+```bash
+just gen-wit-all       # full pipeline: fetch IDL → generate WIT
+just gen-wit-fetch     # step 1: download IDL from W3C WebRef
+just gen-wit           # step 2: generate WIT from cached IDL
+just gen-wit-fetch-force  # force re-download (ignore cache)
+just clean-idl-cache   # remove cached IDL files
+```
+
+#### Checklist
+- [x] Identify and verify W3C WebRef as primary authoritative IDL data source
+- [x] Implement `scripts/fetch_w3c_idl.py` — downloads 23 specs from W3C WebRef
+- [x] Implement `scripts/webidl_to_wit.py` — WebIDL parser + WIT emitter (10 target specs)
+- [x] Handle-pattern transformation (opaque `u64` handles for all object interfaces)
+- [x] Type mapping (all WebIDL primitives → WIT primitives)
+- [x] Multi-word type normalisation (`unsigned long` → `u32`)
+- [x] camelCase → kebab-case identifier conversion
+- [x] Overloaded method deduplication (keeps first matching overload)
+- [x] Justfile recipes: `gen-wit-fetch`, `gen-wit`, `gen-wit-all`, `gen-wit-fetch-force`, `clean-idl-cache`
+- [x] Generated WIT committed to `packages/browser-worlds/wit/generated/`
+- [ ] Review and manually tune generated WIT (Phase 3 task)
+- [ ] Expand targets to include dom.idl interfaces (Element, HTMLElement, MutationObserver …)
+- [ ] Add EventHandler callback interfaces (guest-export side)
+- [ ] Integrate fetch_w3c_idl into CI to keep IDL cache fresh
+
 ### Phase 3 — Glue Code Generation
 - [ ] Build Rust-side WIT→Rust binding generator (extend `browser-wit-resolver`)
 - [ ] Build TS-side WIT→TypeScript stub generator in `browser-glue`
