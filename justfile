@@ -12,9 +12,11 @@
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
 #   just clean           - Clean build artifacts
-#   just gen-wit-all     - Fetch W3C WebIDL + generate WIT interface files
-#   just gen-wit-fetch   - Download WebIDL specs from W3C WebRef (w3c/webref)
-#   just gen-wit         - Generate WIT from cached WebIDL (run fetch first)
+#
+# WIT generation (W3C WebIDL → WIT):
+#   just wit-gen         - Full pipeline: fetch 50 specs + generate 18 domain WIT files
+#   just wit-stats       - Show per-domain interface coverage statistics
+#   just gen-wit-all     - Alternative pipeline (simpler, fewer specs, idl-cache/)
 
 # Configure Windows to use PowerShell (UTF-8 encoding)
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
