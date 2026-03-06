@@ -50,6 +50,12 @@ tower-http = { version = "^0.6", features = ["fs"], optional = true }
 # WASM tools (optional)
 wasm-bindgen-cli-support = { version = "0.2", optional = true }
 
+# SCSS compiler
+grass = "^0.13"
+
+# Regex for extraction
+regex = "^1"
+
 [features]
 default = ["wasm", "dev-server"]
 wasm = ["wasm-bindgen-cli-support"]

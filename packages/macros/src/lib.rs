@@ -4,8 +4,10 @@ use syn::{parse_macro_input, Data, DeriveInput};
 
 mod component;
 mod rsx;
+mod scss;
 use component::expand_component;
 use rsx::{expand_rsx, RsxElement};
+use scss::expand_scss;
 
 /// Component macro for automatic Props generation
 ///
@@ -47,6 +49,53 @@ pub fn rsx(input: TokenStream) -> TokenStream {
     let element = syn::parse_macro_input!(input as RsxElement);
     let expanded = expand_rsx(element);
     TokenStream::from(expanded)
+}
+
+/// SCSS macro for compile-time CSS generation with class name hashing
+///
+/// Compiles SCSS syntax to CSS at compile time using grass compiler,
+/// and generates hashed class names for CSS Modules-style scoping.
+///
+/// # Features
+/// - Full SCSS syntax support via grass compiler
+/// - Automatic class name hashing (CSS Modules style)
+/// - Scope-based isolation
+/// - Returns (css, class_map) tuple
+///
+/// # Example
+/// ```ignore
+/// // Basic usage
+/// let (css, class_map) = scss! {
+///     .button {
+///         background: var(--primary);
+///         color: white;
+///         padding: 8px 16px;
+///         border-radius: 4px;
+///         
+///         &:hover {
+///             background: var(--primary-dark);
+///         }
+///         
+///         &.disabled {
+///             opacity: 0.5;
+///         }
+///     }
+/// };
+///
+/// // With scope for isolation
+/// let (css, class_map) = scss! {
+///     .container {
+///         width: 100%;
+///     },
+///     scope: "MyComponent"
+/// };
+///
+/// // Use hashed class names
+/// let button_class = class_map.get("button").unwrap();
+/// ```
+#[proc_macro]
+pub fn scss(input: TokenStream) -> TokenStream {
+    expand_scss(input)
 }
 
 /// Derives WitCommand trait for an enum, automatically generating Response type and command routing
