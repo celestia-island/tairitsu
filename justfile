@@ -12,6 +12,9 @@
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
 #   just clean           - Clean build artifacts
+#   just gen-wit-all     - Fetch W3C WebIDL + generate WIT interface files
+#   just gen-wit-fetch   - Download WebIDL specs from W3C WebRef (w3c/webref)
+#   just gen-wit         - Generate WIT from cached WebIDL (run fetch first)
 
 # Configure Windows to use PowerShell (UTF-8 encoding)
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
@@ -42,6 +45,46 @@ setup: install-tools
 # Clean all build artifacts
 clean:
     cargo clean
+
+# Clean the downloaded WebIDL cache (forces re-fetch on next gen-wit-fetch)
+clean-idl-cache:
+    @echo "Removing IDL cache..."
+    rm -rf scripts/idl-cache
+
+# ============================================================================
+# W3C WebIDL → WIT generation
+# ============================================================================
+
+# Fetch WebIDL specs from W3C WebRef (https://github.com/w3c/webref, curated branch)
+# Downloads IDL files for: dom, fetch, html, websockets, streams, service-workers,
+# file-api, indexed-db, geolocation, observers, web-animations, and more.
+# Output: scripts/idl-cache/*.idl
+gen-wit-fetch:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Fetching W3C WebIDL specs from webref..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/fetch_w3c_idl.py
+
+# Re-fetch all specs (ignore cache)
+gen-wit-fetch-force:
+    python3 scripts/fetch_w3c_idl.py --force
+
+# Generate WIT interface files from cached WebIDL specs.
+# Reads:  scripts/idl-cache/*.idl
+# Writes: packages/browser-worlds/wit/generated/*.wit
+# Run gen-wit-fetch first if the cache is empty.
+gen-wit:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Generating WIT interfaces from W3C WebIDL..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/webidl_to_wit.py
+
+# Full pipeline: fetch WebIDL specs then generate WIT files.
+gen-wit-all: gen-wit-fetch gen-wit
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ WebIDL → WIT pipeline complete!"
+    @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ============================================================================
 # Build tasks
