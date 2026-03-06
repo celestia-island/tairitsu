@@ -41,7 +41,7 @@ fn default_target() -> String {
 }
 
 fn default_output_dir() -> PathBuf {
-    PathBuf::from("dist")
+    PathBuf::from("../../target/dist/website")
 }
 
 #[derive(Debug, Clone, Deserialize)]

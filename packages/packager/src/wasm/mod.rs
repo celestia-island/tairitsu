@@ -19,7 +19,7 @@ pub fn build(config: &Config, release: bool) -> crate::Result<()> {
 
     // Step 3: Run wasm-bindgen
     pb.set_message("Generating JS bindings...");
-    run_wasm_bindgen(config)?;
+    run_wasm_bindgen(config, release)?;
 
     // Step 4: Generate HTML
     pb.set_message("Generating HTML...");
@@ -49,8 +49,22 @@ fn check_wasm_target() -> crate::Result<()> {
 }
 
 fn build_wasm(release: bool) -> crate::Result<()> {
+    let current_manifest = std::env::current_dir()?.join("Cargo.toml");
+    let content = std::fs::read_to_string(&current_manifest)?;
+    let manifest: toml::Value = toml::from_str(&content)?;
+    
+    let pkg_name = manifest
+        .get("package")
+        .and_then(|p| p.get("name"))
+        .and_then(|n| n.as_str())
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "Failed to read package name from Cargo.toml".to_string()
+            )
+        })?;
+    
     let mut cmd = std::process::Command::new("cargo");
-    cmd.args(["build", "--target", "wasm32-unknown-unknown"]);
+    cmd.args(["build", "--target", "wasm32-unknown-unknown", "--package", pkg_name]);
 
     if release {
         cmd.arg("--release");
@@ -66,10 +80,34 @@ fn build_wasm(release: bool) -> crate::Result<()> {
     Ok(())
 }
 
-fn run_wasm_bindgen(config: &Config) -> crate::Result<()> {
+fn find_workspace_root() -> crate::Result<std::path::PathBuf> {
+    let output = std::process::Command::new("cargo")
+        .args(["metadata", "--no-deps", "--format-version", "1"])
+        .output()?;
+
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)?;
+    let workspace_root = metadata
+        .get("workspace_root")
+        .and_then(|v| v.as_str())
+        .map(std::path::PathBuf::from)
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "Failed to find workspace root".to_string()
+            )
+        })?;
+
+    Ok(workspace_root)
+}
+
+fn run_wasm_bindgen(config: &Config, release: bool) -> crate::Result<()> {
+    let workspace_root = find_workspace_root()?;
     let pkg_name = &config.package.name;
-    let profile = if config.build.optimize { "release" } else { "debug" };
-    let wasm_path = format!("target/wasm32-unknown-unknown/{}/{}.wasm", profile, pkg_name.replace('-', "_"));
+    let profile = if release { "release" } else { "debug" };
+    let wasm_path = workspace_root
+        .join("target")
+        .join("wasm32-unknown-unknown")
+        .join(profile)
+        .join(format!("{}.wasm", pkg_name.replace('-', "_")));
 
     // Create output directory
     std::fs::create_dir_all(&config.build.output_dir)?;
@@ -97,7 +135,7 @@ fn run_wasm_bindgen(config: &Config) -> crate::Result<()> {
 
 fn generate_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
-    let js_file = format!("{}_bg.js", pkg_name.replace('-', "_"));
+    let js_file = format!("{}.js", pkg_name.replace('-', "_"));
 
     let title = config.html.title.as_deref()
         .unwrap_or(&config.package.name);
@@ -161,7 +199,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
         std::fs::read_to_string(&index_path)?
     } else {
         format!(
-            "<!DOCTYPE html><html><head><title>{}</title></head><body><div id=\"app\">Loading...</div><script type=\"module\" src=\"./{}_bg.js\"></script></body></html>",
+            "<!DOCTYPE html><html><head><title>{}</title></head><body><div id=\"app\">Loading...</div><script type=\"module\" src=\"./{}.js\"></script></body></html>",
             config.package.name,
             config.package.name.replace('-', "_")
         )

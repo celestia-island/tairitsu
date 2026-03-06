@@ -1,0 +1,43 @@
+{
+  "name": "@tairitsu/browser-glue",
+  "version": "0.1.0",
+  "description": "TypeScript/JavaScript adaptor glue for Tairitsu browser WIT worlds",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dom": {
+      "import": "./dist/dom-glue.js",
+      "types": "./dist/dom-glue.d.ts"
+    },
+    "./events": {
+      "import": "./dist/events-glue.js",
+      "types": "./dist/events-glue.d.ts"
+    },
+    "./fetch": {
+      "import": "./dist/fetch-glue.js",
+      "types": "./dist/fetch-glue.d.ts"
+    },
+    "./canvas": {
+      "import": "./dist/canvas-glue.js",
+      "types": "./dist/canvas-glue.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "swc src -d dist --strip-leading-paths",
+    "build:watch": "swc src -d dist --strip-leading-paths --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@swc/cli": "^0.3.0",
+    "@swc/core": "^1.7.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.5.0"
+  }
+}

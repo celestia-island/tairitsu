@@ -1,0 +1,102 @@
+/// Browser Events world — W3C Event interfaces.
+///
+/// Version: tairitsu-browser:events@0.1.0
+///
+/// Status: initial subset — MouseEvent, KeyboardEvent, FocusEvent, InputEvent.
+
+package tairitsu-browser:events@0.1.0;
+
+/// Host-side event listener management.
+interface event-target {
+    /// Unique handle to a DOM node.
+    type node-handle = u64;
+
+    /// Unique handle to a DOM event.
+    type event-handle = u64;
+
+    /// Register a named event listener on a node.
+    ///
+    /// Returns an opaque listener-id that can be passed to
+    /// `remove-event-listener`.
+    add-event-listener: func(
+        target: node-handle,
+        event-type: string,
+        use-capture: bool,
+    ) -> result<u64, string>;
+
+    /// Remove a previously registered event listener.
+    remove-event-listener: func(
+        target: node-handle,
+        listener-id: u64,
+    ) -> result<_, string>;
+
+    /// Prevent the default action of the event.
+    prevent-default: func(event: event-handle);
+
+    /// Stop event propagation.
+    stop-propagation: func(event: event-handle);
+}
+
+/// Host → guest callbacks dispatched when events fire.
+/// The guest exports these functions; the host calls them.
+interface event-callbacks {
+    use event-target.{node-handle};
+
+    /// Low-level mouse-event data extracted from the host.
+    record mouse-event-data {
+        client-x: f64,
+        client-y: f64,
+        offset-x: f64,
+        offset-y: f64,
+        button: u8,
+        buttons: u8,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    /// Low-level keyboard-event data.
+    record keyboard-event-data {
+        key: string,
+        code: string,
+        key-code: u32,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+        repeat: bool,
+    }
+
+    /// Low-level focus-event data.
+    record focus-event-data {
+        related-target: option<node-handle>,
+    }
+
+    /// Low-level input-event data.
+    record input-event-data {
+        data: option<string>,
+        input-type: string,
+    }
+
+    /// Called when a registered mouse event fires.
+    on-mouse-event: func(listener-id: u64, data: mouse-event-data);
+
+    /// Called when a registered keyboard event fires.
+    on-keyboard-event: func(listener-id: u64, data: keyboard-event-data);
+
+    /// Called when a registered focus event fires.
+    on-focus-event: func(listener-id: u64, data: focus-event-data);
+
+    /// Called when a registered input event fires.
+    on-input-event: func(listener-id: u64, data: input-event-data);
+
+    /// Generic fallback for event types not covered above.
+    on-generic-event: func(listener-id: u64, event-type: string);
+}
+
+/// Combined events world.
+world events-world {
+    import event-target;
+    export event-callbacks;
+}

@@ -1,0 +1,80 @@
+/// Browser Canvas 2D world.
+///
+/// Version: tairitsu-browser:canvas@0.1.0
+///
+/// Status: initial subset — Canvas2DRenderingContext drawing primitives.
+
+package tairitsu-browser:canvas@0.1.0;
+
+/// Canvas 2D context operations.
+interface canvas2d {
+    /// Unique handle to a Canvas 2D rendering context.
+    type ctx-handle = u64;
+
+    /// Unique handle to a canvas element node.
+    type node-handle = u64;
+
+    /// RGBA colour represented as a CSS colour string (e.g. `"#ff0000"` or
+    /// `"rgba(255,0,0,0.5)"`).
+    type color-string = string;
+
+    /// Line cap style.
+    enum line-cap {
+        butt,
+        round,
+        square,
+    }
+
+    /// Line join style.
+    enum line-join {
+        bevel,
+        round,
+        miter,
+    }
+
+    /// Obtain a Canvas 2D rendering context for a canvas element.
+    get-context: func(canvas: node-handle) -> result<ctx-handle, string>;
+
+    // --- State ---
+    save: func(ctx: ctx-handle);
+    restore: func(ctx: ctx-handle);
+
+    // --- Transform ---
+    translate: func(ctx: ctx-handle, x: f64, y: f64);
+    rotate: func(ctx: ctx-handle, angle: f64);
+    scale: func(ctx: ctx-handle, x: f64, y: f64);
+    reset-transform: func(ctx: ctx-handle);
+
+    // --- Fill and stroke style ---
+    set-fill-style: func(ctx: ctx-handle, color: color-string);
+    set-stroke-style: func(ctx: ctx-handle, color: color-string);
+    set-line-width: func(ctx: ctx-handle, width: f64);
+    set-line-cap: func(ctx: ctx-handle, cap: line-cap);
+    set-line-join: func(ctx: ctx-handle, join: line-join);
+    set-global-alpha: func(ctx: ctx-handle, alpha: f64);
+
+    // --- Rect ---
+    fill-rect: func(ctx: ctx-handle, x: f64, y: f64, w: f64, h: f64);
+    stroke-rect: func(ctx: ctx-handle, x: f64, y: f64, w: f64, h: f64);
+    clear-rect: func(ctx: ctx-handle, x: f64, y: f64, w: f64, h: f64);
+
+    // --- Path ---
+    begin-path: func(ctx: ctx-handle);
+    close-path: func(ctx: ctx-handle);
+    move-to: func(ctx: ctx-handle, x: f64, y: f64);
+    line-to: func(ctx: ctx-handle, x: f64, y: f64);
+    arc: func(ctx: ctx-handle, x: f64, y: f64, radius: f64, start-angle: f64, end-angle: f64, anticlockwise: bool);
+    bezier-curve-to: func(ctx: ctx-handle, cp1x: f64, cp1y: f64, cp2x: f64, cp2y: f64, x: f64, y: f64);
+    fill: func(ctx: ctx-handle);
+    stroke: func(ctx: ctx-handle);
+
+    // --- Text ---
+    set-font: func(ctx: ctx-handle, font: string);
+    fill-text: func(ctx: ctx-handle, text: string, x: f64, y: f64);
+    stroke-text: func(ctx: ctx-handle, text: string, x: f64, y: f64);
+}
+
+/// Canvas world.
+world canvas-world {
+    import canvas2d;
+}
