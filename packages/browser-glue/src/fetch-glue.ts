@@ -67,7 +67,7 @@ const _fetchHandles = new Map<bigint, FetchHandle>();
 export function fetchSync(_request: RequestDescriptor): never {
   throw new Error(
     "fetchSync is not supported in the browser environment. " +
-      "Use fetchAsync + pollFetch instead.",
+    "Use fetchAsync + pollFetch instead.",
   );
 }
 
