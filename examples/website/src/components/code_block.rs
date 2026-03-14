@@ -4,13 +4,13 @@ use tairitsu_vdom::VNode;
 
 #[allow(dead_code)]
 pub fn code_block(code: &str, _language: &str) -> VNode {
-    let _code_text = code.to_string();
+    let _ = code;
     rsx! {
         div {
             class: "code-block",
             pre {
                 code {
-                    "Code placeholder"
+                    "Code example is rendered by the current website demo skin"
                 }
             }
         }

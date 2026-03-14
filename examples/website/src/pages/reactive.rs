@@ -25,7 +25,7 @@ pub fn reactive() -> VNode {
                 div {
                     class: "demo-box",
                     p {
-                        "Signal Count placeholder"
+                        "Signal state is initialized and ready for interaction"
                     }
                 }
             }

@@ -12,6 +12,7 @@
 - [工作区地图](./workspace-map.md)
 - [构建、测试与发布](./build-test-release.md)
 - [从 web-sys 迁移到 WIT 绑定](./migration.md)
+- [术语对照表](./glossary.md)
 
 ### System
 
