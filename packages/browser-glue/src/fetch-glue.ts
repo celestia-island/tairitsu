@@ -1,9 +1,8 @@
 /**
  * Fetch glue — implements the `tairitsu-browser:fetch` WIT import interfaces.
  *
- * Status: Phase 0 — synchronous fetch is not possible in the browser;
- * `fetchSync` always rejects. Async fetch is stubbed via the handle table.
- * Full async implementation is planned for Phase 2.
+ * Browser runtimes cannot execute network requests synchronously, so
+ * `fetchSync` returns an explicit error and async polling is the primary path.
  */
 
 // ---------------------------------------------------------------------------

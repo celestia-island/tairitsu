@@ -3,11 +3,9 @@
  *
  * Manages event listener registration and dispatches serialised event data
  * back to WASM guest callbacks.
- *
- * Status: Phase 0 stubs — listener registration wired to real DOM.
  */
 
-import { registerExternalNode } from "./dom-glue.js";
+import { getEventTarget, registerNode } from "./handle-table.js";
 
 // ---------------------------------------------------------------------------
 // Types matching WIT records
@@ -99,30 +97,13 @@ export function registerEventCallbacks(callbacks: {
 // WIT interface: event-target
 // ---------------------------------------------------------------------------
 
-function getNode(handle: bigint): EventTarget {
-  // Re-use the handle table from dom-glue by querying the DOM directly.
-  // NOTE: The `__tairitsu_node_*` pattern is also used in canvas-glue.ts.
-  // In Phase 3 both modules will share a single exported handle table to
-  // eliminate this coupling.
-  const el = (globalThis as Record<string, unknown>)[`__tairitsu_node_${handle}`] as EventTarget | undefined;
-  if (el) return el;
-  throw new Error(`Event target handle ${handle} not found`);
-}
-
 export function addEventListener(
   target: bigint,
   eventType: string,
-  _useCapture: boolean,
+  useCapture: boolean,
 ): bigint {
   const listenerId = _nextListenerId++;
-
-  let domTarget: EventTarget;
-  try {
-    domTarget = getNode(target);
-  } catch {
-    // Fallback: use document as target for now (Phase 3 will fix this).
-    domTarget = document;
-  }
+  const domTarget = getEventTarget(target);
 
   const handler = (ev: Event) => {
     if (ev instanceof MouseEvent && _onMouseEvent) {
@@ -152,7 +133,7 @@ export function addEventListener(
     } else if (ev instanceof FocusEvent && _onFocusEvent) {
       const rel = ev.relatedTarget as Node | null;
       _onFocusEvent(listenerId, {
-        relatedTarget: rel ? registerExternalNode(rel) : undefined,
+        relatedTarget: rel ? registerNode(rel) : undefined,
       });
     } else if (ev instanceof InputEvent && _onInputEvent) {
       _onInputEvent(listenerId, {
@@ -164,7 +145,7 @@ export function addEventListener(
     }
   };
 
-  domTarget.addEventListener(eventType, handler, _useCapture);
+  domTarget.addEventListener(eventType, handler, useCapture);
   _listeners.set(listenerId, { target: domTarget, eventType, handler });
 
   return listenerId;

@@ -2,38 +2,11 @@
  * DOM glue — implements the `tairitsu-browser:dom` WIT import interfaces.
  *
  * Each function here maps 1:1 to a WIT function in `wit/dom.wit`.
- * Node handles are the underlying browser `Element` / `Text` / `Node`
- * objects stored in a handle table.
- *
- * Status: Phase 0 stubs — core operations implemented.
+ * Node handles are underlying browser `Element` / `Text` / `Node`
+ * objects stored in a shared handle table.
  */
 
-// ---------------------------------------------------------------------------
-// Handle table
-// ---------------------------------------------------------------------------
-
-let _nextHandle = 1n;
-const _nodes = new Map<bigint, Node>();
-
-function registerNode(node: Node): bigint {
-  const handle = _nextHandle++;
-  _nodes.set(handle, node);
-  return handle;
-}
-
-function getNode(handle: bigint): Node {
-  const node = _nodes.get(handle);
-  if (!node) throw new Error(`DOM node handle ${handle} not found`);
-  return node;
-}
-
-function getElement(handle: bigint): Element {
-  const node = getNode(handle);
-  if (!(node instanceof Element)) {
-    throw new Error(`DOM handle ${handle} is not an Element`);
-  }
-  return node;
-}
+import { getElement, getNode, registerNode } from "./handle-table.js";
 
 // ---------------------------------------------------------------------------
 // WIT interface: node

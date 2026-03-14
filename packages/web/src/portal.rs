@@ -15,7 +15,6 @@ use std::rc::Rc;
 #[cfg(feature = "web")]
 pub struct PortalRenderer {
     platform: WebPlatform,
-    manager: PortalManager,
     portal_containers: Rc<RefCell<HashMap<String, web_sys::Element>>>,
     mask_elements: Rc<RefCell<HashMap<String, web_sys::Element>>>,
 }
@@ -25,10 +24,9 @@ use std::collections::HashMap;
 
 #[cfg(feature = "web")]
 impl PortalRenderer {
-    pub fn new(platform: WebPlatform, manager: PortalManager) -> Self {
+    pub fn new(platform: WebPlatform, _manager: PortalManager) -> Self {
         Self {
             platform,
-            manager,
             portal_containers: Rc::new(RefCell::new(HashMap::new())),
             mask_elements: Rc::new(RefCell::new(HashMap::new())),
         }

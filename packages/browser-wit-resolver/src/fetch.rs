@@ -6,7 +6,9 @@
 
 use std::collections::HashMap;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
+#[cfg(not(feature = "fetch"))]
+use anyhow::bail;
 #[cfg(feature = "fetch")]
 use tracing::debug;
 

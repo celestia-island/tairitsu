@@ -9,6 +9,7 @@ impl ClassesBuilder {
         }
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn add(mut self, class: &str) -> Self {
         if !class.is_empty() {
             self.classes.push(class.to_string());

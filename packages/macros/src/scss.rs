@@ -161,8 +161,8 @@ mod tests {
             }
         "#;
 
-        let (css1, map1) = compile_scss_with_hashing(scss, Some("component1"));
-        let (css2, map2) = compile_scss_with_hashing(scss, Some("component2"));
+        let (_css1, map1) = compile_scss_with_hashing(scss, Some("component1"));
+        let (_css2, map2) = compile_scss_with_hashing(scss, Some("component2"));
 
         assert_ne!(map1.get("button").unwrap(), map2.get("button").unwrap());
     }

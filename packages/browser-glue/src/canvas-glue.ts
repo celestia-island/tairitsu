@@ -1,8 +1,8 @@
 /**
  * Canvas glue — implements the `tairitsu-browser:canvas` WIT import interfaces.
- *
- * Status: Phase 0 — all Canvas 2D drawing primitives implemented.
  */
+
+import { getCanvasElement } from "./handle-table.js";
 
 // ---------------------------------------------------------------------------
 // Context handle table
@@ -17,21 +17,12 @@ function getCtx(handle: bigint): CanvasRenderingContext2D {
   return ctx;
 }
 
-// We re-use the dom-glue handle table for canvas element nodes.
-// NOTE: The `__tairitsu_node_*` pattern is also used in events-glue.ts.
-// In Phase 3 this will be consolidated into a shared cross-module table.
-function getCanvas(nodeHandle: bigint): HTMLCanvasElement {
-  const el = (globalThis as Record<string, unknown>)[`__tairitsu_node_${nodeHandle}`];
-  if (el instanceof HTMLCanvasElement) return el;
-  throw new Error(`Node handle ${nodeHandle} is not an HTMLCanvasElement`);
-}
-
 // ---------------------------------------------------------------------------
 // WIT interface: canvas2d
 // ---------------------------------------------------------------------------
 
 export function getContext(canvas: bigint): bigint {
-  const el = getCanvas(canvas);
+  const el = getCanvasElement(canvas);
   const ctx = el.getContext("2d");
   if (!ctx) throw new Error("Failed to obtain 2D rendering context");
   const handle = _nextCtxHandle++;
