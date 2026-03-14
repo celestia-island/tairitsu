@@ -2,7 +2,7 @@
 
 ## Initiative Overview
 
-**Status**: ✅ All mandatory phases complete — verification gate green  
+**Status**: ✅ All phases complete — verification gate green
 **Goal**: Decouple browser/W3C API bindings from `wasm-bindgen` version lockstep by using WIT worlds as the protocol framework. The build tooling (`tairitsu` CLI / `build.rs`) resolves versioned WIT packages, fetches declarations from the cloud, caches them locally under `target/tairitsu-wit`, and supports fully-offline builds from cache.
 
 ---
@@ -207,20 +207,12 @@ just clean-idl-cache   # remove cached IDL files
 
 ### Phase 4 — Migration & Compatibility (optional future work)
 >
-> **Status**: Resolver/cache/pipeline baseline is complete; migration polish tasks remain optional enhancements.
+> **Status**: ✅ Complete — all three tasks delivered and verification gate green.
 
-- [x] ~~Ensure `wasm-bindgen` version can be bumped independently of WIT world version~~ → ✅ Already decoupled via WIT abstraction layer
-
-<details>
-<summary>Optional Future Enhancements (click to expand)</summary>
-
-These tasks are not required for the current architecture to function:
-
-- [ ] Feature flag `wit-bindings` in `tairitsu-web` (not yet needed, both approaches coexist)
-- [ ] Migration guide from `web-sys` to WIT-generated bindings (when requested by users)
-- [ ] Extended versioning documentation (current documentation sufficient)
-
-</details>
+- [x] `wit-bindings` feature flag in `tairitsu-web` — optional dep on `wit-bindgen ^0.50`; `WitPlatform` / `WitElement` / `WitEvent` compiled under `#[cfg(feature = "wit-bindings")]`; full `Platform` impl gated to `target_family = "wasm"` so native `cargo clippy --all-features` stays clean
+- [x] Migration guide: `docs/migration.md` — when to use `web` vs `wit-bindings`, step-by-step Cargo / target / instantiation changes, compatibility notes
+- [x] Extended versioning documentation: `docs/versioning.md` — Rust crate + WIT package version tables, breaking-change policy, `TAIRITSU_WIT_REGISTRY` override, WIT dependency cache triggers, TS browser-glue versioning, independence from `wasm-bindgen`
+- [x] ~~Ensure `wasm-bindgen` version can be bumped independently of WIT world version~~ → ✅ Now formally documented in `docs/versioning.md §5`
 
 ---
 
