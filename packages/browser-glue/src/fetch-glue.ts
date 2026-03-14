@@ -136,6 +136,7 @@ export function pollFetch(
 }
 
 export function cancelFetch(handle: bigint): void {
-  // AbortController support planned for Phase 2.
+  // This removes the handle entry; the browser Fetch API itself does not
+  // currently expose an AbortController from this path.
   _fetchHandles.delete(handle);
 }
