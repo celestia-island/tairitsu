@@ -1,6 +1,6 @@
 # 从 `web` 迁移到 `wit-bindings`
 
-> 本页是简体中文入口，完整步骤与细节参考根文档 [docs/migration.md](../../migration.md)。
+本页即简体中文基线迁移说明。
 
 ## 迁移目标
 

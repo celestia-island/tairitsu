@@ -1,4 +1,3 @@
-<div align="center"><img src="./docs/logo.png" /></div>
 <h1 align="center">Tairitsu</h1>
 <div align="center">
  <strong>
@@ -54,8 +53,8 @@ This project uses [just](https://github.com/casey/just) as a build system.
 
 ## Documentation
 
-- Multilingual docs root: [docs/README.md](docs/README.md)
 - Simplified Chinese baseline: [docs/zh-CHS/guides/index.md](docs/zh-CHS/guides/index.md)
+- English baseline: [docs/en-US/guides/index.md](docs/en-US/guides/index.md)
 
 ### Run Examples
 
