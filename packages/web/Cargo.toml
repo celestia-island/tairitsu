@@ -34,9 +34,17 @@ web-sys = { version = "^0.3", optional = true, features = [
 js-sys = { version = "^0.3", optional = true }
 wasm-bindgen = { version = "^0.2", optional = true }
 
+# WIT component-model binding generator (wasm32-wasip2 target, optional)
+wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
+
 [features]
 default = []
 web = ["web-sys", "js-sys", "wasm-bindgen"]
+
+# WIT component-model bindings (wasm32-wasip2 target)
+# Enable this feature and target wasm32-wasip2 to use WIT-generated bindings
+# instead of wasm-bindgen/web-sys.
+wit-bindings = ["dep:wit-bindgen"]
 
 [dev-dependencies]
 tokio = { version = "^1", features = ["full"] }
