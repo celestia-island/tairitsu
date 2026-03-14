@@ -1,8 +1,19 @@
-# Components / Packages (ko-KR)
+# Layered Package Overview
 
-This locale is under construction.
+## Layer 1: Foundations
+- runtime
+- macros
+- vdom
 
-Please refer to Simplified Chinese baseline:
+## Layer 2: Protocol and platform
+- web
+- browser-worlds
+- browser-wit-resolver
 
-- ../../zh-CHS/components/index.md
+## Layer 3: Tooling and delivery
+- packager
+- e2e
+- hooks
+- style
+- browser-glue
 

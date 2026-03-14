@@ -1,8 +1,26 @@
-# Tairitsu Documentation (ar-SA)
+# Tairitsu Documentation Hub (English)
 
-This locale is under construction.
+> Generic WASM Component Runtime Engine
 
-For complete content, see Simplified Chinese baseline:
+This is the complete English documentation baseline for Tairitsu.
 
-- ../../zh-CHS/guides/index.md
+## Navigation
+
+### Guides
+- [Quick Start](./quick-start.md)
+- [Workspace Map](./workspace-map.md)
+- [Build, Test, and Release](./build-test-release.md)
+- [Migration from web-sys to WIT bindings](./migration.md)
+- [Glossary](./glossary.md)
+
+### System
+- [System Overview](../system/overview.md)
+- [Runtime and Container Model](../system/runtime.md)
+- [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
+- [Dual Web Backends](../system/web-backends.md)
+- [Versioning Strategy](../system/versioning.md)
+
+### Components
+- [Layered Package Overview](../components/index.md)
+- [Workspace Package List](../components/packages.md)
 

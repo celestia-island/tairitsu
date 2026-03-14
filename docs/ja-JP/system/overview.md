@@ -1,8 +1,3 @@
-# System Overview (ja-JP)
+# システム概要
 
-This locale is under construction.
-
-Please refer to Simplified Chinese baseline:
-
-- ../../zh-CHS/system/overview.md
-
+Tairitsu は WebAssembly Component Model 向けの汎用ランタイムです。

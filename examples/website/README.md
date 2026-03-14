@@ -97,7 +97,7 @@ All documentation and examples are available in multiple languages:
 
 - 🇨🇳 Chinese (zh-CN)
 - 🇺🇸 English (en-US)
-- 🇯🇵 Japanese (ja-JP) - Coming soon
+- 🇯🇵 Japanese (ja-JP)
 
 ## Architecture
 

@@ -22,4 +22,6 @@ docs/
 ## Language status
 
 - `zh-CHS`: complete baseline (source of truth)
-- Other locales: skeleton pages created, pending translation
+- `en-US`: complete baseline
+- `ja-JP` and `zh-CHT`: complete localized sets
+- `fr-FR`, `es-ES`, `ko-KR`, `ru-RU`, `ar-SA`: complete document sets (aligned structure)

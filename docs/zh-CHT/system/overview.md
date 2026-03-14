@@ -1,8 +1,3 @@
-# System Overview (zh-CHT)
+# 系統總覽
 
-This locale is under construction.
-
-Please refer to Simplified Chinese baseline:
-
-- ../../zh-CHS/system/overview.md
-
+Tairitsu 是面向 WebAssembly Component Model 的通用執行階段。
