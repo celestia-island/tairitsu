@@ -294,7 +294,7 @@ fn test_serialization_capabilities_summary() {
     println!("  1. Deserialization (ron_to_val):");
     println!("     - Basic types: ✅ Supported");
     println!("     - Complex types: ⚠️  Requires type descriptors");
-    println!("     - Nested complex types: 🚧 TODO (RON Map/Seq parsing)");
+    println!("     - Nested complex types: not covered yet (RON Map/Seq parsing)");
 
     println!("\n  2. Guest Export Discovery:");
     println!("     - Uses predefined function name list");

@@ -57,16 +57,11 @@ pub enum FixedPosition {
     Right,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum PortalMaskMode {
     None,
     Transparent,
+    #[default]
     SemiTransparent,
     Full,
-}
-
-impl Default for PortalMaskMode {
-    fn default() -> Self {
-        Self::SemiTransparent
-    }
 }

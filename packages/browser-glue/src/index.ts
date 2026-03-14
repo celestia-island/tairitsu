@@ -15,9 +15,9 @@
  * - `fetch-glue`  — satisfies `tairitsu-browser:fetch` import interfaces
  * - `canvas-glue` — satisfies `tairitsu-browser:canvas` import interfaces
  *
- * ## Status (Phase 0)
- * Initial stubs are wired to real browser APIs where straightforward.
- * Full coverage is planned in Phase 3.
+ * ## Status
+ * Core DOM/events/fetch/canvas glue is implemented against browser APIs.
+ * Additional API-surface expansion is tracked in PLAN.md.
  */
 
 export * from "./dom-glue.js";

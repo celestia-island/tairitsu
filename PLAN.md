@@ -3,7 +3,6 @@
 ## Initiative Overview
 
 **Status**: 🚧 In Progress  
-**Last Updated**: 2026-03-06  
 **Goal**: Decouple browser/W3C API bindings from `wasm-bindgen` version lockstep by using WIT worlds as the protocol framework. The build tooling (`tairitsu` CLI / `build.rs`) resolves versioned WIT packages, fetches declarations from the cloud, caches them locally under `target/tairitsu-wit`, and supports fully-offline builds from cache.
 
 ---
@@ -187,16 +186,16 @@ just clean-idl-cache   # remove cached IDL files
 - [x] Generated WIT committed to `packages/browser-worlds/wit/generated/`
 - [x] Phase 2.5 scripts functional and tested
 
-### Phase 3 — Glue Code Generation ✅ (implemented via browser-glue + wit-bindgen)
-> **Status**: Core glue layer implemented in `packages/browser-glue` with real browser API bindings. Can use `wit-bindgen` for additional code generation if needed.
+### Phase 3 — Glue Code Generation 🚧
+> **Status**: Core glue layer in `packages/browser-glue` is integrated and validated for DOM/events/fetch/canvas baseline. Additional browser API-surface expansion remains incremental work.
 
 - [x] ~~Build Rust-side WIT→Rust binding generator~~ → Use `wit-bindgen` CLI (v0.53.1)
-- [x] ~~Build TS-side WIT→TypeScript stub generator~~ → Hand-crafted `browser-glue` provides better performance
-- [x] Wire generated bindings into `tairitsu-web` → `browser-glue` implements core interfaces
-- [x] ~~CI job that validates generated bindings compile~~ → TypeScript compilation validated in dev workflow
+- [x] ~~Build TS-side WIT→TypeScript stub generator~~ → Hand-crafted `browser-glue` is used for host integration
+- [x] Wire generated bindings into `tairitsu-web` → `browser-glue` implements baseline interfaces
+- [x] Validate generated bindings compile in workflow → TypeScript compilation and workspace checks pass
 
 ### Phase 4 — Migration & Compatibility (optional future work)
-> **Status**: All core functionality complete. The following tasks are optional enhancements for future consideration.
+> **Status**: Resolver/cache/pipeline baseline is complete; migration polish tasks remain optional enhancements.
 
 - [x] ~~Ensure `wasm-bindgen` version can be bumped independently of WIT world version~~ → ✅ Already decoupled via WIT abstraction layer
 
@@ -348,94 +347,22 @@ Cache entries include a `manifest.json` with content hashes for integrity verifi
 | Phase 0 | `packages/browser-wit-resolver/`, `packages/browser-worlds/` (0.1.x), `packages/browser-glue/`, packager `wit` subcommand | ✅ |
 | Phase A | `scripts/fetch_webidl.py`, `scripts/generate_browser_wit.py`, `scripts/gen_wit_from_webidl.py`, `packages/browser-worlds/wit/generated/` (0.2.x, 18 domains, 422 interfaces), justfile `wit-*` recipes | ✅ |
 | Phase 1 | Real HTTP fetch in resolver, SHA-256 cache integrity, embedded fallback, CLI wit command | ✅ |
-| Phase 2 | Expanded hand-written WIT coverage (≥ 90% target), missing spec integration | 🔜 |
-| Phase 3 | Rust + TS binding generators, `tairitsu-web` integration, CI validation | 🔜 |
-| Phase 4 | Migration guide, `web-sys` deprecation, versioning docs | 🔜 |
+| Phase 2 | Coverage expansion delivered via generated WIT domains and missing spec integration | ✅ |
+| Phase 3 | Core glue integration validated; incremental API-surface expansion ongoing | 🚧 |
+| Phase 4 | Migration guide, `web-sys` deprecation, versioning docs | ⏸️ Optional |
 
 ---
 
-## Prior Project Status (Archived)
+## Current Verification Baseline
 
-The following phases were completed before this initiative:
-
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1: Core vdom | ✅ Done | vdom, reactive system, Diff/Patch |
-| Phase 2: Web backend | ✅ Done | WebPlatform, DOM ops, event management |
-| Phase 3: Macro system | ✅ Done | rsx!, component, WIT macros |
-| Phase 4: Hooks | ✅ Done | use_state/signal/effect/style/context/ref/animation |
-| Phase 6: E2E test | ✅ Done (80%) | Test framework complete |
-| Phase 7: Packager | ✅ Done (40%) | WASM build, HTML generation |
-
----
-
-*Plan owner: Tairitsu contributors — update inline as work progresses.*  
-*Last updated: 2026-03-06*
-
-
-
----
-
-## ✅ Implementation Complete
-
-All core phases of the WIT-First Browser Interface Architecture have been successfully implemented:
-
-### Completed Phases
-
-| Phase | Description | Status | Key Deliverables |
-|-------|-------------|--------|------------------|
-| **Phase 0** | Foundation | ✅ Complete | Core crates, CLI, initial WIT files |
-| **Phase A** | W3C WebIDL Pipeline | ✅ Complete | Automated WIT generation from W3C specs |
-| **Phase 1** | Resolver & Cache | ✅ Complete | HTTP fetch, SHA-256 verification, embedded fallback |
-| **Phase 2** | WIT Coverage | ✅ Complete | 420 interfaces across 18 domains |
-| **Phase 2.5** | Auto-generation | ✅ Complete | WebIDL → WIT transformation pipeline |
-| **Phase 3** | Glue Code | ✅ Complete | Real browser API bindings in TypeScript |
-| **Phase 4** | Migration | ⏸️ Optional | Future enhancements when needed |
-
-### Architecture Achievements
-
-- **✅ WIT-First Design**: Browser APIs defined via WIT worlds, independent of wasm-bindgen version
-- **✅ Offline Support**: Embedded WIT fallback ensures builds work without network
-- **✅ Automation**: 420 interfaces auto-generated from authoritative W3C WebIDL specs
-- **✅ Type Safety**: Full TypeScript bindings with compile-time checking
-- **✅ Real Implementations**: No mocks, stubs, or TODOs - all code is production-ready
-- **✅ Test Coverage**: All unit and integration tests passing
-
-### Quality Metrics
-
-```
-✅ Compilation:     0 errors
-✅ Tests:          100% passing (17 test suites)
-✅ Clippy:         0 errors
-✅ Code Coverage:  Core modules fully covered
-✅ WIT Interfaces: 420 across 18 domains
-✅ Type Safety:    Full TypeScript validation
-```
-
-### Usage Example
+The following commands are used as the release gate for this plan:
 
 ```bash
-# Fetch WIT packages (uses embedded fallback if offline)
-tairitsu wit fetch --offline
-
-# Verify cache integrity
-tairitsu wit verify
-
-# List cached packages
-tairitsu wit list
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cd packages/browser-glue && npm run typecheck
+cargo test -p tairitsu-e2e
 ```
 
-### Future Enhancements (Optional)
-
-The following are not required for current functionality but can be added if needed:
-
-- CI integration for automatic WebIDL updates
-- Browser environment validation tests
-- Migration documentation for web-sys users
-- Extended versioning documentation
-
----
-
-**Status**: 🎉 **All core implementation complete and production-ready!**
-**Last Updated**: 2026-03-06
-**Total Commits**: 4 (c893266, 6cd80b1, 84ea6c1, c3654ec)
+Current focus is to keep these checks green while incrementally expanding browser-world and glue coverage without introducing fallback-only interfaces.

@@ -117,8 +117,10 @@ impl Platform for WebPlatform {
         use wasm_bindgen::closure::Closure;
 
         let handler = Rc::new(RefCell::new(handler));
+        let event_name = event.to_string();
+        let event_name_for_handler = event_name.clone();
         let closure = Closure::wrap(Box::new(move |e: web_sys::Event| {
-            let event_data: Box<dyn EventData> = match event {
+            let event_data: Box<dyn EventData> = match event_name_for_handler.as_str() {
                 "click" | "mousedown" | "mouseup" | "mousemove" => {
                     if let Some(mouse_event) = e.dyn_ref::<web_sys::MouseEvent>() {
                         Box::new(
@@ -139,7 +141,7 @@ impl Platform for WebPlatform {
 
         element
             .0
-            .add_event_listener_with_callback(event, closure.as_ref().unchecked_ref())
+            .add_event_listener_with_callback(&event_name, closure.as_ref().unchecked_ref())
             .unwrap();
 
         let element_id = get_element_id(&element.0);
@@ -148,7 +150,7 @@ impl Platform for WebPlatform {
             listeners
                 .entry(element_id)
                 .or_insert_with(HashMap::new)
-                .insert(event.to_string(), closure_js);
+                .insert(event_name, closure_js);
         });
 
         closure.forget();

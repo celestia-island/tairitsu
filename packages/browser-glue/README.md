@@ -24,7 +24,7 @@ npm run build          # compile TypeScript → dist/ with SWC
 npm run typecheck      # type-check without emitting
 ```
 
-## Status (Phase 0)
+## Status
 
-Initial stubs are wired to real browser APIs where straightforward.
-See `PLAN.md` for the full Phase 2/3 implementation roadmap.
+Core DOM/events/fetch/canvas glue maps to browser APIs and is ready for host integration.
+See `PLAN.md` for incremental API-surface expansion.

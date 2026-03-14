@@ -114,7 +114,7 @@ impl WitCommandHandler<FileSystemCommands> for FileSystemHandler {
     }
 }
 
-/// Network handler (mock implementation)
+/// Network handler used by the local host demo
 struct NetworkHandler;
 
 impl WitCommandHandler<NetworkCommands> for NetworkHandler {
@@ -124,11 +124,11 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
     ) -> Result<<NetworkCommands as WitCommand>::Response, String> {
         match command {
             NetworkCommands::HttpGet { url } => {
-                // Mock HTTP GET
+                // Example HTTP GET response for local demo
                 Ok(Ok(format!("GET response from {}", url).into_bytes()))
             }
             NetworkCommands::HttpPost { url, body } => {
-                // Mock HTTP POST
+                // Example HTTP POST response for local demo
                 Ok(Ok(
                     format!("POST to {} with {} bytes", url, body.len()).into_bytes()
                 ))

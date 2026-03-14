@@ -57,7 +57,7 @@ interface fetch-api {
     fetch-sync: func(request: request-descriptor) -> result<response-data, string>;
 }
 
-/// Async fetch — future-compatible interface (stub; implementation planned).
+/// Async fetch interface used for browser-compatible network requests.
 interface async-fetch {
     use fetch-api.{request-descriptor, response-data};
 

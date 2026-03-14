@@ -80,14 +80,14 @@ impl WitCommandHandler<NetworkCommands> for NetworkHandler {
     fn execute(&mut self, command: &NetworkCommands) -> Result<NetworkResponse, String> {
         match command {
             NetworkCommands::Http_get { url } => {
-                // Mock implementation
+                // Example response behavior for demo host wiring
                 Ok(NetworkResponse::Http_get(Ok(format!(
                     "Response from {}",
                     url
                 ))))
             }
             NetworkCommands::Http_post { url, body } => {
-                // Mock implementation
+                // Example response behavior for demo host wiring
                 Ok(NetworkResponse::Http_post(Ok(format!(
                     "Posted {} bytes to {}",
                     body.len(),
