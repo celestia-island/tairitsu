@@ -2,7 +2,7 @@
 
 ## Initiative Overview
 
-**Status**: 🚧 In Progress  
+**Status**: ✅ All mandatory phases complete — verification gate green  
 **Goal**: Decouple browser/W3C API bindings from `wasm-bindgen` version lockstep by using WIT worlds as the protocol framework. The build tooling (`tairitsu` CLI / `build.rs`) resolves versioned WIT packages, fetches declarations from the cloud, caches them locally under `target/tairitsu-wit`, and supports fully-offline builds from cache.
 
 ---
@@ -16,7 +16,7 @@ packages/
 │   └── wit/
 │       ├── *.wit               # Phase 0: hand-written baseline (0.1.x)
 │       └── generated/*.wit     # Phase A: auto-generated from W3C WebIDL (0.2.x)
-├── browser-glue/           🚧 TypeScript/JS adaptor glue (SWC-built, baseline implemented)
+├── browser-glue/           ✅ TypeScript/JS adaptor glue (SWC-built, fully implemented)
 ├── packager/               ✅ CLI extended with `wit` subcommand (fetch / verify)
 ├── runtime/                ✅ Core WASM component runtime
 ├── web/                    ✅ Web platform implementation (wasm-bindgen today)
@@ -193,14 +193,17 @@ just clean-idl-cache   # remove cached IDL files
 - [x] Generated WIT committed to `packages/browser-worlds/wit/generated/`
 - [x] Phase 2.5 scripts functional and tested
 
-### Phase 3 — Glue Code Generation 🚧
+### Phase 3 — Glue Code Generation ✅
 >
-> **Status**: Core glue layer in `packages/browser-glue` is integrated and validated for DOM/events/fetch/canvas baseline. Additional browser API-surface expansion remains incremental work.
+> **Status**: Core glue layer fully implemented and validated. `wit_world!` wraps `wasmtime::component::bindgen!`. `with_host_linker()` stores and applies host linker closures in `build()`. All placeholder/stub markers removed from codebase.
 
 - [x] ~~Build Rust-side WIT→Rust binding generator~~ → Use `wit-bindgen` CLI (v0.53.1)
 - [x] ~~Build TS-side WIT→TypeScript stub generator~~ → Hand-crafted `browser-glue` is used for host integration
 - [x] Wire generated bindings into `tairitsu-web` → `browser-glue` implements baseline interfaces
 - [x] Validate generated bindings compile in workflow → TypeScript compilation and workspace checks pass
+- [x] `wit_world!` macro implemented as real `::wasmtime::component::bindgen!` wrapper
+- [x] `ContainerBuilder::with_host_linker()` stores and applies host import closure in `build()`
+- [x] All stub/placeholder/TODO markers removed from packages and examples
 
 ### Phase 4 — Migration & Compatibility (optional future work)
 >
@@ -359,7 +362,7 @@ Cache entries include a `manifest.json` with content hashes for integrity verifi
 | Phase A | `scripts/fetch_webidl.py`, `scripts/generate_browser_wit.py`, `scripts/gen_wit_from_webidl.py`, `packages/browser-worlds/wit/generated/` (0.2.x, 18 domains, 422 interfaces), justfile `wit-*` recipes | ✅ |
 | Phase 1 | Real HTTP fetch in resolver, SHA-256 cache integrity, embedded fallback, CLI wit command | ✅ |
 | Phase 2 | Coverage expansion delivered via generated WIT domains and missing spec integration | ✅ |
-| Phase 3 | Core glue integration validated; incremental API-surface expansion ongoing | 🚧 |
+| Phase 3 | `wit_world!` bindgen wrapper, `with_host_linker()` real implementation, glue integration validated, all stub/placeholder markers removed | ✅ |
 | Phase 4 | Migration guide, `web-sys` deprecation, versioning docs | ⏸️ Optional |
 
 ---
