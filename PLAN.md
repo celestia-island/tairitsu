@@ -42,6 +42,7 @@ target/tairitsu-wit/                    (git-ignored)
 ## Phased Work Plan
 
 ### Phase 0 — Foundation ✅
+
 - [x] Replace `PLAN.md` with this document
 - [x] Create `packages/browser-wit-resolver` crate — resolver, cache, fetch stub
 - [x] Create `packages/browser-worlds` crate — initial WIT world files (dom, events, fetch, canvas, browser-full)
@@ -50,6 +51,7 @@ target/tairitsu-wit/                    (git-ignored)
 - [x] Update root `Cargo.toml` workspace members
 
 ### Phase A — W3C WebIDL Source Pipeline ✅
+>
 > _Goal: establish a reproducible, data-driven WIT generation pipeline from authoritative W3C/WHATWG specifications._
 
 - [x] Identify and confirm accessible W3C WebIDL data source: `w3c/webref` (`ed/idl/*.idl` — confirmed accessible via raw GitHub CDN)
@@ -86,6 +88,7 @@ target/tairitsu-wit/                    (git-ignored)
 **Specs not yet fetched** (add to extend coverage): `fileapi`, `mediacapture-output`, `webmidi`, `payment-request`, `credential-management`, `wasm-js-api`, `speech-api`, `screen-capture`
 
 ### Phase 1 — Resolver & Cache ✅
+
 - [x] Implement real HTTP fetch in `browser-wit-resolver::fetch` (reqwest, with timeout)
 - [x] Implement cache integrity check (SHA-256 of WIT content vs. manifest)
 - [x] Add offline-mode detection: if network unavailable, fall back to cache; hard error if cache also absent
@@ -94,6 +97,7 @@ target/tairitsu-wit/                    (git-ignored)
 - [x] CLI `wit` subcommand fully functional (fetch, verify, list)
 
 ### Phase 2 — WIT World Coverage Expansion ✅ (via Phase A/2.5 automation)
+>
 > **Note**: Phase 2 tasks were intended to expand hand-written WIT files, but Phase A and Phase 2.5 have achieved the same goals through automation. The generated WIT files (0.2.x) provide broader coverage than hand-written baseline (0.1.x).
 
 - [x] ~~Expand hand-written `dom.wit` to align with Phase A generated coverage~~ → Covered by `generated/dom.wit` (903 lines, 34 interfaces)
@@ -118,11 +122,12 @@ After online verification, the authoritative machine-readable source is:
 
 | Source | URL | Notes |
 |--------|-----|-------|
-| **W3C WebRef** (primary) | https://github.com/w3c/webref | `curated` branch; auto-updated every 6 h; covers all browser-spec IDL |
+| **W3C WebRef** (primary) | <https://github.com/w3c/webref> | `curated` branch; auto-updated every 6 h; covers all browser-spec IDL |
 | IDL file format | `https://raw.githubusercontent.com/w3c/webref/curated/ed/idl/<spec>.idl` | Accessibility confirmed ✅ |
 | Coverage | dom, fetch, html, websockets, streams, service-workers, file-api, indexed-db, geolocation, web-animations, observers … | 23+ configured specs |
 
 **Why W3C WebRef?**
+
 - Maintained by W3C Devices and Sensors WG and browser-specs community
 - IDL is curated (validity + consistency guaranteed), not raw
 - Published as `@webref/idl` npm package for broader ecosystem use
@@ -136,6 +141,7 @@ After online verification, the authoritative machine-readable source is:
 | `scripts/webidl_to_wit.py` | Parse WebIDL, apply handle-pattern transformation → `packages/browser-worlds/wit/generated/*.wit` |
 
 **IDL → WIT transformation rules:**
+
 - `interface X` with instance methods → `interface x { type x-handle = u64; … }` (opaque handle pattern)
 - Constructors → `new-x: func(…) -> result<x-handle, string>`
 - `attribute T foo` → `foo: func(handle) -> T` getter (+ setter if non-readonly)
@@ -174,6 +180,7 @@ just clean-idl-cache   # remove cached IDL files
 ```
 
 #### Checklist
+
 - [x] Identify and verify W3C WebRef as primary authoritative IDL data source
 - [x] Implement `scripts/fetch_w3c_idl.py` — downloads 23 specs from W3C WebRef
 - [x] Implement `scripts/webidl_to_wit.py` — WebIDL parser + WIT emitter (10 target specs)
@@ -187,6 +194,7 @@ just clean-idl-cache   # remove cached IDL files
 - [x] Phase 2.5 scripts functional and tested
 
 ### Phase 3 — Glue Code Generation 🚧
+>
 > **Status**: Core glue layer in `packages/browser-glue` is integrated and validated for DOM/events/fetch/canvas baseline. Additional browser API-surface expansion remains incremental work.
 
 - [x] ~~Build Rust-side WIT→Rust binding generator~~ → Use `wit-bindgen` CLI (v0.53.1)
@@ -195,6 +203,7 @@ just clean-idl-cache   # remove cached IDL files
 - [x] Validate generated bindings compile in workflow → TypeScript compilation and workspace checks pass
 
 ### Phase 4 — Migration & Compatibility (optional future work)
+>
 > **Status**: Resolver/cache/pipeline baseline is complete; migration polish tasks remain optional enhancements.
 
 - [x] ~~Ensure `wasm-bindgen` version can be bumped independently of WIT world version~~ → ✅ Already decoupled via WIT abstraction layer
@@ -217,12 +226,14 @@ These tasks are not required for the current architecture to function:
 ### Data Source
 
 The primary source for browser interface definitions is **[w3c/webref](https://github.com/w3c/webref)**, a W3C-maintained repository that:
+
 - Automatically crawls W3C and WHATWG editor's drafts daily via the [Reffy](https://github.com/nicehash/reffy) tool
 - Provides machine-readable WebIDL under `ed/idl/<spec>.idl`
 - Covers: DOM, HTML, Fetch, Streams, WebSockets, WebGL, WebRTC, Web Crypto, CSS OM, Service Workers, Media Capture, and 40+ more specs
 - Licensed: MIT / W3C Software License
 
 **Secondary / future sources** considered:
+
 - `@webref/idl` npm package — same data, npm distribution
 - MDN browser-compat-data — for browser compatibility information (Phase 3+)
 - W3C Bikeshed / WebIDL validator — for validation only
