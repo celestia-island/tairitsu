@@ -52,6 +52,11 @@ A WebAssembly runtime for running component-model based WASM modules.
 
 This project uses [just](https://github.com/casey/just) as a build system.
 
+## Documentation
+
+- Multilingual docs root: [docs/README.md](docs/README.md)
+- Simplified Chinese baseline: [docs/zh-CHS/guides/index.md](docs/zh-CHS/guides/index.md)
+
 ### Run Examples
 
 Tairitsu provides several examples demonstrating different approaches to WASM integration. Run them using `just`:

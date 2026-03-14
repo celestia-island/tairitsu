@@ -22,7 +22,7 @@ tracing = "^0.1"
 # Web APIs (only for wasm32 target)
 web-sys = { version = "^0.3", optional = true, features = [
   "Window",
-  "Document", 
+  "Document",
   "Element",
   "HtmlElement",
   "Event",

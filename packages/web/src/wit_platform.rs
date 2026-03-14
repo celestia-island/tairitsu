@@ -114,9 +114,7 @@ mod wasm_impl {
     use std::cell::RefCell;
     use std::collections::HashMap;
 
-    use tairitsu_vdom::{
-        EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform,
-    };
+    use tairitsu_vdom::{EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform};
 
     use super::{WitElement, WitEvent, WitPlatform};
 
@@ -166,9 +164,7 @@ mod wasm_impl {
     /// appropriately typed [`EventData`].
     pub(super) struct BrowserComponent;
 
-    impl bindings::exports::tairitsu_browser::full::event_callbacks::Guest
-        for BrowserComponent
-    {
+    impl bindings::exports::tairitsu_browser::full::event_callbacks::Guest for BrowserComponent {
         fn on_mouse_event(
             listener_id: u64,
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
@@ -239,16 +235,14 @@ mod wasm_impl {
         type Event = WitEvent;
 
         fn create_element(&self, tag: &str) -> Self::Element {
-            let handle =
-                bindings::tairitsu_browser::full::document::create_element(tag)
-                    .expect("WIT create-element failed");
+            let handle = bindings::tairitsu_browser::full::document::create_element(tag)
+                .expect("WIT create-element failed");
             WitElement(handle)
         }
 
         fn create_text_node(&self, text: &str) -> Self::Element {
-            let handle =
-                bindings::tairitsu_browser::full::document::create_text_node(text)
-                    .expect("WIT create-text-node failed");
+            let handle = bindings::tairitsu_browser::full::document::create_text_node(text)
+                .expect("WIT create-text-node failed");
             WitElement(handle)
         }
 
@@ -273,10 +267,8 @@ mod wasm_impl {
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            bindings::tairitsu_browser::full::style::set_style_property(
-                element.0, name, value,
-            )
-            .expect("WIT set-style-property failed");
+            bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value)
+                .expect("WIT set-style-property failed");
         }
 
         fn set_class(&self, element: &Self::Element, class: &str) {
@@ -290,13 +282,10 @@ mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
-            let listener_id =
-                bindings::tairitsu_browser::full::event_target::add_event_listener(
-                    element.0,
-                    event,
-                    false,
-                )
-                .expect("WIT add-event-listener failed");
+            let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
+                element.0, event, false,
+            )
+            .expect("WIT add-event-listener failed");
 
             EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
             ELEMENT_LISTENERS.with(|m| {
@@ -306,14 +295,13 @@ mod wasm_impl {
         }
 
         fn remove_event_listener(&self, element: &Self::Element, event: &str) {
-            let listener_id = ELEMENT_LISTENERS
-                .with(|m| m.borrow_mut().remove(&(element.0, event.to_string())));
+            let listener_id =
+                ELEMENT_LISTENERS.with(|m| m.borrow_mut().remove(&(element.0, event.to_string())));
 
             if let Some(id) = listener_id {
                 EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&id));
                 bindings::tairitsu_browser::full::event_target::remove_event_listener(
-                    element.0,
-                    id,
+                    element.0, id,
                 )
                 .expect("WIT remove-event-listener failed");
             }
