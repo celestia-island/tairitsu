@@ -8,25 +8,14 @@ pub fn reactive() -> VNode {
     let _count = use_signal(0);
 
     rsx! {
-        div {
-            class: "page reactive-demo",
-            h1 {
-                "Reactive System Demo"
-            }
+        div { class: "page reactive-demo",
+            h1 { "Reactive System Demo" }
 
-            section {
-                class: "demo-section",
-                h2 {
-                    "use_signal"
-                }
-                p {
-                    "Signals provide fine-grained reactivity"
-                }
-                div {
-                    class: "demo-box",
-                    p {
-                        "Signal state is initialized and ready for interaction"
-                    }
+            section { class: "demo-section",
+                h2 { "use_signal" }
+                p { "Signals provide fine-grained reactivity" }
+                div { class: "demo-box",
+                    p { "Signal state is initialized and ready for interaction" }
                 }
             }
         }

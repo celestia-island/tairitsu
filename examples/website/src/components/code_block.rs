@@ -6,12 +6,9 @@ use tairitsu_vdom::VNode;
 pub fn code_block(code: &str, _language: &str) -> VNode {
     let _ = code;
     rsx! {
-        div {
-            class: "code-block",
+        div { class: "code-block",
             pre {
-                code {
-                    "Code example is rendered by the current website demo skin"
-                }
+                code { "Code example is rendered by the current website demo skin" }
             }
         }
     }
