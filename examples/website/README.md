@@ -67,11 +67,13 @@ python3 -m http.server 3000
 ## Demo Sections
 
 ### 1. Home Page
+
 - Framework introduction
 - Feature overview
 - Quick start guide
 
 ### 2. rsx! Macro Demo
+
 - Basic elements and attributes
 - Dynamic content and expressions
 - Conditional rendering
@@ -79,12 +81,14 @@ python3 -m http.server 3000
 - Event handling
 
 ### 3. Builder System Demo
+
 - **StyleBuilder**: CSS style construction
 - **ClassesBuilder**: Dynamic class management
 - **AnimationBuilder**: Animation configuration
 - Integration with reactive system
 
 ### 4. Reactive System Demo
+
 - **use_state**: Local state management
 - **use_signal**: Reactive signals
 - **use_effect**: Side effects
@@ -102,6 +106,7 @@ All documentation and examples are available in multiple languages:
 ## Architecture
 
 Built with:
+
 - **Frontend**: Tairitsu vdom + hooks + rsx! macro
 - **Build Tool**: tairitsu-packager (replaces trunk)
 - **Configuration**: Cargo.toml metadata (no HTML templates)
