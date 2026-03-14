@@ -11,12 +11,12 @@
 
 ```
 packages/
-├── browser-wit-resolver/   🚧 WIT version resolution, cloud fetch, local cache
-├── browser-worlds/         🚧 WIT world definitions
+├── browser-wit-resolver/   ✅ WIT version resolution, cloud fetch, local cache
+├── browser-worlds/         ✅ WIT world definitions
 │   └── wit/
 │       ├── *.wit               # Phase 0: hand-written baseline (0.1.x)
 │       └── generated/*.wit     # Phase A: auto-generated from W3C WebIDL (0.2.x)
-├── browser-glue/           🚧 TypeScript/JS adaptor glue (SWC-built)
+├── browser-glue/           🚧 TypeScript/JS adaptor glue (SWC-built, baseline implemented)
 ├── packager/               ✅ CLI extended with `wit` subcommand (fetch / verify)
 ├── runtime/                ✅ Core WASM component runtime
 ├── web/                    ✅ Web platform implementation (wasm-bindgen today)
