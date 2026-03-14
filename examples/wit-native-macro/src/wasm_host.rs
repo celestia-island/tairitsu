@@ -119,7 +119,7 @@ fn main() -> Result<()> {
             info!("[Guest Initializer] Would register macro-generated WIT bindings here");
             info!("[Guest Initializer] Would instantiate component here");
 
-            // This is a placeholder - in real usage you'd return an actual GuestInstance
+            // This is a demonstration — in real usage you would return an actual GuestInstance.
             Err(anyhow::anyhow!(
                 "WIT bindings not implemented - this is a demonstration"
             ))
