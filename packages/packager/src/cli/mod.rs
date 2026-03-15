@@ -130,7 +130,10 @@ pub async fn run() -> crate::Result<()> {
                     std::process::exit(1);
                 }
                 _ => {
-                    eprintln!("Unknown target: {}. Use 'wasm', 'component', or 'native'", target);
+                    eprintln!(
+                        "Unknown target: {}. Use 'wasm', 'component', or 'native'",
+                        target
+                    );
                     std::process::exit(1);
                 }
             }

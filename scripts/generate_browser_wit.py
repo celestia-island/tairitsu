@@ -33,6 +33,7 @@ from typing import Dict, List, Optional, Set, Tuple
 # Data model
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class WebIDLParam:
     name: str
@@ -208,6 +209,7 @@ WIT_KEYWORDS: Set[str] = {
 # ---------------------------------------------------------------------------
 # Identifier conversion
 # ---------------------------------------------------------------------------
+
 
 def camel_to_kebab(name: str) -> str:
     """Convert CamelCase / PascalCase / camelCase to kebab-case."""
@@ -461,7 +463,7 @@ def _parse_member(stmt: str) -> Optional[WebIDLMember]:
     if paren_open == -1 or paren_close == -1:
         return None
 
-    params_str = stmt[paren_open + 1 : paren_close]
+    params_str = stmt[paren_open + 1: paren_close]
     before = stmt[:paren_open].strip()
 
     m = re.match(r"(.+)\s+(\w+)$", before)
@@ -549,7 +551,7 @@ def parse_webidl_file(
                 depth -= 1
             j += 1
 
-        body = text[brace_open + 1 : j - 1]
+        body = text[brace_open + 1: j - 1]
         members: List[WebIDLMember] = []
         for stmt in _split_statements(body):
             member = _parse_member(stmt)
@@ -589,7 +591,8 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
         f"/// Source: https://github.com/w3c/webref/tree/main/ed/idl/{iface.source_spec}.idl"
     )
     lines.append(f"interface {wit_name} {{")
-    lines.append(f"    /// Opaque handle to a host-side `{iface.name}` instance.")
+    lines.append(
+        f"    /// Opaque handle to a host-side `{iface.name}` instance.")
     lines.append(f"    type {handle_type} = u64;")
 
     emitted: Set[str] = set()
@@ -816,7 +819,8 @@ def run_generate(
 
     if stats:
         total_ifaces = sum(len(v) for v in domain_interfaces.values())
-        print(f"Parsed {total_ifaces} interfaces across {len(domain_interfaces)} domains:")
+        print(
+            f"Parsed {total_ifaces} interfaces across {len(domain_interfaces)} domains:")
         for dom in DOMAIN_ORDER:
             ifaces = domain_interfaces.get(dom, [])
             specs = domain_specs.get(dom, [])
