@@ -217,7 +217,11 @@ pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
     pb.set_message("Copying static assets...");
     copy_static_public_assets(config)?;
 
-    // Step 6: Generate HTML
+    // Step 6: Prepare wrapper fallback for browsers without native Component API
+    pb.set_message("Preparing component wrapper fallback...");
+    prepare_component_wrapper_fallback(config, &dest_wasm)?;
+
+    // Step 7: Generate HTML
     pb.set_message("Generating HTML...");
     generate_component_html(config)?;
 
@@ -351,6 +355,161 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
+fn prepare_component_wrapper_fallback(
+    config: &Config,
+    component_wasm_path: &std::path::Path,
+) -> crate::Result<()> {
+    write_component_wrapper_loader(config, component_wasm_path)?;
+
+    if !try_generate_component_wrapper(config, component_wasm_path)? {
+        eprintln!(
+            "⚠  Component wrapper was not generated automatically.\n   \
+             Browsers without native WebAssembly Component API will still fail.\n   \
+             Install JCO and run one of the following in the app directory:\n   \
+             1) npx @bytecodealliance/jco transpile {} -o component-wrapper\n   \
+             2) jco transpile {} -o component-wrapper",
+            component_wasm_path.display(),
+            component_wasm_path.display()
+        );
+    }
+
+    Ok(())
+}
+
+fn write_component_wrapper_loader(
+    config: &Config,
+    component_wasm_path: &std::path::Path,
+) -> crate::Result<()> {
+    let wasm_stem = component_wasm_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "Failed to derive wasm file stem for wrapper loader".to_string(),
+            )
+        })?;
+
+    let loader = format!(
+        r#"export async function instantiateWithWrapper(imports = {{}}) {{
+    const candidates = [
+        './component-wrapper/index.js',
+        './component-wrapper/{wasm_stem}.js',
+        './{wasm_stem}.js',
+    ];
+
+    let lastError = null;
+
+    for (const path of candidates) {{
+        try {{
+            const mod = await import(path);
+            const instantiate = mod.instantiate || mod.default || mod.init;
+            if (typeof instantiate !== 'function') {{
+                // Some transpilers emit self-initializing modules (top-level await)
+                // with no explicit instantiate export. Import success means ready.
+                return mod;
+            }}
+
+            // Try common transpiler signatures in order.
+            try {{
+                return await instantiate(imports);
+            }} catch (_e1) {{}}
+
+            try {{
+                return await instantiate(async (modulePath) => {{
+                    const resolved = new URL(modulePath, import.meta.url);
+                    const response = await fetch(resolved);
+                    if (!response.ok) {{
+                        throw new Error(`Failed to fetch core module: ${{modulePath}}`);
+                    }}
+                    return WebAssembly.compileStreaming(response);
+                }}, imports);
+            }} catch (_e2) {{}}
+        }} catch (e) {{
+            lastError = e;
+        }}
+    }}
+
+    throw new Error(
+        'Component wrapper not found or could not be initialized. '
+        + 'Expected a transpiled wrapper under ./component-wrapper/. '
+        + (lastError ? `Last error: ${{lastError}}` : '')
+    );
+}}
+"#,
+        wasm_stem = wasm_stem
+    );
+
+    let loader_path = config.build.output_dir.join("component-wrapper-loader.js");
+    std::fs::write(loader_path, loader)?;
+    Ok(())
+}
+
+fn try_generate_component_wrapper(
+    config: &Config,
+    component_wasm_path: &std::path::Path,
+) -> crate::Result<bool> {
+    let wrapper_dir = config.build.output_dir.join("component-wrapper");
+    std::fs::create_dir_all(&wrapper_dir)?;
+
+    let wasm_stem = component_wasm_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .ok_or_else(|| {
+            crate::TairitsuPackagerError::BuildError(
+                "Failed to derive wasm file stem for wrapper detection".to_string(),
+            )
+        })?;
+
+    if wrapper_dir.join("index.js").exists()
+        || wrapper_dir.join(format!("{}.js", wasm_stem)).exists()
+    {
+        return Ok(true);
+    }
+
+    let attempts: [(&str, Vec<String>); 2] = [
+        (
+            "jco",
+            vec![
+                "transpile".to_string(),
+                component_wasm_path.display().to_string(),
+                "-o".to_string(),
+                wrapper_dir.display().to_string(),
+            ],
+        ),
+        (
+            "npx",
+            vec![
+                "--yes".to_string(),
+                "@bytecodealliance/jco".to_string(),
+                "transpile".to_string(),
+                component_wasm_path.display().to_string(),
+                "-o".to_string(),
+                wrapper_dir.display().to_string(),
+            ],
+        ),
+    ];
+
+    for (bin, args) in attempts {
+        let mut cmd = std::process::Command::new(bin);
+        cmd.args(&args);
+        cmd.current_dir(&config.build.output_dir);
+
+        match cmd.status() {
+            Ok(status) if status.success() => {
+                return Ok(true);
+            }
+            Ok(_status) => {
+                continue;
+            }
+            Err(_e) => {
+                continue;
+            }
+        }
+    }
+
+    Ok(false)
+}
+
 fn generate_component_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
@@ -378,9 +537,17 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
 </head>
 <body class="{body_class}">
     <div id="app">Loading...</div>
+        <script type="importmap">
+        {{
+            "imports": {{
+                "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/"
+            }}
+        }}
+        </script>
     <script type="module">
         // Load browser API glue (WIT interface implementations)
         import './browser-glue/index.js';
+        import {{ instantiateWithWrapper }} from './component-wrapper-loader.js';
         // Load wasm bytes and detect whether this is a Component or core module
         const response = await fetch('./{wasm_file}');
         const bytes = await response.arrayBuffer();
@@ -392,10 +559,8 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
 
         if (isComponent) {{
             if (typeof WebAssembly.Component !== 'function') {{
-                throw new Error(
-                    'This browser does not support WebAssembly Component Model yet. '
-                    + 'Please use a runtime/browser build with Component API support.'
-                );
+                await instantiateWithWrapper({{}});
+                return;
             }}
             const component = new WebAssembly.Component(bytes);
             await WebAssembly.instantiate(component, {{}});
