@@ -585,6 +585,47 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         // Load browser API glue (WIT interface implementations)
         import './browser-glue/index.js';
         import {{ instantiateWithWrapper }} from './component-wrapper-loader.js';
+
+        const appRoot = document.getElementById('app');
+        const setAppStatus = (text) => {{
+            if (!appRoot) return;
+            const current = (appRoot.textContent || '').trim();
+            if (current === 'Loading...') {{
+                appRoot.textContent = text;
+            }}
+        }};
+
+        const clearLoadingIfUnchanged = () => {{
+            if (!appRoot) return;
+            const current = (appRoot.textContent || '').trim();
+            if (current === 'Loading...') {{
+                appRoot.textContent = '';
+            }}
+        }};
+
+        const tryInvokeBootExports = async (result) => {{
+            const targets = [
+                result,
+                result && result.instance,
+                result && result.exports,
+                result && result.instance && result.instance.exports,
+            ].filter(Boolean);
+
+            for (const target of targets) {{
+                const exportsObj = target.exports || target;
+                if (!exportsObj || typeof exportsObj !== 'object') continue;
+
+                for (const [name, value] of Object.entries(exportsObj)) {{
+                    if (typeof value !== 'function') continue;
+                    if (!/^(run|start|init|main)$/i.test(name)) continue;
+                    await value();
+                    return true;
+                }}
+            }}
+
+            return false;
+        }};
+
         // Load wasm bytes and detect whether this is a Component or core module
         const response = await fetch('./{wasm_file}');
         const bytes = await response.arrayBuffer();
@@ -594,16 +635,27 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         const isComponent = isWasm &&
             magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
 
+        let bootInvoked = false;
+
         if (isComponent) {{
             if (typeof WebAssembly.Component !== 'function') {{
-                await instantiateWithWrapper({{}});
+                const wrapperResult = await instantiateWithWrapper({{}});
+                bootInvoked = await tryInvokeBootExports(wrapperResult);
             }} else {{
                 const component = new WebAssembly.Component(bytes);
-                await WebAssembly.instantiate(component, {{}});
+                const componentResult = await WebAssembly.instantiate(component, {{}});
+                bootInvoked = await tryInvokeBootExports(componentResult);
             }}
         }} else {{
             const module = await WebAssembly.compile(bytes);
-            await WebAssembly.instantiate(module, {{}});
+            const moduleResult = await WebAssembly.instantiate(module, {{}});
+            bootInvoked = await tryInvokeBootExports(moduleResult);
+        }}
+
+        if (!bootInvoked) {{
+            setAppStatus('Component initialized (no exported run/start entry found).');
+        }} else {{
+            clearLoadingIfUnchanged();
         }}
     </script>
 </body>
