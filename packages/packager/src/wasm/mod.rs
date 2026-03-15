@@ -381,9 +381,28 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
     <script type="module">
         // Load browser API glue (WIT interface implementations)
         import './browser-glue/index.js';
-        // Compile and instantiate the Tairitsu WASM component
-        const _module = await WebAssembly.compileStreaming(fetch('./{wasm_file}'));
-        await WebAssembly.instantiate(_module, {{}});
+        // Load wasm bytes and detect whether this is a Component or core module
+        const response = await fetch('./{wasm_file}');
+        const bytes = await response.arrayBuffer();
+        const magic = new Uint8Array(bytes, 0, 8);
+        const isWasm =
+            magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
+        const isComponent = isWasm &&
+            magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
+
+        if (isComponent) {{
+            if (typeof WebAssembly.Component !== 'function') {{
+                throw new Error(
+                    'This browser does not support WebAssembly Component Model yet. '
+                    + 'Please use a runtime/browser build with Component API support.'
+                );
+            }}
+            const component = new WebAssembly.Component(bytes);
+            await WebAssembly.instantiate(component, {{}});
+        }} else {{
+            const module = await WebAssembly.compile(bytes);
+            await WebAssembly.instantiate(module, {{}});
+        }}
     </script>
 </body>
 </html>"#,
