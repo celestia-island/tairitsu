@@ -4,7 +4,8 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rerun-if-changed=Cargo.toml");
 
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()));
+    let manifest_dir =
+        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()));
     let cargo_toml = manifest_dir.join("Cargo.toml");
 
     let output_dir = resolve_output_dir(&cargo_toml)
