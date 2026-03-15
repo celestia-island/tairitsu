@@ -363,9 +363,18 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
-    // Build WASM first
-    println!("[1/3] Building WASM...");
-    build(config, false)?;
+    // Build first, following project target preference.
+    println!("[1/3] Building project artifacts...");
+    match config.build.target.as_str() {
+        "component" => build_component(config, false)?,
+        "wasm" => build(config, false)?,
+        other => {
+            return Err(crate::TairitsuPackagerError::BuildError(format!(
+                "Unknown build target '{}'. Use 'wasm' or 'component'.",
+                other
+            )));
+        }
+    }
 
     let dist_dir = config.build.output_dir.clone();
 
