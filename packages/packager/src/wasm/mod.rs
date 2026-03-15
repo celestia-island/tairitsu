@@ -379,9 +379,11 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
 <body class="{body_class}">
     <div id="app">Loading...</div>
     <script type="module">
-        // Tairitsu component loader — powered by browser-glue
-        import {{ instantiate }} from './browser-glue/index.js';
-        await instantiate(async () => WebAssembly.compileStreaming(fetch('./{wasm_file}')));
+        // Load browser API glue (WIT interface implementations)
+        import './browser-glue/index.js';
+        // Compile and instantiate the Tairitsu WASM component
+        const _module = await WebAssembly.compileStreaming(fetch('./{wasm_file}'));
+        await WebAssembly.instantiate(_module, {{}});
     </script>
 </body>
 </html>"#,

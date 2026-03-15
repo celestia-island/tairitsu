@@ -25,14 +25,4 @@ export * from "./events-glue.js";
 export * from "./fetch-glue.js";
 export * from "./canvas-glue.js";
 
-/**
- * Minimal component instantiation helper used by packager-generated HTML.
- */
-export async function instantiate(
-	compile: () => Promise<WebAssembly.Module>,
-	imports: WebAssembly.Imports = {}
-) {
-	const module = await compile();
-	const instance = await WebAssembly.instantiate(module, imports);
-	return { module, instance };
-}
+
