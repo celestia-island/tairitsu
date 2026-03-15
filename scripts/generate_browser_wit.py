@@ -705,7 +705,7 @@ def generate_domain_wit(
         "/// Regenerate with: just wit-gen",
         "///",
         "/// Status: auto-generated (Phase A) — review before use in production",
-        f"package tairitsu-browser-gen:{domain}@0.2.0;",
+        f"package tairitsu-browser:{domain}@0.2.0;",
         "",
     ]
 

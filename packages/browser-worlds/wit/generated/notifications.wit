@@ -8,7 +8,7 @@
 /// Regenerate with: just wit-gen
 ///
 /// Status: auto-generated (Phase A) — review before use in production
-package tairitsu-browser-gen:notifications@0.2.0;
+package tairitsu-browser:notifications@0.2.0;
 
 /// WebIDL interface: `Notification`
 /// Inherits: `EventTarget`
