@@ -1,12 +1,12 @@
-use indicatif::{ProgressBar, ProgressStyle};
 use crate::config::Config;
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub fn build(config: &Config, release: bool) -> crate::Result<()> {
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
-            .unwrap()
+            .unwrap(),
     );
 
     // Step 1: Check wasm32-unknown-unknown target
@@ -52,19 +52,25 @@ fn build_wasm(release: bool) -> crate::Result<()> {
     let current_manifest = std::env::current_dir()?.join("Cargo.toml");
     let content = std::fs::read_to_string(&current_manifest)?;
     let manifest: toml::Value = toml::from_str(&content)?;
-    
+
     let pkg_name = manifest
         .get("package")
         .and_then(|p| p.get("name"))
         .and_then(|n| n.as_str())
         .ok_or_else(|| {
             crate::TairitsuPackagerError::BuildError(
-                "Failed to read package name from Cargo.toml".to_string()
+                "Failed to read package name from Cargo.toml".to_string(),
             )
         })?;
-    
+
     let mut cmd = std::process::Command::new("cargo");
-    cmd.args(["build", "--target", "wasm32-unknown-unknown", "--package", pkg_name]);
+    cmd.args([
+        "build",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--package",
+        pkg_name,
+    ]);
 
     if release {
         cmd.arg("--release");
@@ -73,7 +79,7 @@ fn build_wasm(release: bool) -> crate::Result<()> {
     let status = cmd.status()?;
     if !status.success() {
         return Err(crate::TairitsuPackagerError::BuildError(
-            "Cargo build failed".to_string()
+            "Cargo build failed".to_string(),
         ));
     }
 
@@ -91,9 +97,7 @@ fn find_workspace_root() -> crate::Result<std::path::PathBuf> {
         .and_then(|v| v.as_str())
         .map(std::path::PathBuf::from)
         .ok_or_else(|| {
-            crate::TairitsuPackagerError::BuildError(
-                "Failed to find workspace root".to_string()
-            )
+            crate::TairitsuPackagerError::BuildError("Failed to find workspace root".to_string())
         })?;
 
     Ok(workspace_root)
@@ -126,7 +130,7 @@ fn run_wasm_bindgen(config: &Config, release: bool) -> crate::Result<()> {
     let status = cmd.status()?;
     if !status.success() {
         return Err(crate::TairitsuPackagerError::BuildError(
-            "wasm-bindgen failed".to_string()
+            "wasm-bindgen failed".to_string(),
         ));
     }
 
@@ -137,10 +141,10 @@ fn generate_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let js_file = format!("{}.js", pkg_name.replace('-', "_"));
 
-    let title = config.html.title.as_deref()
-        .unwrap_or(&config.package.name);
+    let title = config.html.title.as_deref().unwrap_or(&config.package.name);
 
-    let html_content = format!(r#"<!DOCTYPE html>
+    let html_content = format!(
+        r#"<!DOCTYPE html>
 <html lang="{}">
 <head>
     <meta charset="{}">
@@ -311,11 +315,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
 
-    let title = config
-        .html
-        .title
-        .as_deref()
-        .unwrap_or(pkg_name.as_str());
+    let title = config.html.title.as_deref().unwrap_or(pkg_name.as_str());
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -354,27 +354,23 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
 }
 
 pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result<()> {
-    use axum::{
-        routing::get,
-        Router,
-        response::Html,
-    };
+    use axum::{response::Html, routing::get, Router};
     use std::net::SocketAddr;
     use tower_http::services::ServeDir;
-    
+
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!("  Tairitsu Development Server");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
-    
+
     // Build WASM first
     println!("[1/3] Building WASM...");
     build(config, false)?;
-    
+
     let dist_dir = config.build.output_dir.clone();
-    
+
     println!("\n[2/3] Starting development server...");
-    
+
     // Check if index.html exists
     let index_path = dist_dir.join("index.html");
     let index_content = if index_path.exists() {
@@ -386,15 +382,13 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
             config.package.name.replace('-', "_")
         )
     };
-    
+
     // Setup static file server
     let index_html = index_content.clone();
     let app = Router::new()
-        .route("/", get(move || async move { 
-            Html(index_html.clone())
-        }))
+        .route("/", get(move || async move { Html(index_html.clone()) }))
         .fallback_service(ServeDir::new(dist_dir));
-    
+
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     println!("\n[3/3] Server ready!");
     println!();
@@ -404,7 +398,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
     println!("Press Ctrl+C to stop");
-    
+
     // Open browser if requested
     if open {
         let url = format!("http://localhost:{}", port);
@@ -413,9 +407,9 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
             Err(e) => eprintln!("⚠ Failed to open browser: {}", e),
         }
     }
-    
+
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
-    
+
     Ok(())
 }

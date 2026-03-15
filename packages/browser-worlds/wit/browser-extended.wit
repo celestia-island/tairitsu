@@ -1,3 +1,5 @@
+package tairitsu-browser:full@0.1.0;
+
 /// Extended browser world — Phase 0 + Phase A ("全量") 超级世界。
 ///
 /// 包含 Phase-0 (tairitsu-browser:full@0.1.0) 全部接口以及 Phase-A 下
@@ -16,13 +18,11 @@
 /// - 各子世界通过 include 合并；具名接口若来自不同 package，WIT 工具链
 ///   会以完全限定路径区分，不会产生冲突。
 
-package tairitsu-browser:extended@0.1.0;
-
 /// 全量浏览器世界：合并 Phase 0 与所有 Phase A 域。
 world browser-extended {
     // ── Phase 0 ──────────────────────────────────────────────────────────────
     // 手写核心接口：DOM 节点、文档、窗口、样式、事件目标、Fetch、Canvas 2D
-    include tairitsu-browser:full/browser-full;
+    include browser-full;
 
     // ── Phase A — 自动生成域 (Generated WebIDL domains) ─────────────────────
 

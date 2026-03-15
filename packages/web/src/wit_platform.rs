@@ -146,7 +146,7 @@ mod wasm_impl {
         use super::BrowserComponent;
 
         wit_bindgen::generate!({
-            path: "../browser-worlds/wit",
+            path: "../browser-worlds/wit/browser-full.wit",
             world: "browser-full",
         });
 
