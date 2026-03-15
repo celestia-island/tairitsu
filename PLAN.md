@@ -2,26 +2,25 @@
 
 ## 当前状态
 
-本轮计划项已全部完成，当前无待办阻塞项。
+本计划已全部完成，当前无待办阻塞项。
 
-## 已落地范围
+## 已完成项
 
-- WIT 世界扩展：`browser-extended` 已落地并可被 `wit_bindgen` 正常解析。
-- 核心接口补全：Streams / File API / IndexedDB / Geolocation / Storage 已完成 poll-handle 化。
-- 打包链路补全：packager 已支持 `tairitsu build --target component`。
-- 包名统一：自动生成域已统一为 `tairitsu-browser:*` 命名空间。
-- 文档同步：`web-backends` 已更新为当前真实实现。
-- 编译注入：`packages/web/build.rs` 已注入 `TAIRITSU_DIST_DIR`。
+- browser-extended 世界已落地，WIT 解析与绑定可用。
+- Streams / File API / IndexedDB / Geolocation / Storage 已完成 poll-handle 模式补全。
+- packager 已支持 component 构建路径（wasm32-wasip2 + browser-glue）。
+- WIT 包命名已统一为 tairitsu-browser:*。
+- web 后端文档已与当前实现同步。
+- web 构建阶段已注入 TAIRITSU_DIST_DIR 环境变量。
 
-## 验证结论
+## 自检结果
 
-- `cargo check -p tairitsu-packager` 通过。
-- `cargo check -p tairitsu-web --features wit-bindings --target wasm32-wasip2` 通过。
-- `cargo test -p tairitsu-e2e` 通过（当前无测试用例，0 tests）。
+- cargo check --workspace --all-targets：通过
+- cargo clippy --workspace --all-targets -- -D warnings：通过
+- cargo check -p tairitsu-web --features wit-bindings --target wasm32-wasip2：通过
+- cargo test -p tairitsu-e2e：通过（当前 0 tests）
 
-## 后续原则
-
-当前阶段仅做增量维护：
+## 持续约束
 
 1. 新增接口优先遵循 poll-handle 模式。
 2. 变更 WIT 签名时同步更新文档与 packager 入口。
