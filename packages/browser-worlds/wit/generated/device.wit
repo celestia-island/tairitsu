@@ -8,7 +8,7 @@
 /// Regenerate with: just wit-gen
 ///
 /// Status: auto-generated (Phase A) — review before use in production
-package tairitsu-browser-gen:device@0.2.0;
+package tairitsu-browser:device@0.2.0;
 
 /// WebIDL interface: `Navigator`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/battery-status.idl

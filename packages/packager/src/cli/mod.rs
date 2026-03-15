@@ -124,12 +124,13 @@ pub async fn run() -> crate::Result<()> {
             info!("Building for {}...", target);
             match target.as_str() {
                 "wasm" => crate::wasm::build(&config, release)?,
+                "component" => crate::wasm::build_component(&config, release)?,
                 "native" => {
                     eprintln!("Native builds not yet implemented");
                     std::process::exit(1);
                 }
                 _ => {
-                    eprintln!("Unknown target: {}. Use 'wasm' or 'native'", target);
+                    eprintln!("Unknown target: {}. Use 'wasm', 'component', or 'native'", target);
                     std::process::exit(1);
                 }
             }

@@ -14,24 +14,78 @@ enum readable-stream-type {
 }
 
 /// WebIDL interface ReadableStream.
+///
+/// Uses a poll-handle pattern: `read-chunk` returns `none` while bytes are
+/// still in flight, `some(ok(bytes))` when a chunk is ready, or
+/// `some(err(msg))` when the stream is errored.
 interface readable-stream {
-/// Opaque handle to a ReadableStream instance.
+    /// Opaque handle to a ReadableStream instance.
     type readable-handle = u64;
 
+    /// Obtain a locked reader handle for this stream.
+    get-reader: func(stream: readable-handle) -> result<readable-handle, string>;
+
+    /// Poll for the next chunk. Returns:
+    ///   `none`          — chunk not yet available (stream still open)
+    ///   `some(ok([]))` — stream closed cleanly (EOF)
+    ///   `some(ok(data))` — one chunk of bytes
+    ///   `some(err(msg))` — stream errored
+    read-chunk: func(reader: readable-handle) -> option<result<list<u8>, string>>;
+
+    /// Cancel the stream with an optional reason.
+    cancel: func(stream: readable-handle, reason: option<string>) -> result<_, string>;
+
+    /// Whether the stream is locked to a reader.
+    is-locked: func(stream: readable-handle) -> bool;
+
+    /// Whether the stream is closed or errored.
+    is-closed: func(stream: readable-handle) -> bool;
 }
 
 /// WebIDL interface WritableStream.
+///
+/// Uses an async-write handle pattern: `write-chunk` returns a request-id
+/// that can be polled with `poll-write`.
 interface writable-stream {
-/// Opaque handle to a WritableStream instance.
+    /// Opaque handle to a WritableStream instance.
     type writable-handle = u64;
 
+    /// Obtain a locked writer handle for this stream.
+    get-writer: func(stream: writable-handle) -> result<writable-handle, string>;
+
+    /// Enqueue a chunk to be written. Returns a request-id.
+    write-chunk: func(writer: writable-handle, data: list<u8>) -> result<u64, string>;
+
+    /// Poll a pending write operation.
+    /// `none` = still in progress; `some(ok(_))` = done; `some(err(msg))` = failed.
+    poll-write: func(request-id: u64) -> option<result<_, string>>;
+
+    /// Signal that no more chunks will be written.
+    close-writer: func(writer: writable-handle) -> result<u64, string>;
+
+    /// Poll a pending close operation.
+    poll-close: func(request-id: u64) -> option<result<_, string>>;
+
+    /// Abort the stream with an optional reason.
+    abort: func(stream: writable-handle, reason: option<string>) -> result<_, string>;
+
+    /// Whether the stream is locked to a writer.
+    is-locked: func(stream: writable-handle) -> bool;
 }
 
 /// WebIDL interface TransformStream.
+///
+/// A TransformStream wraps a ReadableStream (readable side) and a
+/// WritableStream (writable side).
 interface transform-stream {
-/// Opaque handle to a TransformStream instance.
+    /// Opaque handle to a TransformStream instance.
     type transform-handle = u64;
 
+    /// Get the readable side of this TransformStream.
+    get-readable: func(stream: transform-handle) -> result<u64, string>;
+
+    /// Get the writable side of this TransformStream.
+    get-writable: func(stream: transform-handle) -> result<u64, string>;
 }
 
 /// WIT world for streams — import into your WASM component.

@@ -8,7 +8,7 @@
 /// Regenerate with: just wit-gen
 ///
 /// Status: auto-generated (Phase A) — review before use in production
-package tairitsu-browser-gen:fetch@0.2.0;
+package tairitsu-browser:fetch@0.2.0;
 
 /// WebIDL interface: `Headers`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/fetch.idl

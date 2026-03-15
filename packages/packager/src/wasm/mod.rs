@@ -171,6 +171,188 @@ fn generate_html(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
+/// 构建 wasm32-wasip2 格式的 WASM Component，输出格式与 wasm-bindgen 类似，
+/// 但使用 WIT Component Model 及 tairitsu browser-glue 实现浏览器互操作。
+///
+/// 构建步骤：
+/// 1. 检查 wasm32-wasip2 toolchain 已安装
+/// 2. `cargo build --target wasm32-wasip2 --lib`
+/// 3. 将 .wasm 组件拷贝到输出目录
+/// 4. 将 browser-glue/dist/ 拷贝到输出目录
+/// 5. 生成宿主 HTML（通过 browser-glue 加载组件）
+pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} {msg}")
+            .unwrap(),
+    );
+
+    // Step 1: Check wasm32-wasip2 target
+    pb.set_message("Checking wasm32-wasip2 target...");
+    check_wasip2_target()?;
+
+    // Step 2: Build WASM Component
+    pb.set_message("Compiling WASM component (wasm32-wasip2)...");
+    let wasm_path = build_wasm_component(config, release)?;
+
+    // Step 3: Copy component to output dir
+    pb.set_message("Copying WASM component...");
+    std::fs::create_dir_all(&config.build.output_dir)?;
+    let dest_wasm = config
+        .build
+        .output_dir
+        .join(format!("{}.wasm", config.package.name.replace('-', "_")));
+    std::fs::copy(&wasm_path, &dest_wasm)?;
+
+    // Step 4: Bundle browser-glue
+    pb.set_message("Bundling browser-glue...");
+    copy_browser_glue(config)?;
+
+    // Step 5: Generate HTML
+    pb.set_message("Generating HTML...");
+    generate_component_html(config)?;
+
+    pb.finish_with_message("Component build complete! ✅");
+    println!("\nOutput: {}", config.build.output_dir.display());
+
+    Ok(())
+}
+
+fn check_wasip2_target() -> crate::Result<()> {
+    let output = std::process::Command::new("rustup")
+        .args(["target", "list", "--installed"])
+        .output()?;
+
+    let targets = String::from_utf8_lossy(&output.stdout);
+    if !targets.contains("wasm32-wasip2") {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "wasm32-wasip2 target not installed. Run: rustup target add wasm32-wasip2".to_string(),
+        ));
+    }
+
+    Ok(())
+}
+
+fn build_wasm_component(config: &Config, release: bool) -> crate::Result<std::path::PathBuf> {
+    let pkg_name = &config.package.name;
+
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.args([
+        "build",
+        "--target",
+        "wasm32-wasip2",
+        "--lib",
+        "--package",
+        pkg_name,
+    ]);
+    if release {
+        cmd.arg("--release");
+    }
+
+    let status = cmd.status()?;
+    if !status.success() {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "cargo build --target wasm32-wasip2 failed".to_string(),
+        ));
+    }
+
+    let workspace_root = find_workspace_root()?;
+    let profile = if release { "release" } else { "debug" };
+    let wasm_path = workspace_root
+        .join("target")
+        .join("wasm32-wasip2")
+        .join(profile)
+        .join(format!("{}.wasm", pkg_name.replace('-', "_")));
+
+    if !wasm_path.exists() {
+        return Err(crate::TairitsuPackagerError::BuildError(format!(
+            "Expected component at {} but not found",
+            wasm_path.display()
+        )));
+    }
+
+    Ok(wasm_path)
+}
+
+fn copy_browser_glue(config: &Config) -> crate::Result<()> {
+    let workspace_root = find_workspace_root()?;
+    let glue_dist = workspace_root
+        .join("packages")
+        .join("browser-glue")
+        .join("dist");
+
+    if !glue_dist.exists() {
+        eprintln!(
+            "⚠  browser-glue/dist not found at {}.\n   \
+             Run `npm run build` in packages/browser-glue/ first, \
+             or the component will not have browser bindings.",
+            glue_dist.display()
+        );
+        return Ok(());
+    }
+
+    let target_glue = config.build.output_dir.join("browser-glue");
+    std::fs::create_dir_all(&target_glue)?;
+
+    for entry in std::fs::read_dir(&glue_dist)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() {
+            let dest = target_glue.join(path.file_name().unwrap());
+            std::fs::copy(&path, &dest)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn generate_component_html(config: &Config) -> crate::Result<()> {
+    let pkg_name = &config.package.name;
+    let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
+
+    let title = config
+        .html
+        .title
+        .as_deref()
+        .unwrap_or(pkg_name.as_str());
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+    <meta charset="{charset}">
+    <meta name="viewport" content="{viewport}">
+    <title>{title}</title>
+    {head}
+</head>
+<body class="{body_class}">
+    <div id="app">Loading...</div>
+    <script type="module">
+        // Tairitsu component loader — powered by browser-glue
+        import {{ instantiate }} from './browser-glue/index.js';
+        await instantiate(
+            async () => WebAssembly.compileStreaming(fetch('./{wasm_file}')),
+            {{ /* browser-glue supplies all WIT interface imports */ }}
+        );
+    </script>
+</body>
+</html>"#,
+        lang = config.html.lang,
+        charset = config.html.charset,
+        viewport = config.html.viewport,
+        title = title,
+        head = config.html.head,
+        body_class = config.html.body_class,
+        wasm_file = wasm_file,
+    );
+
+    let html_path = config.build.output_dir.join("index.html");
+    std::fs::write(&html_path, html)?;
+
+    Ok(())
+}
+
 pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result<()> {
     use axum::{
         routing::get,

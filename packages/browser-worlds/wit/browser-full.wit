@@ -6,7 +6,9 @@
 /// instead of importing sub-worlds individually.
 ///
 /// Status: Phase 0 — covers dom, events, fetch, canvas.
-///         Phase 2 will add storage, workers, websocket, streams.
+///
+/// For the full W3C coverage (Phase 0 + all Phase A domains), use
+/// `tairitsu-browser:extended/browser-extended` from browser-extended.wit.
 
 package tairitsu-browser:full@0.1.0;
 

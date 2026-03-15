@@ -8,7 +8,7 @@
 /// Regenerate with: just wit-gen
 ///
 /// Status: auto-generated (Phase A) — review before use in production
-package tairitsu-browser-gen:websocket@0.2.0;
+package tairitsu-browser:websocket@0.2.0;
 
 /// WebIDL interface: `WebSocket`
 /// Inherits: `EventTarget`
