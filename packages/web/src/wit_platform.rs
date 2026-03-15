@@ -118,14 +118,16 @@ mod wasm_impl {
 
     use super::{WitElement, WitEvent, WitPlatform};
 
+    type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
+    type EventCallbackMap = HashMap<u64, EventCallback>;
+
     // ── Event dispatch tables ────────────────────────────────────────────
 
     thread_local! {
         /// Maps each WIT `listener-id` to the Rust event callback closure.
         /// Populated by [`WitPlatform::add_event_listener`]
         /// and cleared by [`WitPlatform::remove_event_listener`].
-        static EVENT_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnMut(Box<dyn EventData>)>>>
-            = RefCell::new(HashMap::new());
+        static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
 
         /// Maps `(node-handle, event-type-string)` → `listener-id`.
         /// Used by `remove_event_listener` to look up the id from

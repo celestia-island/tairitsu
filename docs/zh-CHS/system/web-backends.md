@@ -8,7 +8,7 @@
 ## 能力对比
 
 | 项目 | `web` | `wit-bindings` |
-|---|---|---|
+| --- | --- | --- |
 | 编译目标 | wasm32-unknown-unknown | wasm32-wasip2 |
 | 宿主依赖 | 浏览器 JS + wasm-bindgen glue | Component Model host（browser-glue） |
 | WIT 世界 | — | `browser-full`（Phase 0）或 `browser-extended`（全量） |
@@ -31,7 +31,7 @@
 
 ```rust
 wit_bindgen::generate!({
-    path:  "../browser-worlds/wit",
+    path:  "../browser-worlds/wit/browser-full.wit",
     world: "browser-full",
 });
 ```
@@ -42,7 +42,7 @@ wit_bindgen::generate!({
 `packages/browser-worlds/wit/generated/`，共 22 个独立包：
 
 | 包名 | WIT 文件 | 说明 |
-|---|---|---|
+| --- | --- | --- |
 | `tairitsu-browser:canvas@0.2.0` | canvas.wit | Canvas API（扩展） |
 | `tairitsu-browser:css@0.2.0` | css.wit | CSS 对象模型 |
 | `tairitsu-browser:crypto@0.2.0` | crypto.wit | Web Crypto API |
@@ -70,14 +70,14 @@ wit_bindgen::generate!({
 
 > **包命名约定**：所有包统一使用 `tairitsu-browser:{domain}` 前缀（已去除旧的 `-gen` 后缀）。
 
-### 全量世界 — `tairitsu-browser:extended@0.1.0`
+### 全量世界 — `tairitsu-browser:full@0.1.0` 下的 `browser-extended`
 
 `packages/browser-worlds/wit/browser-extended.wit` 通过 WIT `include`
 将 Phase 0 与所有 Phase A 域合并为一个超级世界：
 
 ```rust
 wit_bindgen::generate!({
-    path:  "../browser-worlds/wit",
+    path:  "../browser-worlds/wit/browser-full.wit",
     world: "browser-extended",
 });
 ```
@@ -101,7 +101,7 @@ poll-foo: func(request-id: u64) -> option<result<T, string>>;
 `packages/packager` 提供 `tairitsu build` CLI，支持以下 target：
 
 | target | 说明 |
-|---|---|
+| --- | --- |
 | `wasm`（默认） | wasm32-unknown-unknown + wasm-bindgen 路径 |
 | `component` | wasm32-wasip2 + browser-glue 路径（Component Model） |
 

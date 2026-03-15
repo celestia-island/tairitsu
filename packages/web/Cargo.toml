@@ -49,5 +49,8 @@ wit-bindings = ["dep:wit-bindgen"]
 [dev-dependencies]
 tokio = { version = "^1", features = ["full"] }
 
+[build-dependencies]
+toml = "^0.8"
+
 [package.metadata.docs.rs]
 features = ["web"]
