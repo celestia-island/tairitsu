@@ -110,6 +110,10 @@ interface event-callbacks {
     on-generic-event: func(listener-id: u64, event-type: string);
 }
 
+interface lifecycle {
+    start: func() -> result<_, string>;
+}
+
 // --- Fetch ---
 
 interface fetch-api {
@@ -211,4 +215,5 @@ world browser-full {
     import fetch-api;
     import canvas2d;
     export event-callbacks;
+    export lifecycle;
 }

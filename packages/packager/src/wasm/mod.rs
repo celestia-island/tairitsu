@@ -497,10 +497,25 @@ fn try_generate_component_wrapper(
             )
         })?;
 
-    if wrapper_dir.join("index.js").exists()
-        || wrapper_dir.join(format!("{}.js", wasm_stem)).exists()
-    {
-        return Ok(true);
+    let wrapper_main = if wrapper_dir.join("index.js").exists() {
+        Some(wrapper_dir.join("index.js"))
+    } else {
+        let named = wrapper_dir.join(format!("{}.js", wasm_stem));
+        if named.exists() {
+            Some(named)
+        } else {
+            None
+        }
+    };
+
+    if let Some(main) = wrapper_main {
+        let wrapper_mtime = std::fs::metadata(&main)?.modified().ok();
+        let wasm_mtime = std::fs::metadata(component_wasm_path)?.modified().ok();
+        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime) {
+            if w >= c {
+                return Ok(true);
+            }
+        }
     }
 
     let attempts: [(&str, Vec<String>); 2] = [
@@ -577,7 +592,14 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         <script type="importmap">
         {{
             "imports": {{
-                "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/"
+                "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
+                "tairitsu-browser:full/node": "./browser-glue/dom-glue.js",
+                "tairitsu-browser:full/document": "./browser-glue/dom-glue.js",
+                "tairitsu-browser:full/window": "./browser-glue/dom-glue.js",
+                "tairitsu-browser:full/style": "./browser-glue/dom-glue.js",
+                "tairitsu-browser:full/event-target": "./browser-glue/events-glue.js",
+                "tairitsu-browser:full/fetch-api": "./browser-glue/fetch-glue.js",
+                "tairitsu-browser:full/canvas2d": "./browser-glue/canvas-glue.js"
             }}
         }}
         </script>
@@ -604,23 +626,41 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         }};
 
         const tryInvokeBootExports = async (result) => {{
+            const isBootName = (name) => /^(run|start|init|main)$/i.test(name);
+            const seen = new Set();
+
+            const walk = async (obj, depth = 0) => {{
+                if (!obj || typeof obj !== 'object' || depth > 3) return false;
+                if (seen.has(obj)) return false;
+                seen.add(obj);
+
+                for (const [name, value] of Object.entries(obj)) {{
+                    if (typeof value === 'function' && isBootName(name)) {{
+                        await value();
+                        return true;
+                    }}
+                }}
+
+                for (const [, value] of Object.entries(obj)) {{
+                    if (value && typeof value === 'object') {{
+                        const ok = await walk(value, depth + 1);
+                        if (ok) return true;
+                    }}
+                }}
+
+                return false;
+            }};
+
             const targets = [
                 result,
                 result && result.instance,
                 result && result.exports,
                 result && result.instance && result.instance.exports,
-            ].filter(Boolean);
+            ];
 
             for (const target of targets) {{
-                const exportsObj = target.exports || target;
-                if (!exportsObj || typeof exportsObj !== 'object') continue;
-
-                for (const [name, value] of Object.entries(exportsObj)) {{
-                    if (typeof value !== 'function') continue;
-                    if (!/^(run|start|init|main)$/i.test(name)) continue;
-                    await value();
-                    return true;
-                }}
+                if (await walk(target)) return true;
+                if (target && target.exports && await walk(target.exports)) return true;
             }}
 
             return false;
