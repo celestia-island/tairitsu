@@ -13,25 +13,9 @@ crate-type = ["cdylib", "rlib"]
 tairitsu-vdom = { path = "../../packages/vdom" }
 tairitsu-hooks = { path = "../../packages/hooks" }
 tairitsu-macros = { path = "../../packages/macros" }
-tairitsu-web = { path = "../../packages/web" }
-
-# Web APIs
-wasm-bindgen = "^0.2"
-wasm-bindgen-futures = "^0.4"
-web-sys = { version = "^0.3", features = [
-  "Window",
-  "Document", 
-  "Element",
-  "HtmlElement",
-  "CssStyleDeclaration",
-  "Event",
-  "MouseEvent",
-  "console",
-] }
-js-sys = "^0.3"
+tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
 
 # Logging and error handling
-console_error_panic_hook = "^0.1"
 tracing = "^0.1"
 tracing-wasm = "^0.2"
 anyhow = "^1"
@@ -43,7 +27,7 @@ title = "Tairitsu - Rust Web Framework Demo"
 description = "Comprehensive demo showcasing Virtual DOM, rsx! macro, Builders, and Reactive System"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 output-dir = "dist"
 optimize = true
 sourcemap = true
