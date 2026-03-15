@@ -839,7 +839,7 @@ def run_generate(
         output_dir.mkdir(parents=True, exist_ok=True)
 
     for domain in target_domains:
-        ifaces = domain_interfaces.get(domain)
+        ifaces = domain_interfaces.get(domain, [])
         if not ifaces:
             print(f"  [skip] {domain} — no interfaces in cache")
             skipped += 1
