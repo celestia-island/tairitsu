@@ -213,7 +213,11 @@ pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
     pb.set_message("Bundling browser-glue...");
     copy_browser_glue(config)?;
 
-    // Step 5: Generate HTML
+    // Step 5: Copy static assets from ./public
+    pb.set_message("Copying static assets...");
+    copy_static_public_assets(config)?;
+
+    // Step 6: Generate HTML
     pb.set_message("Generating HTML...");
     generate_component_html(config)?;
 
@@ -311,11 +315,56 @@ fn copy_browser_glue(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
+fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
+    let project_root = std::env::current_dir()?;
+    let public_dir = project_root.join("public");
+
+    if !public_dir.exists() {
+        return Ok(());
+    }
+
+    for entry in walkdir::WalkDir::new(&public_dir) {
+        let entry = entry.map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "Failed to walk public assets: {}",
+                e
+            ))
+        })?;
+        let path = entry.path();
+        if path.is_dir() {
+            continue;
+        }
+
+        let relative = path.strip_prefix(&public_dir).map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "Failed to compute public asset relative path: {}",
+                e
+            ))
+        })?;
+        let dest = config.build.output_dir.join(relative);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::copy(path, dest)?;
+    }
+
+    Ok(())
+}
+
 fn generate_component_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
 
     let title = config.html.title.as_deref().unwrap_or(pkg_name.as_str());
+    let favicon = config
+        .html
+        .favicon
+        .as_deref()
+        .map(|f| f.strip_prefix("public/").unwrap_or(f).replace('\\', "/"));
+    let favicon_link = favicon
+        .as_deref()
+        .map(|href| format!("<link rel=\"icon\" href=\"./{}\">", href))
+        .unwrap_or_default();
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -324,6 +373,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
     <meta charset="{charset}">
     <meta name="viewport" content="{viewport}">
     <title>{title}</title>
+    {favicon_link}
     {head}
 </head>
 <body class="{body_class}">
@@ -331,10 +381,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
     <script type="module">
         // Tairitsu component loader — powered by browser-glue
         import {{ instantiate }} from './browser-glue/index.js';
-        await instantiate(
-            async () => WebAssembly.compileStreaming(fetch('./{wasm_file}')),
-            {{ /* browser-glue supplies all WIT interface imports */ }}
-        );
+        await instantiate(async () => WebAssembly.compileStreaming(fetch('./{wasm_file}')));
     </script>
 </body>
 </html>"#,
@@ -342,6 +389,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         charset = config.html.charset,
         viewport = config.html.viewport,
         title = title,
+        favicon_link = favicon_link,
         head = config.html.head,
         body_class = config.html.body_class,
         wasm_file = wasm_file,
@@ -409,7 +457,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
     println!("Press Ctrl+C to stop");
 
     // Open browser if requested
-    if open {
+    if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", port);
         match webbrowser::open(&url) {
             Ok(_) => println!("✓ Opening browser..."),

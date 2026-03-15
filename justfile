@@ -304,7 +304,7 @@ dev:
     @echo "Starting Tairitsu Website Demo with tairitsu-packager..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    cd examples/website && cargo run --package tairitsu-packager -- dev --open
+    cd examples/website && cargo run --package tairitsu-packager -- dev
 
 # Start old web-demo (deprecated)
 dev-old:
@@ -312,7 +312,7 @@ dev-old:
     @echo "⚠️  Starting OLD web-demo (deprecated, use 'just dev' instead)"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    cd examples/web-demo && cargo run --package tairitsu-packager -- dev --open
+    cd examples/web-demo && cargo run --package tairitsu-packager -- dev
 
 # Build web demo for production (using tairitsu-packager)
 build-web:
