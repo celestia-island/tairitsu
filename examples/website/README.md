@@ -61,7 +61,7 @@ cargo run --package tairitsu-packager -- build --release
 
 ```bash
 cd dist
-python3 -m http.server 3000
+python3 -m http.server 3001
 ```
 
 ## Demo Sections

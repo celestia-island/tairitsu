@@ -322,7 +322,7 @@ build-web:
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/website/dist && python3 -m http.server 3000
+    cd examples/website/dist && python3 -m http.server 3001
 
 # ============================================================================
 # WIT generation — W3C WebIDL → WIT interface pipeline

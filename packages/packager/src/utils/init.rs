@@ -37,7 +37,7 @@ app-name = "{}"
 target = "wasm"
 
 [package.metadata.tairitsu.dev]
-port = 3000
+port = 3001
 "#,
         name, name
     );
