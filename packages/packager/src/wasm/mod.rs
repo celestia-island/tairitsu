@@ -371,6 +371,43 @@ fn prepare_component_wrapper_fallback(
             component_wasm_path.display(),
             component_wasm_path.display()
         );
+    } else {
+        rewrite_wrapper_imports_to_esm(config)?;
+    }
+
+    Ok(())
+}
+
+fn rewrite_wrapper_imports_to_esm(config: &Config) -> crate::Result<()> {
+    let wrapper_dir = config.build.output_dir.join("component-wrapper");
+    if !wrapper_dir.exists() {
+        return Ok(());
+    }
+
+    for entry in std::fs::read_dir(&wrapper_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        if path.extension().and_then(|s| s.to_str()) != Some("js") {
+            continue;
+        }
+
+        let content = std::fs::read_to_string(&path)?;
+        let patched = content
+            .replace(
+                "'@bytecodealliance/preview2-shim/",
+                "'https://esm.sh/@bytecodealliance/preview2-shim/",
+            )
+            .replace(
+                "\"@bytecodealliance/preview2-shim/",
+                "\"https://esm.sh/@bytecodealliance/preview2-shim/",
+            );
+
+        if patched != content {
+            std::fs::write(&path, patched)?;
+        }
     }
 
     Ok(())
