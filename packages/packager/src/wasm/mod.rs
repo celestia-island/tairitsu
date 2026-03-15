@@ -560,10 +560,10 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         if (isComponent) {{
             if (typeof WebAssembly.Component !== 'function') {{
                 await instantiateWithWrapper({{}});
-                return;
+            }} else {{
+                const component = new WebAssembly.Component(bytes);
+                await WebAssembly.instantiate(component, {{}});
             }}
-            const component = new WebAssembly.Component(bytes);
-            await WebAssembly.instantiate(component, {{}});
         }} else {{
             const module = await WebAssembly.compile(bytes);
             await WebAssembly.instantiate(module, {{}});
