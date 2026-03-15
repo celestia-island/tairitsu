@@ -6,7 +6,7 @@ Reads from : target/tairitsu-wit/webidl-cache/*.idl
 Writes to  : packages/browser-worlds/wit/generated/*.wit
 
 Each output file is a self-contained WIT package with name
-  tairitsu-browser-gen:<domain>@0.2.0
+    tairitsu-browser:<domain>@0.2.0
 so it does not collide with the hand-written 0.1.0 files.
 
 All browser objects are represented as opaque u64 handles crossing the WASM
@@ -28,6 +28,22 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
+
+
+def log_info(message: str) -> None:
+    print(f"[INFO] {message}")
+
+
+def log_ok(message: str) -> None:
+    print(f"[OK] {message}")
+
+
+def log_warn(message: str) -> None:
+    print(f"[WARN] {message}", file=sys.stderr)
+
+
+def log_error(message: str) -> None:
+    print(f"[ERROR] {message}", file=sys.stderr)
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -754,10 +770,8 @@ def load_all_interfaces(
 
     idl_files = sorted(cache_dir.glob("*.idl"))
     if not idl_files:
-        print(
-            f"[ERROR] No .idl files found in {cache_dir}\n"
-            "Run `just wit-fetch-idl` first.",
-            file=sys.stderr,
+        log_error(
+            f"No .idl files found in {cache_dir}. Run `just wit-fetch-idl` first."
         )
         return domain_interfaces, domain_specs
 
@@ -773,7 +787,7 @@ def load_all_interfaces(
         try:
             text = idl_file.read_text(encoding="utf-8")
         except OSError as exc:
-            print(f"  [WARN] Cannot read {idl_file}: {exc}", file=sys.stderr)
+            log_warn(f"Cannot read {idl_file}: {exc}")
             continue
 
         ifaces = parse_webidl_file(text, source_spec=spec)
@@ -808,8 +822,8 @@ def run_generate(
     stats: bool = False,
 ) -> None:
     """Parse cached WebIDL and write generated WIT files."""
-    print(f"Cache  : {cache_dir}")
-    print(f"Output : {output_dir}")
+    log_info(f"Cache  : {cache_dir}")
+    log_info(f"Output : {output_dir}")
     print()
 
     domain_interfaces, domain_specs = load_all_interfaces(cache_dir)
@@ -819,8 +833,9 @@ def run_generate(
 
     if stats:
         total_ifaces = sum(len(v) for v in domain_interfaces.values())
-        print(
-            f"Parsed {total_ifaces} interfaces across {len(domain_interfaces)} domains:")
+        log_info(
+            f"Parsed {total_ifaces} interfaces across {len(domain_interfaces)} domains:"
+        )
         for dom in DOMAIN_ORDER:
             ifaces = domain_interfaces.get(dom, [])
             specs = domain_specs.get(dom, [])
@@ -841,14 +856,14 @@ def run_generate(
     for domain in target_domains:
         ifaces = domain_interfaces.get(domain, [])
         if not ifaces:
-            print(f"  [skip] {domain} — no interfaces in cache")
+            log_warn(f"skip {domain} — no interfaces in cache")
             skipped += 1
             continue
 
         specs = domain_specs.get(domain, [])
         wit_content = generate_domain_wit(domain, ifaces, specs)
         if not wit_content:
-            print(f"  [skip] {domain} — all interfaces were empty")
+            log_warn(f"skip {domain} — all interfaces were empty")
             skipped += 1
             continue
 
@@ -856,16 +871,14 @@ def run_generate(
         iface_count = wit_content.count("\ninterface ")
 
         if dry_run:
-            print(
-                f"  [dry-run] would write {dest.name}"
-                f"  ({iface_count} interfaces, {len(wit_content):,} bytes)"
+            log_info(
+                f"dry-run write {dest.name} ({iface_count} interfaces, {len(wit_content):,} bytes)"
             )
             continue
 
         dest.write_text(wit_content, encoding="utf-8")
-        print(
-            f"  Wrote {dest.name:<30} {iface_count:3d} interfaces"
-            f"  ({len(wit_content):,} bytes)"
+        log_ok(
+            f"Wrote {dest.name:<30} {iface_count:3d} interfaces ({len(wit_content):,} bytes)"
         )
         written += 1
 
@@ -877,7 +890,7 @@ def run_generate(
 
     if not dry_run and written > 0:
         print()
-        print(f"Result : {written} files written, {skipped} skipped")
+        log_info(f"Result : {written} files written, {skipped} skipped")
 
 
 # ---------------------------------------------------------------------------
@@ -930,10 +943,10 @@ def main() -> None:
     )
 
     print("=" * 64)
-    print("Tairitsu WebIDL → WIT Generator")
+    log_info("Tairitsu WebIDL -> WIT Generator")
     print("=" * 64)
     if args.dry_run:
-        print("Mode   : dry run (no files written)")
+        log_info("Mode   : dry run (no files written)")
 
     run_generate(
         cache_dir,

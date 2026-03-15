@@ -32,13 +32,30 @@ FETCH_SCRIPT = SCRIPTS_DIR / "fetch_webidl.py"
 GENERATE_SCRIPT = SCRIPTS_DIR / "generate_browser_wit.py"
 
 
+def log_info(message: str) -> None:
+    print(f"[INFO] {message}")
+
+
+def log_ok(message: str) -> None:
+    print(f"[OK] {message}")
+
+
+def log_warn(message: str) -> None:
+    print(f"[WARN] {message}")
+
+
+def log_error(message: str) -> None:
+    print(f"[ERROR] {message}", file=sys.stderr)
+
+
 def _run(script: Path, extra_args: list[str]) -> None:
     """Run a Python script as a subprocess, raising on failure."""
     cmd = [sys.executable, str(script)] + extra_args
-    print(f"\n$ {' '.join(cmd)}")
+    log_info(f"$ {' '.join(cmd)}")
     print("-" * 64)
     result = subprocess.run(cmd, check=False)
     if result.returncode != 0:
+        log_error(f"Command failed with exit code {result.returncode}: {script.name}")
         sys.exit(result.returncode)
 
 
@@ -76,7 +93,7 @@ Tairitsu WIT Generator — Data Sources
 
 2. Generated output
    WIT files  : packages/browser-worlds/wit/generated/<domain>.wit
-   Package    : tairitsu-browser-gen:<domain>@0.2.0
+    Package    : tairitsu-browser:<domain>@0.2.0
    Cache      : target/tairitsu-wit/webidl-cache/  (git-ignored)
 
 3. Hand-written baseline (Phase 0)
@@ -135,7 +152,7 @@ def main() -> None:
         return
 
     print("=" * 64)
-    print("Tairitsu WebIDL → WIT Pipeline")
+    log_info("Tairitsu WebIDL -> WIT Pipeline")
     print("=" * 64)
 
     fetch_args: list[str] = []
@@ -152,22 +169,22 @@ def main() -> None:
         gen_args.extend(["--domains"] + args.domains)
 
     if not args.gen_only:
-        print("\n[Step 1/2] Fetching WebIDL spec files from w3c/webref …")
+        log_info("[Step 1/2] Fetching WebIDL spec files from w3c/webref...")
         _run(FETCH_SCRIPT, fetch_args)
 
     if not args.fetch_only:
         if args.stats:
-            print("\n[Step 2/2] Coverage statistics:")
+            log_info("[Step 2/2] Coverage statistics")
         else:
-            print("\n[Step 2/2] Generating WIT from cached WebIDL …")
+            log_info("[Step 2/2] Generating WIT from cached WebIDL...")
         _run(GENERATE_SCRIPT, gen_args)
 
     if not args.dry_run and not args.stats and not args.fetch_only:
         print()
         print("=" * 64)
-        print("Pipeline complete.")
-        print("Generated WIT: packages/browser-worlds/wit/generated/")
-        print("Commit the generated files or add to .gitignore as preferred.")
+        log_ok("Pipeline complete")
+        log_info("Generated WIT: packages/browser-worlds/wit/generated/")
+        log_info("Commit the generated files or add to .gitignore as preferred")
         print("=" * 64)
 
 

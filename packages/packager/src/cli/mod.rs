@@ -23,7 +23,7 @@ struct Cli {
 enum Commands {
     /// Start development server with hot reload
     Dev {
-        /// Port to listen on (default: 3000)
+        /// Port to listen on (default: 3001)
         #[arg(short, long)]
         port: Option<u16>,
 
@@ -52,7 +52,7 @@ enum Commands {
 
     /// Preview production build
     Preview {
-        /// Port to listen on (default: 3000)
+        /// Port to listen on (default: 3001)
         #[arg(short, long)]
         port: Option<u16>,
     },
@@ -145,7 +145,7 @@ pub async fn run() -> crate::Result<()> {
         }
         Commands::Preview { port } => {
             info!("Starting preview server...");
-            let port = port.unwrap_or(3000);
+            let port = port.unwrap_or(3001);
             let _port = port;
             eprintln!("Preview not yet implemented");
             std::process::exit(1);

@@ -33,7 +33,7 @@ optimize = true
 sourcemap = true
 
 [package.metadata.tairitsu.dev]
-port = 3000
+port = 3001
 hot-reload = true
 open-browser = true
 
