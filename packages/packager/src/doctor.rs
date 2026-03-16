@@ -329,7 +329,7 @@ impl DoctorChecker {
 
         // Check for wasm32-wasip2 target
         let target_output = Command::new("rustup")
-            .args(&["target", "list", "--installed"])
+            .args(["target", "list", "--installed"])
             .output();
 
         match target_output {
@@ -368,7 +368,7 @@ impl DoctorChecker {
 
         // Check for cargo component (optional but recommended)
         let component_output = Command::new("cargo")
-            .args(&["component", "--version"])
+            .args(["component", "--version"])
             .output();
 
         match component_output {
