@@ -55,7 +55,8 @@ def _run(script: Path, extra_args: list[str]) -> None:
     print("-" * 64)
     result = subprocess.run(cmd, check=False)
     if result.returncode != 0:
-        log_error(f"Command failed with exit code {result.returncode}: {script.name}")
+        log_error(
+            f"Command failed with exit code {result.returncode}: {script.name}")
         sys.exit(result.returncode)
 
 
