@@ -11,10 +11,10 @@ pub use app::App;
 pub fn run() -> Result<()> {
     info!("Tairitsu Website Demo starting...");
 
-    let _platform = WitPlatform::new()?;
+    let platform = WitPlatform::new()?;
+    let vnode = App.render();
+    platform.mount_vnode_to_app(&vnode)?;
 
-    let _vnode = App.render();
-
-    info!("Tairitsu Website Demo loaded!");
+    info!("Tairitsu Website Demo loaded and rendered!");
     Ok(())
 }
