@@ -296,7 +296,6 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
             host_imports: None,
         })
     }
-
 }
 
 /// A Container represents a running instance of an Image

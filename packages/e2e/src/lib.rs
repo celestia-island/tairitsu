@@ -8,9 +8,9 @@ use tracing::info;
 
 pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
     info!("Running all Tairitsu E2E tests...\n");
-    
+
     let mut results = vec![];
-    
+
     match tests::Test::run_with_driver(&tests::BasicComponentsTests, driver).await {
         Ok(result) => results.push(result),
         Err(e) => {
@@ -18,7 +18,7 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
             results.push(TestResult::error("BasicComponents", e.to_string().as_str()));
         }
     }
-    
+
     info!("\n=== E2E Test Results ===");
     for result in &results {
         info!("{}: {}", result.component, result.message);
@@ -31,6 +31,6 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         }
     }
     info!("=== End of Test Results ===\n");
-    
+
     Ok(results)
 }
