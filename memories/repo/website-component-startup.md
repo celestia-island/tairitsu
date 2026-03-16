@@ -1,0 +1,3 @@
+- examples/website 的 wasm32-wasip2 component wrapper 只暴露 tairitsu-browser:full/lifecycle.start，不会暴露 Rust 的 run 符号。
+- 如果页面只显示 lifecycle.start 占位文本，优先检查 packages/web/src/wit_platform.rs 的生命周期启动链路，而不是继续改 packager 的 boot export 探测。
+- 当前做法：packages/web 的 lifecycle.start 直接调用最终应用提供的 extern C 符号 tairitsu_component_bootstrap；examples/website/src/lib.rs 定义该符号并转发到 run().
