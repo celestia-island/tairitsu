@@ -1,4 +1,5 @@
 use crate::config::Config;
+use chrono::Local;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
 
@@ -916,6 +917,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     println!();
 
     // Initial build (no MultiProgress — let cargo write directly to terminal).
+    let initial_started = Instant::now();
     match config.build.target.as_str() {
         "component" => build_component(config, false, None)?,
         "wasm" => build(config, false, None)?,
@@ -926,6 +928,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
             )));
         }
     }
+    let initial_elapsed = initial_started.elapsed();
 
     let dist_dir = config.build.output_dir.clone();
 
@@ -956,19 +959,31 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  🌍  {}:   http://localhost:{}", locale().dev.local, actual_port);
-    println!("  📁  {}: {}", locale().dev.serving, config.build.output_dir.display());
-    if actual_port != port {
-        let msg = locale()
-            .dev
-            .port_switched
-            .replace("{from}", &port.to_string())
-            .replace("{to}", &actual_port.to_string());
-        println!("  ⚠   {}", msg);
-    }
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!();
+    let mut last_build_line = format_last_build_line(
+        true,
+        config.build.target.as_str(),
+        initial_elapsed,
+        None,
+    );
+
+    let port_switched = if actual_port != port {
+        Some(
+            locale()
+                .dev
+                .port_switched
+                .replace("{from}", &port.to_string())
+                .replace("{to}", &actual_port.to_string()),
+        )
+    } else {
+        None
+    };
+
+    print_status_panel(
+        actual_port,
+        &config.build.output_dir,
+        Some(&last_build_line),
+        port_switched.as_deref(),
+    );
 
     if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", actual_port);
@@ -979,12 +994,18 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     }
 
     if watch {
-        let ui = DevWatchUi::new(actual_port, &config.build.output_dir, &config.build.target);
         // Run the HTTP server as a background task; this task runs the watch loop.
         tokio::spawn(async move {
             axum::serve(listener, app).await.ok();
         });
-        run_watch_loop(config, actual_port, Some(ui)).await?;
+        run_watch_loop(
+            config,
+            actual_port,
+            &config.build.output_dir,
+            config.build.target.as_str(),
+            &mut last_build_line,
+        )
+        .await?;
     } else {
         println!("  {}", locale().dev.press_ctrl_c_to_stop);
         axum::serve(listener, app).await?;
@@ -993,6 +1014,64 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     Ok(())
 }
 
+fn print_status_panel(
+    port: u16,
+    output_dir: &std::path::Path,
+    last_build_line: Option<&str>,
+    warning: Option<&str>,
+) {
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("  🌍  {}: http://localhost:{}", locale().dev.local, port);
+    println!("  📁  {}: {}", locale().dev.serving, output_dir.display());
+    if let Some(line) = last_build_line {
+        println!("  🧱  {}", line);
+    }
+    if let Some(w) = warning {
+        println!("  ⚠  {}", w);
+    }
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!();
+}
+
+fn format_last_build_line(
+    ok: bool,
+    subsystem: &str,
+    elapsed: Duration,
+    error_hint: Option<&str>,
+) -> String {
+    let t = locale();
+    let status = if ok {
+        &t.dev.status_success
+    } else {
+        &t.dev.status_failed
+    };
+    let now = Local::now().format("%H:%M:%S").to_string();
+    let mut line = format!(
+        "{}: {} | {} {} | {} {} | {} {:.1?}",
+        t.dev.last_build,
+        status,
+        t.dev.at_time,
+        now,
+        t.dev.subsystem,
+        subsystem,
+        t.dev.duration,
+        elapsed
+    );
+    if let Some(hint) = error_hint {
+        let display = if hint.len() > 50 { &hint[..50] } else { hint };
+        line.push_str(&format!(" | {}", display));
+    }
+    line
+}
+
+fn format_building_line(subsystem: &str) -> String {
+    let t = locale();
+    let now = Local::now().format("%H:%M:%S").to_string();
+    format!(
+        "{}: {} | {} {} | {} {}",
+        t.dev.last_build, t.dev.status_building, t.dev.at_time, now, t.dev.subsystem, subsystem
+    )
+}
 /// Try binding localhost starting from `preferred_port` and automatically
 /// fallback to higher ports when the preferred one is already occupied.
 async fn bind_listener_with_fallback(
@@ -1030,129 +1109,18 @@ enum DevCmd {
     Clear,
 }
 
-#[derive(Clone)]
-struct DevWatchUi {
-    /// Kept public so the watch loop can clone it for the build task.
-    multi: std::sync::Arc<MultiProgress>,
-    _shortcuts: ProgressBar,
-    _divider: ProgressBar,
-    server: ProgressBar,
-    build: ProgressBar,
-    check: ProgressBar,
-    started: Instant,
-    port: u16,
-}
-
-impl DevWatchUi {
-    fn new(port: u16, output_dir: &std::path::Path, target: &str) -> Self {
-        let multi = std::sync::Arc::new(MultiProgress::new());
-
-        let static_style = ProgressStyle::with_template("    {msg}").unwrap();
-
-        let shortcuts = multi.add(ProgressBar::new_spinner());
-        shortcuts.set_style(static_style.clone());
-        let initial_width = crossterm::terminal::size().map(|(w, _)| w).unwrap_or(120);
-        shortcuts.set_message(Self::shortcut_message(initial_width));
-
-        let divider = multi.add(ProgressBar::new_spinner());
-        divider.set_style(static_style.clone());
-        divider.set_message("──────────────────────────────────────────────────────");
-
-        let shortcuts_for_resize = shortcuts.clone();
-        std::thread::spawn(move || {
-            let mut last = initial_width;
-            loop {
-                if let Ok((w, _)) = crossterm::terminal::size() {
-                    if w != last {
-                        last = w;
-                        shortcuts_for_resize.set_message(Self::shortcut_message(w));
-                    }
-                }
-                std::thread::sleep(Duration::from_millis(300));
-            }
-        });
-
-        let server = multi.add(ProgressBar::new_spinner());
-        server.set_style(static_style.clone());
-        server.set_message(format!(
-            "[server] http://localhost:{}  ({})",
-            port,
-            output_dir.display()
-        ));
-
-        let build = multi.add(ProgressBar::new_spinner());
-        build.set_style(static_style.clone());
-        build.set_message(format!("[build] {}  (target: {})", locale().dev.build_idle, target));
-
-        let check = multi.add(ProgressBar::new_spinner());
-        check.set_style(static_style);
-        check.set_message(format!("[check] {}", locale().dev.check_ready));
-
-        Self {
-            multi,
-            _shortcuts: shortcuts,
-            _divider: divider,
-            server,
-            build,
-            check,
-            started: Instant::now(),
-            port,
-        }
-    }
-
-    fn shortcut_message(width: u16) -> String {
-        if width >= 86 {
-            locale().dev.shortcuts_full.clone()
-        } else {
-            locale().dev.shortcuts_compact.clone()
-        }
-    }
-
-    fn on_build_start(&self) {
-        let spinning = ProgressStyle::with_template("  {spinner:.green} {msg}")
-            .unwrap()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]);
-        self.build.set_style(spinning);
-        self.build.enable_steady_tick(Duration::from_millis(100));
-        self.build
-            .set_message(format!("[build] {}", locale().dev.build_rebuilding));
-        self.check
-            .set_message(format!("[check] {}", locale().dev.check_building));
-    }
-
-    fn on_build_finish(&self, ok: bool, elapsed: Duration, error_hint: Option<&str>) {
-        self.build.disable_steady_tick();
-        self.build
-            .set_style(ProgressStyle::with_template("    {msg}").unwrap());
-        let status = if ok { "ok" } else { "failed" };
-        self.build.set_message(format!(
-            "[build] {}  in {:.1?}  |  uptime {:.1?}",
-            status,
-            elapsed,
-            self.started.elapsed()
-        ));
-        if ok {
-            self.server
-                .set_message(format!("[server] http://localhost:{}  (hot)", self.port));
-            self.check
-                .set_message(format!("[check] {}", locale().dev.check_no_errors));
-        } else if let Some(hint) = error_hint {
-            // Truncate long diagnostic messages to fit in one terminal line.
-            let display = if hint.len() > 55 { &hint[..55] } else { hint };
-            self.check.set_message(format!("[check] ✗ {}", display));
-        } else {
-            self.check
-                .set_message(format!("[check] {}", locale().dev.check_compile_failed));
-        }
-    }
-}
-
 /// Watches `src/`, `Cargo.toml`, `Tairitsu.toml`, and `public/` for changes and
 /// triggers incremental rebuilds using the same pipeline as the initial build.
 ///
 /// Debounces rapid saves (200 ms window) so a single `cargo save` operation does
 /// not trigger multiple concurrent builds.
-async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> crate::Result<()> {
+async fn run_watch_loop(
+    config: &Config,
+    port: u16,
+    output_dir: &std::path::Path,
+    target: &str,
+    last_build_line: &mut String,
+) -> crate::Result<()> {
     use notify::{EventKind, RecursiveMode, Watcher};
 
     let project_root = std::env::current_dir()?;
@@ -1172,7 +1140,6 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
 
     // Spawn the watcher on a dedicated OS thread.  Some platform backends
     // (e.g. FSEvents on macOS) are not Send; isolating them here avoids that.
-    let has_ui = ui.is_some();
     std::thread::spawn(move || {
         let Ok(mut watcher) = notify::recommended_watcher(move |ev| {
             tx.blocking_send(ev).ok();
@@ -1192,9 +1159,7 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
             }
         }
 
-        if !has_ui {
-            println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
-        }
+        println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
 
         // Keep the watcher alive until the process exits.
         loop {
@@ -1275,24 +1240,12 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
                 match cmd {
                     None => break 'watch,
                     Some(DevCmd::Rebuild) => {
-                        if let Some(ui) = &ui {
-                            let _ = ui
-                                .multi
-                                .println(format!("  ↻  {}", locale().dev.manual_rebuild_triggered));
-                        } else {
-                            println!("  ↻  {}", locale().dev.manual_rebuild_triggered);
-                        }
+                        println!("  ↻  {}", locale().dev.manual_rebuild_triggered);
                         true
                     }
                     Some(DevCmd::OpenBrowser) => {
                         let url = format!("http://localhost:{}", port);
-                        if let Some(ui) = &ui {
-                            let _ = ui
-                                .multi
-                                .println(format!("  ↗  {} {}", locale().dev.opening_url, url));
-                        } else {
-                            println!("  ↗  {} {}", locale().dev.opening_url, url);
-                        }
+                        println!("  ↗  {} {}", locale().dev.opening_url, url);
                         webbrowser::open(&url).ok();
                         false
                     }
@@ -1312,26 +1265,16 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
             continue;
         }
 
-        if let Some(ui) = &ui {
-            if changed.is_empty() {
-                let _ = ui.multi.println(format!("  ↻  {}", locale().dev.source_changed));
-            } else if changed.len() == 1 {
-                let _ = ui.multi.println(format!("  ↻  {}", changed[0].display()));
-            } else {
-                let _ = ui
-                    .multi
-                    .println(format!("  ↻  {} {}", changed.len(), locale().dev.files_changed));
-            }
-            ui.on_build_start();
+        if changed.is_empty() {
+            println!("  ↻  {}", locale().dev.source_changed);
+        } else if changed.len() == 1 {
+            println!("  ↻  {}", changed[0].display());
         } else {
-            println!();
-            match changed.len() {
-                0 => println!("  ↻  {}", locale().dev.source_changed),
-                1 => println!("  ↻  {}", changed[0].display()),
-                n => println!("  ↻  {} {}", n, locale().dev.files_changed),
-            }
-            println!();
+            println!("  ↻  {} {}", changed.len(), locale().dev.files_changed);
         }
+
+        *last_build_line = format_building_line(target);
+        print_status_panel(port, output_dir, Some(last_build_line), None);
 
         // Run the rebuild on a blocking thread so the tokio runtime stays alive.
         // Pass a clone of MultiProgress so cargo's stderr is piped through it,
@@ -1339,10 +1282,10 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         let rebuild_started = Instant::now();
         let config_clone = config.clone();
         let target = config.build.target.clone();
-        let multi_for_build = ui.as_ref().map(|u| std::sync::Arc::clone(&u.multi));
-        let result = tokio::task::spawn_blocking(move || match target.as_str() {
-            "component" => build_component(&config_clone, false, multi_for_build),
-            _ => build(&config_clone, false, multi_for_build),
+        let target_for_build = target.clone();
+        let result = tokio::task::spawn_blocking(move || match target_for_build.as_str() {
+            "component" => build_component(&config_clone, false, None),
+            _ => build(&config_clone, false, None),
         })
         .await
         .map_err(|e| {
@@ -1352,17 +1295,14 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         let elapsed = rebuild_started.elapsed();
         match result {
             Ok(()) => {
-                if let Some(ui) = &ui {
-                    ui.on_build_finish(true, elapsed, None);
-                } else {
-                    println!("  ✓  {}  →  http://localhost:{}", locale().dev.rebuilt, port);
-                }
+                *last_build_line = format_last_build_line(true, &target, elapsed, None);
+                print_status_panel(port, output_dir, Some(last_build_line), None);
+                println!("  ✓  {}  →  http://localhost:{}", locale().dev.rebuilt, port);
             }
             Err(e) => {
                 let hint = extract_error_hint(e.to_string());
-                if let Some(ui) = &ui {
-                    ui.on_build_finish(false, elapsed, Some(&hint));
-                }
+                *last_build_line = format_last_build_line(false, &target, elapsed, Some(&hint));
+                print_status_panel(port, output_dir, Some(last_build_line), None);
                 eprintln!("  ✗  {}", e);
             }
         }
