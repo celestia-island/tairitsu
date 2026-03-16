@@ -1054,12 +1054,10 @@ impl DevWatchUi {
             "  ─────────────────────────────────────────────────────────",
         );
 
-        let style = ProgressStyle::with_template("  {spinner:.green} {msg}").unwrap();
-        let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+        let static_style = ProgressStyle::with_template("    {msg}").unwrap();
 
         let server = multi.add(ProgressBar::new_spinner());
-        server.set_style(style.clone().tick_strings(&spinner_frames));
-        server.enable_steady_tick(Duration::from_millis(90));
+        server.set_style(static_style.clone());
         server.set_message(format!(
             "serve  http://localhost:{}   ({})",
             port,
@@ -1067,18 +1065,15 @@ impl DevWatchUi {
         ));
 
         let watcher = multi.add(ProgressBar::new_spinner());
-        watcher.set_style(style.clone().tick_strings(&spinner_frames));
-        watcher.enable_steady_tick(Duration::from_millis(110));
+        watcher.set_style(static_style.clone());
         watcher.set_message("watch  src/, Cargo.toml, Tairitsu.toml, public/");
 
         let build = multi.add(ProgressBar::new_spinner());
-        build.set_style(style.clone().tick_strings(&spinner_frames));
-        build.enable_steady_tick(Duration::from_millis(130));
+        build.set_style(static_style.clone());
         build.set_message(format!("build  idle  (target: {})", target));
 
         let check = multi.add(ProgressBar::new_spinner());
-        check.set_style(style.tick_strings(&spinner_frames));
-        check.enable_steady_tick(Duration::from_millis(150));
+        check.set_style(static_style);
         check.set_message("check  ✓  ready");
 
         Self {
@@ -1102,6 +1097,10 @@ impl DevWatchUi {
     }
 
     fn on_build_start(&self) {
+        let spinning = ProgressStyle::with_template("  {spinner:.green} {msg}")
+            .unwrap()
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]);
+        self.build.set_style(spinning);
         self.build.enable_steady_tick(Duration::from_millis(100));
         self.build.set_message("build  rebuilding...");
         self.check.set_message("check  (building…)");
@@ -1109,6 +1108,8 @@ impl DevWatchUi {
 
     fn on_build_finish(&self, ok: bool, elapsed: Duration, error_hint: Option<&str>) {
         self.build.disable_steady_tick();
+        self.build
+            .set_style(ProgressStyle::with_template("    {msg}").unwrap());
         let status = if ok { "ok" } else { "failed" };
         self.build.set_message(format!(
             "build  {}  in {:.1?}   |   uptime {:.1?}",
