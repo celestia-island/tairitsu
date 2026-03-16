@@ -37,7 +37,7 @@ pub struct BuildConfig {
 }
 
 fn default_target() -> String {
-    "wasm".to_string()
+    "component".to_string()
 }
 
 fn default_output_dir() -> PathBuf {

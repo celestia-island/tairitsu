@@ -6,120 +6,6 @@ fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
 }
 
-pub fn build(
-    config: &Config,
-    release: bool,
-    multi: Option<std::sync::Arc<MultiProgress>>,
-) -> crate::Result<()> {
-    let pb_raw = ProgressBar::new_spinner();
-    pb_raw.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg}")
-            .unwrap(),
-    );
-    let pb = match &multi {
-        Some(m) => m.add(pb_raw),
-        None => pb_raw,
-    };
-
-    // Step 1: Check wasm32-unknown-unknown target
-    pb.set_message("Checking WASM target...");
-    check_wasm_target()?;
-
-    // Step 2: Build WASM
-    pb.set_message("Compiling WASM...");
-    build_wasm(release, multi)?;
-
-    // Step 3: Run wasm-bindgen
-    pb.set_message("Generating JS bindings...");
-    run_wasm_bindgen(config, release)?;
-
-    // Step 4: Generate HTML
-    pb.set_message("Generating HTML...");
-    generate_html(config)?;
-
-    pb.finish_with_message("Build complete! ✅");
-
-    println!("\nOutput: {}", config.build.output_dir.display());
-    println!("Run `tairitsu preview` to see the result");
-
-    Ok(())
-}
-
-fn check_wasm_target() -> crate::Result<()> {
-    let output = std::process::Command::new("rustup")
-        .args(["target", "list", "--installed"])
-        .output()?;
-
-    let targets = String::from_utf8_lossy(&output.stdout);
-    if !targets.contains("wasm32-unknown-unknown") {
-        return Err(crate::TairitsuPackagerError::BuildError(
-            "wasm32-unknown-unknown target not installed. Run: rustup target add wasm32-unknown-unknown".to_string()
-        ));
-    }
-
-    Ok(())
-}
-
-fn build_wasm(release: bool, multi: Option<std::sync::Arc<MultiProgress>>) -> crate::Result<()> {
-    use std::io::BufRead;
-
-    let current_manifest = std::env::current_dir()?.join("Cargo.toml");
-    let content = std::fs::read_to_string(&current_manifest)?;
-    let manifest: toml::Value = toml::from_str(&content)?;
-
-    let pkg_name = manifest
-        .get("package")
-        .and_then(|p| p.get("name"))
-        .and_then(|n| n.as_str())
-        .ok_or_else(|| {
-            crate::TairitsuPackagerError::BuildError(
-                "Failed to read package name from Cargo.toml".to_string(),
-            )
-        })?
-        .to_string();
-
-    let mut cmd = std::process::Command::new("cargo");
-    cmd.args([
-        "build",
-        "--target",
-        "wasm32-unknown-unknown",
-        "--package",
-        &pkg_name,
-    ]);
-    if release {
-        cmd.arg("--release");
-    }
-
-    if let Some(multi) = multi {
-        use std::process::Stdio;
-        cmd.stderr(Stdio::piped());
-        let mut child = cmd.spawn()?;
-        if let Some(stderr) = child.stderr.take() {
-            std::thread::spawn(move || {
-                for line in std::io::BufReader::new(stderr).lines().flatten() {
-                    let _ = multi.println(&line);
-                }
-            });
-        }
-        let status = child.wait()?;
-        if !status.success() {
-            return Err(crate::TairitsuPackagerError::BuildError(
-                "Cargo build failed".to_string(),
-            ));
-        }
-    } else {
-        let status = cmd.status()?;
-        if !status.success() {
-            return Err(crate::TairitsuPackagerError::BuildError(
-                "Cargo build failed".to_string(),
-            ));
-        }
-    }
-
-    Ok(())
-}
-
 fn find_workspace_root() -> crate::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
         .args(["metadata", "--no-deps", "--format-version", "1"])
@@ -137,79 +23,7 @@ fn find_workspace_root() -> crate::Result<std::path::PathBuf> {
     Ok(workspace_root)
 }
 
-fn run_wasm_bindgen(config: &Config, release: bool) -> crate::Result<()> {
-    let workspace_root = find_workspace_root()?;
-    let pkg_name = &config.package.name;
-    let profile = if release { "release" } else { "debug" };
-    let wasm_path = workspace_root
-        .join("target")
-        .join("wasm32-unknown-unknown")
-        .join(profile)
-        .join(format!("{}.wasm", pkg_name.replace('-', "_")));
-
-    // Create output directory
-    std::fs::create_dir_all(&config.build.output_dir)?;
-
-    let mut cmd = std::process::Command::new("wasm-bindgen");
-    cmd.arg(&wasm_path)
-        .arg("--out-dir")
-        .arg(&config.build.output_dir)
-        .arg("--target")
-        .arg("web");
-
-    if config.build.sourcemap {
-        cmd.arg("--keep-debug");
-    }
-
-    let status = cmd.status()?;
-    if !status.success() {
-        return Err(crate::TairitsuPackagerError::BuildError(
-            "wasm-bindgen failed".to_string(),
-        ));
-    }
-
-    Ok(())
-}
-
-fn generate_html(config: &Config) -> crate::Result<()> {
-    let pkg_name = &config.package.name;
-    let js_file = format!("{}.js", pkg_name.replace('-', "_"));
-
-    let title = config.html.title.as_deref().unwrap_or(&config.package.name);
-
-    let html_content = format!(
-        r#"<!DOCTYPE html>
-<html lang="{}">
-<head>
-    <meta charset="{}">
-    <meta name="viewport" content="{}">
-    <title>{}</title>
-    {}
-</head>
-<body class="{}">
-    <div id="app">Loading...</div>
-    <script type="module">
-        import init from './{}';
-        init();
-    </script>
-</body>
-</html>"#,
-        config.html.lang,
-        config.html.charset,
-        config.html.viewport,
-        title,
-        config.html.head,
-        config.html.body_class,
-        js_file,
-    );
-
-    let html_path = config.build.output_dir.join("index.html");
-    std::fs::write(&html_path, html_content)?;
-
-    Ok(())
-}
-
-/// 构建 wasm32-wasip2 格式的 WASM Component，输出格式与 wasm-bindgen 类似，
+/// 构建 wasm32-wasip2 格式的 WASM Component，
 /// 但使用 WIT Component Model 及 tairitsu browser-glue 实现浏览器互操作。
 ///
 /// 构建步骤：
@@ -544,8 +358,8 @@ fn write_component_wrapper_loader(
         })?;
 
     let loader = include_str!(concat!(
-        env!("OUT_DIR"),
-        "/component-wrapper-loader.template.js"
+        env!("CARGO_MANIFEST_DIR"),
+        "/src/wasm/component-wrapper-loader.template.js"
     ))
     .replace("__WASM_STEM__", wasm_stem);
 
@@ -947,10 +761,9 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     let initial_started = Instant::now();
     match config.build.target.as_str() {
         "component" => build_component(config, false, None)?,
-        "wasm" => build(config, false, None)?,
         other => {
             return Err(crate::TairitsuPackagerError::BuildError(format!(
-                "Unknown build target '{}'. Use 'wasm' or 'component'.",
+                "Unknown build target '{}'. Only 'component' is supported.",
                 other
             )));
         }
@@ -1288,7 +1101,10 @@ async fn run_watch_loop(
         let target_for_build = target.clone();
         let result = tokio::task::spawn_blocking(move || match target_for_build.as_str() {
             "component" => build_component(&config_clone, false, None),
-            _ => build(&config_clone, false, None),
+            other => Err(crate::TairitsuPackagerError::BuildError(format!(
+                "Unknown build target '{}'. Only 'component' is supported.",
+                other
+            ))),
         })
         .await
         .map_err(|e| {

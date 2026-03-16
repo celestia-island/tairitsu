@@ -17,19 +17,11 @@ pub fn rsx_demo() -> VNode {
 }"##;
 
     rsx! {
-        div {
-            class: "page rsx-demo",
-            id: "demo-rsx",
-            h3 {
-                "rsx! 宏"
-            }
+        div { class: "page rsx-demo", id: "demo-rsx",
+            h3 { "rsx! 宏" }
 
-            section {
-                class: "demo-section",
-                p {
-                    "声明式语法负责结构组织；事件和属性都在同一棵树里定义。"
-                }
-                ..vec![code_block(snippet, "rust")]
+            section { class: "demo-section", ..vec![code_block(snippet, "rust")],
+                p { "声明式语法负责结构组织；事件和属性都在同一棵树里定义。" }
             }
         }
     }

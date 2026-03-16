@@ -105,9 +105,7 @@ impl WitPlatform {
     /// the actual app view tree so users can see real UI content.
     pub fn mount_vnode_to_app(&self, vnode: &tairitsu_vdom::VNode) -> Result<()> {
         #[cfg(not(target_family = "wasm"))]
-        anyhow::bail!(
-            "mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)"
-        );
+        anyhow::bail!("mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)");
 
         #[cfg(target_family = "wasm")]
         {
@@ -344,7 +342,9 @@ mod wasm_impl {
     }
 
     pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: &VNode) -> Result<()> {
-        let app = if let Some(handle) = bindings::tairitsu_browser::full::document::get_element_by_id("app") {
+        let app = if let Some(handle) =
+            bindings::tairitsu_browser::full::document::get_element_by_id("app")
+        {
             WitElement(handle)
         } else {
             let body = bindings::tairitsu_browser::full::document::body()

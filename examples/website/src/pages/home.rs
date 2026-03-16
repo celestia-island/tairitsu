@@ -14,19 +14,12 @@ just build-web
 just serve-web"#;
 
     rsx! {
-        div {
-            class: "page home",
-            id: "demo-home",
-            h3 {
-                "快速开始"
-            }
+        div { class: "page home", id: "demo-home",
+            h3 { "快速开始" }
             p {
                 "把文档中的命令先跑通，确认 component 构建、资源复制、dev watch 全链路可用。"
             }
-            section {
-                class: "demo-section",
-                ..vec![code_block(quick_start, "bash")]
-            }
+            section { class: "demo-section", ..vec![code_block(quick_start, "bash")] }
         }
     }
 }

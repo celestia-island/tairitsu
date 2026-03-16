@@ -25,16 +25,13 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-tairitsu-vdom = "0.1"
-tairitsu-hooks = "0.1"
-tairitsu-macros = "0.1"
-wasm-bindgen = "0.2"
+tairitsu-web = {{ version = "0.1", features = ["wit-bindings"] }}
 
 [package.metadata.tairitsu]
 app-name = "{}"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 
 [package.metadata.tairitsu.dev]
 port = 3001
@@ -44,18 +41,17 @@ port = 3001
     std::fs::write(format!("{}/Cargo.toml", name), cargo_toml)?;
 
     pb.set_message("Writing src/lib.rs...");
-    let lib_rs = r##"use wasm_bindgen::prelude::*;
-use tairitsu_macros::rsx;
+    let lib_rs = r#"use tairitsu_web::WitPlatform;
 
-#[wasm_bindgen(start)]
-pub fn main() {
-    let _node = rsx! {
-        div {
-            "Hello, Tairitsu!"
-        }
-    };
+#[export_name = "tairitsu_component_bootstrap"]
+pub extern "C" fn bootstrap() {
+    WitPlatform::mount(|| {
+        tairitsu_web::vdom::VNode::element("div", vec![], vec![
+            tairitsu_web::vdom::VNode::text("Hello, Tairitsu!"),
+        ])
+    });
 }
-"##;
+"#;
     std::fs::write(format!("{}/src/lib.rs", name), lib_rs)?;
 
     let msg = format!("Project {} created! ✅", name);

@@ -19,9 +19,10 @@ count.set(count.get() + 1);"##;
         div { class: "page reactive-demo", id: "demo-reactive",
             h3 { "响应式基础" }
 
-            section { class: "demo-section",
-                p { "Signal / Effect 已具备表达能力，下一步可继续接入自动重渲染驱动。" }
-                ..vec![code_block(snippet, "rust")]
+            section { class: "demo-section", ..vec![code_block(snippet, "rust")],
+                p {
+                    "Signal / Effect 已具备表达能力，下一步可继续接入自动重渲染驱动。"
+                }
             }
         }
     }

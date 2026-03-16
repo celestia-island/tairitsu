@@ -1,3 +1,31 @@
-- examples/website 的 wasm32-wasip2 component wrapper 只暴露 tairitsu-browser:full/lifecycle.start，不会暴露 Rust 的 run 符号。
-- 如果页面只显示 lifecycle.start 占位文本，优先检查 packages/web/src/wit_platform.rs 的生命周期启动链路，而不是继续改 packager 的 boot export 探测。
-- 当前做法：packages/web 的 lifecycle.start 直接调用最终应用提供的 extern C 符号 tairitsu_component_bootstrap；examples/website/src/lib.rs 定义该符号并转发到 run().
+﻿# Tairitsu 构建闭环记录
+
+## 外部工具清除（2026-03-16）
+
+已从整个代码库彻底移除以下外部工具依赖：
+- trunk —— 从未作为依赖存在，仅文档提及
+- wasm-bindgen / wasm-bindgen-cli-support —— 已从 packager 和 web 包中移除
+- web-sys / js-sys —— 已从 tairitsu-web 包中移除
+- wasm32-unknown-unknown 构建路径 —— 已完全移除
+
+## 当前唯一构建目标
+wasm32-wasip2 (WIT Component Model)
+
+## 构建工具链（全部使用项目自有设施）
+- tairitsu-packager：替代 trunk，一站式打包/dev server
+- tairitsu-web + wit-bindings feature：Rust 侧 WIT 绑定（via wit-bindgen）
+- packages/browser-glue TypeScript：浏览器 DOM/事件/Canvas 侧 WIT 实现
+- jco / npx @bytecodealliance/jco：wasm component → JS transpile（packager 自动调用）
+
+## CLI 默认
+- tairitsu build 默认 --target component
+- Cargo.toml [package.metadata.tairitsu.build] target 默认 "component"
+
+## 关键修改文件
+- packages/packager/Cargo.toml: 无 wasm-bindgen-cli-support，default feature 无 wasm
+- packages/web/Cargo.toml: 无 web-sys/js-sys/wasm-bindgen，无 web feature
+- packages/packager/build.rs: 不再需要 Node.js/tsc
+- packages/packager/src/wasm/component-wrapper-loader.template.js: 纯 JS，include_str! 直接引用
+- packages/packager/src/wasm/mod.rs: 仅保留 component 路径
+- packages/web/src/platform.rs: 纯存根（无 cfg web 块）
+- packages/web/src/portal.rs: 纯存根
