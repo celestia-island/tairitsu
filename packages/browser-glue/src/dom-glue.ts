@@ -84,6 +84,10 @@ export function getHead(): bigint | undefined {
   return registerNode(h);
 }
 
+// Compatibility aliases expected by some jco-transpiled wrappers.
+export const body = getBody;
+export const head = getHead;
+
 export function getElementById(id: string): bigint | undefined {
   const el = document.getElementById(id);
   if (!el) return undefined;

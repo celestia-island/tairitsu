@@ -430,54 +430,11 @@ fn write_component_wrapper_loader(
             )
         })?;
 
-    let loader = format!(
-        r#"export async function instantiateWithWrapper(imports = {{}}) {{
-    const candidates = [
-        './component-wrapper/{wasm_stem}.js',
-        './component-wrapper/index.js',
-    ];
-
-    let lastError = null;
-
-    for (const path of candidates) {{
-        try {{
-            const mod = await import(path);
-            const instantiate = mod.instantiate || mod.default || mod.init;
-            if (typeof instantiate !== 'function') {{
-                // Some transpilers emit self-initializing modules (top-level await)
-                // with no explicit instantiate export. Import success means ready.
-                return mod;
-            }}
-
-            // Try common transpiler signatures in order.
-            try {{
-                return await instantiate(imports);
-            }} catch (_e1) {{}}
-
-            try {{
-                return await instantiate(async (modulePath) => {{
-                    const resolved = new URL(modulePath, import.meta.url);
-                    const response = await fetch(resolved);
-                    if (!response.ok) {{
-                        throw new Error(`Failed to fetch core module: ${{modulePath}}`);
-                    }}
-                    return WebAssembly.compileStreaming(response);
-                }}, imports);
-            }} catch (_e2) {{}}
-        }} catch (e) {{
-            lastError = e;
-        }}
-    }}
-
-    throw new Error(
-        'Component wrapper not found or could not be initialized. '
-        + 'Expected a transpiled wrapper under ./component-wrapper/. '
-        + (lastError ? `Last error: ${{lastError}}` : '')
-    );
-}}
-"#,
-        wasm_stem = wasm_stem
-    );
+    let loader = include_str!(concat!(
+        env!("OUT_DIR"),
+        "/component-wrapper-loader.template.js"
+    ))
+    .replace("__WASM_STEM__", wasm_stem);
 
     let loader_path = config.build.output_dir.join("component-wrapper-loader.js");
     std::fs::write(loader_path, loader)?;
@@ -535,7 +492,7 @@ fn try_generate_component_wrapper(
         }
     }
 
-    let attempts: [(&str, Vec<String>); 2] = [
+    let mut attempts: Vec<(&str, Vec<String>)> = vec![
         (
             "jco",
             vec![
@@ -557,6 +514,21 @@ fn try_generate_component_wrapper(
             ],
         ),
     ];
+
+    #[cfg(windows)]
+    {
+        attempts.push((
+            "npx.cmd",
+            vec![
+                "--yes".to_string(),
+                "@bytecodealliance/jco".to_string(),
+                "transpile".to_string(),
+                wasm_path_for_cmd.display().to_string(),
+                "-o".to_string(),
+                wrapper_dir_for_cmd.display().to_string(),
+            ],
+        ));
+    }
 
     let mut missing_commands = Vec::new();
 
@@ -634,6 +606,12 @@ fn try_generate_component_wrapper(
 fn generate_component_html(config: &Config) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
+    // Build-time version stamp so browsers never serve stale cached JS/WASM
+    // modules even if `Cache-Control: no-store` is bypassed by a caching proxy.
+    let v = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
 
     let title = config.html.title.as_deref().unwrap_or(pkg_name.as_str());
     let favicon = config
@@ -662,20 +640,20 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         {{
             "imports": {{
                 "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-                "tairitsu-browser:full/node": "./browser-glue/dom-glue.js",
-                "tairitsu-browser:full/document": "./browser-glue/dom-glue.js",
-                "tairitsu-browser:full/window": "./browser-glue/dom-glue.js",
-                "tairitsu-browser:full/style": "./browser-glue/dom-glue.js",
-                "tairitsu-browser:full/event-target": "./browser-glue/events-glue.js",
-                "tairitsu-browser:full/fetch-api": "./browser-glue/fetch-glue.js",
-                "tairitsu-browser:full/canvas2d": "./browser-glue/canvas-glue.js"
+                "tairitsu-browser:full/node": "./browser-glue/dom-glue.js?v={v}",
+                "tairitsu-browser:full/document": "./browser-glue/dom-glue.js?v={v}",
+                "tairitsu-browser:full/window": "./browser-glue/dom-glue.js?v={v}",
+                "tairitsu-browser:full/style": "./browser-glue/dom-glue.js?v={v}",
+                "tairitsu-browser:full/event-target": "./browser-glue/events-glue.js?v={v}",
+                "tairitsu-browser:full/fetch-api": "./browser-glue/fetch-glue.js?v={v}",
+                "tairitsu-browser:full/canvas2d": "./browser-glue/canvas-glue.js?v={v}"
             }}
         }}
         </script>
     <script type="module">
         // Load browser API glue (WIT interface implementations)
-        import './browser-glue/index.js';
-        import {{ instantiateWithWrapper }} from './component-wrapper-loader.js';
+        import './browser-glue/index.js?v={v}';
+        import {{ instantiateWithWrapper }} from './component-wrapper-loader.js?v={v}';
 
         const appRoot = document.getElementById('app');
         const setAppStatus = (text) => {{
@@ -777,6 +755,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         head = config.html.head,
         body_class = config.html.body_class,
         wasm_file = wasm_file,
+        v = v,
     );
 
     let html_path = config.build.output_dir.join("index.html");
@@ -785,8 +764,33 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
+/// Middleware that prevents browsers from caching JS/WASM/HTML assets in dev mode.
+/// Without this, browsers serve stale cached modules even after a file changes.
+async fn no_cache_headers(
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let path = request.uri().path().to_owned();
+    let mut response = next.run(request).await;
+
+    let should_bust = path == "/"
+        || path.ends_with(".html")
+        || path.ends_with(".js")
+        || path.ends_with(".mjs")
+        || path.ends_with(".wasm")
+        || path.ends_with(".map");
+
+    if should_bust {
+        response.headers_mut().insert(
+            axum::http::header::CACHE_CONTROL,
+            axum::http::HeaderValue::from_static("no-store"),
+        );
+    }
+    response
+}
+
 pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result<()> {
-    use axum::{response::Html, routing::get, Router};
+    use axum::{middleware, response::Html, routing::get, Router};
     use std::net::SocketAddr;
     use tower_http::services::ServeDir;
 
@@ -824,11 +828,13 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
         )
     };
 
-    // Setup static file server
+    // Setup static file server with no-cache middleware so browsers always get
+    // fresh JS/WASM after a rebuild (prevents stale module cache errors in dev).
     let index_html = index_content.clone();
     let app = Router::new()
         .route("/", get(move || async move { Html(index_html.clone()) }))
-        .fallback_service(ServeDir::new(dist_dir));
+        .fallback_service(ServeDir::new(dist_dir))
+        .layer(middleware::from_fn(no_cache_headers));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     println!("\n[3/3] Server ready!");
