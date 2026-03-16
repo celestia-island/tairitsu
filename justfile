@@ -7,7 +7,9 @@
 #
 # Main tasks:
 #   just build           - Build everything (Release)
-#   just build-dev       - Build everything (Debug)
+#   just init            - Install JS dependencies (auto-detects pnpm/yarn/npm)
+#   just build           - Build everything (Release, runs init first)
+#   just build-dev       - Build everything (Debug, runs init first)
 #   just test            - Run all checks (check + clippy + examples verification)
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
@@ -29,7 +31,7 @@ default:
 # Tool installation and initialization
 # ============================================================================
 
-# Install required tools
+# Install required Rust toolchain components
 install-tools:
     rustup target add wasm32-wasip2
     rustup component add rustfmt --toolchain nightly
@@ -37,8 +39,51 @@ install-tools:
     python3 scripts/download_wasi_adapters.py
 
 # Development environment setup (install tools and build)
-setup: install-tools
+setup: install-tools init
     cargo build --release --all
+
+# ============================================================================
+# JS / Node dependency initialization
+# ============================================================================
+
+# ── Unix ─────────────────────────────────────────────────────────────────────
+# Detect pnpm > yarn > npm, install packages/browser-glue JS deps.
+# Skips when node_modules is already populated (fast, idempotent).
+[unix]
+init:
+    #!/usr/bin/env sh
+    set -e
+    GLUE_DIR="packages/browser-glue"
+    NM_DIR="$GLUE_DIR/node_modules"
+    if [ -d "$NM_DIR" ] && [ "$(ls -A "$NM_DIR" 2>/dev/null)" != "" ]; then
+        printf "  ✓  Node deps ready  (%s)\n" "$NM_DIR"
+    else
+        if   command -v pnpm >/dev/null 2>&1; then PM=pnpm
+        elif command -v yarn >/dev/null 2>&1; then PM=yarn
+        elif command -v npm  >/dev/null 2>&1; then PM=npm
+        else printf "  ✗  No package manager found (install pnpm, yarn, or npm)\n" >&2; exit 1; fi
+        printf "  →  %s install  (%s)\n" "$PM" "$GLUE_DIR"
+        cd "$GLUE_DIR" && "$PM" install
+        printf "  ✓  Node deps installed via %s\n" "$PM"
+    fi
+
+# ── Windows (PowerShell / pwsh) ───────────────────────────────────────────────
+[windows]
+init:
+    $glue = "packages\browser-glue"
+    $nm   = Join-Path $glue "node_modules"
+    $ready = (Test-Path $nm) -and ((Get-ChildItem $nm -ErrorAction SilentlyContinue | Select-Object -First 1) -ne $null)
+    if ($ready) {
+        Write-Host "  ✓  Node deps ready  ($nm)"
+    } else {
+        $pm = if     (Get-Command pnpm -ErrorAction SilentlyContinue) { "pnpm" } `
+              elseif (Get-Command yarn -ErrorAction SilentlyContinue) { "yarn" } `
+              elseif (Get-Command npm  -ErrorAction SilentlyContinue) { "npm"  } `
+              else   { Write-Error "No package manager found (install pnpm, yarn, or npm)"; exit 1 }
+        Write-Host "  →  $pm install  ($glue)"
+        Push-Location $glue; & $pm install; Pop-Location
+        Write-Host "  ✓  Node deps installed via $pm"
+    }
 
 # ============================================================================
 # Cleanup tasks
@@ -93,14 +138,14 @@ gen-wit-all: gen-wit-fetch gen-wit
 # ============================================================================
 
 # Build everything (Debug mode)
-build-dev:
+build-dev: init
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Building all (Debug mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     cargo build --all
 
 # Build everything (Release mode)
-build:
+build: init
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Building all (Release mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -299,12 +344,13 @@ watch:
 # ============================================================================
 
 # Start web demo development server (using tairitsu-packager)
-dev:
+# Start web demo development server with continuous file-watch rebuild
+dev: init
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Starting Tairitsu Website Demo with tairitsu-packager..."
+    @echo "Starting Tairitsu dev server  (watch mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    cd examples/website && cargo run --package tairitsu-packager -- dev
+    cd examples/website && cargo run --package tairitsu-packager -- dev --watch
 
 # Start old web-demo (deprecated)
 dev-old:
@@ -315,7 +361,7 @@ dev-old:
     cd examples/web-demo && cargo run --package tairitsu-packager -- dev
 
 # Build web demo for production (using tairitsu-packager)
-build-web:
+build-web: init
     @echo "Building website demo with tairitsu-packager..."
     cd examples/website && cargo run --package tairitsu-packager -- build --release
 

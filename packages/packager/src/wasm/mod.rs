@@ -1,5 +1,6 @@
 use crate::config::Config;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::time::{Duration, Instant};
 
 pub fn build(config: &Config, release: bool) -> crate::Result<()> {
     let pb = ProgressBar::new_spinner();
@@ -185,48 +186,90 @@ fn generate_html(config: &Config) -> crate::Result<()> {
 /// 4. 将 browser-glue/dist/ 拷贝到输出目录
 /// 5. 生成宿主 HTML（通过 browser-glue 加载组件）
 pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
-    let pb = ProgressBar::new_spinner();
+    let build_start = Instant::now();
+    let pb = ProgressBar::new(5);
     pb.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.cyan} {msg}")
-            .unwrap(),
+        ProgressStyle::with_template("  {spinner:.bold.cyan}  {prefix:.bold.dim}  {wide_msg}")
+            .unwrap()
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
     );
+    pb.enable_steady_tick(Duration::from_millis(80));
 
-    // Step 1: Check wasm32-wasip2 target
-    pb.set_message("Checking wasm32-wasip2 target...");
+    // ── 1/5  check target ─────────────────────────────────────────────────────
+    pb.set_prefix("[1/5]");
+    pb.set_message("check wasm32-wasip2");
+    let t = Instant::now();
     check_wasip2_target()?;
+    pb.println(format!(
+        "     ✓  {:<28}  {:.1?}",
+        "check wasm32-wasip2",
+        t.elapsed()
+    ));
+    pb.inc(1);
 
-    // Step 2: Build WASM Component
-    pb.set_message("Compiling WASM component (wasm32-wasip2)...");
+    // ── 2/5  compile ──────────────────────────────────────────────────────────
+    pb.set_prefix("[2/5]");
+    pb.set_message("compile WASM component");
+    let t = Instant::now();
     let wasm_path = build_wasm_component(config, release)?;
+    pb.println(format!(
+        "     ✓  {:<28}  {:.1?}",
+        "compile WASM component",
+        t.elapsed()
+    ));
+    pb.inc(1);
 
-    // Step 3: Copy component to output dir
-    pb.set_message("Copying WASM component...");
-    std::fs::create_dir_all(&config.build.output_dir)?;
+    // ── 3/5  bundle assets ────────────────────────────────────────────────────
+    pb.set_prefix("[3/5]");
+    pb.set_message("bundle assets");
+    let t = Instant::now();
     let dest_wasm = config
         .build
         .output_dir
         .join(format!("{}.wasm", config.package.name.replace('-', "_")));
+    std::fs::create_dir_all(&config.build.output_dir)?;
     std::fs::copy(&wasm_path, &dest_wasm)?;
-
-    // Step 4: Bundle browser-glue
-    pb.set_message("Bundling browser-glue...");
     copy_browser_glue(config)?;
-
-    // Step 5: Copy static assets from ./public
-    pb.set_message("Copying static assets...");
     copy_static_public_assets(config)?;
+    pb.println(format!(
+        "     ✓  {:<28}  {:.1?}",
+        "bundle assets",
+        t.elapsed()
+    ));
+    pb.inc(1);
 
-    // Step 6: Prepare wrapper fallback for browsers without native Component API
-    pb.set_message("Preparing component wrapper fallback...");
+    // ── 4/5  component wrapper ────────────────────────────────────────────────
+    pb.set_prefix("[4/5]");
+    pb.set_message("component wrapper");
+    let t = Instant::now();
     prepare_component_wrapper_fallback(config, &dest_wasm)?;
+    pb.println(format!(
+        "     ✓  {:<28}  {:.1?}",
+        "component wrapper",
+        t.elapsed()
+    ));
+    pb.inc(1);
 
-    // Step 7: Generate HTML
-    pb.set_message("Generating HTML...");
+    // ── 5/5  HTML ─────────────────────────────────────────────────────────────
+    pb.set_prefix("[5/5]");
+    pb.set_message("generate HTML");
+    let t = Instant::now();
     generate_component_html(config)?;
+    pb.println(format!(
+        "     ✓  {:<28}  {:.1?}",
+        "generate HTML",
+        t.elapsed()
+    ));
+    pb.inc(1);
 
-    pb.finish_with_message("Component build complete! ✅");
-    println!("\nOutput: {}", config.build.output_dir.display());
+    pb.finish_and_clear();
+    println!();
+    println!(
+        "  ✓  build complete  {:.1?}    📦  {}",
+        build_start.elapsed(),
+        config.build.output_dir.display()
+    );
+    println!();
 
     Ok(())
 }
@@ -789,18 +832,21 @@ async fn no_cache_headers(
     response
 }
 
-pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result<()> {
+pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
     use axum::{middleware, response::Html, routing::get, Router};
     use std::net::SocketAddr;
     use tower_http::services::ServeDir;
 
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  Tairitsu Development Server");
+    if watch {
+        println!("  Tairitsu  ↻  Development  (watch mode)");
+    } else {
+        println!("  Tairitsu  Development Server");
+    }
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
-    // Build first, following project target preference.
-    println!("[1/3] Building project artifacts...");
+    // Initial build.
     match config.build.target.as_str() {
         "component" => build_component(config, false)?,
         "wasm" => build(config, false)?,
@@ -814,49 +860,187 @@ pub async fn dev_server(config: &Config, port: u16, open: bool) -> crate::Result
 
     let dist_dir = config.build.output_dir.clone();
 
-    println!("\n[2/3] Starting development server...");
-
-    // Check if index.html exists
-    let index_path = dist_dir.join("index.html");
-    let index_content = if index_path.exists() {
-        std::fs::read_to_string(&index_path)?
-    } else {
-        format!(
-            "<!DOCTYPE html><html><head><title>{}</title></head><body><div id=\"app\">Loading...</div><script type=\"module\" src=\"./{}.js\"></script></body></html>",
-            config.package.name,
-            config.package.name.replace('-', "_")
-        )
-    };
-
-    // Setup static file server with no-cache middleware so browsers always get
-    // fresh JS/WASM after a rebuild (prevents stale module cache errors in dev).
-    let index_html = index_content.clone();
+    // Always read index.html from disk on each request so watch-mode rebuilds
+    // are served immediately without needing a server restart.
+    let dist_for_index = dist_dir.clone();
+    let pkg_name = config.package.name.clone();
     let app = Router::new()
-        .route("/", get(move || async move { Html(index_html.clone()) }))
+        .route(
+            "/",
+            get(move || {
+                let dist = dist_for_index.clone();
+                let pkg = pkg_name.clone();
+                async move {
+                    let content =
+                        std::fs::read_to_string(dist.join("index.html")).unwrap_or_else(|_| {
+                            format!(
+                                "<!DOCTYPE html><html><head><title>{}</title></head>\
+                                 <body><div id=\"app\">Loading…</div></body></html>",
+                                pkg
+                            )
+                        });
+                    Html(content)
+                }
+            }),
+        )
         .fallback_service(ServeDir::new(dist_dir))
         .layer(middleware::from_fn(no_cache_headers));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    println!("\n[3/3] Server ready!");
-    println!();
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("🌍 Local:   http://localhost:{}", port);
-    println!("📁 Serving: {}", config.build.output_dir.display());
+    println!("  🌍  Local:   http://localhost:{}", port);
+    println!("  📁  Serving: {}", config.build.output_dir.display());
+    if watch {
+        println!("  👁   Watch:  src/  Cargo.toml  public/");
+    }
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
-    println!("Press Ctrl+C to stop");
 
-    // Open browser if requested
     if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", port);
         match webbrowser::open(&url) {
-            Ok(_) => println!("✓ Opening browser..."),
-            Err(e) => eprintln!("⚠ Failed to open browser: {}", e),
+            Ok(_) => println!("  ✓  Opening browser…"),
+            Err(e) => eprintln!("  ⚠  Failed to open browser: {}", e),
         }
     }
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+
+    if watch {
+        // Run the HTTP server as a background task; this task runs the watch loop.
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.ok();
+        });
+        run_watch_loop(config, port).await?;
+    } else {
+        println!("  Press Ctrl+C to stop");
+        axum::serve(listener, app).await?;
+    }
+
+    Ok(())
+}
+
+/// Watches `src/`, `Cargo.toml`, `Tairitsu.toml`, and `public/` for changes and
+/// triggers incremental rebuilds using the same pipeline as the initial build.
+///
+/// Debounces rapid saves (200 ms window) so a single `cargo save` operation does
+/// not trigger multiple concurrent builds.
+async fn run_watch_loop(config: &Config, port: u16) -> crate::Result<()> {
+    use notify::{EventKind, RecursiveMode, Watcher};
+
+    let project_root = std::env::current_dir()?;
+
+    // Collect existing watch paths before moving them into the OS thread.
+    let watch_paths: Vec<std::path::PathBuf> = [
+        project_root.join("src"),
+        project_root.join("Cargo.toml"),
+        project_root.join("Tairitsu.toml"),
+        project_root.join("public"),
+    ]
+    .into_iter()
+    .filter(|p| p.exists())
+    .collect();
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<notify::Result<notify::Event>>(64);
+
+    // Spawn the watcher on a dedicated OS thread.  Some platform backends
+    // (e.g. FSEvents on macOS) are not Send; isolating them here avoids that.
+    std::thread::spawn(move || {
+        let Ok(mut watcher) = notify::recommended_watcher(move |ev| {
+            tx.blocking_send(ev).ok();
+        }) else {
+            eprintln!("  ⚠  Failed to create file watcher");
+            return;
+        };
+
+        for path in &watch_paths {
+            let mode = if path.is_dir() {
+                RecursiveMode::Recursive
+            } else {
+                RecursiveMode::NonRecursive
+            };
+            if let Err(e) = watcher.watch(path, mode) {
+                eprintln!("  ⚠  Cannot watch {}: {}", path.display(), e);
+            }
+        }
+
+        println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
+
+        // Keep the watcher alive until the process exits.
+        loop {
+            std::thread::sleep(Duration::from_secs(3600));
+        }
+    });
+
+    let debounce = tokio::time::Duration::from_millis(200);
+
+    loop {
+        // Wait for the first filesystem event.
+        let event = match rx.recv().await {
+            None => break, // channel closed (watcher thread exited)
+            Some(Err(e)) => {
+                eprintln!("  ⚠  Watch error: {}", e);
+                continue;
+            }
+            Some(Ok(ev)) => ev,
+        };
+
+        // Only react to create / modify / remove events.
+        if !matches!(
+            event.kind,
+            EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
+        ) {
+            continue;
+        }
+
+        // Collect the triggering paths, then drain further events within the
+        // debounce window so rapid multi-file saves cause only one rebuild.
+        let mut changed: Vec<std::path::PathBuf> = event
+            .paths
+            .iter()
+            .filter_map(|p| p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf()))
+            .collect();
+
+        let deadline = tokio::time::Instant::now() + debounce;
+        loop {
+            match tokio::time::timeout_at(deadline, rx.recv()).await {
+                Ok(Some(Ok(ev))) => {
+                    changed.extend(ev.paths.iter().filter_map(|p| {
+                        p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
+                    }))
+                }
+                _ => break,
+            }
+        }
+        changed.sort();
+        changed.dedup();
+
+        // Print what triggered the rebuild.
+        println!();
+        match changed.len() {
+            0 => println!("  ↻  source changed"),
+            1 => println!("  ↻  {}", changed[0].display()),
+            n => println!("  ↻  {} files changed", n),
+        }
+        println!();
+
+        // Run the rebuild on a blocking thread so the tokio runtime stays alive.
+        let config_clone = config.clone();
+        let target = config.build.target.clone();
+        let result = tokio::task::spawn_blocking(move || match target.as_str() {
+            "component" => build_component(&config_clone, false),
+            _ => build(&config_clone, false),
+        })
+        .await
+        .map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!("rebuild task panicked: {}", e))
+        })?;
+
+        match result {
+            Ok(()) => println!("  ✓  rebuilt  →  http://localhost:{}", port),
+            Err(e) => eprintln!("  ✗  {}", e),
+        }
+    }
 
     Ok(())
 }
