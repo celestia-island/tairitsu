@@ -907,13 +907,14 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     use axum::{middleware, response::Html, routing::get, Router};
     use tower_http::services::ServeDir;
 
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    let divider = panel_divider();
+    println!("{}", divider);
     if watch {
         println!("  Tairitsu  ↻  Development  (watch mode)");
     } else {
         println!("  Tairitsu  Development Server");
     }
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("{}", divider);
     println!();
 
     // Initial build (no MultiProgress — let cargo write directly to terminal).
@@ -1016,7 +1017,8 @@ fn print_status_panel(
     last_build_line: Option<&str>,
     warning: Option<&str>,
 ) {
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    let divider = panel_divider();
+    println!("{}", divider);
     println!("  🌍  {}: http://localhost:{}", locale().dev.local, port);
     println!("  📁  {}: {}", locale().dev.serving, output_dir.display());
     if let Some(line) = last_build_line {
@@ -1025,8 +1027,16 @@ fn print_status_panel(
     if let Some(w) = warning {
         println!("  ⚠  {}", w);
     }
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("{}", divider);
     println!();
+}
+
+fn panel_divider() -> String {
+    let width = crossterm::terminal::size()
+        .map(|(w, _)| w as usize)
+        .unwrap_or(60);
+    let len = width.max(24);
+    "━".repeat(len)
 }
 
 fn format_last_build_line(
