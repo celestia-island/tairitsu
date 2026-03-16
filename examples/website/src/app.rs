@@ -1,6 +1,9 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::navigation::navigation;
+use crate::pages::{builders::builders, home::home, reactive::reactive, rsx_demo::rsx_demo};
+
 pub struct App;
 
 impl App {
@@ -31,6 +34,8 @@ impl App {
                         }
                     }
                 }
+
+                ..vec![navigation()]
 
                 main { class: "content",
                     section { class: "panel", id: "architecture",
@@ -119,6 +124,14 @@ impl App {
                                 h3 { "Layer 3 工具交付层" }
                                 p { "packager / hooks / style / e2e / browser-glue" }
                             }
+                        }
+                    }
+
+                    section { class: "panel", id: "demos",
+                        h2 { "机制演示区" }
+                        p { class: "lead", "以下是可继续扩展成独立路由页的模块化 demo 卡片，已接入真实页面组件。" }
+                        div { class: "demo-grid",
+                            ..vec![home(), rsx_demo(), builders(), reactive()]
                         }
                     }
 

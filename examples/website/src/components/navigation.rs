@@ -6,30 +6,36 @@ use tairitsu_vdom::VNode;
 pub fn navigation() -> VNode {
     rsx! {
         nav {
-            class: "navigation",
+            class: "section-nav",
             ul {
                 li {
                     a {
-                        href: "#",
-                        "Home"
+                        href: "#architecture",
+                        "架构"
                     }
                 }
                 li {
                     a {
-                        href: "#rsx",
-                        "rsx! Macro"
+                        href: "#backends",
+                        "双后端"
                     }
                 }
                 li {
                     a {
-                        href: "#builders",
-                        "Builders"
+                        href: "#pipeline",
+                        "WIT 流水线"
                     }
                 }
                 li {
                     a {
-                        href: "#reactive",
-                        "Reactive System"
+                        href: "#demos",
+                        "机制演示"
+                    }
+                }
+                li {
+                    a {
+                        href: "#commands",
+                        "命令"
                     }
                 }
             }
