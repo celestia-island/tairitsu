@@ -1,5 +1,4 @@
 use crate::config::Config;
-use chrono::Local;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
 
@@ -960,8 +959,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
-    let mut last_build_line =
-        format_last_build_line(true, config.build.target.as_str(), initial_elapsed, None);
+    let mut last_build_line = format_last_build_line(true, initial_elapsed, None);
 
     let port_switched = if actual_port != port {
         Some(
@@ -999,7 +997,6 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
             config,
             actual_port,
             &config.build.output_dir,
-            config.build.target.as_str(),
             &mut last_build_line,
         )
         .await?;
@@ -1041,28 +1038,11 @@ fn panel_divider() -> String {
 
 fn format_last_build_line(
     ok: bool,
-    subsystem: &str,
     elapsed: Duration,
     error_hint: Option<&str>,
 ) -> String {
-    let t = locale();
-    let status = if ok {
-        &t.dev.status_success
-    } else {
-        &t.dev.status_failed
-    };
-    let now = Local::now().format("%H:%M:%S").to_string();
-    let mut line = format!(
-        "{}: {} | {} {} | {} {} | {} {:.1?}",
-        t.dev.last_build,
-        status,
-        t.dev.at_time,
-        now,
-        t.dev.subsystem,
-        subsystem,
-        t.dev.duration,
-        elapsed
-    );
+    let status = if ok { "成功" } else { "失败" };
+    let mut line = format!("{} | 用时 {:.1?}", status, elapsed);
     if let Some(hint) = error_hint {
         let display = if hint.len() > 50 { &hint[..50] } else { hint };
         line.push_str(&format!(" | {}", display));
@@ -1070,13 +1050,8 @@ fn format_last_build_line(
     line
 }
 
-fn format_building_line(subsystem: &str) -> String {
-    let t = locale();
-    let now = Local::now().format("%H:%M:%S").to_string();
-    format!(
-        "{}: {} | {} {} | {} {}",
-        t.dev.last_build, t.dev.status_building, t.dev.at_time, now, t.dev.subsystem, subsystem
-    )
+fn format_building_line() -> String {
+    locale().dev.build_rebuilding.clone()
 }
 /// Try binding localhost starting from `preferred_port` and automatically
 /// fallback to higher ports when the preferred one is already occupied.
@@ -1124,7 +1099,6 @@ async fn run_watch_loop(
     config: &Config,
     port: u16,
     output_dir: &std::path::Path,
-    target: &str,
     last_build_line: &mut String,
 ) -> crate::Result<()> {
     use notify::{EventKind, RecursiveMode, Watcher};
@@ -1165,7 +1139,7 @@ async fn run_watch_loop(
             }
         }
 
-        println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
+        println!("  ↻  {}", locale().dev.watching_for_changes);
 
         // Keep the watcher alive until the process exits.
         loop {
@@ -1279,7 +1253,7 @@ async fn run_watch_loop(
             println!("  ↻  {} {}", changed.len(), locale().dev.files_changed);
         }
 
-        *last_build_line = format_building_line(target);
+        *last_build_line = format_building_line();
         print_status_panel(port, output_dir, Some(last_build_line), None);
 
         // Run the rebuild on a blocking thread so the tokio runtime stays alive.
@@ -1301,7 +1275,7 @@ async fn run_watch_loop(
         let elapsed = rebuild_started.elapsed();
         match result {
             Ok(()) => {
-                *last_build_line = format_last_build_line(true, &target, elapsed, None);
+                *last_build_line = format_last_build_line(true, elapsed, None);
                 print_status_panel(port, output_dir, Some(last_build_line), None);
                 println!(
                     "  ✓  {}  →  http://localhost:{}",
@@ -1311,7 +1285,7 @@ async fn run_watch_loop(
             }
             Err(e) => {
                 let hint = extract_error_hint(e.to_string());
-                *last_build_line = format_last_build_line(false, &target, elapsed, Some(&hint));
+                *last_build_line = format_last_build_line(false, elapsed, Some(&hint));
                 print_status_panel(port, output_dir, Some(last_build_line), None);
                 eprintln!("  ✗  {}", e);
             }
