@@ -2,13 +2,21 @@ use crate::config::Config;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
 
-pub fn build(config: &Config, release: bool) -> crate::Result<()> {
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(
+pub fn build(
+    config: &Config,
+    release: bool,
+    multi: Option<std::sync::Arc<MultiProgress>>,
+) -> crate::Result<()> {
+    let pb_raw = ProgressBar::new_spinner();
+    pb_raw.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
             .unwrap(),
     );
+    let pb = match &multi {
+        Some(m) => m.add(pb_raw),
+        None => pb_raw,
+    };
 
     // Step 1: Check wasm32-unknown-unknown target
     pb.set_message("Checking WASM target...");
@@ -16,7 +24,7 @@ pub fn build(config: &Config, release: bool) -> crate::Result<()> {
 
     // Step 2: Build WASM
     pb.set_message("Compiling WASM...");
-    build_wasm(release)?;
+    build_wasm(release, multi)?;
 
     // Step 3: Run wasm-bindgen
     pb.set_message("Generating JS bindings...");
@@ -49,7 +57,12 @@ fn check_wasm_target() -> crate::Result<()> {
     Ok(())
 }
 
-fn build_wasm(release: bool) -> crate::Result<()> {
+fn build_wasm(
+    release: bool,
+    multi: Option<std::sync::Arc<MultiProgress>>,
+) -> crate::Result<()> {
+    use std::io::BufRead;
+
     let current_manifest = std::env::current_dir()?.join("Cargo.toml");
     let content = std::fs::read_to_string(&current_manifest)?;
     let manifest: toml::Value = toml::from_str(&content)?;
@@ -62,7 +75,8 @@ fn build_wasm(release: bool) -> crate::Result<()> {
             crate::TairitsuPackagerError::BuildError(
                 "Failed to read package name from Cargo.toml".to_string(),
             )
-        })?;
+        })?
+        .to_string();
 
     let mut cmd = std::process::Command::new("cargo");
     cmd.args([
@@ -70,18 +84,36 @@ fn build_wasm(release: bool) -> crate::Result<()> {
         "--target",
         "wasm32-unknown-unknown",
         "--package",
-        pkg_name,
+        &pkg_name,
     ]);
-
     if release {
         cmd.arg("--release");
     }
 
-    let status = cmd.status()?;
-    if !status.success() {
-        return Err(crate::TairitsuPackagerError::BuildError(
-            "Cargo build failed".to_string(),
-        ));
+    if let Some(multi) = multi {
+        use std::process::Stdio;
+        cmd.stderr(Stdio::piped());
+        let mut child = cmd.spawn()?;
+        if let Some(stderr) = child.stderr.take() {
+            std::thread::spawn(move || {
+                for line in std::io::BufReader::new(stderr).lines().flatten() {
+                    let _ = multi.println(&line);
+                }
+            });
+        }
+        let status = child.wait()?;
+        if !status.success() {
+            return Err(crate::TairitsuPackagerError::BuildError(
+                "Cargo build failed".to_string(),
+            ));
+        }
+    } else {
+        let status = cmd.status()?;
+        if !status.success() {
+            return Err(crate::TairitsuPackagerError::BuildError(
+                "Cargo build failed".to_string(),
+            ));
+        }
     }
 
     Ok(())
@@ -185,15 +217,25 @@ fn generate_html(config: &Config) -> crate::Result<()> {
 /// 3. 将 .wasm 组件拷贝到输出目录
 /// 4. 将 browser-glue/dist/ 拷贝到输出目录
 /// 5. 生成宿主 HTML（通过 browser-glue 加载组件）
-pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
+pub fn build_component(
+    config: &Config,
+    release: bool,
+    multi: Option<std::sync::Arc<MultiProgress>>,
+) -> crate::Result<()> {
     let build_start = Instant::now();
-    let pb = ProgressBar::new(5);
-    pb.set_style(
+    let pb_raw = ProgressBar::new(5);
+    pb_raw.set_style(
         ProgressStyle::with_template("  {spinner:.bold.cyan}  {prefix:.bold.dim}  {wide_msg}")
             .unwrap()
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
     );
-    pb.enable_steady_tick(Duration::from_millis(80));
+    pb_raw.enable_steady_tick(Duration::from_millis(80));
+    // Attach to MultiProgress when in watch mode so pb.println() lines
+    // scroll above the persistent status bars instead of below them.
+    let pb = match &multi {
+        Some(m) => m.add(pb_raw),
+        None => pb_raw,
+    };
 
     // ── 1/5  check target ─────────────────────────────────────────────────────
     pb.set_prefix("[1/5]");
@@ -211,7 +253,7 @@ pub fn build_component(config: &Config, release: bool) -> crate::Result<()> {
     pb.set_prefix("[2/5]");
     pb.set_message("compile WASM component");
     let t = Instant::now();
-    let wasm_path = build_wasm_component(config, release)?;
+    let wasm_path = build_wasm_component(config, release, multi)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "compile WASM component",
@@ -289,7 +331,13 @@ fn check_wasip2_target() -> crate::Result<()> {
     Ok(())
 }
 
-fn build_wasm_component(config: &Config, release: bool) -> crate::Result<std::path::PathBuf> {
+fn build_wasm_component(
+    config: &Config,
+    release: bool,
+    multi: Option<std::sync::Arc<MultiProgress>>,
+) -> crate::Result<std::path::PathBuf> {
+    use std::io::BufRead;
+
     let pkg_name = &config.package.name;
 
     let mut cmd = std::process::Command::new("cargo");
@@ -305,11 +353,32 @@ fn build_wasm_component(config: &Config, release: bool) -> crate::Result<std::pa
         cmd.arg("--release");
     }
 
-    let status = cmd.status()?;
-    if !status.success() {
-        return Err(crate::TairitsuPackagerError::BuildError(
-            "cargo build --target wasm32-wasip2 failed".to_string(),
-        ));
+    if let Some(multi) = multi {
+        // Pipe cargo's stderr (where all diagnostics appear) and relay each
+        // line through MultiProgress so the status bars stay at the bottom.
+        use std::process::Stdio;
+        cmd.stderr(Stdio::piped());
+        let mut child = cmd.spawn()?;
+        if let Some(stderr) = child.stderr.take() {
+            std::thread::spawn(move || {
+                for line in std::io::BufReader::new(stderr).lines().flatten() {
+                    let _ = multi.println(&line);
+                }
+            });
+        }
+        let status = child.wait()?;
+        if !status.success() {
+            return Err(crate::TairitsuPackagerError::BuildError(
+                "cargo build --target wasm32-wasip2 failed".to_string(),
+            ));
+        }
+    } else {
+        let status = cmd.status()?;
+        if !status.success() {
+            return Err(crate::TairitsuPackagerError::BuildError(
+                "cargo build --target wasm32-wasip2 failed".to_string(),
+            ));
+        }
     }
 
     let workspace_root = find_workspace_root()?;
@@ -845,10 +914,10 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
 
-    // Initial build.
+    // Initial build (no MultiProgress — let cargo write directly to terminal).
     match config.build.target.as_str() {
-        "component" => build_component(config, false)?,
-        "wasm" => build(config, false)?,
+        "component" => build_component(config, false, None)?,
+        "wasm" => build(config, false, None)?,
         other => {
             return Err(crate::TairitsuPackagerError::BuildError(format!(
                 "Unknown build target '{}'. Use 'wasm' or 'component'.",
@@ -963,7 +1032,8 @@ enum DevCmd {
 
 #[derive(Clone)]
 struct DevWatchUi {
-    _multi: std::sync::Arc<MultiProgress>,
+    /// Kept public so the watch loop can clone it for the build task.
+    multi: std::sync::Arc<MultiProgress>,
     server: ProgressBar,
     watcher: ProgressBar,
     build: ProgressBar,
@@ -1012,7 +1082,7 @@ impl DevWatchUi {
         check.set_message("check  ✓  ready");
 
         Self {
-            _multi: multi,
+            multi,
             server,
             watcher,
             build,
@@ -1186,7 +1256,7 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
                     None => break 'watch,
                     Some(DevCmd::Rebuild) => {
                         if let Some(ui) = &ui {
-                            let _ = ui._multi.println("  ↻  Manual rebuild triggered");
+                            let _ = ui.multi.println("  ↻  Manual rebuild triggered");
                         } else {
                             println!("  ↻  Manual rebuild triggered");
                         }
@@ -1195,7 +1265,7 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
                     Some(DevCmd::OpenBrowser) => {
                         let url = format!("http://localhost:{}", port);
                         if let Some(ui) = &ui {
-                            let _ = ui._multi.println(format!("  ↗  Opening {}", url));
+                            let _ = ui.multi.println(format!("  ↗  Opening {}", url));
                         } else {
                             println!("  ↗  Opening {}", url);
                         }
@@ -1232,12 +1302,15 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         }
 
         // Run the rebuild on a blocking thread so the tokio runtime stays alive.
+        // Pass a clone of MultiProgress so cargo's stderr is piped through it,
+        // keeping the 4 status bars anchored at the bottom of the terminal.
         let rebuild_started = Instant::now();
         let config_clone = config.clone();
         let target = config.build.target.clone();
+        let multi_for_build = ui.as_ref().map(|u| std::sync::Arc::clone(&u.multi));
         let result = tokio::task::spawn_blocking(move || match target.as_str() {
-            "component" => build_component(&config_clone, false),
-            _ => build(&config_clone, false),
+            "component" => build_component(&config_clone, false, multi_for_build),
+            _ => build(&config_clone, false, multi_for_build),
         })
         .await
         .map_err(|e| {
