@@ -32,6 +32,10 @@ serde_json = "^1"
 anyhow = "^1"
 chrono = "^0.4"
 futures = "^0.3"
+tempfile = "^3"
+
+# TOML parsing
+toml = "^0.8"
 
 # Command line parsing
 clap = { version = "^4", features = ["derive"] }

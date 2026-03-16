@@ -14,15 +14,45 @@
  * - `events-glue` — satisfies `tairitsu-browser:events` import interfaces
  * - `fetch-glue`  — satisfies `tairitsu-browser:fetch` import interfaces
  * - `canvas-glue` — satisfies `tairitsu-browser:canvas` import interfaces
+ * - `handle-table` — shared object handle management
  *
  * ## Status
  * Core DOM/events/fetch/canvas glue is implemented against browser APIs.
  * Additional API-surface expansion is tracked in PLAN.md.
+ *
+ * ## Diagnostic APIs
+ *
+ * The following diagnostic functions are exported for observability and debugging:
+ *
+ * - `registerDiagnosticCallbacks()` — Register event system diagnostics
+ * - `registerDomDiagnosticCallbacks()` — Register DOM operation diagnostics
+ * - `registerHandleDiagnosticCallbacks()` — Register handle table diagnostics
+ * - `checkEnvironment()` — Validate browser environment is ready
+ * - `getListenerCount()` — Get active event listener count
+ * - `getActiveEventCount()` — Get active (in-flight) event count
+ * - `getHandleStats()` — Get handle table statistics
  */
 
 export * from "./dom-glue.js";
 export * from "./events-glue.js";
 export * from "./fetch-glue.js";
 export * from "./canvas-glue.js";
+export * from "./handle-table.js";
+
+/**
+ * Diagnostic types for external consumers.
+ */
+export type {
+  DiagnosticError,
+  EventDispatchInfo,
+} from "./events-glue.js";
+
+export type {
+  DomDiagnosticError,
+} from "./dom-glue.js";
+
+export type {
+  HandleDiagnosticError,
+} from "./handle-table.js";
 
 

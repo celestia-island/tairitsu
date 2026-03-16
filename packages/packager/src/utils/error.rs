@@ -11,6 +11,15 @@ pub enum TairitsuPackagerError {
     #[error("Build error: {0}")]
     BuildError(String),
 
+    #[error("Doctor check failed: {0}")]
+    DoctorError(String),
+
+    #[error("Dependency error: {0}")]
+    DependencyError(String),
+
+    #[error("Environment error: {0}")]
+    EnvironmentError(String),
+
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 

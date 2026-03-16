@@ -1,6 +1,16 @@
 pub mod basic_components;
+pub mod build;
+pub mod doctor;
+pub mod error_handling;
+pub mod events;
+pub mod lifecycle;
 
 pub use basic_components::BasicComponentsTests;
+pub use build::BuildTests;
+pub use doctor::DoctorTests;
+pub use error_handling::ErrorHandlingTests;
+pub use events::EventTests;
+pub use lifecycle::LifecycleTests;
 
 use anyhow::Result;
 use thirtyfour::WebDriver;
@@ -22,9 +32,10 @@ pub trait Test: Send + Sync {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TestStatus {
     Success,
+    Warning,
     Failure,
     Error(String),
 }
@@ -75,20 +86,29 @@ impl TestResult {
             .iter()
             .filter(|r| matches!(r.status, TestStatus::Success))
             .count();
-        let failed = total - passed;
+        let warnings = results
+            .iter()
+            .filter(|r| matches!(r.status, TestStatus::Warning))
+            .count();
+        let errors = results
+            .iter()
+            .filter(|r| matches!(r.status, TestStatus::Failure | TestStatus::Error(_)))
+            .count();
 
-        let status = if failed == 0 {
+        let status = if errors == 0 && warnings == 0 {
             TestStatus::Success
-        } else if failed < total {
+        } else if errors == 0 {
+            TestStatus::Warning
+        } else if errors < total {
             TestStatus::Failure
         } else {
-            TestStatus::Error(format!("{} of {} tests failed", failed, total))
+            TestStatus::Error(format!("{} of {} tests failed", errors, total))
         };
 
         Self {
             component: "Test Suite".to_string(),
             status,
-            message: format!("{} passed, {} failed", passed, failed),
+            message: format!("{} passed, {} warnings, {} errors", passed, warnings, errors),
             duration_ms: 0,
             screenshot_path: None,
         }

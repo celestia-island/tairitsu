@@ -5,6 +5,7 @@
 
 pub mod cli;
 pub mod config;
+pub mod doctor;
 pub mod i18n;
 pub mod styles;
 pub mod utils;

@@ -69,6 +69,7 @@ interface event-target {
 
 interface event-callbacks {
     use node.{node-handle};
+    use event-target.{event-handle};
 
     record mouse-event-data {
         client-x: f64,
@@ -103,11 +104,11 @@ interface event-callbacks {
         input-type: string,
     }
 
-    on-mouse-event: func(listener-id: u64, data: mouse-event-data);
-    on-keyboard-event: func(listener-id: u64, data: keyboard-event-data);
-    on-focus-event: func(listener-id: u64, data: focus-event-data);
-    on-input-event: func(listener-id: u64, data: input-event-data);
-    on-generic-event: func(listener-id: u64, event-type: string);
+    on-mouse-event: func(listener-id: u64, event: event-handle, data: mouse-event-data);
+    on-keyboard-event: func(listener-id: u64, event: event-handle, data: keyboard-event-data);
+    on-focus-event: func(listener-id: u64, event: event-handle, data: focus-event-data);
+    on-input-event: func(listener-id: u64, event: event-handle, data: input-event-data);
+    on-generic-event: func(listener-id: u64, event: event-handle, event-type: string);
 }
 
 interface lifecycle {
