@@ -786,29 +786,38 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         }};
 
         const tryInvokeBootExports = async (result) => {{
-            const isBootName = (name) => /^(run|start|init|main)$/i.test(name);
-            const seen = new Set();
+            const normalizeBootName = (name) => {{
+                const lowered = String(name || '').toLowerCase();
+                if (lowered === 'run') return 'run';
+                if (lowered === 'main') return 'main';
+                if (lowered === 'init') return 'init';
+                if (lowered === 'start') return 'start';
+                return null;
+            }};
 
-            const walk = async (obj, depth = 0) => {{
-                if (!obj || typeof obj !== 'object' || depth > 3) return false;
-                if (seen.has(obj)) return false;
-                seen.add(obj);
+            const seenObjects = new Set();
+            const seenFunctions = new Set();
+            const discovered = [];
+
+            const collect = (obj, depth = 0) => {{
+                if (!obj || typeof obj !== 'object' || depth > 3) return;
+                if (seenObjects.has(obj)) return;
+                seenObjects.add(obj);
 
                 for (const [name, value] of Object.entries(obj)) {{
-                    if (typeof value === 'function' && isBootName(name)) {{
-                        await value();
-                        return true;
-                    }}
+                    if (typeof value !== 'function') continue;
+                    const kind = normalizeBootName(name);
+                    if (!kind) continue;
+                    if (seenFunctions.has(value)) continue;
+                    seenFunctions.add(value);
+                    discovered.push({{ kind, fn: value }});
                 }}
 
                 for (const [, value] of Object.entries(obj)) {{
                     if (value && typeof value === 'object') {{
-                        const ok = await walk(value, depth + 1);
-                        if (ok) return true;
+                        collect(value, depth + 1);
                     }}
                 }}
-
-                return false;
             }};
 
             const targets = [
@@ -819,11 +828,29 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
             ];
 
             for (const target of targets) {{
-                if (await walk(target)) return true;
-                if (target && target.exports && await walk(target.exports)) return true;
+                collect(target);
+                if (target && target.exports) collect(target.exports);
             }}
 
-            return false;
+            let invoked = false;
+
+            for (const preferred of ['run', 'main', 'init']) {{
+                for (const entry of discovered) {{
+                    if (entry.kind !== preferred) continue;
+                    await entry.fn();
+                    invoked = true;
+                }}
+            }}
+
+            if (!invoked) {{
+                const fallbackStart = discovered.find((entry) => entry.kind === 'start');
+                if (fallbackStart) {{
+                    await fallbackStart.fn();
+                    invoked = true;
+                }}
+            }}
+
+            return invoked;
         }};
 
         // Load wasm bytes and detect whether this is a Component or core module
@@ -1036,11 +1063,7 @@ fn panel_divider() -> String {
     "━".repeat(len)
 }
 
-fn format_last_build_line(
-    ok: bool,
-    elapsed: Duration,
-    error_hint: Option<&str>,
-) -> String {
+fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>) -> String {
     let status = if ok { "成功" } else { "失败" };
     let mut line = format!("{} | 用时 {:.1?}", status, elapsed);
     if let Some(hint) = error_hint {
