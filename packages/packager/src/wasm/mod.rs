@@ -954,12 +954,20 @@ async fn bind_listener_with_fallback(
     )))
 }
 
+#[derive(Debug, Clone, Copy)]
+enum DevCmd {
+    Rebuild,
+    OpenBrowser,
+    Clear,
+}
+
 #[derive(Clone)]
 struct DevWatchUi {
     _multi: std::sync::Arc<MultiProgress>,
     server: ProgressBar,
     watcher: ProgressBar,
     build: ProgressBar,
+    check: ProgressBar,
     started: Instant,
     port: u16,
 }
@@ -967,6 +975,14 @@ struct DevWatchUi {
 impl DevWatchUi {
     fn new(port: u16, output_dir: &std::path::Path, target: &str) -> Self {
         let multi = std::sync::Arc::new(MultiProgress::new());
+
+        // Print key-binding hints above the persistent spinner bars.
+        let _ = multi.println(
+            "  (r) rebuild   (o) open browser   (c) clear   (Ctrl+C) quit",
+        );
+        let _ = multi.println(
+            "  ─────────────────────────────────────────────────────────",
+        );
 
         let style = ProgressStyle::with_template("  {spinner:.green} {msg}").unwrap();
         let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -986,15 +1002,21 @@ impl DevWatchUi {
         watcher.set_message("watch  src/, Cargo.toml, Tairitsu.toml, public/");
 
         let build = multi.add(ProgressBar::new_spinner());
-        build.set_style(style.tick_strings(&spinner_frames));
+        build.set_style(style.clone().tick_strings(&spinner_frames));
         build.enable_steady_tick(Duration::from_millis(130));
         build.set_message(format!("build  idle  (target: {})", target));
+
+        let check = multi.add(ProgressBar::new_spinner());
+        check.set_style(style.tick_strings(&spinner_frames));
+        check.enable_steady_tick(Duration::from_millis(150));
+        check.set_message("check  ✓  ready");
 
         Self {
             _multi: multi,
             server,
             watcher,
             build,
+            check,
             started: Instant::now(),
             port,
         }
@@ -1012,9 +1034,10 @@ impl DevWatchUi {
     fn on_build_start(&self) {
         self.build.enable_steady_tick(Duration::from_millis(100));
         self.build.set_message("build  rebuilding...");
+        self.check.set_message("check  (building…)");
     }
 
-    fn on_build_finish(&self, ok: bool, elapsed: Duration) {
+    fn on_build_finish(&self, ok: bool, elapsed: Duration, error_hint: Option<&str>) {
         self.build.disable_steady_tick();
         let status = if ok { "ok" } else { "failed" };
         self.build.set_message(format!(
@@ -1026,6 +1049,13 @@ impl DevWatchUi {
         if ok {
             self.server
                 .set_message(format!("serve  http://localhost:{}   (hot)", self.port));
+            self.check.set_message("check  ✓  no errors");
+        } else if let Some(hint) = error_hint {
+            // Truncate long diagnostic messages to fit in one terminal line.
+            let display = if hint.len() > 55 { &hint[..55] } else { hint };
+            self.check.set_message(format!("check  ✗  {}", display));
+        } else {
+            self.check.set_message("check  ✗  compile failed");
         }
     }
 }
@@ -1055,6 +1085,7 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
 
     // Spawn the watcher on a dedicated OS thread.  Some platform backends
     // (e.g. FSEvents on macOS) are not Send; isolating them here avoids that.
+    let has_ui = ui.is_some();
     std::thread::spawn(move || {
         let Ok(mut watcher) = notify::recommended_watcher(move |ev| {
             tx.blocking_send(ev).ok();
@@ -1074,7 +1105,9 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
             }
         }
 
-        println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
+        if !has_ui {
+            println!("  ↻  Watching for changes…  (Ctrl+C to stop)");
+        }
 
         // Keep the watcher alive until the process exits.
         loop {
@@ -1082,48 +1115,108 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         }
     });
 
+    // ── Keyboard command listener ─────────────────────────────────────────────
+    // Runs on a dedicated blocking thread so the tokio runtime is never stalled
+    // waiting for stdin.  The user types a letter + Enter to send a command.
+    let (cmd_tx, mut cmd_rx) = tokio::sync::mpsc::channel::<DevCmd>(8);
+    tokio::task::spawn_blocking(move || {
+        use std::io::BufRead;
+        for line in std::io::stdin().lock().lines().flatten() {
+            let cmd = match line.trim() {
+                "r" | "R" => Some(DevCmd::Rebuild),
+                "o" | "O" => Some(DevCmd::OpenBrowser),
+                "c" | "C" => Some(DevCmd::Clear),
+                _ => None,
+            };
+            if let Some(c) = cmd {
+                if cmd_tx.blocking_send(c).is_err() {
+                    break;
+                }
+            }
+        }
+    });
+
     let debounce = tokio::time::Duration::from_millis(200);
 
-    loop {
-        // Wait for the first filesystem event.
-        let event = match rx.recv().await {
-            None => break, // channel closed (watcher thread exited)
-            Some(Err(e)) => {
-                eprintln!("  ⚠  Watch error: {}", e);
-                continue;
+    'watch: loop {
+        // Wait for a rebuild trigger — either a file-system event or a keyboard
+        // command.  `changed` is populated only for file-driven triggers.
+        let mut changed: Vec<std::path::PathBuf> = Vec::new();
+
+        let should_rebuild = tokio::select! {
+            ev = rx.recv() => {
+                let ev = match ev {
+                    None => break 'watch,
+                    Some(Err(e)) => { eprintln!("  ⚠  Watch error: {}", e); continue; }
+                    Some(Ok(e)) => e,
+                };
+                if !matches!(
+                    ev.kind,
+                    EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
+                ) {
+                    continue;
+                }
+
+                // Collect paths for this event.
+                changed = ev
+                    .paths
+                    .iter()
+                    .filter_map(|p| p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf()))
+                    .collect();
+
+                // Debounce: drain further events within the 200 ms window.
+                let deadline = tokio::time::Instant::now() + debounce;
+                loop {
+                    match tokio::time::timeout_at(deadline, rx.recv()).await {
+                        Ok(Some(Ok(ev))) => {
+                            changed.extend(ev.paths.iter().filter_map(|p| {
+                                p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
+                            }));
+                        }
+                        _ => break,
+                    }
+                }
+                changed.sort();
+                changed.dedup();
+                true
             }
-            Some(Ok(ev)) => ev,
+
+            cmd = cmd_rx.recv() => {
+                match cmd {
+                    None => break 'watch,
+                    Some(DevCmd::Rebuild) => {
+                        if let Some(ui) = &ui {
+                            let _ = ui._multi.println("  ↻  Manual rebuild triggered");
+                        } else {
+                            println!("  ↻  Manual rebuild triggered");
+                        }
+                        true
+                    }
+                    Some(DevCmd::OpenBrowser) => {
+                        let url = format!("http://localhost:{}", port);
+                        if let Some(ui) = &ui {
+                            let _ = ui._multi.println(format!("  ↗  Opening {}", url));
+                        } else {
+                            println!("  ↗  Opening {}", url);
+                        }
+                        webbrowser::open(&url).ok();
+                        false
+                    }
+                    Some(DevCmd::Clear) => {
+                        // ANSI: clear screen and move cursor to top-left.
+                        // indicatif redraws its persistent bars on the next tick.
+                        print!("\x1b[2J\x1b[1;1H");
+                        use std::io::Write;
+                        std::io::stdout().flush().ok();
+                        false
+                    }
+                }
+            }
         };
 
-        // Only react to create / modify / remove events.
-        if !matches!(
-            event.kind,
-            EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
-        ) {
+        if !should_rebuild {
             continue;
         }
-
-        // Collect the triggering paths, then drain further events within the
-        // debounce window so rapid multi-file saves cause only one rebuild.
-        let mut changed: Vec<std::path::PathBuf> = event
-            .paths
-            .iter()
-            .filter_map(|p| p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf()))
-            .collect();
-
-        let deadline = tokio::time::Instant::now() + debounce;
-        loop {
-            match tokio::time::timeout_at(deadline, rx.recv()).await {
-                Ok(Some(Ok(ev))) => {
-                    changed.extend(ev.paths.iter().filter_map(|p| {
-                        p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
-                    }))
-                }
-                _ => break,
-            }
-        }
-        changed.sort();
-        changed.dedup();
 
         if let Some(ui) = &ui {
             ui.on_change(&changed);
@@ -1155,14 +1248,15 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         match result {
             Ok(()) => {
                 if let Some(ui) = &ui {
-                    ui.on_build_finish(true, elapsed);
+                    ui.on_build_finish(true, elapsed, None);
                 } else {
                     println!("  ✓  rebuilt  →  http://localhost:{}", port);
                 }
             }
             Err(e) => {
+                let hint = extract_error_hint(e.to_string());
                 if let Some(ui) = &ui {
-                    ui.on_build_finish(false, elapsed);
+                    ui.on_build_finish(false, elapsed, Some(&hint));
                 }
                 eprintln!("  ✗  {}", e);
             }
@@ -1170,4 +1264,22 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
     }
 
     Ok(())
+}
+
+/// Extract a concise one-line description from a build error for the TUI status bar.
+fn extract_error_hint(msg: String) -> String {
+    // Prefer lines beginning with rustc-style "error[…]" or "error: …"
+    for line in msg.lines() {
+        let t = line.trim();
+        if (t.starts_with("error[") || t.starts_with("error: "))
+            && !t.contains("aborting due to")
+            && t.len() > 6
+        {
+            return if t.len() > 55 { t[..55].to_string() } else { t.to_string() };
+        }
+    }
+    // Fallback: first non-empty line, capped at 55 chars.
+    let first = msg.lines().find(|l| !l.trim().is_empty()).unwrap_or(&msg);
+    let first = first.trim();
+    if first.len() > 55 { first[..55].to_string() } else { first.to_string() }
 }
