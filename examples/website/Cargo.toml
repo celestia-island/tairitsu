@@ -48,6 +48,60 @@ head = """
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./site.css">
+<script>
+	(() => {
+		const SUPPORTED = ["en-US", "zh-CHS", "zh-CHT", "ja-JP", "ko-KR", "fr-FR", "es-ES", "ru-RU"];
+		const DEFAULT_LANG = "zh-CHS";
+
+		const normalize = (value) => {
+			if (!value) return null;
+			const exact = SUPPORTED.find((item) => item.toLowerCase() === String(value).toLowerCase());
+			if (exact) return exact;
+
+			const short = String(value).slice(0, 2).toLowerCase();
+			const byPrefix = SUPPORTED.find((item) => item.slice(0, 2).toLowerCase() === short);
+			return byPrefix || null;
+		};
+
+		const queryLang = new URLSearchParams(location.search).get("lang");
+		const storedLang = localStorage.getItem("tairitsu.demo.lang");
+		const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+		const active = normalize(queryLang) || normalize(storedLang) || normalize(browserLang) || DEFAULT_LANG;
+
+		const apply = (lang) => {
+			const next = normalize(lang) || DEFAULT_LANG;
+			document.querySelectorAll(".lang-pane").forEach((pane) => {
+				pane.classList.remove("is-active");
+			});
+			const activePane = document.querySelector(`.locale-${next}`);
+			if (activePane) {
+				activePane.classList.add("is-active");
+			}
+
+			document.documentElement.setAttribute("lang", next);
+			localStorage.setItem("tairitsu.demo.lang", next);
+
+			const selector = document.getElementById("lang-switch");
+			if (selector && selector.value !== next) {
+				selector.value = next;
+			}
+
+			const url = new URL(location.href);
+			url.searchParams.set("lang", next);
+			history.replaceState(null, "", url.toString());
+		};
+
+		document.addEventListener("DOMContentLoaded", () => {
+			const selector = document.getElementById("lang-switch");
+			if (selector) {
+				selector.addEventListener("change", (event) => {
+					apply(event.target.value);
+				});
+			}
+			apply(active);
+		});
+	})();
+</script>
 """
 body-class = "tairitsu-app"
 

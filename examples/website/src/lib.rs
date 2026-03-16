@@ -5,6 +5,7 @@ use tracing::info;
 
 mod app;
 mod components;
+mod i18n;
 mod pages;
 
 pub use app::App;

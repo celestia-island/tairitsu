@@ -1,157 +1,185 @@
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VNode, VText};
 
-use crate::components::navigation::navigation;
-use crate::pages::{builders::builders, home::home, reactive::reactive, rsx_demo::rsx_demo};
+use crate::components::code_block::code_block;
+use crate::i18n::{text, Locale, LOCALES};
 
 pub struct App;
 
 impl App {
     pub fn render(&self) -> VNode {
+        let panes: Vec<VNode> = LOCALES.into_iter().map(render_locale).collect();
+        let language_options: Vec<VNode> = LOCALES
+            .into_iter()
+            .map(|locale| {
+                rsx! {
+                    option {
+                        value: locale.code(),
+                        ..txt(locale.label())
+                    }
+                }
+            })
+            .collect();
+
         rsx! {
             div { class: "site-shell",
-                header { class: "site-hero", id: "top",
-                    div { class: "hero-noise" }
-                    p { class: "eyebrow", "Tairitsu Framework Demo" }
-                    h1 { "从占位启动到可读 Demo" }
-                    p { class: "hero-copy", "这一版先把 docs 里的核心设计翻成可见页面：架构、双后端、WIT 流水线、包分层与开发链路。" }
-                    div { class: "hero-actions",
-                        a { class: "btn btn-primary", href: "#architecture", "查看系统设计" }
-                        a { class: "btn btn-ghost", href: "#commands", "开发命令" }
-                    }
-                    ul { class: "hero-metrics",
-                        li {
-                            strong { "3" }
-                            span { "层架构" }
-                        }
-                        li {
-                            strong { "2" }
-                            span { "Web 后端路径" }
-                        }
-                        li {
-                            strong { "22" }
-                            span { "自动生成 WIT 域" }
-                        }
+                div { class: "language-toolbar",
+                    label { r#for: "lang-switch", "Language" }
+                    select { id: "lang-switch", class: "language-switch",
+                        ..language_options
                     }
                 }
 
-                ..vec![navigation()]
-
-                main { class: "content",
-                    section { class: "panel", id: "architecture",
-                        h2 { "系统架构总览" }
-                        p { class: "lead", "Tairitsu 是面向 WebAssembly Component Model 的运行时，强调接口先行、运行时解耦、双路径并行演进。" }
-                        div { class: "grid three",
-                            article { class: "card",
-                                h3 { "应用层" }
-                                p { "自定义 WIT 接口、业务组件、examples 工程，定义你要暴露和消费的能力边界。" }
-                            }
-                            article { class: "card",
-                                h3 { "框架层" }
-                                p { "runtime + macros + vdom/hooks/style/web + packager，负责渲染与组件装配。" }
-                            }
-                            article { class: "card",
-                                h3 { "宿主层" }
-                                p { "wasmtime/native host 与 browser-glue，承接浏览器能力映射和组件执行。" }
-                            }
-                        }
-                    }
-
-                    section { class: "panel", id: "backends",
-                        h2 { "Web 平台双后端" }
-                        div { class: "compare",
-                            article { class: "card tone-a",
-                                h3 { "web 路径" }
-                                p { "wasm32-unknown-unknown + wasm-bindgen/web-sys，兼容历史生态。" }
-                                ul {
-                                    li { "迁移成本低" }
-                                    li { "生态成熟" }
-                                    li { "协议抽象能力一般" }
-                                }
-                            }
-                            article { class: "card tone-b",
-                                h3 { "wit-bindings 路径" }
-                                p { "wasm32-wasip2 + browser-glue，直接对齐 Component Model。" }
-                                ul {
-                                    li { "接口契约更清晰" }
-                                    li { "便于未来协议演进" }
-                                    li { "需要组件宿主支持" }
-                                }
-                            }
-                        }
-                    }
-
-                    section { class: "panel", id: "pipeline",
-                        h2 { "W3C WebIDL → WIT 生成流水线" }
-                        p { "在脚本链路中抓取 webref IDL，转换为多域 WIT，再合并进 browser-extended 世界。" }
-                        ol { class: "steps",
-                            li {
-                                span { class: "step-index", "01" }
-                                div {
-                                    h4 { "抓取规范" }
-                                    p { "从 w3c/webref 拉取 DOM、Fetch、Streams 等接口定义。" }
-                                }
-                            }
-                            li {
-                                span { class: "step-index", "02" }
-                                div {
-                                    h4 { "生成分域 WIT" }
-                                    p { "按 canvas/css/fetch/indexed-db 等域输出 .wit 文件。" }
-                                }
-                            }
-                            li {
-                                span { class: "step-index", "03" }
-                                div {
-                                    h4 { "组装全量世界" }
-                                    p { "通过 include 把 Phase 0 与 Phase A 合并为 browser-extended。" }
-                                }
-                            }
-                        }
-                    }
-
-                    section { class: "panel", id: "layers",
-                        h2 { "包分层职责" }
-                        div { class: "grid three",
-                            article { class: "card",
-                                h3 { "Layer 1 基础运行层" }
-                                p { "runtime / macros / vdom" }
-                            }
-                            article { class: "card",
-                                h3 { "Layer 2 平台协议层" }
-                                p { "web / browser-worlds / browser-wit-resolver" }
-                            }
-                            article { class: "card",
-                                h3 { "Layer 3 工具交付层" }
-                                p { "packager / hooks / style / e2e / browser-glue" }
-                            }
-                        }
-                    }
-
-                    section { class: "panel", id: "demos",
-                        h2 { "机制演示区" }
-                        p { class: "lead", "以下是可继续扩展成独立路由页的模块化 demo 卡片，已接入真实页面组件。" }
-                        div { class: "demo-grid",
-                            ..vec![home(), rsx_demo(), builders(), reactive()]
-                        }
-                    }
-
-                    section { class: "panel", id: "commands",
-                        h2 { "开发命令速览" }
-                        div { class: "command-list",
-                            p { class: "cmd", "just dev" }
-                            p { class: "cmd", "just build-web" }
-                            p { class: "cmd", "just serve-web" }
-                            p { class: "cmd", "just wit-gen" }
-                        }
-                        p { class: "caption", "当前 demo 目标：先保证有可看页面和稳定启动，再继续补交互示例页。" }
-                    }
-                }
-
-                footer { class: "site-footer",
-                    p { "Tairitsu website demo · 2026" }
-                    a { href: "#top", "回到顶部" }
-                }
+                ..panes
             }
         }
     }
+}
+
+fn render_locale(locale: Locale) -> VNode {
+    let t = text(locale);
+    let pane_class = if locale == Locale::ZhChs {
+        format!("lang-pane locale-{} is-active", locale.code())
+    } else {
+        format!("lang-pane locale-{}", locale.code())
+    };
+
+    let rsx_code = r##"rsx! {
+    button {
+        class: "btn btn-primary",
+        onclick: move |_e| {
+            tracing::info!("clicked");
+        },
+        "Click"
+    }
+}"##;
+
+    let builder_code = r##"let class = Classes::new()
+    .add("panel")
+    .add_if("panel-active", is_active);
+
+let style = Style::new()
+    .add("padding", "16px")
+    .add_custom("--accent", "#c7461f");"##;
+
+    let quick_start = r##"just dev
+just build-web
+just serve-web
+just wit-gen"##;
+
+    rsx! {
+        div { class: pane_class,
+            header { class: "site-hero", id: "top",
+                div { class: "hero-noise" }
+                p { class: "eyebrow", ..txt(t.brand) }
+                h1 { ..txt(t.hero_title) }
+                p { class: "hero-copy", ..txt(t.hero_copy) }
+                div { class: "hero-actions",
+                    a { class: "btn btn-primary", href: "#architecture", ..txt(t.action_primary) }
+                    a { class: "btn btn-ghost", href: "#commands", ..txt(t.action_secondary) }
+                }
+                ul { class: "hero-metrics",
+                    li { strong { "3" } span { "Layers" } }
+                    li { strong { "2" } span { "Backends" } }
+                    li { strong { "22" } span { "WIT domains" } }
+                }
+            }
+
+            nav { class: "section-nav",
+                ul {
+                    li { a { href: "#architecture", ..txt(t.nav_arch) } }
+                    li { a { href: "#backends", ..txt(t.nav_backend) } }
+                    li { a { href: "#pipeline", ..txt(t.nav_pipeline) } }
+                    li { a { href: "#demos", ..txt(t.nav_demo) } }
+                    li { a { href: "#commands", ..txt(t.nav_cmd) } }
+                }
+            }
+
+            main { class: "content",
+                section { class: "panel", id: "architecture",
+                    h2 { ..txt(t.section_arch) }
+                    p { class: "lead", ..txt(t.section_arch_lead) }
+                    div { class: "grid three",
+                        article { class: "card",
+                            h3 { "App Layer" }
+                            p { "Custom WIT interfaces, business components, example apps." }
+                        }
+                        article { class: "card",
+                            h3 { "Framework Layer" }
+                            p { "runtime + macros + vdom/hooks/style/web + packager." }
+                        }
+                        article { class: "card",
+                            h3 { "Host Layer" }
+                            p { "wasmtime/native host and browser-glue runtime adaptors." }
+                        }
+                    }
+                }
+
+                section { class: "panel", id: "backends",
+                    h2 { ..txt(t.section_backend) }
+                    div { class: "compare",
+                        article { class: "card tone-a",
+                            h3 { "web" }
+                            p { "wasm32-unknown-unknown + wasm-bindgen/web-sys" }
+                        }
+                        article { class: "card tone-b",
+                            h3 { "wit-bindings" }
+                            p { "wasm32-wasip2 + browser-glue + component host" }
+                        }
+                    }
+                }
+
+                section { class: "panel", id: "pipeline",
+                    h2 { ..txt(t.section_pipeline) }
+                    ol { class: "steps",
+                        li { span { class: "step-index", "01" } div { h4 { "Fetch specs" } p { "Pull IDL from webref." } } }
+                        li { span { class: "step-index", "02" } div { h4 { "Generate WIT" } p { "Convert into domain WIT files." } } }
+                        li { span { class: "step-index", "03" } div { h4 { "Compose world" } p { "Include phase-0 plus generated domains." } } }
+                    }
+                }
+
+                section { class: "panel", id: "demos",
+                    h2 { ..txt(t.section_demo) }
+                    div { class: "demo-grid",
+                        div { class: "page",
+                            h3 { "Quick Start" }
+                            ..vec![code_block(quick_start, "bash")]
+                        }
+                        div { class: "page",
+                            h3 { "rsx!" }
+                            ..vec![code_block(rsx_code, "rust")]
+                        }
+                        div { class: "page",
+                            h3 { "Builder" }
+                            ..vec![code_block(builder_code, "rust")]
+                        }
+                        div { class: "page",
+                            h3 { "Reactive" }
+                            p { "Signal and Effect API are available and ready for interactive expansion." }
+                        }
+                    }
+                }
+
+                section { class: "panel", id: "commands",
+                    h2 { ..txt(t.section_cmd) }
+                    div { class: "command-list",
+                        p { class: "cmd", "just dev" }
+                        p { class: "cmd", "just build-web" }
+                        p { class: "cmd", "just serve-web" }
+                        p { class: "cmd", "just wit-gen" }
+                    }
+                    p { class: "caption", ..txt(t.cmd_caption) }
+                }
+            }
+
+            footer { class: "site-footer",
+                p { "Tairitsu website demo · 2026" }
+                a { href: "#top", "Top" }
+            }
+        }
+    }
+}
+
+fn txt(value: &str) -> Vec<VNode> {
+    vec![VNode::Text(VText::new(value))]
 }
