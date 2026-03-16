@@ -54,7 +54,10 @@ pub static EMBEDDED_PACKAGES: &[EmbeddedPackage] = &[
         namespace: "tairitsu-browser",
         name: "full",
         version: "0.1.0",
-        files: &[("browser-full.wit", include_bytes!("../wit/browser-full.wit"))],
+        files: &[(
+            "browser-full.wit",
+            include_bytes!("../wit/browser-full.wit"),
+        )],
     },
 ];
 
@@ -69,9 +72,9 @@ pub fn find_embedded_by_parts(
     name: &str,
     version: &str,
 ) -> Option<&'static EmbeddedPackage> {
-    EMBEDDED_PACKAGES.iter().find(|p| {
-        p.namespace == namespace && p.name == name && p.version == version
-    })
+    EMBEDDED_PACKAGES
+        .iter()
+        .find(|p| p.namespace == namespace && p.name == name && p.version == version)
 }
 
 #[cfg(test)]
@@ -121,8 +124,7 @@ mod tests {
 
         for pkg in EMBEDDED_PACKAGES {
             for (filename, bytes) in pkg.files {
-                let content = std::str::from_utf8(bytes)
-                    .expect("WIT file should be valid UTF-8");
+                let content = std::str::from_utf8(bytes).expect("WIT file should be valid UTF-8");
                 let mut resolve = Resolve::default();
                 let result = resolve.push_str(filename, content);
                 assert!(

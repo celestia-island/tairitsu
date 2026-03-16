@@ -8,10 +8,8 @@ pub fn code_block(code: &str, _language: &str) -> VNode {
     VNode::Element(
         VElement::new("div")
             .class(Classes::new().add(&class_name))
-            .child(VNode::Element(
-                VElement::new("pre").child(VNode::Element(
-                    VElement::new("code").child(VNode::Text(VText::new(code))),
-                )),
-            )),
+            .child(VNode::Element(VElement::new("pre").child(VNode::Element(
+                VElement::new("code").child(VNode::Text(VText::new(code))),
+            )))),
     )
 }

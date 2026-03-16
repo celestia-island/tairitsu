@@ -9,6 +9,7 @@
 ### 1. 项目初始化测试
 
 **测试流程：**
+
 ```bash
 # 1. 创建新项目
 cargo new test-app --lib
@@ -65,6 +66,7 @@ test -f dist/component-wrapper-loader.js
 ```
 
 **断言：**
+
 - ✅ Cargo.toml 解析成功
 - ✅ WASM 编译成功
 - ✅ HTML 自动生成
@@ -73,6 +75,7 @@ test -f dist/component-wrapper-loader.js
 ### 2. 资源嵌入测试
 
 **测试配置：**
+
 ```toml
 [package.metadata.tairitsu.assets]
 inline-limit = 100
@@ -80,6 +83,7 @@ include = ["assets/**"]
 ```
 
 **测试资源：**
+
 ```
 assets/
 ├── small.txt     (< 100 bytes, should inline)
@@ -87,12 +91,14 @@ assets/
 ```
 
 **验证：**
+
 - small.txt 被内联为 base64
 - large.txt 被复制并添加哈希
 
 ### 3. 多平台打包测试
 
 **测试命令：**
+
 ```bash
 # Windows
 tairitsu package --platform windows
@@ -110,6 +116,7 @@ test -f dist/test-app_0.1.0_amd64.deb
 ### 4. 开发服务器测试
 
 **测试流程：**
+
 ```bash
 # 启动服务器
 tairitsu dev &
@@ -133,6 +140,7 @@ kill $PID
 ### 5. 错误处理测试
 
 **测试场景：**
+
 1. 缺少必要配置
 2. 资源文件不存在
 3. 编译错误

@@ -77,9 +77,8 @@ impl Cache {
 
         for (filename, expected_hash) in &manifest.file_hashes {
             let file_path = dir.join(filename);
-            let bytes = std::fs::read(&file_path).with_context(|| {
-                format!("Reading cached WIT file {}", file_path.display())
-            })?;
+            let bytes = std::fs::read(&file_path)
+                .with_context(|| format!("Reading cached WIT file {}", file_path.display()))?;
             let actual_hash = hex::encode(Sha256::digest(&bytes));
             if actual_hash != *expected_hash {
                 debug!(
@@ -96,11 +95,7 @@ impl Cache {
     /// Store a set of WIT files in the cache and write a manifest.
     ///
     /// `files` is a map from filename (e.g. `dom.wit`) to file content bytes.
-    pub fn store(
-        &self,
-        spec: &PackageSpec,
-        files: HashMap<String, Vec<u8>>,
-    ) -> Result<CacheEntry> {
+    pub fn store(&self, spec: &PackageSpec, files: HashMap<String, Vec<u8>>) -> Result<CacheEntry> {
         let dir = self.package_dir(spec);
         std::fs::create_dir_all(&dir)
             .with_context(|| format!("Creating cache directory {}", dir.display()))?;
@@ -121,8 +116,7 @@ impl Cache {
         let manifest_path = dir.join("manifest.json");
         std::fs::write(
             &manifest_path,
-            serde_json::to_vec_pretty(&manifest)
-                .context("Serializing cache manifest")?,
+            serde_json::to_vec_pretty(&manifest).context("Serializing cache manifest")?,
         )
         .with_context(|| format!("Writing cache manifest at {}", manifest_path.display()))?;
 
@@ -179,7 +173,10 @@ mod tests {
 
         let spec = PackageSpec::parse("tairitsu-browser:dom@0.1.0").unwrap();
         let mut files = HashMap::new();
-        files.insert("dom.wit".to_owned(), b"package tairitsu-browser:dom@0.1.0;".to_vec());
+        files.insert(
+            "dom.wit".to_owned(),
+            b"package tairitsu-browser:dom@0.1.0;".to_vec(),
+        );
 
         cache.store(&spec, files).unwrap();
 
@@ -205,7 +202,10 @@ mod tests {
         let spec2 = PackageSpec::parse("tairitsu-browser:events@0.1.0").unwrap();
 
         let mut files = HashMap::new();
-        files.insert("dom.wit".to_owned(), b"package tairitsu-browser:dom@0.1.0;".to_vec());
+        files.insert(
+            "dom.wit".to_owned(),
+            b"package tairitsu-browser:dom@0.1.0;".to_vec(),
+        );
         cache.store(&spec1, files.clone()).unwrap();
 
         files.clear();
