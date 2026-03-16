@@ -63,7 +63,7 @@ impl CssExtractor {
 
             if seen_rules.insert(normalized) {
                 result.push_str(trimmed);
-                result.push_str("}");
+                result.push('}');
             }
         }
 

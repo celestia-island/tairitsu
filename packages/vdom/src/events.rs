@@ -4,6 +4,58 @@ pub trait EventData: Any {
     fn as_any(&self) -> &dyn Any;
 }
 
+/// Handle to an event that can be used for prevent_default/stop_propagation.
+/// The handle is stored and passed to browser-glue via WIT bindings.
+#[derive(Debug, Clone)]
+pub struct EventWitHandle {
+    handle: Option<u64>,
+}
+
+impl EventWitHandle {
+    /// Create a new event handle from a WIT handle.
+    pub fn from_wit(handle: u64) -> Self {
+        Self { handle: Some(handle) }
+    }
+
+    /// Create a placeholder handle (for non-WIT builds).
+    pub fn placeholder() -> Self {
+        Self { handle: None }
+    }
+
+    /// Call prevent_default on this event.
+    pub fn prevent_default(&self) {
+        if let Some(handle) = self.handle {
+            // This will be linked via WIT bindings in browser-glue
+            unsafe {
+                // The actual implementation is provided by browser-glue
+                // These are weak symbols that will be resolved at link time
+                extern "C" {
+                    fn tairitsu_prevent_default(event_handle: u64);
+                }
+                tairitsu_prevent_default(handle);
+            }
+        }
+    }
+
+    /// Call stop_propagation on this event.
+    pub fn stop_propagation(&self) {
+        if let Some(handle) = self.handle {
+            unsafe {
+                extern "C" {
+                    fn tairitsu_stop_propagation(event_handle: u64);
+                }
+                tairitsu_stop_propagation(handle);
+            }
+        }
+    }
+}
+
+impl Default for EventWitHandle {
+    fn default() -> Self {
+        Self::placeholder()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct MouseEvent {
     pub client_x: i32,
@@ -16,6 +68,7 @@ pub struct MouseEvent {
     pub shift_key: bool,
     pub alt_key: bool,
     pub meta_key: bool,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for MouseEvent {
@@ -37,6 +90,7 @@ impl MouseEvent {
             shift_key: false,
             alt_key: false,
             meta_key: false,
+            event_handle: EventWitHandle::placeholder(),
         }
     }
 
@@ -50,7 +104,18 @@ impl MouseEvent {
         self
     }
 
-    pub fn prevent_default(&self) {}
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
 }
 
 impl Default for MouseEvent {
@@ -69,6 +134,7 @@ pub struct KeyboardEvent {
     pub alt_key: bool,
     pub meta_key: bool,
     pub repeat: bool,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for KeyboardEvent {
@@ -88,6 +154,7 @@ impl KeyboardEvent {
             alt_key: false,
             meta_key: false,
             repeat: false,
+            event_handle: EventWitHandle::placeholder(),
         }
     }
 
@@ -96,7 +163,23 @@ impl KeyboardEvent {
         self
     }
 
-    pub fn prevent_default(&self) {}
+    pub fn code(mut self, code: impl Into<String>) -> Self {
+        self.code = code.into();
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
 }
 
 impl Default for KeyboardEvent {
@@ -108,6 +191,7 @@ impl Default for KeyboardEvent {
 #[derive(Debug, Clone)]
 pub struct FocusEvent {
     pub related_target: Option<String>,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for FocusEvent {
@@ -120,7 +204,21 @@ impl FocusEvent {
     pub fn new() -> Self {
         Self {
             related_target: None,
+            event_handle: EventWitHandle::placeholder(),
         }
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
     }
 }
 
@@ -134,6 +232,7 @@ impl Default for FocusEvent {
 pub struct InputEvent {
     pub data: String,
     pub input_type: String,
+    event_handle: EventWitHandle,
 }
 
 impl EventData for InputEvent {
@@ -147,12 +246,26 @@ impl InputEvent {
         Self {
             data: String::new(),
             input_type: String::new(),
+            event_handle: EventWitHandle::placeholder(),
         }
     }
 
     pub fn data(mut self, data: impl Into<String>) -> Self {
         self.data = data.into();
         self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
     }
 }
 

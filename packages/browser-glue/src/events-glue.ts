@@ -59,6 +59,31 @@ interface ListenerEntry {
 const _listeners = new Map<bigint, ListenerEntry>();
 
 // ---------------------------------------------------------------------------
+// Event handle table for preventDefault/stopPropagation support
+// ---------------------------------------------------------------------------
+
+let _nextEventHandle = 1n;
+const _activeEvents = new Map<bigint, Event>();
+
+/**
+ * Register an Event object for WASM-side manipulation (preventDefault/stopPropagation).
+ * Called during event dispatch to provide a handle to the active event.
+ */
+function registerEvent(event: Event): bigint {
+  const handle = _nextEventHandle++;
+  _activeEvents.set(handle, event);
+  return handle;
+}
+
+/**
+ * Clean up an event handle after dispatch completes.
+ * Called automatically after the WASM callback completes.
+ */
+function cleanupEventHandle(handle: bigint): void {
+  _activeEvents.delete(handle);
+}
+
+// ---------------------------------------------------------------------------
 // WASM callback hooks
 // (To be set by the WASM host after instantiation)
 // ---------------------------------------------------------------------------
@@ -94,6 +119,59 @@ export function registerEventCallbacks(callbacks: {
 }
 
 // ---------------------------------------------------------------------------
+// Diagnostic / observability support
+// ---------------------------------------------------------------------------
+
+interface DiagnosticCallbacks {
+  onError?: (error: DiagnosticError) => void;
+  onWarning?: (warning: string) => void;
+  onEventDispatch?: (info: EventDispatchInfo) => void;
+}
+
+export interface DiagnosticError {
+  kind: "missing-callback" | "invalid-handle" | "dispatch-error" | "environment-error";
+  message: string;
+  context?: Record<string, unknown>;
+}
+
+export interface EventDispatchInfo {
+  eventType: string;
+  listenerId: bigint;
+  success: boolean;
+}
+
+let _diagnosticCallbacks: DiagnosticCallbacks = {};
+
+/**
+ * Register diagnostic callbacks for observing browser-glue internals.
+ * Useful for debugging and error reporting in development.
+ */
+export function registerDiagnosticCallbacks(callbacks: DiagnosticCallbacks): void {
+  _diagnosticCallbacks = { ..._diagnosticCallbacks, ...callbacks };
+}
+
+function reportError(error: DiagnosticError): void {
+  if (_diagnosticCallbacks.onError) {
+    _diagnosticCallbacks.onError(error);
+  }
+  // Always log critical errors to console
+  console.error(`[browser-glue] ${error.kind}: ${error.message}`, error.context ?? "");
+}
+
+function reportWarning(message: string): void {
+  if (_diagnosticCallbacks.onWarning) {
+    _diagnosticCallbacks.onWarning(message);
+  }
+  console.warn(`[browser-glue] ${message}`);
+}
+
+function reportEventDispatch(info: EventDispatchInfo): void {
+  if (_diagnosticCallbacks.onEventDispatch) {
+    _diagnosticCallbacks.onEventDispatch(info);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: event-target
 // ---------------------------------------------------------------------------
 
@@ -103,45 +181,98 @@ export function addEventListener(
   useCapture: boolean,
 ): bigint {
   const listenerId = _nextListenerId++;
-  const domTarget = getEventTarget(target);
+
+  let domTarget: EventTarget;
+  try {
+    domTarget = getEventTarget(target);
+  } catch (e) {
+    reportError({
+      kind: "invalid-handle",
+      message: `Invalid node handle ${target} when adding event listener`,
+      context: { eventType, listenerId, error: e instanceof Error ? e.message : String(e) },
+    });
+    throw e;
+  }
 
   const handler = (ev: Event) => {
-    if (ev instanceof MouseEvent && _onMouseEvent) {
-      _onMouseEvent(listenerId, {
-        clientX: ev.clientX,
-        clientY: ev.clientY,
-        offsetX: ev instanceof MouseEvent ? (ev as MouseEvent).offsetX : 0,
-        offsetY: ev instanceof MouseEvent ? (ev as MouseEvent).offsetY : 0,
-        button: ev.button,
-        buttons: ev.buttons,
-        ctrlKey: ev.ctrlKey,
-        shiftKey: ev.shiftKey,
-        altKey: ev.altKey,
-        metaKey: ev.metaKey,
+    const eventHandle = registerEvent(ev);
+    let dispatchSuccess = false;
+
+    try {
+      if (ev instanceof MouseEvent) {
+        if (_onMouseEvent) {
+          _onMouseEvent(listenerId, eventHandle, {
+            clientX: ev.clientX,
+            clientY: ev.clientY,
+            offsetX: ev instanceof MouseEvent ? (ev as MouseEvent).offsetX : 0,
+            offsetY: ev instanceof MouseEvent ? (ev as MouseEvent).offsetY : 0,
+            button: ev.button,
+            buttons: ev.buttons,
+            ctrlKey: ev.ctrlKey,
+            shiftKey: ev.shiftKey,
+            altKey: ev.altKey,
+            metaKey: ev.metaKey,
+          });
+          dispatchSuccess = true;
+        } else {
+          reportWarning(`MouseEvent dispatched but no callback registered (listener: ${listenerId})`);
+        }
+      } else if (ev instanceof KeyboardEvent) {
+        if (_onKeyboardEvent) {
+          _onKeyboardEvent(listenerId, eventHandle, {
+            key: ev.key,
+            code: ev.code,
+            keyCode: ev.keyCode,
+            ctrlKey: ev.ctrlKey,
+            shiftKey: ev.shiftKey,
+            altKey: ev.altKey,
+            metaKey: ev.metaKey,
+            repeat: ev.repeat,
+          });
+          dispatchSuccess = true;
+        } else {
+          reportWarning(`KeyboardEvent dispatched but no callback registered (listener: ${listenerId})`);
+        }
+      } else if (ev instanceof FocusEvent) {
+        if (_onFocusEvent) {
+          const rel = ev.relatedTarget as Node | null;
+          _onFocusEvent(listenerId, eventHandle, {
+            relatedTarget: rel ? registerNode(rel) : undefined,
+          });
+          dispatchSuccess = true;
+        } else {
+          reportWarning(`FocusEvent dispatched but no callback registered (listener: ${listenerId})`);
+        }
+      } else if (ev instanceof InputEvent) {
+        if (_onInputEvent) {
+          _onInputEvent(listenerId, eventHandle, {
+            data: ev.data ?? undefined,
+            inputType: ev.inputType,
+          });
+          dispatchSuccess = true;
+        } else {
+          reportWarning(`InputEvent dispatched but no callback registered (listener: ${listenerId})`);
+        }
+      } else if (_onGenericEvent) {
+        _onGenericEvent(listenerId, eventHandle, ev.type);
+        dispatchSuccess = true;
+      } else {
+        reportWarning(`Generic event '${ev.type}' dispatched but no callback registered (listener: ${listenerId})`);
+      }
+    } catch (e) {
+      reportError({
+        kind: "dispatch-error",
+        message: `Error during event dispatch for '${eventType}'`,
+        context: {
+          listenerId,
+          eventType: ev.type,
+          error: e instanceof Error ? e.message : String(e),
+        },
       });
-    } else if (ev instanceof KeyboardEvent && _onKeyboardEvent) {
-      _onKeyboardEvent(listenerId, {
-        key: ev.key,
-        code: ev.code,
-        keyCode: ev.keyCode,
-        ctrlKey: ev.ctrlKey,
-        shiftKey: ev.shiftKey,
-        altKey: ev.altKey,
-        metaKey: ev.metaKey,
-        repeat: ev.repeat,
-      });
-    } else if (ev instanceof FocusEvent && _onFocusEvent) {
-      const rel = ev.relatedTarget as Node | null;
-      _onFocusEvent(listenerId, {
-        relatedTarget: rel ? registerNode(rel) : undefined,
-      });
-    } else if (ev instanceof InputEvent && _onInputEvent) {
-      _onInputEvent(listenerId, {
-        data: ev.data ?? undefined,
-        inputType: ev.inputType,
-      });
-    } else if (_onGenericEvent) {
-      _onGenericEvent(listenerId, ev.type);
+    } finally {
+      // Clean up event handle after dispatch
+      cleanupEventHandle(eventHandle);
+      reportEventDispatch({ eventType, listenerId, success: dispatchSuccess });
     }
   };
 
@@ -156,17 +287,68 @@ export function removeEventListener(
   listenerId: bigint,
 ): void {
   const entry = _listeners.get(listenerId);
-  if (!entry) return;
+  if (!entry) {
+    reportWarning(`Attempted to remove non-existent listener ${listenerId}`);
+    return;
+  }
   entry.target.removeEventListener(entry.eventType, entry.handler);
   _listeners.delete(listenerId);
 }
 
-export function preventDefault(_event: bigint): void {
-  // preventDefault is called from WASM during an event handler; the actual
-  // Event object reference is managed by the host dispatch loop.
-  // Phase 3 will pass the Event reference through a separate handle table.
+export function preventDefault(eventHandle: bigint): void {
+  const event = _activeEvents.get(eventHandle);
+  if (!event) {
+    reportError({
+      kind: "invalid-handle",
+      message: `Invalid event handle ${eventHandle} in preventDefault`,
+      context: { eventHandle },
+    });
+    return;
+  }
+  event.preventDefault();
 }
 
-export function stopPropagation(_event: bigint): void {
-  // Same as above — managed by host dispatch loop in Phase 3.
+export function stopPropagation(eventHandle: bigint): void {
+  const event = _activeEvents.get(eventHandle);
+  if (!event) {
+    reportError({
+      kind: "invalid-handle",
+      message: `Invalid event handle ${eventHandle} in stopPropagation`,
+      context: { eventHandle },
+    });
+    return;
+  }
+  event.stopPropagation();
+}
+
+/**
+ * Check if a callback has been registered. Useful for validation.
+ */
+export function hasCallback(type: "mouse" | "keyboard" | "focus" | "input" | "generic"): boolean {
+  switch (type) {
+    case "mouse":
+      return _onMouseEvent !== null;
+    case "keyboard":
+      return _onKeyboardEvent !== null;
+    case "focus":
+      return _onFocusEvent !== null;
+    case "input":
+      return _onInputEvent !== null;
+    case "generic":
+      return _onGenericEvent !== null;
+  }
+}
+
+/**
+ * Get current listener count for diagnostics.
+ */
+export function getListenerCount(): number {
+  return _listeners.size;
+}
+
+/**
+ * Get active event count for diagnostics.
+ */
+export function getActiveEventCount(): number {
+  return _activeEvents.size;
 }

@@ -1,14 +1,10 @@
 use anyhow::Result;
 
-pub struct StyleInjector {
-    inject_styles: bool,
-}
+pub struct StyleInjector;
 
 impl StyleInjector {
     pub fn new() -> Self {
-        Self {
-            inject_styles: true,
-        }
+        Self
     }
 
     pub fn generate_injection_code(&self, css: &str) -> Result<String> {

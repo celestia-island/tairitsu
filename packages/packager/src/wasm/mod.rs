@@ -177,8 +177,13 @@ fn build_wasm_component(
         let mut child = cmd.spawn()?;
         if let Some(stderr) = child.stderr.take() {
             std::thread::spawn(move || {
-                for line in std::io::BufReader::new(stderr).lines().flatten() {
-                    let _ = multi.println(&line);
+                for line in std::io::BufReader::new(stderr).lines() {
+                    match line {
+                        Ok(l) => {
+                            let _ = multi.println(&l);
+                        }
+                        Err(_) => break,
+                    }
                 }
             });
         }
@@ -1009,7 +1014,11 @@ async fn run_watch_loop(
     let (cmd_tx, mut cmd_rx) = tokio::sync::mpsc::channel::<DevCmd>(8);
     tokio::task::spawn_blocking(move || {
         use std::io::BufRead;
-        for line in std::io::stdin().lock().lines().flatten() {
+        for line in std::io::stdin().lock().lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(_) => continue,
+            };
             let cmd = match line.trim() {
                 "r" | "R" => Some(DevCmd::Rebuild),
                 "o" | "O" => Some(DevCmd::OpenBrowser),
@@ -1057,15 +1066,10 @@ async fn run_watch_loop(
 
                 // Debounce: drain further events within the 200 ms window.
                 let deadline = tokio::time::Instant::now() + debounce;
-                loop {
-                    match tokio::time::timeout_at(deadline, rx.recv()).await {
-                        Ok(Some(Ok(ev))) => {
-                            changed.extend(ev.paths.iter().filter_map(|p| {
-                                p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
-                            }));
-                        }
-                        _ => break,
-                    }
+                while let Ok(Some(Ok(ev))) = tokio::time::timeout_at(deadline, rx.recv()).await {
+                    changed.extend(ev.paths.iter().filter_map(|p| {
+                        p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
+                    }));
                 }
                 changed.sort();
                 changed.dedup();

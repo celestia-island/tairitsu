@@ -2,10 +2,11 @@ use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum Language {
     CHS,
     CHT,
+    #[default]
     En,
     Ja,
     Ko,
@@ -13,12 +14,6 @@ pub enum Language {
     Es,
     Ru,
     Ar,
-}
-
-impl Default for Language {
-    fn default() -> Self {
-        Self::En
-    }
 }
 
 impl Language {
@@ -91,22 +86,41 @@ yuuka::derive_struct!(
             check_compile_failed: String,
             shortcuts_full: String,
             shortcuts_compact: String,
+        },
+        doctor: Doctor {
+            running: String,
+            check_complete: String,
+            project_healthy: String,
+            project_has_issues: String,
+            summary: String,
+            checks_passed: String,
+            warnings_count: String,
+            errors_count: String,
+            report_header: String,
+            category_dependencies: String,
+            category_environment: String,
+            category_configuration: String,
+            category_build: String,
+            category_migration: String,
         }
     }
 );
 
 const EN_CLI: &str = include_str!("../../res/locales/en/cli.toml");
 const EN_DEV: &str = include_str!("../../res/locales/en/dev.toml");
+const EN_DOCTOR: &str = include_str!("../../res/locales/en/doctor.toml");
 const CHS_CLI: &str = include_str!("../../res/locales/chs/cli.toml");
 const CHS_DEV: &str = include_str!("../../res/locales/chs/dev.toml");
+const CHS_DOCTOR: &str = include_str!("../../res/locales/chs/doctor.toml");
 const CHT_CLI: &str = include_str!("../../res/locales/cht/cli.toml");
 const CHT_DEV: &str = include_str!("../../res/locales/cht/dev.toml");
+const CHT_DOCTOR: &str = include_str!("../../res/locales/cht/doctor.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
-        Language::CHS => [CHS_CLI, CHS_DEV].join("\n"),
-        Language::CHT => [CHT_CLI, CHT_DEV].join("\n"),
-        _ => [EN_CLI, EN_DEV].join("\n"),
+        Language::CHS => [CHS_CLI, CHS_DEV, CHS_DOCTOR].join("\n"),
+        Language::CHT => [CHT_CLI, CHT_DEV, CHT_DOCTOR].join("\n"),
+        _ => [EN_CLI, EN_DEV, EN_DOCTOR].join("\n"),
     }
 }
 

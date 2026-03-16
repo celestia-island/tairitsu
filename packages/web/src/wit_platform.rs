@@ -102,6 +102,7 @@ impl WitPlatform {
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
     /// the actual app view tree so users can see real UI content.
+    #[allow(unused_variables)]
     pub fn mount_vnode_to_app(&self, vnode: &tairitsu_vdom::VNode) -> Result<()> {
         #[cfg(not(target_family = "wasm"))]
         anyhow::bail!("mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)");
@@ -129,7 +130,7 @@ mod wasm_impl {
     use std::collections::HashMap;
 
     use tairitsu_vdom::{
-        EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, VNode,
+        EventData, EventWitHandle, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -189,75 +190,140 @@ mod wasm_impl {
     impl bindings::exports::tairitsu_browser::full::event_callbacks::Guest for BrowserComponent {
         fn on_mouse_event(
             listener_id: u64,
+            event_handle: u64,
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
         ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 MouseEvent::new()
                     .client_x(data.client_x as i32)
-                    .client_y(data.client_y as i32),
+                    .client_y(data.client_y as i32)
+                    .event_handle(wit_handle),
             );
-            EVENT_CALLBACKS.with(|m| {
-                if let Some(handler) = m.borrow_mut().get_mut(&listener_id) {
-                    handler(event);
-                }
-            });
+            dispatch_event(listener_id, "mouse", event);
         }
 
         fn on_keyboard_event(
             listener_id: u64,
+            event_handle: u64,
             data: bindings::exports::tairitsu_browser::full::event_callbacks::KeyboardEventData,
         ) {
-            let event: Box<dyn EventData> = Box::new(KeyboardEvent::new().key(data.key));
-            EVENT_CALLBACKS.with(|m| {
-                if let Some(handler) = m.borrow_mut().get_mut(&listener_id) {
-                    handler(event);
-                }
-            });
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                KeyboardEvent::new()
+                    .key(data.key)
+                    .code(data.code)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "keyboard", event);
         }
 
         fn on_focus_event(
             listener_id: u64,
+            event_handle: u64,
             _data: bindings::exports::tairitsu_browser::full::event_callbacks::FocusEventData,
         ) {
-            let event: Box<dyn EventData> = Box::new(FocusEvent::new());
-            EVENT_CALLBACKS.with(|m| {
-                if let Some(handler) = m.borrow_mut().get_mut(&listener_id) {
-                    handler(event);
-                }
-            });
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                FocusEvent::new().event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "focus", event);
         }
 
         fn on_input_event(
             listener_id: u64,
+            event_handle: u64,
             data: bindings::exports::tairitsu_browser::full::event_callbacks::InputEventData,
         ) {
-            let event: Box<dyn EventData> =
-                Box::new(InputEvent::new().data(data.data.unwrap_or_default()));
-            EVENT_CALLBACKS.with(|m| {
-                if let Some(handler) = m.borrow_mut().get_mut(&listener_id) {
-                    handler(event);
-                }
-            });
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                InputEvent::new()
+                    .data(data.data.unwrap_or_default())
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "input", event);
         }
 
-        fn on_generic_event(listener_id: u64, _event_type: String) {
-            let event: Box<dyn EventData> = Box::new(MouseEvent::new());
-            EVENT_CALLBACKS.with(|m| {
-                if let Some(handler) = m.borrow_mut().get_mut(&listener_id) {
-                    handler(event);
-                }
-            });
+        fn on_generic_event(
+            listener_id: u64,
+            event_handle: u64,
+            event_type: String,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                MouseEvent::new().event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, &event_type, event);
         }
+    }
+
+    /// Dispatch an event to the registered callback with error handling.
+    fn dispatch_event(listener_id: u64, event_type: &str, event: Box<dyn EventData>) {
+        EVENT_CALLBACKS.with(|m| {
+            let mut callbacks = m.borrow_mut();
+            if let Some(handler) = callbacks.get_mut(&listener_id) {
+                handler(event);
+            } else {
+                let msg = format!(
+                    "Event dispatched but no callback registered: type={}, listener={}",
+                    event_type, listener_id
+                );
+                log_warning(&msg);
+            }
+        });
     }
 
     impl bindings::exports::tairitsu_browser::full::lifecycle::Guest for BrowserComponent {
         fn start() -> Result<(), String> {
+            // Validate the WIT environment before starting the component
+            if let Err(e) = validate_wit_environment() {
+                let msg = format!("WIT environment validation failed: {}", e);
+                log_error(&msg);
+                return Err(msg);
+            }
+
             unsafe {
                 tairitsu_component_bootstrap();
             }
 
             Ok(())
         }
+    }
+
+    /// Validate that the WIT host environment is properly configured.
+    fn validate_wit_environment() -> Result<(), String> {
+        // Test basic DOM operations to ensure the host is working
+        let result = std::panic::catch_unwind(|| {
+            // Try to access document - this will call the WIT import
+            let _body = bindings::tairitsu_browser::full::document::body();
+            // Try window operations
+            let _width = bindings::tairitsu_browser::full::window::inner_width();
+            // Try console operations
+            bindings::tairitsu_browser::full::window::console_log("[WitPlatform] Environment validation passed");
+        });
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err("WIT host call failed during validation".to_string()),
+        }
+    }
+
+    /// Log an error through the WIT console interface.
+    fn log_error(message: &str) {
+        let formatted = format!("[WitPlatform ERROR] {}", message);
+        bindings::tairitsu_browser::full::window::console_error(&formatted);
+    }
+
+    /// Log a warning through the WIT console interface.
+    fn log_warning(message: &str) {
+        let formatted = format!("[WitPlatform WARNING] {}", message);
+        bindings::tairitsu_browser::full::window::console_warn(&formatted);
+    }
+
+    /// Log diagnostic information through the WIT console interface.
+    fn log_info(message: &str) {
+        let formatted = format!("[WitPlatform] {}", message);
+        bindings::tairitsu_browser::full::window::console_log(&formatted);
     }
 
     // ── Platform trait implementation ────────────────────────────────────
@@ -267,45 +333,61 @@ mod wasm_impl {
         type Event = WitEvent;
 
         fn create_element(&self, tag: &str) -> Self::Element {
-            let handle = bindings::tairitsu_browser::full::document::create_element(tag)
-                .expect("WIT create-element failed");
-            WitElement(handle)
+            match bindings::tairitsu_browser::full::document::create_element(tag) {
+                Ok(handle) => WitElement(handle),
+                Err(e) => {
+                    log_error(&format!("create_element({}) failed: {}", tag, e));
+                    panic!("WIT create-element failed for '{}': {}", tag, e);
+                }
+            }
         }
 
         fn create_text_node(&self, text: &str) -> Self::Element {
-            let handle = bindings::tairitsu_browser::full::document::create_text_node(text)
-                .expect("WIT create-text-node failed");
-            WitElement(handle)
+            match bindings::tairitsu_browser::full::document::create_text_node(text) {
+                Ok(handle) => WitElement(handle),
+                Err(e) => {
+                    log_error(&format!("create_text_node failed: {}", e));
+                    panic!("WIT create-text-node failed: {}", e);
+                }
+            }
         }
 
         fn append_child(&self, parent: &Self::Element, child: &Self::Element) {
-            bindings::tairitsu_browser::full::node::append_child(parent.0, child.0)
-                .expect("WIT append-child failed");
+            if let Err(e) = bindings::tairitsu_browser::full::node::append_child(parent.0, child.0) {
+                log_error(&format!("append_child failed: {}", e));
+                panic!("WIT append-child failed: {}", e);
+            }
         }
 
         fn remove_child(&self, parent: &Self::Element, child: &Self::Element) {
-            bindings::tairitsu_browser::full::node::remove_child(parent.0, child.0)
-                .expect("WIT remove-child failed");
+            if let Err(e) = bindings::tairitsu_browser::full::node::remove_child(parent.0, child.0) {
+                log_warning(&format!("remove_child failed: {}", e));
+                // Don't panic for remove_child errors - they might be benign
+            }
         }
 
         fn set_attribute(&self, element: &Self::Element, name: &str, value: &str) {
-            bindings::tairitsu_browser::full::node::set_attribute(element.0, name, value)
-                .expect("WIT set-attribute failed");
+            if let Err(e) = bindings::tairitsu_browser::full::node::set_attribute(element.0, name, value) {
+                log_warning(&format!("set_attribute({}, {}, {}) failed: {}", element.0, name, value, e));
+            }
         }
 
         fn remove_attribute(&self, element: &Self::Element, name: &str) {
-            bindings::tairitsu_browser::full::node::remove_attribute(element.0, name)
-                .expect("WIT remove-attribute failed");
+            if let Err(e) = bindings::tairitsu_browser::full::node::remove_attribute(element.0, name) {
+                log_warning(&format!("remove_attribute({}, {}) failed: {}", element.0, name, e));
+            }
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value)
-                .expect("WIT set-style-property failed");
+            if let Err(e) = bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value) {
+                log_warning(&format!("set_style_property({}, {}, {}) failed: {}", element.0, name, value, e));
+            }
         }
 
         fn set_class(&self, element: &Self::Element, class: &str) {
-            bindings::tairitsu_browser::full::node::set_attribute(element.0, "class", class)
-                .expect("WIT set-class (set-attribute) failed");
+            if let Err(e) = bindings::tairitsu_browser::full::node::set_attribute(element.0, "class", class) {
+                log_warning(&format!("set_class({}, {}) failed: {}", element.0, class, e));
+            }
         }
 
         fn add_event_listener(
@@ -314,16 +396,22 @@ mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
-            let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
+            match bindings::tairitsu_browser::full::event_target::add_event_listener(
                 element.0, event, false,
-            )
-            .expect("WIT add-event-listener failed");
-
-            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
-            ELEMENT_LISTENERS.with(|m| {
-                m.borrow_mut()
-                    .insert((element.0, event.to_string()), listener_id);
-            });
+            ) {
+                Ok(listener_id) => {
+                    EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+                    ELEMENT_LISTENERS.with(|m| {
+                        m.borrow_mut()
+                            .insert((element.0, event.to_string()), listener_id);
+                    });
+                    log_info(&format!("Added event listener: event={}, listener={}", event, listener_id));
+                }
+                Err(e) => {
+                    log_error(&format!("add_event_listener({}, {}) failed: {}", element.0, event, e));
+                    panic!("WIT add-event-listener failed: {}", e);
+                }
+            }
         }
 
         fn remove_event_listener(&self, element: &Self::Element, event: &str) {
@@ -332,10 +420,15 @@ mod wasm_impl {
 
             if let Some(id) = listener_id {
                 EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&id));
-                bindings::tairitsu_browser::full::event_target::remove_event_listener(
+                if let Err(e) = bindings::tairitsu_browser::full::event_target::remove_event_listener(
                     element.0, id,
-                )
-                .expect("WIT remove-event-listener failed");
+                ) {
+                    log_warning(&format!("remove_event_listener failed: {}", e));
+                } else {
+                    log_info(&format!("Removed event listener: event={}, listener={}", event, id));
+                }
+            } else {
+                log_warning(&format!("remove_event_listener: no listener found for event '{}' on element {}", event, element.0));
             }
         }
     }

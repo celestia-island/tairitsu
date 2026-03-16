@@ -11,6 +11,7 @@ This is the complete English documentation baseline for Tairitsu.
 - [Workspace Map](./workspace-map.md)
 - [Build, Test, and Release](./build-test-release.md)
 - [Migration from web-sys to WIT bindings](./migration.md)
+- [Migration from Dioxus to Tairitsu](./migration/dioxus-to-tairitsu.md)
 - [Glossary](./glossary.md)
 
 ### System
