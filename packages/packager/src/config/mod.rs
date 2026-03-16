@@ -28,6 +28,7 @@ pub struct PackageConfig {
 pub struct BuildConfig {
     #[serde(default = "default_target")]
     pub target: String,
+    #[serde(alias = "output-dir")]
     #[serde(default = "default_output_dir")]
     pub output_dir: PathBuf,
     #[serde(default)]
@@ -41,7 +42,7 @@ fn default_target() -> String {
 }
 
 fn default_output_dir() -> PathBuf {
-    PathBuf::from("../../target/dist/website")
+    PathBuf::from("../../target/tairitsu-dist")
 }
 
 #[derive(Debug, Clone, Deserialize)]

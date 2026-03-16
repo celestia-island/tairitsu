@@ -84,7 +84,7 @@ title = "Full App"
 
 [package.metadata.tairitsu.build]
 target = "component"
-output-dir = "dist"
+output_dir = "../../target/tairitsu-dist"
 optimize = true
 
 [package.metadata.tairitsu.assets]

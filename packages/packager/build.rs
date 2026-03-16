@@ -5,6 +5,6 @@ fn main() {
     let template_js = manifest_dir
         .join("src")
         .join("wasm")
-        .join("component-wrapper-loader.template.js");
+        .join("component-wrapper-loader.template.ts");
     println!("cargo:rerun-if-changed={}", template_js.display());
 }
