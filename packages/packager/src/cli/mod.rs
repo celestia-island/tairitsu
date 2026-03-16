@@ -100,6 +100,7 @@ enum WitCommands {
 
 pub async fn run() -> crate::Result<()> {
     let cli = Cli::parse();
+    let t = crate::i18n::translations();
 
     // Setup logging
     let log_level = match cli.verbose {
@@ -119,24 +120,24 @@ pub async fn run() -> crate::Result<()> {
     match cli.command {
         Commands::Dev { port, open, watch } => {
             let config = crate::config::Config::load(&manifest_path)?;
-            info!("Starting development server...");
+            info!("{}", t.cli.starting_dev_server);
             let port = port.unwrap_or(config.dev.port);
             crate::wasm::dev_server(&config, port, open, watch).await?;
         }
         Commands::Build { target, release } => {
             let config = crate::config::Config::load(&manifest_path)?;
-            info!("Building for {}...", target);
+            info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
                 "wasm" => crate::wasm::build(&config, release, None)?,
                 "component" => crate::wasm::build_component(&config, release, None)?,
                 "native" => {
-                    eprintln!("Native builds not yet implemented");
+                    eprintln!("{}", t.cli.native_not_implemented);
                     std::process::exit(1);
                 }
                 _ => {
                     eprintln!(
-                        "Unknown target: {}. Use 'wasm', 'component', or 'native'",
-                        target
+                        "{}: {}. Use 'wasm', 'component', or 'native'",
+                        t.cli.unknown_target, target
                     );
                     std::process::exit(1);
                 }

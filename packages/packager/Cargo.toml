@@ -57,6 +57,9 @@ grass = "^0.13"
 
 # Regex for extraction
 regex = "^1"
+yuuka = "0.6"
+sys-locale = "0.3"
+crossterm = "0.28"
 
 [features]
 default = ["wasm", "dev-server"]

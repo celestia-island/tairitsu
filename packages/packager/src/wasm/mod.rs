@@ -2,6 +2,10 @@ use crate::config::Config;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
 
+fn locale() -> &'static crate::i18n::Translations {
+    crate::i18n::translations()
+}
+
 pub fn build(
     config: &Config,
     release: bool,
@@ -57,10 +61,7 @@ fn check_wasm_target() -> crate::Result<()> {
     Ok(())
 }
 
-fn build_wasm(
-    release: bool,
-    multi: Option<std::sync::Arc<MultiProgress>>,
-) -> crate::Result<()> {
+fn build_wasm(release: bool, multi: Option<std::sync::Arc<MultiProgress>>) -> crate::Result<()> {
     use std::io::BufRead;
 
     let current_manifest = std::env::current_dir()?.join("Cargo.toml");
@@ -956,16 +957,15 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  🌍  Local:   http://localhost:{}", actual_port);
-    println!("  📁  Serving: {}", config.build.output_dir.display());
+    println!("  🌍  {}:   http://localhost:{}", locale().dev.local, actual_port);
+    println!("  📁  {}: {}", locale().dev.serving, config.build.output_dir.display());
     if actual_port != port {
-        println!(
-            "  ⚠   Port {} is busy, switched to {}",
-            port, actual_port
-        );
-    }
-    if watch {
-        println!("  👁   Watch:  src/  Cargo.toml  public/");
+        let msg = locale()
+            .dev
+            .port_switched
+            .replace("{from}", &port.to_string())
+            .replace("{to}", &actual_port.to_string());
+        println!("  ⚠   {}", msg);
     }
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
@@ -973,8 +973,8 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", actual_port);
         match webbrowser::open(&url) {
-            Ok(_) => println!("  ✓  Opening browser…"),
-            Err(e) => eprintln!("  ⚠  Failed to open browser: {}", e),
+            Ok(_) => println!("  ✓  {}", locale().dev.opening_browser),
+            Err(e) => eprintln!("  ⚠  {}: {}", locale().dev.open_browser_failed, e),
         }
     }
 
@@ -986,7 +986,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         });
         run_watch_loop(config, actual_port, Some(ui)).await?;
     } else {
-        println!("  Press Ctrl+C to stop");
+        println!("  {}", locale().dev.press_ctrl_c_to_stop);
         axum::serve(listener, app).await?;
     }
 
@@ -1034,8 +1034,8 @@ enum DevCmd {
 struct DevWatchUi {
     /// Kept public so the watch loop can clone it for the build task.
     multi: std::sync::Arc<MultiProgress>,
+    _shortcuts: ProgressBar,
     server: ProgressBar,
-    watcher: ProgressBar,
     build: ProgressBar,
     check: ProgressBar,
     started: Instant,
@@ -1046,15 +1046,26 @@ impl DevWatchUi {
     fn new(port: u16, output_dir: &std::path::Path, target: &str) -> Self {
         let multi = std::sync::Arc::new(MultiProgress::new());
 
-        // Print key-binding hints above the persistent spinner bars.
-        let _ = multi.println(
-            "  (r) rebuild   (o) open browser   (c) clear   (Ctrl+C) quit",
-        );
-        let _ = multi.println(
-            "  ─────────────────────────────────────────────────────────",
-        );
-
         let static_style = ProgressStyle::with_template("    {msg}").unwrap();
+
+        let shortcuts = multi.add(ProgressBar::new_spinner());
+        shortcuts.set_style(static_style.clone());
+        let initial_width = crossterm::terminal::size().map(|(w, _)| w).unwrap_or(120);
+        shortcuts.set_message(Self::shortcut_message(initial_width));
+
+        let shortcuts_for_resize = shortcuts.clone();
+        std::thread::spawn(move || {
+            let mut last = initial_width;
+            loop {
+                if let Ok((w, _)) = crossterm::terminal::size() {
+                    if w != last {
+                        last = w;
+                        shortcuts_for_resize.set_message(Self::shortcut_message(w));
+                    }
+                }
+                std::thread::sleep(Duration::from_millis(300));
+            }
+        });
 
         let server = multi.add(ProgressBar::new_spinner());
         server.set_style(static_style.clone());
@@ -1064,22 +1075,18 @@ impl DevWatchUi {
             output_dir.display()
         ));
 
-        let watcher = multi.add(ProgressBar::new_spinner());
-        watcher.set_style(static_style.clone());
-        watcher.set_message("watch  src/, Cargo.toml, Tairitsu.toml, public/");
-
         let build = multi.add(ProgressBar::new_spinner());
         build.set_style(static_style.clone());
-        build.set_message(format!("build  idle  (target: {})", target));
+        build.set_message(format!("{}  (target: {})", locale().dev.build_idle, target));
 
         let check = multi.add(ProgressBar::new_spinner());
         check.set_style(static_style);
-        check.set_message("check  ✓  ready");
+        check.set_message(locale().dev.check_ready.clone());
 
         Self {
             multi,
+            _shortcuts: shortcuts,
             server,
-            watcher,
             build,
             check,
             started: Instant::now(),
@@ -1087,13 +1094,12 @@ impl DevWatchUi {
         }
     }
 
-    fn on_change(&self, changed: &[std::path::PathBuf]) {
-        let msg = match changed.len() {
-            0 => "watch  source changed".to_string(),
-            1 => format!("watch  changed: {}", changed[0].display()),
-            n => format!("watch  changed: {} files", n),
-        };
-        self.watcher.set_message(msg);
+    fn shortcut_message(width: u16) -> String {
+        if width >= 86 {
+            locale().dev.shortcuts_full.clone()
+        } else {
+            locale().dev.shortcuts_compact.clone()
+        }
     }
 
     fn on_build_start(&self) {
@@ -1102,8 +1108,8 @@ impl DevWatchUi {
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]);
         self.build.set_style(spinning);
         self.build.enable_steady_tick(Duration::from_millis(100));
-        self.build.set_message("build  rebuilding...");
-        self.check.set_message("check  (building…)");
+        self.build.set_message(locale().dev.build_rebuilding.clone());
+        self.check.set_message(locale().dev.check_building.clone());
     }
 
     fn on_build_finish(&self, ok: bool, elapsed: Duration, error_hint: Option<&str>) {
@@ -1120,13 +1126,13 @@ impl DevWatchUi {
         if ok {
             self.server
                 .set_message(format!("serve  http://localhost:{}   (hot)", self.port));
-            self.check.set_message("check  ✓  no errors");
+            self.check.set_message(locale().dev.check_no_errors.clone());
         } else if let Some(hint) = error_hint {
             // Truncate long diagnostic messages to fit in one terminal line.
             let display = if hint.len() > 55 { &hint[..55] } else { hint };
             self.check.set_message(format!("check  ✗  {}", display));
         } else {
-            self.check.set_message("check  ✗  compile failed");
+            self.check.set_message(locale().dev.check_compile_failed.clone());
         }
     }
 }
@@ -1218,7 +1224,10 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
             ev = rx.recv() => {
                 let ev = match ev {
                     None => break 'watch,
-                    Some(Err(e)) => { eprintln!("  ⚠  Watch error: {}", e); continue; }
+                    Some(Err(e)) => {
+                        eprintln!("  ⚠  {}: {}", locale().dev.watch_error, e);
+                        continue;
+                    }
                     Some(Ok(e)) => e,
                 };
                 if !matches!(
@@ -1257,18 +1266,22 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
                     None => break 'watch,
                     Some(DevCmd::Rebuild) => {
                         if let Some(ui) = &ui {
-                            let _ = ui.multi.println("  ↻  Manual rebuild triggered");
+                            let _ = ui
+                                .multi
+                                .println(format!("  ↻  {}", locale().dev.manual_rebuild_triggered));
                         } else {
-                            println!("  ↻  Manual rebuild triggered");
+                            println!("  ↻  {}", locale().dev.manual_rebuild_triggered);
                         }
                         true
                     }
                     Some(DevCmd::OpenBrowser) => {
                         let url = format!("http://localhost:{}", port);
                         if let Some(ui) = &ui {
-                            let _ = ui.multi.println(format!("  ↗  Opening {}", url));
+                            let _ = ui
+                                .multi
+                                .println(format!("  ↗  {} {}", locale().dev.opening_url, url));
                         } else {
-                            println!("  ↗  Opening {}", url);
+                            println!("  ↗  {} {}", locale().dev.opening_url, url);
                         }
                         webbrowser::open(&url).ok();
                         false
@@ -1290,14 +1303,22 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
         }
 
         if let Some(ui) = &ui {
-            ui.on_change(&changed);
+            if changed.is_empty() {
+                let _ = ui.multi.println(format!("  ↻  {}", locale().dev.source_changed));
+            } else if changed.len() == 1 {
+                let _ = ui.multi.println(format!("  ↻  {}", changed[0].display()));
+            } else {
+                let _ = ui
+                    .multi
+                    .println(format!("  ↻  {} {}", changed.len(), locale().dev.files_changed));
+            }
             ui.on_build_start();
         } else {
             println!();
             match changed.len() {
-                0 => println!("  ↻  source changed"),
+                0 => println!("  ↻  {}", locale().dev.source_changed),
                 1 => println!("  ↻  {}", changed[0].display()),
-                n => println!("  ↻  {} files changed", n),
+                n => println!("  ↻  {} {}", n, locale().dev.files_changed),
             }
             println!();
         }
@@ -1324,7 +1345,7 @@ async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> c
                 if let Some(ui) = &ui {
                     ui.on_build_finish(true, elapsed, None);
                 } else {
-                    println!("  ✓  rebuilt  →  http://localhost:{}", port);
+                    println!("  ✓  {}  →  http://localhost:{}", locale().dev.rebuilt, port);
                 }
             }
             Err(e) => {
@@ -1349,11 +1370,19 @@ fn extract_error_hint(msg: String) -> String {
             && !t.contains("aborting due to")
             && t.len() > 6
         {
-            return if t.len() > 55 { t[..55].to_string() } else { t.to_string() };
+            return if t.len() > 55 {
+                t[..55].to_string()
+            } else {
+                t.to_string()
+            };
         }
     }
     // Fallback: first non-empty line, capped at 55 chars.
     let first = msg.lines().find(|l| !l.trim().is_empty()).unwrap_or(&msg);
     let first = first.trim();
-    if first.len() > 55 { first[..55].to_string() } else { first.to_string() }
+    if first.len() > 55 {
+        first[..55].to_string()
+    } else {
+        first.to_string()
+    }
 }

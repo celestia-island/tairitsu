@@ -1,0 +1,5 @@
+[cli]
+starting_dev_server = "正在启动开发服务器..."
+building_for = "正在构建目标"
+native_not_implemented = "Native 构建尚未实现"
+unknown_target = "未知目标"
