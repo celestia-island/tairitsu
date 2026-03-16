@@ -333,7 +333,7 @@ pub extern "C" fn bootstrap() {
             Ok(TestResult {
                 component: "Build Config Validation".to_string(),
                 status: TestStatus::Success,
-                message: format!("Build config: target=component, output-dir=dist"),
+                message: "Build config: target=component, output-dir=dist".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
             })
