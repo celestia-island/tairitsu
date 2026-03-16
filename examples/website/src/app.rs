@@ -19,7 +19,7 @@ impl App {
             .collect();
 
         rsx! {
-            div { class: "site-shell",
+            div { class: "site-shell", ..panes,
                 div { class: "language-toolbar",
                     label { r#for: "lang-switch", "Language" }
                     select {
@@ -28,7 +28,6 @@ impl App {
                         ..language_options,
                     }
                 }
-                ..panes,
             }
         }
     }
@@ -211,17 +210,23 @@ tests/        端到端相关资产"##;
                         article { class: "flow-card",
                             span { class: "kicker", "02" }
                             h3 { "Container::builder(image)" }
-                            p { "Configure host imports, guest initializer, linker state, and execution context." }
+                            p {
+                                "Configure host imports, guest initializer, linker state, and execution context."
+                            }
                         }
                         article { class: "flow-card",
                             span { class: "kicker", "03" }
                             h3 { "Container" }
-                            p { "Running instance that encapsulates store, linker, and invocation context." }
+                            p {
+                                "Running instance that encapsulates store, linker, and invocation context."
+                            }
                         }
                         article { class: "flow-card",
                             span { class: "kicker", "04" }
                             h3 { "Invoke" }
-                            p { "Choose typed bindings for fixed contracts or dynamic ABI / RON for plugin-style access." }
+                            p {
+                                "Choose typed bindings for fixed contracts or dynamic ABI / RON for plugin-style access."
+                            }
                         }
                     }
                     div { class: "badge-row",
@@ -236,7 +241,10 @@ tests/        端到端相关资产"##;
                     h2 { ..txt(t.section_workspace) }
                     p { class: "lead", ..txt(t.section_workspace_lead) }
                     div { class: "workspace-layout",
-                        div { class: "repo-map", ..vec![code_block(workspace_map, "text")] }
+                        div {
+                            class: "repo-map",
+                            ..vec![code_block(workspace_map, "text")],
+                        }
                         div { class: "repo-notes",
                             article { class: "mini-card",
                                 h3 { "browser-worlds" }
@@ -283,7 +291,9 @@ tests/        端到端相关资产"##;
                         }
                         article { class: "package-card",
                             h3 { "packages/packager" }
-                            p { "CLI build orchestration, dev server, asset copy, and component host HTML." }
+                            p {
+                                "CLI build orchestration, dev server, asset copy, and component host HTML."
+                            }
                         }
                     }
                 }
@@ -320,7 +330,9 @@ tests/        端到端相关资产"##;
                             strong { "01" }
                             div {
                                 h4 { "wit-native-macro" }
-                                p { "Macro-assisted entry point for understanding generated WIT integration." }
+                                p {
+                                    "Macro-assisted entry point for understanding generated WIT integration."
+                                }
                             }
                         }
                         li {
@@ -348,14 +360,18 @@ tests/        端到端相关资产"##;
                             strong { "05" }
                             div {
                                 h4 { "wit-dynamic-advanced" }
-                                p { "Dynamic invocation, RON serialization, and discovery-oriented flow." }
+                                p {
+                                    "Dynamic invocation, RON serialization, and discovery-oriented flow."
+                                }
                             }
                         }
                         li {
                             strong { "06" }
                             div {
                                 h4 { "website" }
-                                p { "Browser-facing docs demo that stitches together VDOM, styles, hooks, and packaging." }
+                                p {
+                                    "Browser-facing docs demo that stitches together VDOM, styles, hooks, and packaging."
+                                }
                             }
                         }
                     }

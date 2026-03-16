@@ -15,19 +15,11 @@ let style = Style::new()
     .add_custom("--accent", "#c7461f");"##;
 
     rsx! {
-        div {
-            class: "page builders-demo",
-            id: "demo-builders",
-            h3 {
-                "Builder 体系"
-            }
+        div { class: "page builders-demo", id: "demo-builders",
+            h3 { "Builder 体系" }
 
-            section {
-                class: "demo-section",
-                p {
-                    "用链式 API 组合 class 与 style，适合做设计系统能力抽象。"
-                }
-                ..vec![code_block(snippet, "rust")]
+            section { class: "demo-section", ..vec![code_block(snippet, "rust")],
+                p { "用链式 API 组合 class 与 style，适合做设计系统能力抽象。" }
             }
         }
     }

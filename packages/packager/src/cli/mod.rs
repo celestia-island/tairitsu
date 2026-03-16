@@ -39,7 +39,7 @@ enum Commands {
     /// Build for production
     Build {
         /// Build target (wasm, native)
-        #[arg(short, long, default_value = "wasm")]
+        #[arg(short, long, default_value = "component")]
         target: String,
 
         /// Build in release mode
@@ -128,7 +128,6 @@ pub async fn run() -> crate::Result<()> {
             let config = crate::config::Config::load(&manifest_path)?;
             info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
-                "wasm" => crate::wasm::build(&config, release, None)?,
                 "component" => crate::wasm::build_component(&config, release, None)?,
                 "native" => {
                     eprintln!("{}", t.cli.native_not_implemented);
@@ -136,7 +135,7 @@ pub async fn run() -> crate::Result<()> {
                 }
                 _ => {
                     eprintln!(
-                        "{}: {}. Use 'wasm', 'component', or 'native'",
+                        "{}: {}. Use 'component' or 'native'",
                         t.cli.unknown_target, target
                     );
                     std::process::exit(1);
