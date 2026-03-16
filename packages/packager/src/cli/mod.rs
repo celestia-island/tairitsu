@@ -127,8 +127,8 @@ pub async fn run() -> crate::Result<()> {
             let config = crate::config::Config::load(&manifest_path)?;
             info!("Building for {}...", target);
             match target.as_str() {
-                "wasm" => crate::wasm::build(&config, release)?,
-                "component" => crate::wasm::build_component(&config, release)?,
+                "wasm" => crate::wasm::build(&config, release, None)?,
+                "component" => crate::wasm::build_component(&config, release, None)?,
                 "native" => {
                     eprintln!("Native builds not yet implemented");
                     std::process::exit(1);
