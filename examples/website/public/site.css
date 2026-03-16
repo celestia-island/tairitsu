@@ -153,6 +153,34 @@ a {
   gap: 14px;
 }
 
+.section-nav {
+  margin-top: 12px;
+  border: 1px solid #d7cdbf;
+  border-radius: 14px;
+  background: #fff8ed;
+  padding: 10px;
+}
+
+.section-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-nav a {
+  display: inline-flex;
+  text-decoration: none;
+  border: 1px solid #d8c9b4;
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #3f3a30;
+  font-size: 14px;
+  background: #fffdf8;
+}
+
 .panel {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -166,6 +194,54 @@ a {
   font-family: "Space Grotesk", "Avenir Next", sans-serif;
   font-size: clamp(26px, 3.8vw, 34px);
   letter-spacing: -0.02em;
+}
+
+.demo-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.page {
+  border: 1px solid #ddcfba;
+  border-radius: 14px;
+  background: #fffbf2;
+  padding: 12px;
+}
+
+.page h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.page p {
+  color: #615b50;
+}
+
+.demo-section {
+  margin-top: 8px;
+}
+
+.code-block {
+  border: 1px solid #e2d8c8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: #1f1f1f;
+}
+
+.code-block code {
+  color: #f5efe3;
+  font-family: "JetBrains Mono", "Cascadia Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 .lead {
@@ -284,7 +360,8 @@ a {
 @media (max-width: 900px) {
   .grid.three,
   .compare,
-  .command-list {
+  .command-list,
+  .demo-grid {
     grid-template-columns: 1fr;
   }
 

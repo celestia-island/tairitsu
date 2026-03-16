@@ -2,38 +2,30 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::code_block::code_block;
+
 #[allow(dead_code)]
 pub fn home() -> VNode {
+    let quick_start = r#"# in workspace root
+just dev
+
+# production build
+just build-web
+just serve-web"#;
+
     rsx! {
         div {
             class: "page home",
-            header {
-                class: "hero",
-                h1 {
-                    "Tairitsu Framework"
-                }
-                p {
-                    class: "tagline",
-                    "A modern Rust Web Framework"
-                }
+            id: "demo-home",
+            h3 {
+                "快速开始"
+            }
+            p {
+                "把文档中的命令先跑通，确认 component 构建、资源复制、dev watch 全链路可用。"
             }
             section {
-                class: "features",
-                h2 {
-                    "Core Features"
-                }
-                div {
-                    class: "feature-grid",
-                    div {
-                        class: "feature-card",
-                        h3 {
-                            "rsx! Macro"
-                        }
-                        p {
-                            "Declarative UI syntax"
-                        }
-                    }
-                }
+                class: "demo-section",
+                ..vec![code_block(quick_start, "bash")]
             }
         }
     }
