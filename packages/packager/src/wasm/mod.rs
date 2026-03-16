@@ -959,12 +959,8 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
-    let mut last_build_line = format_last_build_line(
-        true,
-        config.build.target.as_str(),
-        initial_elapsed,
-        None,
-    );
+    let mut last_build_line =
+        format_last_build_line(true, config.build.target.as_str(), initial_elapsed, None);
 
     let port_switched = if actual_port != port {
         Some(
@@ -1297,7 +1293,11 @@ async fn run_watch_loop(
             Ok(()) => {
                 *last_build_line = format_last_build_line(true, &target, elapsed, None);
                 print_status_panel(port, output_dir, Some(last_build_line), None);
-                println!("  ✓  {}  →  http://localhost:{}", locale().dev.rebuilt, port);
+                println!(
+                    "  ✓  {}  →  http://localhost:{}",
+                    locale().dev.rebuilt,
+                    port
+                );
             }
             Err(e) => {
                 let hint = extract_error_hint(e.to_string());
