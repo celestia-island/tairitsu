@@ -1035,6 +1035,7 @@ struct DevWatchUi {
     /// Kept public so the watch loop can clone it for the build task.
     multi: std::sync::Arc<MultiProgress>,
     _shortcuts: ProgressBar,
+    _divider: ProgressBar,
     server: ProgressBar,
     build: ProgressBar,
     check: ProgressBar,
@@ -1053,6 +1054,10 @@ impl DevWatchUi {
         let initial_width = crossterm::terminal::size().map(|(w, _)| w).unwrap_or(120);
         shortcuts.set_message(Self::shortcut_message(initial_width));
 
+        let divider = multi.add(ProgressBar::new_spinner());
+        divider.set_style(static_style.clone());
+        divider.set_message("──────────────────────────────────────────────────────");
+
         let shortcuts_for_resize = shortcuts.clone();
         std::thread::spawn(move || {
             let mut last = initial_width;
@@ -1070,22 +1075,23 @@ impl DevWatchUi {
         let server = multi.add(ProgressBar::new_spinner());
         server.set_style(static_style.clone());
         server.set_message(format!(
-            "serve  http://localhost:{}   ({})",
+            "[server] http://localhost:{}  ({})",
             port,
             output_dir.display()
         ));
 
         let build = multi.add(ProgressBar::new_spinner());
         build.set_style(static_style.clone());
-        build.set_message(format!("{}  (target: {})", locale().dev.build_idle, target));
+        build.set_message(format!("[build] {}  (target: {})", locale().dev.build_idle, target));
 
         let check = multi.add(ProgressBar::new_spinner());
         check.set_style(static_style);
-        check.set_message(locale().dev.check_ready.clone());
+        check.set_message(format!("[check] {}", locale().dev.check_ready));
 
         Self {
             multi,
             _shortcuts: shortcuts,
+            _divider: divider,
             server,
             build,
             check,
@@ -1108,8 +1114,10 @@ impl DevWatchUi {
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]);
         self.build.set_style(spinning);
         self.build.enable_steady_tick(Duration::from_millis(100));
-        self.build.set_message(locale().dev.build_rebuilding.clone());
-        self.check.set_message(locale().dev.check_building.clone());
+        self.build
+            .set_message(format!("[build] {}", locale().dev.build_rebuilding));
+        self.check
+            .set_message(format!("[check] {}", locale().dev.check_building));
     }
 
     fn on_build_finish(&self, ok: bool, elapsed: Duration, error_hint: Option<&str>) {
@@ -1118,21 +1126,23 @@ impl DevWatchUi {
             .set_style(ProgressStyle::with_template("    {msg}").unwrap());
         let status = if ok { "ok" } else { "failed" };
         self.build.set_message(format!(
-            "build  {}  in {:.1?}   |   uptime {:.1?}",
+            "[build] {}  in {:.1?}  |  uptime {:.1?}",
             status,
             elapsed,
             self.started.elapsed()
         ));
         if ok {
             self.server
-                .set_message(format!("serve  http://localhost:{}   (hot)", self.port));
-            self.check.set_message(locale().dev.check_no_errors.clone());
+                .set_message(format!("[server] http://localhost:{}  (hot)", self.port));
+            self.check
+                .set_message(format!("[check] {}", locale().dev.check_no_errors));
         } else if let Some(hint) = error_hint {
             // Truncate long diagnostic messages to fit in one terminal line.
             let display = if hint.len() > 55 { &hint[..55] } else { hint };
-            self.check.set_message(format!("check  ✗  {}", display));
+            self.check.set_message(format!("[check] ✗ {}", display));
         } else {
-            self.check.set_message(locale().dev.check_compile_failed.clone());
+            self.check
+                .set_message(format!("[check] {}", locale().dev.check_compile_failed));
         }
     }
 }
