@@ -60,6 +60,7 @@ regex = "^1"
 yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = "0.28"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 [features]
 default = ["wasm", "dev-server"]
