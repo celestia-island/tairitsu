@@ -1,0 +1,5 @@
+[cli]
+starting_dev_server = "Starting development server..."
+building_for = "Building for"
+native_not_implemented = "Native builds not yet implemented"
+unknown_target = "Unknown target"
