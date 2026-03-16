@@ -111,7 +111,7 @@ export function fetchAsync(request: RequestDescriptor): bigint {
       if (entry) entry.result = { ok: true, value: data };
       return data;
     },
-  ).catch((err: unknown) => {
+  ).catch((err: Error | DOMException | TypeError) => {
     const entry = _fetchHandles.get(handle);
     if (entry) {
       entry.result = {

@@ -1,10 +1,37 @@
+type HostImportResult =
+  | object
+  | string
+  | number
+  | boolean
+  | bigint
+  | null
+  | undefined
+  | void
+  | Promise<object | string | number | boolean | bigint | null | undefined | void>;
+
+type WrapperImports = Record<string, Record<string, (...args: never[]) => HostImportResult>>;
+
+type WrapperInstantiate = {
+  (imports: WrapperImports): Promise<object> | object;
+  (
+    loadCoreModule: (modulePath: string) => Promise<WebAssembly.Module>,
+    imports: WrapperImports,
+  ): Promise<object> | object;
+};
+
+type WrapperModule = {
+  instantiate?: WrapperInstantiate;
+  default?: WrapperInstantiate;
+  init?: WrapperInstantiate;
+};
+
 const CANDIDATES = [
   './component-wrapper/__WASM_STEM__.js',
   './component-wrapper/index.js',
 ];
 
-export async function instantiateWithWrapper(imports = {}) {
-  const existingCandidates = [];
+export async function instantiateWithWrapper(imports: WrapperImports = {}) {
+  const existingCandidates: string[] = [];
 
   for (const path of CANDIDATES) {
     try {
@@ -25,11 +52,11 @@ export async function instantiateWithWrapper(imports = {}) {
     );
   }
 
-  let lastError = null;
+  let lastError: Error | DOMException | TypeError | string | null = null;
 
   for (const path of existingCandidates) {
     try {
-      const mod = await import(path);
+      const mod = await import(path) as WrapperModule;
       const instantiate = mod.instantiate || mod.default || mod.init;
       if (typeof instantiate !== 'function') {
         // Some transpilers emit self-initializing modules (top-level await)
@@ -44,7 +71,7 @@ export async function instantiateWithWrapper(imports = {}) {
       }
 
       try {
-        return await instantiate(async (modulePath) => {
+        return await instantiate(async (modulePath: string) => {
           const resolved = new URL(modulePath, import.meta.url);
           const response = await fetch(resolved);
           if (!response.ok) {
@@ -56,7 +83,7 @@ export async function instantiateWithWrapper(imports = {}) {
         // Keep the outer import/instantiate error for diagnostics.
       }
     } catch (error) {
-      lastError = error;
+      lastError = error instanceof Error ? error : String(error);
     }
   }
 
