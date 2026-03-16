@@ -31,31 +31,18 @@ const CANDIDATES = [
 ];
 
 export async function instantiateWithWrapper(imports: WrapperImports = {}) {
-  const existingCandidates: string[] = [];
+  let lastError: Error | DOMException | TypeError | string | null = null;
 
+  // Probe and load candidates in order, stopping at the first working entry.
+  // This avoids noisy 404s when the preferred named wrapper file exists.
   for (const path of CANDIDATES) {
     try {
       const probeUrl = new URL(path, import.meta.url);
       const probe = await fetch(probeUrl, { method: 'HEAD' });
-      if (probe.ok) {
-        existingCandidates.push(path);
+      if (!probe.ok) {
+        continue;
       }
-    } catch (_probeErr) {
-      // Ignore probe failures and let runtime error message guide next steps.
-    }
-  }
 
-  if (existingCandidates.length === 0) {
-    throw new Error(
-      'No transpiled component wrapper entry found under ./component-wrapper/. '
-      + 'Expected one of: ' + CANDIDATES.join(', ')
-    );
-  }
-
-  let lastError: Error | DOMException | TypeError | string | null = null;
-
-  for (const path of existingCandidates) {
-    try {
       const mod = await import(path) as WrapperModule;
       const instantiate = mod.instantiate || mod.default || mod.init;
       if (typeof instantiate !== 'function') {

@@ -98,6 +98,22 @@ impl WitPlatform {
         #[allow(unreachable_code)]
         Ok(Self)
     }
+
+    /// Render a VNode tree into `#app` for WIT-backed browser components.
+    ///
+    /// This replaces the bootstrap text set by `lifecycle.start` and mounts
+    /// the actual app view tree so users can see real UI content.
+    pub fn mount_vnode_to_app(&self, vnode: &tairitsu_vdom::VNode) -> Result<()> {
+        #[cfg(not(target_family = "wasm"))]
+        anyhow::bail!(
+            "mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)"
+        );
+
+        #[cfg(target_family = "wasm")]
+        {
+            wasm_impl::mount_vnode_to_app(self, vnode)
+        }
+    }
 }
 
 // ── wasm32 Platform implementation ────────────────────────────────────────
@@ -111,10 +127,13 @@ impl WitPlatform {
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 mod wasm_impl {
+    use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
 
-    use tairitsu_vdom::{EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform};
+    use tairitsu_vdom::{
+        EventData, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, VNode,
+    };
 
     use super::{WitElement, WitEvent, WitPlatform};
 
@@ -330,5 +349,86 @@ mod wasm_impl {
                 .expect("WIT remove-event-listener failed");
             }
         }
+    }
+
+    pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: &VNode) -> Result<()> {
+        let app = if let Some(handle) = bindings::tairitsu_browser::full::document::get_element_by_id("app") {
+            WitElement(handle)
+        } else {
+            let body = bindings::tairitsu_browser::full::document::body()
+                .ok_or_else(|| anyhow::anyhow!("document.body is not available"))?;
+            let div = bindings::tairitsu_browser::full::document::create_element("div")
+                .map_err(|e| anyhow::anyhow!("failed to create #app element: {e}"))?;
+            bindings::tairitsu_browser::full::node::set_attribute(div, "id", "app")
+                .map_err(|e| anyhow::anyhow!("failed to set #app id: {e}"))?;
+            bindings::tairitsu_browser::full::node::append_child(body, div)
+                .map_err(|e| anyhow::anyhow!("failed to append #app to body: {e}"))?;
+            WitElement(div)
+        };
+
+        bindings::tairitsu_browser::full::node::set_text_content(app.0, "")
+            .map_err(|e| anyhow::anyhow!("failed to clear #app content: {e}"))?;
+
+        render_vnode(platform, vnode, &app)
+    }
+
+    fn render_vnode(platform: &WitPlatform, vnode: &VNode, parent: &WitElement) -> Result<()> {
+        match vnode {
+            VNode::Element(velement) => {
+                let element = platform.create_element(&velement.tag);
+
+                for (name, value) in &velement.attributes {
+                    platform.set_attribute(&element, name, value);
+                }
+
+                if !velement.class.static_classes.is_empty() {
+                    platform.set_class(&element, &velement.class.static_classes);
+                }
+
+                if !velement.style.static_styles.is_empty() {
+                    for part in velement.style.static_styles.split(';') {
+                        let part = part.trim();
+                        if part.is_empty() {
+                            continue;
+                        }
+                        if let Some((name, value)) = part.split_once(':') {
+                            platform.set_style(&element, name.trim(), value.trim());
+                        }
+                    }
+                }
+
+                for (name, value) in &velement.style.css_variables {
+                    platform.set_style(&element, name, value);
+                }
+
+                for (event_name, handler) in &velement.event_handlers {
+                    let handler = handler.clone();
+                    platform.add_event_listener(
+                        &element,
+                        event_name,
+                        Box::new(move |event| {
+                            (handler.borrow_mut())(event);
+                        }),
+                    );
+                }
+
+                for child in &velement.children {
+                    render_vnode(platform, child, &element)?;
+                }
+
+                platform.append_child(parent, &element);
+            }
+            VNode::Text(vtext) => {
+                let text_node = platform.create_text_node(&vtext.text);
+                platform.append_child(parent, &text_node);
+            }
+            VNode::Fragment(children) => {
+                for child in children {
+                    render_vnode(platform, child, parent)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
