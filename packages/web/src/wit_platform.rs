@@ -102,14 +102,13 @@ impl WitPlatform {
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
     /// the actual app view tree so users can see real UI content.
-    #[allow(unused_variables)]
-    pub fn mount_vnode_to_app(&self, vnode: &tairitsu_vdom::VNode) -> Result<()> {
+    pub fn mount_vnode_to_app(&self, _vnode: &tairitsu_vdom::VNode) -> Result<()> {
         #[cfg(not(target_family = "wasm"))]
         anyhow::bail!("mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)");
 
         #[cfg(target_family = "wasm")]
         {
-            wasm_impl::mount_vnode_to_app(self, vnode)
+            wasm_impl::mount_vnode_to_app(self, _vnode)
         }
     }
 }
