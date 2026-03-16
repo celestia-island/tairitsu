@@ -329,10 +329,7 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
 
     for entry in walkdir::WalkDir::new(&public_dir) {
         let entry = entry.map_err(|e| {
-            crate::TairitsuPackagerError::BuildError(format!(
-                "Failed to walk public assets: {}",
-                e
-            ))
+            crate::TairitsuPackagerError::BuildError(format!("Failed to walk public assets: {}", e))
         })?;
         let path = entry.path();
         if path.is_dir() {
@@ -362,18 +359,25 @@ fn prepare_component_wrapper_fallback(
     write_component_wrapper_loader(config, component_wasm_path)?;
 
     if !try_generate_component_wrapper(config, component_wasm_path)? {
+        let wasm_hint_path = std::fs::canonicalize(component_wasm_path)
+            .unwrap_or_else(|_| component_wasm_path.to_path_buf());
+        let wasm_hint = wasm_hint_path
+            .display()
+            .to_string()
+            .trim_start_matches(r"\\?\")
+            .to_string();
         eprintln!(
             "⚠  Component wrapper was not generated automatically.\n   \
              Browsers without native WebAssembly Component API will still fail.\n   \
-             Install JCO and run one of the following in the app directory:\n   \
-             1) npx @bytecodealliance/jco transpile {} -o component-wrapper\n   \
-             2) jco transpile {} -o component-wrapper",
-            component_wasm_path.display(),
-            component_wasm_path.display()
+             See detailed diagnostics above for missing commands and command output.\n   \
+             Quick manual command:\n   \
+             npx --yes @bytecodealliance/jco transpile \"{}\" -o \"component-wrapper\"",
+            wasm_hint
         );
-    } else {
-        rewrite_wrapper_imports_to_esm(config)?;
     }
+
+    // Always normalize wrapper imports if wrapper files already exist.
+    rewrite_wrapper_imports_to_esm(config)?;
 
     Ok(())
 }
@@ -429,9 +433,8 @@ fn write_component_wrapper_loader(
     let loader = format!(
         r#"export async function instantiateWithWrapper(imports = {{}}) {{
     const candidates = [
-        './component-wrapper/index.js',
         './component-wrapper/{wasm_stem}.js',
-        './{wasm_stem}.js',
+        './component-wrapper/index.js',
     ];
 
     let lastError = null;
@@ -488,6 +491,20 @@ fn try_generate_component_wrapper(
     let wrapper_dir = config.build.output_dir.join("component-wrapper");
     std::fs::create_dir_all(&wrapper_dir)?;
 
+    let wasm_path_for_cmd = std::fs::canonicalize(component_wasm_path)
+        .unwrap_or_else(|_| component_wasm_path.to_path_buf());
+    let wrapper_dir_for_cmd = std::fs::canonicalize(&wrapper_dir).unwrap_or(wrapper_dir.clone());
+    let wasm_path_hint = wasm_path_for_cmd
+        .display()
+        .to_string()
+        .trim_start_matches(r"\\?\")
+        .to_string();
+    let wrapper_dir_hint = wrapper_dir_for_cmd
+        .display()
+        .to_string()
+        .trim_start_matches(r"\\?\")
+        .to_string();
+
     let wasm_stem = component_wasm_path
         .file_stem()
         .and_then(|s| s.to_str())
@@ -523,9 +540,9 @@ fn try_generate_component_wrapper(
             "jco",
             vec![
                 "transpile".to_string(),
-                component_wasm_path.display().to_string(),
+                wasm_path_for_cmd.display().to_string(),
                 "-o".to_string(),
-                wrapper_dir.display().to_string(),
+                wrapper_dir_for_cmd.display().to_string(),
             ],
         ),
         (
@@ -534,30 +551,82 @@ fn try_generate_component_wrapper(
                 "--yes".to_string(),
                 "@bytecodealliance/jco".to_string(),
                 "transpile".to_string(),
-                component_wasm_path.display().to_string(),
+                wasm_path_for_cmd.display().to_string(),
                 "-o".to_string(),
-                wrapper_dir.display().to_string(),
+                wrapper_dir_for_cmd.display().to_string(),
             ],
         ),
     ];
 
-    for (bin, args) in attempts {
-        let mut cmd = std::process::Command::new(bin);
-        cmd.args(&args);
-        cmd.current_dir(&config.build.output_dir);
+    let mut missing_commands = Vec::new();
 
-        match cmd.status() {
-            Ok(status) if status.success() => {
-                return Ok(true);
-            }
-            Ok(_status) => {
+    for (bin, args) in attempts {
+        let command_preview = format!("{} {}", bin, args.join(" "));
+        match std::process::Command::new(bin).args(&args).output() {
+            Ok(output) if output.status.success() => {
+                let has_index = wrapper_dir.join("index.js").exists();
+                let has_named = wrapper_dir.join(format!("{}.js", wasm_stem)).exists();
+                if has_index || has_named {
+                    return Ok(true);
+                }
+                eprintln!(
+                    "⚠  Wrapper transpile command succeeded but no JS wrapper entry was found.\n   Command: {}",
+                    command_preview
+                );
                 continue;
             }
-            Err(_e) => {
+            Ok(output) => {
+                let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                let detail = if !stderr.is_empty() {
+                    stderr
+                } else if !stdout.is_empty() {
+                    stdout
+                } else {
+                    "(no output)".to_string()
+                };
+                let detail_preview: String = detail.chars().take(400).collect();
+
+                eprintln!(
+                    "⚠  Wrapper transpile command failed.\n   Command: {}\n   Exit: {}\n   Detail: {}",
+                    command_preview,
+                    output.status,
+                    detail_preview
+                );
+                continue;
+            }
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                missing_commands.push(bin.to_string());
+                eprintln!(
+                    "⚠  Wrapper transpile command not found: '{}'.\n   Attempted: {}",
+                    bin, command_preview
+                );
+                continue;
+            }
+            Err(err) => {
+                eprintln!(
+                    "⚠  Failed to execute wrapper transpile command.\n   Command: {}\n   Error: {}",
+                    command_preview, err
+                );
                 continue;
             }
         }
     }
+
+    if !missing_commands.is_empty() {
+        missing_commands.sort();
+        missing_commands.dedup();
+        eprintln!(
+            "⚠  Missing wrapper tooling in PATH: {}\n   Install Node.js + JCO or ensure these commands are available.",
+            missing_commands.join(", ")
+        );
+    }
+
+    eprintln!(
+        "ℹ  Manual fallback command (absolute paths):\n   npx --yes @bytecodealliance/jco transpile \"{}\" -o \"{}\"",
+        wasm_path_hint,
+        wrapper_dir_hint
+    );
 
     Ok(false)
 }
