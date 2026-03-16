@@ -88,6 +88,7 @@ pub fn build_component(
     std::fs::copy(&wasm_path, &dest_wasm)?;
     copy_browser_glue(config)?;
     copy_static_public_assets(config)?;
+    compile_project_scss(config)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "bundle assets",
@@ -279,6 +280,25 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
+fn compile_project_scss(config: &Config) -> crate::Result<()> {
+    let project_root = std::env::current_dir()?;
+    let styles_dir = project_root.join("src").join("styles");
+
+    if !styles_dir.exists() {
+        return Ok(());
+    }
+
+    crate::styles::compile_scss_files(&styles_dir, &config.build.output_dir).map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!(
+            "Failed to compile SCSS from {}: {}",
+            styles_dir.display(),
+            e
+        ))
+    })?;
+
+    Ok(())
+}
+
 fn prepare_component_wrapper_fallback(
     config: &Config,
     component_wasm_path: &std::path::Path,
@@ -359,7 +379,7 @@ fn write_component_wrapper_loader(
 
     let loader = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/wasm/component-wrapper-loader.template.js"
+        "/src/wasm/component-wrapper-loader.template.ts"
     ))
     .replace("__WASM_STEM__", wasm_stem);
 

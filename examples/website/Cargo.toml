@@ -28,7 +28,7 @@ description = "Comprehensive demo showcasing Virtual DOM, rsx! macro, Builders, 
 
 [package.metadata.tairitsu.build]
 target = "component"
-output-dir = "dist"
+output_dir = "../../target/tairitsu-dist"
 optimize = true
 sourcemap = true
 
@@ -47,7 +47,7 @@ head = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./site.css">
+<link rel="stylesheet" href="./styles.css">
 <script>
 	(() => {
 		const SUPPORTED = ["en-US", "zh-CHS", "zh-CHT", "ja-JP", "ko-KR", "fr-FR", "es-ES", "ru-RU"];

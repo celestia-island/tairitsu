@@ -34,8 +34,8 @@ examples/website/
 │   │   ├── builders.rs     # Builder system demos
 │   │   └── reactive.rs     # Reactive system demos
 │   └── styles/             # CSS styles
-│       └── main.css
-└── dist/                   # Build output (generated)
+│       └── main.scss
+└── ../../target/tairitsu-dist/  # Build output (generated)
 ```
 
 ## Running the Demo
@@ -60,7 +60,7 @@ cargo run --package tairitsu-packager -- build --release
 ### Serve Production Build
 
 ```bash
-cd dist
+cd ../../target/tairitsu-dist
 python3 -m http.server 3001
 ```
 

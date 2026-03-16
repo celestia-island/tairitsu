@@ -6,6 +6,7 @@
 pub mod cli;
 pub mod config;
 pub mod i18n;
+pub mod styles;
 pub mod utils;
 pub mod wasm;
 pub mod wit_cmd;
