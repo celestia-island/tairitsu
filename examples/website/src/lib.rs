@@ -27,3 +27,8 @@ pub extern "C" fn run() {
         error!("website run failed: {err}");
     }
 }
+
+#[no_mangle]
+pub extern "C" fn tairitsu_component_bootstrap() {
+    run();
+}

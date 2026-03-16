@@ -137,6 +137,10 @@ mod wasm_impl {
 
     use super::{WitElement, WitEvent, WitPlatform};
 
+    unsafe extern "C" {
+        fn tairitsu_component_bootstrap();
+    }
+
     type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
     type EventCallbackMap = HashMap<u64, EventCallback>;
 
@@ -251,21 +255,9 @@ mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::lifecycle::Guest for BrowserComponent {
         fn start() -> Result<(), String> {
-            let app = if let Some(handle) = bindings::tairitsu_browser::full::document::get_element_by_id("app") {
-                handle
-            } else {
-                let body = bindings::tairitsu_browser::full::document::body()
-                    .ok_or_else(|| "document.body is not available".to_string())?;
-                let div = bindings::tairitsu_browser::full::document::create_element("div")?;
-                bindings::tairitsu_browser::full::node::set_attribute(div, "id", "app")?;
-                bindings::tairitsu_browser::full::node::append_child(body, div)?;
-                div
-            };
-
-            bindings::tairitsu_browser::full::node::set_text_content(
-                app,
-                "Tairitsu component started (lifecycle.start)"
-            )?;
+            unsafe {
+                tairitsu_component_bootstrap();
+            }
 
             Ok(())
         }
