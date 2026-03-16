@@ -26,26 +26,24 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-tairitsu-vdom = { path = "../../../packages/vdom" }
-wasm-bindgen = "0.2"
+tairitsu-web = { path = "../../../packages/web", features = ["wit-bindings"] }
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 "#;
         fs::write(project_path.join("Cargo.toml"), cargo_toml)?;
 
         // 3. 创建源代码
         let lib_rs = r#"
-use wasm_bindgen::prelude::*;
-use tairitsu_macros::rsx;
+use tairitsu_web::WitPlatform;
 
-#[wasm_bindgen(start)]
-pub fn main() {
-    let _node = rsx! {
-        div {
-            "Minimal App"
-        }
-    };
+#[export_name = "tairitsu_component_bootstrap"]
+pub extern "C" fn bootstrap() {
+    WitPlatform::mount(|| {
+        tairitsu_web::vdom::VNode::element("div", vec![], vec![
+            tairitsu_web::vdom::VNode::text("Minimal App"),
+        ])
+    });
 }
 "#;
         fs::write(project_path.join("src/lib.rs"), lib_rs)?;
@@ -78,17 +76,14 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-tairitsu-vdom = { path = "../../../packages/vdom" }
-tairitsu-hooks = { path = "../../../packages/hooks" }
-tairitsu-macros = { path = "../../../packages/macros" }
-wasm-bindgen = "0.2"
+tairitsu-web = { path = "../../../packages/web", features = ["wit-bindings"] }
 
 [package.metadata.tairitsu]
 app-name = "Full Featured App"
 title = "Full App"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 output-dir = "dist"
 optimize = true
 
@@ -123,7 +118,7 @@ version = "0.1.0"
 app-name = "Test App"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 optimize = true
 "#;
 

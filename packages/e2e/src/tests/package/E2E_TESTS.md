@@ -28,16 +28,13 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-tairitsu-vdom = { path = "../../packages/vdom" }
-tairitsu-hooks = { path = "../../packages/hooks" }
-tairitsu-macros = { path = "../../packages/macros" }
-wasm-bindgen = "0.2"
+tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
 
 [package.metadata.tairitsu]
 app-name = "Test App"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 output-dir = "dist"
 
 [package.metadata.tairitsu.dev]
@@ -46,16 +43,15 @@ EOF
 
 # 4. 创建最小源代码
 cat > src/lib.rs << 'EOF'
-use wasm_bindgen::prelude::*;
-use tairitsu_macros::rsx;
+use tairitsu_web::WitPlatform;
 
-#[wasm_bindgen(start)]
-pub fn main() {
-    let _node = rsx! {
-        div {
-            "Hello, Tairitsu!"
-        }
-    };
+#[export_name = "tairitsu_component_bootstrap"]
+pub extern "C" fn bootstrap() {
+    WitPlatform::mount(|| {
+        tairitsu_web::vdom::VNode::element("div", vec![], vec![
+            tairitsu_web::vdom::VNode::text("Hello, Tairitsu!"),
+        ])
+    });
 }
 EOF
 
@@ -64,8 +60,8 @@ tairitsu build
 
 # 6. 验证输出
 test -f dist/index.html
-test -f dist/test_app.js
-test -f dist/test_app_bg.wasm
+test -f dist/test_app.wasm
+test -f dist/component-wrapper-loader.js
 ```
 
 **断言：**
@@ -157,10 +153,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 tairitsu-vdom = "0.1"
-wasm-bindgen = "0.2"
+tairitsu-web = { version = "0.1", features = ["wit-bindings"] }
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 ```
 
 ### 完整 Cargo.toml
@@ -175,10 +171,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-tairitsu-vdom = "0.1"
-tairitsu-hooks = "0.1"
-tairitsu-macros = "0.1"
-wasm-bindgen = "0.2"
+tairitsu-web = { version = "0.1", features = ["wit-bindings"] }
 
 [package.metadata.tairitsu]
 app-name = "Full Featured App"
@@ -186,7 +179,7 @@ title = "Full App - All Features"
 description = "Testing all tairitsu-package features"
 
 [package.metadata.tairitsu.build]
-target = "wasm"
+target = "component"
 output-dir = "dist"
 optimize = true
 sourcemap = true

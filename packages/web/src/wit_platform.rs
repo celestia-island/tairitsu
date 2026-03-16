@@ -91,8 +91,7 @@ impl WitPlatform {
         #[cfg(not(target_family = "wasm"))]
         anyhow::bail!(
             "WitPlatform is only available on wasm32 targets (wasm32-wasip2). \
-             For native or wasm32-unknown-unknown builds, use WebPlatform \
-             with the `web` feature instead."
+               Native hosts should execute through tairitsu-runtime/wasmtime host flow."
         );
 
         #[allow(unreachable_code)]

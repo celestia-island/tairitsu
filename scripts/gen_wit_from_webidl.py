@@ -101,7 +101,7 @@ Tairitsu WIT Generator — Data Sources
    WIT files  : packages/browser-worlds/wit/*.wit
    Package    : tairitsu-browser:<domain>@0.1.0
 
-Coverage target: ≥ 90% of wasm-bindgen-cli browser interface surface
+Coverage target: ≥ 90% of planned browser WIT interface surface
 """
     )
 

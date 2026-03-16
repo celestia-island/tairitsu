@@ -161,8 +161,8 @@ tests/        端到端相关资产"##;
                     h2 { ..txt(t.section_backend) }
                     div { class: "compare",
                         article { class: "card tone-a",
-                            h3 { "web" }
-                            p { "wasm32-unknown-unknown + wasm-bindgen/web-sys" }
+                            h3 { "component" }
+                            p { "wasm32-wasip2 + WIT Component Model" }
                         }
                         article { class: "card tone-b",
                             h3 { "wit-bindings" }
@@ -256,7 +256,7 @@ tests/        端到端相关资产"##;
                             }
                             article { class: "mini-card",
                                 h3 { "web" }
-                                p { "Hosts both wasm-bindgen and wit-bindings platform backends." }
+                                p { "Provides component-first browser platform bindings." }
                             }
                             article { class: "mini-card",
                                 h3 { "packager" }
