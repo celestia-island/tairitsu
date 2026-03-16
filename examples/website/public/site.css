@@ -39,6 +39,39 @@ a {
   margin: 24px auto 32px;
 }
 
+.language-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d8cfbf;
+  border-radius: 12px;
+  background: #fffaf1;
+}
+
+.language-toolbar label {
+  font-size: 14px;
+  color: #5a564d;
+}
+
+.language-switch {
+  border: 1px solid #c7baa6;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  color: #2f2c26;
+  font-size: 14px;
+}
+
+.lang-pane {
+  display: none;
+}
+
+.lang-pane.is-active {
+  display: block;
+}
+
 .site-hero {
   position: relative;
   border: 1px solid #bfa891;
@@ -372,6 +405,11 @@ a {
   .site-shell {
     width: min(1120px, calc(100vw - 18px));
     margin-top: 10px;
+  }
+
+  .language-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .site-hero {
