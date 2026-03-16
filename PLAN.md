@@ -9,7 +9,7 @@
 - browser-extended 世界已落地，WIT 解析与绑定可用。
 - Streams / File API / IndexedDB / Geolocation / Storage 已完成 poll-handle 模式补全。
 - packager 已支持 component 构建路径（wasm32-wasip2 + browser-glue）。
-- dev 流程已按 `build.target` 自动选择 `wasm`/`component`，`just dev` 不再强制走 wasm-bindgen CLI。
+- dev 流程已固定为 component-only（wasm32-wasip2 + browser-glue + wrapper）。
 - WIT 包命名已统一为 tairitsu-browser:*。
 - web 后端文档已与当前实现同步。
 - web 构建阶段已注入 TAIRITSU_DIST_DIR 环境变量。
@@ -20,7 +20,7 @@
 - cargo clippy --workspace --all-targets -- -D warnings：通过
 - cargo check -p tairitsu-web --features wit-bindings --target wasm32-wasip2：通过
 - cargo test -p tairitsu-e2e：通过（当前 0 tests）
-- `just dev`：已验证进入 component 构建路径；当前失败仅为端口占用（os error 10048），非 wasm-bindgen 版本问题
+- `just dev`：已验证进入 component 构建路径；当前失败仅为端口占用（os error 10048）。
 
 ## 持续约束
 

@@ -108,19 +108,19 @@ All documentation and examples are available in multiple languages:
 Built with:
 
 - **Frontend**: Tairitsu vdom + hooks + rsx! macro
-- **Build Tool**: tairitsu-packager (replaces trunk)
+- **Build Tool**: tairitsu-packager (component-first)
 - **Configuration**: Cargo.toml metadata (no HTML templates)
 
 ## Comparison with Hikari Website
 
-| Aspect | Hikari Website | Tairitsu Website |
-|--------|----------------|------------------|
-| Framework | Dioxus | Tairitsu (custom vdom) |
-| UI Syntax | rsx! | rsx! |
-| Styling | StyleBuilder | StyleBuilder (shared) |
-| State | Dioxus signals | Custom reactive system |
-| Build Tool | trunk | tairitsu-packager |
-| Focus | Component library | Framework mechanisms |
+| Aspect | Legacy site stack | Tairitsu Website |
+|--------|-------------------|------------------|
+| Framework | mixed historical stack | Tairitsu (custom vdom) |
+| UI Syntax | rsx-like | rsx! |
+| Styling | custom | StyleBuilder (shared) |
+| State | mixed reactive patterns | Custom reactive system |
+| Build Tool | external wasm tooling | tairitsu-packager |
+| Focus | component showcase | framework mechanisms |
 
 ## Development Status
 

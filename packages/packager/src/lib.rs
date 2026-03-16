@@ -1,6 +1,6 @@
 //! Tairitsu Packager - Build and packaging tool
 //!
-//! A unified build tool for Tairitsu applications, replacing trunk and tauri-build.
+//! A unified build tool for Tairitsu applications with component-model-first flow.
 //! Uses Cargo.toml metadata for configuration instead of HTML templates.
 
 pub mod cli;
