@@ -1,5 +1,5 @@
 use crate::config::Config;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
 
 pub fn build(config: &Config, release: bool) -> crate::Result<()> {
@@ -834,7 +834,6 @@ async fn no_cache_headers(
 
 pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
     use axum::{middleware, response::Html, routing::get, Router};
-    use std::net::SocketAddr;
     use tower_http::services::ServeDir;
 
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -886,10 +885,16 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         .fallback_service(ServeDir::new(dist_dir))
         .layer(middleware::from_fn(no_cache_headers));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let (listener, actual_port) = bind_listener_with_fallback(port).await?;
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    println!("  🌍  Local:   http://localhost:{}", port);
+    println!("  🌍  Local:   http://localhost:{}", actual_port);
     println!("  📁  Serving: {}", config.build.output_dir.display());
+    if actual_port != port {
+        println!(
+            "  ⚠   Port {} is busy, switched to {}",
+            port, actual_port
+        );
+    }
     if watch {
         println!("  👁   Watch:  src/  Cargo.toml  public/");
     }
@@ -897,21 +902,20 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     println!();
 
     if open || config.dev.open_browser {
-        let url = format!("http://localhost:{}", port);
+        let url = format!("http://localhost:{}", actual_port);
         match webbrowser::open(&url) {
             Ok(_) => println!("  ✓  Opening browser…"),
             Err(e) => eprintln!("  ⚠  Failed to open browser: {}", e),
         }
     }
 
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-
     if watch {
+        let ui = DevWatchUi::new(actual_port, &config.build.output_dir, &config.build.target);
         // Run the HTTP server as a background task; this task runs the watch loop.
         tokio::spawn(async move {
             axum::serve(listener, app).await.ok();
         });
-        run_watch_loop(config, port).await?;
+        run_watch_loop(config, actual_port, Some(ui)).await?;
     } else {
         println!("  Press Ctrl+C to stop");
         axum::serve(listener, app).await?;
@@ -920,12 +924,118 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     Ok(())
 }
 
+/// Try binding localhost starting from `preferred_port` and automatically
+/// fallback to higher ports when the preferred one is already occupied.
+async fn bind_listener_with_fallback(
+    preferred_port: u16,
+) -> crate::Result<(tokio::net::TcpListener, u16)> {
+    const MAX_CANDIDATES: u16 = 20;
+
+    for offset in 0..MAX_CANDIDATES {
+        let candidate = preferred_port.saturating_add(offset);
+        let addr = std::net::SocketAddr::from(([127, 0, 0, 1], candidate));
+
+        match tokio::net::TcpListener::bind(addr).await {
+            Ok(listener) => return Ok((listener, candidate)),
+            Err(err) if err.kind() == std::io::ErrorKind::AddrInUse => continue,
+            Err(err) => {
+                return Err(crate::TairitsuPackagerError::BuildError(format!(
+                    "failed to bind dev server at {}: {}",
+                    addr, err
+                )));
+            }
+        }
+    }
+
+    let last = preferred_port.saturating_add(MAX_CANDIDATES - 1);
+    Err(crate::TairitsuPackagerError::BuildError(format!(
+        "failed to bind dev server: no free port in range {}..={}",
+        preferred_port, last
+    )))
+}
+
+#[derive(Clone)]
+struct DevWatchUi {
+    _multi: std::sync::Arc<MultiProgress>,
+    server: ProgressBar,
+    watcher: ProgressBar,
+    build: ProgressBar,
+    started: Instant,
+    port: u16,
+}
+
+impl DevWatchUi {
+    fn new(port: u16, output_dir: &std::path::Path, target: &str) -> Self {
+        let multi = std::sync::Arc::new(MultiProgress::new());
+
+        let style = ProgressStyle::with_template("  {spinner:.green} {msg}").unwrap();
+        let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+        let server = multi.add(ProgressBar::new_spinner());
+        server.set_style(style.clone().tick_strings(&spinner_frames));
+        server.enable_steady_tick(Duration::from_millis(90));
+        server.set_message(format!(
+            "serve  http://localhost:{}   ({})",
+            port,
+            output_dir.display()
+        ));
+
+        let watcher = multi.add(ProgressBar::new_spinner());
+        watcher.set_style(style.clone().tick_strings(&spinner_frames));
+        watcher.enable_steady_tick(Duration::from_millis(110));
+        watcher.set_message("watch  src/, Cargo.toml, Tairitsu.toml, public/");
+
+        let build = multi.add(ProgressBar::new_spinner());
+        build.set_style(style.tick_strings(&spinner_frames));
+        build.enable_steady_tick(Duration::from_millis(130));
+        build.set_message(format!("build  idle  (target: {})", target));
+
+        Self {
+            _multi: multi,
+            server,
+            watcher,
+            build,
+            started: Instant::now(),
+            port,
+        }
+    }
+
+    fn on_change(&self, changed: &[std::path::PathBuf]) {
+        let msg = match changed.len() {
+            0 => "watch  source changed".to_string(),
+            1 => format!("watch  changed: {}", changed[0].display()),
+            n => format!("watch  changed: {} files", n),
+        };
+        self.watcher.set_message(msg);
+    }
+
+    fn on_build_start(&self) {
+        self.build.enable_steady_tick(Duration::from_millis(100));
+        self.build.set_message("build  rebuilding...");
+    }
+
+    fn on_build_finish(&self, ok: bool, elapsed: Duration) {
+        self.build.disable_steady_tick();
+        let status = if ok { "ok" } else { "failed" };
+        self.build.set_message(format!(
+            "build  {}  in {:.1?}   |   uptime {:.1?}",
+            status,
+            elapsed,
+            self.started.elapsed()
+        ));
+        if ok {
+            self.server
+                .set_message(format!("serve  http://localhost:{}   (hot)", self.port));
+        }
+    }
+}
+
 /// Watches `src/`, `Cargo.toml`, `Tairitsu.toml`, and `public/` for changes and
 /// triggers incremental rebuilds using the same pipeline as the initial build.
 ///
 /// Debounces rapid saves (200 ms window) so a single `cargo save` operation does
 /// not trigger multiple concurrent builds.
-async fn run_watch_loop(config: &Config, port: u16) -> crate::Result<()> {
+async fn run_watch_loop(config: &Config, port: u16, ui: Option<DevWatchUi>) -> crate::Result<()> {
     use notify::{EventKind, RecursiveMode, Watcher};
 
     let project_root = std::env::current_dir()?;
@@ -1015,16 +1125,21 @@ async fn run_watch_loop(config: &Config, port: u16) -> crate::Result<()> {
         changed.sort();
         changed.dedup();
 
-        // Print what triggered the rebuild.
-        println!();
-        match changed.len() {
-            0 => println!("  ↻  source changed"),
-            1 => println!("  ↻  {}", changed[0].display()),
-            n => println!("  ↻  {} files changed", n),
+        if let Some(ui) = &ui {
+            ui.on_change(&changed);
+            ui.on_build_start();
+        } else {
+            println!();
+            match changed.len() {
+                0 => println!("  ↻  source changed"),
+                1 => println!("  ↻  {}", changed[0].display()),
+                n => println!("  ↻  {} files changed", n),
+            }
+            println!();
         }
-        println!();
 
         // Run the rebuild on a blocking thread so the tokio runtime stays alive.
+        let rebuild_started = Instant::now();
         let config_clone = config.clone();
         let target = config.build.target.clone();
         let result = tokio::task::spawn_blocking(move || match target.as_str() {
@@ -1036,9 +1151,21 @@ async fn run_watch_loop(config: &Config, port: u16) -> crate::Result<()> {
             crate::TairitsuPackagerError::BuildError(format!("rebuild task panicked: {}", e))
         })?;
 
+        let elapsed = rebuild_started.elapsed();
         match result {
-            Ok(()) => println!("  ✓  rebuilt  →  http://localhost:{}", port),
-            Err(e) => eprintln!("  ✗  {}", e),
+            Ok(()) => {
+                if let Some(ui) = &ui {
+                    ui.on_build_finish(true, elapsed);
+                } else {
+                    println!("  ✓  rebuilt  →  http://localhost:{}", port);
+                }
+            }
+            Err(e) => {
+                if let Some(ui) = &ui {
+                    ui.on_build_finish(false, elapsed);
+                }
+                eprintln!("  ✗  {}", e);
+            }
         }
     }
 
