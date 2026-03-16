@@ -13,24 +13,21 @@ impl App {
             .into_iter()
             .map(|locale| {
                 rsx! {
-                    option {
-                        value: locale.code(),
-                        ..txt(locale.label())
-                    }
+                    option { value: locale.code(), ..txt(locale.label()) }
                 }
             })
             .collect();
 
         rsx! {
-            div { class: "site-shell",
+            div { class: "site-shell", ..panes,
                 div { class: "language-toolbar",
                     label { r#for: "lang-switch", "Language" }
-                    select { id: "lang-switch", class: "language-switch",
-                        ..language_options
+                    select {
+                        id: "lang-switch",
+                        class: "language-switch",
+                        ..language_options,
                     }
                 }
-
-                ..panes
             }
         }
     }
@@ -75,23 +72,50 @@ just wit-gen"##;
                 h1 { ..txt(t.hero_title) }
                 p { class: "hero-copy", ..txt(t.hero_copy) }
                 div { class: "hero-actions",
-                    a { class: "btn btn-primary", href: "#architecture", ..txt(t.action_primary) }
-                    a { class: "btn btn-ghost", href: "#commands", ..txt(t.action_secondary) }
+                    a {
+                        class: "btn btn-primary",
+                        href: "#architecture",
+                        ..txt(t.action_primary),
+                    }
+                    a {
+                        class: "btn btn-ghost",
+                        href: "#commands",
+                        ..txt(t.action_secondary),
+                    }
                 }
                 ul { class: "hero-metrics",
-                    li { strong { "3" } span { "Layers" } }
-                    li { strong { "2" } span { "Backends" } }
-                    li { strong { "22" } span { "WIT domains" } }
+                    li {
+                        strong { "3" }
+                        span { "Layers" }
+                    }
+                    li {
+                        strong { "2" }
+                        span { "Backends" }
+                    }
+                    li {
+                        strong { "22" }
+                        span { "WIT domains" }
+                    }
                 }
             }
 
             nav { class: "section-nav",
                 ul {
-                    li { a { href: "#architecture", ..txt(t.nav_arch) } }
-                    li { a { href: "#backends", ..txt(t.nav_backend) } }
-                    li { a { href: "#pipeline", ..txt(t.nav_pipeline) } }
-                    li { a { href: "#demos", ..txt(t.nav_demo) } }
-                    li { a { href: "#commands", ..txt(t.nav_cmd) } }
+                    li {
+                        a { href: "#architecture", ..txt(t.nav_arch) }
+                    }
+                    li {
+                        a { href: "#backends", ..txt(t.nav_backend) }
+                    }
+                    li {
+                        a { href: "#pipeline", ..txt(t.nav_pipeline) }
+                    }
+                    li {
+                        a { href: "#demos", ..txt(t.nav_demo) }
+                    }
+                    li {
+                        a { href: "#commands", ..txt(t.nav_cmd) }
+                    }
                 }
             }
 
@@ -132,30 +156,51 @@ just wit-gen"##;
                 section { class: "panel", id: "pipeline",
                     h2 { ..txt(t.section_pipeline) }
                     ol { class: "steps",
-                        li { span { class: "step-index", "01" } div { h4 { "Fetch specs" } p { "Pull IDL from webref." } } }
-                        li { span { class: "step-index", "02" } div { h4 { "Generate WIT" } p { "Convert into domain WIT files." } } }
-                        li { span { class: "step-index", "03" } div { h4 { "Compose world" } p { "Include phase-0 plus generated domains." } } }
+                        li {
+                            span { class: "step-index", "01" }
+                            div {
+                                h4 { "Fetch specs" }
+                                p { "Pull IDL from webref." }
+                            }
+                        }
+                        li {
+                            span { class: "step-index", "02" }
+                            div {
+                                h4 { "Generate WIT" }
+                                p { "Convert into domain WIT files." }
+                            }
+                        }
+                        li {
+                            span { class: "step-index", "03" }
+                            div {
+                                h4 { "Compose world" }
+                                p { "Include phase-0 plus generated domains." }
+                            }
+                        }
                     }
                 }
 
                 section { class: "panel", id: "demos",
                     h2 { ..txt(t.section_demo) }
                     div { class: "demo-grid",
-                        div { class: "page",
+                        div {
+                            class: "page",
+                            ..vec![code_block(quick_start, "bash")],
                             h3 { "Quick Start" }
-                            ..vec![code_block(quick_start, "bash")]
                         }
-                        div { class: "page",
+                        div { class: "page", ..vec![code_block(rsx_code, "rust")],
                             h3 { "rsx!" }
-                            ..vec![code_block(rsx_code, "rust")]
                         }
-                        div { class: "page",
+                        div {
+                            class: "page",
+                            ..vec![code_block(builder_code, "rust")],
                             h3 { "Builder" }
-                            ..vec![code_block(builder_code, "rust")]
                         }
                         div { class: "page",
                             h3 { "Reactive" }
-                            p { "Signal and Effect API are available and ready for interactive expansion." }
+                            p {
+                                "Signal and Effect API are available and ready for interactive expansion."
+                            }
                         }
                     }
                 }
