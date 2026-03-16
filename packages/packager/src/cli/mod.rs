@@ -30,6 +30,10 @@ enum Commands {
         /// Open browser automatically
         #[arg(long)]
         open: bool,
+
+        /// Watch source files and rebuild automatically on changes
+        #[arg(short, long)]
+        watch: bool,
     },
 
     /// Build for production
@@ -113,11 +117,11 @@ pub async fn run() -> crate::Result<()> {
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
 
     match cli.command {
-        Commands::Dev { port, open } => {
+        Commands::Dev { port, open, watch } => {
             let config = crate::config::Config::load(&manifest_path)?;
             info!("Starting development server...");
             let port = port.unwrap_or(config.dev.port);
-            crate::wasm::dev_server(&config, port, open).await?;
+            crate::wasm::dev_server(&config, port, open, watch).await?;
         }
         Commands::Build { target, release } => {
             let config = crate::config::Config::load(&manifest_path)?;
