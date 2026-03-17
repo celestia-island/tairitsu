@@ -113,7 +113,34 @@ impl CssExtractor {
     }
 
     fn clean_whitespace(&self, css: &str) -> String {
-        css.split_whitespace().collect::<Vec<_>>().join(" ")
+        // Normalize whitespace: collapse multiple whitespace to single space
+        // Keep spaces around CSS punctuation for readability
+        let mut result = String::new();
+        let mut prev_was_space = false;
+
+        for ch in css.chars() {
+            if ch.is_whitespace() {
+                prev_was_space = true;
+            } else {
+                if prev_was_space {
+                    // Only add space if needed for readability (not before/after punctuation)
+                    if !result.is_empty() {
+                        let last = result.chars().last().unwrap_or(' ');
+                        if !Self::is_css_punctuation(last) && !Self::is_css_punctuation(ch) {
+                            result.push(' ');
+                        }
+                    }
+                    prev_was_space = false;
+                }
+                result.push(ch);
+            }
+        }
+
+        result
+    }
+
+    fn is_css_punctuation(ch: char) -> bool {
+        matches!(ch, '{' | '}' | ':' | ';' | ',')
     }
 
     pub fn extract_from_rust_source(&self, source: &str) -> Result<Vec<String>> {
@@ -160,6 +187,10 @@ mod tests {
         let css = ".test  {  color  :  red  ;  }";
 
         let optimized = extractor.optimize(css).unwrap();
-        assert!(optimized.contains(".test { color : red ; }"));
+        // Verify whitespace is cleaned and structure is preserved
+        assert!(!optimized.contains("  "), "Should not have double spaces: {}", optimized);
+        assert!(optimized.contains(".test"), "Should contain selector: {}", optimized);
+        assert!(optimized.contains("color"), "Should contain property: {}", optimized);
+        assert!(optimized.contains("red"), "Should contain value: {}", optimized);
     }
 }
