@@ -79,7 +79,7 @@ impl<T: ToString> IntoAttrValue for Option<T> {
     }
 }
 
-// Blanket implementation for references
+// Blanket implementation for references to ToString types
 impl<T: ToString + Clone> IntoAttrValue for &T {
     fn into_attr_value(self) -> Option<String> {
         Some(self.to_string())

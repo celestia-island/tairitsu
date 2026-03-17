@@ -307,14 +307,63 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 other_attrs.push(quote! { .attr("id", #expr) });
             }
             RsxAttr::Onclick(expr) => {
-                event_handlers.push(quote! { .on_event("click", move |e| { (#expr)(e); }) });
+                // For onclick, we need to downcast Box<dyn EventData> to MouseEvent
+                // We capture the handler in a mutable binding to allow FnMut handlers
+                event_handlers.push(quote! {
+                    .on_event("click", {
+                        let mut handler = #expr;
+                        move |e: Box<dyn tairitsu_vdom::EventData>| {
+                            if let Some(mouse_event) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
+                                handler(mouse_event.clone());
+                            }
+                        }
+                    })
+                });
             }
             RsxAttr::InnerHtml(expr) => {
                 other_attrs.push(quote! { .inner_html(#expr) });
             }
             RsxAttr::Other { name, value } => {
                 if let Some(event_name) = name.strip_prefix("on") {
-                    event_handlers.push(quote! { .on_event(#event_name, move |e| { (#value)(e); }) });
+                    // Map event names to their types
+                    let event_type = match event_name {
+                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter" | "mouseleave" => {
+                            quote! { tairitsu_vdom::MouseEvent }
+                        }
+                        "keydown" | "keyup" | "keypress" => {
+                            quote! { tairitsu_vdom::KeyboardEvent }
+                        }
+                        "input" => {
+                            quote! { tairitsu_vdom::InputEvent }
+                        }
+                        "change" => {
+                            quote! { tairitsu_vdom::ChangeEvent }
+                        }
+                        "focus" | "blur" => {
+                            quote! { tairitsu_vdom::FocusEvent }
+                        }
+                        _ => {
+                            // For unknown events, just pass the boxed event
+                            event_handlers.push(quote! {
+                                .on_event(#event_name, {
+                                    let mut handler = #value;
+                                    move |e| { handler(e); }
+                                })
+                            });
+                            continue;
+                        }
+                    };
+                    // Capture handler in mutable binding for FnMut support
+                    event_handlers.push(quote! {
+                        .on_event(#event_name, {
+                            let mut handler = #value;
+                            move |e: Box<dyn tairitsu_vdom::EventData>| {
+                                if let Some(typed_event) = e.as_any().downcast_ref::<#event_type>() {
+                                    handler(typed_event.clone());
+                                }
+                            }
+                        })
+                    });
                 } else {
                     other_attrs.push(quote! { .attr(#name, #value) });
                 }
