@@ -1,4 +1,4 @@
-use super::{CssProperty, Property};
+use super::properties::{CssProperty, Property};
 
 pub struct StyleStringBuilder(Vec<(Property, String)>);
 

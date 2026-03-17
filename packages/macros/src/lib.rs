@@ -4,7 +4,6 @@ mod scss;
 
 use component::expand_component;
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;

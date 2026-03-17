@@ -156,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_use_memo_basic() {
-        let memo = use_memo(|| 42, ());
+        let memo = use_memo(|| 42);
         assert_eq!(memo.value().get(), 42);
     }
 
@@ -165,7 +165,7 @@ mod tests {
         let compute_count = Rc::new(Cell::new(0));
         let compute_count_clone = Rc::clone(&compute_count);
 
-        let memo = use_memo(
+        let memo = use_memo_with_deps(
             move || {
                 compute_count_clone.set(compute_count_clone.get() + 1);
                 10 * 10
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_use_memo_with_tuple_deps() {
-        let memo = use_memo(|| "hello world", (1, 2));
+        let memo = use_memo_with_deps(|| "hello world", (1, 2));
 
         assert_eq!(memo.value().get(), "hello world");
 
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_use_memo_clone() {
-        let memo1 = use_memo(|| vec![1, 2, 3], ());
+        let memo1 = use_memo_with(|| vec![1, 2, 3], ());
         let memo2 = memo1.clone();
 
         assert_eq!(memo1.value().get(), memo2.value().get());
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_use_memo_string_deps() {
-        let memo = use_memo(|| "computed", String::from("dep1"));
+        let memo = use_memo_with_deps(|| "computed", String::from("dep1"));
 
         assert_eq!(memo.value().get(), "computed");
 
@@ -222,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_use_memo_vec_deps() {
-        let memo = use_memo(|| 100, vec![1, 2, 3]);
+        let memo = use_memo_with_deps(|| 100, vec![1, 2, 3]);
 
         assert_eq!(memo.value().get(), 100);
 

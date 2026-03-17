@@ -4,9 +4,9 @@ mod properties;
 #[cfg(test)]
 mod tests {
 
-    pub use builder::{StyleBuilder, StyleStringBuilder};
+    pub use builder::StyleStringBuilder;
     pub use classes::ClassesBuilder;
-    pub use properties::{CssProperty, Property};
+    pub use properties::CssProperty;
 
     use super::*;
 
