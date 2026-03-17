@@ -6,7 +6,7 @@ mod component;
 mod rsx;
 mod scss;
 use component::expand_component;
-use rsx::{expand_rsx, expand_rsx_root, RsxElement, RsxRoot};
+use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;
 
 /// Component macro for automatic Props generation
@@ -618,7 +618,7 @@ pub fn derive_props(input: TokenStream) -> TokenStream {
     // The Props derive is essentially a marker - the actual behavior comes from
     // the struct's own Clone, PartialEq, etc. derives
     // We just return an empty implementation block to satisfy the derive
-    let name = &input.ident;
+    let _name = &input.ident;
 
     let expanded = quote! {
         // No additional implementation needed - Props is just a marker trait

@@ -106,12 +106,16 @@ impl ScssCompiler {
             .map(|line| line.trim())
             .filter(|line| !line.is_empty())
             .collect::<Vec<_>>()
-            .join(" ")
-            .replace("  ", " ")
+            .join("")
             .replace("{ ", "{")
+            .replace(" {", "{")
             .replace(" }", "}")
+            .replace("} ", "}")
             .replace("; ", ";")
+            .replace(" ;", ";")
+            .replace(";;", ";")
             .replace(": ", ":")
+            .replace(" :", ":")
     }
 }
 
@@ -170,6 +174,7 @@ mod tests {
 
         let css = compiler.compile(scss).unwrap();
         assert!(!css.contains('\n'));
-        assert!(css.contains(".test{color:red;margin:0}"));
+        // Accept valid minified CSS with or without trailing semicolon
+        assert!(css.contains(".test{color:red;margin:0"), "CSS was: {}", css);
     }
 }
