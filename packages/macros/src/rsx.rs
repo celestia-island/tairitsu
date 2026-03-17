@@ -616,7 +616,8 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
                 props_fields.push(quote! { id: #expr });
             }
             RsxAttr::Onclick(expr) => {
-                props_fields.push(quote! { onclick: #expr });
+                // onclick closure becomes EventHandler directly (not wrapped in Some)
+                props_fields.push(quote! { onclick: tairitsu_vdom::EventHandler::new(#expr) });
             }
             RsxAttr::InnerHtml(expr) => {
                 props_fields.push(quote! { dangerous_inner_html: #expr });

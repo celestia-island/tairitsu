@@ -1158,6 +1158,13 @@ async fn run_watch_loop(
                     }
                 }
             }
+
+            _ = tokio::signal::ctrl_c() => {
+                // Graceful shutdown on Ctrl+C
+                println!();
+                println!("  ✓  {}", locale().dev.stopping);
+                std::process::exit(0);
+            }
         };
 
         if !should_rebuild {

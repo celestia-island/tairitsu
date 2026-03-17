@@ -85,6 +85,7 @@ yuuka::derive_struct!(
             check_compile_failed: String,
             shortcuts_full: String,
             shortcuts_compact: String,
+            stopping: String,
         },
         doctor: Doctor {
             running: String,
