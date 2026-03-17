@@ -66,10 +66,23 @@ impl IntoAttrValue for f64 {
     }
 }
 
+impl IntoAttrValue for f32 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
 // Implement for Option types
 impl<T: ToString> IntoAttrValue for Option<T> {
     fn into_attr_value(self) -> Option<String> {
         self.map(|v| v.to_string())
+    }
+}
+
+// Blanket implementation for references
+impl<T: ToString + Clone> IntoAttrValue for &T {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
     }
 }
 
