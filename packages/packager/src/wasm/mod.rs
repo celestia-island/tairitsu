@@ -444,6 +444,7 @@ fn try_generate_component_wrapper(
         }
     }
 
+    #[allow(unused_mut)]
     let mut attempts: Vec<(&str, Vec<String>)> = vec![
         (
             "jco",
