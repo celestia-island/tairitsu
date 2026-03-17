@@ -162,7 +162,7 @@ impl VElement {
         }
     }
 
-    pub fn attr(mut self, name: &str, value: &str) -> Self {
+    pub fn attr(mut self, name: &str, value: impl ToString) -> Self {
         self.attributes.insert(name.to_string(), value.to_string());
         self
     }
