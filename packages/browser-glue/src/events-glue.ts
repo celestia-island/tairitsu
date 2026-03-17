@@ -88,11 +88,11 @@ function cleanupEventHandle(handle: bigint): void {
 // (To be set by the WASM host after instantiation)
 // ---------------------------------------------------------------------------
 
-type MouseCallback = (listenerId: bigint, data: MouseEventData) => void;
-type KeyboardCallback = (listenerId: bigint, data: KeyboardEventData) => void;
-type FocusCallback = (listenerId: bigint, data: FocusEventData) => void;
-type InputCallback = (listenerId: bigint, data: InputEventData) => void;
-type GenericCallback = (listenerId: bigint, eventType: string) => void;
+type MouseCallback = (listenerId: bigint, eventHandle: bigint, data: MouseEventData) => void;
+type KeyboardCallback = (listenerId: bigint, eventHandle: bigint, data: KeyboardEventData) => void;
+type FocusCallback = (listenerId: bigint, eventHandle: bigint, data: FocusEventData) => void;
+type InputCallback = (listenerId: bigint, eventHandle: bigint, data: InputEventData) => void;
+type GenericCallback = (listenerId: bigint, eventHandle: bigint, eventType: string) => void;
 
 let _onMouseEvent: MouseCallback | null = null;
 let _onKeyboardEvent: KeyboardCallback | null = null;
