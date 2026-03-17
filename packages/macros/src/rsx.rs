@@ -33,6 +33,7 @@ pub enum RsxChild {
 /// Root content of an rsx! macro
 pub enum RsxRoot {
     Element(RsxElement),
+    Fragment(Vec<RsxChild>), // Multiple root elements
     If(RsxIf),
     Match(RsxMatch),
     For(Box<RsxFor>),
@@ -159,7 +160,30 @@ impl Parse for RsxRoot {
         } else if input.peek(Token![for]) {
             Ok(RsxRoot::For(Box::new(input.parse()?)))
         } else if input.peek(Ident) {
-            Ok(RsxRoot::Element(input.parse()?))
+            // Parse first element
+            let first: RsxElement = input.parse()?;
+
+            // Check if there are more elements after this one
+            if !input.is_empty() && (input.peek(Ident) || input.peek(Token![if]) || input.peek(Token![match]) || input.peek(Token![for])) {
+                // Multiple root elements - parse as fragment
+                let mut children = vec![RsxChild::Element(first)];
+                while !input.is_empty() {
+                    if input.peek(Ident) {
+                        children.push(RsxChild::Element(input.parse()?));
+                    } else if input.peek(Token![if]) {
+                        children.push(RsxChild::If(input.parse()?));
+                    } else if input.peek(Token![match]) {
+                        children.push(RsxChild::Match(input.parse()?));
+                    } else if input.peek(Token![for]) {
+                        children.push(RsxChild::For(Box::new(input.parse()?)));
+                    } else {
+                        break;
+                    }
+                }
+                Ok(RsxRoot::Fragment(children))
+            } else {
+                Ok(RsxRoot::Element(first))
+            }
         } else {
             Err(syn::Error::new(
                 input.span(),
@@ -459,6 +483,12 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 pub fn expand_rsx_root(root: RsxRoot) -> TokenStream2 {
     match root {
         RsxRoot::Element(elem) => expand_rsx(elem),
+        RsxRoot::Fragment(children) => {
+            let children_code: Vec<_> = children.into_iter().map(expand_child).collect();
+            quote! {
+                tairitsu_vdom::VNode::Fragment(vec![#(#children_code),*])
+            }
+        }
         RsxRoot::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxRoot::Match(rsx_match) => expand_rsx_match(rsx_match),
         RsxRoot::For(rsx_for) => expand_rsx_for(*rsx_for),
@@ -604,7 +634,8 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
 
     quote! {
         #tag(#props_name {
-            #(#props_fields),*
+            #(#props_fields,)*
+            ..Default::default()
         })
     }
 }
