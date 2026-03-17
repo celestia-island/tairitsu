@@ -320,6 +320,24 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let mut other_attrs = Vec::new();
     let mut children_code = Vec::new();
 
+    // Check if this is a known HTML element (lowercase tags)
+    // Custom components start with uppercase
+    let is_html_element = tag.chars().next().map_or(false, |c| c.is_lowercase());
+
+    // List of known HTML elements that support event handlers
+    let html_elements = [
+        "div", "span", "p", "a", "button", "input", "textarea", "select", "form",
+        "ul", "ol", "li", "table", "tr", "td", "th", "thead", "tbody", "tfoot",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+        "img", "video", "audio", "canvas", "svg", "path", "rect", "circle", "line", "text",
+        "header", "footer", "nav", "main", "section", "article", "aside",
+        "label", "option", "optgroup", "fieldset", "legend",
+        "progress", "meter", "details", "summary", "dialog",
+        "iframe", "object", "embed", "source",
+        "br", "hr", "wbr",
+    ];
+    let is_known_html = html_elements.contains(&tag.as_str()) || (is_html_element && !tag.contains('_'));
+
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(expr) => {
@@ -333,10 +351,10 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Onclick(expr) => {
                 // For onclick, we need to downcast Box<dyn EventData> to MouseEvent
-                // We capture the handler in a mutable binding to allow FnMut handlers
+                // The handler is expected to be a closure that takes MouseEvent
                 event_handlers.push(quote! {
                     .on_event("click", {
-                        let mut handler = #expr;
+                        let handler = #expr;
                         move |e: Box<dyn tairitsu_vdom::EventData>| {
                             if let Some(mouse_event) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
                                 handler(mouse_event.clone());
@@ -349,48 +367,61 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 other_attrs.push(quote! { .inner_html(#expr) });
             }
             RsxAttr::Other { name, value } => {
-                if let Some(event_name) = name.strip_prefix("on") {
-                    // Map event names to their types
-                    let event_type = match event_name {
-                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
-                        | "mouseleave" => {
-                            quote! { tairitsu_vdom::MouseEvent }
-                        }
-                        "keydown" | "keyup" | "keypress" => {
-                            quote! { tairitsu_vdom::KeyboardEvent }
-                        }
-                        "input" => {
-                            quote! { tairitsu_vdom::InputEvent }
-                        }
-                        "change" => {
-                            quote! { tairitsu_vdom::ChangeEvent }
-                        }
-                        "focus" | "blur" => {
-                            quote! { tairitsu_vdom::FocusEvent }
-                        }
-                        _ => {
-                            // For unknown events, just pass the boxed event
-                            event_handlers.push(quote! {
-                                .on_event(#event_name, {
-                                    let mut handler = #value;
-                                    move |e| { handler(e); }
-                                })
-                            });
-                            continue;
-                        }
-                    };
-                    // Capture handler in mutable binding for FnMut support
-                    event_handlers.push(quote! {
-                        .on_event(#event_name, {
-                            let mut handler = #value;
-                            move |e: Box<dyn tairitsu_vdom::EventData>| {
-                                if let Some(typed_event) = e.as_any().downcast_ref::<#event_type>() {
-                                    handler(typed_event.clone());
-                                }
+                // Only treat on_* as event handlers for known HTML elements
+                if is_known_html {
+                    if let Some(event_name) = name.strip_prefix("on") {
+                        // Map event names to their types
+                        let event_type = match event_name {
+                            "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
+                            | "mouseleave" => {
+                                quote! { tairitsu_vdom::MouseEvent }
                             }
-                        })
-                    });
-                } else if name == "children" {
+                            "keydown" | "keyup" | "keypress" => {
+                                quote! { tairitsu_vdom::KeyboardEvent }
+                            }
+                            "input" => {
+                                quote! { tairitsu_vdom::InputEvent }
+                            }
+                            "change" => {
+                                quote! { tairitsu_vdom::ChangeEvent }
+                            }
+                            "focus" | "blur" => {
+                                quote! { tairitsu_vdom::FocusEvent }
+                            }
+                            "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
+                                quote! { tairitsu_vdom::DragEvent }
+                            }
+                            _ => {
+                                // For unknown events, just pass the boxed event
+                                event_handlers.push(quote! {
+                                    .on_event(#event_name, {
+                                        let handler = #value;
+                                        move |e| {
+                                            handler(e);
+                                        }
+                                    })
+                                });
+                                continue;
+                            }
+                        };
+                        // Capture handler in a binding
+                        // The handler is expected to be a closure that takes the event type
+                        event_handlers.push(quote! {
+                            .on_event(#event_name, {
+                                let handler = #value;
+                                move |e: Box<dyn tairitsu_vdom::EventData>| {
+                                    if let Some(typed_event) = e.as_any().downcast_ref::<#event_type>() {
+                                        handler(typed_event.clone());
+                                    }
+                                }
+                            })
+                        });
+                        continue;
+                    }
+                }
+
+                // For custom components or non-event attributes, pass as regular attribute
+                if name == "children" {
                     // Special handling for children - add as child, not attribute
                     children_code.push(quote! { .child(#value) });
                 } else {
