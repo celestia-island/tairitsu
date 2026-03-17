@@ -153,9 +153,12 @@ fn build_wasm_component(
     multi: Option<std::sync::Arc<MultiProgress>>,
 ) -> crate::Result<std::path::PathBuf> {
     use std::io::BufRead;
+    use std::process::Stdio;
 
     let pkg_name = &config.package.name;
 
+    // Use JSON message format to get structured compiler output.
+    // This allows us to intercept cargo's progress and render our own.
     let mut cmd = std::process::Command::new("cargo");
     cmd.args([
         "build",
@@ -164,42 +167,108 @@ fn build_wasm_component(
         "--lib",
         "--package",
         pkg_name,
+        "--message-format=json-diagnostic-rendered-ansi",
     ]);
     if release {
         cmd.arg("--release");
     }
 
-    if let Some(multi) = multi {
-        // Pipe cargo's stderr (where all diagnostics appear) and relay each
-        // line through MultiProgress so the status bars stay at the bottom.
-        use std::process::Stdio;
-        cmd.stderr(Stdio::piped());
-        let mut child = cmd.spawn()?;
-        if let Some(stderr) = child.stderr.take() {
-            std::thread::spawn(move || {
-                for line in std::io::BufReader::new(stderr).lines() {
-                    match line {
-                        Ok(l) => {
-                            let _ = multi.println(&l);
+    // Capture stdout (JSON messages) and suppress stderr (cargo's native progress bars)
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::null()); // Suppress cargo's native progress bars entirely
+
+    let mut child = cmd.spawn()?;
+
+    let stdout = child.stdout.take().expect("stdout should be piped");
+
+    // Create a progress bar for the compilation step.
+    // When in watch mode (multi is Some), attach to MultiProgress so output
+    // scrolls correctly above the persistent status bars.
+    let compile_pb = ProgressBar::new_spinner();
+    compile_pb.set_style(
+        ProgressStyle::with_template("    {spinner:.bold.cyan}  {msg}")
+            .unwrap()
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+    );
+    compile_pb.enable_steady_tick(Duration::from_millis(80));
+    compile_pb.set_message("Preparing...");
+
+    let compile_pb = match &multi {
+        Some(m) => m.add(compile_pb),
+        None => compile_pb,
+    };
+
+    // Clone for the thread
+    let compile_pb_clone = compile_pb.clone();
+
+    // Helper: extract crate name from package_id
+    // Format: "registry+https://github.com/rust-lang/crates.io-index#name@version"
+    // or: "path+file:///path#name@version"
+    fn extract_crate_name(package_id: &str) -> &str {
+        // Try to find the part after '#' and before '@'
+        if let Some(after_hash) = package_id.split('#').nth(1) {
+            if let Some(name) = after_hash.split('@').next() {
+                return name;
+            }
+        }
+        // Fallback: return the whole thing
+        package_id
+    }
+
+    // Thread: parse JSON messages from stdout and render custom progress
+    std::thread::spawn(move || {
+        for line in std::io::BufReader::new(stdout).lines() {
+            let Ok(line) = line else { continue };
+            // Try to parse as cargo JSON message
+            if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line) {
+                if let Some(reason) = msg.get("reason").and_then(|r| r.as_str()) {
+                    match reason {
+                        "compiler-artifact" => {
+                            // A crate is being compiled
+                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
+                            {
+                                let crate_name = extract_crate_name(package_id);
+                                // Only update for lib crates (not build scripts)
+                                if let Some(target) = msg.get("target") {
+                                    if target.get("kind").and_then(|k| k.as_array()).map_or(false, |k| {
+                                        k.iter().any(|kind| kind.as_str() == Some("lib"))
+                                    }) {
+                                        compile_pb_clone.set_message(format!("Compiling {}", crate_name));
+                                    }
+                                }
+                            }
                         }
-                        Err(_) => break,
+                        "compiler-message" => {
+                            // This contains actual compiler output (errors, warnings)
+                            if let Some(rendered) = msg.get("message").and_then(|m| m.get("rendered")).and_then(|r| r.as_str()) {
+                                // Print the rendered diagnostic above the progress bar
+                                compile_pb_clone.println(rendered);
+                            }
+                        }
+                        "build-script-executed" => {
+                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
+                            {
+                                let crate_name = extract_crate_name(package_id);
+                                compile_pb_clone.set_message(format!("Build script: {}", crate_name));
+                            }
+                        }
+                        "build-finished" => {
+                            compile_pb_clone.set_message("Done");
+                        }
+                        _ => {}
                     }
                 }
-            });
+            }
         }
-        let status = child.wait()?;
-        if !status.success() {
-            return Err(crate::TairitsuPackagerError::BuildError(
-                "cargo build --target wasm32-wasip2 failed".to_string(),
-            ));
-        }
-    } else {
-        let status = cmd.status()?;
-        if !status.success() {
-            return Err(crate::TairitsuPackagerError::BuildError(
-                "cargo build --target wasm32-wasip2 failed".to_string(),
-            ));
-        }
+    });
+
+    let status = child.wait()?;
+    compile_pb.finish_and_clear();
+
+    if !status.success() {
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "cargo build --target wasm32-wasip2 failed".to_string(),
+        ));
     }
 
     let workspace_root = find_workspace_root()?;
