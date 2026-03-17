@@ -1,7 +1,9 @@
 use tairitsu_vdom::Signal;
 
-pub fn use_signal<T: Clone + 'static>(initial: T) -> Signal<T> {
-    Signal::new(initial)
+/// Creates a new Signal with the given initial value.
+/// Takes a closure that returns the initial value (Dioxus-compatible API).
+pub fn use_signal<T: Clone + 'static, F: FnOnce() -> T>(initial: F) -> Signal<T> {
+    Signal::new(initial())
 }
 
 #[cfg(test)]
@@ -10,7 +12,7 @@ mod tests {
 
     #[test]
     fn test_use_signal() {
-        let signal = use_signal(0);
+        let signal = use_signal(|| 0);
 
         assert_eq!(signal.get(), 0);
 

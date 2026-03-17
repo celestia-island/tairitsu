@@ -304,3 +304,107 @@ impl Default for ChangeEvent {
         Self::new()
     }
 }
+
+/// Represents keyboard keys for keyboard event handling.
+/// This enum provides a Dioxus-compatible API for matching keyboard keys.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Key {
+    /// Arrow keys
+    ArrowUp,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    /// Special keys
+    Enter,
+    Escape,
+    Tab,
+    Backspace,
+    Delete,
+    Space,
+    /// Modifier keys
+    Shift,
+    Control,
+    Alt,
+    Meta,
+    /// A character key
+    Character(String),
+    /// Any other key by name
+    Other(String),
+}
+
+impl Key {
+    /// Convert a key string to a Key enum
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "ArrowUp" => Key::ArrowUp,
+            "ArrowDown" => Key::ArrowDown,
+            "ArrowLeft" => Key::ArrowLeft,
+            "ArrowRight" => Key::ArrowRight,
+            "Enter" => Key::Enter,
+            "Escape" => Key::Escape,
+            "Tab" => Key::Tab,
+            "Backspace" => Key::Backspace,
+            "Delete" => Key::Delete,
+            " " | "Space" => Key::Space,
+            "Shift" => Key::Shift,
+            "Control" => Key::Control,
+            "Alt" => Key::Alt,
+            "Meta" => Key::Meta,
+            s if s.len() == 1 => Key::Character(s.to_string()),
+            other => Key::Other(other.to_string()),
+        }
+    }
+
+    /// Check if this key matches the given string
+    pub fn is(&self, s: &str) -> bool {
+        match (self, s) {
+            (Key::ArrowUp, "ArrowUp") => true,
+            (Key::ArrowDown, "ArrowDown") => true,
+            (Key::ArrowLeft, "ArrowLeft") => true,
+            (Key::ArrowRight, "ArrowRight") => true,
+            (Key::Enter, "Enter") => true,
+            (Key::Escape, "Escape") => true,
+            (Key::Tab, "Tab") => true,
+            (Key::Backspace, "Backspace") => true,
+            (Key::Delete, "Delete") => true,
+            (Key::Space, " " | "Space") => true,
+            (Key::Shift, "Shift") => true,
+            (Key::Control, "Control") => true,
+            (Key::Alt, "Alt") => true,
+            (Key::Meta, "Meta") => true,
+            (Key::Character(c), s) if s.len() == 1 => c == s,
+            (Key::Other(name), s) => name == s,
+            _ => false,
+        }
+    }
+}
+
+impl std::fmt::Display for Key {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Key::ArrowUp => write!(f, "ArrowUp"),
+            Key::ArrowDown => write!(f, "ArrowDown"),
+            Key::ArrowLeft => write!(f, "ArrowLeft"),
+            Key::ArrowRight => write!(f, "ArrowRight"),
+            Key::Enter => write!(f, "Enter"),
+            Key::Escape => write!(f, "Escape"),
+            Key::Tab => write!(f, "Tab"),
+            Key::Backspace => write!(f, "Backspace"),
+            Key::Delete => write!(f, "Delete"),
+            Key::Space => write!(f, " "),
+            Key::Shift => write!(f, "Shift"),
+            Key::Control => write!(f, "Control"),
+            Key::Alt => write!(f, "Alt"),
+            Key::Meta => write!(f, "Meta"),
+            Key::Character(c) => write!(f, "{}", c),
+            Key::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl KeyboardEvent {
+    /// Get the Key enum for this keyboard event
+    pub fn key_code(&self) -> Key {
+        Key::from_str(&self.key)
+    }
+}

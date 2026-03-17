@@ -119,6 +119,13 @@ impl<T, R> std::fmt::Debug for Callback<T, R> {
     }
 }
 
+impl<T, R> PartialEq for Callback<T, R> {
+    fn eq(&self, other: &Self) -> bool {
+        // Two callbacks are equal if they point to the same Rc
+        Rc::ptr_eq(&self.inner, &other.inner)
+    }
+}
+
 // Specialization for unit argument callbacks
 impl<R> Callback<(), R> {
     /// Creates a no-argument callback.

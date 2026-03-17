@@ -39,6 +39,11 @@ where
         self.value.clone()
     }
 
+    /// Gets the current value directly (Dioxus compatibility).
+    pub fn read(&self) -> T {
+        self.value.get()
+    }
+
     /// Updates the dependencies and recomputes if they have changed.
     pub fn update_deps(&self, new_deps: D) {
         let mut deps = self.deps.borrow_mut();
