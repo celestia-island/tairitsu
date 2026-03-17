@@ -1,13 +1,13 @@
 mod builder;
 mod classes;
 mod properties;
-
-pub use builder::{StyleBuilder, StyleStringBuilder};
-pub use classes::ClassesBuilder;
-pub use properties::{CssProperty, Property};
-
 #[cfg(test)]
 mod tests {
+
+    pub use builder::{StyleBuilder, StyleStringBuilder};
+    pub use classes::ClassesBuilder;
+    pub use properties::{CssProperty, Property};
+
     use super::*;
 
     #[test]

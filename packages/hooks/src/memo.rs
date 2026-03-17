@@ -1,5 +1,5 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
+
 use tairitsu_vdom::Signal;
 
 /// A memoized value that only recomputes when dependencies change.

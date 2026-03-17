@@ -1,7 +1,7 @@
+mod metadata;
+
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
-
-mod metadata;
 
 pub use metadata::TairitsuMetadata;
 

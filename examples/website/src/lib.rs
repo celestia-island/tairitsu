@@ -2,16 +2,15 @@
 //!
 //! 照抄 Hikari 的 website demo 设计
 
-use anyhow::Result;
-use tairitsu_web::WitPlatform;
-use tracing::error;
-use tracing::info;
-
 mod app;
 mod components;
 mod pages;
 
+use anyhow::Result;
+
 pub use app::App;
+use tairitsu_web::WitPlatform;
+use tracing::{error, info};
 
 pub fn run_app() -> Result<()> {
     info!("Tairitsu Website starting...");

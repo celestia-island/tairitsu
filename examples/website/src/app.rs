@@ -6,8 +6,10 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
-use crate::components::{sidebar, top_nav};
-use crate::pages::{guides, home, not_found, packages, system};
+use crate::{
+    components::{sidebar, top_nav},
+    pages::{guides, home, not_found, packages, system},
+};
 
 /// Render the full application VNode tree.
 pub fn render() -> VNode {

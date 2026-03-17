@@ -2,11 +2,13 @@
 //!
 //! Tests for component lifecycle including mount, update, and unmount.
 
-use crate::tests::{Test, TestResult, TestStatus};
 use anyhow::Result;
 use std::time::{Duration, Instant};
+
 use thirtyfour::{By, WebDriver};
 use tracing::info;
+
+use crate::tests::{Test, TestResult, TestStatus};
 
 pub struct LifecycleTests;
 
@@ -206,9 +208,7 @@ impl LifecycleTests {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Look for elements with CSS classes - simplified using find_all
-        let elements_with_class = driver
-            .find_all(By::Css("[class]"))
-            .await?;
+        let elements_with_class = driver.find_all(By::Css("[class]")).await?;
 
         let duration = start.elapsed().as_millis() as u64;
 
@@ -216,7 +216,10 @@ impl LifecycleTests {
             Ok(TestResult {
                 component: "CSS Class Application".to_string(),
                 status: TestStatus::Success,
-                message: format!("{} elements with CSS classes found", elements_with_class.len()),
+                message: format!(
+                    "{} elements with CSS classes found",
+                    elements_with_class.len()
+                ),
                 duration_ms: duration,
                 screenshot_path: None,
             })
@@ -244,9 +247,7 @@ impl LifecycleTests {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Look for elements with inline styles - simplified using find_all
-        let elements_with_style = driver
-            .find_all(By::Css("[style]"))
-            .await?;
+        let elements_with_style = driver.find_all(By::Css("[style]")).await?;
 
         let duration = start.elapsed().as_millis() as u64;
 
@@ -328,7 +329,10 @@ impl Test for LifecycleTests {
             Ok(result) => results.push(result),
             Err(e) => {
                 tracing::error!("Style attribute application test failed: {}", e);
-                results.push(TestResult::error("Style Attribute Application", &e.to_string()));
+                results.push(TestResult::error(
+                    "Style Attribute Application",
+                    &e.to_string(),
+                ));
             }
         }
 

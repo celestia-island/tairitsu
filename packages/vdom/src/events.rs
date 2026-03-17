@@ -18,7 +18,9 @@ pub struct EventWitHandle {
 impl EventWitHandle {
     /// Create a new event handle from a WIT handle.
     pub fn from_wit(handle: u64) -> Self {
-        Self { handle: Some(handle) }
+        Self {
+            handle: Some(handle),
+        }
     }
 
     /// Create a placeholder handle (for non-WIT builds).

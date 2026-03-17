@@ -2,15 +2,14 @@
 //!
 //! Tests for error handling including build errors, runtime errors, and edge cases.
 
-use crate::tests::{Test, TestResult, TestStatus};
 use anyhow::Result;
-use std::fs;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::Instant;
+use std::{fs, path::PathBuf, process::Command, time::Instant};
+
 use tempfile::TempDir;
 use thirtyfour::WebDriver;
 use tracing::info;
+
+use crate::tests::{Test, TestResult, TestStatus};
 
 pub struct ErrorHandlingTests;
 

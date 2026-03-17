@@ -51,9 +51,7 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
     for arg in &mut input.sig.inputs {
         if let FnArg::Typed(pat_type) = arg {
             // Remove doc comments from parameter attributes
-            pat_type.attrs.retain(|attr| {
-                !attr.path().is_ident("doc")
-            });
+            pat_type.attrs.retain(|attr| !attr.path().is_ident("doc"));
 
             // Skip extraction if using existing props
             if !uses_existing_props {
@@ -179,9 +177,7 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
     for arg in &input.sig.inputs {
         if let FnArg::Typed(mut pat_type) = arg.clone() {
             // Remove doc comments from parameter attributes
-            pat_type.attrs.retain(|attr| {
-                !attr.path().is_ident("doc")
-            });
+            pat_type.attrs.retain(|attr| !attr.path().is_ident("doc"));
             cleaned_inputs.push(FnArg::Typed(pat_type));
         } else {
             cleaned_inputs.push(arg.clone());
@@ -199,7 +195,9 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
         }
     } else {
         // Generate proper let bindings for each prop
-        let prop_bindings: Vec<_> = prop_names.iter().zip(prop_has_defaults.iter())
+        let prop_bindings: Vec<_> = prop_names
+            .iter()
+            .zip(prop_has_defaults.iter())
             .map(|(name, has_default)| {
                 if *has_default {
                     quote! { let #name = props.#name; }

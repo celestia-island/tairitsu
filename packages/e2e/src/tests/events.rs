@@ -2,11 +2,13 @@
 //!
 //! Tests for DOM event handling including click, input, keyboard, and focus events.
 
-use crate::tests::{Test, TestResult, TestStatus};
 use anyhow::Result;
 use std::time::{Duration, Instant};
+
 use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
+
+use crate::tests::{Test, TestResult, TestStatus};
 
 pub struct EventTests;
 
@@ -35,7 +37,10 @@ impl EventTests {
                 Ok(_) => Ok(TestResult {
                     component: "Click Event".to_string(),
                     status: TestStatus::Success,
-                    message: format!("Button clicked successfully ({} buttons found)", buttons.len()),
+                    message: format!(
+                        "Button clicked successfully ({} buttons found)",
+                        buttons.len()
+                    ),
                     duration_ms: duration,
                     screenshot_path: None,
                 }),
@@ -127,7 +132,10 @@ impl EventTests {
                 Ok(_) => Ok(TestResult {
                     component: "Input Event".to_string(),
                     status: TestStatus::Success,
-                    message: format!("Textarea input handled successfully ({} textareas)", textareas.len()),
+                    message: format!(
+                        "Textarea input handled successfully ({} textareas)",
+                        textareas.len()
+                    ),
                     duration_ms: duration,
                     screenshot_path: None,
                 }),

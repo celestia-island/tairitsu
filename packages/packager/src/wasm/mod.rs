@@ -1,6 +1,8 @@
-use crate::config::Config;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::{Duration, Instant};
+
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+
+use crate::config::Config;
 
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
@@ -214,9 +216,13 @@ fn build_wasm_component(
                                 let crate_name = extract_crate_name(package_id);
                                 // Only update for lib crates (not build scripts)
                                 if let Some(target) = msg.get("target") {
-                                    if target.get("kind").and_then(|k| k.as_array()).map_or(false, |k| {
-                                        k.iter().any(|kind| kind.as_str() == Some("lib"))
-                                    }) {
+                                    if target
+                                        .get("kind")
+                                        .and_then(|k| k.as_array())
+                                        .map_or(false, |k| {
+                                            k.iter().any(|kind| kind.as_str() == Some("lib"))
+                                        })
+                                    {
                                         pb_clone.set_message(format!("compile {}", crate_name));
                                     }
                                 }
@@ -224,7 +230,11 @@ fn build_wasm_component(
                         }
                         "compiler-message" => {
                             // This contains actual compiler output (errors, warnings)
-                            if let Some(rendered) = msg.get("message").and_then(|m| m.get("rendered")).and_then(|r| r.as_str()) {
+                            if let Some(rendered) = msg
+                                .get("message")
+                                .and_then(|m| m.get("rendered"))
+                                .and_then(|r| r.as_str())
+                            {
                                 // Print the rendered diagnostic above the progress bar
                                 pb_clone.println(rendered);
                             }

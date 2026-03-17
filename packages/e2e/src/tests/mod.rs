@@ -5,14 +5,14 @@ pub mod error_handling;
 pub mod events;
 pub mod lifecycle;
 
+use anyhow::Result;
+
 pub use basic_components::BasicComponentsTests;
 pub use build::BuildTests;
 pub use doctor::DoctorTests;
 pub use error_handling::ErrorHandlingTests;
 pub use events::EventTests;
 pub use lifecycle::LifecycleTests;
-
-use anyhow::Result;
 use thirtyfour::WebDriver;
 
 pub trait Test: Send + Sync {
@@ -108,7 +108,10 @@ impl TestResult {
         Self {
             component: "Test Suite".to_string(),
             status,
-            message: format!("{} passed, {} warnings, {} errors", passed, warnings, errors),
+            message: format!(
+                "{} passed, {} warnings, {} errors",
+                passed, warnings, errors
+            ),
             duration_ms: 0,
             screenshot_path: None,
         }

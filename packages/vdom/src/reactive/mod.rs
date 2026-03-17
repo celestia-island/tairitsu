@@ -1,6 +1,5 @@
-use std::any::Any;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{any::Any, cell::RefCell, rc::Rc};
+
 use tracing::trace;
 
 thread_local! {

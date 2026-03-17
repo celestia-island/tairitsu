@@ -45,7 +45,7 @@ just install-tools"
                         pre {
                             code {
                                 "# 一次性全量校验
-just test"
+    just test"
                             }
                         }
                     }
@@ -77,7 +77,7 @@ just run-dynamic-advanced"
                         pre {
                             code {
                                 "# 浏览器 WIT 路线
-cargo check -p tairitsu-web --features wit-bindings"
+    cargo check -p tairitsu-web --features wit-bindings"
                             }
                         }
                     }
@@ -92,7 +92,7 @@ cargo check -p tairitsu-web --features wit-bindings"
                         pre {
                             code {
                                 "# 添加 wasm32-wasip2 target
-rustup target add wasm32-wasip2"
+    rustup target add wasm32-wasip2"
                             }
                         }
                     }
@@ -115,7 +115,7 @@ rustup target add wasm32-wasip2"
                         pre {
                             code {
                                 "npm install
-npm run typecheck"
+    npm run typecheck"
                             }
                         }
                     }

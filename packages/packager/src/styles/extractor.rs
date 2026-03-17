@@ -188,9 +188,25 @@ mod tests {
 
         let optimized = extractor.optimize(css).unwrap();
         // Verify whitespace is cleaned and structure is preserved
-        assert!(!optimized.contains("  "), "Should not have double spaces: {}", optimized);
-        assert!(optimized.contains(".test"), "Should contain selector: {}", optimized);
-        assert!(optimized.contains("color"), "Should contain property: {}", optimized);
-        assert!(optimized.contains("red"), "Should contain value: {}", optimized);
+        assert!(
+            !optimized.contains("  "),
+            "Should not have double spaces: {}",
+            optimized
+        );
+        assert!(
+            optimized.contains(".test"),
+            "Should contain selector: {}",
+            optimized
+        );
+        assert!(
+            optimized.contains("color"),
+            "Should contain property: {}",
+            optimized
+        );
+        assert!(
+            optimized.contains("red"),
+            "Should contain value: {}",
+            optimized
+        );
     }
 }

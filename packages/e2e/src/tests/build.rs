@@ -3,14 +3,13 @@
 //! Tests for the complete build process including project initialization,
 //! dependency resolution, WASM compilation, and output verification.
 
-use crate::tests::{Test, TestResult, TestStatus};
 use anyhow::Result;
-use std::fs;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::Instant;
+use std::{fs, path::PathBuf, process::Command, time::Instant};
+
 use tempfile::TempDir;
 use tracing::info;
+
+use crate::tests::{Test, TestResult, TestStatus};
 
 pub struct BuildTests;
 
@@ -305,8 +304,10 @@ pub extern "C" fn bootstrap() {
             Ok(TestResult {
                 component: "Tairitsu Metadata".to_string(),
                 status: TestStatus::Warning,
-                message: format!("Metadata incomplete: tairitsu={}, build={}",
-                    has_tairitsu_metadata, has_build_config),
+                message: format!(
+                    "Metadata incomplete: tairitsu={}, build={}",
+                    has_tairitsu_metadata, has_build_config
+                ),
                 duration_ms: duration,
                 screenshot_path: None,
             })
@@ -341,8 +342,10 @@ pub extern "C" fn bootstrap() {
             Ok(TestResult {
                 component: "Build Config Validation".to_string(),
                 status: TestStatus::Warning,
-                message: format!("Build config incomplete: target={}, output-dir={}",
-                    has_target, has_output_dir),
+                message: format!(
+                    "Build config incomplete: target={}, output-dir={}",
+                    has_target, has_output_dir
+                ),
                 duration_ms: duration,
                 screenshot_path: None,
             })

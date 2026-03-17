@@ -1,5 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 /// A cached callback that only recreates when dependencies change.
 ///
@@ -237,8 +236,10 @@ mod tests {
 
     #[test]
     fn test_use_callback_with_string_deps() {
-        let callback =
-            use_callback(|| Rc::new(|| "result") as Rc<dyn Fn() -> &'static str>, String::from("a"));
+        let callback = use_callback(
+            || Rc::new(|| "result") as Rc<dyn Fn() -> &'static str>,
+            String::from("a"),
+        );
 
         // Same string - no recreate
         callback.update_deps(String::from("a"));
