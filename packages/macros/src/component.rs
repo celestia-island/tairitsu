@@ -238,19 +238,27 @@ fn extract_arg_info(pat_type: &PatType) -> Result<(Ident, bool, bool)> {
         ));
     };
 
-    let has_default = has_attribute(&pat_type.attrs, "default");
-    let is_children = has_attribute(&pat_type.attrs, "children");
+    let has_default = has_props_attribute(&pat_type.attrs, "default");
+    let is_children = has_props_attribute(&pat_type.attrs, "children");
 
     Ok((name, has_default, is_children))
 }
 
-fn has_attribute(attrs: &[Attribute], name: &str) -> bool {
+fn has_props_attribute(attrs: &[Attribute], inner_name: &str) -> bool {
     attrs.iter().any(|attr| {
-        if let Some(ident) = attr.path().get_ident() {
-            ident == name
-        } else {
-            false
+        // Check for #[props(...)] pattern
+        if attr.path().is_ident("props") {
+            // Check the meta for the inner_name
+            if let syn::Meta::List(meta_list) = &attr.meta {
+                // Check if any nested meta matches the inner_name
+                return meta_list.tokens.to_string().contains(inner_name);
+            }
         }
+        // Also check for direct #[default] for backward compatibility
+        if attr.path().is_ident(inner_name) {
+            return true;
+        }
+        false
     })
 }
 
