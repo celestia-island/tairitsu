@@ -21,5 +21,5 @@ pub use ref_::{use_ref, UseRef};
 pub use signal::use_signal;
 pub use state::use_state;
 
-// Re-export Event type from vdom for convenience
-pub use tairitsu_vdom::Event;
+// Re-export Event types from vdom for convenience
+pub use tairitsu_vdom::{Event, GenericEvent};
