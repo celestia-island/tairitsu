@@ -71,7 +71,30 @@ where
     }
 }
 
-/// Creates a memoized value that only recomputes when dependencies change.
+/// Creates a memoized value that only recomputes when accessed signals change.
+/// This is the Dioxus-compatible API that accepts just a compute function.
+///
+/// # Arguments
+/// * `compute` - A function that computes the value
+///
+/// # Returns
+/// A `Memo` struct that provides access to the memoized value
+///
+/// # Example
+/// ```ignore
+/// let memo = use_memo(|| expensive_computation());
+/// let value = memo.read();
+/// ```
+pub fn use_memo<T, F>(compute: F) -> Memo<T, (), F>
+where
+    T: Clone + 'static,
+    F: Fn() -> T + Clone + 'static,
+{
+    Memo::new(compute, ())
+}
+
+/// Creates a memoized value with explicit dependencies.
+/// Only recomputes when dependencies change.
 ///
 /// # Arguments
 /// * `compute` - A function that computes the value
@@ -82,10 +105,10 @@ where
 ///
 /// # Example
 /// ```ignore
-/// let memo = use_memo(|| expensive_computation(a, b), (a, b));
+/// let memo = use_memo_with_deps(|| expensive_computation(a, b), (a, b));
 /// let value = memo.value().get();
 /// ```
-pub fn use_memo<T, D, F>(compute: F, deps: D) -> Memo<T, D, F>
+pub fn use_memo_with_deps<T, D, F>(compute: F, deps: D) -> Memo<T, D, F>
 where
     T: Clone + 'static,
     D: PartialEq + 'static,

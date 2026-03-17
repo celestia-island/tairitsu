@@ -294,6 +294,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
     let mut other_attrs = Vec::new();
+    let mut children_code = Vec::new();
 
     for attr in element.attrs {
         match attr {
@@ -364,6 +365,9 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                             }
                         })
                     });
+                } else if name == "children" {
+                    // Special handling for children - add as child, not attribute
+                    children_code.push(quote! { .child(#value) });
                 } else {
                     other_attrs.push(quote! { .attr(#name, #value) });
                 }
@@ -371,7 +375,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
         }
     }
 
-    let mut children_code = Vec::new();
+    // Add element children
     for child in element.children {
         children_code.push(expand_child_method(child));
     }
@@ -461,7 +465,7 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
                 let inner = &text_value[1..text_value.len()-1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
-                    return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new((#expr).to_string())) };
+                    return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr))) };
                 }
             }
             quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
@@ -486,7 +490,7 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
                 let inner = &text_value[1..text_value.len()-1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
-                    return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new((#expr).to_string()))) };
+                    return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr)))) };
                 }
             }
             quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))) }
