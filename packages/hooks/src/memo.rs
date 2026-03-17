@@ -124,7 +124,7 @@ where
     D: PartialEq + 'static,
     F: Fn() -> T + Clone + 'static,
 {
-    use_memo(compute, deps)
+    Memo::new(compute, deps)
 }
 
 #[cfg(test)]
