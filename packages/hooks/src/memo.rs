@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use tairitsu_vdom::Signal;
+use tairitsu_vdom::{Classes, Signal, Style};
 
 /// A memoized value that only recomputes when dependencies change.
 ///
@@ -68,6 +68,28 @@ where
             compute: self.compute.clone(),
             deps: Rc::clone(&self.deps),
         }
+    }
+}
+
+// Allow Memo<String> to be converted to Style
+impl<D, F> From<Memo<String, D, F>> for Style
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn from(memo: Memo<String, D, F>) -> Self {
+        Style::from(memo.read())
+    }
+}
+
+// Allow Memo<String> to be converted to Classes
+impl<D, F> From<Memo<String, D, F>> for Classes
+where
+    D: PartialEq + 'static,
+    F: Fn() -> String + Clone + 'static,
+{
+    fn from(memo: Memo<String, D, F>) -> Self {
+        Classes::from(memo.read())
     }
 }
 
