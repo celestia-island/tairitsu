@@ -385,26 +385,11 @@ pub enum Key {
 }
 
 impl Key {
-    /// Convert a key string to a Key enum
+    /// Convert a key string to a Key enum.
+    /// This is a convenience method that delegates to [`FromStr`].
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Self {
-        match s {
-            "ArrowUp" => Key::ArrowUp,
-            "ArrowDown" => Key::ArrowDown,
-            "ArrowLeft" => Key::ArrowLeft,
-            "ArrowRight" => Key::ArrowRight,
-            "Enter" => Key::Enter,
-            "Escape" => Key::Escape,
-            "Tab" => Key::Tab,
-            "Backspace" => Key::Backspace,
-            "Delete" => Key::Delete,
-            " " | "Space" => Key::Space,
-            "Shift" => Key::Shift,
-            "Control" => Key::Control,
-            "Alt" => Key::Alt,
-            "Meta" => Key::Meta,
-            s if s.len() == 1 => Key::Character(s.to_string()),
-            other => Key::Other(other.to_string()),
-        }
+        s.parse().unwrap_or_else(|_| Key::Other(s.to_string()))
     }
 
     /// Check if this key matches the given string
@@ -450,6 +435,31 @@ impl std::fmt::Display for Key {
             Key::Meta => write!(f, "Meta"),
             Key::Character(c) => write!(f, "{}", c),
             Key::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl std::str::FromStr for Key {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ArrowUp" => Ok(Key::ArrowUp),
+            "ArrowDown" => Ok(Key::ArrowDown),
+            "ArrowLeft" => Ok(Key::ArrowLeft),
+            "ArrowRight" => Ok(Key::ArrowRight),
+            "Enter" => Ok(Key::Enter),
+            "Escape" => Ok(Key::Escape),
+            "Tab" => Ok(Key::Tab),
+            "Backspace" => Ok(Key::Backspace),
+            "Delete" => Ok(Key::Delete),
+            " " | "Space" => Ok(Key::Space),
+            "Shift" => Ok(Key::Shift),
+            "Control" => Ok(Key::Control),
+            "Alt" => Ok(Key::Alt),
+            "Meta" => Ok(Key::Meta),
+            s if s.len() == 1 => Ok(Key::Character(s.to_string())),
+            other => Ok(Key::Other(other.to_string())),
         }
     }
 }

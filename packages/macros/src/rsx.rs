@@ -24,7 +24,7 @@ pub enum RsxChild {
     Spread(Expr),  // ..expr syntax for spreading Vec<VNode>
     If(RsxIf),
     Match(RsxMatch),
-    For(RsxFor),
+    For(Box<RsxFor>),
 }
 
 /// Root content of an rsx! macro
@@ -32,7 +32,7 @@ pub enum RsxRoot {
     Element(RsxElement),
     If(RsxIf),
     Match(RsxMatch),
-    For(RsxFor),
+    For(Box<RsxFor>),
 }
 
 /// If expression with rsx body
@@ -129,7 +129,7 @@ impl Parse for RsxElement {
                     children.push(RsxChild::Match(rsx_match));
                 } else if content.peek(Token![for]) {
                     let rsx_for: RsxFor = content.parse()?;
-                    children.push(RsxChild::For(rsx_for));
+                    children.push(RsxChild::For(Box::new(rsx_for)));
                 } else if content.peek(Ident) {
                     let elem: RsxElement = content.parse()?;
                     children.push(RsxChild::Element(elem));
@@ -150,7 +150,7 @@ impl Parse for RsxRoot {
         } else if input.peek(Token![match]) {
             Ok(RsxRoot::Match(input.parse()?))
         } else if input.peek(Token![for]) {
-            Ok(RsxRoot::For(input.parse()?))
+            Ok(RsxRoot::For(Box::new(input.parse()?)))
         } else if input.peek(Ident) {
             Ok(RsxRoot::Element(input.parse()?))
         } else {
@@ -278,7 +278,7 @@ fn parse_rsx_children(content: &syn::parse::ParseBuffer) -> syn::Result<Vec<RsxC
         } else if content.peek(Token![match]) {
             children.push(RsxChild::Match(content.parse()?));
         } else if content.peek(Token![for]) {
-            children.push(RsxChild::For(content.parse()?));
+            children.push(RsxChild::For(Box::new(content.parse()?)));
         } else if content.peek(Ident) {
             children.push(RsxChild::Element(content.parse()?));
         } else {
@@ -393,7 +393,7 @@ pub fn expand_rsx_root(root: RsxRoot) -> TokenStream2 {
         RsxRoot::Element(elem) => expand_rsx(elem),
         RsxRoot::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxRoot::Match(rsx_match) => expand_rsx_match(rsx_match),
-        RsxRoot::For(rsx_for) => expand_rsx_for(rsx_for),
+        RsxRoot::For(rsx_for) => expand_rsx_for(*rsx_for),
     }
 }
 
@@ -455,6 +455,15 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
     match child {
         RsxChild::Text(text) => {
             let text_value = text.value();
+            // Check if this is a format string like "{variable}"
+            if text_value.starts_with('{') && text_value.ends_with('}') && text_value.matches('{').count() == 1 {
+                // This is a shorthand for displaying a variable: "{count}" -> count.to_string()
+                let inner = &text_value[1..text_value.len()-1];
+                // Parse the inner as an expression
+                if let Ok(expr) = syn::parse_str::<Expr>(inner) {
+                    return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new((#expr).to_string())) };
+                }
+            }
             quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
         }
         RsxChild::Element(elem) => expand_rsx(elem),
@@ -462,7 +471,7 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
         RsxChild::Spread(expr) => quote! { tairitsu_vdom::VNode::Fragment(#expr) },
         RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
-        RsxChild::For(rsx_for) => expand_rsx_for(rsx_for),
+        RsxChild::For(rsx_for) => expand_rsx_for(*rsx_for),
     }
 }
 
@@ -471,6 +480,15 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
     match child {
         RsxChild::Text(text) => {
             let text_value = text.value();
+            // Check if this is a format string like "{variable}"
+            if text_value.starts_with('{') && text_value.ends_with('}') && text_value.matches('{').count() == 1 {
+                // This is a shorthand for displaying a variable: "{count}" -> count.to_string()
+                let inner = &text_value[1..text_value.len()-1];
+                // Parse the inner as an expression
+                if let Ok(expr) = syn::parse_str::<Expr>(inner) {
+                    return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new((#expr).to_string()))) };
+                }
+            }
             quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))) }
         }
         RsxChild::Element(elem) => {
@@ -488,7 +506,7 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
             quote! { .child(#expanded) }
         }
         RsxChild::For(rsx_for) => {
-            let expanded = expand_rsx_for(rsx_for);
+            let expanded = expand_rsx_for(*rsx_for);
             quote! { .child(#expanded) }
         }
     }
