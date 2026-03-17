@@ -114,7 +114,7 @@ where
     use_callback(
         move || {
             let cb = callback.clone();
-            Rc::new(move || cb()) as Rc<VoidCallback>
+            Rc::new(cb) as Rc<VoidCallback>
         },
         deps,
     )
@@ -136,7 +136,7 @@ where
     use_callback(
         move || {
             let cb = callback.clone();
-            Rc::new(move || cb()) as Rc<ReturnCallback<T>>
+            Rc::new(cb) as Rc<ReturnCallback<T>>
         },
         deps,
     )
