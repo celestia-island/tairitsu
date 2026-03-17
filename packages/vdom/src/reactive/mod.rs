@@ -1,6 +1,5 @@
 use std::any::Any;
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use tracing::trace;
 
@@ -18,38 +17,6 @@ pub struct Signal<T> {
 struct SignalInner<T> {
     value: T,
     subscribers: Vec<Rc<dyn Fn()>>,
-}
-
-/// A mutable guard for Signal values (Dioxus compatibility)
-pub struct SignalMut<'a, T> {
-    guard: std::cell::RefMut<'a, SignalInner<T>>,
-}
-
-impl<'a, T> Deref for SignalMut<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.guard.value
-    }
-}
-
-impl<'a, T> DerefMut for SignalMut<'a, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.guard.value
-    }
-}
-
-impl<'a, T: Clone + 'static> Drop for SignalMut<'a, T> {
-    fn drop(&mut self) {
-        // Trigger subscribers when the mutable guard is dropped
-        let subscribers = self.guard.subscribers.clone();
-        if BATCHING.with(|b| *b.borrow()) {
-            trace!("Signal update batched");
-        } else {
-            for subscriber in subscribers {
-                subscriber();
-            }
-        }
-    }
 }
 
 impl<T: Clone + 'static> Signal<T> {
@@ -96,21 +63,20 @@ impl<T: Clone + 'static> Signal<T> {
         self.get()
     }
 
-    /// Returns a mutable guard - Dioxus compatibility
-    /// Usage: let mut guard = signal.write(); guard.field = new_value;
-    pub fn write(&self) -> SignalMut<T> {
-        DEPENDENCIES.with(|deps| {
-            deps.borrow_mut()
-                .push(Rc::clone(&self.inner) as Rc<RefCell<dyn Any>>);
-        });
-        SignalMut {
-            guard: self.inner.borrow_mut(),
-        }
+    /// Returns a mutable reference to the value - Dioxus compatibility
+    /// Usage: let mut guard = signal.write(); guard.push(item);
+    /// Note: Changes made through this guard will NOT automatically trigger subscribers.
+    /// Use signal.set() or manually call signal.notify() if reactivity is needed.
+    pub fn write(&self) -> std::cell::RefMut<'_, T> {
+        std::cell::RefMut::map(self.inner.borrow_mut(), |inner| &mut inner.value)
     }
 
-    /// Alias for set() - explicit set with value
-    pub fn set_value(&self, value: T) {
-        self.set(value)
+    /// Manually trigger all subscribers (for use after write() modifications)
+    pub fn notify(&self) {
+        let subscribers = self.inner.borrow().subscribers.clone();
+        for subscriber in subscribers {
+            subscriber();
+        }
     }
 }
 
