@@ -81,17 +81,24 @@ impl Parse for RsxElement {
             syn::braced!(content in input);
 
             while !content.is_empty() {
-                // Check for attribute pattern
+                // Check for attribute pattern (name: value) or shorthand (name,)
                 let fork = content.fork();
                 let is_attr = if fork.peek(LitStr) {
                     fork.parse::<LitStr>().is_ok() && fork.peek(Token![:])
                 } else if fork.peek(Ident) {
-                    fork.parse::<Ident>().is_ok() && fork.peek(Token![:])
+                    fork.parse::<Ident>().is_ok() && (fork.peek(Token![:]) || fork.peek(Token![,]) || fork.is_empty())
                 } else {
                     false
                 };
 
                 if is_attr {
+                    // Check for shorthand syntax: identifier, or identifier }
+                    let is_shorthand = content.peek(Ident) && {
+                        let fork = content.fork();
+                        fork.parse::<Ident>().ok();
+                        !fork.peek(Token![:]) && (fork.peek(Token![,]) || fork.is_empty())
+                    };
+
                     let name = if content.peek(LitStr) {
                         let lit: LitStr = content.parse()?;
                         lit.value()
@@ -99,18 +106,30 @@ impl Parse for RsxElement {
                         let name: Ident = content.parse()?;
                         name.to_string()
                     };
-                    content.parse::<Token![:]>()?;
 
-                    let attr = match name.as_str() {
-                        "class" => RsxAttr::Class(content.parse()?),
-                        "style" => RsxAttr::Style(content.parse()?),
-                        "id" => RsxAttr::Id(content.parse()?),
-                        "onclick" => RsxAttr::Onclick(content.parse()?),
-                        "dangerous_inner_html" => RsxAttr::InnerHtml(content.parse()?),
-                        _ => RsxAttr::Other {
-                            name,
-                            value: content.parse()?,
-                        },
+                    // For non-shorthand, consume the colon
+                    if !is_shorthand {
+                        content.parse::<Token![:]>()?;
+                    }
+
+                    let attr = if is_shorthand {
+                        // Shorthand: name, means name: name
+                        let value: Expr = syn::parse_str(&name).unwrap_or_else(|_| {
+                            syn::parse_str(&format!("{}", name)).unwrap()
+                        });
+                        RsxAttr::Other { name: name.clone(), value }
+                    } else {
+                        match name.as_str() {
+                            "class" => RsxAttr::Class(content.parse()?),
+                            "style" => RsxAttr::Style(content.parse()?),
+                            "id" => RsxAttr::Id(content.parse()?),
+                            "onclick" => RsxAttr::Onclick(content.parse()?),
+                            "dangerous_inner_html" => RsxAttr::InnerHtml(content.parse()?),
+                            _ => RsxAttr::Other {
+                                name,
+                                value: content.parse()?,
+                            },
+                        }
                     };
                     attrs.push(attr);
                 } else if content.peek(LitStr) {
