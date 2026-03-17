@@ -9,11 +9,11 @@ pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
 pub use events::{
-    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FocusEvent, FormData,
+    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FileData, FocusEvent, FormData,
     FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
 };
 pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{batch, create_effect, EffectHandle, Signal};
-pub use vnode::{Classes, IntoAttrValue, Style, VElement, VNode, VText};
+pub use vnode::{empty_vnode, Classes, IntoAttrValue, Style, VElement, VNode, VText};
