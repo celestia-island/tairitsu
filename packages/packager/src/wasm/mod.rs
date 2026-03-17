@@ -68,7 +68,8 @@ pub fn build_component(
     pb.set_prefix("[2/5]");
     pb.set_message("compile WASM component");
     let t = Instant::now();
-    let wasm_path = build_wasm_component(config, release, multi)?;
+    // Pass the progress bar so cargo compilation can update it directly
+    let wasm_path = build_wasm_component(config, release, pb.clone())?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "compile WASM component",
@@ -86,7 +87,7 @@ pub fn build_component(
         .join(format!("{}.wasm", config.package.name.replace('-', "_")));
     std::fs::create_dir_all(&config.build.output_dir)?;
     std::fs::copy(&wasm_path, &dest_wasm)?;
-    copy_browser_glue(config)?;
+    copy_browser_glue(config, &pb)?;
     copy_static_public_assets(config)?;
     compile_project_scss(config)?;
     pb.println(format!(
@@ -100,7 +101,7 @@ pub fn build_component(
     pb.set_prefix("[4/5]");
     pb.set_message("component wrapper");
     let t = Instant::now();
-    prepare_component_wrapper_fallback(config, &dest_wasm)?;
+    prepare_component_wrapper_fallback(config, &dest_wasm, &pb)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "component wrapper",
@@ -150,7 +151,7 @@ fn check_wasip2_target() -> crate::Result<()> {
 fn build_wasm_component(
     config: &Config,
     release: bool,
-    multi: Option<std::sync::Arc<MultiProgress>>,
+    pb: ProgressBar,
 ) -> crate::Result<std::path::PathBuf> {
     use std::io::BufRead;
     use std::process::Stdio;
@@ -181,25 +182,8 @@ fn build_wasm_component(
 
     let stdout = child.stdout.take().expect("stdout should be piped");
 
-    // Create a progress bar for the compilation step.
-    // When in watch mode (multi is Some), attach to MultiProgress so output
-    // scrolls correctly above the persistent status bars.
-    let compile_pb = ProgressBar::new_spinner();
-    compile_pb.set_style(
-        ProgressStyle::with_template("    {spinner:.bold.cyan}  {msg}")
-            .unwrap()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
-    );
-    compile_pb.enable_steady_tick(Duration::from_millis(80));
-    compile_pb.set_message("Preparing...");
-
-    let compile_pb = match &multi {
-        Some(m) => m.add(compile_pb),
-        None => compile_pb,
-    };
-
-    // Clone for the thread
-    let compile_pb_clone = compile_pb.clone();
+    // Clone the progress bar for the thread
+    let pb_clone = pb.clone();
 
     // Helper: extract crate name from package_id
     // Format: "registry+https://github.com/rust-lang/crates.io-index#name@version"
@@ -215,7 +199,7 @@ fn build_wasm_component(
         package_id
     }
 
-    // Thread: parse JSON messages from stdout and render custom progress
+    // Thread: parse JSON messages from stdout and update the progress bar
     std::thread::spawn(move || {
         for line in std::io::BufReader::new(stdout).lines() {
             let Ok(line) = line else { continue };
@@ -233,7 +217,7 @@ fn build_wasm_component(
                                     if target.get("kind").and_then(|k| k.as_array()).map_or(false, |k| {
                                         k.iter().any(|kind| kind.as_str() == Some("lib"))
                                     }) {
-                                        compile_pb_clone.set_message(format!("Compiling {}", crate_name));
+                                        pb_clone.set_message(format!("compile {}", crate_name));
                                     }
                                 }
                             }
@@ -242,18 +226,18 @@ fn build_wasm_component(
                             // This contains actual compiler output (errors, warnings)
                             if let Some(rendered) = msg.get("message").and_then(|m| m.get("rendered")).and_then(|r| r.as_str()) {
                                 // Print the rendered diagnostic above the progress bar
-                                compile_pb_clone.println(rendered);
+                                pb_clone.println(rendered);
                             }
                         }
                         "build-script-executed" => {
                             if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
                             {
                                 let crate_name = extract_crate_name(package_id);
-                                compile_pb_clone.set_message(format!("Build script: {}", crate_name));
+                                pb_clone.set_message(format!("build script {}", crate_name));
                             }
                         }
                         "build-finished" => {
-                            compile_pb_clone.set_message("Done");
+                            // Keep the original message
                         }
                         _ => {}
                     }
@@ -263,7 +247,7 @@ fn build_wasm_component(
     });
 
     let status = child.wait()?;
-    compile_pb.finish_and_clear();
+    // Don't finish/clear here - the caller manages the progress bar lifecycle
 
     if !status.success() {
         return Err(crate::TairitsuPackagerError::BuildError(
@@ -289,7 +273,7 @@ fn build_wasm_component(
     Ok(wasm_path)
 }
 
-fn copy_browser_glue(config: &Config) -> crate::Result<()> {
+fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
     let workspace_root = find_workspace_root()?;
     let glue_dist = workspace_root
         .join("packages")
@@ -297,12 +281,12 @@ fn copy_browser_glue(config: &Config) -> crate::Result<()> {
         .join("dist");
 
     if !glue_dist.exists() {
-        eprintln!(
+        pb.println(format!(
             "⚠  browser-glue/dist not found at {}.\n   \
              Run `npm run build` in packages/browser-glue/ first, \
              or the component will not have browser bindings.",
             glue_dist.display()
-        );
+        ));
         return Ok(());
     }
 
@@ -376,10 +360,11 @@ fn compile_project_scss(config: &Config) -> crate::Result<()> {
 fn prepare_component_wrapper_fallback(
     config: &Config,
     component_wasm_path: &std::path::Path,
+    pb: &ProgressBar,
 ) -> crate::Result<()> {
     write_component_wrapper_loader(config, component_wasm_path)?;
 
-    if !try_generate_component_wrapper(config, component_wasm_path)? {
+    if !try_generate_component_wrapper(config, component_wasm_path, pb)? {
         let wasm_hint_path = std::fs::canonicalize(component_wasm_path)
             .unwrap_or_else(|_| component_wasm_path.to_path_buf());
         let wasm_hint = wasm_hint_path
@@ -387,14 +372,12 @@ fn prepare_component_wrapper_fallback(
             .to_string()
             .trim_start_matches(r"\\?\")
             .to_string();
-        eprintln!(
-            "⚠  Component wrapper was not generated automatically.\n   \
-             Browsers without native WebAssembly Component API will still fail.\n   \
-             See detailed diagnostics above for missing commands and command output.\n   \
-             Quick manual command:\n   \
-             npx --yes @bytecodealliance/jco transpile \"{}\" -o \"component-wrapper\"",
-            wasm_hint
-        );
+        pb.println(format!(
+            "⚠  Wrapper transpile command not found: 'jco'.\n   \
+             Attempted: jco transpile {} -o {}",
+            wasm_hint,
+            config.build.output_dir.join("component-wrapper").display()
+        ));
     }
 
     // Always normalize wrapper imports if wrapper files already exist.
@@ -465,6 +448,7 @@ fn write_component_wrapper_loader(
 fn try_generate_component_wrapper(
     config: &Config,
     component_wasm_path: &std::path::Path,
+    pb: &ProgressBar,
 ) -> crate::Result<bool> {
     let wrapper_dir = config.build.output_dir.join("component-wrapper");
     std::fs::create_dir_all(&wrapper_dir)?;
@@ -563,10 +547,10 @@ fn try_generate_component_wrapper(
                 if has_index || has_named {
                     return Ok(true);
                 }
-                eprintln!(
+                pb.println(format!(
                     "⚠  Wrapper transpile command succeeded but no JS wrapper entry was found.\n   Command: {}",
                     command_preview
-                );
+                ));
                 continue;
             }
             Ok(output) => {
@@ -581,46 +565,41 @@ fn try_generate_component_wrapper(
                 };
                 let detail_preview: String = detail.chars().take(400).collect();
 
-                eprintln!(
+                pb.println(format!(
                     "⚠  Wrapper transpile command failed.\n   Command: {}\n   Exit: {}\n   Detail: {}",
                     command_preview,
                     output.status,
                     detail_preview
-                );
+                ));
                 continue;
             }
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
                 missing_commands.push(bin.to_string());
-                eprintln!(
-                    "⚠  Wrapper transpile command not found: '{}'.\n   Attempted: {}",
-                    bin, command_preview
-                );
+                // Don't print per-command not found - we'll summarize at the end
                 continue;
             }
             Err(err) => {
-                eprintln!(
+                pb.println(format!(
                     "⚠  Failed to execute wrapper transpile command.\n   Command: {}\n   Error: {}",
                     command_preview, err
-                );
+                ));
                 continue;
             }
         }
     }
 
+    // Only print one summary message for missing commands
     if !missing_commands.is_empty() {
         missing_commands.sort();
         missing_commands.dedup();
-        eprintln!(
-            "⚠  Missing wrapper tooling in PATH: {}\n   Install Node.js + JCO or ensure these commands are available.",
-            missing_commands.join(", ")
-        );
+        pb.println(format!(
+            "⚠  Wrapper transpile command not found: '{}'.\n   \
+             Attempted: jco transpile {} -o {}",
+            missing_commands.join(", "),
+            wasm_path_hint,
+            wrapper_dir_hint
+        ));
     }
-
-    eprintln!(
-        "ℹ  Manual fallback command (absolute paths):\n   npx --yes @bytecodealliance/jco transpile \"{}\" -o \"{}\"",
-        wasm_path_hint,
-        wrapper_dir_hint
-    );
 
     Ok(false)
 }
@@ -1187,8 +1166,7 @@ async fn run_watch_loop(
         print_status_panel(port, output_dir, Some(last_build_line), None);
 
         // Run the rebuild on a blocking thread so the tokio runtime stays alive.
-        // Pass a clone of MultiProgress so cargo's stderr is piped through it,
-        // keeping the 4 status bars anchored at the bottom of the terminal.
+        // The progress bar is managed internally by build_component.
         let rebuild_started = Instant::now();
         let config_clone = config.clone();
         let target = config.build.target.clone();

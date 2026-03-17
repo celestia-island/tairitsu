@@ -94,6 +94,17 @@ pub enum VNode {
     Fragment(Vec<VNode>),
 }
 
+impl Default for VNode {
+    fn default() -> Self {
+        VNode::Fragment(Vec::new())
+    }
+}
+
+/// Helper function to create an empty VNode
+pub fn empty_vnode() -> VNode {
+    VNode::default()
+}
+
 pub type EventHandler = Rc<RefCell<dyn FnMut(Box<dyn EventData>)>>;
 
 pub struct VElement {
@@ -337,6 +348,15 @@ impl From<&str> for Style {
 impl From<String> for Style {
     fn from(s: String) -> Self {
         Self::from(s.as_str())
+    }
+}
+
+impl From<Option<String>> for Style {
+    fn from(s: Option<String>) -> Self {
+        match s {
+            Some(style) => Self::from(style),
+            None => Self::default(),
+        }
     }
 }
 

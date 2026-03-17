@@ -479,7 +479,35 @@ pub struct FormData {
     pub value: String,
     /// The values of all form elements (for form submit events)
     pub values: Vec<(String, String)>,
+    /// Files from file input elements
+    pub files: Vec<FileData>,
     event_handle: EventWitHandle,
+}
+
+/// File data from file input elements
+#[derive(Debug, Clone)]
+pub struct FileData {
+    pub name: String,
+    pub size: u64,
+    pub mime_type: String,
+}
+
+impl FileData {
+    pub fn new(name: impl Into<String>, size: u64, mime_type: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            size,
+            mime_type: mime_type.into(),
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn size(&self) -> u64 {
+        self.size
+    }
 }
 
 impl EventData for FormData {
@@ -493,6 +521,7 @@ impl FormData {
         Self {
             value: String::new(),
             values: Vec::new(),
+            files: Vec::new(),
             event_handle: EventWitHandle::placeholder(),
         }
     }
@@ -522,6 +551,16 @@ impl FormData {
 
     pub fn add_value(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.values.push((key.into(), value.into()));
+        self
+    }
+
+    pub fn files(mut self, files: Vec<FileData>) -> Self {
+        self.files = files;
+        self
+    }
+
+    pub fn add_file(mut self, file: FileData) -> Self {
+        self.files.push(file);
         self
     }
 

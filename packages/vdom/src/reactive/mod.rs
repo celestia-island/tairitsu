@@ -14,6 +14,15 @@ pub struct Signal<T> {
     inner: Rc<RefCell<SignalInner<T>>>,
 }
 
+// Implement PartialEq by comparing the inner Rc pointer (identity comparison)
+impl<T> PartialEq for Signal<T> {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.inner, &other.inner)
+    }
+}
+
+impl<T> Eq for Signal<T> {}
+
 struct SignalInner<T> {
     value: T,
     subscribers: Vec<Rc<dyn Fn()>>,
