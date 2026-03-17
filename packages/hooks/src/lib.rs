@@ -16,7 +16,7 @@ pub use context::{consume_context, provide_context, use_context, Context};
 // Dioxus compatibility alias
 pub use provide_context as use_context_provider;
 pub use effect::use_effect;
-pub use memo::{use_memo, use_memo_with, Memo};
+pub use memo::{use_memo, use_memo_with, use_memo_with_deps, Memo};
 pub use ref_::{use_ref, UseRef};
 pub use signal::use_signal;
 pub use state::use_state;
