@@ -57,6 +57,16 @@ impl<T: Clone + 'static> Signal<T> {
     pub fn subscribe<F: Fn() + 'static>(&self, callback: F) {
         self.inner.borrow_mut().subscribers.push(Rc::new(callback));
     }
+
+    /// Alias for get() - Dioxus compatibility
+    pub fn read(&self) -> T {
+        self.get()
+    }
+
+    /// Alias for set() - Dioxus compatibility
+    pub fn write(&self, value: T) {
+        self.set(value)
+    }
 }
 
 pub struct EffectHandle {

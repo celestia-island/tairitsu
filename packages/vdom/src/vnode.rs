@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use crate::EventData;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::large_enum_variant)]
 pub enum VNode {
     Element(VElement),
@@ -23,6 +23,22 @@ pub struct VElement {
     pub style: Style,
     pub class: Classes,
     pub event_handlers: HashMap<String, EventHandler>,
+    /// Raw HTML to be set as inner_html (for dangerouslySetInnerHTML equivalent)
+    pub inner_html: Option<String>,
+}
+
+impl PartialEq for VElement {
+    fn eq(&self, other: &Self) -> bool {
+        // Compare all fields except event_handlers (which can't be compared)
+        self.tag == other.tag
+            && self.key == other.key
+            && self.attributes == other.attributes
+            && self.children == other.children
+            && self.style == other.style
+            && self.class == other.class
+            && self.inner_html == other.inner_html
+        // Note: event_handlers are intentionally not compared
+    }
 }
 
 impl fmt::Debug for VElement {
@@ -52,16 +68,17 @@ impl Clone for VElement {
             style: self.style.clone(),
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
+            inner_html: self.inner_html.clone(),
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VText {
     pub text: String,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Style {
     pub static_styles: String,
     pub css_variables: Vec<(String, String)>,
@@ -99,7 +116,7 @@ impl Style {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Classes {
     pub static_classes: String,
 }
@@ -141,6 +158,7 @@ impl VElement {
             style: Style::new(),
             class: Classes::new(),
             event_handlers: HashMap::new(),
+            inner_html: None,
         }
     }
 
@@ -183,6 +201,12 @@ impl VElement {
             .insert(event.to_string(), Rc::new(RefCell::new(handler)));
         self
     }
+
+    /// Set inner HTML directly (dangerously, equivalent to dangerouslySetInnerHTML)
+    pub fn inner_html(mut self, html: impl Into<String>) -> Self {
+        self.inner_html = Some(html.into());
+        self
+    }
 }
 
 impl From<&str> for Classes {
@@ -223,5 +247,12 @@ impl VText {
         Self {
             text: text.to_string(),
         }
+    }
+}
+
+impl VNode {
+    /// Creates an empty text node
+    pub fn empty() -> Self {
+        VNode::Text(VText::new(""))
     }
 }

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse::Parse, parse::ParseStream, Expr, Ident, LitStr, Token};
+use syn::{parse::Parse, parse::ParseStream, Expr, Ident, LitStr, Token, Pat};
 
 pub struct RsxElement {
     pub tag: Ident,
@@ -13,13 +13,48 @@ pub enum RsxAttr {
     Style(Expr),
     Id(Expr),
     Onclick(Expr),
-    Other { name: Ident, value: Expr },
+    InnerHtml(Expr),  // dangerous_inner_html attribute
+    Other { name: String, value: Expr },
 }
 
 pub enum RsxChild {
     Text(LitStr),
     Element(RsxElement),
     Dynamic(Expr),
+    Spread(Expr),  // ..expr syntax for spreading Vec<VNode>
+    If(RsxIf),
+    Match(RsxMatch),
+}
+
+/// Root content of an rsx! macro
+pub enum RsxRoot {
+    Element(RsxElement),
+    If(RsxIf),
+    Match(RsxMatch),
+}
+
+/// If expression with rsx body
+pub struct RsxIf {
+    pub condition: Expr,
+    pub then_branch: Vec<RsxChild>,
+    pub else_branch: Option<RsxElse>,
+}
+
+pub enum RsxElse {
+    Block(Vec<RsxChild>),
+    If(Box<RsxIf>),
+}
+
+/// Match expression with rsx arms
+pub struct RsxMatch {
+    pub scrutinee: Expr,
+    pub arms: Vec<RsxMatchArm>,
+}
+
+pub struct RsxMatchArm {
+    pub pattern: Pat,
+    pub guard: Option<Expr>,
+    pub body: Vec<RsxChild>,
 }
 
 impl Parse for RsxElement {
@@ -33,7 +68,39 @@ impl Parse for RsxElement {
             syn::braced!(content in input);
 
             while !content.is_empty() {
-                if content.peek(LitStr) {
+                // Check for attribute pattern
+                let fork = content.fork();
+                let is_attr = if fork.peek(LitStr) {
+                    fork.parse::<LitStr>().is_ok() && fork.peek(Token![:])
+                } else if fork.peek(Ident) {
+                    fork.parse::<Ident>().is_ok() && fork.peek(Token![:])
+                } else {
+                    false
+                };
+
+                if is_attr {
+                    let name = if content.peek(LitStr) {
+                        let lit: LitStr = content.parse()?;
+                        lit.value()
+                    } else {
+                        let name: Ident = content.parse()?;
+                        name.to_string()
+                    };
+                    content.parse::<Token![:]>()?;
+
+                    let attr = match name.as_str() {
+                        "class" => RsxAttr::Class(content.parse()?),
+                        "style" => RsxAttr::Style(content.parse()?),
+                        "id" => RsxAttr::Id(content.parse()?),
+                        "onclick" => RsxAttr::Onclick(content.parse()?),
+                        "dangerous_inner_html" => RsxAttr::InnerHtml(content.parse()?),
+                        _ => RsxAttr::Other {
+                            name,
+                            value: content.parse()?,
+                        },
+                    };
+                    attrs.push(attr);
+                } else if content.peek(LitStr) {
                     let text: LitStr = content.parse()?;
                     children.push(RsxChild::Text(text));
                 } else if content.peek(Token![,]) {
@@ -41,22 +108,16 @@ impl Parse for RsxElement {
                 } else if content.peek(Token![..]) {
                     content.parse::<Token![..]>()?;
                     let expr: Expr = content.parse()?;
+                    children.push(RsxChild::Spread(expr));
+                } else if content.peek(syn::token::Brace) {
+                    let expr: Expr = content.parse()?;
                     children.push(RsxChild::Dynamic(expr));
-                } else if content.peek2(Token![:]) {
-                    let name: Ident = content.parse()?;
-                    content.parse::<Token![:]>()?;
-
-                    let attr = match name.to_string().as_str() {
-                        "class" => RsxAttr::Class(content.parse()?),
-                        "style" => RsxAttr::Style(content.parse()?),
-                        "id" => RsxAttr::Id(content.parse()?),
-                        "onclick" => RsxAttr::Onclick(content.parse()?),
-                        _ => RsxAttr::Other {
-                            name,
-                            value: content.parse()?,
-                        },
-                    };
-                    attrs.push(attr);
+                } else if content.peek(Token![if]) {
+                    let rsx_if: RsxIf = content.parse()?;
+                    children.push(RsxChild::If(rsx_if));
+                } else if content.peek(Token![match]) {
+                    let rsx_match: RsxMatch = content.parse()?;
+                    children.push(RsxChild::Match(rsx_match));
                 } else if content.peek(Ident) {
                     let elem: RsxElement = content.parse()?;
                     children.push(RsxChild::Element(elem));
@@ -66,17 +127,138 @@ impl Parse for RsxElement {
             }
         }
 
-        Ok(RsxElement {
-            tag,
-            attrs,
-            children,
-        })
+        Ok(RsxElement { tag, attrs, children })
     }
+}
+
+impl Parse for RsxRoot {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.peek(Token![if]) {
+            Ok(RsxRoot::If(input.parse()?))
+        } else if input.peek(Token![match]) {
+            Ok(RsxRoot::Match(input.parse()?))
+        } else if input.peek(Ident) {
+            Ok(RsxRoot::Element(input.parse()?))
+        } else {
+            Err(syn::Error::new(input.span(), "Expected element or control flow"))
+        }
+    }
+}
+
+impl Parse for RsxIf {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        input.parse::<Token![if]>()?;
+        let condition: Expr = input.parse()?;
+
+        let content;
+        syn::braced!(content in input);
+        let then_branch = parse_rsx_children(&content)?;
+
+        let else_branch = if input.peek(Token![else]) {
+            input.parse::<Token![else]>()?;
+            if input.peek(Token![if]) {
+                Some(RsxElse::If(Box::new(input.parse()?)))
+            } else {
+                let else_content;
+                syn::braced!(else_content in input);
+                Some(RsxElse::Block(parse_rsx_children(&else_content)?))
+            }
+        } else {
+            None
+        };
+
+        Ok(RsxIf { condition, then_branch, else_branch })
+    }
+}
+
+impl Parse for RsxMatch {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        input.parse::<Token![match]>()?;
+        let scrutinee: Expr = input.parse()?;
+
+        let content;
+        syn::braced!(content in input);
+        let mut arms = Vec::new();
+        while !content.is_empty() {
+            let arm = parse_rsx_match_arm(&content)?;
+            arms.push(arm);
+            if content.peek(Token![,]) {
+                content.parse::<Token![,]>()?;
+            }
+        }
+        Ok(RsxMatch { scrutinee, arms })
+    }
+}
+
+fn parse_rsx_match_arm(input: ParseStream) -> syn::Result<RsxMatchArm> {
+    // Parse pattern - use PatType which handles various pattern forms
+    let pattern: Pat = syn::Pat::parse_single(input)?;
+
+    let guard = if input.peek(Token![if]) {
+        input.parse::<Token![if]>()?;
+        Some(input.parse()?)
+    } else {
+        None
+    };
+
+    input.parse::<Token![=>]>()?;
+
+    let body = if input.peek(syn::token::Brace) {
+        let content;
+        syn::braced!(content in input);
+        parse_rsx_children(&content)?
+    } else {
+        let expr: Expr = input.parse()?;
+        vec![RsxChild::Dynamic(expr)]
+    };
+
+    Ok(RsxMatchArm { pattern, guard, body })
+}
+
+fn parse_rsx_children(content: &syn::parse::ParseBuffer) -> syn::Result<Vec<RsxChild>> {
+    let mut children = Vec::new();
+    while !content.is_empty() {
+        let fork = content.fork();
+        let is_attr = if fork.peek(LitStr) {
+            fork.parse::<LitStr>().is_ok() && fork.peek(Token![:])
+        } else if fork.peek(Ident) {
+            fork.parse::<Ident>().is_ok() && fork.peek(Token![:])
+        } else {
+            false
+        };
+
+        if is_attr {
+            if content.peek(LitStr) {
+                content.parse::<LitStr>()?;
+            } else {
+                content.parse::<Ident>()?;
+            }
+            content.parse::<Token![:]>()?;
+            content.parse::<Expr>()?;
+        } else if content.peek(LitStr) {
+            children.push(RsxChild::Text(content.parse()?));
+        } else if content.peek(Token![,]) {
+            content.parse::<Token![,]>()?;
+        } else if content.peek(Token![..]) {
+            content.parse::<Token![..]>()?;
+            children.push(RsxChild::Spread(content.parse()?));
+        } else if content.peek(syn::token::Brace) {
+            children.push(RsxChild::Dynamic(content.parse()?));
+        } else if content.peek(Token![if]) {
+            children.push(RsxChild::If(content.parse()?));
+        } else if content.peek(Token![match]) {
+            children.push(RsxChild::Match(content.parse()?));
+        } else if content.peek(Ident) {
+            children.push(RsxChild::Element(content.parse()?));
+        } else {
+            break;
+        }
+    }
+    Ok(children)
 }
 
 pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let tag = element.tag.to_string();
-
     let mut class_code = quote! { tairitsu_vdom::Classes::new() };
     let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
@@ -91,20 +273,19 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 style_code = quote! { #expr };
             }
             RsxAttr::Id(expr) => {
-                let value = expr;
-                other_attrs.push(quote! { .attr("id", #value) });
+                other_attrs.push(quote! { .attr("id", #expr) });
             }
             RsxAttr::Onclick(expr) => {
-                let handler = expr;
-                event_handlers.push(quote! { .on_event("click", move |e| { (#handler)(e); }) });
+                event_handlers.push(quote! { .on_event("click", move |e| { (#expr)(e); }) });
+            }
+            RsxAttr::InnerHtml(expr) => {
+                other_attrs.push(quote! { .inner_html(#expr) });
             }
             RsxAttr::Other { name, value } => {
-                let name_str = name.to_string();
-                if let Some(event_name) = name_str.strip_prefix("on") {
-                    event_handlers
-                        .push(quote! { .on_event(#event_name, move |e| { (#value)(e); }) });
+                if let Some(event_name) = name.strip_prefix("on") {
+                    event_handlers.push(quote! { .on_event(#event_name, move |e| { (#value)(e); }) });
                 } else {
-                    other_attrs.push(quote! { .attr(#name_str, #value) });
+                    other_attrs.push(quote! { .attr(#name, #value) });
                 }
             }
         }
@@ -112,21 +293,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 
     let mut children_code = Vec::new();
     for child in element.children {
-        match child {
-            RsxChild::Text(text) => {
-                let text_value = text.value();
-                children_code.push(quote! {
-                    .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)))
-                });
-            }
-            RsxChild::Element(elem) => {
-                let child_code = expand_rsx(elem);
-                children_code.push(quote! { .child(#child_code) });
-            }
-            RsxChild::Dynamic(expr) => {
-                children_code.push(quote! { .children(#expr) });
-            }
-        }
+        children_code.push(expand_child_method(child));
     }
 
     quote! {
@@ -138,5 +305,90 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 #(#event_handlers)*
                 #(#children_code)*
         )
+    }
+}
+
+pub fn expand_rsx_root(root: RsxRoot) -> TokenStream2 {
+    match root {
+        RsxRoot::Element(elem) => expand_rsx(elem),
+        RsxRoot::If(rsx_if) => expand_rsx_if(rsx_if),
+        RsxRoot::Match(rsx_match) => expand_rsx_match(rsx_match),
+    }
+}
+
+fn expand_rsx_if(rsx_if: RsxIf) -> TokenStream2 {
+    let condition = &rsx_if.condition;
+    let then_code: Vec<_> = rsx_if.then_branch.into_iter().map(expand_child).collect();
+    let else_code = match rsx_if.else_branch {
+        Some(RsxElse::Block(children)) => {
+            let children_code: Vec<_> = children.into_iter().map(expand_child).collect();
+            quote! { else { tairitsu_vdom::VNode::Fragment(vec![#(#children_code),*]) } }
+        }
+        Some(RsxElse::If(inner_if)) => {
+            let inner_code = expand_rsx_if(*inner_if);
+            quote! { else { #inner_code } }
+        }
+        None => quote! {},
+    };
+    quote! {
+        if #condition {
+            tairitsu_vdom::VNode::Fragment(vec![#(#then_code),*])
+        } #else_code
+    }
+}
+
+fn expand_rsx_match(rsx_match: RsxMatch) -> TokenStream2 {
+    let scrutinee = &rsx_match.scrutinee;
+    let arms_code: Vec<_> = rsx_match.arms.into_iter().map(|arm| {
+        let pattern = &arm.pattern;
+        let guard_code = match &arm.guard {
+            Some(guard) => quote! { if #guard },
+            None => quote! {},
+        };
+        let body_code: Vec<_> = arm.body.into_iter().map(expand_child).collect();
+        quote! { #pattern #guard_code => tairitsu_vdom::VNode::Fragment(vec![#(#body_code),*]), }
+    }).collect();
+    quote! {
+        match #scrutinee {
+            #(#arms_code)*
+        }
+    }
+}
+
+fn expand_child(child: RsxChild) -> TokenStream2 {
+    match child {
+        RsxChild::Text(text) => {
+            let text_value = text.value();
+            quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
+        }
+        RsxChild::Element(elem) => expand_rsx(elem),
+        RsxChild::Dynamic(expr) => quote! { #expr },
+        RsxChild::Spread(expr) => quote! { tairitsu_vdom::VNode::Fragment(#expr) },
+        RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
+        RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
+    }
+}
+
+/// Expands a child into a method call for building VElement
+fn expand_child_method(child: RsxChild) -> TokenStream2 {
+    match child {
+        RsxChild::Text(text) => {
+            let text_value = text.value();
+            quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value))) }
+        }
+        RsxChild::Element(elem) => {
+            let expanded = expand_rsx(elem);
+            quote! { .child(#expanded) }
+        }
+        RsxChild::Dynamic(expr) => quote! { .child(#expr) },
+        RsxChild::Spread(expr) => quote! { .children(#expr) },
+        RsxChild::If(rsx_if) => {
+            let expanded = expand_rsx_if(rsx_if);
+            quote! { .child(#expanded) }
+        }
+        RsxChild::Match(rsx_match) => {
+            let expanded = expand_rsx_match(rsx_match);
+            quote! { .child(#expanded) }
+        }
     }
 }
