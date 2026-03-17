@@ -129,7 +129,7 @@ mod wasm_impl {
     use std::collections::HashMap;
 
     use tairitsu_vdom::{
-        EventData, EventWitHandle, FocusEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, VNode,
+        EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -250,7 +250,9 @@ mod wasm_impl {
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
             let event: Box<dyn EventData> = Box::new(
-                MouseEvent::new().event_handle(wit_handle),
+                GenericEvent::new()
+                    .event_type(&event_type)
+                    .event_handle(wit_handle),
             );
             dispatch_event(listener_id, &event_type, event);
         }

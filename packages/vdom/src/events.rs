@@ -309,6 +309,54 @@ impl Default for ChangeEvent {
     }
 }
 
+/// A generic event type for events that don't have a specific typed representation.
+/// This is used for custom events or events where we only need the event type name.
+#[derive(Debug, Clone)]
+pub struct GenericEvent {
+    /// The event type name (e.g., "submit", "scroll", "wheel")
+    pub event_type: String,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for GenericEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl GenericEvent {
+    pub fn new() -> Self {
+        Self {
+            event_type: String::new(),
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn event_type(mut self, event_type: impl Into<String>) -> Self {
+        self.event_type = event_type.into();
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for GenericEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Represents keyboard keys for keyboard event handling.
 /// This enum provides a Dioxus-compatible API for matching keyboard keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
