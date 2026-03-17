@@ -1,11 +1,7 @@
 //! Packages pages - package documentation
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode, VText};
-
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
+use tairitsu_vdom::VNode;
 
 /// Render all packages pages
 pub fn render_all() -> Vec<VNode> {
