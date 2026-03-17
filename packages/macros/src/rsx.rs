@@ -24,6 +24,7 @@ pub enum RsxChild {
     Spread(Expr),  // ..expr syntax for spreading Vec<VNode>
     If(RsxIf),
     Match(RsxMatch),
+    For(RsxFor),
 }
 
 /// Root content of an rsx! macro
@@ -31,6 +32,7 @@ pub enum RsxRoot {
     Element(RsxElement),
     If(RsxIf),
     Match(RsxMatch),
+    For(RsxFor),
 }
 
 /// If expression with rsx body
@@ -54,6 +56,13 @@ pub struct RsxMatch {
 pub struct RsxMatchArm {
     pub pattern: Pat,
     pub guard: Option<Expr>,
+    pub body: Vec<RsxChild>,
+}
+
+/// For loop expression with rsx body
+pub struct RsxFor {
+    pub pattern: Pat,
+    pub iterable: Expr,
     pub body: Vec<RsxChild>,
 }
 
@@ -118,6 +127,9 @@ impl Parse for RsxElement {
                 } else if content.peek(Token![match]) {
                     let rsx_match: RsxMatch = content.parse()?;
                     children.push(RsxChild::Match(rsx_match));
+                } else if content.peek(Token![for]) {
+                    let rsx_for: RsxFor = content.parse()?;
+                    children.push(RsxChild::For(rsx_for));
                 } else if content.peek(Ident) {
                     let elem: RsxElement = content.parse()?;
                     children.push(RsxChild::Element(elem));
@@ -137,6 +149,8 @@ impl Parse for RsxRoot {
             Ok(RsxRoot::If(input.parse()?))
         } else if input.peek(Token![match]) {
             Ok(RsxRoot::Match(input.parse()?))
+        } else if input.peek(Token![for]) {
+            Ok(RsxRoot::For(input.parse()?))
         } else if input.peek(Ident) {
             Ok(RsxRoot::Element(input.parse()?))
         } else {
@@ -187,6 +201,21 @@ impl Parse for RsxMatch {
             }
         }
         Ok(RsxMatch { scrutinee, arms })
+    }
+}
+
+impl Parse for RsxFor {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        input.parse::<Token![for]>()?;
+        let pattern: Pat = syn::Pat::parse_single(input)?;
+        input.parse::<Token![in]>()?;
+        let iterable: Expr = input.parse()?;
+
+        let content;
+        syn::braced!(content in input);
+        let body = parse_rsx_children(&content)?;
+
+        Ok(RsxFor { pattern, iterable, body })
     }
 }
 
@@ -248,6 +277,8 @@ fn parse_rsx_children(content: &syn::parse::ParseBuffer) -> syn::Result<Vec<RsxC
             children.push(RsxChild::If(content.parse()?));
         } else if content.peek(Token![match]) {
             children.push(RsxChild::Match(content.parse()?));
+        } else if content.peek(Token![for]) {
+            children.push(RsxChild::For(content.parse()?));
         } else if content.peek(Ident) {
             children.push(RsxChild::Element(content.parse()?));
         } else {
@@ -313,6 +344,7 @@ pub fn expand_rsx_root(root: RsxRoot) -> TokenStream2 {
         RsxRoot::Element(elem) => expand_rsx(elem),
         RsxRoot::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxRoot::Match(rsx_match) => expand_rsx_match(rsx_match),
+        RsxRoot::For(rsx_for) => expand_rsx_for(rsx_for),
     }
 }
 
@@ -355,6 +387,21 @@ fn expand_rsx_match(rsx_match: RsxMatch) -> TokenStream2 {
     }
 }
 
+fn expand_rsx_for(rsx_for: RsxFor) -> TokenStream2 {
+    let pattern = &rsx_for.pattern;
+    let iterable = &rsx_for.iterable;
+    let body_code: Vec<_> = rsx_for.body.into_iter().map(expand_child).collect();
+    quote! {
+        {
+            let mut __children = Vec::new();
+            for #pattern in #iterable {
+                #(__children.push(#body_code);)*
+            }
+            tairitsu_vdom::VNode::Fragment(__children)
+        }
+    }
+}
+
 fn expand_child(child: RsxChild) -> TokenStream2 {
     match child {
         RsxChild::Text(text) => {
@@ -366,6 +413,7 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
         RsxChild::Spread(expr) => quote! { tairitsu_vdom::VNode::Fragment(#expr) },
         RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
+        RsxChild::For(rsx_for) => expand_rsx_for(rsx_for),
     }
 }
 
@@ -388,6 +436,10 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
         }
         RsxChild::Match(rsx_match) => {
             let expanded = expand_rsx_match(rsx_match);
+            quote! { .child(#expanded) }
+        }
+        RsxChild::For(rsx_for) => {
+            let expanded = expand_rsx_for(rsx_for);
             quote! { .child(#expanded) }
         }
     }
