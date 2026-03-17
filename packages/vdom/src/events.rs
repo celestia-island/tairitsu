@@ -470,3 +470,280 @@ impl KeyboardEvent {
         Key::from_str(&self.key)
     }
 }
+
+/// Form data event for form input events.
+/// This is a Dioxus-compatible type for handling form submissions and input changes.
+#[derive(Debug, Clone)]
+pub struct FormData {
+    /// The current value of the form element
+    pub value: String,
+    /// The values of all form elements (for form submit events)
+    pub values: Vec<(String, String)>,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for FormData {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl FormData {
+    pub fn new() -> Self {
+        Self {
+            value: String::new(),
+            values: Vec::new(),
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    /// Get the current value of the form element
+    pub fn value(&self) -> &str {
+        &self.value
+    }
+
+    /// Get a value from the form data by key
+    pub fn get_value(&self, key: &str) -> Option<&str> {
+        self.values
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
+    }
+
+    pub fn value_mut(mut self, value: impl Into<String>) -> Self {
+        self.value = value.into();
+        self
+    }
+
+    pub fn values(mut self, values: Vec<(String, String)>) -> Self {
+        self.values = values;
+        self
+    }
+
+    pub fn add_value(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.values.push((key.into(), value.into()));
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for FormData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Alias for FormData, providing Dioxus API compatibility.
+/// FormEvent is used for form-related events like onsubmit, oninput, etc.
+pub type FormEvent = FormData;
+
+/// Data transfer object for drag and drop events.
+/// Contains information about the data being dragged.
+#[derive(Debug, Clone, Default)]
+pub struct DataTransfer {
+    /// The data being transferred, stored as MIME type -> data pairs
+    pub data: Vec<(String, String)>,
+    /// The drop effect (none, copy, move, link)
+    pub drop_effect: String,
+    /// The allowed effects
+    pub effect_allowed: String,
+    /// List of file names being dragged
+    pub files: Vec<String>,
+}
+
+impl DataTransfer {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Get data by MIME type
+    pub fn get_data(&self, mime_type: &str) -> Option<&str> {
+        self.data
+            .iter()
+            .find(|(t, _)| t == mime_type)
+            .map(|(_, v)| v.as_str())
+    }
+
+    /// Set data for a MIME type
+    pub fn set_data(&mut self, mime_type: impl Into<String>, data: impl Into<String>) {
+        self.data.push((mime_type.into(), data.into()));
+    }
+
+    pub fn drop_effect(mut self, effect: impl Into<String>) -> Self {
+        self.drop_effect = effect.into();
+        self
+    }
+
+    pub fn effect_allowed(mut self, allowed: impl Into<String>) -> Self {
+        self.effect_allowed = allowed.into();
+        self
+    }
+
+    pub fn add_file(mut self, file: impl Into<String>) -> Self {
+        self.files.push(file.into());
+        self
+    }
+
+    pub fn add_data(mut self, mime_type: impl Into<String>, data: impl Into<String>) -> Self {
+        self.data.push((mime_type.into(), data.into()));
+        self
+    }
+}
+
+/// Drag event for drag and drop interactions.
+/// This provides Dioxus-compatible API for handling drag events.
+#[derive(Debug, Clone)]
+pub struct DragEvent {
+    /// The data being transferred
+    pub data_transfer: Option<DataTransfer>,
+    /// Mouse position - client X coordinate
+    pub client_x: i32,
+    /// Mouse position - client Y coordinate
+    pub client_y: i32,
+    /// Mouse position - screen X coordinate
+    pub screen_x: i32,
+    /// Mouse position - screen Y coordinate
+    pub screen_y: i32,
+    /// Which mouse button was pressed (if any)
+    pub button: i16,
+    /// Which mouse buttons are pressed
+    pub buttons: u16,
+    /// Whether ctrl key was pressed
+    pub ctrl_key: bool,
+    /// Whether shift key was pressed
+    pub shift_key: bool,
+    /// Whether alt key was pressed
+    pub alt_key: bool,
+    /// Whether meta key was pressed
+    pub meta_key: bool,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for DragEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl DragEvent {
+    pub fn new() -> Self {
+        Self {
+            data_transfer: None,
+            client_x: 0,
+            client_y: 0,
+            screen_x: 0,
+            screen_y: 0,
+            button: 0,
+            buttons: 0,
+            ctrl_key: false,
+            shift_key: false,
+            alt_key: false,
+            meta_key: false,
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    /// Get the data transfer object
+    pub fn data_transfer(&self) -> Option<&DataTransfer> {
+        self.data_transfer.as_ref()
+    }
+
+    /// Get mutable access to data transfer, creating it if needed
+    pub fn data_transfer_mut(&mut self) -> &mut DataTransfer {
+        if self.data_transfer.is_none() {
+            self.data_transfer = Some(DataTransfer::new());
+        }
+        self.data_transfer.as_mut().unwrap()
+    }
+
+    /// Builder method to set the data transfer object
+    pub fn with_data_transfer(mut self, data_transfer: DataTransfer) -> Self {
+        self.data_transfer = Some(data_transfer);
+        self
+    }
+
+    pub fn client_x(mut self, x: i32) -> Self {
+        self.client_x = x;
+        self
+    }
+
+    pub fn client_y(mut self, y: i32) -> Self {
+        self.client_y = y;
+        self
+    }
+
+    pub fn screen_x(mut self, x: i32) -> Self {
+        self.screen_x = x;
+        self
+    }
+
+    pub fn screen_y(mut self, y: i32) -> Self {
+        self.screen_y = y;
+        self
+    }
+
+    pub fn button(mut self, button: i16) -> Self {
+        self.button = button;
+        self
+    }
+
+    pub fn buttons(mut self, buttons: u16) -> Self {
+        self.buttons = buttons;
+        self
+    }
+
+    pub fn ctrl_key(mut self, ctrl: bool) -> Self {
+        self.ctrl_key = ctrl;
+        self
+    }
+
+    pub fn shift_key(mut self, shift: bool) -> Self {
+        self.shift_key = shift;
+        self
+    }
+
+    pub fn alt_key(mut self, alt: bool) -> Self {
+        self.alt_key = alt;
+        self
+    }
+
+    pub fn meta_key(mut self, meta: bool) -> Self {
+        self.meta_key = meta;
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for DragEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Alias for MouseEvent, providing Dioxus API compatibility.
+/// MouseData is the preferred type name in Dioxus for mouse event handlers.
+pub type MouseData = MouseEvent;

@@ -1,4 +1,7 @@
-pub mod builders;
+//! Page render functions, organised by route group.
+
+pub mod guides;
 pub mod home;
-pub mod reactive;
-pub mod rsx_demo;
+pub mod not_found;
+pub mod packages;
+pub mod system;

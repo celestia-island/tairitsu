@@ -198,20 +198,20 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
             }
         }
     } else {
-        // Generate destructuring that unwraps Option fields
+        // Generate proper let bindings for each prop
         let prop_bindings: Vec<_> = prop_names.iter().zip(prop_has_defaults.iter())
             .map(|(name, has_default)| {
                 if *has_default {
-                    quote! { #name }
+                    quote! { let #name = props.#name; }
                 } else {
-                    quote! { #name: #name.unwrap_or_default() }
+                    quote! { let #name = props.#name.unwrap_or_default(); }
                 }
             })
             .collect();
 
         quote! {
             #fn_vis fn #fn_name(props: #props_name) #fn_return {
-                let #props_name { #(#prop_bindings),* } = props;
+                #(#prop_bindings)*
                 #fn_block
             }
         }

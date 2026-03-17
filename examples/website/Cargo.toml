@@ -2,7 +2,7 @@
 name = "tairitsu-website"
 version = "0.1.0"
 edition = "2021"
-description = "Tairitsu framework website demo - showcasing rsx!, builders, and reactive system"
+description = "Tairitsu framework website - documentation and demo"
 publish = false
 
 [lib]
@@ -15,6 +15,12 @@ tairitsu-hooks = { path = "../../packages/hooks" }
 tairitsu-macros = { path = "../../packages/macros" }
 tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
 
+# Hikari design system (direct path to hikari workspace)
+hikari-palette = { path = "../../../hikari/packages/palette" }
+
+# Markdown rendering
+pulldown-cmark = "0.12"
+
 # Logging and error handling
 tracing = "^0.1"
 tracing-wasm = "^0.2"
@@ -22,9 +28,9 @@ anyhow = "^1"
 
 # Tairitsu Package configuration (replaces HTML template)
 [package.metadata.tairitsu]
-app-name = "Tairitsu Framework Demo"
-title = "Tairitsu - Rust Web Framework Demo"
-description = "Comprehensive demo showcasing Virtual DOM, rsx! macro, Builders, and Reactive System"
+app-name = "Tairitsu Framework"
+title = "Tairitsu - WASM Component Runtime Engine"
+description = "Documentation and demo for Tairitsu framework"
 
 [package.metadata.tairitsu.build]
 target = "component"
@@ -43,64 +49,61 @@ charset = "UTF-8"
 viewport = "width=device-width, initial-scale=1.0"
 favicon = "public/favicon.ico"
 head = """
-<meta name="theme-color" content="#667eea">
+<meta name="theme-color" content="#146e74">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./styles.css">
 <script>
-	(() => {
-		const SUPPORTED = ["en-US", "zh-CHS", "zh-CHT", "ja-JP", "ko-KR", "fr-FR", "es-ES", "ru-RU"];
-		const DEFAULT_LANG = "zh-CHS";
+(() => {
+  const ROUTES = {
+    '': 'home',
+    '/': 'home',
+    '/guides': 'guides-overview',
+    '/guides/quick-start': 'guides-quick-start',
+    '/guides/workspace-map': 'guides-workspace-map',
+    '/guides/build-test-release': 'guides-build-test-release',
+    '/guides/migration': 'guides-migration',
+    '/guides/glossary': 'guides-glossary',
+    '/system': 'system-overview',
+    '/system/runtime': 'system-runtime',
+    '/system/wit-pipeline': 'system-wit-pipeline',
+    '/system/web-backends': 'system-web-backends',
+    '/system/versioning': 'system-versioning',
+    '/packages': 'packages-overview',
+    '/packages/list': 'packages-list',
+  };
 
-		const normalize = (value) => {
-			if (!value) return null;
-			const exact = SUPPORTED.find((item) => item.toLowerCase() === String(value).toLowerCase());
-			if (exact) return exact;
+  function getRouteId() {
+    var hash = (location.hash || '').replace(/^#/, '');
+    if (hash.length > 1 && hash[hash.length - 1] === '/') hash = hash.slice(0, -1);
+    if (!hash) hash = '/';
+    return ROUTES[hash] || 'not-found';
+  }
 
-			const short = String(value).slice(0, 2).toLowerCase();
-			const byPrefix = SUPPORTED.find((item) => item.slice(0, 2).toLowerCase() === short);
-			return byPrefix || null;
-		};
+  function navigate() {
+    var routeId = getRouteId();
+    document.querySelectorAll('.tairitsu-page').forEach(function(p) {
+      p.classList.remove('is-active');
+      p.setAttribute('aria-hidden', 'true');
+    });
+    var page = document.getElementById('page-' + routeId);
+    if (page) {
+      page.classList.add('is-active');
+      page.removeAttribute('aria-hidden');
+      window.scrollTo(0, 0);
+    }
+    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+      link.classList.remove('is-active');
+    });
+    var currentHash = location.hash || '#/';
+    var activeLink = document.querySelector('.sidebar-link[href="' + currentHash + '"]');
+    if (activeLink) { activeLink.classList.add('is-active'); }
+  }
 
-		const queryLang = new URLSearchParams(location.search).get("lang");
-		const storedLang = localStorage.getItem("tairitsu.demo.lang");
-		const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
-		const active = normalize(queryLang) || normalize(storedLang) || normalize(browserLang) || DEFAULT_LANG;
-
-		const apply = (lang) => {
-			const next = normalize(lang) || DEFAULT_LANG;
-			document.querySelectorAll(".lang-pane").forEach((pane) => {
-				pane.classList.remove("is-active");
-			});
-			const activePane = document.querySelector(`.locale-${next}`);
-			if (activePane) {
-				activePane.classList.add("is-active");
-			}
-
-			document.documentElement.setAttribute("lang", next);
-			localStorage.setItem("tairitsu.demo.lang", next);
-
-			const selector = document.getElementById("lang-switch");
-			if (selector && selector.value !== next) {
-				selector.value = next;
-			}
-
-			const url = new URL(location.href);
-			url.searchParams.set("lang", next);
-			history.replaceState(null, "", url.toString());
-		};
-
-		document.addEventListener("DOMContentLoaded", () => {
-			const selector = document.getElementById("lang-switch");
-			if (selector) {
-				selector.addEventListener("change", (event) => {
-					apply(event.target.value);
-				});
-			}
-			apply(active);
-		});
-	})();
+  window.addEventListener('hashchange', navigate);
+  document.addEventListener('DOMContentLoaded', navigate);
+})();
 </script>
 """
 body-class = "tairitsu-app"
