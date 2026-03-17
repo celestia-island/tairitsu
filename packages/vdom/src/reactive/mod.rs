@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use tracing::trace;
 
@@ -17,6 +18,38 @@ pub struct Signal<T> {
 struct SignalInner<T> {
     value: T,
     subscribers: Vec<Rc<dyn Fn()>>,
+}
+
+/// A mutable guard for Signal values (Dioxus compatibility)
+pub struct SignalMut<'a, T> {
+    guard: std::cell::RefMut<'a, SignalInner<T>>,
+}
+
+impl<'a, T> Deref for SignalMut<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.guard.value
+    }
+}
+
+impl<'a, T> DerefMut for SignalMut<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.guard.value
+    }
+}
+
+impl<'a, T: Clone + 'static> Drop for SignalMut<'a, T> {
+    fn drop(&mut self) {
+        // Trigger subscribers when the mutable guard is dropped
+        let subscribers = self.guard.subscribers.clone();
+        if BATCHING.with(|b| *b.borrow()) {
+            trace!("Signal update batched");
+        } else {
+            for subscriber in subscribers {
+                subscriber();
+            }
+        }
+    }
 }
 
 impl<T: Clone + 'static> Signal<T> {
@@ -63,8 +96,20 @@ impl<T: Clone + 'static> Signal<T> {
         self.get()
     }
 
-    /// Alias for set() - Dioxus compatibility
-    pub fn write(&self, value: T) {
+    /// Returns a mutable guard - Dioxus compatibility
+    /// Usage: let mut guard = signal.write(); guard.field = new_value;
+    pub fn write(&self) -> SignalMut<T> {
+        DEPENDENCIES.with(|deps| {
+            deps.borrow_mut()
+                .push(Rc::clone(&self.inner) as Rc<RefCell<dyn Any>>);
+        });
+        SignalMut {
+            guard: self.inner.borrow_mut(),
+        }
+    }
+
+    /// Alias for set() - explicit set with value
+    pub fn set_value(&self, value: T) {
         self.set(value)
     }
 }
