@@ -1,3 +1,4 @@
+pub mod callback;
 pub mod diff;
 pub mod events;
 pub mod patch;
@@ -6,6 +7,7 @@ pub mod portal;
 pub mod reactive;
 pub mod vnode;
 
+pub use callback::{Callback, EventHandler};
 pub use events::{ChangeEvent, EventData, EventWitHandle, FocusEvent, InputEvent, KeyboardEvent, MouseEvent};
 pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};
