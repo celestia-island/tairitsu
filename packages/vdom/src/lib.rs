@@ -8,7 +8,10 @@ pub mod reactive;
 pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
-pub use events::{ChangeEvent, Event, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseEvent};
+pub use events::{
+    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FocusEvent, FormData,
+    FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
+};
 pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
