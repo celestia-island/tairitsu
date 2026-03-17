@@ -1,13 +1,13 @@
-use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
-
 mod component;
 mod rsx;
 mod scss;
+
 use component::expand_component;
+use proc_macro::TokenStream;
+use quote::quote;
 use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;
+use syn::{parse_macro_input, Data, DeriveInput};
 
 /// Component macro for automatic Props generation
 ///

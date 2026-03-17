@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 
 pub struct ScssInput {
     content: String,

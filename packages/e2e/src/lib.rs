@@ -1,8 +1,8 @@
 pub mod tests;
 
-pub use tests::{Test, TestResult, TestStatus};
-
 use anyhow::Result;
+
+pub use tests::{Test, TestResult, TestStatus};
 use thirtyfour::WebDriver;
 use tracing::info;
 

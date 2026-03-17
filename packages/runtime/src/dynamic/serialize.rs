@@ -4,6 +4,7 @@
 //! to RON (Rust Object Notation), with full support for nested complex types.
 
 use anyhow::{bail, Result};
+
 use wasmtime::component::Val;
 
 /// Convert Wasmtime Val to RON string

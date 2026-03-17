@@ -108,4 +108,3 @@ pub fn sidebar() -> VNode {
             .children(sections),
     )
 }
-

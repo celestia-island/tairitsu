@@ -5,16 +5,15 @@
 //! - `verify` — check cache integrity
 //! - `list`   — list cached packages
 
-use std::path::{Path, PathBuf};
-
 use anyhow::Result;
-use tracing::{error, info};
+use std::path::{Path, PathBuf};
 
 use tairitsu_browser_wit_resolver::{
     cache::Cache,
     resolver::{PackageSpec, ResolveOptions, Resolver},
     CACHE_DIR_NAME,
 };
+use tracing::{error, info};
 
 /// Determine the workspace target directory.
 fn resolve_target_dir(workspace_root: &Path) -> PathBuf {

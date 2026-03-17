@@ -6,11 +6,14 @@
 //! - Configuration checks (package.metadata.tairitsu validity)
 //! - Migration suggestions for legacy projects
 
-use crate::{Result, TairitsuPackagerError};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+    process::Command,
+};
+
+use crate::{Result, TairitsuPackagerError};
 
 /// Severity level for diagnostic messages
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -263,9 +266,9 @@ impl DoctorChecker {
         if let Some(lib) = manifest.get("lib") {
             if let Some(crate_types) = lib.get("crate-type") {
                 if let Some(types) = crate_types.as_array() {
-                    let has_cdylib = types.iter().any(|v| {
-                        v.as_str().map(|s| s == "cdylib").unwrap_or(false)
-                    });
+                    let has_cdylib = types
+                        .iter()
+                        .any(|v| v.as_str().map(|s| s == "cdylib").unwrap_or(false));
 
                     if !has_cdylib {
                         diagnostics.push(Diagnostic {
@@ -273,7 +276,8 @@ impl DoctorChecker {
                             category: DiagnosticCategory::Configuration,
                             message: "[lib] crate-type does not include \"cdylib\"".to_string(),
                             suggestion: Some(
-                                "Add crate-type = [\"cdylib\", \"rlib\"] to [lib] section".to_string(),
+                                "Add crate-type = [\"cdylib\", \"rlib\"] to [lib] section"
+                                    .to_string(),
                             ),
                             help_url: None,
                         });
@@ -300,9 +304,7 @@ impl DoctorChecker {
         let mut diagnostics = Vec::new();
 
         // Check for Rust installation
-        let rust_version_output = Command::new("rustc")
-            .arg("--version")
-            .output();
+        let rust_version_output = Command::new("rustc").arg("--version").output();
 
         match rust_version_output {
             Ok(output) if output.status.success() => {
@@ -335,7 +337,8 @@ impl DoctorChecker {
         match target_output {
             Ok(output) if output.status.success() => {
                 let targets = String::from_utf8_lossy(&output.stdout);
-                let has_wasip2 = targets.contains("wasm32-wasip1") || targets.contains("wasm32-wasip2");
+                let has_wasip2 =
+                    targets.contains("wasm32-wasip1") || targets.contains("wasm32-wasip2");
 
                 if !has_wasip2 {
                     diagnostics.push(Diagnostic {
@@ -388,7 +391,9 @@ impl DoctorChecker {
                     category: DiagnosticCategory::Environment,
                     message: "cargo-component not found (optional)".to_string(),
                     suggestion: Some("Install with: cargo install cargo-component".to_string()),
-                    help_url: Some("https://github.com/bytecodealliance/cargo-component".to_string()),
+                    help_url: Some(
+                        "https://github.com/bytecodealliance/cargo-component".to_string(),
+                    ),
                 });
             }
         }
@@ -415,7 +420,8 @@ impl DoctorChecker {
                 category: DiagnosticCategory::Configuration,
                 message: "[package.metadata.tairitsu] section not found".to_string(),
                 suggestion: Some(
-                    "Add [package.metadata.tairitsu] section to Cargo.toml for configuration".to_string(),
+                    "Add [package.metadata.tairitsu] section to Cargo.toml for configuration"
+                        .to_string(),
                 ),
                 help_url: Some("https://docs.tairitsu.dev/configuration".to_string()),
             });
@@ -445,8 +451,13 @@ impl DoctorChecker {
                         diagnostics.push(Diagnostic {
                             severity: Severity::Warning,
                             category: DiagnosticCategory::Configuration,
-                            message: format!("Build target is '{}' (expected 'component')", target_str),
-                            suggestion: Some("Set target to 'component' for WASM component builds".to_string()),
+                            message: format!(
+                                "Build target is '{}' (expected 'component')",
+                                target_str
+                            ),
+                            suggestion: Some(
+                                "Set target to 'component' for WASM component builds".to_string(),
+                            ),
                             help_url: None,
                         });
                     }
@@ -497,7 +508,8 @@ impl DoctorChecker {
                 category: DiagnosticCategory::Migration,
                 message: "Migration from Dioxus may be needed".to_string(),
                 suggestion: Some(
-                    "See migration guide: https://docs.tairitsu.dev/migration/from-dioxus".to_string(),
+                    "See migration guide: https://docs.tairitsu.dev/migration/from-dioxus"
+                        .to_string(),
                 ),
                 help_url: Some("https://docs.tairitsu.dev/migration/from-dioxus".to_string()),
             });
@@ -514,7 +526,8 @@ impl DoctorChecker {
                 category: DiagnosticCategory::Migration,
                 message: "Migration from wasm-bindgen may be needed".to_string(),
                 suggestion: Some(
-                    "See migration guide: https://docs.tairitsu.dev/migration/from-wasm-bindgen".to_string(),
+                    "See migration guide: https://docs.tairitsu.dev/migration/from-wasm-bindgen"
+                        .to_string(),
                 ),
                 help_url: Some("https://docs.tairitsu.dev/migration/from-wasm-bindgen".to_string()),
             });
@@ -529,7 +542,9 @@ impl DoctorChecker {
                     severity: Severity::Warning,
                     category: DiagnosticCategory::Migration,
                     message: "build.rs contains legacy WASM build references".to_string(),
-                    suggestion: Some("Consider updating build.rs for Tairitsu component model".to_string()),
+                    suggestion: Some(
+                        "Consider updating build.rs for Tairitsu component model".to_string(),
+                    ),
                     help_url: Some("https://docs.tairitsu.dev/migration/build-scripts".to_string()),
                 });
             }
@@ -541,8 +556,14 @@ impl DoctorChecker {
     /// Create summary from diagnostics
     fn create_summary(&self, diagnostics: &[Diagnostic]) -> DoctorSummary {
         let total_checks = diagnostics.len();
-        let errors = diagnostics.iter().filter(|d| d.severity == Severity::Error).count();
-        let warnings = diagnostics.iter().filter(|d| d.severity == Severity::Warning).count();
+        let errors = diagnostics
+            .iter()
+            .filter(|d| d.severity == Severity::Error)
+            .count();
+        let warnings = diagnostics
+            .iter()
+            .filter(|d| d.severity == Severity::Warning)
+            .count();
         let passed = total_checks - errors - warnings;
 
         DoctorSummary {
@@ -594,9 +615,21 @@ pub fn format_report(report: &DoctorReport) -> String {
     output.push_str(&format!("{}\n", "=".repeat(60)));
 
     // Group diagnostics by severity
-    let errors: Vec<_> = report.diagnostics.iter().filter(|d| d.severity == Severity::Error).collect();
-    let warnings: Vec<_> = report.diagnostics.iter().filter(|d| d.severity == Severity::Warning).collect();
-    let info: Vec<_> = report.diagnostics.iter().filter(|d| d.severity == Severity::Info).collect();
+    let errors: Vec<_> = report
+        .diagnostics
+        .iter()
+        .filter(|d| d.severity == Severity::Error)
+        .collect();
+    let warnings: Vec<_> = report
+        .diagnostics
+        .iter()
+        .filter(|d| d.severity == Severity::Warning)
+        .collect();
+    let info: Vec<_> = report
+        .diagnostics
+        .iter()
+        .filter(|d| d.severity == Severity::Info)
+        .collect();
 
     if !errors.is_empty() {
         output.push_str(&format!("\n🔴 ERRORS ({}):\n", errors.len()));

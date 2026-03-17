@@ -1,6 +1,9 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse::Parse, parse::ParseStream, Expr, Ident, LitStr, Token, Pat};
+use syn::{
+    parse::{Parse, ParseStream},
+    Expr, Ident, LitStr, Pat, Token,
+};
 
 pub struct RsxElement {
     pub tag: Ident,
@@ -13,7 +16,7 @@ pub enum RsxAttr {
     Style(Expr),
     Id(Expr),
     Onclick(Expr),
-    InnerHtml(Expr),  // dangerous_inner_html attribute
+    InnerHtml(Expr), // dangerous_inner_html attribute
     Other { name: String, value: Expr },
 }
 
@@ -21,7 +24,7 @@ pub enum RsxChild {
     Text(LitStr),
     Element(RsxElement),
     Dynamic(Expr),
-    Spread(Expr),  // ..expr syntax for spreading Vec<VNode>
+    Spread(Expr), // ..expr syntax for spreading Vec<VNode>
     If(RsxIf),
     Match(RsxMatch),
     For(Box<RsxFor>),
@@ -139,7 +142,11 @@ impl Parse for RsxElement {
             }
         }
 
-        Ok(RsxElement { tag, attrs, children })
+        Ok(RsxElement {
+            tag,
+            attrs,
+            children,
+        })
     }
 }
 
@@ -154,7 +161,10 @@ impl Parse for RsxRoot {
         } else if input.peek(Ident) {
             Ok(RsxRoot::Element(input.parse()?))
         } else {
-            Err(syn::Error::new(input.span(), "Expected element or control flow"))
+            Err(syn::Error::new(
+                input.span(),
+                "Expected element or control flow",
+            ))
         }
     }
 }
@@ -162,7 +172,8 @@ impl Parse for RsxRoot {
 impl Parse for RsxIf {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         input.parse::<Token![if]>()?;
-        let condition: Expr = input.parse()?;
+        // Use parse_without_eager_brace to prevent parsing { as struct literal
+        let condition: Expr = Expr::parse_without_eager_brace(input)?;
 
         let content;
         syn::braced!(content in input);
@@ -181,14 +192,19 @@ impl Parse for RsxIf {
             None
         };
 
-        Ok(RsxIf { condition, then_branch, else_branch })
+        Ok(RsxIf {
+            condition,
+            then_branch,
+            else_branch,
+        })
     }
 }
 
 impl Parse for RsxMatch {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         input.parse::<Token![match]>()?;
-        let scrutinee: Expr = input.parse()?;
+        // Use parse_without_eager_brace to prevent parsing { as struct literal
+        let scrutinee: Expr = Expr::parse_without_eager_brace(input)?;
 
         let content;
         syn::braced!(content in input);
@@ -215,7 +231,11 @@ impl Parse for RsxFor {
         syn::braced!(content in input);
         let body = parse_rsx_children(&content)?;
 
-        Ok(RsxFor { pattern, iterable, body })
+        Ok(RsxFor {
+            pattern,
+            iterable,
+            body,
+        })
     }
 }
 
@@ -241,7 +261,11 @@ fn parse_rsx_match_arm(input: ParseStream) -> syn::Result<RsxMatchArm> {
         vec![RsxChild::Dynamic(expr)]
     };
 
-    Ok(RsxMatchArm { pattern, guard, body })
+    Ok(RsxMatchArm {
+        pattern,
+        guard,
+        body,
+    })
 }
 
 fn parse_rsx_children(content: &syn::parse::ParseBuffer) -> syn::Result<Vec<RsxChild>> {
@@ -328,7 +352,8 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 if let Some(event_name) = name.strip_prefix("on") {
                     // Map event names to their types
                     let event_type = match event_name {
-                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter" | "mouseleave" => {
+                        "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
+                        | "mouseleave" => {
                             quote! { tairitsu_vdom::MouseEvent }
                         }
                         "keydown" | "keyup" | "keypress" => {
@@ -460,9 +485,12 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
         RsxChild::Text(text) => {
             let text_value = text.value();
             // Check if this is a format string like "{variable}"
-            if text_value.starts_with('{') && text_value.ends_with('}') && text_value.matches('{').count() == 1 {
+            if text_value.starts_with('{')
+                && text_value.ends_with('}')
+                && text_value.matches('{').count() == 1
+            {
                 // This is a shorthand for displaying a variable: "{count}" -> count.to_string()
-                let inner = &text_value[1..text_value.len()-1];
+                let inner = &text_value[1..text_value.len() - 1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
                     return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr))) };
@@ -485,9 +513,12 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
         RsxChild::Text(text) => {
             let text_value = text.value();
             // Check if this is a format string like "{variable}"
-            if text_value.starts_with('{') && text_value.ends_with('}') && text_value.matches('{').count() == 1 {
+            if text_value.starts_with('{')
+                && text_value.ends_with('}')
+                && text_value.matches('{').count() == 1
+            {
                 // This is a shorthand for displaying a variable: "{count}" -> count.to_string()
-                let inner = &text_value[1..text_value.len()-1];
+                let inner = &text_value[1..text_value.len() - 1];
                 // Parse the inner as an expression
                 if let Ok(expr) = syn::parse_str::<Expr>(inner) {
                     return quote! { .child(tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr)))) };

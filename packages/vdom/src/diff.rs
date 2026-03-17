@@ -1,5 +1,7 @@
-use crate::patch::Patch;
-use crate::vnode::{VElement, VNode};
+use crate::{
+    patch::Patch,
+    vnode::{VElement, VNode},
+};
 
 pub fn diff(old: Option<&VNode>, new: &VNode) -> Vec<Patch> {
     let mut patches = Vec::new();

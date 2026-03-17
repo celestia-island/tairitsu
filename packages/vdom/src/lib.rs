@@ -9,8 +9,8 @@ pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
 pub use events::{
-    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FileData, FocusEvent, FormData,
-    FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
+    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FileData, FocusEvent,
+    FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
 };
 pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};

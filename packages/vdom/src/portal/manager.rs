@@ -1,6 +1,6 @@
+use std::{cell::RefCell, rc::Rc};
+
 use super::{Portal, PortalMaskMode, PortalPosition};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Clone, Default)]
 pub struct PortalManager {

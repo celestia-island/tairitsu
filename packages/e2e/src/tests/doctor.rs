@@ -3,15 +3,14 @@
 //! Tests for the `tairitsu doctor` command which checks project compatibility
 //! and environment setup.
 
-use crate::tests::{Test, TestResult, TestStatus};
 use anyhow::Result;
-use std::fs;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::Instant;
+use std::{fs, path::PathBuf, process::Command, time::Instant};
+
 use tempfile::TempDir;
 use thirtyfour::WebDriver;
 use tracing::info;
+
+use crate::tests::{Test, TestResult, TestStatus};
 
 pub struct DoctorTests;
 
@@ -202,7 +201,10 @@ pub extern "C" fn bootstrap() {
                     Ok(TestResult {
                         component: "Doctor (Missing Dependency)".to_string(),
                         status: TestStatus::Failure,
-                        message: format!("Doctor did not identify missing dependency. Output: {}", combined),
+                        message: format!(
+                            "Doctor did not identify missing dependency. Output: {}",
+                            combined
+                        ),
                         duration_ms: duration,
                         screenshot_path: None,
                     })
@@ -304,7 +306,10 @@ impl Test for DoctorTests {
             Ok(result) => results.push(result),
             Err(e) => {
                 tracing::error!("Missing Cargo.toml test failed: {}", e);
-                results.push(TestResult::error("Doctor (Missing Cargo.toml)", &e.to_string()));
+                results.push(TestResult::error(
+                    "Doctor (Missing Cargo.toml)",
+                    &e.to_string(),
+                ));
             }
         }
 
@@ -312,7 +317,10 @@ impl Test for DoctorTests {
             Ok(result) => results.push(result),
             Err(e) => {
                 tracing::error!("Missing dependency test failed: {}", e);
-                results.push(TestResult::error("Doctor (Missing Dependency)", &e.to_string()));
+                results.push(TestResult::error(
+                    "Doctor (Missing Dependency)",
+                    &e.to_string(),
+                ));
             }
         }
 

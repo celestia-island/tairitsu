@@ -4,13 +4,13 @@
 //! and contains WIT source files plus a `manifest.json` with content hashes for
 //! integrity verification.
 
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::debug;
 

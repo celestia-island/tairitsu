@@ -1,5 +1,4 @@
-use std::fs;
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 fn main() {
     println!("cargo:rerun-if-changed=Cargo.toml");
