@@ -45,6 +45,7 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
     let mut field_defaults = Vec::new();
     let mut builder_methods = Vec::new();
     let mut prop_names = Vec::new();
+    let mut prop_has_defaults = Vec::new(); // Track which props have defaults
 
     // Strip doc comments from function parameters and extract info
     for arg in &mut input.sig.inputs {
@@ -60,9 +61,17 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
                 let ty = (*pat_type.ty).clone();
 
                 prop_names.push(name.clone());
+                prop_has_defaults.push(has_default);
+
+                // For non-default fields, wrap in Option<T>
+                let field_ty = if has_default {
+                    quote! { #ty }
+                } else {
+                    quote! { Option<#ty> }
+                };
 
                 fields.push(quote! {
-                    pub #name: #ty
+                    pub #name: #field_ty
                 });
 
                 if has_default {
@@ -71,13 +80,20 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
                     });
                 } else {
                     field_defaults.push(quote! {
-                        #name: std::marker::PhantomData::<()>.into()
+                        #name: None
                     });
                 }
 
+                // For builder methods, unwrap Option for required fields
+                let builder_body = if has_default {
+                    quote! { self.#name = #name; }
+                } else {
+                    quote! { self.#name = Some(#name); }
+                };
+
                 builder_methods.push(quote! {
                     pub fn #name(mut self, #name: #ty) -> Self {
-                        self.#name = #name;
+                        #builder_body
                         self
                     }
                 });
@@ -182,9 +198,20 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
             }
         }
     } else {
+        // Generate destructuring that unwraps Option fields
+        let prop_bindings: Vec<_> = prop_names.iter().zip(prop_has_defaults.iter())
+            .map(|(name, has_default)| {
+                if *has_default {
+                    quote! { #name }
+                } else {
+                    quote! { #name: #name.unwrap_or_default() }
+                }
+            })
+            .collect();
+
         quote! {
             #fn_vis fn #fn_name(props: #props_name) #fn_return {
-                let #props_name { #(#prop_names),* } = props;
+                let #props_name { #(#prop_bindings),* } = props;
                 #fn_block
             }
         }

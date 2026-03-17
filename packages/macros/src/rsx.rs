@@ -328,7 +328,7 @@ fn expand_rsx_if(rsx_if: RsxIf) -> TokenStream2 {
             let inner_code = expand_rsx_if(*inner_if);
             quote! { else { #inner_code } }
         }
-        None => quote! {},
+        None => quote! { else { tairitsu_vdom::VNode::empty() } },
     };
     quote! {
         if #condition {
