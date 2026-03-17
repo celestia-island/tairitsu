@@ -313,7 +313,17 @@ fn parse_rsx_children(content: &syn::parse::ParseBuffer) -> syn::Result<Vec<RsxC
 }
 
 pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
-    let tag = element.tag.to_string();
+    let tag = element.tag.clone();
+    let tag_str = tag.to_string();
+
+    // Check if this is a custom component (starts with uppercase)
+    let is_custom_component = tag_str.chars().next().map_or(false, |c| c.is_uppercase());
+
+    if is_custom_component {
+        return expand_custom_component(element);
+    }
+
+    // HTML element handling
     let mut class_code = quote! { tairitsu_vdom::Classes::new() };
     let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
@@ -322,21 +332,19 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 
     // Check if this is a known HTML element (lowercase tags)
     // Custom components start with uppercase
-    let is_html_element = tag.chars().next().map_or(false, |c| c.is_lowercase());
+    let is_html_element = tag_str.chars().next().map_or(false, |c| c.is_lowercase());
 
     // List of known HTML elements that support event handlers
     let html_elements = [
-        "div", "span", "p", "a", "button", "input", "textarea", "select", "form",
-        "ul", "ol", "li", "table", "tr", "td", "th", "thead", "tbody", "tfoot",
-        "h1", "h2", "h3", "h4", "h5", "h6",
+        "div", "span", "p", "a", "button", "input", "textarea", "select", "form", "ul", "ol", "li",
+        "table", "tr", "td", "th", "thead", "tbody", "tfoot", "h1", "h2", "h3", "h4", "h5", "h6",
         "img", "video", "audio", "canvas", "svg", "path", "rect", "circle", "line", "text",
-        "header", "footer", "nav", "main", "section", "article", "aside",
-        "label", "option", "optgroup", "fieldset", "legend",
-        "progress", "meter", "details", "summary", "dialog",
-        "iframe", "object", "embed", "source",
-        "br", "hr", "wbr",
+        "header", "footer", "nav", "main", "section", "article", "aside", "label", "option",
+        "optgroup", "fieldset", "legend", "progress", "meter", "details", "summary", "dialog",
+        "iframe", "object", "embed", "source", "br", "hr", "wbr",
     ];
-    let is_known_html = html_elements.contains(&tag.as_str()) || (is_html_element && !tag.contains('_'));
+    let is_known_html =
+        html_elements.contains(&tag_str.as_str()) || (is_html_element && !tag_str.contains('_'));
 
     for attr in element.attrs {
         match attr {
@@ -438,7 +446,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 
     quote! {
         tairitsu_vdom::VNode::Element(
-            tairitsu_vdom::VElement::new(#tag)
+            tairitsu_vdom::VElement::new(#tag_str)
                 .class(#class_code)
                 .style(#style_code)
                 #(#other_attrs)*
@@ -535,6 +543,69 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
         RsxChild::If(rsx_if) => expand_rsx_if(rsx_if),
         RsxChild::Match(rsx_match) => expand_rsx_match(rsx_match),
         RsxChild::For(rsx_for) => expand_rsx_for(*rsx_for),
+    }
+}
+
+/// Expands a custom component (PascalCase tag) into a component function call
+fn expand_custom_component(element: RsxElement) -> TokenStream2 {
+    let tag = &element.tag;
+    let tag_str = tag.to_string();
+    let props_name = syn::Ident::new(&format!("{}Props", tag_str), tag.span());
+
+    // Collect all props from attributes
+    let mut props_fields: Vec<TokenStream2> = Vec::new();
+
+    for attr in element.attrs {
+        match attr {
+            RsxAttr::Class(expr) => {
+                props_fields.push(quote! { class: #expr });
+            }
+            RsxAttr::Style(expr) => {
+                props_fields.push(quote! { style: #expr });
+            }
+            RsxAttr::Id(expr) => {
+                props_fields.push(quote! { id: #expr });
+            }
+            RsxAttr::Onclick(expr) => {
+                props_fields.push(quote! { onclick: #expr });
+            }
+            RsxAttr::InnerHtml(expr) => {
+                props_fields.push(quote! { dangerous_inner_html: #expr });
+            }
+            RsxAttr::Other { name, value } => {
+                // Convert attribute name to Rust field name
+                let field_name = if name == "children" {
+                    "children"
+                } else if name.contains('_') {
+                    &name
+                } else {
+                    &name
+                };
+                let field_ident = syn::Ident::new(field_name, tag.span());
+                props_fields.push(quote! { #field_ident: #value });
+            }
+        }
+    }
+
+    // Handle children
+    if !element.children.is_empty() {
+        // Check if there's already a children field
+        let has_children_field = props_fields
+            .iter()
+            .any(|f| f.to_string().starts_with("children :"));
+
+        if !has_children_field {
+            let children_code: Vec<_> = element.children.into_iter().map(expand_child).collect();
+            props_fields.push(
+                quote! { children: tairitsu_vdom::VNode::Fragment(vec![#(#children_code),*]) },
+            );
+        }
+    }
+
+    quote! {
+        #tag(#props_name {
+            #(#props_fields),*
+        })
     }
 }
 

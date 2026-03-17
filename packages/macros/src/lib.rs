@@ -4,6 +4,7 @@ mod scss;
 
 use component::expand_component;
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;
@@ -598,13 +599,13 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
 
 /// Derive macro for Props structs.
 ///
-/// This is a compatibility shim that allows structs to be used as component props.
-/// It essentially does nothing special - just ensures the struct can be used with
-/// the component system.
+/// This is a marker derive that indicates a struct is used as component props.
+/// The actual Default implementation should be derived separately using `#[derive(Default)]`
+/// or implemented manually with proper defaults for fields.
 ///
 /// # Example
 /// ```ignore
-/// #[derive(Clone, Props, PartialEq)]
+/// #[derive(Clone, Props, PartialEq, Default)]
 /// pub struct ButtonProps {
 ///     pub variant: String,
 ///     #[props(default)]
@@ -613,16 +614,11 @@ fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro
 /// ```
 #[proc_macro_derive(Props, attributes(props))]
 pub fn derive_props(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let _input = parse_macro_input!(input as DeriveInput);
 
-    // The Props derive is essentially a marker - the actual behavior comes from
-    // the struct's own Clone, PartialEq, etc. derives
-    // We just return an empty implementation block to satisfy the derive
-    let _name = &input.ident;
-
+    // Props derive is just a marker - Default should be derived separately
     let expanded = quote! {
-        // No additional implementation needed - Props is just a marker trait
-        // The Clone, PartialEq etc. are already derived on the struct
+        // Props marker - no additional implementation
     };
 
     TokenStream::from(expanded)
