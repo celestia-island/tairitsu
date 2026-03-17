@@ -109,13 +109,3 @@ pub fn sidebar() -> VNode {
     )
 }
 
-/// Code block component
-pub fn code_block(code: &str, language: &str) -> VNode {
-    VNode::Element(
-        VElement::new("div")
-            .class(format!("code-block language-{}", language).as_str())
-            .child(VNode::Element(VElement::new("pre").child(VNode::Element(
-                VElement::new("code").child(VNode::Text(VText::new(code))),
-            )))),
-    )
-}
