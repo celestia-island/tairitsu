@@ -4,6 +4,10 @@ pub trait EventData: Any {
     fn as_any(&self) -> &dyn Any;
 }
 
+/// Type alias for boxed event data, commonly used in event handlers.
+/// This provides a simpler type name for `Box<dyn EventData>`.
+pub type Event = Box<dyn EventData>;
+
 /// Handle to an event that can be used for prevent_default/stop_propagation.
 /// The handle is stored and passed to browser-glue via WIT bindings.
 #[derive(Debug, Clone)]

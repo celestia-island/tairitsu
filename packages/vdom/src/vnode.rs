@@ -5,6 +5,74 @@ use std::rc::Rc;
 
 use crate::EventData;
 
+/// Trait for attribute values that can be optionally rendered.
+/// This allows `attr` to accept both `T` and `Option<T>` values.
+pub trait IntoAttrValue {
+    fn into_attr_value(self) -> Option<String>;
+}
+
+// Implement for common non-Option types
+impl IntoAttrValue for &str {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for String {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self)
+    }
+}
+
+impl IntoAttrValue for i32 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for i64 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for u32 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for u64 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for usize {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for bool {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+impl IntoAttrValue for f64 {
+    fn into_attr_value(self) -> Option<String> {
+        Some(self.to_string())
+    }
+}
+
+// Implement for Option types
+impl<T: ToString> IntoAttrValue for Option<T> {
+    fn into_attr_value(self) -> Option<String> {
+        self.map(|v| v.to_string())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::large_enum_variant)]
 pub enum VNode {
@@ -162,8 +230,25 @@ impl VElement {
         }
     }
 
-    pub fn attr(mut self, name: &str, value: impl ToString) -> Self {
-        self.attributes.insert(name.to_string(), value.to_string());
+    /// Add an attribute to the element.
+    /// Accepts both direct values and `Option<T>` values.
+    /// When the value is `Some(v)`, the attribute is added with value `v`.
+    /// When the value is `None`, the attribute is not added (this allows conditional attributes).
+    pub fn attr(mut self, name: &str, value: impl IntoAttrValue) -> Self {
+        if let Some(v) = value.into_attr_value() {
+            self.attributes.insert(name.to_string(), v);
+        }
+        self
+    }
+
+    /// Add an optional attribute to the element.
+    /// This is a convenience method that is equivalent to calling `attr` with an `Option<T>` value.
+    /// When the value is `Some(v)`, the attribute is added with value `v`.
+    /// When the value is `None`, the attribute is not added.
+    pub fn attr_opt<T: ToString>(mut self, name: &str, value: Option<T>) -> Self {
+        if let Some(v) = value {
+            self.attributes.insert(name.to_string(), v.to_string());
+        }
         self
     }
 

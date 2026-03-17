@@ -20,3 +20,6 @@ pub use memo::{use_memo, use_memo_with, Memo};
 pub use ref_::{use_ref, UseRef};
 pub use signal::use_signal;
 pub use state::use_state;
+
+// Re-export Event type from vdom for convenience
+pub use tairitsu_vdom::Event;
