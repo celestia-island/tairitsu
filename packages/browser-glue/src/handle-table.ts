@@ -84,13 +84,14 @@ export function getElement(handle: bigint): Element {
 export function getEventTarget(handle: bigint): EventTarget {
   const node = getNode(handle);
   if (!(node instanceof EventTarget)) {
+    const actualType = (node as object).constructor?.name ?? "unknown";
     reportHandleError({
       kind: "type-mismatch",
       handle,
       expectedType: "EventTarget",
-      actualType: node.constructor.name,
+      actualType,
     });
-    throw new Error(`DOM handle ${handle} is not an EventTarget (got ${node.constructor.name})`);
+    throw new Error(`DOM handle ${handle} is not an EventTarget (got ${actualType})`);
   }
   return node;
 }
