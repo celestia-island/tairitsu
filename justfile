@@ -14,6 +14,7 @@
 #   just fmt             - Format code
 #   just clippy          - Run Clippy checks
 #   just clean           - Clean build artifacts
+#   just install-packager- Install tairitsu CLI to ~/.cargo/bin
 #
 # WIT generation (W3C WebIDL → WIT):
 #   just wit-gen         - Full pipeline: fetch 50 specs + generate 18 domain WIT files
@@ -37,6 +38,14 @@ install-tools:
     rustup component add rustfmt --toolchain nightly
     rustup component add clippy
     python3 scripts/download_wasi_adapters.py
+
+# Install tairitsu-packager CLI binary (tairitsu) to ~/.cargo/bin
+install-packager:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Installing tairitsu CLI..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo install --path packages/packager
+    @echo "✅ Installed 'tairitsu' CLI to ~/.cargo/bin"
 
 # Development environment setup (install tools and build)
 setup: install-tools init

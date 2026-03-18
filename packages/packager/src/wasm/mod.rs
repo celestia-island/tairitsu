@@ -219,7 +219,7 @@ fn build_wasm_component(
                                     if target
                                         .get("kind")
                                         .and_then(|k| k.as_array())
-                                        .map_or(false, |k| {
+                                        .is_some_and(|k| {
                                             k.iter().any(|kind| kind.as_str() == Some("lib"))
                                         })
                                     {

@@ -1,6 +1,7 @@
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub fn init_project(name: &str) -> crate::Result<()> {
+    let t = crate::i18n::translations();
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -10,11 +11,11 @@ pub fn init_project(name: &str) -> crate::Result<()> {
 
     let name = name.to_string();
 
-    pb.set_message("Creating project directory...");
+    pb.set_message(t.cli.init_creating_dir.as_str());
     std::fs::create_dir_all(&name)?;
     std::fs::create_dir_all(format!("{}/src", name))?;
 
-    pb.set_message("Writing Cargo.toml...");
+    pb.set_message(t.cli.init_writing_cargo.as_str());
     let cargo_toml = format!(
         r#"[package]
 name = "{}"
@@ -40,7 +41,7 @@ port = 3001
     );
     std::fs::write(format!("{}/Cargo.toml", name), cargo_toml)?;
 
-    pb.set_message("Writing src/lib.rs...");
+    pb.set_message(t.cli.init_writing_lib.as_str());
     let lib_rs = r#"use tairitsu_web::WitPlatform;
 
 #[export_name = "tairitsu_component_bootstrap"]
@@ -54,10 +55,10 @@ pub extern "C" fn bootstrap() {
 "#;
     std::fs::write(format!("{}/src/lib.rs", name), lib_rs)?;
 
-    let msg = format!("Project {} created! ✅", name);
+    let msg = t.cli.init_project_created.replace("{name}", &name);
     pb.finish_with_message(msg);
 
-    println!("\nNext steps:");
+    println!("\n{}:", t.cli.init_next_steps);
     println!("  cd {}", name);
     println!("  tairitsu dev");
 
