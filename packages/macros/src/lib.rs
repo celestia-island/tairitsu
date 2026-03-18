@@ -62,11 +62,12 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 /// - Full SCSS syntax support via grass compiler
 /// - Automatic class name hashing (CSS Modules style)
 /// - Scope-based isolation
+/// - Support for inline content or file paths
 /// - Returns (css, class_map) tuple
 ///
 /// # Example
 /// ```ignore
-/// // Basic usage
+/// // Basic usage - inline SCSS
 /// let (css, class_map) = scss! {
 ///     .button {
 ///         background: var(--primary);
@@ -84,6 +85,9 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 ///     }
 /// };
 ///
+/// // From file (relative to crate root)
+/// let (css, class_map) = scss! { file: "styles/main.scss" };
+///
 /// // With scope for isolation
 /// let (css, class_map) = scss! {
 ///     .container {
@@ -91,6 +95,9 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 ///     },
 ///     scope: "MyComponent"
 /// };
+///
+/// // File with scope
+/// let (css, class_map) = scss! { file: "styles/button.scss", scope: "Button" };
 ///
 /// // Use hashed class names
 /// let button_class = class_map.get("button").unwrap();
