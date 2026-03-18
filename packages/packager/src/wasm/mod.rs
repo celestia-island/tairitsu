@@ -283,33 +283,47 @@ fn build_wasm_component(
     Ok(wasm_path)
 }
 
+/// Embedded browser-glue files compiled into the packager binary.
+/// This ensures the packager works standalone without requiring external browser-glue.
+static BROWSER_GLUE_DIST: include_dir::Dir =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/../browser-glue/dist");
+
 fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
-    let workspace_root = find_workspace_root()?;
-    let glue_dist = workspace_root
-        .join("packages")
-        .join("browser-glue")
-        .join("dist");
-
-    if !glue_dist.exists() {
-        pb.println(format!(
-            "⚠  browser-glue/dist not found at {}.\n   \
-             Run `npm run build` in packages/browser-glue/ first, \
-             or the component will not have browser bindings.",
-            glue_dist.display()
-        ));
-        return Ok(());
-    }
-
     let target_glue = config.build.output_dir.join("browser-glue");
     std::fs::create_dir_all(&target_glue)?;
 
-    for entry in std::fs::read_dir(&glue_dist)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() {
-            let dest = target_glue.join(path.file_name().unwrap());
-            std::fs::copy(&path, &dest)?;
+    // Strategy 1: Try workspace-relative path (for monorepo development)
+    if let Ok(workspace_root) = find_workspace_root() {
+        let glue_dist = workspace_root
+            .join("packages")
+            .join("browser-glue")
+            .join("dist");
+
+        if glue_dist.exists() {
+            for entry in std::fs::read_dir(&glue_dist)? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() {
+                    let dest = target_glue.join(path.file_name().unwrap());
+                    std::fs::copy(&path, &dest)?;
+                }
+            }
+            return Ok(());
         }
+    }
+
+    // Strategy 2: Use embedded browser-glue from compile time
+    let mut file_count = 0;
+    for file in BROWSER_GLUE_DIST.files() {
+        let dest = target_glue.join(file.path().file_name().unwrap());
+        std::fs::write(&dest, file.contents())?;
+        file_count += 1;
+    }
+
+    if file_count == 0 {
+        pb.println(
+            "⚠  No browser-glue files found (neither on filesystem nor embedded).".to_string(),
+        );
     }
 
     Ok(())
