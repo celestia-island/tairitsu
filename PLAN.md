@@ -32,7 +32,7 @@ pub fn ComponentName(props: ComponentNameProps) -> Element {
 
 ### 2. `rsx!` 宏生成代码优化
 
-**文件**: `packages/macros/src/rsx/`
+**文件**: `packages/macros/src/rsx.rs`
 
 - 移除不必要的花括号
 - 为闭包参数添加 `_` 前缀避免 unused 警告
@@ -47,12 +47,12 @@ pub fn ComponentName(props: ComponentNameProps) -> Element {
 ## 任务清单
 
 - [x] 修改 `component.rs` 添加 allow 属性
-- [ ] 修改 `rsx/mod.rs` 优化代码生成
-- [ ] 验证 Hikari 编译警告减少
+- [x] 修改 `rsx.rs` 优化代码生成（验证后无需额外修改）
+- [x] 验证 Hikari 编译警告减少
 - [x] 提交并更新 PLAN.md
 
 ## 验收标准
 
-- `cargo check` 警告数 < 50（主要是业务代码的真实警告）
-- 组件 PascalCase 命名不产生警告
-- 宏生成代码不产生 `unused_*` 警告
+- `cargo check` 警告数 < 50（主要是业务代码的真实警告）✅ 已达成（0 代码警告）
+- 组件 PascalCase 命名不产生警告 ✅
+- 宏生成代码不产生 `unused_*` 警告 ✅
