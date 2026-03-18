@@ -189,6 +189,10 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
         // Use the existing Props type
         let props_type = existing_props_name.unwrap();
         quote! {
+            #[allow(non_snake_case)]
+            #[allow(unused_braces)]
+            #[allow(unused_mut)]
+            #[allow(unused_variables)]
             #fn_vis fn #fn_name(props: #props_type) #fn_return {
                 #fn_block
             }
@@ -208,6 +212,10 @@ fn expand_component_impl(mut input: ItemFn) -> Result<TokenStream2> {
             .collect();
 
         quote! {
+            #[allow(non_snake_case)]
+            #[allow(unused_braces)]
+            #[allow(unused_mut)]
+            #[allow(unused_variables)]
             #fn_vis fn #fn_name(props: #props_name) #fn_return {
                 #(#prop_bindings)*
                 #fn_block
