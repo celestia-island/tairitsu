@@ -103,13 +103,8 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 - [x] Add E2E tests
 
 ### Phase 5: Packager Self-Containment
-- [ ] **内置 browser-glue**: packager 应携带自己的 browser-glue 副本
-  - 当前问题：`copy_browser_glue()` 从 `workspace_root/packages/browser-glue` 查找
-  - 对于外部项目（如 Hikari），这个路径不存在
-  - 解决方案：
-    1. 在 `tairitsu-packager` 包内嵌入 browser-glue/dist 内容（推荐）
-    2. 或者从 `CARGO_MANIFEST_DIR/../browser-glue/dist` 查找（packager 的兄弟目录）
-  - 文件：`packages/packager/src/wasm/mod.rs` 的 `copy_browser_glue()` 函数
+
+- [x] Embed browser-glue at compile time using `include_dir`
 
 ## API
 
