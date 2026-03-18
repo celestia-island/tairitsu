@@ -30,8 +30,11 @@ pub fn compile_scss_with_config(
     let mut results = Vec::new();
 
     // Collect entries to process
+    tracing::info!("SCSS config: {} entries, load_paths: {:?}", config.entries.len(), config.load_paths);
+
     let entries = if !config.entries.is_empty() {
         // Use explicit multi-entry configuration
+        tracing::info!("Using multi-entry configuration");
         config.entries.clone()
     } else if let Some(entry) = &config.entry {
         // Use single entry configuration
@@ -53,6 +56,7 @@ pub fn compile_scss_with_config(
 
     // Process each entry
     for entry in entries {
+        tracing::info!("Processing SCSS entry: {} -> {}", entry.entry, entry.output);
         let entry_path = project_root.join(&entry.entry);
 
         if !entry_path.exists() {
