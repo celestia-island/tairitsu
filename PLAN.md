@@ -2,148 +2,164 @@
 
 ## 1. Props DSL 宏增强 ✅ 已完成
 
-### 问题
+详见 git log。
 
-当前 Props 定义冗长繁琐：
+## 2. CSS 基础设施包 (tairitsu-style)
+
+### 背景
+
+当前 hikari 中存在大量 CSS 相关的基础设施代码，应当作为 tairitsu 框架的一部分提供给所有前端依赖使用：
+
+1. **StyleStringBuilder** - 构建 CSS style 字符串的工具
+2. **ClassesBuilder** - 构建 CSS class 字符串的工具
+3. **CssProperty 枚举** - 类型安全的 CSS 属性名
+
+### 目标
+
+创建 `packages/style` 子包，提供：
+
+```
+tairitsu-style/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs
+│   ├── properties/
+│   │   ├── mod.rs
+│   │   ├── css.rs          # CssProperty 枚举 (全部 W3C 标准属性)
+│   │   └── generated.rs    # 自动生成的属性定义
+│   ├── builders/
+│   │   ├── mod.rs
+│   │   ├── style.rs        # StyleStringBuilder
+│   │   └── classes.rs      # ClassesBuilder
+│   ├── traits/
+│   │   ├── mod.rs
+│   │   └── utility.rs      # UtilityClass trait
+│   └── css_data/           # W3C CSS 规范数据
+│       ├── index.json      # 属性索引
+│       └── ...
+└── build.rs                # 从 W3C 规范生成属性的脚本
+```
+
+### 实现步骤
+
+#### Phase 1: 基础结构 (手动)
+
+- [ ] 创建 `packages/style` 包
+- [ ] 迁移 `StyleStringBuilder` 从 hikari-animation
+- [ ] 迁移 `ClassesBuilder` 和 `UtilityClass` trait 从 hikari-palette
+- [ ] 迁移现有 `CssProperty` 枚举
+
+#### Phase 2: W3C CSS 属性自动生成 (爬虫)
+
+- [ ] 研究 W3C CSS 规范数据源
+  - MDN CSS Reference: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference
+  - W3C CSS Index: https://w3c.github.io/csswg-drafts/indexes.html
+- [ ] 创建爬虫脚本获取所有标准 CSS 属性
+- [ ] 生成 `CssProperty` 枚举，包含：
+  - 属性名 (kebab-case)
+  - 属性分类 (Layout, Box Model, Typography, etc.)
+  - 是否为简写属性
+  - 初始值（可选）
+- [ ] build.rs 集成，自动生成 `generated.rs`
+
+#### Phase 3: 增强功能
+
+- [ ] 添加 CSS 值类型枚举（常用值如 `auto`, `none`, `inherit`）
+- [ ] 添加属性验证（可选）
+- [ ] 支持 CSS 变量类型提示
+
+### 数据源选项
+
+1. **MDN Browser Compatibility Data (BCD)**
+   - 仓库：https://github.com/mdn/browser-compat-data
+   - 包含所有 CSS 属性及其兼容性数据
+   - 可通过 `@mdn/browser-compat-data` npm 包获取
+
+2. **W3C CSSWG Drafts**
+   - https://w3c.github.io/csswg-drafts/indexes.html
+   - 官方规范索引
+
+3. **CSSTree**
+   - https://github.com/csstree/csstree
+   - 包含完整的 CSS 语法数据
+
+### 示例：生成的代码
 
 ```rust
-#[derive(Clone, PartialEq, Props)]
-pub struct AvatarProps {
-    #[props(default)]
-    src: Option<String>,
+// generated.rs - 自动生成，不要手动编辑
+// Source: MDN CSS Reference + W3C CSSWG Indexes
 
-    #[props(default = "Avatar".to_string())]
-    alt: String,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CssProperty {
+    // Layout
+    Display,
+    Position,
+    Top,
+    Right,
+    Bottom,
+    Left,
+    ZIndex,
+    Float,
+    Clear,
+    // ... 数百个属性
 
-    #[props(default = AvatarSize::Md)]
-    size: AvatarSize,
+    // CSS Values and Units Module Level 4
+    AccentColor,
+    // ...
 
-    #[props(default = AvatarVariant::Circular)]
-    variant: AvatarVariant,
-
-    #[props(default)]
-    fallback: Option<String>,
-
-    #[props(default)]
-    fallback_mode: AvatarFallbackMode,
-
-    #[props(default)]
-    class: String,
+    // 新增实验性属性（标记）
+    #[cfg(feature = "experimental")]
+    ViewTimeline,
 }
 
-impl Default for AvatarProps {
-    fn default() -> Self {
-        Self {
-            src: None,
-            alt: "Avatar".to_string(),
-            size: AvatarSize::Md,
-            variant: AvatarVariant::Circular,
-            fallback: None,
-            fallback_mode: AvatarFallbackMode::default(),
-            class: String::new(),
+impl CssProperty {
+    /// Get the CSS property name in kebab-case
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Display => "display",
+            Self::Position => "position",
+            // ... 自动生成
+        }
+    }
+
+    /// Get the category of this property
+    pub const fn category(&self) -> CssCategory {
+        match self {
+            Self::Display => CssCategory::Layout,
+            Self::Margin => CssCategory::BoxModel,
+            Self::FontSize => CssCategory::Typography,
+            // ...
         }
     }
 }
 ```
 
-### 解决方案 ✅ 已实现
-
-创建 `#[define_props]` 宏，使用 `#[default(...)]` 属性语法：
+### API 示例
 
 ```rust
-#[define_props]
-pub struct AvatarProps {
-    src: Option<String>,                    // Option 自动默认为 None
-    #[default("Avatar".to_string())]
-    alt: String,
-    #[default(AvatarSize::Md)]
-    size: AvatarSize,
-    #[default(AvatarVariant::Circular)]
-    variant: AvatarVariant,
-    fallback: Option<String>,               // 自动推断
-    fallback_mode: AvatarFallbackMode,      // 使用 Default trait
-    class: String,                          // String 自动默认为 String::new()
-}
+use tairitsu_style::{StyleStringBuilder, CssProperty};
+
+let style = StyleStringBuilder::new()
+    .add(CssProperty::Display, "flex")
+    .add_px(CssProperty::Gap, 8)
+    .add_custom("--custom-var", "value")
+    .build_clean();
+// Output: "display:flex;gap:8px;--custom-var:value"
 ```
 
-### 实现细节
-
-由于 Rust 的 `field: Type = value` 语法目前是实验性功能（E0658），我们采用 `#[default(value)]` 属性语法：
-
-- `#[default(expr)]` - 显式指定默认值
-- 无属性 - 根据类型自动推断：
-  - `Option<T>` → `None`
-  - `String` → `String::new()`
-  - `Vec<T>` → `Vec::new()`
-  - 其他 → `Default::default()`
-
-### 实现步骤 ✅
-
-- [x] 修改 `packages/macros/src/lib.rs` 添加 `define_props` 宏
-- [x] 创建 `packages/macros/src/props_dsl.rs` 实现解析逻辑
-- [x] 支持 `#[default(...)]` 属性指定默认值
-- [x] 支持 `Option<T>` 自动推断 `#[props(default)]` + `None`
-- [x] 支持 `String` 自动推断 `#[props(default)]` + `String::new()`
-- [x] 支持 `Vec<T>` 自动推断 `#[props(default)]` + `Vec::new()`
-- [x] 支持其他类型使用 `Default::default()`
-- [x] 生成 `Default` impl
-- [x] 在 hikari-icons 中验证（IconProps）
-
-### 示例：IconProps
-
-**之前（27行）：**
 ```rust
-#[cfg(feature = "tairitsu")]
-#[derive(Clone, PartialEq, Props)]
-pub struct IconProps {
-    #[props(default)]
-    pub icon: MdiIcon,
-    #[props(default)]
-    pub class: String,
-    #[props(default = 24)]
-    pub size: u32,
-    #[props(default)]
-    pub color: String,
-}
+use tairitsu_style::{ClassesBuilder, UtilityClass};
 
-#[cfg(feature = "tairitsu")]
-impl Default for IconProps {
-    fn default() -> Self {
-        Self {
-            icon: MdiIcon::Help,
-            class: String::new(),
-            size: 24,
-            color: String::new(),
-        }
-    }
-}
+let classes = ClassesBuilder::new()
+    .add(MyClass::Button)
+    .add_if(MyClass::Active, || is_active)
+    .build();
 ```
 
-**之后（11行）：**
-```rust
-#[cfg(feature = "tairitsu")]
-#[define_props]
-pub struct IconProps {
-    #[default(MdiIcon::Help)]
-    pub icon: MdiIcon,
-    pub class: String,           // 自动 String::new()
-    #[default(24)]
-    pub size: u32,
-    pub color: String,           // 自动 String::new()
-}
-```
+## 验收标准
 
-**减少约 60%**
-
-## 验收标准 ✅
-
-- [x] 宏编译通过
-- [x] 生成的 Props 结构体与手动编写的功能等价
-- [x] hikari-icons 中 IconProps 使用新宏
-- [ ] hikari-components 中其他组件使用新宏（待推广）
-
-## 后续优化
-
-1. 将更多 hikari-components 的 Props 定义迁移到 `#[define_props]`
-2. 考虑添加 `#[optional]` 属性作为 `Option<T>` 的语法糖
-3. 考虑添加 `#[into]` 属性自动添加 `#[props(into)]`
+- [ ] `tairitsu-style` 包编译通过
+- [ ] 包含全部 W3C 标准 CSS 属性（~300+）
+- [ ] `StyleStringBuilder` 功能完整
+- [ ] `ClassesBuilder` 功能完整
+- [ ] hikari 成功迁移使用
