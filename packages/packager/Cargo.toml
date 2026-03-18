@@ -27,6 +27,7 @@ toml = "^0.8"
 
 # Async runtime
 tokio = { version = "^1", features = ["full"] }
+futures = "^0.3"
 
 # Logging and tracing
 tracing = "^0.1"
@@ -59,6 +60,12 @@ yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = "0.28"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+# HTTP client for icon fetching
+reqwest = { version = "^0.12", features = ["blocking", "json", "stream"] }
+
+# ZIP file handling for icon packages
+zip = { version = "^2", default-features = false, features = ["deflate"] }
 
 [features]
 default = ["dev-server"]

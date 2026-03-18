@@ -75,6 +75,12 @@ enum Commands {
         action: WitCommands,
     },
 
+    /// Manage icons (fetch, build, list)
+    Icons {
+        #[command(subcommand)]
+        action: IconsCommands,
+    },
+
     /// Check project compatibility and environment setup
     Doctor {
         /// Fix issues automatically (experimental)
@@ -108,6 +114,50 @@ enum WitCommands {
 
     /// List all WIT packages in the local cache
     List,
+}
+
+#[derive(Subcommand)]
+enum IconsCommands {
+    /// Fetch icons from the configured source and cache them
+    Fetch {
+        /// Icon source (mdi, lucide, custom)
+        #[arg(short, long, default_value = "mdi")]
+        source: String,
+
+        /// Force refresh (ignore cache)
+        #[arg(short, long)]
+        force: bool,
+    },
+
+    /// Build icon module from cached icons
+    Build {
+        /// Output file path (overrides Cargo.toml setting)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// Icon names to include (comma-separated)
+        #[arg(short, long)]
+        icons: Option<String>,
+
+        /// Tags to include (comma-separated)
+        #[arg(short, long)]
+        tags: Option<String>,
+    },
+
+    /// List available icons (optionally filter by source/tag)
+    List {
+        /// Icon source (mdi, lucide)
+        #[arg(short, long, default_value = "mdi")]
+        source: String,
+
+        /// Filter by tag
+        #[arg(short, long)]
+        tag: Option<String>,
+
+        /// Search query
+        #[arg(short, long)]
+        search: Option<String>,
+    },
 }
 
 pub async fn run() -> crate::Result<()> {
@@ -203,6 +253,95 @@ pub async fn run() -> crate::Result<()> {
                 std::process::exit(1);
             }
         }
+        Commands::Icons { action } => match action {
+            IconsCommands::Fetch { source, force } => {
+                info!("Fetching icons from {}...", source);
+                let target_dir = std::path::PathBuf::from("target");
+                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
+                let cache_dir = target_dir.join(crate::icons::ICON_CACHE_DIR).join(icon_source.to_string());
+
+                if force {
+                    crate::icons::force_fetch_icons(&icon_source, &cache_dir)?;
+                } else {
+                    crate::icons::fetch_icons(&icon_source, &cache_dir)?;
+                }
+                info!("Icons cached successfully.");
+            }
+            IconsCommands::Build { output, icons, tags } => {
+                info!("Building icon module...");
+
+                // Load Cargo.toml to get configuration
+                let cargo_toml_path = if manifest_path.is_dir() {
+                    manifest_path.join("Cargo.toml")
+                } else {
+                    manifest_path.clone()
+                };
+
+                let content = std::fs::read_to_string(&cargo_toml_path)?;
+                let manifest: toml::Value = toml::from_str(&content)?;
+                let icons_config = crate::icons::parse_icons_config(&manifest)?;
+
+                let output_path = output.unwrap_or_else(|| {
+                    icons_config.output.as_ref()
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_else(|| std::path::PathBuf::from("src/generated/icons.rs"))
+                });
+
+                let icon_names: Vec<String> = icons
+                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+                    .unwrap_or_else(|| icons_config.icons.clone());
+
+                let tag_names: Vec<String> = tags
+                    .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+                    .unwrap_or_else(|| icons_config.tags.clone());
+
+                let icon_config = crate::icons::IconConfig {
+                    source: icons_config.source.as_ref()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or_default(),
+                    names: icon_names,
+                    tags: tag_names,
+                    styles: vec![crate::icons::IconStyle::Filled],
+                    output: output_path,
+                };
+
+                let target_dir = std::path::PathBuf::from("target");
+                let result = crate::icons::build_icons(&icon_config, &target_dir)?;
+
+                info!("Generated {} icons to {}", result.icons_count, result.output_path.display());
+            }
+            IconsCommands::List { source, tag, search } => {
+                info!("Listing icons from {}...", source);
+
+                let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
+                let target_dir = std::path::PathBuf::from("target");
+                let cache_dir = target_dir.join(crate::icons::ICON_CACHE_DIR).join(icon_source.to_string());
+
+                let metadata = crate::icons::fetch_icons(&icon_source, &cache_dir)?;
+
+                let icons = if let Some(query) = search {
+                    metadata.search(&query)
+                } else if let Some(tag_filter) = tag {
+                    metadata.filter_icons(&[], &[tag_filter])
+                } else {
+                    metadata.filter_icons(&[], &[])
+                };
+
+                println!("Found {} icons:", icons.len());
+                for icon in icons.iter().take(100) {
+                    let tags_str = if icon.tags.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" [{}]", icon.tags.join(", "))
+                    };
+                    println!("  {}{}", icon.name, tags_str);
+                }
+
+                if icons.len() > 100 {
+                    println!("  ... and {} more", icons.len() - 100);
+                }
+            }
+        },
     }
 
     Ok(())
