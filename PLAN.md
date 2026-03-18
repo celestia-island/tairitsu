@@ -46,10 +46,10 @@ pub fn ComponentName(props: ComponentNameProps) -> Element {
 
 ## 任务清单
 
-- [ ] 修改 `component.rs` 添加 allow 属性
+- [x] 修改 `component.rs` 添加 allow 属性
 - [ ] 修改 `rsx/mod.rs` 优化代码生成
 - [ ] 验证 Hikari 编译警告减少
-- [ ] 提交并更新 PLAN.md
+- [x] 提交并更新 PLAN.md
 
 ## 验收标准
 
