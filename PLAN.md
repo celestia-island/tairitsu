@@ -99,7 +99,7 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 
 ### Phase 4: Cleanup
 - [x] Remove complex icon fetching (keep simple file-based)
-- [ ] Update documentation
+- [x] Update documentation
 - [ ] Add E2E tests
 
 ## API

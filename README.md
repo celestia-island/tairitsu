@@ -46,6 +46,74 @@ A WebAssembly runtime for running component-model based WASM modules.
 - 🚀 **Dynamic Invocation**: Runtime WASM function calls with RON and binary canonical ABI
 - 🔤 **RON Support**: Rust-friendly serialization for better type compatibility
 - ⚡ **Dual Calling Paths**: RON (convenient) + Binary (high-performance) for dynamic invocation
+- 🔒 **Safe SVG**: XSS-protected SVG embedding with compile-time sanitization
+- 🎨 **Resource Indexing**: Build-time discovery and hashing of SCSS/SVG resources
+
+## Safe SVG & Resources
+
+Tairitsu provides safe SVG embedding with XSS protection and build-time resource indexing:
+
+### Safe SVG Usage
+
+```rust
+use tairitsu::SafeSvg;
+use tairitsu_macros::{svg, scss};
+
+// Safe SVG from static content
+let icon = SafeSvg::from_static(r#"<path d="M12 2L2 22h20L12 2z"/>"#);
+
+// Safe SVG from file (compile-time)
+let icon = svg! { file: "icons/sun.svg" };
+
+// Safe SVG by resource ID
+let icon = svg! { id: "sun" };
+
+// Use with VElement
+rsx! {
+    svg {
+        viewBox: "0 0 24 24",
+        safe_svg: icon,
+    }
+}
+```
+
+### SCSS with Class Hashing
+
+```rust
+// Inline SCSS with automatic class hashing
+let (css, class_map) = scss! {
+    .button {
+        background: var(--primary);
+        color: white;
+    }
+};
+
+// From file with scope isolation
+let (css, class_map) = scss! { file: "styles/main.scss", scope: "MyComponent" };
+
+// Use hashed class names
+let button_class = class_map.get("button").unwrap();
+```
+
+### Security
+
+SVG sanitization removes:
+
+- `<script>` tags
+- Event handlers (onclick, onload, onerror, etc.)
+- External references (xlink:href to external URLs)
+- JavaScript URLs (javascript:...)
+- Data URLs with executable content
+
+### CLI Commands
+
+```bash
+# Index resources
+tairitsu resources index
+
+# List indexed resources
+tairitsu resources list
+```
 
 ## Quick Start
 
