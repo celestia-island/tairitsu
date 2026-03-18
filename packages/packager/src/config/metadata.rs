@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::{AssetsConfig, BuildConfig, CssConfig, DevConfig, HtmlConfig, NativeConfig};
+use super::{AssetsConfig, BuildConfig, CssConfig, DevConfig, HtmlConfig, NativeConfig, ScssConfig};
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct TairitsuMetadata {
@@ -20,6 +20,8 @@ pub struct TairitsuMetadata {
     pub html: HtmlConfig,
     #[serde(default)]
     pub css: CssConfig,
+    #[serde(default)]
+    pub scss: ScssConfig,
     #[serde(default)]
     pub native: NativeConfig,
 }

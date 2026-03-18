@@ -364,19 +364,21 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
 
 fn compile_project_scss(config: &Config) -> crate::Result<()> {
     let project_root = std::env::current_dir()?;
-    let styles_dir = project_root.join("src").join("styles");
 
-    if !styles_dir.exists() {
-        return Ok(());
-    }
-
-    crate::styles::compile_scss_files(&styles_dir, &config.build.output_dir).map_err(|e| {
-        crate::TairitsuPackagerError::BuildError(format!(
-            "Failed to compile SCSS from {}: {}",
-            styles_dir.display(),
-            e
-        ))
+    // Use new SCSS configuration system
+    let results = crate::styles::compile_scss_with_config(
+        &config.scss,
+        &project_root,
+        &config.build.output_dir,
+    )
+    .map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!("Failed to compile SCSS: {}", e))
     })?;
+
+    // Log compiled files
+    for result in results {
+        tracing::debug!("Compiled SCSS: {}", result.output_path.display());
+    }
 
     Ok(())
 }
