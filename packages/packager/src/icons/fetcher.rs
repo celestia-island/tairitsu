@@ -1,22 +1,19 @@
 //! Icon fetching and caching for tairitsu-packager.
 //!
-//! Downloads icons from various sources and manages local cache.
-//! Supports MDI (Material Design Icons) with async fetching and ZIP extraction.
+//! This module provides icon loading capabilities. HTTP fetching is optional
+//! and can be enabled via the `icon-fetch` feature flag.
 //!
-//! # Cache Structure
+//! # Simple File-Based Usage (Default)
 //!
-//! ```text
-//! target/tairitsu/icons/
-//!   mdi/
-//!     svg/
-//!       account.svg
-//!       account-circle.svg
-//!       ...
-//!     metadata.json
-//!   mdi_metadata.json  (global metadata cache)
+//! ```rust,ignore
+//! use tairitsu_packager::icons::{IconFetcher, IconSource};
+//!
+//! // Load icons from local directory
+//! let fetcher = IconFetcher::new("/path/to/icons".into(), IconSource::Custom);
+//! let metadata = fetcher.load_from_directory()?;
 //! ```
 //!
-//! # Usage
+//! # HTTP Fetching (Requires `icon-fetch` feature)
 //!
 //! ```rust,ignore
 //! use tairitsu_packager::icons::{IconFetcher, IconSource};
@@ -30,11 +27,8 @@
 //! ```
 
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 
-use tracing::{debug, info, warn};
-#[allow(unused_imports)]
-use zip::ZipArchive;
+use tracing::{info, warn};
 
 use super::metadata::IconMetadata;
 use super::{IconSource, MDI_DEFAULT_VERSION};
@@ -42,29 +36,6 @@ use super::{IconSource, MDI_DEFAULT_VERSION};
 // ============================================================================
 // Constants
 // ============================================================================
-
-/// MDI SVG distribution URL template (npm package tarball via unpkg CDN)
-/// This is more reliable than GitHub releases for getting the full SVG set
-#[allow(dead_code)]
-const MDI_SVG_PACKAGE_URL: &str =
-    "https://unpkg.com/@mdi/svg@{version}/";
-
-/// Alternative: Direct GitHub raw URL for meta.json
-const MDI_GITHUB_META_URL: &str =
-    "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/meta.json";
-
-/// Alternative: GitHub raw URL for SVG files (individual)
-#[allow(dead_code)]
-const MDI_GITHUB_SVG_URL: &str =
-    "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/svg/{name}.svg";
-
-/// NPM registry URL for @mdi/svg package info
-#[allow(dead_code)]
-const NPM_REGISTRY_URL: &str = "https://registry.npmjs.org/@mdi/svg/{version}";
-
-/// Cache subdirectory for MDI icons
-#[allow(dead_code)]
-const MDI_CACHE_SUBDIR: &str = "mdi";
 
 /// Metadata cache filename
 const METADATA_FILENAME: &str = "metadata.json";
@@ -76,10 +47,10 @@ const SVG_SUBDIR: &str = "svg";
 // Icon Fetcher
 // ============================================================================
 
-/// Icon fetcher for downloading and caching icons.
+/// Icon fetcher for loading icons.
 ///
-/// Supports multiple icon sources with async fetching and local caching.
-/// Icons are downloaded once and cached for subsequent use.
+/// Supports local file-based loading (always available) and optional
+/// HTTP fetching (requires `icon-fetch` feature).
 pub struct IconFetcher {
     /// Cache directory (e.g., target/tairitsu/icons/)
     cache_dir: PathBuf,
@@ -135,13 +106,6 @@ impl IconFetcher {
         self.source_cache_dir().join(SVG_SUBDIR)
     }
 
-    /// Get the global metadata path (for backward compatibility).
-    ///
-    /// This is `{cache_dir}/mdi_metadata.json`.
-    pub fn global_metadata_path(&self) -> PathBuf {
-        self.cache_dir.join("mdi_metadata.json")
-    }
-
     /// Check if icons are already cached.
     ///
     /// Returns true if both metadata and SVG directory exist.
@@ -161,6 +125,77 @@ impl IconFetcher {
         metadata_exists && has_icons
     }
 
+    /// Load icons from a local directory (simple file-based approach).
+    ///
+    /// This scans the `icons/` directory for SVG files and builds metadata.
+    /// This is the recommended simple approach.
+    pub fn load_from_directory(&self) -> crate::Result<IconMetadata> {
+        let icons_dir = self.cache_dir.join("icons");
+
+        if !icons_dir.exists() {
+            return Ok(IconMetadata::default());
+        }
+
+        let mut metadata = IconMetadata::default();
+        metadata.version = "local".to_string();
+
+        for entry in std::fs::read_dir(&icons_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.extension().map(|e| e == "svg").unwrap_or(false) {
+                if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
+                    let content = std::fs::read_to_string(&path)?;
+                    let svg_path = extract_svg_path(&content);
+
+                    metadata.icons.insert(
+                        name.to_string(),
+                        crate::icons::IconEntry {
+                            name: name.to_string(),
+                            aliases: vec![],
+                            tags: vec![],
+                            author: None,
+                            version: None,
+                            deprecated: false,
+                            svg_path,
+                        },
+                    );
+                }
+            }
+        }
+
+        metadata.count = metadata.icons.len();
+        info!("Loaded {} icons from {}", metadata.count, icons_dir.display());
+
+        Ok(metadata)
+    }
+
+    /// Load cached metadata (no HTTP fetching).
+    pub fn load_cached(&self) -> crate::Result<IconMetadata> {
+        let metadata_path = self.metadata_path();
+        let svg_dir = self.svg_dir();
+
+        if !metadata_path.exists() {
+            return Ok(IconMetadata::default());
+        }
+
+        let content = std::fs::read_to_string(&metadata_path)?;
+        let mut metadata = IconMetadata::parse_mdi_json(&content)?;
+
+        // Load SVG paths for each icon
+        for (name, icon) in &mut metadata.icons {
+            let svg_path = svg_dir.join(format!("{}.svg", name));
+            if svg_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&svg_path) {
+                    icon.svg_path = extract_svg_path(&content);
+                }
+            }
+        }
+
+        Ok(metadata)
+    }
+
+    #[cfg(feature = "icon-fetch")]
     /// Fetch icons (uses cache if available).
     ///
     /// # Arguments
@@ -183,334 +218,115 @@ impl IconFetcher {
                 self.source,
                 self.source_cache_dir().display()
             );
-            return self.load_cached_metadata();
+            return self.load_cached();
         }
 
         // Fetch fresh icons based on source
         match self.source {
             IconSource::Mdi => self.fetch_mdi().await,
             IconSource::Lucide => self.fetch_lucide().await,
-            IconSource::Custom => self.load_custom(),
+            IconSource::Custom => self.load_from_directory(),
         }
     }
 
-    /// Load cached metadata and SVG paths.
-    fn load_cached_metadata(&self) -> crate::Result<IconMetadata> {
-        let content = std::fs::read_to_string(self.metadata_path())?;
-        let mut metadata = IconMetadata::parse_mdi_json(&content)?;
-
-        // Load SVG paths for each icon
-        let svg_dir = self.svg_dir();
-        for (name, icon) in &mut metadata.icons {
-            let svg_path = svg_dir.join(format!("{}.svg", name));
-            if svg_path.exists() {
-                if let Ok(content) = std::fs::read_to_string(&svg_path) {
-                    icon.svg_path = extract_svg_path(&content);
-                }
-            }
-        }
-
-        Ok(metadata)
-    }
-
-    /// Fetch MDI icons from the npm registry or GitHub.
+    #[cfg(not(feature = "icon-fetch"))]
+    /// Fetch icons - returns error when HTTP fetching is not enabled.
     ///
-    /// Strategy:
-    /// 1. Try to download @mdi/svg tarball from npm registry
-    /// 2. If that fails, fall back to fetching individual SVGs from GitHub
-    /// 3. Always fetch meta.json from GitHub for metadata
-    async fn fetch_mdi(&self) -> crate::Result<IconMetadata> {
-        info!("Fetching MDI icons v{}", self.version);
-
-        // Step 1: Fetch and save metadata
-        let metadata = self.fetch_mdi_metadata().await?;
-        info!("Fetched metadata for {} MDI icons", metadata.count);
-
-        // Step 2: Download SVG files
-        match self.download_mdi_package().await {
-            Ok(count) => {
-                info!("Downloaded {} SVG files from npm package", count);
-            }
-            Err(e) => {
-                warn!("Failed to download MDI package from npm: {}, falling back to GitHub", e);
-                // Fallback: don't download all SVGs, they'll be fetched on-demand
-                info!("SVGs will be fetched on-demand from GitHub when needed");
+    /// Enable the `icon-fetch` feature to use HTTP fetching.
+    pub async fn fetch(&self, _force: bool) -> crate::Result<IconMetadata> {
+        match self.source {
+            IconSource::Custom => self.load_from_directory(),
+            _ => {
+                warn!(
+                    "HTTP icon fetching not available (compile without 'icon-fetch' feature). \
+                     Use IconSource::Custom for local files."
+                );
+                self.load_cached()
             }
         }
+    }
+}
 
-        // Save metadata to cache
-        self.save_metadata(&metadata)?;
+// ============================================================================
+// HTTP Fetching (Optional)
+// ============================================================================
 
-        // Reload with SVG paths
-        self.load_cached_metadata()
+#[cfg(feature = "icon-fetch")]
+mod http_fetch {
+    use super::*;
+    use std::sync::OnceLock;
+
+    /// MDI GitHub raw URL for meta.json
+    const MDI_GITHUB_META_URL: &str =
+        "https://raw.githubusercontent.com/Templarian/MaterialDesign/master/meta.json";
+
+    /// Global async HTTP client (lazy initialized)
+    static ASYNC_HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+
+    /// Get or create the async HTTP client.
+    fn get_async_http_client() -> &'static reqwest::Client {
+        ASYNC_HTTP_CLIENT.get_or_init(|| {
+            reqwest::Client::builder()
+                .user_agent(format!("tairitsu-packager/{}", crate::VERSION))
+                .timeout(std::time::Duration::from_secs(60))
+                .build()
+                .expect("Failed to create async HTTP client")
+        })
     }
 
-    /// Fetch MDI metadata from GitHub.
-    async fn fetch_mdi_metadata(&self) -> crate::Result<IconMetadata> {
-        let url = MDI_GITHUB_META_URL;
-        debug!("Fetching MDI metadata from {}", url);
-
-        let content = fetch_url_async(url).await?;
-        let mut metadata = IconMetadata::parse_mdi_json(&content)?;
-        metadata.version = self.version.clone();
-
-        // Save raw metadata to cache
-        std::fs::write(self.metadata_path(), &content)?;
-
-        Ok(metadata)
-    }
-
-    /// Save metadata to cache.
-    fn save_metadata(&self, metadata: &IconMetadata) -> crate::Result<()> {
-        // Serialize metadata
-        let json = serde_json::to_string_pretty(metadata)?;
-        std::fs::write(self.metadata_path(), json)?;
-
-        // Also save to global location for backward compatibility
-        let global_path = self.global_metadata_path();
-        let legacy_metadata = LegacyMetadata::from(metadata);
-        let legacy_json = serde_json::to_string_pretty(&legacy_metadata)?;
-        std::fs::write(global_path, legacy_json)?;
-
-        Ok(())
-    }
-
-    /// Download MDI SVG package from npm registry.
-    ///
-    /// This downloads the @mdi/svg tarball and extracts all SVG files.
-    async fn download_mdi_package(&self) -> crate::Result<usize> {
-        let version = if self.version == "latest" {
-            // Get latest version from npm
-            self.get_latest_mdi_version().await?
-        } else {
-            self.version.clone()
-        };
-
-        // Construct tarball URL
-        let tarball_url = format!(
-            "https://registry.npmjs.org/@mdi/svg/-/svg-{}.tgz",
-            version
-        );
-
-        info!("Downloading MDI SVG package from {}", tarball_url);
-
-        // Download tarball
-        let _tarball = fetch_bytes_async(&tarball_url).await?;
-
-        // Extract tarball (it's a gzipped tar, but we can use the zip library
-        // with flate2 for gzip decompression, then parse the tar)
-        // For simplicity, we'll use an alternative approach: download from unpkg
-        self.download_from_unpkg(&version).await
-    }
-
-    /// Get the latest MDI version from npm.
-    async fn get_latest_mdi_version(&self) -> crate::Result<String> {
-        let url = "https://registry.npmjs.org/@mdi/svg/latest";
-        let content = fetch_url_async(url).await?;
-
-        let json: serde_json::Value = serde_json::from_str(&content)?;
-        let version = json
-            .get("version")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| {
-                crate::TairitsuPackagerError::IconFetchError(
-                    "Could not parse latest version from npm".to_string(),
-                )
+    /// Fetch URL content asynchronously.
+    pub async fn fetch_url_async(url: &str) -> crate::Result<String> {
+        let client = get_async_http_client();
+        let response = client
+            .get(url)
+            .send()
+            .await
+            .map_err(|e| {
+                crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
             })?;
 
-        Ok(version.to_string())
-    }
-
-    /// Download SVG files from unpkg CDN.
-    ///
-    /// This is an alternative approach that downloads files individually
-    /// from the unpkg CDN, which serves files directly from npm packages.
-    async fn download_from_unpkg(&self, version: &str) -> crate::Result<usize> {
-        let svg_dir = self.svg_dir();
-        let mut count = 0;
-
-        // Load metadata to get icon names
-        let metadata = self.load_cached_metadata()?;
-
-        info!(
-            "Downloading {} SVG files from unpkg for v{}",
-            metadata.icons.len(),
-            version
-        );
-
-        // Download icons in batches using async
-        use futures::future::join_all;
-
-        let batch_size = 20;
-        let icon_names: Vec<_> = metadata.icons.keys().cloned().collect();
-
-        for chunk in icon_names.chunks(batch_size) {
-            let futures: Vec<_> = chunk
-                .iter()
-                .filter(|name| {
-                    // Skip if already cached
-                    !svg_dir.join(format!("{}.svg", name)).exists()
-                })
-                .map(|name| self.download_single_svg(name, version))
-                .collect();
-
-            let results = join_all(futures).await;
-
-            for result in results {
-                match result {
-                    Ok(downloaded) => {
-                        if downloaded {
-                            count += 1;
-                        }
-                    }
-                    Err(e) => {
-                        debug!("Failed to download SVG: {}", e);
-                    }
-                }
-            }
-
-            // Small delay between batches to be nice to the server
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        if !response.status().is_success() {
+            return Err(crate::TairitsuPackagerError::HttpError(format!(
+                "HTTP {} for {}",
+                response.status(),
+                url
+            )));
         }
 
-        Ok(count)
+        response.text().await.map_err(|e| {
+            crate::TairitsuPackagerError::HttpError(format!("Failed to read response: {}", e))
+        })
     }
 
-    /// Download a single SVG file from unpkg.
-    async fn download_single_svg(&self, name: &str, version: &str) -> crate::Result<bool> {
-        let url = format!(
-            "https://unpkg.com/@mdi/svg@{}/svg/{}.svg",
-            version, name
-        );
+    impl IconFetcher {
+        /// Fetch MDI icons from GitHub.
+        pub(super) async fn fetch_mdi(&self) -> crate::Result<IconMetadata> {
+            info!("Fetching MDI icons v{}", self.version);
 
-        let content = fetch_url_async(&url).await?;
+            // Fetch metadata from GitHub
+            let content = fetch_url_async(MDI_GITHUB_META_URL).await?;
+            let mut metadata = IconMetadata::parse_mdi_json(&content)?;
+            metadata.version = self.version.clone();
 
-        // Save to cache
-        let svg_path = self.svg_dir().join(format!("{}.svg", name));
-        std::fs::write(&svg_path, &content)?;
+            // Save metadata to cache
+            std::fs::write(self.metadata_path(), &content)?;
 
-        debug!("Downloaded {}.svg", name);
-        Ok(true)
-    }
+            info!("Fetched metadata for {} MDI icons", metadata.count);
 
-    /// Fetch Lucide icons (stub implementation).
-    async fn fetch_lucide(&self) -> crate::Result<IconMetadata> {
-        warn!("Lucide icon source not yet implemented");
-        Ok(IconMetadata::default())
-    }
+            // Load SVG paths from cache
+            self.load_cached()
+        }
 
-    /// Load custom icons from directory.
-    fn load_custom(&self) -> crate::Result<IconMetadata> {
-        info!("Loading custom icons from directory");
-        // Custom icons are loaded from a local directory
-        // This would be configured via IconsConfig::custom_dir
-        Ok(IconMetadata::default())
+        /// Fetch Lucene icons (stub implementation).
+        pub(super) async fn fetch_lucide(&self) -> crate::Result<IconMetadata> {
+            warn!("Lucide icon source not yet implemented");
+            Ok(IconMetadata::default())
+        }
     }
 }
 
-// ============================================================================
-// Async HTTP Client
-// ============================================================================
-
-/// Global async HTTP client (lazy initialized)
-static ASYNC_HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
-
-/// Get or create the async HTTP client.
-fn get_async_http_client() -> &'static reqwest::Client {
-    ASYNC_HTTP_CLIENT.get_or_init(|| {
-        reqwest::Client::builder()
-            .user_agent(format!("tairitsu-packager/{}", crate::VERSION))
-            .timeout(std::time::Duration::from_secs(60))
-            .build()
-            .expect("Failed to create async HTTP client")
-    })
-}
-
-/// Fetch URL content asynchronously.
-async fn fetch_url_async(url: &str) -> crate::Result<String> {
-    let client = get_async_http_client();
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| {
-            crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
-        })?;
-
-    if !response.status().is_success() {
-        return Err(crate::TairitsuPackagerError::HttpError(format!(
-            "HTTP {} for {}",
-            response.status(),
-            url
-        )));
-    }
-
-    response.text().await.map_err(|e| {
-        crate::TairitsuPackagerError::HttpError(format!("Failed to read response: {}", e))
-    })
-}
-
-/// Fetch URL content as bytes asynchronously.
-async fn fetch_bytes_async(url: &str) -> crate::Result<Vec<u8>> {
-    let client = get_async_http_client();
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| {
-            crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
-        })?;
-
-    if !response.status().is_success() {
-        return Err(crate::TairitsuPackagerError::HttpError(format!(
-            "HTTP {} for {}",
-            response.status(),
-            url
-        )));
-    }
-
-    response.bytes().await.map_err(|e| {
-        crate::TairitsuPackagerError::HttpError(format!("Failed to read response bytes: {}", e))
-    }).map(|b| b.to_vec())
-}
-
-// ============================================================================
-// Sync HTTP Client (for non-async contexts)
-// ============================================================================
-
-/// Global blocking HTTP client (lazy initialized)
-static BLOCKING_HTTP_CLIENT: OnceLock<reqwest::blocking::Client> = OnceLock::new();
-
-/// Get or create the blocking HTTP client.
-fn get_blocking_http_client() -> &'static reqwest::blocking::Client {
-    BLOCKING_HTTP_CLIENT.get_or_init(|| {
-        reqwest::blocking::Client::builder()
-            .user_agent(format!("tairitsu-packager/{}", crate::VERSION))
-            .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .expect("Failed to create blocking HTTP client")
-    })
-}
-
-/// Fetch URL content synchronously.
-fn fetch_url_blocking(url: &str) -> crate::Result<String> {
-    let client = get_blocking_http_client();
-    let response = client.get(url).send().map_err(|e| {
-        crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
-    })?;
-
-    if !response.status().is_success() {
-        return Err(crate::TairitsuPackagerError::HttpError(format!(
-            "HTTP {} for {}",
-            response.status(),
-            url
-        )));
-    }
-
-    response.text().map_err(|e| {
-        crate::TairitsuPackagerError::HttpError(format!("Failed to read response: {}", e))
-    })
-}
+#[cfg(feature = "icon-fetch")]
+use http_fetch::*;
 
 // ============================================================================
 // SVG Path Extraction
@@ -538,7 +354,8 @@ pub fn extract_svg_path(svg: &str) -> Option<String> {
 
 /// Fetch icons from source (convenience function, async).
 ///
-/// Uses cache if available, otherwise downloads fresh.
+/// Uses cache if available, otherwise downloads fresh (if HTTP fetching enabled).
+#[cfg(feature = "icon-fetch")]
 pub async fn fetch_icons_async(
     source: &IconSource,
     cache_dir: &Path,
@@ -548,6 +365,7 @@ pub async fn fetch_icons_async(
 }
 
 /// Force fetch icons (ignores cache, async).
+#[cfg(feature = "icon-fetch")]
 pub async fn force_fetch_icons_async(
     source: &IconSource,
     cache_dir: &Path,
@@ -561,154 +379,62 @@ pub async fn force_fetch_icons_async(
 /// This is a blocking wrapper around the async fetch function.
 /// Uses cache if available, otherwise downloads fresh.
 pub fn fetch_icons(source: &IconSource, cache_dir: &Path) -> crate::Result<IconMetadata> {
-    // Try to use tokio runtime if available, otherwise use blocking
-    match tokio::runtime::Handle::try_current() {
-        Ok(handle) => {
-            // We're in an async context, block_on should work
-            handle.block_on(fetch_icons_async(source, cache_dir))
+    // For Custom source, use local file loading
+    if *source == IconSource::Custom {
+        let fetcher = IconFetcher::new(cache_dir.to_path_buf(), *source);
+        return fetcher.load_from_directory();
+    }
+
+    // Try to load from cache first
+    let fetcher = IconFetcher::new(cache_dir.to_path_buf(), *source);
+    if fetcher.is_cached() {
+        return fetcher.load_cached();
+    }
+
+    #[cfg(feature = "icon-fetch")]
+    {
+        // Try to use tokio runtime if available
+        match tokio::runtime::Handle::try_current() {
+            Ok(handle) => handle.block_on(fetch_icons_async(source, cache_dir)),
+            Err(_) => {
+                // Create a new runtime
+                let rt = tokio::runtime::Runtime::new()
+                    .map_err(|e| crate::TairitsuPackagerError::IconFetchError(e.to_string()))?;
+                rt.block_on(fetch_icons_async(source, cache_dir))
+            }
         }
-        Err(_) => {
-            // No async runtime, use blocking implementation
-            fetch_icons_blocking(source, cache_dir)
-        }
+    }
+
+    #[cfg(not(feature = "icon-fetch"))]
+    {
+        warn!(
+            "HTTP icon fetching not available for {:?}. \
+             Enable 'icon-fetch' feature or use IconSource::Custom for local files.",
+            source
+        );
+        Ok(IconMetadata::default())
     }
 }
 
 /// Force fetch icons (synchronous wrapper).
 pub fn force_fetch_icons(source: &IconSource, cache_dir: &Path) -> crate::Result<IconMetadata> {
-    match tokio::runtime::Handle::try_current() {
-        Ok(handle) => handle.block_on(force_fetch_icons_async(source, cache_dir)),
-        Err(_) => force_fetch_icons_blocking(source, cache_dir),
-    }
-}
-
-/// Blocking implementation for fetch_icons.
-fn fetch_icons_blocking(source: &IconSource, cache_dir: &Path) -> crate::Result<IconMetadata> {
-    let source_cache_dir = cache_dir.join(source.to_string());
-    let metadata_path = source_cache_dir.join(METADATA_FILENAME);
-    let svg_dir = source_cache_dir.join(SVG_SUBDIR);
-
-    // Ensure directories exist
-    std::fs::create_dir_all(&source_cache_dir)?;
-    std::fs::create_dir_all(&svg_dir)?;
-
-    // Load from cache if available
-    if metadata_path.exists() && svg_dir.exists() {
-        let content = std::fs::read_to_string(&metadata_path)?;
-        let mut metadata = IconMetadata::parse_mdi_json(&content)?;
-
-        // Load SVG paths
-        for (name, icon) in &mut metadata.icons {
-            let svg_path = svg_dir.join(format!("{}.svg", name));
-            if svg_path.exists() {
-                if let Ok(content) = std::fs::read_to_string(&svg_path) {
-                    icon.svg_path = extract_svg_path(&content);
-                }
-            }
-        }
-
-        return Ok(metadata);
-    }
-
-    // Fetch metadata
-    let content = fetch_url_blocking(MDI_GITHUB_META_URL)?;
-    std::fs::write(&metadata_path, &content)?;
-
-    let mut metadata = IconMetadata::parse_mdi_json(&content)?;
-    metadata.version = MDI_DEFAULT_VERSION.to_string();
-
-    info!("Fetched {} MDI icons (metadata only, SVGs fetched on-demand)", metadata.count);
-
-    Ok(metadata)
-}
-
-/// Blocking implementation for force_fetch_icons.
-fn force_fetch_icons_blocking(source: &IconSource, cache_dir: &Path) -> crate::Result<IconMetadata> {
-    let source_cache_dir = cache_dir.join(source.to_string());
-    let metadata_path = source_cache_dir.join(METADATA_FILENAME);
-
-    // Ensure directories exist
-    std::fs::create_dir_all(&source_cache_dir)?;
-    std::fs::create_dir_all(source_cache_dir.join(SVG_SUBDIR))?;
-
-    // Always fetch fresh metadata
-    let content = fetch_url_blocking(MDI_GITHUB_META_URL)?;
-    std::fs::write(&metadata_path, &content)?;
-
-    let mut metadata = IconMetadata::parse_mdi_json(&content)?;
-    metadata.version = MDI_DEFAULT_VERSION.to_string();
-
-    info!("Force-fetched {} MDI icons", metadata.count);
-
-    Ok(metadata)
-}
-
-/// List icons from cache.
-#[allow(dead_code)]
-pub fn list_cached_icons(cache_dir: &Path) -> crate::Result<Vec<String>> {
-    let svg_dir = cache_dir.join(SVG_SUBDIR);
-    if !svg_dir.exists() {
-        return Ok(Vec::new());
-    }
-
-    let mut icons = Vec::new();
-    for entry in std::fs::read_dir(svg_dir)? {
-        let entry = entry?;
-        if let Some(name) = entry.file_name().to_str() {
-            if name.ends_with(".svg") {
-                icons.push(name.trim_end_matches(".svg").to_string());
+    #[cfg(feature = "icon-fetch")]
+    {
+        match tokio::runtime::Handle::try_current() {
+            Ok(handle) => handle.block_on(force_fetch_icons_async(source, cache_dir)),
+            Err(_) => {
+                let rt = tokio::runtime::Runtime::new()
+                    .map_err(|e| crate::TairitsuPackagerError::IconFetchError(e.to_string()))?;
+                rt.block_on(force_fetch_icons_async(source, cache_dir))
             }
         }
     }
 
-    icons.sort();
-    Ok(icons)
-}
-
-// ============================================================================
-// Legacy Metadata Format
-// ============================================================================
-
-/// Legacy metadata format for backward compatibility.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-struct LegacyMetadata {
-    /// Version
-    version: String,
-    /// Count
-    count: usize,
-    /// Icons
-    icons: Vec<LegacyIconEntry>,
-}
-
-impl From<&IconMetadata> for LegacyMetadata {
-    fn from(metadata: &IconMetadata) -> Self {
-        Self {
-            version: metadata.version.clone(),
-            count: metadata.count,
-            icons: metadata
-                .icons
-                .values()
-                .map(|e| LegacyIconEntry {
-                    name: e.name.clone(),
-                    aliases: e.aliases.clone(),
-                    tags: e.tags.clone(),
-                    author: e.author.clone(),
-                    version: e.version.clone(),
-                    deprecated: e.deprecated,
-                })
-                .collect(),
-        }
+    #[cfg(not(feature = "icon-fetch"))]
+    {
+        let fetcher = IconFetcher::new(cache_dir.to_path_buf(), *source);
+        fetcher.load_from_directory()
     }
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-struct LegacyIconEntry {
-    name: String,
-    aliases: Vec<String>,
-    tags: Vec<String>,
-    author: Option<String>,
-    version: Option<String>,
-    deprecated: bool,
 }
 
 // ============================================================================
@@ -761,10 +487,6 @@ mod tests {
         assert_eq!(
             fetcher.svg_dir(),
             PathBuf::from("/tmp/cache/mdi/svg")
-        );
-        assert_eq!(
-            fetcher.global_metadata_path(),
-            PathBuf::from("/tmp/cache/mdi_metadata.json")
         );
     }
 

@@ -65,13 +65,15 @@ sys-locale = "0.3"
 crossterm = "0.28"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
-# HTTP client for icon fetching
-reqwest = { version = "^0.12", features = ["blocking", "json", "stream"] }
+# HTTP client for icon fetching (optional)
+reqwest = { version = "^0.12", features = ["blocking", "json", "stream"], optional = true }
 
-# ZIP file handling for icon packages
-zip = { version = "^2", default-features = false, features = ["deflate"] }
+# ZIP file handling for icon packages (optional)
+zip = { version = "^2", default-features = false, features = ["deflate"], optional = true }
 
 [features]
 default = ["dev-server"]
 native = []
 dev-server = ["axum", "tower-http", "notify"]
+# Enable remote icon fetching from MDI, Lucide, etc.
+icon-fetch = ["reqwest", "zip"]

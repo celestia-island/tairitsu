@@ -98,7 +98,7 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 - [x] Update CLI to trigger reindexing
 
 ### Phase 4: Cleanup
-- [ ] Remove complex icon fetching (keep simple file-based)
+- [x] Remove complex icon fetching (keep simple file-based)
 - [ ] Update documentation
 - [ ] Add E2E tests
 
