@@ -73,6 +73,17 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         }
     }
 
+    // SVG Safety Tests (don't require WebDriver)
+    info!("Running SVG Safety Tests...");
+    match tests::Test::run_with_driver(&tests::SvgSafetyTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("SVG safety test suite failed: {}", e);
+            let error_msg: String = e.to_string();
+            results.push(TestResult::error("SvgSafetyTests", error_msg.as_str()));
+        }
+    }
+
     info!("\n=== E2E Test Results ===");
     for result in &results {
         info!("{}: {}", result.component, result.message);
