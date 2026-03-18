@@ -1,4 +1,5 @@
 mod component;
+mod props_dsl;
 mod rsx;
 mod scss;
 mod svg;
@@ -664,4 +665,64 @@ pub fn derive_props(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
+}
+
+/// Attribute macro for defining component props with cleaner DSL syntax.
+///
+/// This macro transforms a simplified struct definition into the verbose
+/// Props format required by the component system, automatically generating
+/// the `#[props(default = ...)]` attributes and `Default` implementation.
+///
+/// # Example
+/// ```ignore
+/// #[define_props]
+/// pub struct AvatarProps {
+///     src: Option<String> = None,
+///     alt: String = "Avatar".to_string(),
+///     size: AvatarSize = AvatarSize::Md,
+///     class: String = String::new(),
+/// }
+/// ```
+///
+/// Expands to:
+/// ```ignore
+/// #[derive(Clone, PartialEq, Props)]
+/// pub struct AvatarProps {
+///     #[props(default)]
+///     pub src: Option<String>,
+///     #[props(default = "Avatar".to_string())]
+///     pub alt: String,
+///     #[props(default = AvatarSize::Md)]
+///     pub size: AvatarSize,
+///     #[props(default)]
+///     pub class: String,
+/// }
+///
+/// impl Default for AvatarProps {
+///     fn default() -> Self {
+///         Self {
+///             src: None,
+///             alt: "Avatar".to_string(),
+///             size: AvatarSize::Md,
+///             class: String::new(),
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn define_props(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    match syn::parse::<props_dsl::PropsInput>(item.clone()) {
+        Ok(input) => {
+            let expanded = props_dsl::expand_define_props(input);
+            TokenStream::from(expanded)
+        }
+        Err(e) => {
+            // If parsing fails, output a compile_error with the error message
+            let msg = format!("define_props macro error: {}", e);
+            let ts = quote! {
+                compile_error!(#msg);
+            };
+            TokenStream::from(ts)
+        }
+    }
 }
