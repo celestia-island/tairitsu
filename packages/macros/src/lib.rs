@@ -1,12 +1,14 @@
 mod component;
 mod rsx;
 mod scss;
+mod svg;
 
 use component::expand_component;
 use proc_macro::TokenStream;
 use quote::quote;
 use rsx::{expand_rsx_root, RsxRoot};
 use scss::expand_scss;
+use svg::expand_svg;
 use syn::{parse_macro_input, Data, DeriveInput};
 
 /// Component macro for automatic Props generation
@@ -71,11 +73,11 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 ///         color: white;
 ///         padding: 8px 16px;
 ///         border-radius: 4px;
-///         
+///
 ///         &:hover {
 ///             background: var(--primary-dark);
 ///         }
-///         
+///
 ///         &.disabled {
 ///             opacity: 0.5;
 ///         }
@@ -96,6 +98,37 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn scss(input: TokenStream) -> TokenStream {
     expand_scss(input)
+}
+
+/// SVG macro for compile-time SVG embedding with XSS protection
+///
+/// This macro reads SVG content at compile time and creates a SafeSvg instance
+/// with built-in XSS sanitization.
+///
+/// # Features
+/// - Compile-time SVG embedding
+/// - XSS sanitization (removes scripts, event handlers, dangerous URLs)
+/// - Support for inline content or file paths
+///
+/// # Example
+/// ```ignore
+/// // Inline SVG content
+/// let icon = svg! { r#"<path d="M12 2L2 22h20L12 2z"/>"# };
+///
+/// // From file (relative to crate root)
+/// let icon = svg! { file: "icons/sun.svg" };
+///
+/// // Use with VElement
+/// rsx! {
+///     svg {
+///         viewBox: "0 0 24 24",
+///         safe_svg: icon,
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn svg(input: TokenStream) -> TokenStream {
+    expand_svg(input)
 }
 
 /// Derives WitCommand trait for an enum, automatically generating Response type and command routing

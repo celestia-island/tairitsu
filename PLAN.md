@@ -82,7 +82,7 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 ### Phase 1: Safe SVG Core
 - [x] Add `SafeSvg` struct to vdom with sanitization
 - [x] Add `safe_svg()` method to `VElement`
-- [ ] Add `svg!` macro for compile-time SVG embedding
+- [x] Add `svg!` macro for compile-time SVG embedding
 - [x] Add SVG sanitization tests
 
 ### Phase 2: build.rs Infrastructure
