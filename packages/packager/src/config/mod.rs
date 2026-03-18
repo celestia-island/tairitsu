@@ -15,6 +15,8 @@ pub struct Config {
     #[serde(default)]
     pub css: CssConfig,
     #[serde(default)]
+    pub scss: ScssConfig,
+    #[serde(default)]
     pub native: NativeConfig,
 }
 
@@ -141,6 +143,36 @@ pub struct CssConfig {
     pub minify: bool,
 }
 
+/// SCSS compilation configuration
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct ScssConfig {
+    /// Single entry point (legacy, for backward compatibility)
+    #[serde(default)]
+    pub entry: Option<String>,
+    /// Single output filename (legacy)
+    #[serde(default = "default_scss_output")]
+    pub output: String,
+    /// Multiple entry points
+    #[serde(default)]
+    pub entries: Vec<ScssEntry>,
+    /// Load paths for @use and @import
+    #[serde(default)]
+    pub load_paths: Vec<String>,
+}
+
+fn default_scss_output() -> String {
+    "styles.css".to_string()
+}
+
+/// Single SCSS entry point configuration
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct ScssEntry {
+    /// Entry SCSS file path
+    pub entry: String,
+    /// Output CSS filename
+    pub output: String,
+}
+
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct NativeConfig {
     #[serde(default)]
@@ -195,6 +227,7 @@ impl Config {
             assets: metadata.assets,
             html: metadata.html,
             css: metadata.css,
+            scss: metadata.scss,
             native: metadata.native,
         })
     }
