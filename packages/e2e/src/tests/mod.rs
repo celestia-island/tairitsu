@@ -4,8 +4,10 @@ pub mod doctor;
 pub mod error_handling;
 pub mod events;
 pub mod lifecycle;
+pub mod svg_safety;
 
 use anyhow::Result;
+use thirtyfour::WebDriver;
 
 pub use basic_components::BasicComponentsTests;
 pub use build::BuildTests;
@@ -13,7 +15,7 @@ pub use doctor::DoctorTests;
 pub use error_handling::ErrorHandlingTests;
 pub use events::EventTests;
 pub use lifecycle::LifecycleTests;
-use thirtyfour::WebDriver;
+pub use svg_safety::SvgSafetyTests;
 
 pub trait Test: Send + Sync {
     fn name(&self) -> &str;
