@@ -14,6 +14,21 @@ pub enum TairitsuPackagerError {
     #[error("Doctor check failed: {0}")]
     DoctorError(String),
 
+    #[error("Icon fetch error: {0}")]
+    IconFetchError(String),
+
+    #[error("Icon build error: {0}")]
+    IconBuildError(String),
+
+    #[error("Icon cache error: {0}")]
+    IconCacheError(String),
+
+    #[error("HTTP error: {0}")]
+    HttpError(String),
+
+    #[error("ZIP extraction error: {0}")]
+    ZipError(String),
+
     #[error("Dependency error: {0}")]
     DependencyError(String),
 

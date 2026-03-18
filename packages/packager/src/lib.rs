@@ -7,6 +7,7 @@ pub mod cli;
 pub mod config;
 pub mod doctor;
 pub mod i18n;
+pub mod icons;
 pub mod styles;
 pub mod utils;
 pub mod wasm;
@@ -14,6 +15,10 @@ pub mod wit_cmd;
 
 pub use cli::run;
 pub use config::{Config, TairitsuMetadata};
+pub use icons::{
+    IconBuildResult, IconConfig, IconMetadata, IconSource, IconStyle, IconsConfig, MdiIconMeta,
+    MdiMetadata,
+};
 pub use utils::error::{Result, TairitsuPackagerError};
 
 /// Version of tairitsu-packager

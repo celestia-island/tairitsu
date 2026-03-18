@@ -113,6 +113,15 @@ yuuka::derive_struct!(
             category_configuration: String,
             category_build: String,
             category_migration: String,
+        },
+        icons: Icons {
+            fetching: String,
+            cached: String,
+            building: String,
+            generated: String,
+            listing: String,
+            found: String,
+            source_not_implemented: String,
         }
     }
 );
@@ -120,9 +129,11 @@ yuuka::derive_struct!(
 const EN_CLI: &str = include_str!("../../res/locales/en/cli.toml");
 const EN_DEV: &str = include_str!("../../res/locales/en/dev.toml");
 const EN_DOCTOR: &str = include_str!("../../res/locales/en/doctor.toml");
+const EN_ICONS: &str = include_str!("../../res/locales/en/icons.toml");
 const CHS_CLI: &str = include_str!("../../res/locales/chs/cli.toml");
 const CHS_DEV: &str = include_str!("../../res/locales/chs/dev.toml");
 const CHS_DOCTOR: &str = include_str!("../../res/locales/chs/doctor.toml");
+const CHS_ICONS: &str = include_str!("../../res/locales/chs/icons.toml");
 const CHT_CLI: &str = include_str!("../../res/locales/cht/cli.toml");
 const CHT_DEV: &str = include_str!("../../res/locales/cht/dev.toml");
 const CHT_DOCTOR: &str = include_str!("../../res/locales/cht/doctor.toml");
@@ -147,15 +158,15 @@ const AR_DOCTOR: &str = include_str!("../../res/locales/ar/doctor.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
-        Language::CHS => [CHS_CLI, CHS_DEV, CHS_DOCTOR].join("\n"),
-        Language::CHT => [CHT_CLI, CHT_DEV, CHT_DOCTOR].join("\n"),
-        Language::Ja => [JA_CLI, JA_DEV, JA_DOCTOR].join("\n"),
-        Language::Ko => [KO_CLI, KO_DEV, KO_DOCTOR].join("\n"),
-        Language::Fr => [FR_CLI, FR_DEV, FR_DOCTOR].join("\n"),
-        Language::Es => [ES_CLI, ES_DEV, ES_DOCTOR].join("\n"),
-        Language::Ru => [RU_CLI, RU_DEV, RU_DOCTOR].join("\n"),
-        Language::Ar => [AR_CLI, AR_DEV, AR_DOCTOR].join("\n"),
-        _ => [EN_CLI, EN_DEV, EN_DOCTOR].join("\n"),
+        Language::CHS => [CHS_CLI, CHS_DEV, CHS_DOCTOR, CHS_ICONS].join("\n"),
+        Language::CHT => [CHT_CLI, CHT_DEV, CHT_DOCTOR, EN_ICONS].join("\n"),
+        Language::Ja => [JA_CLI, JA_DEV, JA_DOCTOR, EN_ICONS].join("\n"),
+        Language::Ko => [KO_CLI, KO_DEV, KO_DOCTOR, EN_ICONS].join("\n"),
+        Language::Fr => [FR_CLI, FR_DEV, FR_DOCTOR, EN_ICONS].join("\n"),
+        Language::Es => [ES_CLI, ES_DEV, ES_DOCTOR, EN_ICONS].join("\n"),
+        Language::Ru => [RU_CLI, RU_DEV, RU_DOCTOR, EN_ICONS].join("\n"),
+        Language::Ar => [AR_CLI, AR_DEV, AR_DOCTOR, EN_ICONS].join("\n"),
+        _ => [EN_CLI, EN_DEV, EN_DOCTOR, EN_ICONS].join("\n"),
     }
 }
 

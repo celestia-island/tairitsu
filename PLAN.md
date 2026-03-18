@@ -34,91 +34,56 @@ styles = ["filled", "outline"]  # Which style variants to include
 output = "src/generated/icons.rs"
 ```
 
-### 2. New Module: `packages/packager/src/icons/`
+### 2. Module Structure: `packages/packager/src/icons/`
 
 ```
 packages/packager/src/icons/
-├── mod.rs           # Public API
-├── fetcher.rs       # Download icons from sources
-├── generator.rs     # Generate Rust code
-└── metadata.rs      # Parse icon metadata
+├── mod.rs           # Public API and core types
+├── fetcher.rs       # Download icons from sources (MDI, async)
+├── generator.rs     # Generate Rust code (enum, SVG paths)
+└── metadata.rs      # Parse icon metadata and Cargo.toml config
 ```
 
-### 3. Public API
-
-```rust
-pub mod icons;
-
-/// Icon source library
-pub enum IconSource {
-    MaterialDesign,  // MDI - 7,447 icons
-    Lucide,          // Lucide - ~500 icons
-}
-
-/// Icon style variant
-pub enum IconStyle {
-    Filled,
-    Outline,
-}
-
-/// Icon selection configuration
-pub struct IconConfig {
-    pub source: IconSource,
-    pub names: Vec<String>,
-    pub tags: Vec<String>,
-    pub styles: Vec<IconStyle>,
-    pub output: PathBuf,
-}
-
-/// Fetch and build icons
-pub fn build_icons(config: &IconConfig) -> Result<IconBuildResult>;
-```
-
-### 4. CLI Support
+### 3. CLI Support
 
 ```bash
-# Fetch icons based on Cargo.toml metadata
-tairitsu icons fetch
+# Fetch icons from configured source
+tairitsu icons fetch --source mdi [--force]
 
-# Build icon module (usually called during build)
-tairitsu icons build
+# Build icon module
+tairitsu icons build [--output path] [--icons icon1,icon2] [--tags tag1,tag2]
 
 # List available icons
-tairitsu icons list --source mdi --tag Nature
+tairitsu icons list --source mdi [--tag Nature] [--search query]
 ```
 
-### 5. Integration with `tairitsu dev`
+### 4. Integration with `tairitsu dev`
 
-The `tairitsu dev` command should:
-1. Check for `[package.metadata.tairitsu.icons]` in Cargo.toml
-2. If present, fetch/update icons if not cached
-3. Build icon module before compiling WASM
-4. Watch icon source directory for changes
+The `tairitsu dev` command can check for `[package.metadata.tairitsu.icons]` and build icons as needed.
 
 ## Implementation Tasks
 
-### Phase 1: Core Infrastructure
-- [ ] Create `packages/packager/src/icons/mod.rs`
-- [ ] Implement `IconFetcher` for MDI (download from GitHub)
-- [ ] Parse MDI metadata (meta.json from zip)
-- [ ] Cache downloaded icons in target directory
+### Phase 1: Core Infrastructure ✅
+- [x] Create `packages/packager/src/icons/mod.rs`
+- [x] Implement `IconFetcher` for MDI (download from GitHub/npm)
+- [x] Parse MDI metadata (meta.json)
+- [x] Cache downloaded icons in target directory
 
-### Phase 2: Code Generation
-- [ ] Generate Rust icon enum
-- [ ] Generate icon data module with SVG paths
-- [ ] Support selection by name, tag, style
+### Phase 2: Code Generation ✅
+- [x] Generate Rust icon enum
+- [x] Generate icon data module with SVG paths
+- [x] Support selection by name, tag
 
-### Phase 3: Cargo.toml Integration
-- [ ] Parse `[package.metadata.tairitsu.icons]` from Cargo.toml
-- [ ] Integrate with `tairitsu dev` build pipeline
-- [ ] Add `--icons` flag to force icon rebuild
+### Phase 3: Cargo.toml Integration ✅
+- [x] Parse `[package.metadata.tairitsu.icons]` from Cargo.toml
+- [x] `IconsConfig` struct with serde support
 
-### Phase 4: CLI Commands
-- [ ] `tairitsu icons fetch` - Download icon library
-- [ ] `tairitsu icons build` - Build icon module
-- [ ] `tairitsu icons list` - List available icons
+### Phase 4: CLI Commands ✅
+- [x] `tairitsu icons fetch` - Download icon library
+- [x] `tairitsu icons build` - Build icon module
+- [x] `tairitsu icons list` - List available icons
 
-### Phase 5: Advanced Features
+### Phase 5: Advanced Features (Future)
 - [ ] Auto-discovery (scan codebase for icon usage)
 - [ ] Custom icon sources (local SVG files)
 - [ ] Icon optimization (SVGO integration)
@@ -130,19 +95,32 @@ The `tairitsu dev` command should:
 |----------|----------|
 | Icon cache | `target/tairitsu/icons/mdi/` |
 | Generated code | Configured in Cargo.toml (default: `src/generated/icons.rs`) |
-| Metadata | `target/tairitsu/icons/mdi_metadata.json` |
+| Metadata | `target/tairitsu/icons/mdi/metadata.json` |
 
-## Migration from Hikari
+## API
 
-1. Move `hikari/scripts/icons/fetch_mdi_icons.py` logic to Rust
-2. Update `hikari/packages/builder/src/icons.rs` to use tairitsu-packager
-3. Add `[package.metadata.tairitsu.icons]` to hikari Cargo.toml
-4. Remove Python icon script
+```rust
+pub mod icons;
 
-## Benefits
+pub enum IconSource {
+    Mdi,      // Material Design Icons
+    Lucide,   // Lucide icons
+    Custom,   // Local SVG files
+}
 
-- **No Python dependency** for icon handling
-- **Declarative configuration** via Cargo.toml
-- **Faster builds** with caching
-- **Better DX** with `tairitsu icons list` command
-- **Unified tooling** - one CLI for everything
+pub enum IconStyle {
+    Filled,
+    Outline,
+}
+
+pub struct IconConfig {
+    pub source: IconSource,
+    pub names: Vec<String>,
+    pub tags: Vec<String>,
+    pub styles: Vec<IconStyle>,
+    pub output: PathBuf,
+}
+
+pub fn build_icons(config: &IconConfig, target_dir: &Path) -> Result<IconBuildResult>;
+pub fn fetch_icons(source: &IconSource, cache_dir: &Path) -> Result<IconMetadata>;
+```
