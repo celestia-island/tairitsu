@@ -106,6 +106,35 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 
 - [x] Embed browser-glue at compile time using `include_dir`
 
+### Phase 6: SCSS 配置灵活性
+
+当前 `compile_project_scss()` 只从 `src/styles/` 查找 SCSS，输出到 `styles.css`。
+需要支持：
+
+- [ ] **可配置 SCSS 入口**: 从 `Cargo.toml` 的 `[package.metadata.tairitsu.scss]` 读取配置
+  ```toml
+  [package.metadata.tairitsu.scss]
+  entry = "src/styles/index.scss"  # 或其他路径
+  output = "bundle.css"            # 输出文件名
+  ```
+- [ ] **多入口支持**: 支持编译多个 SCSS 入口点
+  ```toml
+  [[package.metadata.tairitsu.scss.entries]]
+  entry = "src/styles/index.scss"
+  output = "bundle.css"
+
+  [[package.metadata.tairitsu.scss.entries]]
+  entry = "src/styles/spa.scss"
+  output = "spa.css"
+  ```
+- [ ] **Load path 配置**: 支持配置 `--load-path`
+  ```toml
+  [package.metadata.tairitsu.scss]
+  load-paths = ["packages/theme/styles", "packages/components/src/styles"]
+  ```
+
+文件：`packages/packager/src/wasm/mod.rs` 的 `compile_project_scss()` 函数
+
 ## API
 
 ```rust
