@@ -93,7 +93,7 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 - [x] Add `tairitsu resources index` and `tairitsu resources list` CLI commands
 
 ### Phase 3: Integration
-- [ ] Integrate resource index with scss! macro
+- [x] Integrate resource index with scss! macro (via file: syntax)
 - [x] Integrate resource index with svg! macro (via id: syntax)
 - [x] Update CLI to trigger reindexing
 
