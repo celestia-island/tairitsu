@@ -89,6 +89,12 @@ pub fn compile_scss_with_config(
 
         let optimized_css = extractor.optimize(&css)?;
         let output_path = output_dir.join(&entry.output);
+
+        // Ensure parent directory exists
+        if let Some(parent) = output_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
         std::fs::write(&output_path, &optimized_css)?;
 
         results.push(ScssBuildResult {
