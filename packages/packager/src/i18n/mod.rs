@@ -126,11 +126,35 @@ const CHS_DOCTOR: &str = include_str!("../../res/locales/chs/doctor.toml");
 const CHT_CLI: &str = include_str!("../../res/locales/cht/cli.toml");
 const CHT_DEV: &str = include_str!("../../res/locales/cht/dev.toml");
 const CHT_DOCTOR: &str = include_str!("../../res/locales/cht/doctor.toml");
+const JA_CLI: &str = include_str!("../../res/locales/ja/cli.toml");
+const JA_DEV: &str = include_str!("../../res/locales/ja/dev.toml");
+const JA_DOCTOR: &str = include_str!("../../res/locales/ja/doctor.toml");
+const KO_CLI: &str = include_str!("../../res/locales/ko/cli.toml");
+const KO_DEV: &str = include_str!("../../res/locales/ko/dev.toml");
+const KO_DOCTOR: &str = include_str!("../../res/locales/ko/doctor.toml");
+const FR_CLI: &str = include_str!("../../res/locales/fr/cli.toml");
+const FR_DEV: &str = include_str!("../../res/locales/fr/dev.toml");
+const FR_DOCTOR: &str = include_str!("../../res/locales/fr/doctor.toml");
+const ES_CLI: &str = include_str!("../../res/locales/es/cli.toml");
+const ES_DEV: &str = include_str!("../../res/locales/es/dev.toml");
+const ES_DOCTOR: &str = include_str!("../../res/locales/es/doctor.toml");
+const RU_CLI: &str = include_str!("../../res/locales/ru/cli.toml");
+const RU_DEV: &str = include_str!("../../res/locales/ru/dev.toml");
+const RU_DOCTOR: &str = include_str!("../../res/locales/ru/doctor.toml");
+const AR_CLI: &str = include_str!("../../res/locales/ar/cli.toml");
+const AR_DEV: &str = include_str!("../../res/locales/ar/dev.toml");
+const AR_DOCTOR: &str = include_str!("../../res/locales/ar/doctor.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
         Language::CHS => [CHS_CLI, CHS_DEV, CHS_DOCTOR].join("\n"),
         Language::CHT => [CHT_CLI, CHT_DEV, CHT_DOCTOR].join("\n"),
+        Language::Ja => [JA_CLI, JA_DEV, JA_DOCTOR].join("\n"),
+        Language::Ko => [KO_CLI, KO_DEV, KO_DOCTOR].join("\n"),
+        Language::Fr => [FR_CLI, FR_DEV, FR_DOCTOR].join("\n"),
+        Language::Es => [ES_CLI, ES_DEV, ES_DOCTOR].join("\n"),
+        Language::Ru => [RU_CLI, RU_DEV, RU_DOCTOR].join("\n"),
+        Language::Ar => [AR_CLI, AR_DEV, AR_DOCTOR].join("\n"),
         _ => [EN_CLI, EN_DEV, EN_DOCTOR].join("\n"),
     }
 }
