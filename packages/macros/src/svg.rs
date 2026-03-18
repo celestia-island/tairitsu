@@ -1,12 +1,12 @@
 //! SVG embedding macro for compile-time SVG injection with XSS protection.
 //!
 //! This macro reads SVG content at compile time and creates a SafeSvg instance.
-//! It supports both inline SVG content and file paths.
+//! It supports inline SVG content, file paths, and resource index lookup by ID.
 //!
 //! # Features
 //! - Compile-time SVG embedding
 //! - XSS sanitization via SafeSvg
-//! - Support for inline content or file paths
+//! - Support for inline content, file paths, or resource ID lookup
 //!
 //! # Example
 //! ```ignore
@@ -15,6 +15,9 @@
 //!
 //! // From file (relative to crate root)
 //! let icon = svg! { file: "icons/sun.svg" };
+//!
+//! // From resource index by ID
+//! let icon = svg! { id: "sun" };
 //!
 //! // Use with VElement
 //! rsx! {
@@ -41,24 +44,34 @@ enum SvgSource {
     Inline(String),
     /// File path relative to crate root
     File(String),
+    /// Resource ID (looked up in resource index)
+    Id(String),
 }
 
 impl syn::parse::Parse for SvgInput {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        // Check if it starts with `file:` keyword
+        // Check if it starts with a keyword or a string literal
         let lookahead = input.lookahead1();
+
         if lookahead.peek(syn::Ident) {
             let ident: syn::Ident = input.parse()?;
+
             if ident == "file" {
                 input.parse::<syn::Token![:]>()?;
                 let path: syn::LitStr = input.parse()?;
                 Ok(SvgInput {
                     source: SvgSource::File(path.value()),
                 })
+            } else if ident == "id" {
+                input.parse::<syn::Token![:]>()?;
+                let id: syn::LitStr = input.parse()?;
+                Ok(SvgInput {
+                    source: SvgSource::Id(id.value()),
+                })
             } else {
                 Err(syn::Error::new(
                     ident.span(),
-                    "expected `file:` or a string literal with SVG content",
+                    "expected `file:`, `id:`, or a string literal with SVG content",
                 ))
             }
         } else if lookahead.peek(syn::LitStr) {
@@ -80,6 +93,7 @@ pub fn expand_svg(input: TokenStream) -> TokenStream {
     let expanded = match svg_input.source {
         SvgSource::Inline(content) => expand_inline_svg(&content),
         SvgSource::File(path) => expand_file_svg(&path),
+        SvgSource::Id(id) => expand_id_svg(&id),
     };
 
     TokenStream::from(expanded)
@@ -120,6 +134,106 @@ fn expand_file_svg(path: &str) -> TokenStream2 {
     quote! {
         tairitsu::SafeSvg::from_static(#sanitized)
     }
+}
+
+/// Expand SVG by resource ID
+fn expand_id_svg(id: &str) -> TokenStream2 {
+    // Get the crate root and target directories
+    let crate_root = std::env::var("CARGO_MANIFEST_DIR")
+        .expect("CARGO_MANIFEST_DIR not set");
+
+    let crate_root_path = std::path::Path::new(&crate_root);
+
+    // Try to find the SVG file by searching common locations
+    let search_paths: Vec<std::path::PathBuf> = vec![
+        crate_root_path.join("icons"),
+        crate_root_path.join("src/icons"),
+        crate_root_path.join("assets/icons"),
+        crate_root_path.join("static/icons"),
+        crate_root_path.join("resources/svg"),
+        crate_root_path.to_path_buf(),
+    ];
+
+    // Try to find the file by ID
+    for search_path in search_paths {
+        let svg_path = search_path.join(format!("{}.svg", id));
+        if svg_path.exists() {
+            match std::fs::read_to_string(&svg_path) {
+                Ok(content) => {
+                    let sanitized = sanitize_svg(&content);
+                    return quote! {
+                        tairitsu::SafeSvg::from_static(#sanitized)
+                    };
+                }
+                Err(err) => {
+                    let error_msg = format!("Failed to read SVG file '{}': {}", svg_path.display(), err);
+                    return quote! {
+                        compile_error!(#error_msg)
+                    };
+                }
+            }
+        }
+    }
+
+    // Try loading from resource index
+    let target_dir = crate_root_path
+        .parent()
+        .map(|p| p.join("target"))
+        .unwrap_or_else(|| std::path::PathBuf::from("target"));
+
+    let index_path = target_dir.join("tairitsu/resources/index.json");
+
+    if index_path.exists() {
+        if let Ok(index_content) = std::fs::read_to_string(&index_path) {
+            if let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content) {
+                // Find SVG by ID
+                for svg_entry in index.svg {
+                    if svg_entry.id == id {
+                        // Found by ID, read the source file
+                        let svg_path = crate_root_path.join(&svg_entry.source);
+                        match std::fs::read_to_string(&svg_path) {
+                            Ok(content) => {
+                                let sanitized = sanitize_svg(&content);
+                                return quote! {
+                                    tairitsu::SafeSvg::from_static(#sanitized)
+                                };
+                            }
+                            Err(err) => {
+                                let error_msg = format!(
+                                    "Failed to read SVG file '{}' (indexed as '{}'): {}",
+                                    svg_entry.source, id, err
+                                );
+                                return quote! {
+                                    compile_error!(#error_msg)
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Not found
+    let error_msg = format!(
+        "SVG with id '{}' not found. Searched in: icons/, src/icons/, assets/icons/, and resource index.",
+        id
+    );
+    quote! {
+        compile_error!(#error_msg)
+    }
+}
+
+/// Resource index JSON structure for parsing
+#[derive(Debug, serde::Deserialize)]
+struct ResourceIndexJson {
+    svg: Vec<SvgResourceJson>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct SvgResourceJson {
+    id: String,
+    source: String,
 }
 
 /// Sanitize SVG content at compile time

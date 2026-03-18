@@ -108,7 +108,7 @@ pub fn scss(input: TokenStream) -> TokenStream {
 /// # Features
 /// - Compile-time SVG embedding
 /// - XSS sanitization (removes scripts, event handlers, dangerous URLs)
-/// - Support for inline content or file paths
+/// - Support for inline content, file paths, or resource ID lookup
 ///
 /// # Example
 /// ```ignore
@@ -117,6 +117,9 @@ pub fn scss(input: TokenStream) -> TokenStream {
 ///
 /// // From file (relative to crate root)
 /// let icon = svg! { file: "icons/sun.svg" };
+///
+/// // From resource index by ID (searches icons/, src/icons/, etc.)
+/// let icon = svg! { id: "sun" };
 ///
 /// // Use with VElement
 /// rsx! {

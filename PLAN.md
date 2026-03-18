@@ -94,7 +94,7 @@ scss!("styles/main.scss")  // Auto-indexed by build.rs
 
 ### Phase 3: Integration
 - [ ] Integrate resource index with scss! macro
-- [ ] Integrate resource index with svg! macro
+- [x] Integrate resource index with svg! macro (via id: syntax)
 - [x] Update CLI to trigger reindexing
 
 ### Phase 4: Cleanup
