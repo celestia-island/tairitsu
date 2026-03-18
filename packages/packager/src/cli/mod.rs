@@ -155,19 +155,19 @@ pub async fn run() -> crate::Result<()> {
             }
         }
         Commands::Package { platform } => {
-            info!("Packaging for {}...", platform);
-            eprintln!("Packaging not yet implemented");
+            info!("{} {}...", t.cli.packaging_for, platform);
+            eprintln!("{}", t.cli.packaging_not_implemented);
             std::process::exit(1);
         }
         Commands::Preview { port } => {
-            info!("Starting preview server...");
+            info!("{}", t.cli.preview_starting);
             let port = port.unwrap_or(3001);
             let _port = port;
-            eprintln!("Preview not yet implemented");
+            eprintln!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }
         Commands::Init { name } => {
-            info!("Initializing new project...");
+            info!("{}", t.cli.init_starting);
             let name = name.unwrap_or_else(|| "my-tairitsu-app".to_string());
             crate::utils::init_project(&name)?;
         }
@@ -196,7 +196,7 @@ pub async fn run() -> crate::Result<()> {
             }
 
             if fix {
-                eprintln!("Auto-fix is not yet implemented");
+                eprintln!("{}", t.cli.autofix_not_implemented);
             }
 
             if !report.summary.is_healthy() {
