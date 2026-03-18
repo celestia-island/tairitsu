@@ -5,6 +5,7 @@ pub mod patch;
 pub mod platform;
 pub mod portal;
 pub mod reactive;
+pub mod svg;
 pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
@@ -16,4 +17,5 @@ pub use patch::Patch;
 pub use platform::{ElementHandle, EventHandle, Platform};
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{batch, create_effect, EffectHandle, Signal};
+pub use svg::SafeSvg;
 pub use vnode::{empty_vnode, Classes, IntoAttrValue, Style, VElement, VNode, VText};

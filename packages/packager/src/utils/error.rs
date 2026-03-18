@@ -35,6 +35,12 @@ pub enum TairitsuPackagerError {
     #[error("Environment error: {0}")]
     EnvironmentError(String),
 
+    #[error("Resource error: {0}")]
+    ResourceError(String),
+
+    #[error("Resource indexing error: {0}")]
+    ResourceIndexError(String),
+
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 
