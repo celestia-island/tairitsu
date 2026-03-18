@@ -81,6 +81,12 @@ enum Commands {
         action: IconsCommands,
     },
 
+    /// Manage resources (index, list)
+    Resources {
+        #[command(subcommand)]
+        action: ResourcesCommands,
+    },
+
     /// Check project compatibility and environment setup
     Doctor {
         /// Fix issues automatically (experimental)
@@ -157,6 +163,27 @@ enum IconsCommands {
         /// Search query
         #[arg(short, long)]
         search: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum ResourcesCommands {
+    /// Scan and index resources (SCSS, SVG) with content hashing
+    Index {
+        /// Output format (text, json)
+        #[arg(short, long, default_value = "text")]
+        format: String,
+    },
+
+    /// List indexed resources from the cache
+    List {
+        /// Filter by resource type (scss, svg)
+        #[arg(short, long)]
+        r#type: Option<String>,
+
+        /// Output format (text, json)
+        #[arg(short, long, default_value = "text")]
+        format: String,
     },
 }
 
@@ -339,6 +366,92 @@ pub async fn run() -> crate::Result<()> {
 
                 if icons.len() > 100 {
                     println!("  ... and {} more", icons.len() - 100);
+                }
+            }
+        },
+        Commands::Resources { action } => match action {
+            ResourcesCommands::Index { format } => {
+                info!("Indexing resources...");
+
+                let target_dir = std::path::PathBuf::from("target");
+                let indexer = crate::resources::ResourceIndexer::new(&manifest_path);
+                let (index, output_path) = indexer.index_to_target(&target_dir)?;
+
+                if format == "json" {
+                    let json = serde_json::to_string_pretty(&index)?;
+                    println!("{}", json);
+                } else {
+                    println!("Resource index saved to: {}", output_path.display());
+                    println!();
+                    println!("SCSS files ({}):", index.scss.len());
+                    for resource in &index.scss {
+                        println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                    }
+                    println!();
+                    println!("SVG files ({}):", index.svg.len());
+                    for resource in &index.svg {
+                        println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                    }
+                    println!();
+                    println!("Total: {} resources indexed", index.count());
+                }
+            }
+            ResourcesCommands::List { r#type, format } => {
+                let target_dir = std::path::PathBuf::from("target");
+                let index_path = target_dir.join(crate::resources::RESOURCE_DIR)
+                    .join(crate::resources::INDEX_FILE);
+
+                if !index_path.exists() {
+                    eprintln!("No resource index found. Run 'tairitsu resources index' first.");
+                    std::process::exit(1);
+                }
+
+                let index = crate::resources::ResourceIndex::load(&index_path)?;
+
+                if format == "json" {
+                    let filtered_index = match r#type.as_deref() {
+                        Some("scss") => {
+                            let mut filtered = crate::resources::ResourceIndex::new();
+                            filtered.scss = index.scss.clone();
+                            filtered
+                        }
+                        Some("svg") => {
+                            let mut filtered = crate::resources::ResourceIndex::new();
+                            filtered.svg = index.svg.clone();
+                            filtered
+                        }
+                        _ => index.clone(),
+                    };
+                    let json = serde_json::to_string_pretty(&filtered_index)?;
+                    println!("{}", json);
+                } else {
+                    match r#type.as_deref() {
+                        Some("scss") => {
+                            println!("SCSS files ({}):", index.scss.len());
+                            for resource in &index.scss {
+                                println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                            }
+                        }
+                        Some("svg") => {
+                            println!("SVG files ({}):", index.svg.len());
+                            for resource in &index.svg {
+                                println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                            }
+                        }
+                        _ => {
+                            println!("SCSS files ({}):", index.scss.len());
+                            for resource in &index.scss {
+                                println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                            }
+                            println!();
+                            println!("SVG files ({}):", index.svg.len());
+                            for resource in &index.svg {
+                                println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                            }
+                        }
+                    }
+                    println!();
+                    println!("Total: {} resources", index.count());
                 }
             }
         },

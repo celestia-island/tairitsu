@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
 use crate::EventData;
+use crate::svg::SafeSvg;
 
 /// Trait for attribute values that can be optionally rendered.
 /// This allows `attr` to accept both `T` and `Option<T>` values.
@@ -311,6 +312,25 @@ impl VElement {
     /// Set inner HTML directly (dangerously, equivalent to dangerouslySetInnerHTML)
     pub fn inner_html(mut self, html: impl Into<String>) -> Self {
         self.inner_html = Some(html.into());
+        self
+    }
+
+    /// Set inner HTML from a sanitized SVG content.
+    ///
+    /// This is the safe alternative to `inner_html` for SVG content.
+    /// The `SafeSvg` wrapper ensures that the SVG has been sanitized
+    /// to remove potentially dangerous elements and attributes.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tairitsu_vdom::{VElement, svg::SafeSvg};
+    ///
+    /// let svg = SafeSvg::new(r#"<svg><circle cx="50" cy="50" r="40"/></svg>"#);
+    /// let element = VElement::new("div").safe_svg(svg);
+    /// ```
+    pub fn safe_svg(mut self, svg: SafeSvg) -> Self {
+        self.inner_html = Some(svg.into_content());
         self
     }
 }

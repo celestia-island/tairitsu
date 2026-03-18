@@ -56,6 +56,10 @@ grass = "^0.13"
 
 # Regex for extraction
 regex = "^1"
+
+# Hashing for resource cache busting
+sha2 = "^0.10"
+
 yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = "0.28"
