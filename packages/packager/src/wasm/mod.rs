@@ -322,7 +322,7 @@ fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
 
     if file_count == 0 {
         pb.println(
-            "⚠  No browser-glue files found (neither on filesystem nor embedded).".to_string(),
+            "⚠  No browser-glue files found (neither on filesystem nor embedded).",
         );
     }
 

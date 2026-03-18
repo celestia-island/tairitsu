@@ -136,8 +136,10 @@ impl IconFetcher {
             return Ok(IconMetadata::default());
         }
 
-        let mut metadata = IconMetadata::default();
-        metadata.version = "local".to_string();
+        let mut metadata = IconMetadata {
+            version: "local".to_string(),
+            ..Default::default()
+        };
 
         for entry in std::fs::read_dir(&icons_dir)? {
             let entry = entry?;

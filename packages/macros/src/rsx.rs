@@ -114,9 +114,7 @@ impl Parse for RsxElement {
 
                     let attr = if is_shorthand {
                         // Shorthand: name, means name: name
-                        let value: Expr = syn::parse_str(&name).unwrap_or_else(|_| {
-                            syn::parse_str(&format!("{}", name)).unwrap()
-                        });
+                        let value: Expr = syn::parse_str(&name).unwrap();
                         RsxAttr::Other { name: name.clone(), value }
                     } else {
                         match name.as_str() {
@@ -360,7 +358,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let tag_str = tag.to_string();
 
     // Check if this is a custom component (starts with uppercase)
-    let is_custom_component = tag_str.chars().next().map_or(false, |c| c.is_uppercase());
+    let is_custom_component = tag_str.chars().next().is_some_and(|c| c.is_uppercase());
 
     if is_custom_component {
         return expand_custom_component(element);
@@ -375,7 +373,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
 
     // Check if this is a known HTML element (lowercase tags)
     // Custom components start with uppercase
-    let is_html_element = tag_str.chars().next().map_or(false, |c| c.is_lowercase());
+    let is_html_element = tag_str.chars().next().is_some_and(|c| c.is_lowercase());
 
     // List of known HTML elements that support event handlers
     let html_elements = [
@@ -624,13 +622,7 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Other { name, value } => {
                 // Convert attribute name to Rust field name
-                let field_name = if name == "children" {
-                    "children"
-                } else if name.contains('_') {
-                    &name
-                } else {
-                    &name
-                };
+                let field_name = name.as_str();
                 let field_ident = syn::Ident::new(field_name, tag.span());
                 props_fields.push(quote! { #field_ident: #value });
             }

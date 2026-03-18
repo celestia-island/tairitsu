@@ -250,14 +250,14 @@ fn find_attr_position(content: &str, attr_name: &str) -> Option<usize> {
                 true
             } else {
                 let prev_char = content.chars().nth(actual_pos - 1);
-                prev_char.map_or(false, |c| c.is_whitespace() || c == '<')
+                prev_char.is_some_and(|c| c.is_whitespace() || c == '<')
             };
 
             if valid_prefix {
                 // Check if it's followed by whitespace, '=', '>', or '/'
                 let after_pos = actual_pos + attr_name.len();
                 let next_char = content.chars().nth(after_pos);
-                if next_char.map_or(true, |c| c.is_whitespace() || c == '=' || c == '>' || c == '/')
+                if next_char.is_none_or(|c| c.is_whitespace() || c == '=' || c == '>' || c == '/')
                 {
                     return Some(actual_pos);
                 }
