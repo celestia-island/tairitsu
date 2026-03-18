@@ -139,32 +139,46 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                 });
             }
             None => {
-                // No default - check if it's Option<T> to auto-default to None
+                // No default - infer based on type
                 let ty_str = quote!(#field_ty).to_string();
-                if ty_str.contains("Option") {
+
+                // Check for Option<T> first (most specific)
+                if ty_str.starts_with("Option <") || ty_str.contains("Option <") {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
                     default_values.push(quote! {
                         #field_name: None
                     });
-                } else if ty_str.contains("String") {
-                    // String defaults to empty
-                    prop_attrs.push(quote! {
-                        #[props(default)]
-                    });
-                    default_values.push(quote! {
-                        #field_name: String::new()
-                    });
-                } else if ty_str.contains("Vec") {
-                    // Vec defaults to empty
+                }
+                // Check for Vec<T> before String since Vec<Vec<String>> contains "String"
+                else if ty_str.starts_with("Vec <") || ty_str.starts_with("Vec<") {
                     prop_attrs.push(quote! {
                         #[props(default)]
                     });
                     default_values.push(quote! {
                         #field_name: Vec::new()
                     });
-                } else {
+                }
+                // Check for String (exact match patterns)
+                else if ty_str == "String" || ty_str.starts_with("String ") {
+                    prop_attrs.push(quote! {
+                        #[props(default)]
+                    });
+                    default_values.push(quote! {
+                        #field_name: String::new()
+                    });
+                }
+                // Check for HashMap/HashSet
+                else if ty_str.starts_with("HashMap") || ty_str.starts_with("HashSet") {
+                    prop_attrs.push(quote! {
+                        #[props(default)]
+                    });
+                    default_values.push(quote! {
+                        #field_name: Default::default()
+                    });
+                }
+                else {
                     // Try to use Default trait
                     prop_attrs.push(quote! {
                         #[props(default)]
