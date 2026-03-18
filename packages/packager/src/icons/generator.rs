@@ -122,7 +122,7 @@ pub fn generate_icon_module(icons: &[&IconEntry], styles: &[IconStyle]) -> crate
     code.push_str("}\n\n");
 
     // ICON_COUNT constant
-    code.push_str(&format!("/// Total number of icons\n"));
+    code.push_str("/// Total number of icons\n");
     code.push_str(&format!("pub const ICON_COUNT: usize = {};\n\n", icons.len()));
 
     // Icon names array for lookup

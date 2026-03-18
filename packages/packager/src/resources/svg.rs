@@ -49,8 +49,7 @@ impl SvgResource {
     pub fn normalized_id(&self) -> String {
         // SVG IDs should be valid identifiers
         self.id
-            .replace('_', "-")
-            .replace(' ', "-")
+            .replace(['_', ' '], "-")
             .to_lowercase()
     }
 
@@ -102,8 +101,7 @@ impl SvgUtils {
 
     /// Normalize an ID to a valid CSS identifier
     pub fn normalize_id(id: &str) -> String {
-        id.replace('_', "-")
-            .replace(' ', "-")
+        id.replace(['_', ' '], "-")
             .chars()
             .map(|c| if c.is_ascii_alphanumeric() || c == '-' { c } else { '-' })
             .collect::<String>()
