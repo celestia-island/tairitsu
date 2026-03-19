@@ -93,6 +93,31 @@ pub enum CssCategory {
     ///
     /// Includes: `object-fit`, `vertical-align`, `columns`, etc.
     Miscellaneous,
+
+    /// CSS Motion Path properties for animation along paths.
+    ///
+    /// Includes: `offset-path`, `offset-distance`, `offset-rotate`, etc.
+    MotionPath,
+
+    /// Scroll-driven animation properties.
+    ///
+    /// Includes: `scroll-timeline`, `view-timeline`, etc.
+    ScrollDriven,
+
+    /// CSS Houdini properties for low-level rendering control.
+    ///
+    /// Includes: `paint-order`, `color-interpolation`, etc.
+    Houdini,
+
+    /// SVG-specific properties.
+    ///
+    /// Includes: `fill`, `stroke`, `stroke-width`, etc.
+    Svg,
+
+    /// Hardware acceleration and optimization properties.
+    ///
+    /// Includes: `will-change`, `backface-visibility`, etc.
+    Hardware,
 }
 
 impl CssCategory {
@@ -117,6 +142,11 @@ impl CssCategory {
             CssCategory::GeneratedContent => "Generated Content",
             CssCategory::FlexGridGap => "Flex & Grid Gap",
             CssCategory::Miscellaneous => "Miscellaneous",
+            CssCategory::MotionPath => "Motion Path",
+            CssCategory::ScrollDriven => "Scroll Driven",
+            CssCategory::Houdini => "Houdini",
+            CssCategory::Svg => "SVG",
+            CssCategory::Hardware => "Hardware",
         }
     }
 
@@ -141,12 +171,17 @@ impl CssCategory {
             CssCategory::GeneratedContent => "Generated content properties",
             CssCategory::FlexGridGap => "Gap properties for flex and grid layouts",
             CssCategory::Miscellaneous => "Miscellaneous CSS properties",
+            CssCategory::MotionPath => "CSS Motion Path properties for animation along paths",
+            CssCategory::ScrollDriven => "Scroll-driven animation properties",
+            CssCategory::Houdini => "CSS Houdini properties for low-level rendering control",
+            CssCategory::Svg => "SVG-specific properties",
+            CssCategory::Hardware => "Hardware acceleration and optimization properties",
         }
     }
 
     /// Get all category variants.
     #[inline]
-    pub const fn all() -> [CssCategory; 17] {
+    pub const fn all() -> [CssCategory; 22] {
         [
             CssCategory::Layout,
             CssCategory::BoxModel,
@@ -165,6 +200,11 @@ impl CssCategory {
             CssCategory::GeneratedContent,
             CssCategory::FlexGridGap,
             CssCategory::Miscellaneous,
+            CssCategory::MotionPath,
+            CssCategory::ScrollDriven,
+            CssCategory::Houdini,
+            CssCategory::Svg,
+            CssCategory::Hardware,
         ]
     }
 }
@@ -195,7 +235,7 @@ mod tests {
     #[test]
     fn test_all_categories() {
         let categories = CssCategory::all();
-        assert_eq!(categories.len(), 17);
+        assert_eq!(categories.len(), 22);
         assert!(categories.contains(&CssCategory::Layout));
         assert!(categories.contains(&CssCategory::Miscellaneous));
     }

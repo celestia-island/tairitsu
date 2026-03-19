@@ -209,6 +209,11 @@ fn generate_property_enum(data: &CssData) -> String {
             "GeneratedContent" => "CssCategory::GeneratedContent",
             "FlexGridGap" => "CssCategory::FlexGridGap",
             "Miscellaneous" => "CssCategory::Miscellaneous",
+            "MotionPath" => "CssCategory::MotionPath",
+            "ScrollDriven" => "CssCategory::ScrollDriven",
+            "Houdini" => "CssCategory::Houdini",
+            "Svg" => "CssCategory::Svg",
+            "Hardware" => "CssCategory::Hardware",
             _ => "CssCategory::Layout",
         };
         code.push_str(&format!("            CssProperty::{} => {},\n", prop.rust_name, category_variant));

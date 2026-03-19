@@ -39,12 +39,20 @@
 mod builder;
 mod classes;
 mod properties;
+mod utility;
 mod values;
 
 // Re-export public API
 pub use builder::{StyleBuilder, StyleStringBuilder};
 pub use classes::ClassesBuilder;
 pub use properties::{CssCategory, CssProperty, Property};
+pub use utility::{
+    AlignItemsUtility, BgColorUtility, Breakpoint, DisplayUtility, FlexDirectionUtility,
+    FlexWrapUtility, FontSizeUtility, FontWeightUtility, JustifyContentUtility, MarginUtility,
+    PaddingUtility, ParsedUtility, PositionUtility, State, TextAlignUtility, TextColorUtility,
+    UtilityClass, UtilityRegistry, Variant,
+};
+pub use utility::{create_default_registry};
 pub use values::{
     AlignItemsValue, CursorValue, DisplayValue, FlexDirectionValue, FlexWrapValue,
     JustifyContentValue, LengthUnit, OverflowValue, PositionValue, TextAlignValue, CssValue,
@@ -575,5 +583,456 @@ mod tests {
         assert!(style.contains("width:100%"));
         assert!(style.contains("height:50vw"));
         assert!(style.contains("min-height:100vh"));
+    }
+
+    // UtilityClass integration tests
+
+    #[test]
+    fn test_classes_builder_with_utilities() {
+        let classes = ClassesBuilder::new()
+            .add_utility("p-4")
+            .add_utility("flex")
+            .add_utility("text-center")
+            .build();
+
+        assert!(classes.contains("p-4"));
+        assert!(classes.contains("flex"));
+        assert!(classes.contains("text-center"));
+    }
+
+    #[test]
+    fn test_classes_builder_utility_if() {
+        let classes = ClassesBuilder::new()
+            .add_utility_if("p-4", true)
+            .add_utility_if("m-4", false)
+            .build();
+
+        assert!(classes.contains("p-4"));
+        assert!(!classes.contains("m-4"));
+    }
+
+    #[test]
+    fn test_classes_builder_add_utilities() {
+        let classes = ClassesBuilder::new()
+            .add_utilities("p-4 flex text-center")
+            .build();
+
+        assert!(classes.contains("p-4"));
+        assert!(classes.contains("flex"));
+        assert!(classes.contains("text-center"));
+    }
+
+    #[test]
+    fn test_classes_builder_from_utilities() {
+        let classes = ClassesBuilder::from_utilities("flex p-4 text-center")
+            .build();
+        assert!(classes.contains("flex"));
+        assert!(classes.contains("p-4"));
+        assert!(classes.contains("text-center"));
+    }
+
+    #[test]
+    fn test_classes_builder_add_mixed() {
+        let classes = ClassesBuilder::new()
+            .add_mixed("custom-class p-4 flex")
+            .build();
+
+        assert!(classes.contains("custom-class"));
+        assert!(classes.contains("p-4"));
+        assert!(classes.contains("flex"));
+    }
+
+    #[test]
+    fn test_classes_builder_generate_css() {
+        let builder = ClassesBuilder::new()
+            .add_utility("p-4")
+            .add_utility("flex");
+
+        let css = builder.generate_css();
+        assert!(css.contains("padding"));
+        assert!(css.contains("display"));
+    }
+
+    #[test]
+    fn test_classes_builder_generate_stylesheet() {
+        let builder = ClassesBuilder::new()
+            .add_utility("p-4")
+            .add_utility("flex");
+
+        let stylesheet = builder.generate_stylesheet();
+        assert!(stylesheet.contains("/* Utility Classes */"));
+        assert!(stylesheet.contains("padding"));
+        assert!(stylesheet.contains("display"));
+    }
+
+    #[test]
+    fn test_classes_builder_with_variants() {
+        let classes = ClassesBuilder::new()
+            .add_utility("p-4")
+            .add_utility("hover:text-center")
+            .add_utility("md:flex")
+            .build();
+
+        assert!(classes.contains("p-4"));
+        assert!(classes.contains("hover:text-center"));
+        assert!(classes.contains("md:flex"));
+    }
+
+    #[test]
+    fn test_classes_builder_with_arbitrary_values() {
+        let classes = ClassesBuilder::new()
+            .add_utility("p-[10px]")
+            .add_utility("m-[1.5rem]")
+            .build();
+
+        assert!(classes.contains("p-[10px]"));
+        assert!(classes.contains("m-[1.5rem]"));
+    }
+
+    #[test]
+    fn test_utility_with_css_generation() {
+        let (builder, css) = ClassesBuilder::new()
+            .add_utility_with_css("p-4");
+
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("padding"));
+        assert!(css.contains("1rem"));
+
+        let classes = builder.build();
+        assert!(classes.contains("p-4"));
+    }
+
+    #[test]
+    fn test_combined_responsive_and_state_variants() {
+        let classes = ClassesBuilder::new()
+            .add_utility("md:hover:flex")
+            .build();
+
+        assert!(classes.contains("md:hover:flex"));
+    }
+
+    #[test]
+    fn test_spacing_utilities_comprehensive() {
+        let test_cases = [
+            ("p-0", "padding:0"),
+            ("p-4", "padding:1rem"),
+            ("px-4", "padding-left"),
+            ("py-4", "padding-top"),
+            ("pt-4", "padding-top"),
+            ("pr-4", "padding-right"),
+            ("pb-4", "padding-bottom"),
+            ("pl-4", "padding-left"),
+        ];
+
+        for (class, expected) in test_cases {
+            let (_, css) = ClassesBuilder::new().add_utility_with_css(class);
+            assert!(
+                css.is_some(),
+                "Expected CSS to be generated for class: {}",
+                class
+            );
+            let css = css.unwrap();
+            assert!(
+                css.contains(expected),
+                "Expected CSS for {} to contain {}",
+                class,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_margin_utilities_with_auto() {
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("mx-auto");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("margin-left"));
+        assert!(css.contains("auto"));
+    }
+
+    #[test]
+    fn test_layout_utilities() {
+        let test_cases = [
+            ("flex", "display:flex"),
+            ("grid", "display:grid"),
+            ("block", "display:block"),
+            ("inline-block", "display:inline-block"),
+            ("hidden", "display:none"),
+        ];
+
+        for (class, expected) in test_cases {
+            let (_, css) = ClassesBuilder::new().add_utility_with_css(class);
+            assert!(
+                css.is_some(),
+                "Expected CSS to be generated for class: {}",
+                class
+            );
+            let css = css.unwrap();
+            assert!(
+                css.contains(expected),
+                "Expected CSS for {} to contain {}",
+                class,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_flexbox_utilities() {
+        let test_cases = [
+            ("flex-row", "flex-direction:row"),
+            ("flex-col", "flex-direction:column"),
+            ("flex-wrap", "flex-wrap:wrap"),
+            ("flex-nowrap", "flex-wrap:nowrap"),
+            ("justify-center", "justify-content:center"),
+            ("justify-between", "justify-content:space-between"),
+            ("items-center", "align-items:center"),
+            ("items-start", "align-items:flex-start"),
+        ];
+
+        for (class, expected) in test_cases {
+            let (_, css) = ClassesBuilder::new().add_utility_with_css(class);
+            assert!(
+                css.is_some(),
+                "Expected CSS to be generated for class: {}",
+                class
+            );
+            let css = css.unwrap();
+            assert!(
+                css.contains(expected),
+                "Expected CSS for {} to contain {}",
+                class,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_typography_utilities() {
+        let test_cases = [
+            ("text-left", "text-align:left"),
+            ("text-center", "text-align:center"),
+            ("text-right", "text-align:right"),
+            ("text-lg", "font-size:1.125rem"),
+            ("text-xl", "font-size:1.25rem"),
+            ("font-bold", "font-weight:700"),
+            ("font-normal", "font-weight:400"),
+        ];
+
+        for (class, expected) in test_cases {
+            let (_, css) = ClassesBuilder::new().add_utility_with_css(class);
+            assert!(
+                css.is_some(),
+                "Expected CSS to be generated for class: {}",
+                class
+            );
+            let css = css.unwrap();
+            assert!(
+                css.contains(expected),
+                "Expected CSS for {} to contain {}",
+                class,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_position_utilities() {
+        let test_cases = [
+            ("static", "position:static"),
+            ("fixed", "position:fixed"),
+            ("absolute", "position:absolute"),
+            ("relative", "position:relative"),
+            ("sticky", "position:sticky"),
+        ];
+
+        for (class, expected) in test_cases {
+            let (_, css) = ClassesBuilder::new().add_utility_with_css(class);
+            assert!(
+                css.is_some(),
+                "Expected CSS to be generated for class: {}",
+                class
+            );
+            let css = css.unwrap();
+            assert!(
+                css.contains(expected),
+                "Expected CSS for {} to contain {}",
+                class,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_color_utilities() {
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("text-white");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("color:#ffffff"));
+
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("bg-black");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("background-color:#000000"));
+    }
+
+    #[test]
+    fn test_invalid_utility_class() {
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("invalid-class");
+        assert!(css.is_none());
+    }
+
+    #[test]
+    fn test_empty_utility_class() {
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("");
+        assert!(css.is_none());
+    }
+
+    #[test]
+    fn test_variant_css_generation() {
+        // Test responsive variant
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("md:p-4");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("@media"));
+        assert!(css.contains("min-width: 768px"));
+        assert!(css.contains("padding"));
+
+        // Test state variant
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("hover:text-center");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains(":hover"));
+
+        // Test combined variant
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("md:hover:flex");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("@media"));
+        assert!(css.contains(":hover"));
+    }
+
+    #[test]
+    fn test_arbitrary_value_css_generation() {
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("p-[10px]");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("padding"));
+        assert!(css.contains("10px"));
+
+        let (_, css) = ClassesBuilder::new().add_utility_with_css("m-[1.5rem]");
+        assert!(css.is_some());
+        let css = css.unwrap();
+        assert!(css.contains("margin"));
+        assert!(css.contains("1.5rem"));
+    }
+
+    #[test]
+    fn test_utility_categories() {
+        let registry = create_default_registry();
+
+        // Test that utilities have correct categories
+        let p_utility = registry.find("p-4").unwrap();
+        assert_eq!(p_utility.category(), CssCategory::BoxModel);
+
+        let flex_utility = registry.find("flex").unwrap();
+        assert_eq!(flex_utility.category(), CssCategory::Layout);
+
+        let text_utility = registry.find("text-center").unwrap();
+        assert_eq!(text_utility.category(), CssCategory::Typography);
+    }
+
+    #[test]
+    fn test_custom_registry() {
+        let custom_registry = UtilityRegistry::new();
+        let builder = ClassesBuilder::with_registry(custom_registry);
+
+        // Custom registry starts empty
+        let classes = builder.add_utility("p-4").build();
+        assert!(!classes.contains("p-4"));
+    }
+
+    #[test]
+    fn test_register_custom_utility() {
+        use std::sync::Arc;
+
+        // Create a simple custom utility
+        struct CustomUtility;
+        impl UtilityClass for CustomUtility {
+            fn pattern(&self) -> &'static str {
+                "custom"
+            }
+
+            fn generate_css(&self, class_name: &str, _parsed: &ParsedUtility) -> Option<String> {
+                Some(format!(".{} {{ custom: prop; }}", class_name))
+            }
+
+            fn matches(&self, class_name: &str) -> bool {
+                class_name == "custom"
+            }
+
+            fn property(&self) -> Property {
+                Property::Custom("custom".to_string())
+            }
+
+            fn category(&self) -> CssCategory {
+                CssCategory::Miscellaneous
+            }
+        }
+
+        let builder = ClassesBuilder::new()
+            .register_utility(Arc::new(CustomUtility))
+            .add_utility("custom");
+
+        let classes = builder.build();
+        assert!(classes.contains("custom"));
+
+        let (_, css) = ClassesBuilder::new()
+            .register_utility(Arc::new(CustomUtility))
+            .add_utility_with_css("custom");
+        assert!(css.is_some());
+    }
+
+    #[test]
+    fn test_comprehensive_class_combination() {
+        let classes = ClassesBuilder::new()
+            .add("container")
+            .add_utility("flex")
+            .add_if("active", true)
+            .add_utility_if("p-4", true)
+            .add_utility_if("m-4", false)
+            .add_utilities("text-center justify-center")
+            .add_mixed("custom-class items-center")
+            .build();
+
+        assert!(classes.contains("container"));
+        assert!(classes.contains("flex"));
+        assert!(classes.contains("active"));
+        assert!(classes.contains("p-4"));
+        assert!(!classes.contains("m-4"));
+        assert!(classes.contains("text-center"));
+        assert!(classes.contains("justify-center"));
+        assert!(classes.contains("custom-class"));
+        assert!(classes.contains("items-center"));
+    }
+
+    #[test]
+    fn test_utility_property_access() {
+        let registry = create_default_registry();
+
+        let padding_util = registry.find("p-4").unwrap();
+        if let Property::Known(prop) = padding_util.property() {
+            assert_eq!(prop, CssProperty::Padding);
+        } else {
+            panic!("Expected Known property");
+        }
+
+        let display_util = registry.find("flex").unwrap();
+        if let Property::Known(prop) = display_util.property() {
+            assert_eq!(prop, CssProperty::Display);
+        } else {
+            panic!("Expected Known property");
+        }
     }
 }

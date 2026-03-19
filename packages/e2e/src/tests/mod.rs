@@ -4,6 +4,7 @@ pub mod doctor;
 pub mod error_handling;
 pub mod events;
 pub mod lifecycle;
+pub mod style_integration;
 pub mod svg_safety;
 
 use anyhow::Result;
@@ -15,6 +16,7 @@ pub use doctor::DoctorTests;
 pub use error_handling::ErrorHandlingTests;
 pub use events::EventTests;
 pub use lifecycle::LifecycleTests;
+pub use style_integration::StyleIntegrationTests;
 pub use svg_safety::SvgSafetyTests;
 
 pub trait Test: Send + Sync {
