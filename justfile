@@ -399,6 +399,38 @@ wit-fetch-force:
 wit-stats:
     python3 scripts/generate_browser_wit.py --stats
 
+# ============================================================================
+# TypeScript Glue generation (WIT → TypeScript)
+# ============================================================================
+
+# Generate TypeScript glue code from WIT files
+# Reads:  packages/browser-worlds/wit/generated/*.wit
+# Writes: packages/browser-glue/src/generated/*-glue.ts
+glue-gen:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "TypeScript Glue generation (WIT → TypeScript)"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/generate_browser_glue.py
+
+# Show TypeScript glue generation coverage statistics
+glue-stats:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "TypeScript Glue Statistics"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    python3 scripts/generate_browser_glue.py --stats
+
+# Dry-run: show what glue generation would do without writing
+glue-dry-run:
+    python3 scripts/generate_browser_glue.py --dry-run
+
+# Full pipeline: WIT + TypeScript Glue generation
+wit-full: wit-gen glue-gen
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ Full WIT → TypeScript Glue pipeline complete!"
+    @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
+    @echo "   Generated Glue: packages/browser-glue/src/generated/"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 # Show all W3C data sources used by the pipeline
 wit-sources:
     python3 scripts/gen_wit_from_webidl.py --list-sources

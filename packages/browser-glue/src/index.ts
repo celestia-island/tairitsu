@@ -10,15 +10,15 @@
  *
  * ## Package layout
  *
+ * ### Hand-written Phase 0 modules
  * - `dom-glue`    — satisfies `tairitsu-browser:dom` import interfaces
  * - `events-glue` — satisfies `tairitsu-browser:events` import interfaces
  * - `fetch-glue`  — satisfies `tairitsu-browser:fetch` import interfaces
  * - `canvas-glue` — satisfies `tairitsu-browser:canvas` import interfaces
  * - `handle-table` — shared object handle management
  *
- * ## Status
- * Core DOM/events/fetch/canvas glue is implemented against browser APIs.
- * Additional API-surface expansion is tracked in PLAN.md.
+ * ### Auto-generated Phase A modules (from WIT)
+ * - `generated/*-glue` — 22 domain-specific glue modules
  *
  * ## Diagnostic APIs
  *
@@ -33,11 +33,15 @@
  * - `getHandleStats()` — Get handle table statistics
  */
 
+// Hand-written Phase 0 modules
 export * from "./dom-glue.js";
 export * from "./events-glue.js";
 export * from "./fetch-glue.js";
 export * from "./canvas-glue.js";
 export * from "./handle-table.js";
+
+// Auto-generated Phase A modules
+export * from "./generated-index.js";
 
 /**
  * Diagnostic types for external consumers.
