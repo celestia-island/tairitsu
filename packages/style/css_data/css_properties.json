@@ -1,0 +1,1368 @@
+{
+  "version": "1.0.0",
+  "source": "MDN Web Docs and CSS Specifications",
+  "last_updated": "2024-01-01",
+  "categories": {
+    "Layout": {
+      "description": "Properties that control the layout and positioning of elements",
+      "properties": [
+        {
+          "name": "display",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/display"
+        },
+        {
+          "name": "position",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/position"
+        },
+        {
+          "name": "top",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/top"
+        },
+        {
+          "name": "right",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/right"
+        },
+        {
+          "name": "bottom",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/bottom"
+        },
+        {
+          "name": "left",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/left"
+        },
+        {
+          "name": "z-index",
+          "rust_name": "ZIndex",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/z-index"
+        },
+        {
+          "name": "float",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/float"
+        },
+        {
+          "name": "clear",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/clear"
+        },
+        {
+          "name": "overflow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow"
+        },
+        {
+          "name": "overflow-x",
+          "rust_name": "OverflowX",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-x"
+        },
+        {
+          "name": "overflow-y",
+          "rust_name": "OverflowY",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-y"
+        },
+        {
+          "name": "visibility",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/visibility"
+        },
+        {
+          "name": "isolation",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/isolation"
+        }
+      ]
+    },
+    "BoxModel": {
+      "description": "Properties related to the box model: width, height, margin, padding, border",
+      "properties": [
+        {
+          "name": "width",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/width"
+        },
+        {
+          "name": "min-width",
+          "rust_name": "MinWidth",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/min-width"
+        },
+        {
+          "name": "max-width",
+          "rust_name": "MaxWidth",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/max-width"
+        },
+        {
+          "name": "height",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/height"
+        },
+        {
+          "name": "min-height",
+          "rust_name": "MinHeight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/min-height"
+        },
+        {
+          "name": "max-height",
+          "rust_name": "MaxHeight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/max-height"
+        },
+        {
+          "name": "margin",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/margin"
+        },
+        {
+          "name": "margin-top",
+          "rust_name": "MarginTop",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-top"
+        },
+        {
+          "name": "margin-right",
+          "rust_name": "MarginRight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-right"
+        },
+        {
+          "name": "margin-bottom",
+          "rust_name": "MarginBottom",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-bottom"
+        },
+        {
+          "name": "margin-left",
+          "rust_name": "MarginLeft",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/margin-left"
+        },
+        {
+          "name": "padding",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/padding"
+        },
+        {
+          "name": "padding-top",
+          "rust_name": "PaddingTop",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-top"
+        },
+        {
+          "name": "padding-right",
+          "rust_name": "PaddingRight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-right"
+        },
+        {
+          "name": "padding-bottom",
+          "rust_name": "PaddingBottom",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-bottom"
+        },
+        {
+          "name": "padding-left",
+          "rust_name": "PaddingLeft",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/padding-left"
+        },
+        {
+          "name": "border",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border"
+        },
+        {
+          "name": "border-top",
+          "rust_name": "BorderTop",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-top"
+        },
+        {
+          "name": "border-right",
+          "rust_name": "BorderRight",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-right"
+        },
+        {
+          "name": "border-bottom",
+          "rust_name": "BorderBottom",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-bottom"
+        },
+        {
+          "name": "border-left",
+          "rust_name": "BorderLeft",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-left"
+        },
+        {
+          "name": "border-width",
+          "rust_name": "BorderWidth",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-width"
+        },
+        {
+          "name": "border-style",
+          "rust_name": "BorderStyle",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-style"
+        },
+        {
+          "name": "border-color",
+          "rust_name": "BorderColor",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-color"
+        },
+        {
+          "name": "border-radius",
+          "rust_name": "BorderRadius",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius"
+        },
+        {
+          "name": "border-image",
+          "rust_name": "BorderImage",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-image"
+        },
+        {
+          "name": "box-sizing",
+          "rust_name": "BoxSizing",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing"
+        },
+        {
+          "name": "box-shadow",
+          "rust_name": "BoxShadow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow"
+        }
+      ]
+    },
+    "Flexbox": {
+      "description": "CSS Flexible Box Layout properties",
+      "properties": [
+        {
+          "name": "flex",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex"
+        },
+        {
+          "name": "flex-basis",
+          "rust_name": "FlexBasis",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis"
+        },
+        {
+          "name": "flex-direction",
+          "rust_name": "FlexDirection",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction"
+        },
+        {
+          "name": "flex-flow",
+          "rust_name": "FlexFlow",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-flow"
+        },
+        {
+          "name": "flex-grow",
+          "rust_name": "FlexGrow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-grow"
+        },
+        {
+          "name": "flex-shrink",
+          "rust_name": "FlexShrink",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-shrink"
+        },
+        {
+          "name": "flex-wrap",
+          "rust_name": "FlexWrap",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/flex-wrap"
+        },
+        {
+          "name": "align-content",
+          "rust_name": "AlignContent",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/align-content"
+        },
+        {
+          "name": "align-items",
+          "rust_name": "AlignItems",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/align-items"
+        },
+        {
+          "name": "align-self",
+          "rust_name": "AlignSelf",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/align-self"
+        },
+        {
+          "name": "justify-content",
+          "rust_name": "JustifyContent",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content"
+        },
+        {
+          "name": "justify-items",
+          "rust_name": "JustifyItems",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items"
+        },
+        {
+          "name": "justify-self",
+          "rust_name": "JustifySelf",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self"
+        },
+        {
+          "name": "order",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/order"
+        }
+      ]
+    },
+    "Grid": {
+      "description": "CSS Grid Layout properties",
+      "properties": [
+        {
+          "name": "grid",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid"
+        },
+        {
+          "name": "grid-area",
+          "rust_name": "GridArea",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-area"
+        },
+        {
+          "name": "grid-auto-columns",
+          "rust_name": "GridAutoColumns",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns"
+        },
+        {
+          "name": "grid-auto-flow",
+          "rust_name": "GridAutoFlow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow"
+        },
+        {
+          "name": "grid-auto-rows",
+          "rust_name": "GridAutoRows",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows"
+        },
+        {
+          "name": "grid-column",
+          "rust_name": "GridColumn",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column"
+        },
+        {
+          "name": "grid-column-end",
+          "rust_name": "GridColumnEnd",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-end"
+        },
+        {
+          "name": "grid-column-start",
+          "rust_name": "GridColumnStart",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-start"
+        },
+        {
+          "name": "grid-row",
+          "rust_name": "GridRow",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row"
+        },
+        {
+          "name": "grid-row-end",
+          "rust_name": "GridRowEnd",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-end"
+        },
+        {
+          "name": "grid-row-start",
+          "rust_name": "GridRowStart",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start"
+        },
+        {
+          "name": "grid-template",
+          "rust_name": "GridTemplate",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template"
+        },
+        {
+          "name": "grid-template-areas",
+          "rust_name": "GridTemplateAreas",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas"
+        },
+        {
+          "name": "grid-template-columns",
+          "rust_name": "GridTemplateColumns",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns"
+        },
+        {
+          "name": "grid-template-rows",
+          "rust_name": "GridTemplateRows",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows"
+        },
+        {
+          "name": "gap",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/gap"
+        },
+        {
+          "name": "row-gap",
+          "rust_name": "RowGap",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/row-gap"
+        },
+        {
+          "name": "column-gap",
+          "rust_name": "ColumnGap",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-gap"
+        }
+      ]
+    },
+    "Typography": {
+      "description": "Font and text properties",
+      "properties": [
+        {
+          "name": "font",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font"
+        },
+        {
+          "name": "font-family",
+          "rust_name": "FontFamily",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-family"
+        },
+        {
+          "name": "font-size",
+          "rust_name": "FontSize",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-size"
+        },
+        {
+          "name": "font-size-adjust",
+          "rust_name": "FontSizeAdjust",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-size-adjust"
+        },
+        {
+          "name": "font-stretch",
+          "rust_name": "FontStretch",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch"
+        },
+        {
+          "name": "font-style",
+          "rust_name": "FontStyle",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-style"
+        },
+        {
+          "name": "font-variant",
+          "rust_name": "FontVariant",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant"
+        },
+        {
+          "name": "font-weight",
+          "rust_name": "FontWeight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight"
+        },
+        {
+          "name": "letter-spacing",
+          "rust_name": "LetterSpacing",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/letter-spacing"
+        },
+        {
+          "name": "line-height",
+          "rust_name": "LineHeight",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/line-height"
+        },
+        {
+          "name": "text-align",
+          "rust_name": "TextAlign",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align"
+        },
+        {
+          "name": "text-align-last",
+          "rust_name": "TextAlignLast",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-align-last"
+        },
+        {
+          "name": "text-decoration",
+          "rust_name": "TextDecoration",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration"
+        },
+        {
+          "name": "text-decoration-line",
+          "rust_name": "TextDecorationLine",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-line"
+        },
+        {
+          "name": "text-decoration-style",
+          "rust_name": "TextDecorationStyle",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-style"
+        },
+        {
+          "name": "text-decoration-color",
+          "rust_name": "TextDecorationColor",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-color"
+        },
+        {
+          "name": "text-decoration-thickness",
+          "rust_name": "TextDecorationThickness",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration-thickness"
+        },
+        {
+          "name": "text-indent",
+          "rust_name": "TextIndent",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-indent"
+        },
+        {
+          "name": "text-transform",
+          "rust_name": "TextTransform",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-transform"
+        },
+        {
+          "name": "text-overflow",
+          "rust_name": "TextOverflow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-overflow"
+        },
+        {
+          "name": "text-shadow",
+          "rust_name": "TextShadow",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/text-shadow"
+        },
+        {
+          "name": "white-space",
+          "rust_name": "WhiteSpace",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/white-space"
+        },
+        {
+          "name": "word-spacing",
+          "rust_name": "WordSpacing",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/word-spacing"
+        },
+        {
+          "name": "word-break",
+          "rust_name": "WordBreak",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/word-break"
+        },
+        {
+          "name": "word-wrap",
+          "rust_name": "WordWrap",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/word-wrap"
+        },
+        {
+          "name": "overflow-wrap",
+          "rust_name": "OverflowWrap",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap"
+        },
+        {
+          "name": "hyphens",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/hyphens"
+        },
+        {
+          "name": "writing-mode",
+          "rust_name": "WritingMode",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/writing-mode"
+        }
+      ]
+    },
+    "Color": {
+      "description": "Color and background properties",
+      "properties": [
+        {
+          "name": "color",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/color"
+        },
+        {
+          "name": "opacity",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/opacity"
+        },
+        {
+          "name": "background",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background"
+        },
+        {
+          "name": "background-attachment",
+          "rust_name": "BackgroundAttachment",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-attachment"
+        },
+        {
+          "name": "background-clip",
+          "rust_name": "BackgroundClip",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-clip"
+        },
+        {
+          "name": "background-color",
+          "rust_name": "BackgroundColor",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-color"
+        },
+        {
+          "name": "background-image",
+          "rust_name": "BackgroundImage",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-image"
+        },
+        {
+          "name": "background-origin",
+          "rust_name": "BackgroundOrigin",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-origin"
+        },
+        {
+          "name": "background-position",
+          "rust_name": "BackgroundPosition",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-position"
+        },
+        {
+          "name": "background-repeat",
+          "rust_name": "BackgroundRepeat",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-repeat"
+        },
+        {
+          "name": "background-size",
+          "rust_name": "BackgroundSize",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size"
+        },
+        {
+          "name": "background-blend-mode",
+          "rust_name": "BackgroundBlendMode",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-blend-mode"
+        }
+      ]
+    },
+    "Visual": {
+      "description": "Visual effects and filters",
+      "properties": [
+        {
+          "name": "filter",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/filter"
+        },
+        {
+          "name": "backdrop-filter",
+          "rust_name": "BackdropFilter",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter"
+        },
+        {
+          "name": "clip-path",
+          "rust_name": "ClipPath",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path"
+        },
+        {
+          "name": "mask",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask"
+        },
+        {
+          "name": "mask-image",
+          "rust_name": "MaskImage",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image"
+        },
+        {
+          "name": "mask-mode",
+          "rust_name": "MaskMode",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-mode"
+        },
+        {
+          "name": "mask-repeat",
+          "rust_name": "MaskRepeat",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-repeat"
+        },
+        {
+          "name": "mask-position",
+          "rust_name": "MaskPosition",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-position"
+        },
+        {
+          "name": "mask-clip",
+          "rust_name": "MaskClip",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-clip"
+        },
+        {
+          "name": "mask-origin",
+          "rust_name": "MaskOrigin",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-origin"
+        },
+        {
+          "name": "mask-size",
+          "rust_name": "MaskSize",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-size"
+        },
+        {
+          "name": "mask-composite",
+          "rust_name": "MaskComposite",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite"
+        },
+        {
+          "name": "mask-type",
+          "rust_name": "MaskType",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/mask-type"
+        }
+      ]
+    },
+    "Transform": {
+      "description": "2D and 3D transforms",
+      "properties": [
+        {
+          "name": "transform",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transform"
+        },
+        {
+          "name": "transform-origin",
+          "rust_name": "TransformOrigin",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transform-origin"
+        },
+        {
+          "name": "transform-style",
+          "rust_name": "TransformStyle",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transform-style"
+        },
+        {
+          "name": "perspective",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/perspective"
+        },
+        {
+          "name": "perspective-origin",
+          "rust_name": "PerspectiveOrigin",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/perspective-origin"
+        },
+        {
+          "name": "backface-visibility",
+          "rust_name": "BackfaceVisibility",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/backface-visibility"
+        }
+      ]
+    },
+    "Transition": {
+      "description": "CSS transition properties",
+      "properties": [
+        {
+          "name": "transition",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transition"
+        },
+        {
+          "name": "transition-delay",
+          "rust_name": "TransitionDelay",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-delay"
+        },
+        {
+          "name": "transition-duration",
+          "rust_name": "TransitionDuration",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-duration"
+        },
+        {
+          "name": "transition-property",
+          "rust_name": "TransitionProperty",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-property"
+        },
+        {
+          "name": "transition-timing-function",
+          "rust_name": "TransitionTimingFunction",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/transition-timing-function"
+        }
+      ]
+    },
+    "Animation": {
+      "description": "CSS animation properties",
+      "properties": [
+        {
+          "name": "animation",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation"
+        },
+        {
+          "name": "animation-delay",
+          "rust_name": "AnimationDelay",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-delay"
+        },
+        {
+          "name": "animation-direction",
+          "rust_name": "AnimationDirection",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction"
+        },
+        {
+          "name": "animation-duration",
+          "rust_name": "AnimationDuration",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-duration"
+        },
+        {
+          "name": "animation-fill-mode",
+          "rust_name": "AnimationFillMode",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-fill-mode"
+        },
+        {
+          "name": "animation-iteration-count",
+          "rust_name": "AnimationIterationCount",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count"
+        },
+        {
+          "name": "animation-name",
+          "rust_name": "AnimationName",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-name"
+        },
+        {
+          "name": "animation-play-state",
+          "rust_name": "AnimationPlayState",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-play-state"
+        },
+        {
+          "name": "animation-timing-function",
+          "rust_name": "AnimationTimingFunction",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function"
+        },
+        {
+          "name": "animation-composition",
+          "rust_name": "AnimationComposition",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/animation-composition"
+        }
+      ]
+    },
+    "Interaction": {
+      "description": "User interaction properties",
+      "properties": [
+        {
+          "name": "cursor",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/cursor"
+        },
+        {
+          "name": "pointer-events",
+          "rust_name": "PointerEvents",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events"
+        },
+        {
+          "name": "user-select",
+          "rust_name": "UserSelect",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/user-select"
+        },
+        {
+          "name": "resize",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/resize"
+        },
+        {
+          "name": "outline",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/outline"
+        },
+        {
+          "name": "outline-width",
+          "rust_name": "OutlineWidth",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-width"
+        },
+        {
+          "name": "outline-style",
+          "rust_name": "OutlineStyle",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-style"
+        },
+        {
+          "name": "outline-color",
+          "rust_name": "OutlineColor",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color"
+        },
+        {
+          "name": "outline-offset",
+          "rust_name": "OutlineOffset",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/outline-offset"
+        }
+      ]
+    },
+    "List": {
+      "description": "List and counter properties",
+      "properties": [
+        {
+          "name": "list-style",
+          "rust_name": "ListStyle",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style"
+        },
+        {
+          "name": "list-style-type",
+          "rust_name": "ListStyleType",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type"
+        },
+        {
+          "name": "list-style-position",
+          "rust_name": "ListStylePosition",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-position"
+        },
+        {
+          "name": "list-style-image",
+          "rust_name": "ListStyleImage",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-image"
+        },
+        {
+          "name": "counter-increment",
+          "rust_name": "CounterIncrement",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/counter-increment"
+        },
+        {
+          "name": "counter-reset",
+          "rust_name": "CounterReset",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/counter-reset"
+        }
+      ]
+    },
+    "Table": {
+      "description": "Table-specific properties",
+      "properties": [
+        {
+          "name": "table-layout",
+          "rust_name": "TableLayout",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/table-layout"
+        },
+        {
+          "name": "border-collapse",
+          "rust_name": "BorderCollapse",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-collapse"
+        },
+        {
+          "name": "border-spacing",
+          "rust_name": "BorderSpacing",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/border-spacing"
+        },
+        {
+          "name": "caption-side",
+          "rust_name": "CaptionSide",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/caption-side"
+        },
+        {
+          "name": "empty-cells",
+          "rust_name": "EmptyCells",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/empty-cells"
+        }
+      ]
+    },
+    "Paged": {
+      "description": "Paged media properties",
+      "properties": [
+        {
+          "name": "page-break-before",
+          "rust_name": "PageBreakBefore",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-before"
+        },
+        {
+          "name": "page-break-after",
+          "rust_name": "PageBreakAfter",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-after"
+        },
+        {
+          "name": "page-break-inside",
+          "rust_name": "PageBreakInside",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/page-break-inside"
+        },
+        {
+          "name": "orphans",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/orphans"
+        },
+        {
+          "name": "widows",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/widows"
+        }
+      ]
+    },
+    "GeneratedContent": {
+      "description": "Generated content properties",
+      "properties": [
+        {
+          "name": "content",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/content"
+        },
+        {
+          "name": "quotes",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/quotes"
+        }
+      ]
+    },
+    "FlexGridGap": {
+      "description": "Gap properties for flex and grid layouts",
+      "properties": []
+    },
+    "Miscellaneous": {
+      "description": "Miscellaneous CSS properties",
+      "properties": [
+        {
+          "name": "object-fit",
+          "rust_name": "ObjectFit",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit"
+        },
+        {
+          "name": "object-position",
+          "rust_name": "ObjectPosition",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/object-position"
+        },
+        {
+          "name": "vertical-align",
+          "rust_name": "VerticalAlign",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/vertical-align"
+        },
+        {
+          "name": "columns",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/columns"
+        },
+        {
+          "name": "column-width",
+          "rust_name": "ColumnWidth",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-width"
+        },
+        {
+          "name": "column-count",
+          "rust_name": "ColumnCount",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-count"
+        },
+        {
+          "name": "column-rule",
+          "rust_name": "ColumnRule",
+          "status": "standard",
+          "shorthand": true,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule"
+        },
+        {
+          "name": "column-rule-color",
+          "rust_name": "ColumnRuleColor",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-color"
+        },
+        {
+          "name": "column-rule-style",
+          "rust_name": "ColumnRuleStyle",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-style"
+        },
+        {
+          "name": "column-rule-width",
+          "rust_name": "ColumnRuleWidth",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-rule-width"
+        },
+        {
+          "name": "column-span",
+          "rust_name": "ColumnSpan",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-span"
+        },
+        {
+          "name": "column-fill",
+          "rust_name": "ColumnFill",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/column-fill"
+        },
+        {
+          "name": "tab-size",
+          "rust_name": "TabSize",
+          "status": "standard",
+          "shorthand": false,
+          "mdn_url": "https://developer.mozilla.org/en-US/docs/Web/CSS/tab-size"
+        }
+      ]
+    }
+  }
+}
