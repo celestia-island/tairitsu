@@ -1,4 +1,5 @@
 use super::properties::{CssProperty, Property};
+use super::values::CssValue;
 
 pub struct StyleStringBuilder(Vec<(Property, String)>);
 
@@ -21,6 +22,90 @@ impl StyleStringBuilder {
     pub fn add_px(mut self, property: CssProperty, pixels: u32) -> Self {
         self.0
             .push((Property::Known(property), format!("{}px", pixels)));
+        self
+    }
+
+    pub fn add_auto(mut self, property: CssProperty) -> Self {
+        self.0
+            .push((Property::Known(property), CssValue::Auto.as_str().to_string()));
+        self
+    }
+
+    pub fn add_none(mut self, property: CssProperty) -> Self {
+        self.0
+            .push((Property::Known(property), CssValue::None.as_str().to_string()));
+        self
+    }
+
+    pub fn add_inherit(mut self, property: CssProperty) -> Self {
+        self.0
+            .push((Property::Known(property), CssValue::Inherit.as_str().to_string()));
+        self
+    }
+
+    pub fn add_percent(mut self, property: CssProperty, value: u32) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}%", value)));
+        self
+    }
+
+    pub fn add_em(mut self, property: CssProperty, value: u32) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}em", value)));
+        self
+    }
+
+    pub fn add_rem(mut self, property: CssProperty, value: u32) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}rem", value)));
+        self
+    }
+
+    pub fn add_vw(mut self, property: CssProperty, value: u32) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}vw", value)));
+        self
+    }
+
+    pub fn add_vh(mut self, property: CssProperty, value: u32) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}vh", value)));
+        self
+    }
+
+    pub fn add_px_f64(mut self, property: CssProperty, pixels: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}px", pixels)));
+        self
+    }
+
+    pub fn add_percent_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}%", value)));
+        self
+    }
+
+    pub fn add_em_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}em", value)));
+        self
+    }
+
+    pub fn add_rem_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}rem", value)));
+        self
+    }
+
+    pub fn add_vw_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}vw", value)));
+        self
+    }
+
+    pub fn add_vh_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.0
+            .push((Property::Known(property), format!("{}vh", value)));
         self
     }
 
@@ -83,6 +168,90 @@ impl StyleBuilder {
         self
     }
 
+    pub fn add_auto(mut self, property: CssProperty) -> Self {
+        self.properties
+            .push((Property::Known(property), CssValue::Auto.as_str().to_string()));
+        self
+    }
+
+    pub fn add_none(mut self, property: CssProperty) -> Self {
+        self.properties
+            .push((Property::Known(property), CssValue::None.as_str().to_string()));
+        self
+    }
+
+    pub fn add_inherit(mut self, property: CssProperty) -> Self {
+        self.properties
+            .push((Property::Known(property), CssValue::Inherit.as_str().to_string()));
+        self
+    }
+
+    pub fn add_percent(mut self, property: CssProperty, value: u32) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}%", value)));
+        self
+    }
+
+    pub fn add_em(mut self, property: CssProperty, value: u32) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}em", value)));
+        self
+    }
+
+    pub fn add_rem(mut self, property: CssProperty, value: u32) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}rem", value)));
+        self
+    }
+
+    pub fn add_vw(mut self, property: CssProperty, value: u32) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}vw", value)));
+        self
+    }
+
+    pub fn add_vh(mut self, property: CssProperty, value: u32) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}vh", value)));
+        self
+    }
+
+    pub fn add_px_f64(mut self, property: CssProperty, pixels: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}px", pixels)));
+        self
+    }
+
+    pub fn add_percent_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}%", value)));
+        self
+    }
+
+    pub fn add_em_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}em", value)));
+        self
+    }
+
+    pub fn add_rem_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}rem", value)));
+        self
+    }
+
+    pub fn add_vw_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}vw", value)));
+        self
+    }
+
+    pub fn add_vh_f64(mut self, property: CssProperty, value: f64) -> Self {
+        self.properties
+            .push((Property::Known(property), format!("{}vh", value)));
+        self
+    }
+
     pub fn add_all(mut self, properties: &[(CssProperty, &str)]) -> Self {
         for &(property, value) in properties {
             self.properties
@@ -108,13 +277,13 @@ impl StyleBuilder {
     pub fn to_vdom_style(self) -> tairitsu_vdom::Style {
         let mut style = tairitsu_vdom::Style::new();
         for (property, value) in self.properties {
+            let prop_str = property.as_str();
             match property {
                 Property::Known(_) => {
-                    let prop_str = property.as_str();
                     style = style.add(prop_str, &value);
                 }
-                Property::Custom(name) => {
-                    style = style.add_custom(&name, &value);
+                Property::Custom(_) => {
+                    style = style.add_custom(prop_str, &value);
                 }
             }
         }
