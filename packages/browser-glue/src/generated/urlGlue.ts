@@ -284,7 +284,7 @@ export function _get(self: bigint, name: string): string | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): (string)[] {
+export function getAll(self: bigint, name: string): bigint {
   const obj = getUrlSearchParams(self);
   return obj.all;
 }

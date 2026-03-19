@@ -42,7 +42,7 @@ export function scope(handle: bigint): string {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type SwHandle = number;
+export type SwHandle = bigint | undefined;
 
 /** Handle table for ServiceWorker instances */
 const _swHandles = new Map<bigint, ServiceWorker>();
@@ -60,7 +60,7 @@ function getSw(handle: bigint): ServiceWorker {
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): string {
+export function scriptUrl(handle: bigint): bigint {
   const obj = getSw(self);
   return obj.scriptUrl(handle);
 }
