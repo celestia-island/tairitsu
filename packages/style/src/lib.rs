@@ -46,16 +46,16 @@ mod values;
 pub use builder::{StyleBuilder, StyleStringBuilder};
 pub use classes::ClassesBuilder;
 pub use properties::{CssCategory, CssProperty, Property};
+pub use utility::create_default_registry;
 pub use utility::{
     AlignItemsUtility, BgColorUtility, Breakpoint, DisplayUtility, FlexDirectionUtility,
     FlexWrapUtility, FontSizeUtility, FontWeightUtility, JustifyContentUtility, MarginUtility,
     PaddingUtility, ParsedUtility, PositionUtility, State, TextAlignUtility, TextColorUtility,
     UtilityClass, UtilityRegistry, Variant,
 };
-pub use utility::{create_default_registry};
 pub use values::{
-    AlignItemsValue, CursorValue, DisplayValue, FlexDirectionValue, FlexWrapValue,
-    JustifyContentValue, LengthUnit, OverflowValue, PositionValue, TextAlignValue, CssValue,
+    AlignItemsValue, CssValue, CursorValue, DisplayValue, FlexDirectionValue, FlexWrapValue,
+    JustifyContentValue, LengthUnit, OverflowValue, PositionValue, TextAlignValue,
 };
 
 #[cfg(test)]
@@ -95,7 +95,8 @@ mod tests {
     #[test]
     fn test_style_builder_with_closure() {
         let style = StyleBuilder::build_clean(|b| {
-            b.add(CssProperty::Width, "200px").add_px(CssProperty::Height, 100)
+            b.add(CssProperty::Width, "200px")
+                .add_px(CssProperty::Height, 100)
         });
         assert!(style.contains("width:200px"));
         assert!(style.contains("height:100px"));
@@ -127,9 +128,7 @@ mod tests {
 
     #[test]
     fn test_classes_builder_add_all() {
-        let classes = ClassesBuilder::new()
-            .add_all(&["a", "b", "c"])
-            .build();
+        let classes = ClassesBuilder::new().add_all(&["a", "b", "c"]).build();
         assert_eq!(classes, "a b c");
     }
 
@@ -499,7 +498,10 @@ mod tests {
         let style = StyleStringBuilder::new()
             .add(CssProperty::Display, DisplayValue::Flex.as_str())
             .add(CssProperty::FlexDirection, FlexDirectionValue::Row.as_str())
-            .add(CssProperty::JustifyContent, JustifyContentValue::SpaceBetween.as_str())
+            .add(
+                CssProperty::JustifyContent,
+                JustifyContentValue::SpaceBetween.as_str(),
+            )
             .add(CssProperty::AlignItems, AlignItemsValue::Center.as_str())
             .add_px(CssProperty::Gap, 16)
             .add_auto(CssProperty::Width)
@@ -624,8 +626,7 @@ mod tests {
 
     #[test]
     fn test_classes_builder_from_utilities() {
-        let classes = ClassesBuilder::from_utilities("flex p-4 text-center")
-            .build();
+        let classes = ClassesBuilder::from_utilities("flex p-4 text-center").build();
         assert!(classes.contains("flex"));
         assert!(classes.contains("p-4"));
         assert!(classes.contains("text-center"));
@@ -644,9 +645,7 @@ mod tests {
 
     #[test]
     fn test_classes_builder_generate_css() {
-        let builder = ClassesBuilder::new()
-            .add_utility("p-4")
-            .add_utility("flex");
+        let builder = ClassesBuilder::new().add_utility("p-4").add_utility("flex");
 
         let css = builder.generate_css();
         assert!(css.contains("padding"));
@@ -655,9 +654,7 @@ mod tests {
 
     #[test]
     fn test_classes_builder_generate_stylesheet() {
-        let builder = ClassesBuilder::new()
-            .add_utility("p-4")
-            .add_utility("flex");
+        let builder = ClassesBuilder::new().add_utility("p-4").add_utility("flex");
 
         let stylesheet = builder.generate_stylesheet();
         assert!(stylesheet.contains("/* Utility Classes */"));
@@ -691,8 +688,7 @@ mod tests {
 
     #[test]
     fn test_utility_with_css_generation() {
-        let (builder, css) = ClassesBuilder::new()
-            .add_utility_with_css("p-4");
+        let (builder, css) = ClassesBuilder::new().add_utility_with_css("p-4");
 
         assert!(css.is_some());
         let css = css.unwrap();
@@ -705,9 +701,7 @@ mod tests {
 
     #[test]
     fn test_combined_responsive_and_state_variants() {
-        let classes = ClassesBuilder::new()
-            .add_utility("md:hover:flex")
-            .build();
+        let classes = ClassesBuilder::new().add_utility("md:hover:flex").build();
 
         assert!(classes.contains("md:hover:flex"));
     }

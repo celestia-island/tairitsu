@@ -155,7 +155,9 @@ impl CssCategory {
     pub const fn description(self) -> &'static str {
         match self {
             CssCategory::Layout => "Properties that control the layout and positioning of elements",
-            CssCategory::BoxModel => "Properties related to the box model: width, height, margin, padding, border",
+            CssCategory::BoxModel => {
+                "Properties related to the box model: width, height, margin, padding, border"
+            }
             CssCategory::Flexbox => "CSS Flexible Box Layout properties",
             CssCategory::Grid => "CSS Grid Layout properties",
             CssCategory::Typography => "Font and text properties",

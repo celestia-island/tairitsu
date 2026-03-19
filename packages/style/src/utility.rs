@@ -97,7 +97,10 @@ pub enum Variant {
     /// Pseudo-class state variant
     State(State),
     /// Combined breakpoint and state variant (e.g., "hover:md:text-center")
-    Combined { breakpoint: Breakpoint, state: State },
+    Combined {
+        breakpoint: Breakpoint,
+        state: State,
+    },
 }
 
 impl Variant {
@@ -118,16 +121,19 @@ impl Variant {
             }
             [first, second] => {
                 // Try both orders for combined variants
-                if let (Some(bp), Some(st)) = (
-                    Breakpoint::from_str(first),
-                    State::from_str(second)
-                ) {
-                    Some(Variant::Combined { breakpoint: bp, state: st })
-                } else if let (Some(st), Some(bp)) = (
-                    State::from_str(first),
-                    Breakpoint::from_str(second)
-                ) {
-                    Some(Variant::Combined { breakpoint: bp, state: st })
+                if let (Some(bp), Some(st)) = (Breakpoint::from_str(first), State::from_str(second))
+                {
+                    Some(Variant::Combined {
+                        breakpoint: bp,
+                        state: st,
+                    })
+                } else if let (Some(st), Some(bp)) =
+                    (State::from_str(first), Breakpoint::from_str(second))
+                {
+                    Some(Variant::Combined {
+                        breakpoint: bp,
+                        state: st,
+                    })
                 } else {
                     None
                 }
@@ -140,7 +146,11 @@ impl Variant {
     pub fn as_css_selector(&self, class: &str) -> String {
         match self {
             Variant::Breakpoint(bp) => {
-                format!("@media (min-width: {}) {{ .{} }}", bp.min_width(), class.trim_start_matches('.'))
+                format!(
+                    "@media (min-width: {}) {{ .{} }}",
+                    bp.min_width(),
+                    class.trim_start_matches('.')
+                )
             }
             Variant::State(st) => {
                 format!("{}{}", class, st.as_str())
@@ -237,7 +247,8 @@ impl ParsedUtility {
         };
 
         // Find variant prefix (ends with ':')
-        let variant = s.split(':')
+        let variant = s
+            .split(':')
             .take(s.matches(':').count())
             .filter(|p| !p.is_empty())
             .collect::<Vec<_>>()
@@ -407,7 +418,9 @@ impl UtilityClass for PaddingUtility {
             arbitrary.clone()
         } else {
             // Extract value from class name (e.g., "p-4" -> "4")
-            parsed.base.strip_prefix(self.base)?
+            parsed
+                .base
+                .strip_prefix(self.base)?
                 .strip_prefix('-')?
                 .to_string()
         };
@@ -420,7 +433,12 @@ impl UtilityClass for PaddingUtility {
             format!(".{}", class_name)
         };
 
-        Some(format!("{} {{ {}:{}; }}", selector, self.property.as_str(), value))
+        Some(format!(
+            "{} {{ {}:{}; }}",
+            selector,
+            self.property.as_str(),
+            value
+        ))
     }
 
     fn matches(&self, class_name: &str) -> bool {
@@ -464,7 +482,9 @@ impl UtilityClass for MarginUtility {
         let value_str = if let Some(ref arbitrary) = parsed.arbitrary_value {
             arbitrary.clone()
         } else {
-            parsed.base.strip_prefix(self.base)?
+            parsed
+                .base
+                .strip_prefix(self.base)?
                 .strip_prefix('-')?
                 .to_string()
         };
@@ -481,7 +501,12 @@ impl UtilityClass for MarginUtility {
             format!(".{}", class_name)
         };
 
-        Some(format!("{} {{ {}:{}; }}", selector, self.property.as_str(), value))
+        Some(format!(
+            "{} {{ {}:{}; }}",
+            selector,
+            self.property.as_str(),
+            value
+        ))
     }
 
     fn matches(&self, class_name: &str) -> bool {
@@ -682,7 +707,10 @@ impl UtilityClass for JustifyContentUtility {
             format!(".{}", class_name)
         };
 
-        Some(format!("{} {{ justify-content:{}; }}", selector, self.value))
+        Some(format!(
+            "{} {{ justify-content:{}; }}",
+            selector, self.value
+        ))
     }
 
     fn matches(&self, class_name: &str) -> bool {
@@ -1029,12 +1057,24 @@ pub fn create_default_registry() -> UtilityRegistry {
 
     // Padding utilities
     registry.register(Arc::new(PaddingUtility::new("p", CssProperty::Padding)));
-    registry.register(Arc::new(PaddingUtility::new("px", CssProperty::PaddingLeft))); // Will need shorthand handling
+    registry.register(Arc::new(PaddingUtility::new(
+        "px",
+        CssProperty::PaddingLeft,
+    ))); // Will need shorthand handling
     registry.register(Arc::new(PaddingUtility::new("py", CssProperty::PaddingTop)));
     registry.register(Arc::new(PaddingUtility::new("pt", CssProperty::PaddingTop)));
-    registry.register(Arc::new(PaddingUtility::new("pr", CssProperty::PaddingRight)));
-    registry.register(Arc::new(PaddingUtility::new("pb", CssProperty::PaddingBottom)));
-    registry.register(Arc::new(PaddingUtility::new("pl", CssProperty::PaddingLeft)));
+    registry.register(Arc::new(PaddingUtility::new(
+        "pr",
+        CssProperty::PaddingRight,
+    )));
+    registry.register(Arc::new(PaddingUtility::new(
+        "pb",
+        CssProperty::PaddingBottom,
+    )));
+    registry.register(Arc::new(PaddingUtility::new(
+        "pl",
+        CssProperty::PaddingLeft,
+    )));
 
     // Margin utilities
     registry.register(Arc::new(MarginUtility::new("m", CssProperty::Margin)));
@@ -1042,7 +1082,10 @@ pub fn create_default_registry() -> UtilityRegistry {
     registry.register(Arc::new(MarginUtility::new("my", CssProperty::MarginTop)));
     registry.register(Arc::new(MarginUtility::new("mt", CssProperty::MarginTop)));
     registry.register(Arc::new(MarginUtility::new("mr", CssProperty::MarginRight)));
-    registry.register(Arc::new(MarginUtility::new("mb", CssProperty::MarginBottom)));
+    registry.register(Arc::new(MarginUtility::new(
+        "mb",
+        CssProperty::MarginBottom,
+    )));
     registry.register(Arc::new(MarginUtility::new("ml", CssProperty::MarginLeft)));
 
     // Display utilities
@@ -1055,28 +1098,61 @@ pub fn create_default_registry() -> UtilityRegistry {
 
     // Flex direction utilities
     registry.register(Arc::new(FlexDirectionUtility::new("flex-row", "row")));
-    registry.register(Arc::new(FlexDirectionUtility::new("flex-row-reverse", "row-reverse")));
+    registry.register(Arc::new(FlexDirectionUtility::new(
+        "flex-row-reverse",
+        "row-reverse",
+    )));
     registry.register(Arc::new(FlexDirectionUtility::new("flex-col", "column")));
-    registry.register(Arc::new(FlexDirectionUtility::new("flex-col-reverse", "column-reverse")));
+    registry.register(Arc::new(FlexDirectionUtility::new(
+        "flex-col-reverse",
+        "column-reverse",
+    )));
 
     // Flex wrap utilities
     registry.register(Arc::new(FlexWrapUtility::new("flex-wrap", "wrap")));
     registry.register(Arc::new(FlexWrapUtility::new("flex-nowrap", "nowrap")));
-    registry.register(Arc::new(FlexWrapUtility::new("flex-wrap-reverse", "wrap-reverse")));
+    registry.register(Arc::new(FlexWrapUtility::new(
+        "flex-wrap-reverse",
+        "wrap-reverse",
+    )));
 
     // Justify content utilities
-    registry.register(Arc::new(JustifyContentUtility::new("justify-start", "flex-start")));
-    registry.register(Arc::new(JustifyContentUtility::new("justify-end", "flex-end")));
-    registry.register(Arc::new(JustifyContentUtility::new("justify-center", "center")));
-    registry.register(Arc::new(JustifyContentUtility::new("justify-between", "space-between")));
-    registry.register(Arc::new(JustifyContentUtility::new("justify-around", "space-around")));
-    registry.register(Arc::new(JustifyContentUtility::new("justify-evenly", "space-evenly")));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-start",
+        "flex-start",
+    )));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-end",
+        "flex-end",
+    )));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-center",
+        "center",
+    )));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-between",
+        "space-between",
+    )));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-around",
+        "space-around",
+    )));
+    registry.register(Arc::new(JustifyContentUtility::new(
+        "justify-evenly",
+        "space-evenly",
+    )));
 
     // Align items utilities
-    registry.register(Arc::new(AlignItemsUtility::new("items-start", "flex-start")));
+    registry.register(Arc::new(AlignItemsUtility::new(
+        "items-start",
+        "flex-start",
+    )));
     registry.register(Arc::new(AlignItemsUtility::new("items-end", "flex-end")));
     registry.register(Arc::new(AlignItemsUtility::new("items-center", "center")));
-    registry.register(Arc::new(AlignItemsUtility::new("items-baseline", "baseline")));
+    registry.register(Arc::new(AlignItemsUtility::new(
+        "items-baseline",
+        "baseline",
+    )));
     registry.register(Arc::new(AlignItemsUtility::new("items-stretch", "stretch")));
 
     // Text align utilities
@@ -1121,11 +1197,17 @@ pub fn create_default_registry() -> UtilityRegistry {
     // Basic color utilities
     registry.register(Arc::new(TextColorUtility::new("text-white", "#ffffff")));
     registry.register(Arc::new(TextColorUtility::new("text-black", "#000000")));
-    registry.register(Arc::new(TextColorUtility::new("text-transparent", "transparent")));
+    registry.register(Arc::new(TextColorUtility::new(
+        "text-transparent",
+        "transparent",
+    )));
 
     registry.register(Arc::new(BgColorUtility::new("bg-white", "#ffffff")));
     registry.register(Arc::new(BgColorUtility::new("bg-black", "#000000")));
-    registry.register(Arc::new(BgColorUtility::new("bg-transparent", "transparent")));
+    registry.register(Arc::new(BgColorUtility::new(
+        "bg-transparent",
+        "transparent",
+    )));
 
     registry
 }
@@ -1164,7 +1246,10 @@ mod tests {
 
     #[test]
     fn test_variant_parse() {
-        assert_eq!(Variant::parse("sm:"), Some(Variant::Breakpoint(Breakpoint::Sm)));
+        assert_eq!(
+            Variant::parse("sm:"),
+            Some(Variant::Breakpoint(Breakpoint::Sm))
+        );
         assert_eq!(Variant::parse("hover:"), Some(Variant::State(State::Hover)));
         assert_eq!(
             Variant::parse("md:hover:"),
@@ -1321,7 +1406,10 @@ mod tests {
     #[test]
     fn test_scale_to_rem() {
         assert_eq!(PaddingUtility::scale_to_rem("0"), Some("0".to_string()));
-        assert_eq!(PaddingUtility::scale_to_rem("1"), Some("0.25rem".to_string()));
+        assert_eq!(
+            PaddingUtility::scale_to_rem("1"),
+            Some("0.25rem".to_string())
+        );
         assert_eq!(PaddingUtility::scale_to_rem("4"), Some("1rem".to_string()));
         assert_eq!(PaddingUtility::scale_to_rem("8"), Some("2rem".to_string()));
         assert_eq!(PaddingUtility::scale_to_rem("12"), Some("3rem".to_string()));
@@ -1478,9 +1566,20 @@ mod tests {
 
         // Test that various utility categories are registered
         let test_classes = [
-            "p-4", "m-2", "flex", "grid", "flex-col", "justify-center",
-            "items-center", "text-center", "text-lg", "font-bold", "absolute",
-            "text-white", "bg-black", "hidden"
+            "p-4",
+            "m-2",
+            "flex",
+            "grid",
+            "flex-col",
+            "justify-center",
+            "items-center",
+            "text-center",
+            "text-lg",
+            "font-bold",
+            "absolute",
+            "text-white",
+            "bg-black",
+            "hidden",
         ];
 
         for class in test_classes {
@@ -1509,7 +1608,12 @@ mod tests {
         ];
 
         for (str, expected) in states {
-            assert_eq!(State::from_str(str), Some(expected), "Failed for state: {}", str);
+            assert_eq!(
+                State::from_str(str),
+                Some(expected),
+                "Failed for state: {}",
+                str
+            );
         }
     }
 

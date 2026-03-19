@@ -13,7 +13,10 @@ fn main() {
             let parsed = ParsedUtility::parse(class);
             if let Some(css) = util.generate_css(class, &parsed) {
                 println!("  CSS: {}", css);
-                println!("  Contains 'color:#ffffff': {}", css.contains("color:#ffffff"));
+                println!(
+                    "  Contains 'color:#ffffff': {}",
+                    css.contains("color:#ffffff")
+                );
             }
         } else {
             println!("No utility found for: {}", class);

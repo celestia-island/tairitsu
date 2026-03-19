@@ -26,20 +26,26 @@ impl StyleStringBuilder {
     }
 
     pub fn add_auto(mut self, property: CssProperty) -> Self {
-        self.0
-            .push((Property::Known(property), CssValue::Auto.as_str().to_string()));
+        self.0.push((
+            Property::Known(property),
+            CssValue::Auto.as_str().to_string(),
+        ));
         self
     }
 
     pub fn add_none(mut self, property: CssProperty) -> Self {
-        self.0
-            .push((Property::Known(property), CssValue::None.as_str().to_string()));
+        self.0.push((
+            Property::Known(property),
+            CssValue::None.as_str().to_string(),
+        ));
         self
     }
 
     pub fn add_inherit(mut self, property: CssProperty) -> Self {
-        self.0
-            .push((Property::Known(property), CssValue::Inherit.as_str().to_string()));
+        self.0.push((
+            Property::Known(property),
+            CssValue::Inherit.as_str().to_string(),
+        ));
         self
     }
 
@@ -169,20 +175,26 @@ impl StyleBuilder {
     }
 
     pub fn add_auto(mut self, property: CssProperty) -> Self {
-        self.properties
-            .push((Property::Known(property), CssValue::Auto.as_str().to_string()));
+        self.properties.push((
+            Property::Known(property),
+            CssValue::Auto.as_str().to_string(),
+        ));
         self
     }
 
     pub fn add_none(mut self, property: CssProperty) -> Self {
-        self.properties
-            .push((Property::Known(property), CssValue::None.as_str().to_string()));
+        self.properties.push((
+            Property::Known(property),
+            CssValue::None.as_str().to_string(),
+        ));
         self
     }
 
     pub fn add_inherit(mut self, property: CssProperty) -> Self {
-        self.properties
-            .push((Property::Known(property), CssValue::Inherit.as_str().to_string()));
+        self.properties.push((
+            Property::Known(property),
+            CssValue::Inherit.as_str().to_string(),
+        ));
         self
     }
 
