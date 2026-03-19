@@ -154,6 +154,7 @@ class WitPackage:
 
 TOKEN_PATTERNS = [
     ('COMMENT_LINE', r'///[^\n]*'),
+    ('COMMENT_REGULAR', r'//[^\n]*'),  # Regular single-line comments
     ('COMMENT_BLOCK', r'/\*[\s\S]*?\*/'),
     ('WHITESPACE', r'\s+'),
     ('PACKAGE', r'\bpackage\b'),
@@ -164,6 +165,8 @@ TOKEN_PATTERNS = [
     ('IMPORT', r'\bimport\b'),
     ('EXPORT', r'\bexport\b'),
     ('FROM', r'\bfrom\b'),
+    ('INCLUDE', r'\binclude\b'),
+    ('USE', r'\buse\b'),
     ('OPTION', r'\boption\b'),
     ('LIST', r'\blist\b'),
     ('RESULT', r'\bresult\b'),
@@ -174,6 +177,7 @@ TOKEN_PATTERNS = [
     ('FLAGS', r'\bflags\b'),
     ('RESOURCE', r'\bresource\b'),
     ('STATIC', r'\bstatic\b'),
+    ('ESCAPED_IDENT', r'%[a-zA-Z_][a-zA-Z0-9_-]*'),  # # e.g., %type, %use
     ('PRIMITIVE', r'\b(u8|u16|u32|u64|s8|s16|s32|s64|f32|f64|bool|string|char|_)\b'),
     ('IDENT', r'[a-zA-Z_][a-zA-Z0-9_-]*'),
     ('STRING', r'"[^"]*"'),
@@ -227,7 +231,7 @@ def tokenize(text: str) -> List[Token]:
                 column += len(value)
             continue
 
-        if kind in ('COMMENT_LINE', 'COMMENT_BLOCK'):
+        if kind in ('COMMENT_LINE', 'COMMENT_BLOCK', 'COMMENT_REGULAR'):
             # Track position but don't emit (comments are handled separately)
             line += value.count('\n')
             if '\n' in value:
@@ -363,8 +367,13 @@ class WitParser:
 
         if not self.match('RPAREN'):
             while True:
-                name_tok = self.consume('IDENT')
-                name = name_tok.value
+                # Accept both IDENT and ESCAPED_IDENT for param names
+                if self.match('ESCAPED_IDENT'):
+                    name_tok = self.consume()
+                    name = name_tok.value[1:]  # Remove leading %
+                else:
+                    name_tok = self.consume('IDENT')
+                    name = name_tok.value
                 self.consume('COLON')
                 type_ = self.parse_type()
                 params.append(WitParam(name, type_))
@@ -378,8 +387,13 @@ class WitParser:
     def parse_function(self) -> WitFunction:
         """Parse a function definition: name: func(params) -> result;"""
         docs = self.collect_docs()
-        name_tok = self.consume('IDENT')
-        name = name_tok.value
+        # Accept both IDENT and ESCAPED_IDENT for function names
+        if self.match('ESCAPED_IDENT'):
+            name_tok = self.consume()
+            name = name_tok.value[1:]  # Remove leading %
+        else:
+            name_tok = self.consume('IDENT')
+            name = name_tok.value
         self.consume('COLON')
         self.consume('FUNC')
 
@@ -419,8 +433,11 @@ class WitParser:
         while not self.match('RBRACE'):
             if self.match('TYPE'):
                 type_aliases.append(self.parse_type_alias())
-            elif self.match('IDENT'):
+            elif self.match('IDENT') or self.match('ESCAPED_IDENT'):
                 functions.append(self.parse_function())
+            elif self.match('INCLUDE') or self.match('USE') or self.match('IMPORT') or self.match('FROM'):
+                # Skip include/use/import statements in interfaces
+                self._skip_include()
             else:
                 tok = self.current()
                 raise SyntaxError(f"Unexpected token in interface: {tok.kind if tok else 'EOF'}")
@@ -503,11 +520,107 @@ class WitParser:
                 interfaces.append(self.parse_interface())
             elif self.match('WORLD'):
                 worlds.append(self.parse_world())
+            elif self.match('ENUM'):
+                # Skip top-level enum definitions
+                self._skip_enum()
+            elif self.match('RECORD'):
+                # Skip top-level record definitions
+                self._skip_record()
+            elif self.match('VARIANT'):
+                # Skip top-level variant definitions
+                self._skip_variant()
+            elif self.match('FLAGS'):
+                # Skip top-level flags definitions
+                self._skip_flags()
+            elif self.match('TYPE'):
+                # Skip top-level type aliases
+                self._skip_type_alias()
             else:
                 tok = self.current()
                 raise SyntaxError(f"Unexpected token at package level: {tok.kind if tok else 'EOF'}")
 
         return WitPackage(pkg_name, version, interfaces, worlds, docs, self.source_file)
+
+    def _skip_enum(self) -> None:
+        """Skip an enum definition."""
+        self.consume('ENUM')
+        self.consume('IDENT')  # enum name
+        self.consume('LBRACE')
+        depth = 1
+        while depth > 0:
+            tok = self.consume()
+            if tok is None:
+                break
+            if tok.kind == 'LBRACE':
+                depth += 1
+            elif tok.kind == 'RBRACE':
+                depth -= 1
+
+    def _skip_record(self) -> None:
+        """Skip a record definition."""
+        self.consume('RECORD')
+        self.consume('IDENT')  # record name
+        self.consume('LBRACE')
+        depth = 1
+        while depth > 0:
+            tok = self.consume()
+            if tok is None:
+                break
+            if tok.kind == 'LBRACE':
+                depth += 1
+            elif tok.kind == 'RBRACE':
+                depth -= 1
+
+    def _skip_variant(self) -> None:
+        """Skip a variant definition."""
+        self.consume('VARIANT')
+        self.consume('IDENT')  # variant name
+        self.consume('LBRACE')
+        depth = 1
+        while depth > 0:
+            tok = self.consume()
+            if tok is None:
+                break
+            if tok.kind == 'LBRACE':
+                depth += 1
+            elif tok.kind == 'RBRACE':
+                depth -= 1
+
+    def _skip_flags(self) -> None:
+        """Skip a flags definition."""
+        self.consume('FLAGS')
+        self.consume('IDENT')  # flags name
+        self.consume('LBRACE')
+        depth = 1
+        while depth > 0:
+            tok = self.consume()
+            if tok is None:
+                break
+            if tok.kind == 'LBRACE':
+                depth += 1
+            elif tok.kind == 'RBRACE':
+                depth -= 1
+
+    def _skip_type_alias(self) -> None:
+        """Skip a top-level type alias."""
+        self.consume('TYPE')
+        self.consume('IDENT')  # type name
+        self.consume('EQUALS')
+        # Skip until semicolon
+        while self.current() and self.current().kind != 'SEMICOLON':
+            self.consume()
+        self.consume('SEMICOLON')
+
+    def _skip_include(self) -> None:
+        """Skip include/use/import statements within interfaces."""
+        tok = self.current()
+        if tok is None:
+            return
+        # include/use/import [name] [from "path"];
+        while self.current() and self.current().kind != 'SEMICOLON':
+            self.consume()
+        if self.current() and self.current().kind == 'SEMICOLON':
+            self.consume()
 
     def parse(self) -> WitPackage:
         """Parse the complete WIT file."""

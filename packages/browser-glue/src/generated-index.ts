@@ -10,32 +10,58 @@
  *
  * ## Package layout
  *
+ * - `./canvas` — `tairitsu-browser:canvas` (18 interfaces)
+ * - `./crypto` — `tairitsu-browser:crypto` (3 interfaces)
+ * - `./device` — `tairitsu-browser:device` (12 interfaces)
+ * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
+ * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
+ * - `./html` — `tairitsu-browser:html` (182 interfaces)
+ * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
  * - `./media` — `tairitsu-browser:media` (12 interfaces)
  * - `./notifications` — `tairitsu-browser:notifications` (4 interfaces)
  * - `./observers` — `tairitsu-browser:observers` (5 interfaces)
+ * - `./performance` — `tairitsu-browser:performance` (11 interfaces)
  * - `./permissions` — `tairitsu-browser:permissions` (2 interfaces)
+ * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
+ * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
  * - `./storage` — `tairitsu-browser:storage` (2 interfaces)
+ * - `./streams` — `tairitsu-browser:streams` (3 interfaces)
  * - `./url` — `tairitsu-browser:url` (2 interfaces)
+ * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
  * - `./webrtc` — `tairitsu-browser:webrtc` (20 interfaces)
  * - `./websocket` — `tairitsu-browser:websocket` (2 interfaces)
+ * - `./websockets` — `tairitsu-browser:websockets` (1 interfaces)
  * - `./workers` — `tairitsu-browser:workers` (12 interfaces)
  */
 
 // Re-export all generated modules
+export * as canvas from "./generated/canvas-glue.js";
+export * as crypto from "./generated/crypto-glue.js";
+export * as device from "./generated/device-glue.js";
+export * as dom from "./generated/dom-glue.js";
+export * as fetch from "./generated/fetch-glue.js";
+export * as html from "./generated/html-glue.js";
+export * as indexeddb from "./generated/indexed-db-glue.js";
 export * as media from "./generated/media-glue.js";
 export * as notifications from "./generated/notifications-glue.js";
 export * as observers from "./generated/observers-glue.js";
+export * as performance from "./generated/performance-glue.js";
 export * as permissions from "./generated/permissions-glue.js";
+export * as resizeobserver from "./generated/resize-observer-glue.js";
+export * as serviceworkers from "./generated/service-workers-glue.js";
 export * as storage from "./generated/storage-glue.js";
+export * as streams from "./generated/streams-glue.js";
 export * as url from "./generated/url-glue.js";
+export * as webanimations from "./generated/web-animations-glue.js";
 export * as webrtc from "./generated/webrtc-glue.js";
 export * as websocket from "./generated/websocket-glue.js";
+export * as websockets from "./generated/websockets-glue.js";
 export * as workers from "./generated/workers-glue.js";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 9,
-  totalInterfaces: 61,
-  totalFunctions: 457,
-  generatedAt: "2026-03-19T16:22:18.096721",
+  totalDomains: 22,
+  totalInterfaces: 361,
+  totalFunctions: 2859,
+  generatedAt: "2026-03-19T18:10:33.257291",
 };

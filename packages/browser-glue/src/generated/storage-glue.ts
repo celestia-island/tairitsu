@@ -45,7 +45,7 @@ function getNavigatorStorage(handle: bigint): NavigatorStorage {
 /**
  * `get-storage()` operation.
  */
-export function getStorage(self: bigint): bigint {
+export function getStorage(self: string): bigint {
   const obj = getNavigatorStorage(self);
   return obj.storage;
 }
@@ -75,7 +75,7 @@ function getStorageManager(handle: bigint): StorageManager {
  *
  * Async operation: returns request ID, poll with `pollPersisted()`
  */
-export function persisted(self: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
+export function persisted(self: bigint): { ok: true; value: string } | { ok: false; error: string } {
   const requestId = _nextAsyncHandle++;
   const obj = getStorageManager(self);
   const promise = obj.persisted()
@@ -99,7 +99,7 @@ export function persisted(self: bigint): { ok: true; value: bigint } | { ok: fal
 /**
  * `poll-persisted()` operation.
  */
-export function pollPersisted(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
+export function pollPersisted(requestId: bigint): bigint {
   const obj = getStorageManager(self);
   return obj.pollPersisted(requestId) ?? undefined;
 }
@@ -109,7 +109,7 @@ export function pollPersisted(requestId: bigint): { ok: true; value: boolean } |
  *
  * Async operation: returns request ID, poll with `pollPersist()`
  */
-export function persist(self: bigint): bigint {
+export function persist(self: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
   const requestId = _nextAsyncHandle++;
   const obj = getStorageManager(self);
   const promise = obj.persist()
@@ -133,7 +133,7 @@ export function persist(self: bigint): bigint {
 /**
  * `poll-persist()` operation.
  */
-export function pollPersist(requestId: bigint | undefined): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollPersist(requestId: string): bigint {
   const obj = getStorageManager(self);
   return obj.pollPersist(requestId) ?? undefined;
 }
@@ -143,7 +143,7 @@ export function pollPersist(requestId: bigint | undefined): { ok: true; value: n
  *
  * Async operation: returns request ID, poll with `pollEstimate()`
  */
-export function estimate(self: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
+export function estimate(self: string): { ok: true; value: bigint } | { ok: false; error: bigint } {
   const requestId = _nextAsyncHandle++;
   const obj = getStorageManager(self);
   const promise = obj.estimate()

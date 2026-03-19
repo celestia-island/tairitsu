@@ -32,7 +32,7 @@ function getIntersectionObserver(handle: bigint): intersectionobserver {
 /**
  * `get-root()` operation.
  */
-export function getRoot(self: bigint): bigint | undefined {
+export function getRoot(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.root ?? undefined;
 }
@@ -104,7 +104,7 @@ export function disconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: boolean): bigint {
   const obj = getIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -140,7 +140,7 @@ export function getTime(self: bigint): number {
 /**
  * `get-root-bounds()` operation.
  */
-export function getRootBounds(self: bigint): bigint | undefined {
+export function getRootBounds(self: bigint): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.rootBounds ?? undefined;
 }
@@ -156,7 +156,7 @@ export function getBoundingClientRect(self: bigint): bigint {
 /**
  * `get-intersection-rect()` operation.
  */
-export function getIntersectionRect(self: bigint): bigint {
+export function getIntersectionRect(self: string): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRect;
 }
@@ -164,7 +164,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): bigint {
+export function getIsIntersecting(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -172,7 +172,7 @@ export function getIsIntersecting(self: bigint): bigint {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.isVisible;
 }
@@ -180,7 +180,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): bigint {
+export function getIntersectionRatio(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -242,7 +242,7 @@ export function disconnect(self: bigint): void {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ResizeObserverEntryHandle = bigint;
+export type ResizeObserverEntryHandle = string;
 
 /** Handle table for resizeobserverentry instances */
 const _resizeObserverEntryhandles = new Map<bigint, resizeobserverentry>();
@@ -276,7 +276,7 @@ export function getContentRect(self: bigint): bigint {
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: bigint): (bigint)[] {
+export function getBorderBoxSize(self: bigint): (string)[] {
   const obj = getResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -320,7 +320,7 @@ function getResizeObserverSize(handle: bigint): resizeobserversize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: string): number {
   const obj = getResizeObserverSize(self);
   return obj.inlineSize;
 }
@@ -328,7 +328,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): number {
+export function getBlockSize(self: string): number {
   const obj = getResizeObserverSize(self);
   return obj.blockSize;
 }
