@@ -26,11 +26,124 @@
     "./canvas": {
       "import": "./dist/canvas-glue.js",
       "types": "./dist/canvas-glue.d.ts"
+    },
+    "./generated": {
+      "import": "./dist/generated-index.js",
+      "types": "./dist/generated-index.d.ts"
+    },
+    "./generated/canvas": {
+      "import": "./dist/generated/canvas-glue.js",
+      "types": "./dist/generated/canvas-glue.d.ts"
+    },
+    "./generated/crypto": {
+      "import": "./dist/generated/crypto-glue.js",
+      "types": "./dist/generated/crypto-glue.d.ts"
+    },
+    "./generated/css": {
+      "import": "./dist/generated/css-glue.js",
+      "types": "./dist/generated/css-glue.d.ts"
+    },
+    "./generated/device": {
+      "import": "./dist/generated/device-glue.js",
+      "types": "./dist/generated/device-glue.d.ts"
+    },
+    "./generated/dom": {
+      "import": "./dist/generated/dom-glue.js",
+      "types": "./dist/generated/dom-glue.d.ts"
+    },
+    "./generated/events": {
+      "import": "./dist/generated/events-glue.js",
+      "types": "./dist/generated/events-glue.d.ts"
+    },
+    "./generated/fetch": {
+      "import": "./dist/generated/fetch-glue.js",
+      "types": "./dist/generated/fetch-glue.d.ts"
+    },
+    "./generated/file-api": {
+      "import": "./dist/generated/file-api-glue.js",
+      "types": "./dist/generated/file-api-glue.d.ts"
+    },
+    "./generated/geolocation": {
+      "import": "./dist/generated/geolocation-glue.js",
+      "types": "./dist/generated/geolocation-glue.d.ts"
+    },
+    "./generated/html": {
+      "import": "./dist/generated/html-glue.js",
+      "types": "./dist/generated/html-glue.d.ts"
+    },
+    "./generated/indexed-db": {
+      "import": "./dist/generated/indexed-db-glue.js",
+      "types": "./dist/generated/indexed-db-glue.d.ts"
+    },
+    "./generated/intersection-observer": {
+      "import": "./dist/generated/intersection-observer-glue.js",
+      "types": "./dist/generated/intersection-observer-glue.d.ts"
+    },
+    "./generated/media": {
+      "import": "./dist/generated/media-glue.js",
+      "types": "./dist/generated/media-glue.d.ts"
+    },
+    "./generated/notifications": {
+      "import": "./dist/generated/notifications-glue.js",
+      "types": "./dist/generated/notifications-glue.d.ts"
+    },
+    "./generated/observers": {
+      "import": "./dist/generated/observers-glue.js",
+      "types": "./dist/generated/observers-glue.d.ts"
+    },
+    "./generated/performance": {
+      "import": "./dist/generated/performance-glue.js",
+      "types": "./dist/generated/performance-glue.d.ts"
+    },
+    "./generated/permissions": {
+      "import": "./dist/generated/permissions-glue.js",
+      "types": "./dist/generated/permissions-glue.d.ts"
+    },
+    "./generated/resize-observer": {
+      "import": "./dist/generated/resize-observer-glue.js",
+      "types": "./dist/generated/resize-observer-glue.d.ts"
+    },
+    "./generated/service-workers": {
+      "import": "./dist/generated/service-workers-glue.js",
+      "types": "./dist/generated/service-workers-glue.d.ts"
+    },
+    "./generated/storage": {
+      "import": "./dist/generated/storage-glue.js",
+      "types": "./dist/generated/storage-glue.d.ts"
+    },
+    "./generated/streams": {
+      "import": "./dist/generated/streams-glue.js",
+      "types": "./dist/generated/streams-glue.d.ts"
+    },
+    "./generated/url": {
+      "import": "./dist/generated/url-glue.js",
+      "types": "./dist/generated/url-glue.d.ts"
+    },
+    "./generated/web-animations": {
+      "import": "./dist/generated/web-animations-glue.js",
+      "types": "./dist/generated/web-animations-glue.d.ts"
+    },
+    "./generated/webrtc": {
+      "import": "./dist/generated/webrtc-glue.js",
+      "types": "./dist/generated/webrtc-glue.d.ts"
+    },
+    "./generated/websockets": {
+      "import": "./dist/generated/websockets-glue.js",
+      "types": "./dist/generated/websockets-glue.d.ts"
+    },
+    "./generated/websocket": {
+      "import": "./dist/generated/websocket-glue.js",
+      "types": "./dist/generated/websocket-glue.d.ts"
+    },
+    "./generated/workers": {
+      "import": "./dist/generated/workers-glue.js",
+      "types": "./dist/generated/workers-glue.d.ts"
     }
   },
   "scripts": {
-    "build": "swc src -d dist --strip-leading-paths",
+    "build": "npm run build:glue && swc src -d dist --strip-leading-paths",
     "build:watch": "swc src -d dist --strip-leading-paths --watch",
+    "build:glue": "python3 ../../scripts/generate_browser_glue.py",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
