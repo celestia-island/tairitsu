@@ -2361,6 +2361,14 @@ function getXsltProcessor(handle: bigint): xsltprocessor {
 }
 
 /**
+ * `import-stylesheet()` operation.
+ */
+export function importStylesheet(self: bigint, style: bigint): void {
+  const obj = getXsltProcessor(self);
+  obj.importStylesheet(style);
+}
+
+/**
  * `transform-to-fragment()` operation.
  */
 export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
@@ -2621,6 +2629,7 @@ export default {
   createExpression,
   createNsResolver,
   evaluate,
+  importStylesheet,
   transformToFragment,
   transformToDocument,
   setParameter,

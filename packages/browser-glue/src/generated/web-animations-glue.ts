@@ -139,7 +139,7 @@ export function play(handle: bigint): void {
 /**
  * `pause()` operation.
  */
-export function pause(handle: bigint): void {
+export function pause(handle: bigint | undefined): void {
   const obj = getAnimation(self);
   obj.pause(handle);
 }
@@ -147,7 +147,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: bigint): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
   const obj = getAnimation(self);
   obj.updatePlaybackRate(handle, playbackRate);
 }
@@ -155,7 +155,7 @@ export function updatePlaybackRate(handle: bigint, playbackRate: bigint): void {
 /**
  * `reverse()` operation.
  */
-export function reverse(handle: bigint | undefined): void {
+export function reverse(handle: string): void {
   const obj = getAnimation(self);
   obj.reverse(handle);
 }
@@ -165,7 +165,7 @@ export function reverse(handle: bigint | undefined): void {
  *
  * Async operation: returns request ID, poll with `pollPersist()`
  */
-export function persist(handle: boolean): void {
+export function persist(handle: bigint): void {
   const requestId = _nextAsyncHandle++;
   const obj = getAnimation(self);
   const promise = obj.persist(handle)

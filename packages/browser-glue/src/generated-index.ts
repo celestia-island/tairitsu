@@ -12,9 +12,13 @@
  *
  * - `./canvas` — `tairitsu-browser:canvas` (18 interfaces)
  * - `./crypto` — `tairitsu-browser:crypto` (3 interfaces)
+ * - `./css` — `tairitsu-browser:css` (36 interfaces)
  * - `./device` — `tairitsu-browser:device` (12 interfaces)
  * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
+ * - `./events` — `tairitsu-browser:events` (15 interfaces)
  * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
+ * - `./file-api` — `tairitsu-browser:file-api` (4 interfaces)
+ * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
  * - `./html` — `tairitsu-browser:html` (182 interfaces)
  * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
  * - `./media` — `tairitsu-browser:media` (12 interfaces)
@@ -37,9 +41,13 @@
 // Re-export all generated modules
 export * as canvas from "./generated/canvas-glue.js";
 export * as crypto from "./generated/crypto-glue.js";
+export * as css from "./generated/css-glue.js";
 export * as device from "./generated/device-glue.js";
 export * as dom from "./generated/dom-glue.js";
+export * as events from "./generated/events-glue.js";
 export * as fetch from "./generated/fetch-glue.js";
+export * as fileapi from "./generated/file-api-glue.js";
+export * as geolocation from "./generated/geolocation-glue.js";
 export * as html from "./generated/html-glue.js";
 export * as indexeddb from "./generated/indexed-db-glue.js";
 export * as media from "./generated/media-glue.js";
@@ -60,8 +68,8 @@ export * as workers from "./generated/workers-glue.js";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 22,
-  totalInterfaces: 361,
-  totalFunctions: 2859,
-  generatedAt: "2026-03-19T18:29:13.353626",
+  totalDomains: 26,
+  totalInterfaces: 417,
+  totalFunctions: 3682,
+  generatedAt: "2026-03-19T19:03:47.556127",
 };

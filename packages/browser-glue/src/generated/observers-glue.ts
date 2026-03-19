@@ -32,7 +32,7 @@ function getIntersectionObserver(handle: bigint): intersectionobserver {
 /**
  * `get-root()` operation.
  */
-export function getRoot(self: bigint): boolean | undefined {
+export function getRoot(self: string): bigint | undefined {
   const obj = getIntersectionObserver(self);
   return obj.root ?? undefined;
 }
@@ -40,7 +40,7 @@ export function getRoot(self: bigint): boolean | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): string {
+export function getRootMargin(self: boolean): bigint {
   const obj = getIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -48,7 +48,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): string {
+export function getScrollMargin(self: boolean): string {
   const obj = getIntersectionObserver(self);
   return obj.scrollMargin;
 }
@@ -64,7 +64,7 @@ export function getThresholds(self: bigint): (bigint)[] {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): number {
+export function getDelay(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.delay;
 }
@@ -80,7 +80,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, target: bigint): void {
+export function observe(self: bigint, target: boolean): void {
   const obj = getIntersectionObserver(self);
   obj.observe(target);
 }
@@ -104,7 +104,7 @@ export function disconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -114,7 +114,7 @@ export function takeRecords(self: bigint): (bigint)[] {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type IntersectionObserverEntryHandle = boolean;
+export type IntersectionObserverEntryHandle = bigint;
 
 /** Handle table for intersectionobserverentry instances */
 const _intersectionObserverEntryhandles = new Map<bigint, intersectionobserverentry>();
@@ -132,7 +132,7 @@ function getIntersectionObserverEntry(handle: bigint): intersectionobserverentry
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): bigint {
+export function getTime(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -164,7 +164,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: string): bigint {
+export function getIsIntersecting(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -172,7 +172,7 @@ export function getIsIntersecting(self: string): bigint {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.isVisible;
 }
@@ -180,7 +180,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): string {
+export function getIntersectionRatio(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -198,7 +198,7 @@ export function getTarget(self: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ResizeObserverHandle = string;
+export type ResizeObserverHandle = bigint;
 
 /** Handle table for resizeobserver instances */
 const _resizeObserverhandles = new Map<bigint, resizeobserver>();
@@ -216,7 +216,7 @@ function getResizeObserver(handle: bigint): resizeobserver {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, target: bigint, options: bigint | undefined): void {
+export function observe(self: string, target: bigint, options: bigint | undefined): void {
   const obj = getResizeObserver(self);
   obj.observe(target, options);
 }
@@ -276,7 +276,7 @@ export function getContentRect(self: bigint): bigint {
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: string): (bigint)[] {
+export function getBorderBoxSize(self: bigint): (bigint)[] {
   const obj = getResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -302,7 +302,7 @@ export function getDevicePixelContentBoxSize(self: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ResizeObserverSizeHandle = string;
+export type ResizeObserverSizeHandle = bigint;
 
 /** Handle table for resizeobserversize instances */
 const _resizeObserverSizehandles = new Map<bigint, resizeobserversize>();
@@ -320,7 +320,7 @@ function getResizeObserverSize(handle: bigint): resizeobserversize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: bigint): bigint {
   const obj = getResizeObserverSize(self);
   return obj.inlineSize;
 }
@@ -328,7 +328,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): bigint {
+export function getBlockSize(self: bigint): number {
   const obj = getResizeObserverSize(self);
   return obj.blockSize;
 }

@@ -47,7 +47,7 @@ function getPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint | undefined, permissionDesc: bigint): bigint {
+export function query(self: string | undefined, permissionDesc: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPermissions(self);
   const promise = obj.query(permissionDesc)
@@ -85,7 +85,7 @@ export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PermissionStatusHandle = string;
+export type PermissionStatusHandle = bigint;
 
 /** Handle table for PermissionStatus instances */
 const _permissionStatushandles = new Map<bigint, PermissionStatus>();
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): string {
+export function getOnchange(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
