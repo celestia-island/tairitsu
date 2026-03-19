@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type WebSocketHandle = string;
+export type WebSocketHandle = bigint;
 
 /** Handle table for websocket instances */
 const _webSockethandles = new Map<bigint, websocket>();
@@ -69,7 +69,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): bigint | undefined {
+export function getOnopen(self: bigint): bigint {
   const obj = getWebSocket(self);
   return obj.onopen;
 }
@@ -93,7 +93,7 @@ export function getOnerror(self: bigint): bigint {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: bigint): void {
+export function setOnerror(self: bigint, value: string): void {
   const obj = getWebSocket(self);
   obj.onerror = value;
 }
@@ -101,7 +101,7 @@ export function setOnerror(self: bigint, value: bigint): void {
 /**
  * `get-onclose()` operation.
  */
-export function getOnclose(self: bigint): string {
+export function getOnclose(self: bigint): number | undefined {
   const obj = getWebSocket(self);
   return obj.onclose;
 }
@@ -125,7 +125,7 @@ export function getExtensions(self: bigint): bigint {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: string): string {
+export function getProtocol(self: number): string {
   const obj = getWebSocket(self);
   return obj.protocol;
 }
@@ -195,7 +195,7 @@ export function getBinaryType(self: bigint): bigint {
 /**
  * `set-binary-type()` operation.
  */
-export function setBinaryType(self: (bigint)[], value: bigint): void {
+export function setBinaryType(self: bigint, value: bigint): void {
   const obj = getWebSocket(self);
   obj.binaryType = value;
 }
@@ -203,7 +203,7 @@ export function setBinaryType(self: (bigint)[], value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: (bigint)[]): void {
+export function send(self: bigint | undefined, data: Uint8Array): void {
   const obj = getWebSocket(self);
   obj.send(data);
 }
@@ -231,7 +231,7 @@ function getCloseEvent(handle: bigint): closeevent {
 /**
  * `get-was-clean()` operation.
  */
-export function getWasClean(self: bigint | undefined): boolean {
+export function getWasClean(self: bigint): boolean {
   const obj = getCloseEvent(self);
   return obj.wasClean;
 }
@@ -239,7 +239,7 @@ export function getWasClean(self: bigint | undefined): boolean {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): bigint {
+export function getCode(self: bigint): bigint | undefined {
   const obj = getCloseEvent(self);
   return obj.code;
 }
@@ -247,7 +247,7 @@ export function getCode(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): bigint | undefined {
+export function getReason(self: string): string {
   const obj = getCloseEvent(self);
   return obj.reason;
 }

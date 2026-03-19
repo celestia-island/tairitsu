@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type SwRegHandle = number;
+export type SwRegHandle = bigint;
 
 /** Handle table for serviceworkerregistration instances */
 const _swReghandles = new Map<bigint, serviceworkerregistration>();
@@ -42,7 +42,7 @@ export function scope(handle: bigint): string {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type SwHandle = number;
+export type SwHandle = bigint;
 
 /** Handle table for ServiceWorker instances */
 const _swHandles = new Map<bigint, ServiceWorker>();
@@ -68,7 +68,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (bigint)[]): void {
+export function postMessage(handle: bigint, message: bigint, transfer: ((bigint)[])[]): void {
   const obj = getSw(self);
   obj.postMessage(handle, message, transfer);
 }

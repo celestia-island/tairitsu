@@ -480,7 +480,7 @@ export function getRequest(self: bigint): bigint {
 /**
  * `get-preload-response()` operation.
  */
-export function getPreloadResponse(self: bigint): bigint {
+export function getPreloadResponse(self: bigint): number {
   const obj = getFetchEvent(self);
   return obj.preloadResponse;
 }
@@ -496,7 +496,7 @@ export function getClientId(self: bigint): string {
 /**
  * `get-resulting-client-id()` operation.
  */
-export function getResultingClientId(self: bigint): number {
+export function getResultingClientId(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.resultingClientId;
 }
@@ -504,7 +504,7 @@ export function getResultingClientId(self: bigint): number {
 /**
  * `get-replaces-client-id()` operation.
  */
-export function getReplacesClientId(self: string): string {
+export function getReplacesClientId(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.replacesClientId;
 }
@@ -556,7 +556,7 @@ export function getData(self: bigint): string {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: number): string {
+export function getOrigin(self: bigint): bigint {
   const obj = getExtendableMessageEvent(self);
   return obj.origin;
 }
@@ -572,7 +572,7 @@ export function getLastEventId(self: bigint): string {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: bigint): bigint {
+export function getSource(self: bigint): bigint | undefined {
   const obj = getExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): cache {
 /**
  * `match-all()` operation.
  */
-export function matchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function matchAll(self: bigint, request: bigint | undefined, options: bigint): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -616,7 +616,7 @@ export function matchAll(self: bigint, request: bigint | undefined, options: big
 /**
  * `add()` operation.
  */
-export function add(self: bigint, request: bigint): number {
+export function add(self: string, request: bigint): bigint {
   const obj = getCache(self);
   return obj.add(request);
 }
@@ -632,7 +632,7 @@ export function addAll(self: bigint, requests: (bigint)[]): bigint {
 /**
  * `put()` operation.
  */
-export function put(self: bigint, request: bigint, response: string): bigint {
+export function put(self: bigint, request: bigint, response: bigint): bigint {
   const obj = getCache(self);
   return obj.put(request, response);
 }
@@ -640,7 +640,7 @@ export function put(self: bigint, request: bigint, response: string): bigint {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, request: bigint, options: bigint | undefined): bigint {
+export function _delete(self: bigint, request: bigint, options: string): bigint {
   const obj = getCache(self);
   return obj._delete(request, options);
 }
@@ -676,7 +676,7 @@ function getCacheStorage(handle: bigint): cachestorage {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, cacheName: string): bigint {
+export function has(self: bigint, cacheName: bigint): bigint {
   const obj = getCacheStorage(self);
   return obj.has(cacheName);
 }

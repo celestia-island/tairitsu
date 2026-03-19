@@ -704,7 +704,7 @@ class BrowserGlueGenerator:
         lines.append("// Re-export all generated modules")
 
         for domain in domains:
-            lines.append(f"export * as {domain.export_name} from \"./generated/{domain.name}-glue.js\";")
+            lines.append(f"export * as {domain.export_name} from \"./generated/{domain.export_name}Glue.js\";")
 
         lines.append("")
         lines.append("// Statistics")
@@ -824,7 +824,7 @@ def run_generate(
     for gen_domain in generated_domains:
         wit_path = wit_dir / f"{gen_domain.name}.wit"
         content = generator.render_module(gen_domain, str(wit_path))
-        dest = output_dir / "generated" / f"{gen_domain.name}-glue.ts"
+        dest = output_dir / "generated" / f"{gen_domain.export_name}Glue.ts"
 
         if dry_run:
             log_info(f"dry-run: {dest.name} ({len(content):,} bytes)")

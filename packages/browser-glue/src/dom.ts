@@ -6,7 +6,7 @@
  * objects stored in a shared handle table.
  */
 
-import { getElement, getNode, registerNode } from "./handle-table.js";
+import { getElement, getNode, registerNode } from "./handles.js";
 
 // ---------------------------------------------------------------------------
 // Diagnostic support

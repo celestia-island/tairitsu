@@ -35,33 +35,33 @@
  */
 
 // Re-export all generated modules
-export * as auth from "./generated/auth-glue.js";
-export * as canvas from "./generated/canvas-glue.js";
-export * as crypto from "./generated/crypto-glue.js";
-export * as css from "./generated/css-glue.js";
-export * as device from "./generated/device-glue.js";
-export * as dom from "./generated/dom-glue.js";
-export * as events from "./generated/events-glue.js";
-export * as fetch from "./generated/fetch-glue.js";
-export * as html from "./generated/html-glue.js";
-export * as media from "./generated/media-glue.js";
-export * as notifications from "./generated/notifications-glue.js";
-export * as observers from "./generated/observers-glue.js";
-export * as payments from "./generated/payments-glue.js";
-export * as performance from "./generated/performance-glue.js";
-export * as permissions from "./generated/permissions-glue.js";
-export * as serviceworkers from "./generated/service-workers-glue.js";
-export * as storage from "./generated/storage-glue.js";
-export * as url from "./generated/url-glue.js";
-export * as wasm from "./generated/wasm-glue.js";
-export * as webrtc from "./generated/webrtc-glue.js";
-export * as websocket from "./generated/websocket-glue.js";
-export * as workers from "./generated/workers-glue.js";
+export * as auth from "./generated/authGlue.js";
+export * as canvas from "./generated/canvasGlue.js";
+export * as crypto from "./generated/cryptoGlue.js";
+export * as css from "./generated/cssGlue.js";
+export * as device from "./generated/deviceGlue.js";
+export * as dom from "./generated/domGlue.js";
+export * as events from "./generated/eventsGlue.js";
+export * as fetch from "./generated/fetchGlue.js";
+export * as html from "./generated/htmlGlue.js";
+export * as media from "./generated/mediaGlue.js";
+export * as notifications from "./generated/notificationsGlue.js";
+export * as observers from "./generated/observersGlue.js";
+export * as payments from "./generated/paymentsGlue.js";
+export * as performance from "./generated/performanceGlue.js";
+export * as permissions from "./generated/permissionsGlue.js";
+export * as serviceworkers from "./generated/serviceworkersGlue.js";
+export * as storage from "./generated/storageGlue.js";
+export * as url from "./generated/urlGlue.js";
+export * as wasm from "./generated/wasmGlue.js";
+export * as webrtc from "./generated/webrtcGlue.js";
+export * as websocket from "./generated/websocketGlue.js";
+export * as workers from "./generated/workersGlue.js";
 
 // Statistics
 export const GLUE_STATS = {
   totalDomains: 22,
   totalInterfaces: 260,
   totalFunctions: 2446,
-  generatedAt: "2026-03-19T19:42:22.360541",
+  generatedAt: "2026-03-19T23:38:03.066246",
 };

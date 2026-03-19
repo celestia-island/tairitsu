@@ -127,7 +127,7 @@ export function getOnchange(self: bigint): bigint {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: bigint): void {
+export function setOnchange(self: number, value: bigint): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

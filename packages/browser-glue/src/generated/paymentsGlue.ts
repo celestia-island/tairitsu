@@ -91,7 +91,7 @@ export function pollAbort(requestId: bigint): { ok: true; value: bigint } | { ok
 /**
  * `can-make-payment()` operation.
  */
-export function canMakePayment(self: bigint): bigint {
+export function canMakePayment(self: number): bigint {
   const obj = getPaymentRequest(self);
   return obj.canMakePayment();
 }
@@ -115,7 +115,7 @@ export function getShippingAddress(self: bigint): bigint {
 /**
  * `get-shipping-option()` operation.
  */
-export function getShippingOption(self: number): bigint {
+export function getShippingOption(self: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.shippingOption ?? undefined;
 }
@@ -123,7 +123,7 @@ export function getShippingOption(self: number): bigint {
 /**
  * `get-shipping-type()` operation.
  */
-export function getShippingType(self: bigint): bigint {
+export function getShippingType(self: bigint): string {
   const obj = getPaymentRequest(self);
   return obj.shippingType ?? undefined;
 }
@@ -131,7 +131,7 @@ export function getShippingType(self: bigint): bigint {
 /**
  * `get-onshippingaddresschange()` operation.
  */
-export function getOnshippingaddresschange(self: number | undefined): bigint {
+export function getOnshippingaddresschange(self: string): bigint {
   const obj = getPaymentRequest(self);
   return obj.onshippingaddresschange;
 }
@@ -139,7 +139,7 @@ export function getOnshippingaddresschange(self: number | undefined): bigint {
 /**
  * `set-onshippingaddresschange()` operation.
  */
-export function setOnshippingaddresschange(self: bigint, value: bigint): void {
+export function setOnshippingaddresschange(self: bigint, value: boolean): void {
   const obj = getPaymentRequest(self);
   obj.onshippingaddresschange = value;
 }
@@ -147,7 +147,7 @@ export function setOnshippingaddresschange(self: bigint, value: bigint): void {
 /**
  * `get-onshippingoptionchange()` operation.
  */
-export function getOnshippingoptionchange(self: bigint): boolean {
+export function getOnshippingoptionchange(self: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.onshippingoptionchange;
 }
@@ -239,7 +239,7 @@ export function getShippingAddress(self: bigint): bigint {
 /**
  * `get-shipping-option()` operation.
  */
-export function getShippingOption(self: bigint): number | undefined {
+export function getShippingOption(self: number): string | undefined {
   const obj = getPaymentResponse(self);
   return obj.shippingOption ?? undefined;
 }
@@ -247,7 +247,7 @@ export function getShippingOption(self: bigint): number | undefined {
 /**
  * `get-payer-name()` operation.
  */
-export function getPayerName(self: bigint): number | undefined {
+export function getPayerName(self: bigint): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerName ?? undefined;
 }
@@ -255,7 +255,7 @@ export function getPayerName(self: bigint): number | undefined {
 /**
  * `get-payer-email()` operation.
  */
-export function getPayerEmail(self: bigint): bigint {
+export function getPayerEmail(self: string): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerEmail ?? undefined;
 }
@@ -271,7 +271,7 @@ export function getPayerPhone(self: bigint): string | undefined {
 /**
  * `complete()` operation.
  */
-export function complete(self: bigint, result: number, details: bigint | undefined): bigint {
+export function complete(self: bigint, result: bigint | undefined, details: bigint | undefined): bigint {
   const obj = getPaymentResponse(self);
   return obj.complete(result, details);
 }
@@ -295,7 +295,7 @@ export function getOnpayerdetailchange(self: bigint): bigint {
 /**
  * `set-onpayerdetailchange()` operation.
  */
-export function setOnpayerdetailchange(self: bigint, value: bigint): void {
+export function setOnpayerdetailchange(self: bigint, value: string | undefined): void {
   const obj = getPaymentResponse(self);
   obj.onpayerdetailchange = value;
 }
@@ -331,7 +331,7 @@ export function getMethodName(self: bigint): string {
 /**
  * `get-method-details()` operation.
  */
-export function getMethodDetails(self: string): bigint | undefined {
+export function getMethodDetails(self: bigint): string {
   const obj = getPaymentMethodChangeEvent(self);
   return obj.methodDetails ?? undefined;
 }
@@ -359,7 +359,7 @@ function getPaymentRequestUpdateEvent(handle: bigint): paymentrequestupdateevent
 /**
  * `update-with()` operation.
  */
-export function updateWith(self: string | undefined, detailsPromise: bigint | undefined): void {
+export function updateWith(self: bigint, detailsPromise: bigint): void {
   const obj = getPaymentRequestUpdateEvent(self);
   obj.updateWith(detailsPromise);
 }

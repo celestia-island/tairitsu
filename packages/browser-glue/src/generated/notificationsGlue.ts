@@ -45,7 +45,7 @@ function getNotification(handle: bigint): Notification {
 /**
  * `get-permission()` operation.
  */
-export function getPermission(): number {
+export function getPermission(): bigint {
   return obj.permission;
 }
 
@@ -60,14 +60,14 @@ export function requestPermission(deprecatedCallback: bigint | undefined): bigin
 /**
  * `get-max-actions()` operation.
  */
-export function getMaxActions(): bigint {
+export function getMaxActions(): number {
   return obj.maxActions;
 }
 
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: number): bigint {
+export function getOnclick(self: string): number | undefined {
   const obj = getNotification(self);
   return obj.onclick;
 }
@@ -75,7 +75,7 @@ export function getOnclick(self: number): bigint {
 /**
  * `set-onclick()` operation.
  */
-export function setOnclick(self: bigint, value: number): void {
+export function setOnclick(self: bigint, value: bigint): void {
   const obj = getNotification(self);
   obj.onclick = value;
 }
@@ -83,7 +83,7 @@ export function setOnclick(self: bigint, value: number): void {
 /**
  * `get-onshow()` operation.
  */
-export function getOnshow(self: string): bigint {
+export function getOnshow(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.onshow;
 }
@@ -107,7 +107,7 @@ export function getOnerror(self: bigint): bigint {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: boolean): void {
+export function setOnerror(self: bigint, value: bigint): void {
   const obj = getNotification(self);
   obj.onerror = value;
 }
@@ -147,7 +147,7 @@ export function getDir(self: bigint): bigint {
 /**
  * `get-lang()` operation.
  */
-export function getLang(self: (bigint)[]): string {
+export function getLang(self: bigint): string {
   const obj = getNotification(self);
   return obj.lang;
 }
@@ -163,7 +163,7 @@ export function getBody(self: bigint): string {
 /**
  * `get-navigate()` operation.
  */
-export function getNavigate(self: bigint): bigint {
+export function getNavigate(self: bigint): string {
   const obj = getNotification(self);
   return obj.navigate;
 }
@@ -171,7 +171,7 @@ export function getNavigate(self: bigint): bigint {
 /**
  * `get-tag()` operation.
  */
-export function getTag(self: string): bigint {
+export function getTag(self: bigint): string {
   const obj = getNotification(self);
   return obj.tag;
 }
@@ -187,7 +187,7 @@ export function getImage(self: bigint): string {
 /**
  * `get-icon()` operation.
  */
-export function getIcon(self: bigint): string {
+export function getIcon(self: bigint | undefined): string {
   const obj = getNotification(self);
   return obj.icon;
 }
@@ -203,7 +203,7 @@ export function getBadge(self: bigint): string {
 /**
  * `get-vibrate()` operation.
  */
-export function getVibrate(self: bigint): (bigint)[] {
+export function getVibrate(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.vibrate;
 }
@@ -219,7 +219,7 @@ export function getTimestamp(self: bigint): bigint {
 /**
  * `get-renotify()` operation.
  */
-export function getRenotify(self: number): boolean {
+export function getRenotify(self: bigint): boolean {
   const obj = getNotification(self);
   return obj.renotify;
 }
@@ -227,7 +227,7 @@ export function getRenotify(self: number): boolean {
 /**
  * `get-silent()` operation.
  */
-export function getSilent(self: bigint): bigint | undefined {
+export function getSilent(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.silent ?? undefined;
 }
@@ -251,7 +251,7 @@ export function getData(self: bigint): string {
 /**
  * `get-actions()` operation.
  */
-export function getActions(self: bigint): (bigint)[] {
+export function getActions(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.actions;
 }
@@ -317,7 +317,7 @@ function getServiceWorkerRegistration(handle: bigint): serviceworkerregistration
 /**
  * `show-notification()` operation.
  */
-export function showNotification(self: bigint, title: bigint, options: bigint | undefined): bigint {
+export function showNotification(self: bigint, title: string, options: bigint | undefined): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.showNotification(title, options);
 }
@@ -325,7 +325,7 @@ export function showNotification(self: bigint, title: bigint, options: bigint | 
 /**
  * `get-notifications()` operation.
  */
-export function getNotifications(self: bigint, filter: bigint): bigint {
+export function getNotifications(self: bigint, filter: bigint | undefined): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.notifications;
 }
@@ -333,7 +333,7 @@ export function getNotifications(self: bigint, filter: bigint): bigint {
 /**
  * `get-installing()` operation.
  */
-export function getInstalling(self: bigint): bigint | undefined {
+export function getInstalling(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.installing ?? undefined;
 }
@@ -341,7 +341,7 @@ export function getInstalling(self: bigint): bigint | undefined {
 /**
  * `get-waiting()` operation.
  */
-export function getWaiting(self: bigint): bigint | undefined {
+export function getWaiting(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.waiting ?? undefined;
 }
@@ -349,7 +349,7 @@ export function getWaiting(self: bigint): bigint | undefined {
 /**
  * `get-active()` operation.
  */
-export function getActive(self: bigint): bigint | undefined {
+export function getActive(self: bigint): number {
   const obj = getServiceWorkerRegistration(self);
   return obj.active ?? undefined;
 }
@@ -357,7 +357,7 @@ export function getActive(self: bigint): bigint | undefined {
 /**
  * `get-navigation-preload()` operation.
  */
-export function getNavigationPreload(self: number): bigint {
+export function getNavigationPreload(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.navigationPreload;
 }
@@ -365,7 +365,7 @@ export function getNavigationPreload(self: number): bigint {
 /**
  * `get-scope()` operation.
  */
-export function getScope(self: bigint): string {
+export function getScope(self: boolean): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.scope;
 }
@@ -373,7 +373,7 @@ export function getScope(self: bigint): string {
 /**
  * `get-update-via-cache()` operation.
  */
-export function getUpdateViaCache(self: bigint): number {
+export function getUpdateViaCache(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.updateViaCache;
 }
@@ -381,7 +381,7 @@ export function getUpdateViaCache(self: bigint): number {
 /**
  * `update()` operation.
  */
-export function update(self: bigint): bigint {
+export function update(self: number): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.update();
 }
@@ -397,7 +397,7 @@ export function unregister(self: bigint): bigint {
 /**
  * `get-onupdatefound()` operation.
  */
-export function getOnupdatefound(self: number): bigint {
+export function getOnupdatefound(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.onupdatefound;
 }
@@ -405,7 +405,7 @@ export function getOnupdatefound(self: number): bigint {
 /**
  * `set-onupdatefound()` operation.
  */
-export function setOnupdatefound(self: bigint, value: bigint): void {
+export function setOnupdatefound(self: bigint, value: number | undefined): void {
   const obj = getServiceWorkerRegistration(self);
   obj.onupdatefound = value;
 }
@@ -433,7 +433,7 @@ function getNotificationEvent(handle: bigint): notificationevent {
 /**
  * `get-notification()` operation.
  */
-export function getNotification(self: number): bigint {
+export function getNotification(self: bigint): bigint {
   const obj = getNotificationEvent(self);
   return obj.notification;
 }
@@ -441,7 +441,7 @@ export function getNotification(self: number): bigint {
 /**
  * `get-action()` operation.
  */
-export function getAction(self: bigint): bigint {
+export function getAction(self: bigint): number {
   const obj = getNotificationEvent(self);
   return obj.action;
 }
@@ -477,7 +477,7 @@ export function getOnnotificationclick(self: bigint): bigint {
 /**
  * `set-onnotificationclick()` operation.
  */
-export function setOnnotificationclick(self: bigint, value: bigint): void {
+export function setOnnotificationclick(self: number, value: bigint): void {
   const obj = getServiceWorkerGlobalScope(self);
   obj.onnotificationclick = value;
 }
@@ -485,7 +485,7 @@ export function setOnnotificationclick(self: bigint, value: bigint): void {
 /**
  * `get-onnotificationclose()` operation.
  */
-export function getOnnotificationclose(self: bigint): bigint {
+export function getOnnotificationclose(self: bigint | undefined): bigint {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onnotificationclose;
 }
@@ -501,7 +501,7 @@ export function setOnnotificationclose(self: bigint, value: bigint): void {
 /**
  * `get-clients()` operation.
  */
-export function getClients(self: bigint): bigint {
+export function getClients(self: bigint): number {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.clients;
 }
@@ -509,7 +509,7 @@ export function getClients(self: bigint): bigint {
 /**
  * `get-registration()` operation.
  */
-export function getRegistration(self: bigint): boolean {
+export function getRegistration(self: number | undefined): bigint {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.registration;
 }
@@ -517,7 +517,7 @@ export function getRegistration(self: bigint): boolean {
 /**
  * `get-service-worker()` operation.
  */
-export function getServiceWorker(self: number | undefined): bigint {
+export function getServiceWorker(self: boolean): boolean | undefined {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.serviceWorker;
 }
@@ -525,7 +525,7 @@ export function getServiceWorker(self: number | undefined): bigint {
 /**
  * `skip-waiting()` operation.
  */
-export function skipWaiting(self: number | undefined): boolean {
+export function skipWaiting(self: bigint): bigint {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.skipWaiting();
 }
@@ -533,7 +533,7 @@ export function skipWaiting(self: number | undefined): boolean {
 /**
  * `get-oninstall()` operation.
  */
-export function getOninstall(self: boolean): bigint {
+export function getOninstall(self: bigint): bigint {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.oninstall;
 }
@@ -549,7 +549,7 @@ export function setOninstall(self: bigint, value: bigint): void {
 /**
  * `get-onactivate()` operation.
  */
-export function getOnactivate(self: bigint): bigint {
+export function getOnactivate(self: bigint): bigint | undefined {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onactivate;
 }
@@ -573,7 +573,7 @@ export function getOnfetch(self: bigint): bigint {
 /**
  * `set-onfetch()` operation.
  */
-export function setOnfetch(self: bigint, value: bigint): void {
+export function setOnfetch(self: number, value: bigint): void {
   const obj = getServiceWorkerGlobalScope(self);
   obj.onfetch = value;
 }
@@ -581,7 +581,7 @@ export function setOnfetch(self: bigint, value: bigint): void {
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): bigint {
+export function getOnmessage(self: bigint): number {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onmessage;
 }
@@ -605,7 +605,7 @@ export function getOnmessageerror(self: bigint): bigint {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: bigint): void {
+export function setOnmessageerror(self: string, value: bigint): void {
   const obj = getServiceWorkerGlobalScope(self);
   obj.onmessageerror = value;
 }

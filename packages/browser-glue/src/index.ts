@@ -11,14 +11,14 @@
  * ## Package layout
  *
  * ### Hand-written Phase 0 modules
- * - `dom-glue`    — satisfies `tairitsu-browser:dom` import interfaces
- * - `events-glue` — satisfies `tairitsu-browser:events` import interfaces
- * - `fetch-glue`  — satisfies `tairitsu-browser:fetch` import interfaces
- * - `canvas-glue` — satisfies `tairitsu-browser:canvas` import interfaces
- * - `handle-table` — shared object handle management
+ * - `dom`    — satisfies `tairitsu-browser:dom` import interfaces
+ * - `events` — satisfies `tairitsu-browser:events` import interfaces
+ * - `http`   — satisfies `tairitsu-browser:fetch` import interfaces
+ * - `canvas` — satisfies `tairitsu-browser:canvas` import interfaces
+ * - `handles` — shared object handle management
  *
  * ### Auto-generated Phase A modules (from WIT)
- * - `generated/*-glue` — 22 domain-specific glue modules
+ * - `generated/*Glue` — 25 domain-specific glue modules
  *
  * ## Diagnostic APIs
  *
@@ -34,11 +34,11 @@
  */
 
 // Hand-written Phase 0 modules
-export * from "./dom-glue.js";
-export * from "./events-glue.js";
-export * from "./fetch-glue.js";
-export * from "./canvas-glue.js";
-export * from "./handle-table.js";
+export * from "./dom.js";
+export * from "./events.js";
+export * from "./http.js";
+export * from "./canvas.js";
+export * from "./handles.js";
 
 // Auto-generated Phase A modules
 export * from "./generated-index.js";
@@ -49,14 +49,14 @@ export * from "./generated-index.js";
 export type {
   DiagnosticError,
   EventDispatchInfo,
-} from "./events-glue.js";
+} from "./events.js";
 
 export type {
   DomDiagnosticError,
-} from "./dom-glue.js";
+} from "./dom.js";
 
 export type {
   HandleDiagnosticError,
-} from "./handle-table.js";
+} from "./handles.js";
 
 
