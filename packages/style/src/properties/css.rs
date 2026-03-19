@@ -34,7 +34,10 @@ mod tests {
         assert_eq!(CssProperty::Display.category(), CssCategory::Layout);
         assert_eq!(CssProperty::Width.category(), CssCategory::BoxModel);
         assert_eq!(CssProperty::FlexDirection.category(), CssCategory::Flexbox);
-        assert_eq!(CssProperty::GridTemplateColumns.category(), CssCategory::Grid);
+        assert_eq!(
+            CssProperty::GridTemplateColumns.category(),
+            CssCategory::Grid
+        );
         assert_eq!(CssProperty::FontSize.category(), CssCategory::Typography);
         assert_eq!(CssProperty::Color.category(), CssCategory::Color);
     }

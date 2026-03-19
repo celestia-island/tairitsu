@@ -18,18 +18,31 @@ fn main() {
     let data_path = Path::new(&manifest_dir).join("css_data/css_properties.json");
     let output_path = Path::new(&manifest_dir).join("src/properties/generated.rs");
 
-    let data = fs::read_to_string(&data_path)
-        .unwrap_or_else(|e| panic!("Failed to read CSS properties data from {}: {}", data_path.display(), e));
+    let data = fs::read_to_string(&data_path).unwrap_or_else(|e| {
+        panic!(
+            "Failed to read CSS properties data from {}: {}",
+            data_path.display(),
+            e
+        )
+    });
 
     let css_data: CssData = serde_json::from_str(&data)
         .unwrap_or_else(|e| panic!("Failed to parse CSS properties data: {}", e));
 
     let generated_code = generate_property_enum(&css_data);
 
-    fs::write(&output_path, generated_code)
-        .unwrap_or_else(|e| panic!("Failed to write generated code to {}: {}", output_path.display(), e));
+    fs::write(&output_path, generated_code).unwrap_or_else(|e| {
+        panic!(
+            "Failed to write generated code to {}: {}",
+            output_path.display(),
+            e
+        )
+    });
 
-    println!("cargo:warning=Generated {} CSS properties", css_data.properties().len());
+    println!(
+        "cargo:warning=Generated {} CSS properties",
+        css_data.properties().len()
+    );
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -53,7 +66,10 @@ impl CssData {
             for prop in &category_data.properties {
                 props.push(PropertyEntry {
                     name: prop.name.clone(),
-                    rust_name: prop.rust_name.clone().unwrap_or_else(|| to_rust_name(&prop.name)),
+                    rust_name: prop
+                        .rust_name
+                        .clone()
+                        .unwrap_or_else(|| to_rust_name(&prop.name)),
                     category: category_name.clone(),
                     status: prop.status.clone(),
                     shorthand: prop.shorthand,
@@ -62,11 +78,9 @@ impl CssData {
             }
         }
 
-        props.sort_by(|a, b| {
-            match a.category.cmp(&b.category) {
-                std::cmp::Ordering::Equal => a.name.cmp(&b.name),
-                other => other,
-            }
+        props.sort_by(|a, b| match a.category.cmp(&b.category) {
+            std::cmp::Ordering::Equal => a.name.cmp(&b.name),
+            other => other,
         });
 
         props
@@ -140,7 +154,10 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("// To add or modify CSS properties, edit css_data/css_properties.json\n");
     code.push_str("// and run `cargo build` to regenerate this file.\n");
     code.push_str("//\n");
-    code.push_str(&format!("// Generated from CSS properties data version: {}\n", data.version));
+    code.push_str(&format!(
+        "// Generated from CSS properties data version: {}\n",
+        data.version
+    ));
     code.push_str(&format!("// Source: {}\n", data.source));
     code.push_str(&format!("// Last updated: {}\n", data.last_updated));
     code.push_str(&format!("// Total properties: {}\n", properties.len()));
@@ -178,7 +195,10 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("        match self {\n");
 
     for prop in &properties {
-        code.push_str(&format!("            CssProperty::{} => \"{}\",\n", prop.rust_name, prop.name));
+        code.push_str(&format!(
+            "            CssProperty::{} => \"{}\",\n",
+            prop.rust_name, prop.name
+        ));
     }
 
     code.push_str("        }\n");
@@ -216,7 +236,10 @@ fn generate_property_enum(data: &CssData) -> String {
             "Hardware" => "CssCategory::Hardware",
             _ => "CssCategory::Layout",
         };
-        code.push_str(&format!("            CssProperty::{} => {},\n", prop.rust_name, category_variant));
+        code.push_str(&format!(
+            "            CssProperty::{} => {},\n",
+            prop.rust_name, category_variant
+        ));
     }
 
     code.push_str("        }\n");

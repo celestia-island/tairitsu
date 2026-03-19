@@ -57,13 +57,10 @@ fn main() {
 
     // Combined variants
     println!("4. Combined Responsive + State Variants:");
-    let classes = ClassesBuilder::new()
-        .add_utility("md:hover:flex")
-        .build();
+    let classes = ClassesBuilder::new().add_utility("md:hover:flex").build();
     println!("   Classes: {}", classes);
 
-    let (_, css) = ClassesBuilder::new()
-        .add_utility_with_css("md:hover:flex");
+    let (_, css) = ClassesBuilder::new().add_utility_with_css("md:hover:flex");
     if let Some(css) = css {
         println!("   CSS: {}\n", css);
     }
