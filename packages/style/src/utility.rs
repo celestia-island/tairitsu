@@ -237,11 +237,7 @@ impl ParsedUtility {
     pub fn parse(s: &str) -> Self {
         // Extract arbitrary value if present
         let arbitrary_value = if let Some(start) = s.find('[') {
-            if let Some(end) = s.rfind(']') {
-                Some(s[start + 1..end].to_string())
-            } else {
-                None
-            }
+            s.rfind(']').map(|end| s[start + 1..end].to_string())
         } else {
             None
         };

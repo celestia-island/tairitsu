@@ -161,11 +161,11 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str(&format!("// Source: {}\n", data.source));
     code.push_str(&format!("// Last updated: {}\n", data.last_updated));
     code.push_str(&format!("// Total properties: {}\n", properties.len()));
-    code.push_str("\n");
+    code.push('\n');
 
     // Imports
     code.push_str("use super::category::CssCategory;\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Enum definition
     code.push_str("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\n");
@@ -176,7 +176,7 @@ fn generate_property_enum(data: &CssData) -> String {
     for prop in &properties {
         if prop.category != last_category {
             if !last_category.is_empty() {
-                code.push_str("\n");
+                code.push('\n');
             }
             code.push_str(&format!("    // {} properties\n", prop.category));
             last_category = prop.category.clone();
@@ -185,7 +185,7 @@ fn generate_property_enum(data: &CssData) -> String {
     }
 
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate as_str method
     code.push_str("impl CssProperty {\n");
@@ -203,7 +203,7 @@ fn generate_property_enum(data: &CssData) -> String {
 
     code.push_str("        }\n");
     code.push_str("    }\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate category method
     code.push_str("    /// Get the category of this CSS property.\n");
@@ -244,7 +244,7 @@ fn generate_property_enum(data: &CssData) -> String {
 
     code.push_str("        }\n");
     code.push_str("    }\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate is_shorthand method
     code.push_str("    /// Check if this property is a shorthand property.\n");
@@ -261,7 +261,7 @@ fn generate_property_enum(data: &CssData) -> String {
 
     code.push_str("        }\n");
     code.push_str("    }\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate is_experimental method
     code.push_str("    /// Check if this property is experimental/non-standard.\n");
@@ -279,7 +279,7 @@ fn generate_property_enum(data: &CssData) -> String {
 
     code.push_str("        }\n");
     code.push_str("    }\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate mdn_url method
     code.push_str("    /// Get the MDN documentation URL for this property.\n");
@@ -298,7 +298,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("    }\n");
 
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate Property enum (wrapper for custom properties)
     code.push_str("#[derive(Debug, Clone, PartialEq)]\n");
@@ -306,7 +306,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("    Known(CssProperty),\n");
     code.push_str("    Custom(String),\n");
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate Property impl
     code.push_str("impl Property {\n");
@@ -317,7 +317,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("            Property::Custom(s) => s.as_str(),\n");
     code.push_str("        }\n");
     code.push_str("    }\n");
-    code.push_str("\n");
+    code.push('\n');
 
     code.push_str("    /// Get the category of this property.\n");
     code.push_str("    pub fn category(&self) -> Option<CssCategory> {\n");
@@ -328,7 +328,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("    }\n");
 
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate From implementations
     code.push_str("impl From<CssProperty> for Property {\n");
@@ -337,7 +337,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("        Property::Known(prop)\n");
     code.push_str("    }\n");
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     code.push_str("impl From<String> for Property {\n");
     code.push_str("    #[inline]\n");
@@ -345,7 +345,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("        Property::Custom(s)\n");
     code.push_str("    }\n");
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     code.push_str("impl From<&str> for Property {\n");
     code.push_str("    #[inline]\n");
@@ -353,7 +353,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("        Property::Custom(s.to_string())\n");
     code.push_str("    }\n");
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     // Generate Display implementation
     code.push_str("impl std::fmt::Display for CssProperty {\n");
@@ -361,7 +361,7 @@ fn generate_property_enum(data: &CssData) -> String {
     code.push_str("        write!(f, \"{}\", self.as_str())\n");
     code.push_str("    }\n");
     code.push_str("}\n");
-    code.push_str("\n");
+    code.push('\n');
 
     code.push_str("impl std::fmt::Display for Property {\n");
     code.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
