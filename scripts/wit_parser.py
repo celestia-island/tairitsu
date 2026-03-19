@@ -157,28 +157,28 @@ TOKEN_PATTERNS = [
     ('COMMENT_REGULAR', r'//[^\n]*'),  # Regular single-line comments
     ('COMMENT_BLOCK', r'/\*[\s\S]*?\*/'),
     ('WHITESPACE', r'\s+'),
-    ('PACKAGE', r'\bpackage\b'),
-    ('INTERFACE', r'\binterface\b'),
-    ('WORLD', r'\bworld\b'),
-    ('TYPE', r'\btype\b'),
-    ('FUNC', r'\bfunc\b'),
-    ('IMPORT', r'\bimport\b'),
-    ('EXPORT', r'\bexport\b'),
-    ('FROM', r'\bfrom\b'),
-    ('INCLUDE', r'\binclude\b'),
-    ('USE', r'\buse\b'),
-    ('OPTION', r'\boption\b'),
-    ('LIST', r'\blist\b'),
-    ('RESULT', r'\bresult\b'),
-    ('TUPLE', r'\btuple\b'),
-    ('RECORD', r'\brecord\b'),
-    ('ENUM', r'\benum\b'),
-    ('VARIANT', r'\bvariant\b'),
-    ('FLAGS', r'\bflags\b'),
-    ('RESOURCE', r'\bresource\b'),
-    ('STATIC', r'\bstatic\b'),
+    ('PACKAGE', r'\bpackage\b(?!\-)'),  # Not followed by hyphen
+    ('INTERFACE', r'\binterface\b(?!\-)'),
+    ('WORLD', r'\bworld\b(?!\-)'),
+    ('TYPE', r'\btype\b(?!\-)'),
+    ('FUNC', r'\bfunc\b(?!\-)'),
+    ('IMPORT', r'\bimport\b(?!\-)'),
+    ('EXPORT', r'\bexport\b(?!\-)'),
+    ('FROM', r'\bfrom\b(?!\-)'),
+    ('INCLUDE', r'\binclude\b(?!\-)'),
+    ('USE', r'\buse\b(?!\-)'),
+    ('OPTION', r'\boption\b(?!\-)'),
+    ('LIST', r'\blist\b(?!\-)'),
+    ('RESULT', r'\bresult\b(?!\-)'),
+    ('TUPLE', r'\btuple\b(?!\-)'),
+    ('RECORD', r'\brecord\b(?!\-)'),
+    ('ENUM', r'\benum\b(?!\-)'),
+    ('VARIANT', r'\bvariant\b(?!\-)'),
+    ('FLAGS', r'\bflags\b(?!\-)'),
+    ('RESOURCE', r'\bresource\b(?!\-)'),
+    ('STATIC', r'\bstatic\b(?!\-)'),
     ('ESCAPED_IDENT', r'%[a-zA-Z_][a-zA-Z0-9_-]*'),  # # e.g., %type, %use
-    ('PRIMITIVE', r'\b(u8|u16|u32|u64|s8|s16|s32|s64|f32|f64|bool|string|char|_)\b'),
+    ('PRIMITIVE', r'\b(u8|u16|u32|u64|s8|s16|s32|s64|f32|f64|bool|string|char|_)\b(?!\-)'),
     ('IDENT', r'[a-zA-Z_][a-zA-Z0-9_-]*'),
     ('STRING', r'"[^"]*"'),
     ('VERSION', r'\d+\.\d+\.\d+'),  # semver: 0.2.0
@@ -243,7 +243,42 @@ def tokenize(text: str) -> List[Token]:
         tokens.append(Token(kind, value, line, column))
         column += len(value)
 
-    return tokens
+    # Post-process: handle keywords that should be treated as identifiers
+    # 1. keyword + hyphen + identifier -> merge into single IDENT (e.g., "type-val")
+    # 2. keyword followed by colon -> convert to IDENT (e.g., "from:" as param name)
+    merged_tokens: List[Token] = []
+    i = 0
+    KEYWORDS = {'PACKAGE', 'INTERFACE', 'WORLD', 'TYPE', 'FUNC', 'IMPORT', 'EXPORT',
+                'FROM', 'INCLUDE', 'USE', 'OPTION', 'LIST', 'RESULT', 'TUPLE',
+                'RECORD', 'ENUM', 'VARIANT', 'FLAGS', 'RESOURCE', 'STATIC',
+                'PRIMITIVE'}
+
+    while i < len(tokens):
+        tok = tokens[i]
+
+        # Check if this is a keyword that should be treated as identifier
+        if tok.kind in KEYWORDS:
+            # Case 1: keyword + hyphen + identifier -> merge into single IDENT
+            if (i + 2 < len(tokens) and
+                tokens[i + 1].value == '-' and
+                tokens[i + 2].kind in ('IDENT', 'PRIMITIVE', 'ESCAPED_IDENT', *KEYWORDS)):
+                # Merge into a single IDENT token
+                merged_value = tok.value + '-' + tokens[i + 2].value
+                merged_tokens.append(Token('IDENT', merged_value, tok.line, tok.column))
+                i += 3
+                continue
+
+            # Case 2: keyword followed by colon (parameter name context)
+            if i + 1 < len(tokens) and tokens[i + 1].kind == 'COLON':
+                # Convert keyword to IDENT for parameter names like "from:"
+                merged_tokens.append(Token('IDENT', tok.value, tok.line, tok.column))
+                i += 1
+                continue
+
+        merged_tokens.append(tok)
+        i += 1
+
+    return merged_tokens
 
 
 # ---------------------------------------------------------------------------
@@ -379,7 +414,10 @@ class WitParser:
                 params.append(WitParam(name, type_))
                 if not self.match('COMMA'):
                     break
-                self.consume()
+                self.consume('COMMA')
+                # Handle trailing comma - stop if next is RPAREN
+                if self.match('RPAREN'):
+                    break
 
         self.consume('RPAREN')
         return params

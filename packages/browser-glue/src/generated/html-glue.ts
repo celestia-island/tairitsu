@@ -11732,6 +11732,44 @@ function getOrigin(handle: bigint): origin {
 }
 
 /**
+ * `from()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollFrom()`
+ */
+export function from(value: string): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getOrigin(self);
+  const promise = obj.from(value)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `from()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
  * `get-opaque()` operation.
  */
 export function getOpaque(self: bigint): boolean {
@@ -14360,6 +14398,14 @@ export function getNavigator(self: bigint): bigint {
 }
 
 /**
+ * `import-scripts()` operation.
+ */
+export function importScripts(self: bigint, urls: (bigint)[]): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.importScripts(urls);
+}
+
+/**
  * `get-onerror()` operation.
  */
 export function getOnerror(self: bigint): bigint {
@@ -16918,6 +16964,8 @@ export default {
   setPopoverTargetElement,
   getPopoverTargetAction,
   setPopoverTargetAction,
+  from,
+  pollFrom,
   getOpaque,
   isSameOrigin,
   isSameSite,
@@ -17128,6 +17176,7 @@ export default {
   getSelf,
   getLocation,
   getNavigator,
+  importScripts,
   getOnerror,
   setOnerror,
   getOnlanguagechange,

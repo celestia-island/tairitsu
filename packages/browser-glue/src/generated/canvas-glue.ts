@@ -2554,6 +2554,14 @@ export function uniform4i(self: bigint, location: bigint | undefined, x: bigint,
 }
 
 /**
+ * `use-program()` operation.
+ */
+export function useProgram(self: bigint, program: bigint | undefined): void {
+  const obj = getWebGlRenderingContextBase(self);
+  obj.useProgram(program);
+}
+
+/**
  * `validate-program()` operation.
  */
 export function validateProgram(self: bigint, program: bigint): void {
@@ -3075,6 +3083,7 @@ export default {
   uniform2i,
   uniform3i,
   uniform4i,
+  useProgram,
   validateProgram,
   vertexAttrib1f,
   vertexAttrib2f,
