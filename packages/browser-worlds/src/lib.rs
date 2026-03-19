@@ -3,11 +3,6 @@
 //! Provides embedded WIT world definitions for all supported browser/W3C API
 //! surface packages. These are used as the offline fallback when the local
 //! `target/tairitsu-wit` cache is empty and network access is unavailable.
-//!
-//! ## Package Layout
-//!
-//! - Phase 0 (hand-written, stable): `wit/*.wit`
-//! - Phase A (generated, comprehensive): `wit/generated/*.wit`
 
 /// Version metadata for each embedded WIT package.
 #[derive(Debug, Clone)]
@@ -24,7 +19,7 @@ pub struct EmbeddedPackage {
     pub files: &'static [(&'static str, &'static [u8])],
 }
 
-// Helper macro to define an embedded package
+// Helper macro to define an embedded package from generated WIT files
 macro_rules! wit_pkg {
     ($name:literal, $file:literal) => {
         EmbeddedPackage {
@@ -39,17 +34,9 @@ macro_rules! wit_pkg {
 
 /// All WIT packages embedded in this crate.
 ///
-/// Includes both Phase 0 (hand-written) and Phase A (auto-generated) packages.
+/// 26 individual Phase A domains (auto-generated from W3C WebIDL)
 pub static EMBEDDED_PACKAGES: &[EmbeddedPackage] = &[
-    // Phase 0 - Hand-written, stable interfaces
-    EmbeddedPackage {
-        id: "tairitsu-browser:full@0.1.0",
-        namespace: "tairitsu-browser",
-        name: "full",
-        version: "0.1.0",
-        files: &[("browser-full.wit", include_bytes!("../wit/browser-full.wit"))],
-    },
-    // Phase A - Auto-generated from W3C WebIDL (26 domains, 417 interfaces)
+    // Phase A - Auto-generated from W3C WebIDL (26 domains)
     wit_pkg!("canvas", "canvas.wit"),
     wit_pkg!("crypto", "crypto.wit"),
     wit_pkg!("css", "css.wit"),
@@ -106,7 +93,7 @@ mod tests {
     #[test]
     fn all_embedded_packages_present() {
         let expected = [
-            "tairitsu-browser:full@0.1.0",
+            "tairitsu-browser:full@0.2.0",
             "tairitsu-browser:canvas@0.1.0",
             "tairitsu-browser:crypto@0.1.0",
             "tairitsu-browser:css@0.1.0",
@@ -184,7 +171,7 @@ mod tests {
 
     #[test]
     fn count_embedded_packages() {
-        // Should have 27 packages (1 hand-written + 26 generated)
+        // Should have 27 packages (1 consolidated + 26 generated)
         assert_eq!(EMBEDDED_PACKAGES.len(), 27);
     }
 }
