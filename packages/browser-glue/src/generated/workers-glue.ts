@@ -32,7 +32,7 @@ function getServiceWorker(handle: bigint): ServiceWorker {
 /**
  * `get-script-url()` operation.
  */
-export function getScriptUrl(self: bigint): bigint {
+export function getScriptUrl(self: bigint): string {
   const obj = getServiceWorker(self);
   return obj.scriptUrl;
 }
@@ -64,7 +64,7 @@ export function getOnstatechange(self: bigint): bigint {
 /**
  * `set-onstatechange()` operation.
  */
-export function setOnstatechange(self: bigint, value: string): void {
+export function setOnstatechange(self: bigint, value: bigint): void {
   const obj = getServiceWorker(self);
   obj.onstatechange = value;
 }
@@ -74,7 +74,7 @@ export function setOnstatechange(self: bigint, value: string): void {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ServiceWorkerContainerHandle = string;
+export type ServiceWorkerContainerHandle = bigint;
 
 /** Handle table for serviceworkercontainer instances */
 const _serviceWorkerContainerhandles = new Map<bigint, serviceworkercontainer>();
@@ -92,7 +92,7 @@ function getServiceWorkerContainer(handle: bigint): serviceworkercontainer {
 /**
  * `get-controller()` operation.
  */
-export function getController(self: bigint): boolean {
+export function getController(self: bigint): bigint | undefined {
   const obj = getServiceWorkerContainer(self);
   return obj.controller ?? undefined;
 }
@@ -100,7 +100,7 @@ export function getController(self: bigint): boolean {
 /**
  * `get-ready()` operation.
  */
-export function getReady(self: boolean): bigint {
+export function getReady(self: bigint): bigint {
   const obj = getServiceWorkerContainer(self);
   return obj.ready;
 }
@@ -148,7 +148,7 @@ export function setOncontrollerchange(self: bigint, value: bigint): void {
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): bigint {
+export function getOnmessage(self: boolean): bigint {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessage;
 }
@@ -156,7 +156,7 @@ export function getOnmessage(self: bigint): bigint {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: bigint): void {
+export function setOnmessage(self: bigint, value: string): void {
   const obj = getServiceWorkerContainer(self);
   obj.onmessage = value;
 }
@@ -182,7 +182,7 @@ export function setOnmessageerror(self: bigint, value: bigint): void {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type NavigationPreloadManagerHandle = bigint;
+export type NavigationPreloadManagerHandle = string;
 
 /** Handle table for navigationpreloadmanager instances */
 const _navigationPreloadManagerhandles = new Map<bigint, navigationpreloadmanager>();
@@ -208,7 +208,7 @@ export function enable(self: bigint): bigint {
 /**
  * `disable()` operation.
  */
-export function disable(self: string): bigint {
+export function disable(self: bigint): bigint {
   const obj = getNavigationPreloadManager(self);
   return obj.disable();
 }
@@ -216,7 +216,7 @@ export function disable(self: string): bigint {
 /**
  * `set-header-value()` operation.
  */
-export function setHeaderValue(self: bigint, value: bigint): bigint {
+export function setHeaderValue(self: bigint, value: string): bigint {
   const obj = getNavigationPreloadManager(self);
   obj.headerValue = value;
 }
@@ -260,7 +260,7 @@ export function getUrl(self: bigint): string {
 /**
  * `get-frame-type()` operation.
  */
-export function getFrameType(self: bigint): bigint {
+export function getFrameType(self: number): bigint {
   const obj = getClient(self);
   return obj.frameType;
 }
@@ -284,7 +284,7 @@ export function getType(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function postMessage(self: bigint, message: bigint, transfer: (bigint)[]): void {
+export function postMessage(self: bigint, message: bigint, transfer: bigint): void {
   const obj = getClient(self);
   obj.postMessage(message, transfer);
 }
@@ -294,7 +294,7 @@ export function postMessage(self: bigint, message: bigint, transfer: (bigint)[])
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type WindowClientHandle = bigint;
+export type WindowClientHandle = string;
 
 /** Handle table for windowclient instances */
 const _windowClienthandles = new Map<bigint, windowclient>();
@@ -312,7 +312,7 @@ function getWindowClient(handle: bigint): windowclient {
 /**
  * `get-visibility-state()` operation.
  */
-export function getVisibilityState(self: bigint): bigint {
+export function getVisibilityState(self: number): bigint {
   const obj = getWindowClient(self);
   return obj.visibilityState;
 }
@@ -320,7 +320,7 @@ export function getVisibilityState(self: bigint): bigint {
 /**
  * `get-focused()` operation.
  */
-export function getFocused(self: number): boolean {
+export function getFocused(self: bigint): boolean {
   const obj = getWindowClient(self);
   return obj.focused;
 }
@@ -328,7 +328,7 @@ export function getFocused(self: number): boolean {
 /**
  * `get-ancestor-origins()` operation.
  */
-export function getAncestorOrigins(self: bigint): bigint {
+export function getAncestorOrigins(self: bigint): (bigint)[] {
   const obj = getWindowClient(self);
   return obj.ancestorOrigins;
 }
@@ -344,7 +344,7 @@ export function focus(self: bigint): bigint {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: string): bigint {
+export function navigate(self: bigint, url: bigint | undefined): bigint {
   const obj = getWindowClient(self);
   return obj.navigate(url);
 }
@@ -372,7 +372,7 @@ function getClients(handle: bigint): clients {
 /**
  * `match-all()` operation.
  */
-export function matchAll(self: bigint, options: bigint | undefined): bigint {
+export function matchAll(self: number, options: bigint): bigint {
   const obj = getClients(self);
   return obj.matchAll(options);
 }
@@ -380,7 +380,7 @@ export function matchAll(self: bigint, options: bigint | undefined): bigint {
 /**
  * `open-window()` operation.
  */
-export function openWindow(self: number, url: string): bigint {
+export function openWindow(self: bigint, url: string): bigint {
   const obj = getClients(self);
   return obj.openWindow(url);
 }
@@ -454,7 +454,7 @@ export function addRoutes(self: bigint, rules: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type FetchEventHandle = number;
+export type FetchEventHandle = bigint;
 
 /** Handle table for fetchevent instances */
 const _fetchEventhandles = new Map<bigint, fetchevent>();
@@ -480,7 +480,7 @@ export function getRequest(self: string): bigint {
 /**
  * `get-preload-response()` operation.
  */
-export function getPreloadResponse(self: bigint): string {
+export function getPreloadResponse(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.preloadResponse;
 }
@@ -488,7 +488,7 @@ export function getPreloadResponse(self: bigint): string {
 /**
  * `get-client-id()` operation.
  */
-export function getClientId(self: bigint): string {
+export function getClientId(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.clientId;
 }
@@ -504,7 +504,7 @@ export function getResultingClientId(self: bigint): string {
 /**
  * `get-replaces-client-id()` operation.
  */
-export function getReplacesClientId(self: bigint): string {
+export function getReplacesClientId(self: string): string {
   const obj = getFetchEvent(self);
   return obj.replacesClientId;
 }
@@ -548,7 +548,7 @@ function getExtendableMessageEvent(handle: bigint): extendablemessageevent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): bigint {
+export function getData(self: boolean): bigint {
   const obj = getExtendableMessageEvent(self);
   return obj.data;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): cache {
 /**
  * `match-all()` operation.
  */
-export function matchAll(self: bigint, request: number | undefined, options: number | undefined): bigint {
+export function matchAll(self: bigint, request: number | undefined, options: bigint | undefined): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -632,7 +632,7 @@ export function addAll(self: bigint, requests: (bigint)[]): bigint {
 /**
  * `put()` operation.
  */
-export function put(self: bigint, request: bigint, response: bigint): number {
+export function put(self: bigint, request: bigint, response: bigint): bigint {
   const obj = getCache(self);
   return obj.put(request, response);
 }
@@ -648,7 +648,7 @@ export function _delete(self: bigint, request: bigint, options: bigint): bigint 
 /**
  * `keys()` operation.
  */
-export function keys(self: bigint, request: bigint | undefined, options: string | undefined): bigint {
+export function keys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
@@ -676,7 +676,7 @@ function getCacheStorage(handle: bigint): cachestorage {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, cacheName: string): bigint {
+export function has(self: string, cacheName: string): bigint {
   const obj = getCacheStorage(self);
   return obj.has(cacheName);
 }
@@ -684,7 +684,7 @@ export function has(self: bigint, cacheName: string): bigint {
 /**
  * `open()` operation.
  */
-export function open(self: bigint, cacheName: string): bigint {
+export function open(self: string, cacheName: string): bigint {
   const obj = getCacheStorage(self);
   return obj.open(cacheName);
 }

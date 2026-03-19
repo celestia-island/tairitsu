@@ -45,7 +45,7 @@ function getWs(handle: bigint): websocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: bigint, protocols: string): bigint {
   const obj = getWs(self);
   return obj.connect(url, protocols);
 }
@@ -53,7 +53,7 @@ export function connect(url: bigint, protocols: string): { ok: true; value: bigi
 /**
  * `url()` operation.
  */
-export function url(handle: string): string {
+export function url(handle: bigint): bigint | undefined {
   const obj = getWs(self);
   return obj.url(handle);
 }
@@ -61,7 +61,7 @@ export function url(handle: string): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint {
+export function readyState(handle: bigint): number {
   const obj = getWs(self);
   return obj.readyState(handle);
 }
@@ -69,7 +69,7 @@ export function readyState(handle: bigint): bigint {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint {
+export function bufferedAmount(handle: bigint): string {
   const obj = getWs(self);
   return obj.bufferedAmount(handle);
 }
@@ -85,7 +85,7 @@ export function extensions(handle: bigint): bigint {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): string {
+export function protocol(handle: bigint): number {
   const obj = getWs(self);
   return obj.protocol(handle);
 }
@@ -95,7 +95,7 @@ export function protocol(handle: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: string, code: bigint, reason: number): void {
+export function close(handle: number, code: bigint, reason: string): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWs(self);
   const promise = obj.close(handle, code, reason)
@@ -131,7 +131,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: bigint): void {
+export function send(handle: bigint, data: number | undefined): void {
   const obj = getWs(self);
   obj.send(handle, data);
 }

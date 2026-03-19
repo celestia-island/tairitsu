@@ -45,7 +45,7 @@ function getReadable(handle: bigint): ReadableStream {
 /**
  * `get-reader()` operation.
  */
-export function getReader(stream: bigint): string {
+export function getReader(stream: bigint): bigint {
   const obj = getReadable(self);
   return obj.reader;
 }
@@ -53,7 +53,7 @@ export function getReader(stream: bigint): string {
 /**
  * `read-chunk()` operation.
  */
-export function readChunk(reader: bigint): string {
+export function readChunk(reader: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
   const obj = getReadable(self);
   return obj.readChunk(reader) ?? undefined;
 }
@@ -63,7 +63,7 @@ export function readChunk(reader: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollCancel()`
  */
-export function cancel(stream: string | undefined, reason: boolean): string {
+export function cancel(stream: string | undefined, reason: string): string {
   const requestId = _nextAsyncHandle++;
   const obj = getReadable(self);
   const promise = obj.cancel(stream, reason)
@@ -135,7 +135,7 @@ function getWritable(handle: bigint): WritableStream {
 /**
  * `get-writer()` operation.
  */
-export function getWriter(stream: bigint): { ok: true; value: bigint } | { ok: false; error: bigint } {
+export function getWriter(stream: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
   const obj = getWritable(self);
   return obj.writer;
 }
@@ -143,7 +143,7 @@ export function getWriter(stream: bigint): { ok: true; value: bigint } | { ok: f
 /**
  * `write-chunk()` operation.
  */
-export function writeChunk(writer: bigint, data: Uint8Array): { ok: true; value: bigint } | { ok: false; error: string } {
+export function writeChunk(writer: string, data: bigint | undefined): { ok: true; value: bigint } | { ok: false; error: string } {
   const obj = getWritable(self);
   return obj.writeChunk(writer, data);
 }
@@ -159,7 +159,7 @@ export function pollWrite(requestId: bigint): number | undefined {
 /**
  * `close-writer()` operation.
  */
-export function closeWriter(writer: bigint): bigint {
+export function closeWriter(writer: bigint): { ok: true; value: bigint } | { ok: false; error: number } {
   const obj = getWritable(self);
   return obj.closeWriter(writer);
 }
@@ -167,7 +167,7 @@ export function closeWriter(writer: bigint): bigint {
 /**
  * `poll-close()` operation.
  */
-export function pollClose(requestId: bigint): { ok: true } | { ok: false; error: bigint } | undefined {
+export function pollClose(requestId: string): bigint | undefined {
   const obj = getWritable(self);
   return obj.pollClose(requestId) ?? undefined;
 }
@@ -177,7 +177,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(stream: bigint, reason: bigint): { ok: true } | { ok: false; error: bigint } {
+export function abort(stream: bigint, reason: bigint | undefined): { ok: true } | { ok: false; error: string } {
   const requestId = _nextAsyncHandle++;
   const obj = getWritable(self);
   const promise = obj.abort(stream, reason)
@@ -202,7 +202,7 @@ export function abort(stream: bigint, reason: bigint): { ok: true } | { ok: fals
  * Poll an async `abort()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollAbort(requestId: bigint): { ok: true; value: { ok: true } | { ok: false; error: bigint } } | { ok: false; error: string } | undefined {
+export function pollAbort(requestId: bigint): { ok: true; value: { ok: true } | { ok: false; error: string } } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -213,7 +213,7 @@ export function pollAbort(requestId: bigint): { ok: true; value: { ok: true } | 
 /**
  * `is-locked()` operation.
  */
-export function isLocked(stream: bigint): boolean {
+export function isLocked(stream: bigint): bigint {
   const obj = getWritable(self);
   return obj.isLocked(stream);
 }
@@ -241,7 +241,7 @@ function getTransform(handle: bigint): TransformStream {
 /**
  * `get-readable()` operation.
  */
-export function getReadable(stream: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function getReadable(stream: bigint): { ok: true; value: bigint } | { ok: false; error: bigint } {
   const obj = getTransform(self);
   return obj.readable;
 }
@@ -249,7 +249,7 @@ export function getReadable(stream: string): { ok: true; value: bigint } | { ok:
 /**
  * `get-writable()` operation.
  */
-export function getWritable(stream: bigint): { ok: true; value: bigint } | { ok: false; error: bigint } {
+export function getWritable(stream: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
   const obj = getTransform(self);
   return obj.writable;
 }
