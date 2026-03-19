@@ -45,7 +45,7 @@ function getMediaCapabilities(handle: bigint): mediacapabilities {
 /**
  * `decoding-info()` operation.
  */
-export function decodingInfo(self: bigint, configuration: string): bigint {
+export function decodingInfo(self: bigint, configuration: bigint): string {
   const obj = getMediaCapabilities(self);
   return obj.decodingInfo(configuration);
 }
@@ -81,7 +81,7 @@ function getMediaStream(handle: bigint): MediaStream {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): string {
+export function getId(self: bigint): bigint {
   const obj = getMediaStream(self);
   return obj.id;
 }
@@ -89,7 +89,7 @@ export function getId(self: bigint): string {
 /**
  * `get-audio-tracks()` operation.
  */
-export function getAudioTracks(self: bigint): boolean {
+export function getAudioTracks(self: bigint): (bigint)[] {
   const obj = getMediaStream(self);
   return obj.audioTracks;
 }
@@ -97,7 +97,7 @@ export function getAudioTracks(self: bigint): boolean {
 /**
  * `get-video-tracks()` operation.
  */
-export function getVideoTracks(self: bigint): (bigint)[] {
+export function getVideoTracks(self: boolean): bigint {
   const obj = getMediaStream(self);
   return obj.videoTracks;
 }
@@ -183,7 +183,7 @@ export function getActive(self: bigint): boolean {
 /**
  * `get-onaddtrack()` operation.
  */
-export function getOnaddtrack(self: bigint): bigint {
+export function getOnaddtrack(self: string): bigint {
   const obj = getMediaStream(self);
   return obj.onaddtrack;
 }
@@ -243,7 +243,7 @@ export function getKind(self: bigint): string {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): number {
+export function getId(self: bigint): bigint {
   const obj = getMediaStreamTrack(self);
   return obj.id;
 }
@@ -251,7 +251,7 @@ export function getId(self: bigint): number {
 /**
  * `get-label()` operation.
  */
-export function getLabel(self: bigint): string {
+export function getLabel(self: number): string {
   const obj = getMediaStreamTrack(self);
   return obj.label;
 }
@@ -275,7 +275,7 @@ export function setEnabled(self: bigint, value: bigint): void {
 /**
  * `get-muted()` operation.
  */
-export function getMuted(self: bigint): boolean {
+export function getMuted(self: string): boolean {
   const obj = getMediaStreamTrack(self);
   return obj.muted;
 }
@@ -291,7 +291,7 @@ export function getOnmute(self: bigint): bigint {
 /**
  * `set-onmute()` operation.
  */
-export function setOnmute(self: bigint, value: bigint): void {
+export function setOnmute(self: bigint, value: string): void {
   const obj = getMediaStreamTrack(self);
   obj.onmute = value;
 }
@@ -299,7 +299,7 @@ export function setOnmute(self: bigint, value: bigint): void {
 /**
  * `get-onunmute()` operation.
  */
-export function getOnunmute(self: bigint): string {
+export function getOnunmute(self: bigint): bigint {
   const obj = getMediaStreamTrack(self);
   return obj.onunmute;
 }
@@ -331,7 +331,7 @@ export function getOnended(self: bigint): bigint {
 /**
  * `set-onended()` operation.
  */
-export function setOnended(self: string, value: bigint): void {
+export function setOnended(self: bigint, value: string): void {
   const obj = getMediaStreamTrack(self);
   obj.onended = value;
 }
@@ -341,7 +341,7 @@ export function setOnended(self: string, value: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollClone()`
  */
-export function clone(self: bigint): string {
+export function clone(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getMediaStreamTrack(self);
   const promise = obj.clone()
@@ -366,7 +366,7 @@ export function clone(self: bigint): string {
  * Poll an async `clone()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollClone(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -377,7 +377,7 @@ export function pollClone(requestId: bigint): { ok: true; value: string } | { ok
 /**
  * `stop()` operation.
  */
-export function stop(self: bigint): void {
+export function stop(self: string): void {
   const obj = getMediaStreamTrack(self);
   obj.stop();
 }
@@ -385,7 +385,7 @@ export function stop(self: bigint): void {
 /**
  * `get-capabilities()` operation.
  */
-export function getCapabilities(self: bigint): bigint {
+export function getCapabilities(self: bigint): number {
   const obj = getMediaStreamTrack(self);
   return obj.capabilities;
 }
@@ -393,7 +393,7 @@ export function getCapabilities(self: bigint): bigint {
 /**
  * `get-constraints()` operation.
  */
-export function getConstraints(self: number): bigint {
+export function getConstraints(self: bigint): bigint {
   const obj = getMediaStreamTrack(self);
   return obj.constraints;
 }
@@ -409,7 +409,7 @@ export function getSettings(self: bigint): bigint {
 /**
  * `apply-constraints()` operation.
  */
-export function applyConstraints(self: bigint, constraints: number | undefined): bigint {
+export function applyConstraints(self: bigint, constraints: bigint | undefined): bigint {
   const obj = getMediaStreamTrack(self);
   return obj.applyConstraints(constraints);
 }
@@ -511,7 +511,7 @@ export function setOndevicechange(self: bigint, value: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollEnumerateDevices()`
  */
-export function enumerateDevices(self: bigint): bigint {
+export function enumerateDevices(self: boolean): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getMediaDevices(self);
   const promise = obj.enumerateDevices()
@@ -583,7 +583,7 @@ function getMediaDeviceInfo(handle: bigint): mediadeviceinfo {
 /**
  * `get-device-id()` operation.
  */
-export function getDeviceId(self: bigint): string {
+export function getDeviceId(self: string): string {
   const obj = getMediaDeviceInfo(self);
   return obj.deviceId;
 }
@@ -607,7 +607,7 @@ export function getLabel(self: bigint): string {
 /**
  * `get-group-id()` operation.
  */
-export function getGroupId(self: string): string {
+export function getGroupId(self: bigint): string {
   const obj = getMediaDeviceInfo(self);
   return obj.groupId;
 }
@@ -671,7 +671,7 @@ function getDeviceChangeEvent(handle: bigint): devicechangeevent {
 /**
  * `get-devices()` operation.
  */
-export function getDevices(self: bigint): (string)[] {
+export function getDevices(self: bigint | undefined): (bigint)[] {
   const obj = getDeviceChangeEvent(self);
   return obj.devices;
 }
@@ -689,7 +689,7 @@ export function getUserInsertedDevices(self: bigint): (bigint)[] {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type MediaSessionHandle = bigint;
+export type MediaSessionHandle = bigint | undefined;
 
 /** Handle table for mediasession instances */
 const _mediaSessionhandles = new Map<bigint, mediasession>();
@@ -715,7 +715,7 @@ export function getMetadata(self: bigint): bigint | undefined {
 /**
  * `set-metadata()` operation.
  */
-export function setMetadata(self: bigint, value: bigint | undefined): void {
+export function setMetadata(self: bigint | undefined, value: bigint | undefined): void {
   const obj = getMediaSession(self);
   obj.metadata = value;
 }
@@ -723,7 +723,7 @@ export function setMetadata(self: bigint, value: bigint | undefined): void {
 /**
  * `get-playback-state()` operation.
  */
-export function getPlaybackState(self: bigint): bigint {
+export function getPlaybackState(self: bigint): string {
   const obj = getMediaSession(self);
   return obj.playbackState;
 }
@@ -731,7 +731,7 @@ export function getPlaybackState(self: bigint): bigint {
 /**
  * `set-playback-state()` operation.
  */
-export function setPlaybackState(self: string | undefined, value: bigint): void {
+export function setPlaybackState(self: bigint, value: bigint): void {
   const obj = getMediaSession(self);
   obj.playbackState = value;
 }
@@ -739,7 +739,7 @@ export function setPlaybackState(self: string | undefined, value: bigint): void 
 /**
  * `set-action-handler()` operation.
  */
-export function setActionHandler(self: bigint, action: string, handler: bigint): void {
+export function setActionHandler(self: bigint, action: bigint, handler: bigint | undefined): void {
   const obj = getMediaSession(self);
   obj.actionHandler = handler;
 }
@@ -747,7 +747,7 @@ export function setActionHandler(self: bigint, action: string, handler: bigint):
 /**
  * `set-position-state()` operation.
  */
-export function setPositionState(self: string, state: bigint): void {
+export function setPositionState(self: bigint, state: bigint): void {
   const obj = getMediaSession(self);
   obj.positionState = state;
 }
@@ -763,7 +763,7 @@ export function setMicrophoneActive(self: bigint, active: bigint): bigint {
 /**
  * `set-camera-active()` operation.
  */
-export function setCameraActive(self: bigint, active: boolean): number {
+export function setCameraActive(self: bigint, active: boolean): bigint {
   const obj = getMediaSession(self);
   obj.cameraActive = active;
 }
@@ -771,7 +771,7 @@ export function setCameraActive(self: bigint, active: boolean): number {
 /**
  * `set-screenshare-active()` operation.
  */
-export function setScreenshareActive(self: bigint, active: boolean): bigint {
+export function setScreenshareActive(self: number, active: boolean): bigint {
   const obj = getMediaSession(self);
   obj.screenshareActive = active;
 }
@@ -807,7 +807,7 @@ export function getTitle(self: bigint): string {
 /**
  * `set-title()` operation.
  */
-export function setTitle(self: bigint, value: string): void {
+export function setTitle(self: bigint, value: bigint): void {
   const obj = getMediaMetadata(self);
   obj.title = value;
 }
@@ -855,7 +855,7 @@ export function getArtwork(self: bigint): (bigint)[] {
 /**
  * `set-artwork()` operation.
  */
-export function setArtwork(self: bigint, value: (bigint)[]): void {
+export function setArtwork(self: bigint, value: (number)[]): void {
   const obj = getMediaMetadata(self);
   obj.artwork = value;
 }
@@ -863,7 +863,7 @@ export function setArtwork(self: bigint, value: (bigint)[]): void {
 /**
  * `get-chapter-info()` operation.
  */
-export function getChapterInfo(self: bigint): (bigint)[] {
+export function getChapterInfo(self: bigint): number {
   const obj = getMediaMetadata(self);
   return obj.chapterInfo;
 }
@@ -891,7 +891,7 @@ function getChapterInformation(handle: bigint): chapterinformation {
 /**
  * `get-title()` operation.
  */
-export function getTitle(self: bigint): bigint {
+export function getTitle(self: bigint): string {
   const obj = getChapterInformation(self);
   return obj.title;
 }
@@ -899,7 +899,7 @@ export function getTitle(self: bigint): bigint {
 /**
  * `get-start-time()` operation.
  */
-export function getStartTime(self: bigint): boolean {
+export function getStartTime(self: bigint): number {
   const obj = getChapterInformation(self);
   return obj.startTime;
 }
@@ -907,7 +907,7 @@ export function getStartTime(self: bigint): boolean {
 /**
  * `get-artwork()` operation.
  */
-export function getArtwork(self: bigint): (bigint)[] {
+export function getArtwork(self: boolean): bigint {
   const obj = getChapterInformation(self);
   return obj.artwork;
 }

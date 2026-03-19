@@ -45,7 +45,7 @@ function getAnimation(handle: bigint): animation {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: boolean): string {
+export function getId(handle: bigint): string {
   const obj = getAnimation(self);
   return obj.id;
 }
@@ -131,7 +131,7 @@ export function finish(handle: bigint): void {
 /**
  * `play()` operation.
  */
-export function play(handle: string): void {
+export function play(handle: bigint): void {
   const obj = getAnimation(self);
   obj.play(handle);
 }
@@ -139,7 +139,7 @@ export function play(handle: string): void {
 /**
  * `pause()` operation.
  */
-export function pause(handle: bigint | undefined | undefined): void {
+export function pause(handle: bigint): void {
   const obj = getAnimation(self);
   obj.pause(handle);
 }
@@ -147,7 +147,7 @@ export function pause(handle: bigint | undefined | undefined): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: string | undefined): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: bigint): void {
   const obj = getAnimation(self);
   obj.updatePlaybackRate(handle, playbackRate);
 }
@@ -155,7 +155,7 @@ export function updatePlaybackRate(handle: bigint, playbackRate: string | undefi
 /**
  * `reverse()` operation.
  */
-export function reverse(handle: boolean): void {
+export function reverse(handle: bigint | undefined): void {
   const obj = getAnimation(self);
   obj.reverse(handle);
 }
@@ -165,7 +165,7 @@ export function reverse(handle: boolean): void {
  *
  * Async operation: returns request ID, poll with `pollPersist()`
  */
-export function persist(handle: bigint | undefined): void {
+export function persist(handle: boolean): void {
   const requestId = _nextAsyncHandle++;
   const obj = getAnimation(self);
   const promise = obj.persist(handle)
@@ -201,7 +201,7 @@ export function pollPersist(requestId: bigint): { ok: true } | { ok: false; erro
 /**
  * `commit-styles()` operation.
  */
-export function commitStyles(handle: bigint): void {
+export function commitStyles(handle: string): void {
   const obj = getAnimation(self);
   obj.commitStyles(handle);
 }
