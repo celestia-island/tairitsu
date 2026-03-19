@@ -153,7 +153,10 @@ def wit_name(idl_name: str) -> str:
     k = to_kebab(idl_name)
     # WIT reserved words
     _reserved = {"type", "interface", "world", "record", "enum", "variant",
-                 "resource", "use", "import", "export", "package", "func"}
+                 "resource", "use", "import", "export", "package", "func",
+                 "result", "option", "list", "tuple", "bool", "string",
+                 "u8", "u16", "u32", "u64", "s8", "s16", "s32", "s64", "f32", "f64",
+                 "from", "as", "where", "let", "static", "borrow", "own"}
     if k in _reserved:
         k = k + "-val"
     return k
@@ -885,23 +888,42 @@ def generate_wit(
     w.line(f"package {target.package}@{target.version};")
     w.blank()
 
-    # Enums (standalone in package scope)
-    for enum_name in target.enums:
-        e = enum_by_name.get(enum_name)
-        if e:
-            emit_enum(w, e)
-        else:
-            w.comment(f"NOTE: enum {enum_name} not found in IDL source")
-            w.blank()
-
-    # Dictionaries / records
-    for dict_name in target.dicts:
-        d = dict_by_name.get(dict_name)
-        if d:
-            emit_record(w, d)
-        else:
-            w.comment(f"NOTE: dictionary {dict_name} not found in IDL source")
-            w.blank()
+    # Enums and records must be inside an interface in WIT
+    # Create a "types" interface if we have any enums or dicts
+    has_types = target.enums or target.dicts
+    if has_types:
+        w.comment("Type definitions (enums and records from WebIDL).")
+        w.line("interface types {")
+        # Enums
+        for enum_name in target.enums:
+            e = enum_by_name.get(enum_name)
+            if e:
+                w.line(f"{_INDENT}/// WebIDL enum {e.name}.")
+                w.line(f"{_INDENT}enum {wit_name(e.name)} {{")
+                for v in e.values:
+                    safe = wit_name(v.replace("-", "_"))
+                    w.line(f"{_INDENT}{_INDENT}{safe},")
+                w.line(f"{_INDENT}}}")
+            else:
+                w.line(f"{_INDENT}// NOTE: enum {enum_name} not found in IDL source")
+        # Dictionaries / records
+        for dict_name in target.dicts:
+            d = dict_by_name.get(dict_name)
+            if d:
+                w.line(f"{_INDENT}/// WebIDL dictionary {d.name}.")
+                w.line(f"{_INDENT}record {wit_name(d.name)} {{")
+                for f_type, f_name, _required in d.fields:
+                    wt = map_type(f_type)
+                    if wt is None:
+                        wt = "string"     # fallback
+                    if wt == "":
+                        continue
+                    w.line(f"{_INDENT}{_INDENT}{wit_name(f_name)}: {wt},")
+                w.line(f"{_INDENT}}}")
+            else:
+                w.line(f"{_INDENT}// NOTE: dictionary {dict_name} not found in IDL source")
+        w.line("}")
+        w.blank()
 
     # Interfaces
     for iface_name, (handle_type, ctor_override) in target.interfaces.items():

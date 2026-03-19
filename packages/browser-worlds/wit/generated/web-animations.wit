@@ -8,60 +8,56 @@
 
 package tairitsu-browser:web-animations@0.1.0;
 
-/// WebIDL enum FillMode.
-enum fill-mode {
-    none,
-    forwards,
-    backwards,
-    both,
-    auto,
-}
-
-/// WebIDL enum PlaybackDirection.
-enum playback-direction {
-    normal,
-    reverse,
-    alternate,
-    alternate-reverse,
-}
-
-/// WebIDL enum CompositeOperation.
-enum composite-operation {
-    replace,
-    add,
-    accumulate,
-}
-
-/// WebIDL enum AnimationPlayState.
-enum animation-play-state {
-    idle,
-    running,
-    paused,
-    finished,
-}
-
-/// WebIDL enum AnimationReplaceState.
-enum animation-replace-state {
-    active,
-    removed,
-    persisted,
-}
-
-/// WebIDL dictionary KeyframeEffectOptions.
-record keyframe-effect-options {
-    composite: string,
-    pseudo-element: option<string>,
-}
-
-/// WebIDL dictionary KeyframeAnimationOptions.
-record keyframe-animation-options {
-    id: string,
-    timeline: string,
-}
-
-/// WebIDL dictionary DocumentTimelineOptions.
-record document-timeline-options {
-    origin-time: f64,
+/// Type definitions (enums and records from WebIDL).
+interface types {
+    /// WebIDL enum FillMode.
+    enum fill-mode {
+        none,
+        forwards,
+        backwards,
+        both,
+        auto,
+    }
+    /// WebIDL enum PlaybackDirection.
+    enum playback-direction {
+        normal,
+        reverse,
+        alternate,
+        alternate-reverse,
+    }
+    /// WebIDL enum CompositeOperation.
+    enum composite-operation {
+        replace,
+        add,
+        accumulate,
+    }
+    /// WebIDL enum AnimationPlayState.
+    enum animation-play-state {
+        idle,
+        running,
+        paused,
+        finished,
+    }
+    /// WebIDL enum AnimationReplaceState.
+    enum animation-replace-state {
+        active,
+        removed,
+        persisted,
+    }
+    /// WebIDL dictionary KeyframeEffectOptions.
+    record keyframe-effect-options {
+        composite: string,
+        pseudo-element: option<string>,
+    }
+    /// WebIDL dictionary KeyframeAnimationOptions.
+    record keyframe-animation-options {
+        id: string,
+        timeline: string,
+    }
+    /// WebIDL dictionary DocumentTimelineOptions.
+    record document-timeline-options {
+        origin-time: f64,
+    }
 }
 
 /// WebIDL interface Animation.

@@ -498,7 +498,7 @@ interface rtc-sctp-transport {
     get-state: func(self: rtc-sctp-transport-handle) -> u64;
 
     /// `maxMessageSize` attribute — getter.
-    get-max-message-size: func(self: rtc-sctp-transport-handle) -> f64;
+    get-max-message-size: func(self: rtc-sctp-transport-handle) -> option<f64>;
 
     /// `maxChannels` attribute — getter.
     get-max-channels: func(self: rtc-sctp-transport-handle) -> option<u16>;
