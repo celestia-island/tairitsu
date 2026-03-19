@@ -239,7 +239,7 @@ interface readable-stream {
     type readable-stream-handle = u64;
 
     /// `from()` operation.
-    from: func(async-iterable: string) -> u64;
+    %from: func(async-iterable: string) -> u64;
 
     /// `locked` attribute — getter.
     get-locked: func(self: readable-stream-handle) -> bool;

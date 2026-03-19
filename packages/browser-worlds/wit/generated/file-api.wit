@@ -8,89 +8,53 @@
 
 package tairitsu-browser:file-api@0.1.0;
 
-/// WebIDL enum EndingType.
-enum ending-type {
-    transparent,
-    native,
-}
-
-/// WebIDL dictionary BlobPropertyBag.
-record blob-property-bag {
-    type-val: string,
-    endings: string,
-}
-
-/// WebIDL dictionary FilePropertyBag.
-record file-property-bag {
-    last-modified: s64,
+/// Type definitions (enums and records from WebIDL).
+interface types {
+    /// WebIDL enum EndingType.
+    enum ending-type {
+        transparent,
+        native,
+    }
+    /// WebIDL dictionary BlobPropertyBag.
+    record blob-property-bag {
+        type-val: string,
+        endings: string,
+    }
+    /// WebIDL dictionary FilePropertyBag.
+    record file-property-bag {
+        last-modified: s64,
+    }
 }
 
 /// WebIDL interface Blob.
 interface blob {
-    /// Opaque handle to a Blob instance.
+/// Opaque handle to a Blob instance.
     type blob-handle = u64;
 
-    /// Total size in bytes.
-    size: func(handle: blob-handle) -> u64;
-
-    /// MIME type string (may be empty).
-    type-val: func(handle: blob-handle) -> string;
-
-    /// Return a new Blob that is a slice of this one.
-    slice: func(handle: blob-handle, start: option<s64>, end: option<s64>, content-type: option<string>) -> result<blob-handle, string>;
-
-    /// Read the entire Blob contents as bytes. Returns a request-id to poll.
-    read-all-async: func(handle: blob-handle) -> result<u64, string>;
-
-    /// Poll a pending read-all. `none` = still loading; `some(ok(bytes))` = done.
-    poll-read-all: func(request-id: u64) -> option<result<list<u8>, string>>;
-
-    /// Dispose the Blob handle, freeing host-side resources.
-    drop-blob: func(handle: blob-handle);
 }
 
 /// WebIDL interface File.
 /// Extends: Blob.
 interface file {
-    /// Opaque handle to a File instance.
+/// Opaque handle to a File instance.
     type file-handle = u64;
 
-    /// File name as reported by the browser.
-    name: func(handle: file-handle) -> string;
-
-    /// Last-modified timestamp in milliseconds since epoch.
-    last-modified: func(handle: file-handle) -> s64;
-
-    /// Underlying Blob handle (for read / slice operations).
-    as-blob: func(handle: file-handle) -> u64;
 }
 
 /// WebIDL interface FileReader.
 /// Extends: EventTarget.
 interface file-reader {
-    /// Opaque handle to a FileReader instance.
+/// Opaque handle to a FileReader instance.
     type file-reader-handle = u64;
 
     new-file-reader: func() -> result<file-reader-handle, string>;
-
-    /// Begin reading a Blob as an ArrayBuffer. Returns a request-id.
-    read-as-array-buffer: func(handle: file-reader-handle, blob: u64) -> result<u64, string>;
-
-    /// Begin reading a Blob as a data URL. Returns a request-id.
-    read-as-data-url: func(handle: file-reader-handle, blob: u64) -> result<u64, string>;
-
-    /// Begin reading a Blob as UTF-8 text with an optional encoding label. Returns a request-id.
-    read-as-text: func(handle: file-reader-handle, blob: u64, encoding: option<string>) -> result<u64, string>;
-
-    /// Poll a pending read operation.
-    /// `none` = still loading.
-    /// `some(ok(bytes))` = done (for array-buffer and data-url the bytes are
-    ///   the raw UTF-8 of the result string; callers decode as needed).
-    /// `some(err(msg))` = error.
-    poll-result: func(request-id: u64) -> option<result<list<u8>, string>>;
-
+    // read-as-array-buffer: skipped (unmappable parameter type)
+    // read-as-binary-string: skipped (unmappable parameter type)
+    // read-as-text: skipped (unmappable parameter type)
+    // read-as-data-url: skipped (unmappable parameter type)
     abort: func(handle: file-reader-handle);
     ready-state: func(handle: file-reader-handle) -> u16;
+    result-val: func(handle: file-reader-handle) -> option<string>;
 }
 
 /// WebIDL interface FileList.

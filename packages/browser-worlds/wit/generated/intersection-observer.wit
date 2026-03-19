@@ -8,16 +8,18 @@
 
 package tairitsu-browser:intersection-observer@0.1.0;
 
-/// NOTE: dictionary IntersectionObserverEntry not found in IDL source
-
-/// WebIDL dictionary IntersectionObserverInit.
-record intersection-observer-init {
-    root: option<string>,
-    root-margin: string,
-    scroll-margin: string,
-    threshold: string,
-    delay: s32,
-    track-visibility: bool,
+/// Type definitions (enums and records from WebIDL).
+interface types {
+    // NOTE: dictionary IntersectionObserverEntry not found in IDL source
+    /// WebIDL dictionary IntersectionObserverInit.
+    record intersection-observer-init {
+        root: option<string>,
+        root-margin: string,
+        scroll-margin: string,
+        threshold: string,
+        delay: s32,
+        track-visibility: bool,
+    }
 }
 
 /// WebIDL interface IntersectionObserver.

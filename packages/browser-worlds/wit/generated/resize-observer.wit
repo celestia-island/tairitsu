@@ -8,18 +8,19 @@
 
 package tairitsu-browser:resize-observer@0.1.0;
 
-/// WebIDL enum ResizeObserverBoxOptions.
-enum resize-observer-box-options {
-    border-box,
-    content-box,
-    device-pixel-content-box,
-}
-
-/// NOTE: dictionary ResizeObserverEntry not found in IDL source
-
-/// WebIDL dictionary ResizeObserverOptions.
-record resize-observer-options {
-    box: string,
+/// Type definitions (enums and records from WebIDL).
+interface types {
+    /// WebIDL enum ResizeObserverBoxOptions.
+    enum resize-observer-box-options {
+        border-box,
+        content-box,
+        device-pixel-content-box,
+    }
+    // NOTE: dictionary ResizeObserverEntry not found in IDL source
+    /// WebIDL dictionary ResizeObserverOptions.
+    record resize-observer-options {
+        box: string,
+    }
 }
 
 /// WebIDL interface ResizeObserver.

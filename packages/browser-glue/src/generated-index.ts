@@ -10,35 +10,32 @@
  *
  * ## Package layout
  *
- * - `./canvas` — `tairitsu-browser:canvas` (18 interfaces)
+ * - `./auth` — `tairitsu-browser:auth` (5 interfaces)
+ * - `./canvas` — `tairitsu-browser:canvas` (20 interfaces)
  * - `./crypto` — `tairitsu-browser:crypto` (3 interfaces)
- * - `./css` — `tairitsu-browser:css` (36 interfaces)
+ * - `./css` — `tairitsu-browser:css` (44 interfaces)
  * - `./device` — `tairitsu-browser:device` (12 interfaces)
  * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
  * - `./events` — `tairitsu-browser:events` (15 interfaces)
  * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
- * - `./file-api` — `tairitsu-browser:file-api` (4 interfaces)
- * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
- * - `./html` — `tairitsu-browser:html` (182 interfaces)
- * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
- * - `./media` — `tairitsu-browser:media` (12 interfaces)
+ * - `./html` — `tairitsu-browser:html` (1 interfaces)
+ * - `./media` — `tairitsu-browser:media` (29 interfaces)
  * - `./notifications` — `tairitsu-browser:notifications` (4 interfaces)
  * - `./observers` — `tairitsu-browser:observers` (5 interfaces)
+ * - `./payments` — `tairitsu-browser:payments` (4 interfaces)
  * - `./performance` — `tairitsu-browser:performance` (11 interfaces)
  * - `./permissions` — `tairitsu-browser:permissions` (2 interfaces)
- * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
  * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
  * - `./storage` — `tairitsu-browser:storage` (2 interfaces)
- * - `./streams` — `tairitsu-browser:streams` (3 interfaces)
  * - `./url` — `tairitsu-browser:url` (2 interfaces)
- * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
+ * - `./wasm` — `tairitsu-browser:wasm` (6 interfaces)
  * - `./webrtc` — `tairitsu-browser:webrtc` (20 interfaces)
  * - `./websocket` — `tairitsu-browser:websocket` (2 interfaces)
- * - `./websockets` — `tairitsu-browser:websockets` (1 interfaces)
  * - `./workers` — `tairitsu-browser:workers` (12 interfaces)
  */
 
 // Re-export all generated modules
+export * as auth from "./generated/auth-glue.js";
 export * as canvas from "./generated/canvas-glue.js";
 export * as crypto from "./generated/crypto-glue.js";
 export * as css from "./generated/css-glue.js";
@@ -46,30 +43,25 @@ export * as device from "./generated/device-glue.js";
 export * as dom from "./generated/dom-glue.js";
 export * as events from "./generated/events-glue.js";
 export * as fetch from "./generated/fetch-glue.js";
-export * as fileapi from "./generated/file-api-glue.js";
-export * as geolocation from "./generated/geolocation-glue.js";
 export * as html from "./generated/html-glue.js";
-export * as indexeddb from "./generated/indexed-db-glue.js";
 export * as media from "./generated/media-glue.js";
 export * as notifications from "./generated/notifications-glue.js";
 export * as observers from "./generated/observers-glue.js";
+export * as payments from "./generated/payments-glue.js";
 export * as performance from "./generated/performance-glue.js";
 export * as permissions from "./generated/permissions-glue.js";
-export * as resizeobserver from "./generated/resize-observer-glue.js";
 export * as serviceworkers from "./generated/service-workers-glue.js";
 export * as storage from "./generated/storage-glue.js";
-export * as streams from "./generated/streams-glue.js";
 export * as url from "./generated/url-glue.js";
-export * as webanimations from "./generated/web-animations-glue.js";
+export * as wasm from "./generated/wasm-glue.js";
 export * as webrtc from "./generated/webrtc-glue.js";
 export * as websocket from "./generated/websocket-glue.js";
-export * as websockets from "./generated/websockets-glue.js";
 export * as workers from "./generated/workers-glue.js";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 26,
-  totalInterfaces: 417,
-  totalFunctions: 3682,
-  generatedAt: "2026-03-19T19:03:47.556127",
+  totalDomains: 22,
+  totalInterfaces: 260,
+  totalFunctions: 2446,
+  generatedAt: "2026-03-19T19:42:22.360541",
 };

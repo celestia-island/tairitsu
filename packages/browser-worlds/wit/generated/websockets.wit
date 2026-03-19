@@ -8,10 +8,13 @@
 
 package tairitsu-browser:websocket@0.1.0;
 
-/// WebIDL enum BinaryType.
-enum binary-type {
-    blob,
-    arraybuffer,
+/// Type definitions (enums and records from WebIDL).
+interface types {
+    /// WebIDL enum BinaryType.
+    enum binary-type {
+        blob,
+        arraybuffer,
+    }
 }
 
 /// WebIDL interface WebSocket.

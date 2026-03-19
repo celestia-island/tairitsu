@@ -220,6 +220,8 @@ WIT_KEYWORDS: Set[str] = {
     "constructor", "static", "borrow", "own", "option", "result", "list",
     "tuple", "string", "bool", "char",
     "u8", "u16", "u32", "u64", "s8", "s16", "s32", "s64", "f32", "f64",
+    # Additional keywords that may appear in parameter names
+    "from", "as", "where", "let", "true", "false", "async", "await",
 }
 
 # ---------------------------------------------------------------------------
