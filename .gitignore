@@ -39,3 +39,7 @@ dist/
 # IDE
 .DS_Store
 Thumbs.db
+
+# W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
+scripts/idl-cache/
+scripts/idl-cache/

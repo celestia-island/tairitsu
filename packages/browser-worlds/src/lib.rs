@@ -93,7 +93,6 @@ mod tests {
     #[test]
     fn all_embedded_packages_present() {
         let expected = [
-            "tairitsu-browser:full@0.2.0",
             "tairitsu-browser:canvas@0.1.0",
             "tairitsu-browser:crypto@0.1.0",
             "tairitsu-browser:css@0.1.0",
@@ -171,7 +170,7 @@ mod tests {
 
     #[test]
     fn count_embedded_packages() {
-        // Should have 27 packages (1 consolidated + 26 generated)
-        assert_eq!(EMBEDDED_PACKAGES.len(), 27);
+        // Should have 26 packages (all Phase A generated)
+        assert_eq!(EMBEDDED_PACKAGES.len(), 26);
     }
 }
