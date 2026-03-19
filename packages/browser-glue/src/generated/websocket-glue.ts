@@ -45,7 +45,7 @@ function getWebSocket(handle: bigint): websocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): string | undefined {
+export function getUrl(self: number): number | undefined {
   const obj = getWebSocket(self);
   return obj.url;
 }
@@ -61,7 +61,7 @@ export function getReadyState(self: bigint): number {
 /**
  * `get-buffered-amount()` operation.
  */
-export function getBufferedAmount(self: bigint): bigint {
+export function getBufferedAmount(self: string): bigint {
   const obj = getWebSocket(self);
   return obj.bufferedAmount;
 }
@@ -69,7 +69,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): number {
+export function getOnopen(self: number): bigint {
   const obj = getWebSocket(self);
   return obj.onopen;
 }
@@ -77,7 +77,7 @@ export function getOnopen(self: bigint): number {
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: bigint): void {
+export function setOnopen(self: number, value: bigint): void {
   const obj = getWebSocket(self);
   obj.onopen = value;
 }
@@ -85,7 +85,7 @@ export function setOnopen(self: bigint, value: bigint): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): bigint {
+export function getOnerror(self: number | undefined): bigint {
   const obj = getWebSocket(self);
   return obj.onerror;
 }
@@ -101,7 +101,7 @@ export function setOnerror(self: bigint, value: bigint): void {
 /**
  * `get-onclose()` operation.
  */
-export function getOnclose(self: string): bigint {
+export function getOnclose(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.onclose;
 }
@@ -125,7 +125,7 @@ export function getExtensions(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): bigint {
+export function getProtocol(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.protocol;
 }
@@ -135,7 +135,7 @@ export function getProtocol(self: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(self: bigint | undefined, code: number | undefined, reason: string | undefined): void {
+export function close(self: number, code: number | undefined, reason: number): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWebSocket(self);
   const promise = obj.close(code, reason)
@@ -187,7 +187,7 @@ export function setOnmessage(self: bigint, value: bigint): void {
 /**
  * `get-binary-type()` operation.
  */
-export function getBinaryType(self: bigint): bigint {
+export function getBinaryType(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.binaryType;
 }
@@ -195,7 +195,7 @@ export function getBinaryType(self: bigint): bigint {
 /**
  * `set-binary-type()` operation.
  */
-export function setBinaryType(self: bigint, value: bigint): void {
+export function setBinaryType(self: number, value: bigint): void {
   const obj = getWebSocket(self);
   obj.binaryType = value;
 }
@@ -203,7 +203,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: (bigint)[]): void {
+export function send(self: bigint | undefined, data: Uint8Array): void {
   const obj = getWebSocket(self);
   obj.send(data);
 }
@@ -231,7 +231,7 @@ function getCloseEvent(handle: bigint): closeevent {
 /**
  * `get-was-clean()` operation.
  */
-export function getWasClean(self: bigint): bigint {
+export function getWasClean(self: bigint): boolean {
   const obj = getCloseEvent(self);
   return obj.wasClean;
 }
@@ -239,7 +239,7 @@ export function getWasClean(self: bigint): bigint {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): string {
+export function getCode(self: bigint): number {
   const obj = getCloseEvent(self);
   return obj.code;
 }
@@ -247,7 +247,7 @@ export function getCode(self: bigint): string {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: number): string {
   const obj = getCloseEvent(self);
   return obj.reason;
 }

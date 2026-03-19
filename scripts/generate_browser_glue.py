@@ -242,6 +242,8 @@ class BrowserGlueGenerator:
         "import", "super", "implements", "interface", "let", "package", "private",
         "protected", "public", "static", "yield", "null", "true", "false",
         "undefined", "NaN", "Infinity", "await", "async", "of", "get", "set",
+        # Also reserved in strict mode
+        "arguments", "eval",
     }
 
     def generate_function(self, func: WitFunction, interface: WitInterface,
