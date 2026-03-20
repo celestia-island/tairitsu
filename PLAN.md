@@ -78,35 +78,35 @@ browser-glue/
 - 已完成：所有手写文件和生成文件的 import 路径已更新
 - 已完成：`generated/index.ts` 移动到 `src/generated/index.ts` 并更新引用路径
 
-### Phase 3: 架构增强 ⏳ 待定
+### Phase 3: 架构增强 ✅ 已完成
 
-> 注意：此阶段需要进一步的设计文档来指导实现细节
-> 当前架构已通过编译和测试验证，增强功能可根据实际需求逐步添加
+#### 3.1 增强 handles.ts ✅
+- 添加类型安全的句柄注册（isInstanceOfType, registerTypedHandle with strict check）
+- 添加批量操作支持（registerTypedHandleBatch, getTypedHandleBatch）
+- 添加垃圾回收钩子（setGCHandleHook, invokeGCHandleHook）
+- 扩展 HandleDiagnosticError 类型
 
-#### 3.1 增强 handles.ts (待设计文档)
-- 添加类型安全的句柄注册
-- 添加批量操作支持
-- 添加垃圾回收钩子
+#### 3.2 增强 dom.ts ✅
+- 添加选择器缓存（queryCached, clearSelectorCache）
+- 添加批量 DOM 操作（batchAppendChildren, batchSetAttributes, batchRemoveChildren）
+- 添加模板字符串支持（parseTemplate, createElementFromTemplate）
 
-#### 3.2 增强 dom.ts (待设计文档)
-- 添加批量 DOM 操作
-- 添加模板字符串支持
-- 添加选择器缓存
+#### 3.3 增强 events.ts ✅
+- 添加事件委托（addDelegatedEventListener, removeDelegatedEventListener）
+- 添加防抖/节流（createDebouncedCallback, createThrottledCallback）
+- 添加一次性事件（addOneTimeEventListener, removeOneTimeEventListener）
 
-#### 3.3 增强 events.ts (待设计文档)
-- 添加事件委托
-- 添加防抖/节流
-- 添加一次性事件
+#### 3.4 增强 http.ts ✅
+- 添加请求拦截器（RequestInterceptor, addRequestInterceptor, fetchAsyncWithInterceptors）
+- 添加响应缓存（ResponseCache, enableResponseCache, getCachedResponse, setCachedResponse）
+- 添加重试逻辑（RetryConfig, fetchWithRetry, calculateRetryDelay）
+- 扩展 RequestData 接口
 
-#### 3.4 增强 http.ts (待设计文档)
-- 添加请求拦截器
-- 添加响应缓存
-- 添加重试逻辑
-
-#### 3.5 新增 async.ts (待设计文档)
-- Promise 桥接到 WIT
-- setTimeout/setInterval 封装
-- async/iterator 支持
+#### 3.5 新增 async.ts ✅
+- 实现 Promise 桥接到 WIT（registerPromise, pollPromise）
+- 实现 setTimeout/setInterval 封装（setTimeoutAsync, setIntervalAsync, clearTimer）
+- 实现异步迭代器支持（registerAsyncIterator, pollIterator）
+- 添加异步操作统计（getAsyncStats, clearAllAsyncState）
 
 ### Phase 4: 构建验证 ✅ 已完成
 
