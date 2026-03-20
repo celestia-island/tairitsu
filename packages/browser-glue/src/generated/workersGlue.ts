@@ -293,7 +293,7 @@ export function getScriptUrl(self: bigint): string {
 /**
  * `get-state()` operation.
  */
-export function ServiceWorkerGetState(self: bigint): string {
+export function ServiceWorkerGetState(self: bigint): bigint {
   const obj = lookupServiceWorker(self);
   return obj.state;
 }
@@ -623,7 +623,7 @@ export function pollDisable(requestId: bigint): { ok: true; value: bigint } | { 
  *
  * Async operation: returns request ID, poll with `pollSetHeaderValue()`
  */
-export function setHeaderValue(self: bigint, value: number): bigint {
+export function setHeaderValue(self: bigint, value: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupNavigationPreloadManager(self);
   const promise = obj.setHeaderValue(value)
@@ -740,7 +740,7 @@ export function getId(self: bigint): string {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): bigint {
+export function getType(self: bigint): string | undefined {
   const obj = lookupClient(self);
   return obj.type;
 }
@@ -850,7 +850,7 @@ export function openWindow(self: bigint, url: string): bigint {
 /**
  * `claim()` operation.
  */
-export function claim(self: bigint): bigint {
+export function claim(self: bigint): number {
   const obj = lookupClients(self);
   return obj.claim();
 }
@@ -1038,7 +1038,7 @@ export function getSource(self: bigint): bigint {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): (number)[] {
+export function getPorts(self: bigint): (bigint)[] {
   const obj = lookupExtendableMessageEvent(self);
   return obj.ports;
 }
@@ -1067,7 +1067,7 @@ function lookupCache(handle: bigint): Cache {
  *
  * Async operation: returns request ID, poll with `pollMatchAll()`
  */
-export function CacheMatchAll(self: bigint, request: number, options: bigint | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: number | undefined, options: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = obj.matchAll(request, options)
@@ -1219,7 +1219,7 @@ export function pollPut(requestId: bigint): { ok: true; value: bigint } | { ok: 
  *
  * Async operation: returns request ID, poll with `CachePollDelete()`
  */
-export function CacheDelete(self: bigint, request: bigint, options: bigint | undefined): bigint {
+export function CacheDelete(self: bigint, request: number, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = obj.delete(request, options)
@@ -1257,7 +1257,7 @@ export function CachePollDelete(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `CachePollKeys()`
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: number | undefined, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = obj.keys(request, options)

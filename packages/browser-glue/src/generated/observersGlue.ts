@@ -310,7 +310,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): bigint | undefined {
+export function getDelay(self: bigint): number {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -350,7 +350,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): number {
   const obj = lookupIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -417,7 +417,7 @@ export function getIsIntersecting(self: bigint): boolean {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): string {
+export function getIsVisible(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -433,7 +433,7 @@ export function getIntersectionRatio(self: bigint): number {
 /**
  * `get-target()` operation.
  */
-export function IntersectionObserverEntryGetTarget(self: bigint): bigint {
+export function IntersectionObserverEntryGetTarget(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.target;
 }
@@ -460,7 +460,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: number | undefined, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   obj.observe(target, options);
 }
@@ -519,7 +519,7 @@ export function getContentRect(self: bigint): bigint {
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: bigint): (string)[] {
+export function getBorderBoxSize(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -527,7 +527,7 @@ export function getBorderBoxSize(self: bigint): (string)[] {
 /**
  * `get-content-box-size()` operation.
  */
-export function getContentBoxSize(self: bigint): EventHandlerRecord {
+export function getContentBoxSize(self: bigint): string {
   const obj = lookupResizeObserverEntry(self);
   return obj.contentBoxSize;
 }
@@ -535,7 +535,7 @@ export function getContentBoxSize(self: bigint): EventHandlerRecord {
 /**
  * `get-device-pixel-content-box-size()` operation.
  */
-export function getDevicePixelContentBoxSize(self: bigint): string {
+export function getDevicePixelContentBoxSize(self: bigint): (bigint)[] {
   const obj = lookupResizeObserverEntry(self);
   return obj.devicePixelContentBoxSize;
 }
@@ -562,7 +562,7 @@ function lookupResizeObserverSize(handle: bigint): ResizeObserverSize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: bigint): string {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }

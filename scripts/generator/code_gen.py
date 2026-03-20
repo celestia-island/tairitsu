@@ -383,6 +383,12 @@ class CodeGenerator:
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, result);")
                 lines.append("  return handle;")
+            elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
+                if func.return_is_optional:
+                    lines.append(f"  const result = {obj_ref_with_assertion}.{method_name}({args});")
+                    lines.append(f"  return result !== null ? BigInt(result) : undefined;")
+                else:
+                    lines.append(f"  return BigInt({obj_ref_with_assertion}.{method_name}({args}));")
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ?? undefined;")
             elif func.return_is_void:
@@ -463,11 +469,19 @@ class CodeGenerator:
         """Render static function body."""
         bool_key = (iface.wit_name, func.wit_name)
         key = (iface.name, func.ts_name)
+        handle_key = (iface.wit_name, kebab_to_camel(func.wit_name))
         if func.browser_class:
             args = self._get_converted_browser_args(func, iface, skip_self=False)
             class_ref = f"(globalThis as any).{func.browser_class}" if key in STATIC_METHOD_NEEDS_TYPE_ASSERTION else func.browser_class
             if bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
                 lines.append(f"  return {class_ref}.{func.browser_method}({args}) ? 1n : 0n;")
+            elif func.return_is_handle and handle_key in HANDLE_RETURNING_FUNCTIONS:
+                target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
+                target_var, target_pascal = self._get_handle_info(target_iface)
+                lines.append(f"  const result = {class_ref}.{func.browser_method}({args});")
+                lines.append(f"  const handle = _next{target_pascal}++;")
+                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append("  return handle;")
             else:
                 lines.append(f"  return {class_ref}.{func.browser_method}({args});")
         else:

@@ -264,21 +264,21 @@ function lookupModule(handle: bigint): WebAssembly.Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: boolean): (number)[] {
+export function exports(moduleObject: number): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
+export function imports(moduleObject: bigint): boolean {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
+export function customSections(moduleObject: bigint, sectionName: string): (number)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -334,7 +334,7 @@ function lookupMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: boolean): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): string {
   const obj = lookupMemory(self);
   return BigInt((obj as any).grow(delta));
 }
@@ -350,7 +350,7 @@ export function toFixedLengthBuffer(self: bigint): Uint8Array {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): bigint {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -431,7 +431,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: number | undefined): void {
+export function _set(self: bigint, index: bigint, value: boolean | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -485,7 +485,7 @@ export function getValue(self: bigint): bigint {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: string): void {
+export function setValue(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobal(self);
   (obj as any).value = value;
 }
@@ -512,7 +512,7 @@ function lookupException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: string): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -520,7 +520,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): boolean {
+export function is(self: bigint, exceptionTag: string): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }
@@ -528,7 +528,7 @@ export function is(self: bigint, exceptionTag: bigint): boolean {
 /**
  * `get-stack()` operation.
  */
-export function getStack(self: bigint): bigint {
+export function getStack(self: bigint): string {
   const obj = lookupException(self);
   return obj.stack;
 }

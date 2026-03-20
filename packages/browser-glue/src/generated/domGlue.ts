@@ -793,21 +793,30 @@ export type AbortSignalHandle = bigint;
  * `abort()` operation.
  */
 export function AbortSignalAbort(reason: string | undefined): bigint {
-  return AbortSignal.abort(reason);
+  const result = AbortSignal.abort(reason);
+  const handle = _nextAbortSignal++;
+  _abortSignalHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `timeout()` operation.
  */
 export function timeout(milliseconds: bigint): bigint {
-  return AbortSignal.timeout(milliseconds);
+  const result = AbortSignal.timeout(milliseconds);
+  const handle = _nextAbortSignal++;
+  _abortSignalHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `any()` operation.
  */
 export function any(signals: (bigint)[]): bigint {
-  return AbortSignal.any(signals);
+  const result = AbortSignal.any(signals);
+  const handle = _nextAbortSignal++;
+  _abortSignalHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2388,7 +2397,7 @@ export function lastChild(self: bigint): bigint | undefined {
 /**
  * `previous-sibling()` operation.
  */
-export function previousSibling(self: bigint): bigint | undefined {
+export function previousSibling(self: bigint): EventHandlerRecord {
   const obj = lookupTreeWalker(self);
   return obj.previousSibling() ?? undefined;
 }
@@ -2396,7 +2405,7 @@ export function previousSibling(self: bigint): bigint | undefined {
 /**
  * `next-sibling()` operation.
  */
-export function nextSibling(self: bigint): bigint | undefined {
+export function nextSibling(self: bigint): EventHandlerRecord {
   const obj = lookupTreeWalker(self);
   return obj.nextSibling() ?? undefined;
 }
@@ -2412,7 +2421,7 @@ export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
 /**
  * `next-node()` operation.
  */
-export function TreeWalkerNextNode(self: bigint): bigint {
+export function TreeWalkerNextNode(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
   return obj.nextNode() ?? undefined;
 }
@@ -2485,7 +2494,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): bigint {
+export function DomTokenListContains(self: bigint, token: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2735,7 +2744,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: string, resolver: bigint | undefined, type: number | undefined, result: string | undefined): string {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: string): bigint {
   const obj = lookupXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }

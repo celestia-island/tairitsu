@@ -337,7 +337,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint {
+export function getOnchange(self: bigint): EventHandlerRecord {
   const obj = lookupPermissionStatus(self);
   return obj.onchange;
 }
@@ -345,7 +345,7 @@ export function getOnchange(self: bigint): bigint {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: string): void {
+export function setOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupPermissionStatus(self);
   obj.onchange = value;
 }
