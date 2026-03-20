@@ -336,7 +336,7 @@ export function getAncestorOrigins(self: bigint): (string)[] {
 /**
  * `focus()` operation.
  */
-export function focus(self: bigint): bigint {
+export function focus(self: bigint): string {
   const obj = getWindowClient(self);
   return obj.focus();
 }
@@ -372,7 +372,7 @@ function getClients(handle: bigint): Clients {
 /**
  * `match-all()` operation.
  */
-export function ClientsMatchAll(self: bigint, options: bigint | undefined): string {
+export function ClientsMatchAll(self: bigint, options: bigint | undefined): bigint {
   const obj = getClients(self);
   return obj.matchAll(options);
 }
@@ -472,7 +472,7 @@ function getFetchEvent(handle: bigint): FetchEvent {
 /**
  * `get-request()` operation.
  */
-export function getRequest(self: bigint): string {
+export function getRequest(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.request;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): Cache {
 /**
  * `match-all()` operation.
  */
-export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -624,7 +624,7 @@ export function add(self: bigint, request: bigint): bigint {
 /**
  * `add-all()` operation.
  */
-export function addAll(self: bigint, requests: bigint): bigint {
+export function addAll(self: bigint, requests: (bigint)[]): bigint {
   const obj = getCache(self);
   return obj.addAll(requests);
 }
@@ -648,7 +648,7 @@ export function CacheDelete(self: bigint, request: bigint, options: bigint | und
 /**
  * `keys()` operation.
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
@@ -684,7 +684,7 @@ export function has(self: bigint, cacheName: string): bigint {
 /**
  * `open()` operation.
  */
-export function open(self: bigint, cacheName: bigint): bigint {
+export function open(self: bigint, cacheName: string): bigint {
   const obj = getCacheStorage(self);
   return obj.open(cacheName);
 }

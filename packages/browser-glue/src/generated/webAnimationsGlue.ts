@@ -45,7 +45,7 @@ function getAnimation(handle: bigint): Animation {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): number {
+export function getId(handle: bigint): Uint8Array {
   const obj = getAnimation(self);
   return obj.id;
 }
@@ -53,7 +53,7 @@ export function getId(handle: bigint): number {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: Uint8Array): void {
+export function setId(handle: bigint, value: string): void {
   const obj = getAnimation(self);
   obj.id = value;
 }
@@ -69,7 +69,7 @@ export function getPlaybackRate(handle: bigint): number {
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: number): void {
+export function setPlaybackRate(handle: bigint, value: bigint): void {
   const obj = getAnimation(self);
   obj.playbackRate = value;
 }
@@ -77,9 +77,8 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): string {
-  const obj = getAnimation(self);
-  return obj.pending(handle);
+export function pending(handle: bigint): string | undefined {
+  return Animation.pending(handle);
 }
 
 /**
@@ -124,40 +123,35 @@ export function pollCancel(requestId: bigint): { ok: true } | { ok: false; error
  * `finish()` operation.
  */
 export function finish(handle: bigint): void {
-  const obj = getAnimation(self);
-  obj.finish(handle);
+  return Animation.finish(handle);
 }
 
 /**
  * `play()` operation.
  */
 export function play(handle: bigint): void {
-  const obj = getAnimation(self);
-  obj.play(handle);
+  return Animation.play(handle);
 }
 
 /**
  * `pause()` operation.
  */
 export function pause(handle: bigint): void {
-  const obj = getAnimation(self);
-  obj.pause(handle);
+  return Animation.pause(handle);
 }
 
 /**
  * `update-playback-rate()` operation.
  */
 export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
-  const obj = getAnimation(self);
-  obj.updatePlaybackRate(handle, playbackRate);
+  return Animation.updatePlaybackRate(handle, playbackRate);
 }
 
 /**
  * `reverse()` operation.
  */
 export function reverse(handle: bigint): void {
-  const obj = getAnimation(self);
-  obj.reverse(handle);
+  return Animation.reverse(handle);
 }
 
 /**
@@ -202,8 +196,7 @@ export function pollPersist(requestId: bigint): { ok: true } | { ok: false; erro
  * `commit-styles()` operation.
  */
 export function commitStyles(handle: bigint): void {
-  const obj = getAnimation(self);
-  obj.commitStyles(handle);
+  return Animation.commitStyles(handle);
 }
 
 // ---------------------------------------------------------------------------

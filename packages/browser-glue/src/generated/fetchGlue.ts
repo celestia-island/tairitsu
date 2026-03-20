@@ -69,7 +69,7 @@ export function HeadersGet(self: bigint, name: string): string | undefined {
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): (string)[] {
+export function getSetCookie(self: bigint): (bigint)[] {
   const obj = getHeaders(self);
   return obj.setCookie;
 }
@@ -270,7 +270,7 @@ export function formData(self: bigint): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -401,7 +401,7 @@ export function RequestGetHeaders(self: bigint): bigint {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: bigint): string {
+export function getDestination(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.destination;
 }
@@ -409,7 +409,7 @@ export function getDestination(self: bigint): string {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint): boolean {
+export function getReferrer(self: bigint): string {
   const obj = getRequest(self);
   return obj.referrer;
 }
@@ -433,7 +433,7 @@ export function getMode(self: bigint): bigint {
 /**
  * `get-credentials()` operation.
  */
-export function getCredentials(self: bigint): (bigint)[] {
+export function getCredentials(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.credentials;
 }
@@ -465,7 +465,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): (number)[] {
+export function getKeepalive(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.keepalive;
 }
@@ -564,15 +564,14 @@ function getResponse(handle: bigint): Response {
  * `error()` operation.
  */
 export function ResponseError(): bigint {
-  return obj.error();
+  return Response.error();
 }
 
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): bigint {
-  const obj = getResponse(self);
-  return obj.redirect(url, status);
+export function redirect(url: string, status: bigint | undefined): bigint | undefined {
+  return Response.redirect(url, status);
 }
 
 /**
@@ -580,7 +579,7 @@ export function redirect(url: string, status: number | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `ResponsePollJson()`
  */
-export function ResponseJson(data: bigint | undefined, init: bigint | undefined): bigint {
+export function ResponseJson(data: bigint | undefined, init: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getResponse(self);
   const promise = obj.json(data, init)
@@ -632,7 +631,7 @@ export function ResponseGetUrl(self: bigint): string {
 /**
  * `get-redirected()` operation.
  */
-export function getRedirected(self: bigint): bigint {
+export function getRedirected(self: bigint): boolean {
   const obj = getResponse(self);
   return obj.redirected;
 }
@@ -640,7 +639,7 @@ export function getRedirected(self: bigint): bigint {
 /**
  * `get-status()` operation.
  */
-export function ResponseGetStatus(self: bigint): number {
+export function ResponseGetStatus(self: bigint): bigint {
   const obj = getResponse(self);
   return obj.status;
 }
@@ -648,7 +647,7 @@ export function ResponseGetStatus(self: bigint): number {
 /**
  * `get-ok()` operation.
  */
-export function getOk(self: bigint): boolean {
+export function getOk(self: bigint): bigint {
   const obj = getResponse(self);
   return obj.ok;
 }
@@ -656,7 +655,7 @@ export function getOk(self: bigint): boolean {
 /**
  * `get-status-text()` operation.
  */
-export function ResponseGetStatusText(self: bigint): string {
+export function ResponseGetStatusText(self: bigint): bigint | undefined {
   const obj = getResponse(self);
   return obj.statusText;
 }
@@ -739,7 +738,7 @@ function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope
  *
  * Async operation: returns request ID, poll with `pollFetch()`
  */
-export function fetch(self: bigint, input: bigint | undefined, init: bigint | undefined): bigint {
+export function fetch(self: bigint, input: bigint, init: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getWindowOrWorkerGlobalScope(self);
   const promise = obj.fetch(input, init)
@@ -775,7 +774,7 @@ export function pollFetch(requestId: bigint): { ok: true; value: bigint } | { ok
 /**
  * `get-performance()` operation.
  */
-export function getPerformance(self: bigint): bigint | undefined {
+export function getPerformance(self: bigint): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.performance;
 }
@@ -783,7 +782,7 @@ export function getPerformance(self: bigint): bigint | undefined {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): bigint {
+export function getOrigin(self: bigint): string {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.origin;
 }
@@ -791,7 +790,7 @@ export function getOrigin(self: bigint): bigint {
 /**
  * `get-is-secure-context()` operation.
  */
-export function getIsSecureContext(self: bigint): boolean {
+export function getIsSecureContext(self: bigint): bigint | undefined {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.isSecureContext;
 }
@@ -799,7 +798,7 @@ export function getIsSecureContext(self: bigint): boolean {
 /**
  * `get-cross-origin-isolated()` operation.
  */
-export function getCrossOriginIsolated(self: bigint): bigint | undefined {
+export function getCrossOriginIsolated(self: bigint): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.crossOriginIsolated;
 }
@@ -815,7 +814,7 @@ export function reportError(self: bigint, e: bigint | undefined): void {
 /**
  * `btoa()` operation.
  */
-export function btoa(self: bigint, data: bigint | undefined): string {
+export function btoa(self: bigint, data: string): string {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.btoa(data);
 }
@@ -823,7 +822,7 @@ export function btoa(self: bigint, data: bigint | undefined): string {
 /**
  * `atob()` operation.
  */
-export function atob(self: bigint, data: bigint): string {
+export function atob(self: bigint, data: bigint): bigint | undefined {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.atob(data);
 }
@@ -831,7 +830,7 @@ export function atob(self: bigint, data: bigint): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: bigint): bigint {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (bigint)[]): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.timeout = _arguments;
 }
@@ -839,7 +838,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: Uint8Array | undefined): void {
+export function clearTimeout(self: bigint, id: number | undefined): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }

@@ -45,7 +45,7 @@ function getPaymentRequest(handle: bigint): PaymentRequest {
 /**
  * `show()` operation.
  */
-export function show(self: bigint, detailsPromise: bigint): bigint {
+export function show(self: bigint, detailsPromise: string): bigint {
   const obj = getPaymentRequest(self);
   return obj.show(detailsPromise);
 }
@@ -80,7 +80,7 @@ export function abort(self: bigint): bigint {
  * Poll an async `abort()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollAbort(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollAbort(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -99,7 +99,7 @@ export function canMakePayment(self: bigint): bigint {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): number {
+export function getId(self: bigint): string {
   const obj = getPaymentRequest(self);
   return obj.id;
 }
@@ -107,7 +107,7 @@ export function getId(self: bigint): number {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentRequestGetShippingAddress(self: bigint): string | undefined {
+export function PaymentRequestGetShippingAddress(self: bigint): bigint | undefined {
   const obj = getPaymentRequest(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -155,7 +155,7 @@ export function getOnshippingoptionchange(self: bigint): bigint {
 /**
  * `set-onshippingoptionchange()` operation.
  */
-export function setOnshippingoptionchange(self: bigint, value: bigint): void {
+export function setOnshippingoptionchange(self: bigint, value: string): void {
   const obj = getPaymentRequest(self);
   obj.onshippingoptionchange = value;
 }
@@ -231,7 +231,7 @@ export function getDetails(self: bigint): bigint {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentResponseGetShippingAddress(self: bigint): number {
+export function PaymentResponseGetShippingAddress(self: bigint): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -263,7 +263,7 @@ export function getPayerEmail(self: bigint): string | undefined {
 /**
  * `get-payer-phone()` operation.
  */
-export function getPayerPhone(self: bigint): string {
+export function getPayerPhone(self: bigint): string | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerPhone ?? undefined;
 }
@@ -279,7 +279,7 @@ export function complete(self: bigint, result: bigint | undefined, details: bigi
 /**
  * `retry()` operation.
  */
-export function retry(self: bigint, errorFields: string | undefined): bigint {
+export function retry(self: bigint, errorFields: string): bigint {
   const obj = getPaymentResponse(self);
   return obj.retry(errorFields);
 }

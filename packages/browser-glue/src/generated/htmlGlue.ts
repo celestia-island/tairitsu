@@ -32,25 +32,22 @@ function getStorage(handle: bigint): Storage {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): bigint {
-  const obj = getStorage(self);
-  return obj.length(handle);
+export function length(handle: bigint): number {
+  return Storage.length(handle);
 }
 
 /**
  * `key()` operation.
  */
-export function key(handle: bigint, index: number): string | undefined {
-  const obj = getStorage(self);
-  return obj.key(handle, index) ?? undefined;
+export function key(handle: bigint, index: boolean): bigint | undefined {
+  return Storage.key(handle, index);
 }
 
 /**
  * `clear()` operation.
  */
 export function clear(handle: bigint): void {
-  const obj = getStorage(self);
-  obj.clear(handle);
+  return Storage.clear(handle);
 }
 
 // ---------------------------------------------------------------------------

@@ -32,25 +32,22 @@ function getModule(handle: bigint): Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): number {
-  const obj = getModule(self);
-  return obj.exports(moduleObject);
+export function exports(moduleObject: bigint): bigint {
+  return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: (bigint)[]): number {
-  const obj = getModule(self);
-  return obj.imports(moduleObject);
+export function imports(moduleObject: bigint): ((bigint)[])[] {
+  return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (number)[] {
-  const obj = getModule(self);
-  return obj.customSections(moduleObject, sectionName);
+export function customSections(moduleObject: bigint, sectionName: string): string {
+  return Module.customSections(moduleObject, sectionName);
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +101,7 @@ function getMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): boolean {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
