@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -220,37 +220,37 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type ModuleHandle = bigint;
 
-/** Handle table for Module instances */
-const _moduleHandles = new Map<bigint, Module>();
+/** Handle table for WebAssembly.Module instances */
+const _moduleHandles = new Map<bigint, WebAssembly.Module>();
 let _nextModule = 1n;
 
-/** Get a Module by handle, throwing if not found. */
-function getModule(handle: bigint): Module {
+/** Get a WebAssembly.Module by handle, throwing if not found. */
+function getModule(handle: bigint): WebAssembly.Module {
   const obj = _moduleHandles.get(handle);
   if (!obj) {
-    throw new Error(`Module handle ${handle} not found`);
+    throw new Error(`WebAssembly.Module handle ${handle} not found`);
   }
   return obj;
 }
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (bigint)[] {
-  return Module.exports(moduleObject);
+export function exports(moduleObject: bigint): (string)[] {
+  return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
-  return Module.imports(moduleObject);
+export function imports(moduleObject: bigint): string {
+  return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
-  return Module.customSections(moduleObject, sectionName);
+export function customSections(moduleObject: string, sectionName: string): string {
+  return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +310,7 @@ export function MemoryGrow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): string {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -318,7 +318,7 @@ export function toFixedLengthBuffer(self: bigint): string {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): string {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -326,7 +326,7 @@ export function toResizableBuffer(self: bigint): string {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): string {
+export function getBuffer(self: bigint): (string)[] {
   const obj = getMemory(self);
   return (obj as any).buffer;
 }
@@ -363,10 +363,10 @@ export function TableGrow(self: bigint, delta: bigint, value: string | undefined
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, index: string): bigint {
+export function _get(self: bigint, index: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getTable(self);
-  const promise = obj.get(index)
+  const promise = (obj as any).get(index)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -434,7 +434,7 @@ function getGlobal(handle: bigint): Global {
 /**
  * `value-of()` operation.
  */
-export function valueOf(self: bigint): number {
+export function valueOf(self: bigint): string {
   const obj = getGlobal(self);
   return obj.valueOf();
 }
@@ -477,7 +477,7 @@ function getException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: string, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = getException(self);
   return obj.arg;
 }
@@ -485,7 +485,7 @@ export function getArg(self: bigint, exceptionTag: string, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): boolean {
+export function is(self: bigint, exceptionTag: string): boolean {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }

@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -204,9 +204,21 @@ export type Exception = any;
 // Synthetic handle tables for primitive/utility types
 // ---------------------------------------------------------------------------
 
+/** Handle table for document values */
+const _documentHandles = new Map<bigint, Document>();
+let _nextDocument = 1n;
+
+/** Handle table for document-type values */
+const _documentTypeHandles = new Map<bigint, DocumentType>();
+let _nextDocumentType = 1n;
+
 /** Handle table for element values */
 const _elementHandles = new Map<bigint, Element>();
 let _nextElement = 1n;
+
+/** Handle table for event-target values */
+const _eventTargetHandles = new Map<bigint, EventTarget>();
+let _nextEventTarget = 1n;
 
 /** Handle table for node values */
 const _nodeHandles = new Map<bigint, Node>();
@@ -216,9 +228,47 @@ let _nextNode = 1n;
 const _nodeListHandles = new Map<bigint, NodeList>();
 let _nextNodeList = 1n;
 
+/** Handle table for string values */
+const _stringHandles = new Map<bigint, string>();
+let _nextString = 1n;
+
 // ---------------------------------------------------------------------------
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
+
+/** Get a document value by handle. */
+function getDocument(handle: bigint): Document {
+  const obj = _documentHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`document handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional document value by handle. */
+function getOptionDocument(handle: bigint | undefined): Document | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _documentHandles.get(handle);
+}
+
+/** Get a document-type value by handle. */
+function getDocumentType(handle: bigint): DocumentType {
+  const obj = _documentTypeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`document-type handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional document-type value by handle. */
+function getOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _documentTypeHandles.get(handle);
+}
 
 /** Get a element value by handle. */
 function getElement(handle: bigint): Element {
@@ -235,6 +285,23 @@ function getOptionElement(handle: bigint | undefined): Element | undefined {
     return undefined;
   }
   return _elementHandles.get(handle);
+}
+
+/** Get a event-target value by handle. */
+function getEventTarget(handle: bigint): EventTarget {
+  const obj = _eventTargetHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-target handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional event-target value by handle. */
+function getOptionEventTarget(handle: bigint | undefined): EventTarget | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _eventTargetHandles.get(handle);
 }
 
 /** Get a node value by handle. */
@@ -271,6 +338,23 @@ function getOptionNodeList(handle: bigint | undefined): NodeList | undefined {
   return _nodeListHandles.get(handle);
 }
 
+/** Get a string value by handle. */
+function getString(handle: bigint): string {
+  const obj = _stringHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`string handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional string value by handle. */
+function getOptionString(handle: bigint | undefined): string | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _stringHandles.get(handle);
+}
+
 // ---------------------------------------------------------------------------
 // WIT interface: event
 // ---------------------------------------------------------------------------
@@ -301,9 +385,12 @@ export function EventGetType(self: bigint): string {
 /**
  * `get-target()` operation.
  */
-export function EventGetTarget(self: bigint): bigint {
+export function EventGetTarget(self: bigint): bigint | undefined {
   const obj = getEvent(self);
-  return obj.target ?? undefined;
+  const result = obj.target;
+  const handle = _nextEventTarget++;
+  _eventTargetHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -311,7 +398,10 @@ export function EventGetTarget(self: bigint): bigint {
  */
 export function getSrcElement(self: bigint): bigint | undefined {
   const obj = getEvent(self);
-  return obj.srcElement ?? undefined;
+  const result = obj.srcElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -319,13 +409,16 @@ export function getSrcElement(self: bigint): bigint | undefined {
  */
 export function getCurrentTarget(self: bigint): bigint | undefined {
   const obj = getEvent(self);
-  return obj.currentTarget ?? undefined;
+  const result = obj.currentTarget;
+  const handle = _nextEventTarget++;
+  _eventTargetHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `composed-path()` operation.
  */
-export function composedPath(self: bigint): bigint {
+export function composedPath(self: bigint): (bigint)[] {
   const obj = getEvent(self);
   return obj.composedPath();
 }
@@ -333,7 +426,7 @@ export function composedPath(self: bigint): bigint {
 /**
  * `get-event-phase()` operation.
  */
-export function getEventPhase(self: bigint): bigint {
+export function getEventPhase(self: bigint): number {
   const obj = getEvent(self);
   return obj.eventPhase;
 }
@@ -413,7 +506,7 @@ export function preventDefault(self: bigint): void {
 /**
  * `get-default-prevented()` operation.
  */
-export function getDefaultPrevented(self: bigint): bigint | undefined {
+export function getDefaultPrevented(self: bigint): boolean {
   const obj = getEvent(self);
   return obj.defaultPrevented;
 }
@@ -445,7 +538,7 @@ export function getTimeStamp(self: bigint): number {
 /**
  * `init-event()` operation.
  */
-export function initEvent(self: bigint, type: bigint | undefined, bubbles: bigint | undefined | undefined, cancelable: boolean | undefined): void {
+export function initEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined): void {
   const obj = getEvent(self);
   obj.initEvent(type, bubbles, cancelable);
 }
@@ -480,7 +573,7 @@ export function getDetail(self: bigint): string {
 /**
  * `init-custom-event()` operation.
  */
-export function initCustomEvent(self: bigint, type: string, bubbles: bigint, cancelable: boolean | undefined, detail: bigint | undefined): void {
+export function initCustomEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, detail: string | undefined): void {
   const obj = getCustomEvent(self);
   obj.initCustomEvent(type, bubbles, cancelable, detail);
 }
@@ -507,7 +600,7 @@ function getEventTarget(handle: bigint): EventTarget {
 /**
  * `add-event-listener()` operation.
  */
-export function addEventListener(self: bigint, type: bigint, callback: bigint | undefined, options: bigint | undefined): void {
+export function addEventListener(self: bigint, type: string, callback: bigint | undefined, options: bigint | undefined): void {
   const obj = getEventTarget(self);
   obj.addEventListener(type, callback, options);
 }
@@ -515,7 +608,7 @@ export function addEventListener(self: bigint, type: bigint, callback: bigint | 
 /**
  * `remove-event-listener()` operation.
  */
-export function removeEventListener(self: bigint, type: string, callback: bigint, options: Uint8Array | undefined): void {
+export function removeEventListener(self: bigint, type: string, callback: bigint | undefined, options: bigint | undefined): void {
   const obj = getEventTarget(self);
   obj.removeEventListener(type, callback, options);
 }
@@ -641,7 +734,7 @@ export function getAborted(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: bigint): bigint | undefined {
   const obj = getAbortSignal(self);
   return obj.reason;
 }
@@ -657,7 +750,7 @@ export function throwIfAborted(self: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): EventHandlerRecord {
+export function getOnabort(self: bigint): bigint {
   const obj = getAbortSignal(self);
   return obj.onabort;
 }
@@ -665,7 +758,7 @@ export function getOnabort(self: bigint): EventHandlerRecord {
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: EventHandlerRecord): void {
+export function setOnabort(self: bigint, value: bigint): void {
   const obj = getAbortSignal(self);
   obj.onabort = value;
 }
@@ -692,7 +785,7 @@ function getNonElementParentNode(handle: bigint): NonElementParentNode {
 /**
  * `get-element-by-id()` operation.
  */
-export function getElementById(self: bigint, elementId: string): bigint | undefined {
+export function getElementById(self: bigint, elementId: bigint): bigint | undefined {
   const obj = getNonElementParentNode(self);
   const result = obj.getElementById;
   const handle = _nextElement++;
@@ -746,7 +839,7 @@ export function getLastElementChild(self: bigint): bigint | undefined {
 /**
  * `get-child-element-count()` operation.
  */
-export function getChildElementCount(self: bigint): number {
+export function getChildElementCount(self: bigint): bigint | undefined {
   const obj = getParentNode(self);
   return obj.childElementCount;
 }
@@ -762,7 +855,7 @@ export function prepend(self: bigint, nodes: (bigint)[]): void {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, nodes: (bigint)[]): void {
+export function append(self: bigint, nodes: bigint | undefined): void {
   const obj = getParentNode(self);
   obj.append(nodes);
 }
@@ -770,7 +863,7 @@ export function append(self: bigint, nodes: (bigint)[]): void {
 /**
  * `replace-children()` operation.
  */
-export function replaceChildren(self: bigint, nodes: (bigint)[]): void {
+export function replaceChildren(self: bigint, nodes: bigint): void {
   const obj = getParentNode(self);
   obj.replaceChildren(nodes);
 }
@@ -786,7 +879,7 @@ export function moveBefore(self: bigint, node: bigint, child: bigint | undefined
 /**
  * `query-selector()` operation.
  */
-export function querySelector(self: bigint, selectors: string): bigint | undefined {
+export function querySelector(self: bigint, selectors: bigint): bigint | undefined {
   const obj = getParentNode(self);
   const result = obj.querySelector(selectors);
   const handle = _nextElement++;
@@ -1186,7 +1279,10 @@ export function getIsConnected(self: bigint): boolean {
  */
 export function getOwnerDocument(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.ownerDocument ?? undefined;
+  const result = obj.ownerDocument;
+  const handle = _nextDocument++;
+  _documentHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1205,7 +1301,10 @@ export function getRootNode(self: bigint, options: bigint | undefined): bigint {
  */
 export function NodeGetParentNode(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.parentNode ?? undefined;
+  const result = obj.parentNode;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1213,7 +1312,10 @@ export function NodeGetParentNode(self: bigint): bigint | undefined {
  */
 export function getParentElement(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.parentElement ?? undefined;
+  const result = obj.parentElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1237,7 +1339,10 @@ export function getChildNodes(self: bigint): bigint {
  */
 export function getFirstChild(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.firstChild ?? undefined;
+  const result = obj.firstChild;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1245,7 +1350,10 @@ export function getFirstChild(self: bigint): bigint | undefined {
  */
 export function getLastChild(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.lastChild ?? undefined;
+  const result = obj.lastChild;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1253,7 +1361,10 @@ export function getLastChild(self: bigint): bigint | undefined {
  */
 export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.previousSibling ?? undefined;
+  const result = obj.previousSibling;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1261,7 +1372,10 @@ export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
  */
 export function NodeGetNextSibling(self: bigint): bigint | undefined {
   const obj = getNode(self);
-  return obj.nextSibling ?? undefined;
+  const result = obj.nextSibling;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1430,7 +1544,10 @@ function getDOMImplementation(handle: bigint): DOMImplementation {
  */
 export function createDocumentType(self: bigint, name: string, publicId: string, systemId: string): bigint {
   const obj = getDOMImplementation(self);
-  return obj.createDocumentType(name, publicId, systemId);
+  const result = obj.createDocumentType(name, publicId, systemId);
+  const handle = _nextDocumentType++;
+  _documentTypeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1438,7 +1555,10 @@ export function createDocumentType(self: bigint, name: string, publicId: string,
  */
 export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
   const obj = getDOMImplementation(self);
-  return obj.createDocument(namespace, qualifiedName, doctype);
+  const result = obj.createDocument(namespace, qualifiedName, doctype);
+  const handle = _nextDocument++;
+  _documentHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1479,25 +1599,34 @@ function getDocumentType(handle: bigint): DocumentType {
 /**
  * `get-name()` operation.
  */
-export function DocumentTypeGetName(self: bigint): string {
+export function DocumentTypeGetName(self: bigint): bigint {
   const obj = getDocumentType(self);
-  return obj.name;
+  const result = obj.name;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-public-id()` operation.
  */
-export function getPublicId(self: bigint): string {
+export function getPublicId(self: bigint): bigint {
   const obj = getDocumentType(self);
-  return obj.publicId;
+  const result = obj.publicId;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-system-id()` operation.
  */
-export function getSystemId(self: bigint): string {
+export function getSystemId(self: bigint): bigint {
   const obj = getDocumentType(self);
-  return obj.systemId;
+  const result = obj.systemId;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------

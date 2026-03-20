@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -223,7 +223,7 @@ function getFileReader(handle: bigint): FileReader {
  * `new-file-reader()` operation.
  */
 export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
-  return FileReader.newFileReader();
+  return (globalThis as any).FileReader.newFileReader();
 }
 
 /**
@@ -245,7 +245,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): string {
+export function resultVal(handle: bigint): string | undefined {
   const obj = getFileReader(handle);
   return obj.result() ?? undefined;
 }
@@ -272,7 +272,7 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): boolean {
   const obj = getFileList(handle);
   return obj.length();
 }

@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -237,7 +237,7 @@ function getPaymentRequest(handle: bigint): PaymentRequest {
  *
  * Async operation: returns request ID, poll with `pollShow()`
  */
-export function show(self: bigint, detailsPromise: bigint | undefined): bigint {
+export function show(self: bigint, detailsPromise: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPaymentRequest(self);
   const promise = obj.show(detailsPromise)
@@ -338,12 +338,12 @@ export function canMakePayment(self: bigint): bigint {
  * Poll an async `canMakePayment()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollCanMakePayment(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollCanMakePayment(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -365,7 +365,7 @@ export function PaymentRequestGetShippingAddress(self: bigint): bigint | undefin
 /**
  * `get-shipping-option()` operation.
  */
-export function PaymentRequestGetShippingOption(self: bigint): EventHandlerRecord {
+export function PaymentRequestGetShippingOption(self: bigint): string {
   const obj = getPaymentRequest(self);
   return obj.shippingOption ?? undefined;
 }
@@ -381,7 +381,7 @@ export function getShippingType(self: bigint): bigint | undefined {
 /**
  * `get-onshippingaddresschange()` operation.
  */
-export function getOnshippingaddresschange(self: bigint): bigint {
+export function getOnshippingaddresschange(self: bigint): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.onshippingaddresschange;
 }
@@ -413,7 +413,7 @@ export function setOnshippingoptionchange(self: bigint, value: EventHandlerRecor
 /**
  * `get-onpaymentmethodchange()` operation.
  */
-export function getOnpaymentmethodchange(self: bigint): number {
+export function getOnpaymentmethodchange(self: bigint): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.onpaymentmethodchange;
 }
@@ -421,7 +421,7 @@ export function getOnpaymentmethodchange(self: bigint): number {
 /**
  * `set-onpaymentmethodchange()` operation.
  */
-export function setOnpaymentmethodchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnpaymentmethodchange(self: bigint, value: bigint): void {
   const obj = getPaymentRequest(self);
   obj.onpaymentmethodchange = value;
 }
@@ -448,7 +448,7 @@ function getPaymentResponse(handle: bigint): PaymentResponse {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): bigint {
+export function toJson(self: bigint): EventHandlerRecord {
   const obj = getPaymentResponse(self);
   return obj.toJSON();
 }
@@ -472,7 +472,7 @@ export function PaymentResponseGetMethodName(self: bigint): string {
 /**
  * `get-details()` operation.
  */
-export function getDetails(self: bigint): bigint {
+export function getDetails(self: bigint): EventHandlerRecord {
   const obj = getPaymentResponse(self);
   return obj.details;
 }
@@ -512,7 +512,7 @@ export function getPayerEmail(self: bigint): string | undefined {
 /**
  * `get-payer-phone()` operation.
  */
-export function getPayerPhone(self: bigint): bigint {
+export function getPayerPhone(self: bigint): string | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerPhone ?? undefined;
 }
@@ -522,7 +522,7 @@ export function getPayerPhone(self: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `pollComplete()`
  */
-export function complete(self: bigint, result: bigint | undefined, details: number | undefined): bigint {
+export function complete(self: bigint, result: bigint | undefined, details: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPaymentResponse(self);
   const promise = obj.complete(result, details)
@@ -560,7 +560,7 @@ export function pollComplete(requestId: bigint): { ok: true; value: bigint } | {
  *
  * Async operation: returns request ID, poll with `pollRetry()`
  */
-export function retry(self: bigint, errorFields: number): bigint {
+export function retry(self: bigint, errorFields: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPaymentResponse(self);
   const promise = obj.retry(errorFields)
@@ -639,7 +639,7 @@ export function PaymentMethodChangeEventGetMethodName(self: bigint): string {
 /**
  * `get-method-details()` operation.
  */
-export function getMethodDetails(self: bigint): bigint | undefined {
+export function getMethodDetails(self: bigint): EventHandlerRecord | undefined {
   const obj = getPaymentMethodChangeEvent(self);
   return obj.methodDetails ?? undefined;
 }

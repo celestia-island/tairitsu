@@ -16,6 +16,7 @@ from .config import (
     STATIC_METHOD_NEEDS_TYPE_ASSERTION,
     ENUM_PROPERTIES,
     ENUM_VALUE_MAPPINGS,
+    ENUM_SETTER_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
     BOOLEAN_TO_BIGINT_PROPERTIES,
     PROPERTIES_NEEDING_TYPE_ASSERTION,
@@ -298,14 +299,16 @@ class CodeGenerator:
             args = self._get_converted_browser_args(func, iface, skip_self=False)
             key = (iface.name, func.ts_name)
             if key in STATIC_METHOD_NEEDS_TYPE_ASSERTION:
-                lines.append(f"  const promise = ({obj_ref} as any).{func.browser_method}({args})")
+                lines.append(f"  const promise = (globalThis as any).{obj_ref}.{func.browser_method}({args})")
             else:
                 lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
             args = self._get_converted_browser_args(func, iface, skip_self=True)
-            lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
+            needs_type_assertion = (iface.wit_name, func.browser_method) in PROPERTIES_NEEDING_TYPE_ASSERTION
+            obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
+            lines.append(f"  const promise = {obj_ref_with_assertion}.{func.browser_method}({args})")
         else:
             lines.append("  // No handle lookup needed")
             obj_ref = "" if func.is_global_singleton else "obj"
@@ -425,19 +428,34 @@ class CodeGenerator:
         if func.params:
             value_param = func.params[-1].name
             value_expr = value_param
-            if func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
+            
+            # Check if this is an enum setter
+            enum_key = (iface.wit_name, prop_name)
+            if enum_key in ENUM_SETTER_PROPERTIES:
+                enum_name = ENUM_SETTER_PROPERTIES[enum_key]
+                enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
+                # Generate reverse mapping (int -> string)
+                lines.append(f"  const value = {value_param};")
+                lines.append(f"  let enumValue: {enum_name};")
+                for enum_str, enum_int in enum_values.items():
+                    lines.append(f"  if (value === {enum_int}n) {{ enumValue = '{enum_str}'; }}")
+                lines.append(f"  else {{ enumValue = '{list(enum_values.keys())[0]}'; }}")
+                value_expr = "enumValue"
+            elif func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
                 value_expr = f"get{func.params[-1].target_handle_pascal}({value_param})"
             lines.append(f"  {obj_ref_with_assertion}.{func.browser_attr} = {value_expr};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render static function body."""
         bool_key = (iface.wit_name, func.wit_name)
+        key = (iface.name, func.ts_name)
         if func.browser_class:
             args = self._get_converted_browser_args(func, iface, skip_self=False)
+            class_ref = f"(globalThis as any).{func.browser_class}" if key in STATIC_METHOD_NEEDS_TYPE_ASSERTION else func.browser_class
             if bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
-                lines.append(f"  return {func.browser_class}.{func.browser_method}({args}) ? 1n : 0n;")
+                lines.append(f"  return {class_ref}.{func.browser_method}({args}) ? 1n : 0n;")
             else:
-                lines.append(f"  return {func.browser_class}.{func.browser_method}({args});")
+                lines.append(f"  return {class_ref}.{func.browser_method}({args});")
         else:
             lines.append(f"  // Static operation: {func.wit_name}")
             lines.append(f"  throw new Error('Static operation not implemented: {func.wit_name}');")

@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -222,21 +222,21 @@ function getURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): number | undefined {
+export function parse(url: string, base: string | undefined): string {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: string | undefined): bigint {
+export function canParse(url: string, base: string): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): bigint | undefined {
+export function getHref(self: bigint): bigint {
   const obj = getURL(self);
   return obj.href;
 }
@@ -364,7 +364,7 @@ export function getPathname(self: bigint): string {
 /**
  * `set-pathname()` operation.
  */
-export function setPathname(self: bigint, value: string): void {
+export function setPathname(self: bigint, value: number): void {
   const obj = getURL(self);
   obj.pathname = value;
 }
@@ -412,7 +412,7 @@ export function setHash(self: bigint, value: string): void {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): bigint {
+export function toJson(self: bigint): string {
   const obj = getURL(self);
   return obj.toJSON();
 }
@@ -471,15 +471,15 @@ export function _get(self: bigint, name: string): bigint | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): bigint {
+export function getAll(self: bigint, name: string): (number | undefined)[] {
   const obj = getURLSearchParams(self);
-  return obj.all;
+  return (obj as any).all;
 }
 
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: bigint, value: string | undefined): boolean {
+export function has(self: bigint, name: string, value: string): boolean {
   const obj = getURLSearchParams(self);
   return obj.has(name, value);
 }

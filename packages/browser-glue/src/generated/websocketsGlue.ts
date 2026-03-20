@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -222,14 +222,14 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
-  return WebSocket.connect(url, protocols);
+export function connect(url: string, protocols: string): { ok: true; value: number } | { ok: false; error: boolean } {
+  return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): (bigint)[] {
+export function url(handle: bigint): string {
   const obj = getWs(handle);
   return obj.url();
 }
@@ -245,7 +245,7 @@ export function readyState(handle: bigint): bigint {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint {
+export function bufferedAmount(handle: bigint): (string)[] {
   const obj = getWs(handle);
   return obj.bufferedAmount();
 }
@@ -269,7 +269,7 @@ export function protocol(handle: bigint): string {
 /**
  * `close()` operation.
  */
-export function close(handle: bigint, code: bigint | undefined, reason: number | undefined): void {
+export function close(handle: bigint, code: number, reason: string): void {
   const obj = getWs(handle);
   obj.close(code, reason);
 }

@@ -137,6 +137,8 @@ class WitParser:
                 key = (interface.name, kebab_to_camel(wit_name))
                 if key in HANDLE_RETURNING_FUNCTIONS:
                     return_is_handle = True
+                    ts_return = "bigint | undefined" if return_is_optional else "bigint"
+                    ts_return_inner = ""
 
         is_getter = wit_name.startswith("get-")
         is_setter = wit_name.startswith("set-")
@@ -179,10 +181,27 @@ class WitParser:
                 ts_return_inner = ""
                 break
 
-        browser_attr = ""
         if is_getter:
             attr_name = wit_name[4:]
             browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
+            
+            # Check for NUMBER_TO_BIGINT_PROPERTIES - need to use property name
+            prop_name = browser_attr
+            num_key = (interface.name, prop_name)
+            if num_key in NUMBER_TO_BIGINT_PROPERTIES:
+                if return_is_optional:
+                    ts_return = "bigint | undefined"
+                else:
+                    ts_return = "bigint"
+                ts_return_inner = ""
+            
+            # Check for ENUM_PROPERTIES
+            if num_key in ENUM_PROPERTIES:
+                if return_is_optional:
+                    ts_return = "bigint | undefined"
+                else:
+                    ts_return = "bigint"
+                ts_return_inner = ""
         elif is_setter:
             attr_name = wit_name[4:]
             browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
