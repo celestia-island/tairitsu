@@ -10,6 +10,14953 @@
  */
 
 // ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-all-collection
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlAllCollectionHandle = bigint;
+
+/** Handle table for HtmlAllCollection instances */
+const _htmlAllCollectionhandles = new Map<bigint, HtmlAllCollection>();
+let _nextHtmlAllCollection = 1n;
+
+/** Get a HtmlAllCollection by handle, throwing if not found. */
+function getHtmlAllCollection(handle: bigint): HtmlAllCollection {
+  const obj = _htmlAllCollectionhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlAllCollection handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function HtmlAllCollectionGetLength(self: bigint): number {
+  const obj = getHtmlAllCollection(self);
+  return obj.length;
+}
+
+/**
+ * `element()` operation.
+ */
+export function HtmlAllCollectionElement(self: bigint, index: number): void {
+  const obj = getHtmlAllCollection(self);
+  obj.element(index);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: radio-node-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type RadioNodeListHandle = bigint;
+
+/** Handle table for RadioNodeList instances */
+const _radioNodeListhandles = new Map<bigint, RadioNodeList>();
+let _nextRadioNodeList = 1n;
+
+/** Get a RadioNodeList by handle, throwing if not found. */
+function getRadioNodeList(handle: bigint): RadioNodeList {
+  const obj = _radioNodeListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`RadioNodeList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function RadioNodeListGetValue(self: bigint): string {
+  const obj = getRadioNodeList(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function RadioNodeListSetValue(self: bigint, value: string): void {
+  const obj = getRadioNodeList(self);
+  obj.value = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-options-collection
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlOptionsCollectionHandle = bigint;
+
+/** Handle table for HtmlOptionsCollection instances */
+const _htmlOptionsCollectionhandles = new Map<bigint, HtmlOptionsCollection>();
+let _nextHtmlOptionsCollection = 1n;
+
+/** Get a HtmlOptionsCollection by handle, throwing if not found. */
+function getHtmlOptionsCollection(handle: bigint): HtmlOptionsCollection {
+  const obj = _htmlOptionsCollectionhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlOptionsCollection handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function HtmlOptionsCollectionGetLength(self: bigint): number {
+  const obj = getHtmlOptionsCollection(self);
+  return obj.length;
+}
+
+/**
+ * `set-length()` operation.
+ */
+export function HtmlOptionsCollectionSetLength(self: bigint, value: number): void {
+  const obj = getHtmlOptionsCollection(self);
+  obj.length = value;
+}
+
+/**
+ * `undefined()` operation.
+ */
+export function HtmlOptionsCollectionUndefined(self: bigint, index: number, option: bigint | undefined): void {
+  const obj = getHtmlOptionsCollection(self);
+  obj._undefined(index, option);
+}
+
+/**
+ * `add()` operation.
+ */
+export function HtmlOptionsCollectionAdd(self: bigint, element: bigint, before: bigint | undefined): void {
+  const obj = getHtmlOptionsCollection(self);
+  obj.add(element, before);
+}
+
+/**
+ * `remove()` operation.
+ */
+export function HtmlOptionsCollectionRemove(self: bigint, index: number): void {
+  const obj = getHtmlOptionsCollection(self);
+  obj.remove(index);
+}
+
+/**
+ * `get-selected-index()` operation.
+ */
+export function HtmlOptionsCollectionGetSelectedIndex(self: bigint): number {
+  const obj = getHtmlOptionsCollection(self);
+  return obj.selectedIndex;
+}
+
+/**
+ * `set-selected-index()` operation.
+ */
+export function HtmlOptionsCollectionSetSelectedIndex(self: bigint, value: number): void {
+  const obj = getHtmlOptionsCollection(self);
+  obj.selectedIndex = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: dom-string-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DomStringListHandle = bigint;
+
+/** Handle table for DomStringList instances */
+const _domStringListhandles = new Map<bigint, DomStringList>();
+let _nextDomStringList = 1n;
+
+/** Get a DomStringList by handle, throwing if not found. */
+function getDomStringList(handle: bigint): DomStringList {
+  const obj = _domStringListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DomStringList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function DomStringListGetLength(self: bigint): number {
+  const obj = getDomStringList(self);
+  return obj.length;
+}
+
+/**
+ * `item()` operation.
+ */
+export function DomStringListItem(self: bigint, index: number): string | undefined {
+  const obj = getDomStringList(self);
+  return obj.item(index) ?? undefined;
+}
+
+/**
+ * `contains()` operation.
+ */
+export function contains(self: bigint, string: string): boolean {
+  const obj = getDomStringList(self);
+  return obj.contains(string);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-or-svg-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlOrSvgElementHandle = bigint;
+
+/** Handle table for HtmlOrSvgElement instances */
+const _htmlOrSvgElementhandles = new Map<bigint, HtmlOrSvgElement>();
+let _nextHtmlOrSvgElement = 1n;
+
+/** Get a HtmlOrSvgElement by handle, throwing if not found. */
+function getHtmlOrSvgElement(handle: bigint): HtmlOrSvgElement {
+  const obj = _htmlOrSvgElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlOrSvgElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-dataset()` operation.
+ */
+export function getDataset(self: bigint): bigint {
+  const obj = getHtmlOrSvgElement(self);
+  return obj.dataset;
+}
+
+/**
+ * `get-nonce()` operation.
+ */
+export function getNonce(self: bigint): string {
+  const obj = getHtmlOrSvgElement(self);
+  return obj.nonce;
+}
+
+/**
+ * `set-nonce()` operation.
+ */
+export function setNonce(self: bigint, value: string): void {
+  const obj = getHtmlOrSvgElement(self);
+  obj.nonce = value;
+}
+
+/**
+ * `get-autofocus()` operation.
+ */
+export function getAutofocus(self: bigint): boolean {
+  const obj = getHtmlOrSvgElement(self);
+  return obj.autofocus;
+}
+
+/**
+ * `set-autofocus()` operation.
+ */
+export function setAutofocus(self: bigint, value: boolean): void {
+  const obj = getHtmlOrSvgElement(self);
+  obj.autofocus = value;
+}
+
+/**
+ * `get-tab-index()` operation.
+ */
+export function getTabIndex(self: bigint): number {
+  const obj = getHtmlOrSvgElement(self);
+  return obj.tabIndex;
+}
+
+/**
+ * `set-tab-index()` operation.
+ */
+export function setTabIndex(self: bigint, value: number): void {
+  const obj = getHtmlOrSvgElement(self);
+  obj.tabIndex = value;
+}
+
+/**
+ * `focus()` operation.
+ */
+export function focus(self: bigint, options: bigint | undefined): void {
+  const obj = getHtmlOrSvgElement(self);
+  obj.focus(options);
+}
+
+/**
+ * `blur()` operation.
+ */
+export function blur(self: bigint): void {
+  const obj = getHtmlOrSvgElement(self);
+  obj.blur();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: dom-string-map
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DomStringMapHandle = bigint;
+
+/** Handle table for DomStringMap instances */
+const _domStringMaphandles = new Map<bigint, DomStringMap>();
+let _nextDomStringMap = 1n;
+
+/** Get a DomStringMap by handle, throwing if not found. */
+function getDomStringMap(handle: bigint): DomStringMap {
+  const obj = _domStringMaphandles.get(handle);
+  if (!obj) {
+    throw new Error(`DomStringMap handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `dom-string()` operation.
+ */
+export function domString(self: bigint, name: string): void {
+  const obj = getDomStringMap(self);
+  obj.domString(name);
+}
+
+/**
+ * `undefined()` operation.
+ */
+export function DomStringMapUndefined(self: bigint, name: string, value: string): void {
+  const obj = getDomStringMap(self);
+  obj._undefined(name, value);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-html-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlHtmlElementHandle = bigint;
+
+/** Handle table for HtmlHtmlElement instances */
+const _htmlHtmlElementhandles = new Map<bigint, HtmlHtmlElement>();
+let _nextHtmlHtmlElement = 1n;
+
+/** Get a HtmlHtmlElement by handle, throwing if not found. */
+function getHtmlHtmlElement(handle: bigint): HtmlHtmlElement {
+  const obj = _htmlHtmlElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlHtmlElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-version()` operation.
+ */
+export function getVersion(self: bigint): string {
+  const obj = getHtmlHtmlElement(self);
+  return obj.version;
+}
+
+/**
+ * `set-version()` operation.
+ */
+export function setVersion(self: bigint, value: string): void {
+  const obj = getHtmlHtmlElement(self);
+  obj.version = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-title-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTitleElementHandle = bigint;
+
+/** Handle table for HtmlTitleElement instances */
+const _htmlTitleElementhandles = new Map<bigint, HtmlTitleElement>();
+let _nextHtmlTitleElement = 1n;
+
+/** Get a HtmlTitleElement by handle, throwing if not found. */
+function getHtmlTitleElement(handle: bigint): HtmlTitleElement {
+  const obj = _htmlTitleElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTitleElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-text()` operation.
+ */
+export function HtmlTitleElementGetText(self: bigint): string {
+  const obj = getHtmlTitleElement(self);
+  return obj.text;
+}
+
+/**
+ * `set-text()` operation.
+ */
+export function HtmlTitleElementSetText(self: bigint, value: string): void {
+  const obj = getHtmlTitleElement(self);
+  obj.text = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-base-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlBaseElementHandle = bigint;
+
+/** Handle table for HtmlBaseElement instances */
+const _htmlBaseElementhandles = new Map<bigint, HtmlBaseElement>();
+let _nextHtmlBaseElement = 1n;
+
+/** Get a HtmlBaseElement by handle, throwing if not found. */
+function getHtmlBaseElement(handle: bigint): HtmlBaseElement {
+  const obj = _htmlBaseElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlBaseElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function HtmlBaseElementGetHref(self: bigint): string {
+  const obj = getHtmlBaseElement(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function HtmlBaseElementSetHref(self: bigint, value: string): void {
+  const obj = getHtmlBaseElement(self);
+  obj.href = value;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlBaseElementGetTarget(self: bigint): string {
+  const obj = getHtmlBaseElement(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlBaseElementSetTarget(self: bigint, value: string): void {
+  const obj = getHtmlBaseElement(self);
+  obj.target = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-link-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlLinkElementHandle = bigint;
+
+/** Handle table for HtmlLinkElement instances */
+const _htmlLinkElementhandles = new Map<bigint, HtmlLinkElement>();
+let _nextHtmlLinkElement = 1n;
+
+/** Get a HtmlLinkElement by handle, throwing if not found. */
+function getHtmlLinkElement(handle: bigint): HtmlLinkElement {
+  const obj = _htmlLinkElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlLinkElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function HtmlLinkElementGetHref(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function HtmlLinkElementSetHref(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.href = value;
+}
+
+/**
+ * `get-cross-origin()` operation.
+ */
+export function HtmlLinkElementGetCrossOrigin(self: bigint): string | undefined {
+  const obj = getHtmlLinkElement(self);
+  return obj.crossOrigin ?? undefined;
+}
+
+/**
+ * `set-cross-origin()` operation.
+ */
+export function HtmlLinkElementSetCrossOrigin(self: bigint, value: string | undefined): void {
+  const obj = getHtmlLinkElement(self);
+  obj.crossOrigin = value;
+}
+
+/**
+ * `get-rel()` operation.
+ */
+export function HtmlLinkElementGetRel(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.rel;
+}
+
+/**
+ * `set-rel()` operation.
+ */
+export function HtmlLinkElementSetRel(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.rel = value;
+}
+
+/**
+ * `get-as()` operation.
+ */
+export function getAs(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.as;
+}
+
+/**
+ * `set-as()` operation.
+ */
+export function setAs(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.as = value;
+}
+
+/**
+ * `get-rel-list()` operation.
+ */
+export function HtmlLinkElementGetRelList(self: bigint): bigint {
+  const obj = getHtmlLinkElement(self);
+  return obj.relList;
+}
+
+/**
+ * `get-media()` operation.
+ */
+export function HtmlLinkElementGetMedia(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.media;
+}
+
+/**
+ * `set-media()` operation.
+ */
+export function HtmlLinkElementSetMedia(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.media = value;
+}
+
+/**
+ * `get-integrity()` operation.
+ */
+export function HtmlLinkElementGetIntegrity(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.integrity;
+}
+
+/**
+ * `set-integrity()` operation.
+ */
+export function HtmlLinkElementSetIntegrity(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.integrity = value;
+}
+
+/**
+ * `get-hreflang()` operation.
+ */
+export function HtmlLinkElementGetHreflang(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.hreflang;
+}
+
+/**
+ * `set-hreflang()` operation.
+ */
+export function HtmlLinkElementSetHreflang(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.hreflang = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlLinkElementGetType(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlLinkElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-sizes()` operation.
+ */
+export function HtmlLinkElementGetSizes(self: bigint): bigint {
+  const obj = getHtmlLinkElement(self);
+  return obj.sizes;
+}
+
+/**
+ * `get-image-srcset()` operation.
+ */
+export function getImageSrcset(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.imageSrcset;
+}
+
+/**
+ * `set-image-srcset()` operation.
+ */
+export function setImageSrcset(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.imageSrcset = value;
+}
+
+/**
+ * `get-image-sizes()` operation.
+ */
+export function getImageSizes(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.imageSizes;
+}
+
+/**
+ * `set-image-sizes()` operation.
+ */
+export function setImageSizes(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.imageSizes = value;
+}
+
+/**
+ * `get-referrer-policy()` operation.
+ */
+export function HtmlLinkElementGetReferrerPolicy(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.referrerPolicy;
+}
+
+/**
+ * `set-referrer-policy()` operation.
+ */
+export function HtmlLinkElementSetReferrerPolicy(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.referrerPolicy = value;
+}
+
+/**
+ * `get-blocking()` operation.
+ */
+export function HtmlLinkElementGetBlocking(self: bigint): bigint {
+  const obj = getHtmlLinkElement(self);
+  return obj.blocking;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlLinkElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlLinkElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlLinkElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlLinkElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-fetch-priority()` operation.
+ */
+export function HtmlLinkElementGetFetchPriority(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.fetchPriority;
+}
+
+/**
+ * `set-fetch-priority()` operation.
+ */
+export function HtmlLinkElementSetFetchPriority(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.fetchPriority = value;
+}
+
+/**
+ * `get-charset()` operation.
+ */
+export function HtmlLinkElementGetCharset(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.charset;
+}
+
+/**
+ * `set-charset()` operation.
+ */
+export function HtmlLinkElementSetCharset(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.charset = value;
+}
+
+/**
+ * `get-rev()` operation.
+ */
+export function HtmlLinkElementGetRev(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.rev;
+}
+
+/**
+ * `set-rev()` operation.
+ */
+export function HtmlLinkElementSetRev(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.rev = value;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlLinkElementGetTarget(self: bigint): string {
+  const obj = getHtmlLinkElement(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlLinkElementSetTarget(self: bigint, value: string): void {
+  const obj = getHtmlLinkElement(self);
+  obj.target = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-meta-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMetaElementHandle = bigint;
+
+/** Handle table for HtmlMetaElement instances */
+const _htmlMetaElementhandles = new Map<bigint, HtmlMetaElement>();
+let _nextHtmlMetaElement = 1n;
+
+/** Get a HtmlMetaElement by handle, throwing if not found. */
+function getHtmlMetaElement(handle: bigint): HtmlMetaElement {
+  const obj = _htmlMetaElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMetaElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlMetaElementGetName(self: bigint): string {
+  const obj = getHtmlMetaElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlMetaElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlMetaElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-http-equiv()` operation.
+ */
+export function getHttpEquiv(self: bigint): string {
+  const obj = getHtmlMetaElement(self);
+  return obj.httpEquiv;
+}
+
+/**
+ * `set-http-equiv()` operation.
+ */
+export function setHttpEquiv(self: bigint, value: string): void {
+  const obj = getHtmlMetaElement(self);
+  obj.httpEquiv = value;
+}
+
+/**
+ * `get-content()` operation.
+ */
+export function HtmlMetaElementGetContent(self: bigint): string {
+  const obj = getHtmlMetaElement(self);
+  return obj.content;
+}
+
+/**
+ * `set-content()` operation.
+ */
+export function setContent(self: bigint, value: string): void {
+  const obj = getHtmlMetaElement(self);
+  obj.content = value;
+}
+
+/**
+ * `get-media()` operation.
+ */
+export function HtmlMetaElementGetMedia(self: bigint): string {
+  const obj = getHtmlMetaElement(self);
+  return obj.media;
+}
+
+/**
+ * `set-media()` operation.
+ */
+export function HtmlMetaElementSetMedia(self: bigint, value: string): void {
+  const obj = getHtmlMetaElement(self);
+  obj.media = value;
+}
+
+/**
+ * `get-scheme()` operation.
+ */
+export function getScheme(self: bigint): string {
+  const obj = getHtmlMetaElement(self);
+  return obj.scheme;
+}
+
+/**
+ * `set-scheme()` operation.
+ */
+export function setScheme(self: bigint, value: string): void {
+  const obj = getHtmlMetaElement(self);
+  obj.scheme = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-style-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlStyleElementHandle = bigint;
+
+/** Handle table for HtmlStyleElement instances */
+const _htmlStyleElementhandles = new Map<bigint, HtmlStyleElement>();
+let _nextHtmlStyleElement = 1n;
+
+/** Get a HtmlStyleElement by handle, throwing if not found. */
+function getHtmlStyleElement(handle: bigint): HtmlStyleElement {
+  const obj = _htmlStyleElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlStyleElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlStyleElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlStyleElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlStyleElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlStyleElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-media()` operation.
+ */
+export function HtmlStyleElementGetMedia(self: bigint): string {
+  const obj = getHtmlStyleElement(self);
+  return obj.media;
+}
+
+/**
+ * `set-media()` operation.
+ */
+export function HtmlStyleElementSetMedia(self: bigint, value: string): void {
+  const obj = getHtmlStyleElement(self);
+  obj.media = value;
+}
+
+/**
+ * `get-blocking()` operation.
+ */
+export function HtmlStyleElementGetBlocking(self: bigint): bigint {
+  const obj = getHtmlStyleElement(self);
+  return obj.blocking;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlStyleElementGetType(self: bigint): string {
+  const obj = getHtmlStyleElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlStyleElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlStyleElement(self);
+  obj.type = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-body-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlBodyElementHandle = bigint;
+
+/** Handle table for HtmlBodyElement instances */
+const _htmlBodyElementhandles = new Map<bigint, HtmlBodyElement>();
+let _nextHtmlBodyElement = 1n;
+
+/** Get a HtmlBodyElement by handle, throwing if not found. */
+function getHtmlBodyElement(handle: bigint): HtmlBodyElement {
+  const obj = _htmlBodyElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlBodyElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-text()` operation.
+ */
+export function HtmlBodyElementGetText(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.text;
+}
+
+/**
+ * `set-text()` operation.
+ */
+export function HtmlBodyElementSetText(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.text = value;
+}
+
+/**
+ * `get-link()` operation.
+ */
+export function getLink(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.link;
+}
+
+/**
+ * `set-link()` operation.
+ */
+export function setLink(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.link = value;
+}
+
+/**
+ * `get-v-link()` operation.
+ */
+export function getVLink(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.vLink;
+}
+
+/**
+ * `set-v-link()` operation.
+ */
+export function setVLink(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.vLink = value;
+}
+
+/**
+ * `get-a-link()` operation.
+ */
+export function getALink(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.aLink;
+}
+
+/**
+ * `set-a-link()` operation.
+ */
+export function setALink(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.aLink = value;
+}
+
+/**
+ * `get-bg-color()` operation.
+ */
+export function HtmlBodyElementGetBgColor(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.bgColor;
+}
+
+/**
+ * `set-bg-color()` operation.
+ */
+export function HtmlBodyElementSetBgColor(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.bgColor = value;
+}
+
+/**
+ * `get-background()` operation.
+ */
+export function getBackground(self: bigint): string {
+  const obj = getHtmlBodyElement(self);
+  return obj.background;
+}
+
+/**
+ * `set-background()` operation.
+ */
+export function setBackground(self: bigint, value: string): void {
+  const obj = getHtmlBodyElement(self);
+  obj.background = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-heading-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlHeadingElementHandle = bigint;
+
+/** Handle table for HtmlHeadingElement instances */
+const _htmlHeadingElementhandles = new Map<bigint, HtmlHeadingElement>();
+let _nextHtmlHeadingElement = 1n;
+
+/** Get a HtmlHeadingElement by handle, throwing if not found. */
+function getHtmlHeadingElement(handle: bigint): HtmlHeadingElement {
+  const obj = _htmlHeadingElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlHeadingElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlHeadingElementGetAlign(self: bigint): string {
+  const obj = getHtmlHeadingElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlHeadingElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlHeadingElement(self);
+  obj.align = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-paragraph-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlParagraphElementHandle = bigint;
+
+/** Handle table for HtmlParagraphElement instances */
+const _htmlParagraphElementhandles = new Map<bigint, HtmlParagraphElement>();
+let _nextHtmlParagraphElement = 1n;
+
+/** Get a HtmlParagraphElement by handle, throwing if not found. */
+function getHtmlParagraphElement(handle: bigint): HtmlParagraphElement {
+  const obj = _htmlParagraphElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlParagraphElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlParagraphElementGetAlign(self: bigint): string {
+  const obj = getHtmlParagraphElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlParagraphElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlParagraphElement(self);
+  obj.align = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmlhr-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlhrElementHandle = bigint;
+
+/** Handle table for HtmlhrElement instances */
+const _htmlhrElementhandles = new Map<bigint, HtmlhrElement>();
+let _nextHtmlhrElement = 1n;
+
+/** Get a HtmlhrElement by handle, throwing if not found. */
+function getHtmlhrElement(handle: bigint): HtmlhrElement {
+  const obj = _htmlhrElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlhrElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlhrElementGetAlign(self: bigint): string {
+  const obj = getHtmlhrElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlhrElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlhrElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-color()` operation.
+ */
+export function HtmlhrElementGetColor(self: bigint): string {
+  const obj = getHtmlhrElement(self);
+  return obj.color;
+}
+
+/**
+ * `set-color()` operation.
+ */
+export function HtmlhrElementSetColor(self: bigint, value: string): void {
+  const obj = getHtmlhrElement(self);
+  obj.color = value;
+}
+
+/**
+ * `get-no-shade()` operation.
+ */
+export function getNoShade(self: bigint): boolean {
+  const obj = getHtmlhrElement(self);
+  return obj.noShade;
+}
+
+/**
+ * `set-no-shade()` operation.
+ */
+export function setNoShade(self: bigint, value: boolean): void {
+  const obj = getHtmlhrElement(self);
+  obj.noShade = value;
+}
+
+/**
+ * `get-size()` operation.
+ */
+export function HtmlhrElementGetSize(self: bigint): string {
+  const obj = getHtmlhrElement(self);
+  return obj.size;
+}
+
+/**
+ * `set-size()` operation.
+ */
+export function HtmlhrElementSetSize(self: bigint, value: string): void {
+  const obj = getHtmlhrElement(self);
+  obj.size = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlhrElementGetWidth(self: bigint): string {
+  const obj = getHtmlhrElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlhrElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlhrElement(self);
+  obj.width = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-pre-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlPreElementHandle = bigint;
+
+/** Handle table for HtmlPreElement instances */
+const _htmlPreElementhandles = new Map<bigint, HtmlPreElement>();
+let _nextHtmlPreElement = 1n;
+
+/** Get a HtmlPreElement by handle, throwing if not found. */
+function getHtmlPreElement(handle: bigint): HtmlPreElement {
+  const obj = _htmlPreElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlPreElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlPreElementGetWidth(self: bigint): number {
+  const obj = getHtmlPreElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlPreElementSetWidth(self: bigint, value: number): void {
+  const obj = getHtmlPreElement(self);
+  obj.width = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-quote-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlQuoteElementHandle = bigint;
+
+/** Handle table for HtmlQuoteElement instances */
+const _htmlQuoteElementhandles = new Map<bigint, HtmlQuoteElement>();
+let _nextHtmlQuoteElement = 1n;
+
+/** Get a HtmlQuoteElement by handle, throwing if not found. */
+function getHtmlQuoteElement(handle: bigint): HtmlQuoteElement {
+  const obj = _htmlQuoteElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlQuoteElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-cite()` operation.
+ */
+export function HtmlQuoteElementGetCite(self: bigint): string {
+  const obj = getHtmlQuoteElement(self);
+  return obj.cite;
+}
+
+/**
+ * `set-cite()` operation.
+ */
+export function HtmlQuoteElementSetCite(self: bigint, value: string): void {
+  const obj = getHtmlQuoteElement(self);
+  obj.cite = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmlo-list-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmloListElementHandle = bigint;
+
+/** Handle table for HtmloListElement instances */
+const _htmloListElementhandles = new Map<bigint, HtmloListElement>();
+let _nextHtmloListElement = 1n;
+
+/** Get a HtmloListElement by handle, throwing if not found. */
+function getHtmloListElement(handle: bigint): HtmloListElement {
+  const obj = _htmloListElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmloListElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-reversed()` operation.
+ */
+export function getReversed(self: bigint): boolean {
+  const obj = getHtmloListElement(self);
+  return obj.reversed;
+}
+
+/**
+ * `set-reversed()` operation.
+ */
+export function setReversed(self: bigint, value: boolean): void {
+  const obj = getHtmloListElement(self);
+  obj.reversed = value;
+}
+
+/**
+ * `get-start()` operation.
+ */
+export function getStart(self: bigint): number {
+  const obj = getHtmloListElement(self);
+  return obj.start;
+}
+
+/**
+ * `set-start()` operation.
+ */
+export function setStart(self: bigint, value: number): void {
+  const obj = getHtmloListElement(self);
+  obj.start = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmloListElementGetType(self: bigint): string {
+  const obj = getHtmloListElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmloListElementSetType(self: bigint, value: string): void {
+  const obj = getHtmloListElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-compact()` operation.
+ */
+export function HtmloListElementGetCompact(self: bigint): boolean {
+  const obj = getHtmloListElement(self);
+  return obj.compact;
+}
+
+/**
+ * `set-compact()` operation.
+ */
+export function HtmloListElementSetCompact(self: bigint, value: boolean): void {
+  const obj = getHtmloListElement(self);
+  obj.compact = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmlu-list-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmluListElementHandle = bigint;
+
+/** Handle table for HtmluListElement instances */
+const _htmluListElementhandles = new Map<bigint, HtmluListElement>();
+let _nextHtmluListElement = 1n;
+
+/** Get a HtmluListElement by handle, throwing if not found. */
+function getHtmluListElement(handle: bigint): HtmluListElement {
+  const obj = _htmluListElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmluListElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-compact()` operation.
+ */
+export function HtmluListElementGetCompact(self: bigint): boolean {
+  const obj = getHtmluListElement(self);
+  return obj.compact;
+}
+
+/**
+ * `set-compact()` operation.
+ */
+export function HtmluListElementSetCompact(self: bigint, value: boolean): void {
+  const obj = getHtmluListElement(self);
+  obj.compact = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmluListElementGetType(self: bigint): string {
+  const obj = getHtmluListElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmluListElementSetType(self: bigint, value: string): void {
+  const obj = getHtmluListElement(self);
+  obj.type = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-menu-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMenuElementHandle = bigint;
+
+/** Handle table for HtmlMenuElement instances */
+const _htmlMenuElementhandles = new Map<bigint, HtmlMenuElement>();
+let _nextHtmlMenuElement = 1n;
+
+/** Get a HtmlMenuElement by handle, throwing if not found. */
+function getHtmlMenuElement(handle: bigint): HtmlMenuElement {
+  const obj = _htmlMenuElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMenuElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-compact()` operation.
+ */
+export function HtmlMenuElementGetCompact(self: bigint): boolean {
+  const obj = getHtmlMenuElement(self);
+  return obj.compact;
+}
+
+/**
+ * `set-compact()` operation.
+ */
+export function HtmlMenuElementSetCompact(self: bigint, value: boolean): void {
+  const obj = getHtmlMenuElement(self);
+  obj.compact = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmlli-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlliElementHandle = bigint;
+
+/** Handle table for HtmlliElement instances */
+const _htmlliElementhandles = new Map<bigint, HtmlliElement>();
+let _nextHtmlliElement = 1n;
+
+/** Get a HtmlliElement by handle, throwing if not found. */
+function getHtmlliElement(handle: bigint): HtmlliElement {
+  const obj = _htmlliElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlliElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlliElementGetValue(self: bigint): number {
+  const obj = getHtmlliElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlliElementSetValue(self: bigint, value: number): void {
+  const obj = getHtmlliElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlliElementGetType(self: bigint): string {
+  const obj = getHtmlliElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlliElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlliElement(self);
+  obj.type = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmld-list-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmldListElementHandle = bigint;
+
+/** Handle table for HtmldListElement instances */
+const _htmldListElementhandles = new Map<bigint, HtmldListElement>();
+let _nextHtmldListElement = 1n;
+
+/** Get a HtmldListElement by handle, throwing if not found. */
+function getHtmldListElement(handle: bigint): HtmldListElement {
+  const obj = _htmldListElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmldListElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-compact()` operation.
+ */
+export function HtmldListElementGetCompact(self: bigint): boolean {
+  const obj = getHtmldListElement(self);
+  return obj.compact;
+}
+
+/**
+ * `set-compact()` operation.
+ */
+export function HtmldListElementSetCompact(self: bigint, value: boolean): void {
+  const obj = getHtmldListElement(self);
+  obj.compact = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-div-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDivElementHandle = bigint;
+
+/** Handle table for HtmlDivElement instances */
+const _htmlDivElementhandles = new Map<bigint, HtmlDivElement>();
+let _nextHtmlDivElement = 1n;
+
+/** Get a HtmlDivElement by handle, throwing if not found. */
+function getHtmlDivElement(handle: bigint): HtmlDivElement {
+  const obj = _htmlDivElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDivElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlDivElementGetAlign(self: bigint): string {
+  const obj = getHtmlDivElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlDivElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlDivElement(self);
+  obj.align = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-anchor-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlAnchorElementHandle = bigint;
+
+/** Handle table for HtmlAnchorElement instances */
+const _htmlAnchorElementhandles = new Map<bigint, HtmlAnchorElement>();
+let _nextHtmlAnchorElement = 1n;
+
+/** Get a HtmlAnchorElement by handle, throwing if not found. */
+function getHtmlAnchorElement(handle: bigint): HtmlAnchorElement {
+  const obj = _htmlAnchorElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlAnchorElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlAnchorElementGetTarget(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlAnchorElementSetTarget(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.target = value;
+}
+
+/**
+ * `get-download()` operation.
+ */
+export function HtmlAnchorElementGetDownload(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.download;
+}
+
+/**
+ * `set-download()` operation.
+ */
+export function HtmlAnchorElementSetDownload(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.download = value;
+}
+
+/**
+ * `get-ping()` operation.
+ */
+export function HtmlAnchorElementGetPing(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.ping;
+}
+
+/**
+ * `set-ping()` operation.
+ */
+export function HtmlAnchorElementSetPing(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.ping = value;
+}
+
+/**
+ * `get-rel()` operation.
+ */
+export function HtmlAnchorElementGetRel(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.rel;
+}
+
+/**
+ * `set-rel()` operation.
+ */
+export function HtmlAnchorElementSetRel(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.rel = value;
+}
+
+/**
+ * `get-rel-list()` operation.
+ */
+export function HtmlAnchorElementGetRelList(self: bigint): bigint {
+  const obj = getHtmlAnchorElement(self);
+  return obj.relList;
+}
+
+/**
+ * `get-hreflang()` operation.
+ */
+export function HtmlAnchorElementGetHreflang(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.hreflang;
+}
+
+/**
+ * `set-hreflang()` operation.
+ */
+export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.hreflang = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlAnchorElementGetType(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlAnchorElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-text()` operation.
+ */
+export function HtmlAnchorElementGetText(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.text;
+}
+
+/**
+ * `set-text()` operation.
+ */
+export function HtmlAnchorElementSetText(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.text = value;
+}
+
+/**
+ * `get-referrer-policy()` operation.
+ */
+export function HtmlAnchorElementGetReferrerPolicy(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.referrerPolicy;
+}
+
+/**
+ * `set-referrer-policy()` operation.
+ */
+export function HtmlAnchorElementSetReferrerPolicy(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.referrerPolicy = value;
+}
+
+/**
+ * `get-coords()` operation.
+ */
+export function HtmlAnchorElementGetCoords(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.coords;
+}
+
+/**
+ * `set-coords()` operation.
+ */
+export function HtmlAnchorElementSetCoords(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.coords = value;
+}
+
+/**
+ * `get-charset()` operation.
+ */
+export function HtmlAnchorElementGetCharset(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.charset;
+}
+
+/**
+ * `set-charset()` operation.
+ */
+export function HtmlAnchorElementSetCharset(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.charset = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlAnchorElementGetName(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlAnchorElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-rev()` operation.
+ */
+export function HtmlAnchorElementGetRev(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.rev;
+}
+
+/**
+ * `set-rev()` operation.
+ */
+export function HtmlAnchorElementSetRev(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.rev = value;
+}
+
+/**
+ * `get-shape()` operation.
+ */
+export function HtmlAnchorElementGetShape(self: bigint): string {
+  const obj = getHtmlAnchorElement(self);
+  return obj.shape;
+}
+
+/**
+ * `set-shape()` operation.
+ */
+export function HtmlAnchorElementSetShape(self: bigint, value: string): void {
+  const obj = getHtmlAnchorElement(self);
+  obj.shape = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-data-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDataElementHandle = bigint;
+
+/** Handle table for HtmlDataElement instances */
+const _htmlDataElementhandles = new Map<bigint, HtmlDataElement>();
+let _nextHtmlDataElement = 1n;
+
+/** Get a HtmlDataElement by handle, throwing if not found. */
+function getHtmlDataElement(handle: bigint): HtmlDataElement {
+  const obj = _htmlDataElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDataElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlDataElementGetValue(self: bigint): string {
+  const obj = getHtmlDataElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlDataElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlDataElement(self);
+  obj.value = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-time-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTimeElementHandle = bigint;
+
+/** Handle table for HtmlTimeElement instances */
+const _htmlTimeElementhandles = new Map<bigint, HtmlTimeElement>();
+let _nextHtmlTimeElement = 1n;
+
+/** Get a HtmlTimeElement by handle, throwing if not found. */
+function getHtmlTimeElement(handle: bigint): HtmlTimeElement {
+  const obj = _htmlTimeElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTimeElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-date-time()` operation.
+ */
+export function HtmlTimeElementGetDateTime(self: bigint): string {
+  const obj = getHtmlTimeElement(self);
+  return obj.dateTime;
+}
+
+/**
+ * `set-date-time()` operation.
+ */
+export function HtmlTimeElementSetDateTime(self: bigint, value: string): void {
+  const obj = getHtmlTimeElement(self);
+  obj.dateTime = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmlbr-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlbrElementHandle = bigint;
+
+/** Handle table for HtmlbrElement instances */
+const _htmlbrElementhandles = new Map<bigint, HtmlbrElement>();
+let _nextHtmlbrElement = 1n;
+
+/** Get a HtmlbrElement by handle, throwing if not found. */
+function getHtmlbrElement(handle: bigint): HtmlbrElement {
+  const obj = _htmlbrElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlbrElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-clear()` operation.
+ */
+export function getClear(self: bigint): string {
+  const obj = getHtmlbrElement(self);
+  return obj.clear;
+}
+
+/**
+ * `set-clear()` operation.
+ */
+export function setClear(self: bigint, value: string): void {
+  const obj = getHtmlbrElement(self);
+  obj.clear = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: hyperlink-element-utils
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HyperlinkElementUtilsHandle = bigint;
+
+/** Handle table for HyperlinkElementUtils instances */
+const _hyperlinkElementUtilshandles = new Map<bigint, HyperlinkElementUtils>();
+let _nextHyperlinkElementUtils = 1n;
+
+/** Get a HyperlinkElementUtils by handle, throwing if not found. */
+function getHyperlinkElementUtils(handle: bigint): HyperlinkElementUtils {
+  const obj = _hyperlinkElementUtilshandles.get(handle);
+  if (!obj) {
+    throw new Error(`HyperlinkElementUtils handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-origin()` operation.
+ */
+export function HyperlinkElementUtilsGetOrigin(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.origin;
+}
+
+/**
+ * `get-protocol()` operation.
+ */
+export function HyperlinkElementUtilsGetProtocol(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.protocol;
+}
+
+/**
+ * `set-protocol()` operation.
+ */
+export function HyperlinkElementUtilsSetProtocol(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.protocol = value;
+}
+
+/**
+ * `get-username()` operation.
+ */
+export function getUsername(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.username;
+}
+
+/**
+ * `set-username()` operation.
+ */
+export function setUsername(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.username = value;
+}
+
+/**
+ * `get-password()` operation.
+ */
+export function getPassword(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.password;
+}
+
+/**
+ * `set-password()` operation.
+ */
+export function setPassword(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.password = value;
+}
+
+/**
+ * `get-host()` operation.
+ */
+export function HyperlinkElementUtilsGetHost(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.host;
+}
+
+/**
+ * `set-host()` operation.
+ */
+export function HyperlinkElementUtilsSetHost(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.host = value;
+}
+
+/**
+ * `get-hostname()` operation.
+ */
+export function HyperlinkElementUtilsGetHostname(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.hostname;
+}
+
+/**
+ * `set-hostname()` operation.
+ */
+export function HyperlinkElementUtilsSetHostname(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.hostname = value;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function HyperlinkElementUtilsGetPort(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.port;
+}
+
+/**
+ * `set-port()` operation.
+ */
+export function HyperlinkElementUtilsSetPort(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.port = value;
+}
+
+/**
+ * `get-pathname()` operation.
+ */
+export function HyperlinkElementUtilsGetPathname(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.pathname;
+}
+
+/**
+ * `set-pathname()` operation.
+ */
+export function HyperlinkElementUtilsSetPathname(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.pathname = value;
+}
+
+/**
+ * `get-search()` operation.
+ */
+export function HyperlinkElementUtilsGetSearch(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.search;
+}
+
+/**
+ * `set-search()` operation.
+ */
+export function HyperlinkElementUtilsSetSearch(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.search = value;
+}
+
+/**
+ * `get-hash()` operation.
+ */
+export function HyperlinkElementUtilsGetHash(self: bigint): string {
+  const obj = getHyperlinkElementUtils(self);
+  return obj.hash;
+}
+
+/**
+ * `set-hash()` operation.
+ */
+export function HyperlinkElementUtilsSetHash(self: bigint, value: string): void {
+  const obj = getHyperlinkElementUtils(self);
+  obj.hash = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-hyperlink-element-utils
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlHyperlinkElementUtilsHandle = bigint;
+
+/** Handle table for HtmlHyperlinkElementUtils instances */
+const _htmlHyperlinkElementUtilshandles = new Map<bigint, HtmlHyperlinkElementUtils>();
+let _nextHtmlHyperlinkElementUtils = 1n;
+
+/** Get a HtmlHyperlinkElementUtils by handle, throwing if not found. */
+function getHtmlHyperlinkElementUtils(handle: bigint): HtmlHyperlinkElementUtils {
+  const obj = _htmlHyperlinkElementUtilshandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlHyperlinkElementUtils handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
+  const obj = getHtmlHyperlinkElementUtils(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): void {
+  const obj = getHtmlHyperlinkElementUtils(self);
+  obj.href = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-mod-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlModElementHandle = bigint;
+
+/** Handle table for HtmlModElement instances */
+const _htmlModElementhandles = new Map<bigint, HtmlModElement>();
+let _nextHtmlModElement = 1n;
+
+/** Get a HtmlModElement by handle, throwing if not found. */
+function getHtmlModElement(handle: bigint): HtmlModElement {
+  const obj = _htmlModElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlModElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-cite()` operation.
+ */
+export function HtmlModElementGetCite(self: bigint): string {
+  const obj = getHtmlModElement(self);
+  return obj.cite;
+}
+
+/**
+ * `set-cite()` operation.
+ */
+export function HtmlModElementSetCite(self: bigint, value: string): void {
+  const obj = getHtmlModElement(self);
+  obj.cite = value;
+}
+
+/**
+ * `get-date-time()` operation.
+ */
+export function HtmlModElementGetDateTime(self: bigint): string {
+  const obj = getHtmlModElement(self);
+  return obj.dateTime;
+}
+
+/**
+ * `set-date-time()` operation.
+ */
+export function HtmlModElementSetDateTime(self: bigint, value: string): void {
+  const obj = getHtmlModElement(self);
+  obj.dateTime = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-source-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlSourceElementHandle = bigint;
+
+/** Handle table for HtmlSourceElement instances */
+const _htmlSourceElementhandles = new Map<bigint, HtmlSourceElement>();
+let _nextHtmlSourceElement = 1n;
+
+/** Get a HtmlSourceElement by handle, throwing if not found. */
+function getHtmlSourceElement(handle: bigint): HtmlSourceElement {
+  const obj = _htmlSourceElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlSourceElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlSourceElementGetSrc(self: bigint): string {
+  const obj = getHtmlSourceElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlSourceElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlSourceElementGetType(self: bigint): string {
+  const obj = getHtmlSourceElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlSourceElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlSourceElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-srcset()` operation.
+ */
+export function getSrcset(self: bigint): string {
+  const obj = getHtmlSourceElement(self);
+  return obj.srcset;
+}
+
+/**
+ * `set-srcset()` operation.
+ */
+export function setSrcset(self: bigint, value: string): void {
+  const obj = getHtmlSourceElement(self);
+  obj.srcset = value;
+}
+
+/**
+ * `get-sizes()` operation.
+ */
+export function HtmlSourceElementGetSizes(self: bigint): string {
+  const obj = getHtmlSourceElement(self);
+  return obj.sizes;
+}
+
+/**
+ * `set-sizes()` operation.
+ */
+export function setSizes(self: bigint, value: string): void {
+  const obj = getHtmlSourceElement(self);
+  obj.sizes = value;
+}
+
+/**
+ * `get-media()` operation.
+ */
+export function HtmlSourceElementGetMedia(self: bigint): string {
+  const obj = getHtmlSourceElement(self);
+  return obj.media;
+}
+
+/**
+ * `set-media()` operation.
+ */
+export function HtmlSourceElementSetMedia(self: bigint, value: string): void {
+  const obj = getHtmlSourceElement(self);
+  obj.media = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlSourceElementGetWidth(self: bigint): number {
+  const obj = getHtmlSourceElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlSourceElementSetWidth(self: bigint, value: number): void {
+  const obj = getHtmlSourceElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlSourceElementGetHeight(self: bigint): number {
+  const obj = getHtmlSourceElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlSourceElementSetHeight(self: bigint, value: number): void {
+  const obj = getHtmlSourceElement(self);
+  obj.height = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: htmli-frame-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmliFrameElementHandle = bigint;
+
+/** Handle table for HtmliFrameElement instances */
+const _htmliFrameElementhandles = new Map<bigint, HtmliFrameElement>();
+let _nextHtmliFrameElement = 1n;
+
+/** Get a HtmliFrameElement by handle, throwing if not found. */
+function getHtmliFrameElement(handle: bigint): HtmliFrameElement {
+  const obj = _htmliFrameElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmliFrameElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmliFrameElementGetSrc(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmliFrameElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-srcdoc()` operation.
+ */
+export function getSrcdoc(self: bigint): bigint {
+  const obj = getHtmliFrameElement(self);
+  return obj.srcdoc;
+}
+
+/**
+ * `set-srcdoc()` operation.
+ */
+export function setSrcdoc(self: bigint, value: bigint): void {
+  const obj = getHtmliFrameElement(self);
+  obj.srcdoc = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmliFrameElementGetName(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmliFrameElementSetName(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-sandbox()` operation.
+ */
+export function getSandbox(self: bigint): bigint {
+  const obj = getHtmliFrameElement(self);
+  return obj.sandbox;
+}
+
+/**
+ * `get-allow()` operation.
+ */
+export function getAllow(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.allow;
+}
+
+/**
+ * `set-allow()` operation.
+ */
+export function setAllow(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.allow = value;
+}
+
+/**
+ * `get-allow-fullscreen()` operation.
+ */
+export function getAllowFullscreen(self: bigint): boolean {
+  const obj = getHtmliFrameElement(self);
+  return obj.allowFullscreen;
+}
+
+/**
+ * `set-allow-fullscreen()` operation.
+ */
+export function setAllowFullscreen(self: bigint, value: boolean): void {
+  const obj = getHtmliFrameElement(self);
+  obj.allowFullscreen = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmliFrameElementGetWidth(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmliFrameElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmliFrameElementGetHeight(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmliFrameElementSetHeight(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-referrer-policy()` operation.
+ */
+export function HtmliFrameElementGetReferrerPolicy(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.referrerPolicy;
+}
+
+/**
+ * `set-referrer-policy()` operation.
+ */
+export function HtmliFrameElementSetReferrerPolicy(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.referrerPolicy = value;
+}
+
+/**
+ * `get-loading()` operation.
+ */
+export function getLoading(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.loading;
+}
+
+/**
+ * `set-loading()` operation.
+ */
+export function setLoading(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.loading = value;
+}
+
+/**
+ * `get-content-document()` operation.
+ */
+export function HtmliFrameElementGetContentDocument(self: bigint): bigint | undefined {
+  const obj = getHtmliFrameElement(self);
+  return obj.contentDocument ?? undefined;
+}
+
+/**
+ * `get-content-window()` operation.
+ */
+export function HtmliFrameElementGetContentWindow(self: bigint): bigint | undefined {
+  const obj = getHtmliFrameElement(self);
+  return obj.contentWindow ?? undefined;
+}
+
+/**
+ * `get-svg-document()` operation.
+ */
+export function HtmliFrameElementGetSvgDocument(self: bigint): bigint | undefined {
+  const obj = getHtmliFrameElement(self);
+  return obj.svgDocument ?? undefined;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmliFrameElementGetAlign(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmliFrameElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-scrolling()` operation.
+ */
+export function HtmliFrameElementGetScrolling(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.scrolling;
+}
+
+/**
+ * `set-scrolling()` operation.
+ */
+export function HtmliFrameElementSetScrolling(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.scrolling = value;
+}
+
+/**
+ * `get-frame-border()` operation.
+ */
+export function HtmliFrameElementGetFrameBorder(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.frameBorder;
+}
+
+/**
+ * `set-frame-border()` operation.
+ */
+export function HtmliFrameElementSetFrameBorder(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.frameBorder = value;
+}
+
+/**
+ * `get-long-desc()` operation.
+ */
+export function HtmliFrameElementGetLongDesc(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.longDesc;
+}
+
+/**
+ * `set-long-desc()` operation.
+ */
+export function HtmliFrameElementSetLongDesc(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.longDesc = value;
+}
+
+/**
+ * `get-margin-height()` operation.
+ */
+export function HtmliFrameElementGetMarginHeight(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.marginHeight;
+}
+
+/**
+ * `set-margin-height()` operation.
+ */
+export function HtmliFrameElementSetMarginHeight(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.marginHeight = value;
+}
+
+/**
+ * `get-margin-width()` operation.
+ */
+export function HtmliFrameElementGetMarginWidth(self: bigint): string {
+  const obj = getHtmliFrameElement(self);
+  return obj.marginWidth;
+}
+
+/**
+ * `set-margin-width()` operation.
+ */
+export function HtmliFrameElementSetMarginWidth(self: bigint, value: string): void {
+  const obj = getHtmliFrameElement(self);
+  obj.marginWidth = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-embed-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlEmbedElementHandle = bigint;
+
+/** Handle table for HtmlEmbedElement instances */
+const _htmlEmbedElementhandles = new Map<bigint, HtmlEmbedElement>();
+let _nextHtmlEmbedElement = 1n;
+
+/** Get a HtmlEmbedElement by handle, throwing if not found. */
+function getHtmlEmbedElement(handle: bigint): HtmlEmbedElement {
+  const obj = _htmlEmbedElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlEmbedElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlEmbedElementGetSrc(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlEmbedElementGetType(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlEmbedElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlEmbedElementGetWidth(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlEmbedElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlEmbedElementGetHeight(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlEmbedElementSetHeight(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-svg-document()` operation.
+ */
+export function HtmlEmbedElementGetSvgDocument(self: bigint): bigint | undefined {
+  const obj = getHtmlEmbedElement(self);
+  return obj.svgDocument ?? undefined;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlEmbedElementGetAlign(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlEmbedElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlEmbedElementGetName(self: bigint): string {
+  const obj = getHtmlEmbedElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlEmbedElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlEmbedElement(self);
+  obj.name = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-object-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlObjectElementHandle = bigint;
+
+/** Handle table for HtmlObjectElement instances */
+const _htmlObjectElementhandles = new Map<bigint, HtmlObjectElement>();
+let _nextHtmlObjectElement = 1n;
+
+/** Get a HtmlObjectElement by handle, throwing if not found. */
+function getHtmlObjectElement(handle: bigint): HtmlObjectElement {
+  const obj = _htmlObjectElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlObjectElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-data()` operation.
+ */
+export function HtmlObjectElementGetData(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.data;
+}
+
+/**
+ * `set-data()` operation.
+ */
+export function HtmlObjectElementSetData(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.data = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlObjectElementGetType(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlObjectElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlObjectElementGetName(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlObjectElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlObjectElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlObjectElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlObjectElementGetWidth(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlObjectElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlObjectElementGetHeight(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlObjectElementSetHeight(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-content-document()` operation.
+ */
+export function HtmlObjectElementGetContentDocument(self: bigint): bigint | undefined {
+  const obj = getHtmlObjectElement(self);
+  return obj.contentDocument ?? undefined;
+}
+
+/**
+ * `get-content-window()` operation.
+ */
+export function HtmlObjectElementGetContentWindow(self: bigint): bigint | undefined {
+  const obj = getHtmlObjectElement(self);
+  return obj.contentWindow ?? undefined;
+}
+
+/**
+ * `get-svg-document()` operation.
+ */
+export function HtmlObjectElementGetSvgDocument(self: bigint): bigint | undefined {
+  const obj = getHtmlObjectElement(self);
+  return obj.svgDocument ?? undefined;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlObjectElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlObjectElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlObjectElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlObjectElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlObjectElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlObjectElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlObjectElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlObjectElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlObjectElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlObjectElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlObjectElementGetAlign(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlObjectElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-archive()` operation.
+ */
+export function getArchive(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.archive;
+}
+
+/**
+ * `set-archive()` operation.
+ */
+export function setArchive(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.archive = value;
+}
+
+/**
+ * `get-code()` operation.
+ */
+export function HtmlObjectElementGetCode(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.code;
+}
+
+/**
+ * `set-code()` operation.
+ */
+export function setCode(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.code = value;
+}
+
+/**
+ * `get-declare()` operation.
+ */
+export function getDeclare(self: bigint): boolean {
+  const obj = getHtmlObjectElement(self);
+  return obj.declare;
+}
+
+/**
+ * `set-declare()` operation.
+ */
+export function setDeclare(self: bigint, value: boolean): void {
+  const obj = getHtmlObjectElement(self);
+  obj.declare = value;
+}
+
+/**
+ * `get-hspace()` operation.
+ */
+export function HtmlObjectElementGetHspace(self: bigint): number {
+  const obj = getHtmlObjectElement(self);
+  return obj.hspace;
+}
+
+/**
+ * `set-hspace()` operation.
+ */
+export function HtmlObjectElementSetHspace(self: bigint, value: number): void {
+  const obj = getHtmlObjectElement(self);
+  obj.hspace = value;
+}
+
+/**
+ * `get-standby()` operation.
+ */
+export function getStandby(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.standby;
+}
+
+/**
+ * `set-standby()` operation.
+ */
+export function setStandby(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.standby = value;
+}
+
+/**
+ * `get-vspace()` operation.
+ */
+export function HtmlObjectElementGetVspace(self: bigint): number {
+  const obj = getHtmlObjectElement(self);
+  return obj.vspace;
+}
+
+/**
+ * `set-vspace()` operation.
+ */
+export function HtmlObjectElementSetVspace(self: bigint, value: number): void {
+  const obj = getHtmlObjectElement(self);
+  obj.vspace = value;
+}
+
+/**
+ * `get-code-base()` operation.
+ */
+export function getCodeBase(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.codeBase;
+}
+
+/**
+ * `set-code-base()` operation.
+ */
+export function setCodeBase(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.codeBase = value;
+}
+
+/**
+ * `get-code-type()` operation.
+ */
+export function getCodeType(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.codeType;
+}
+
+/**
+ * `set-code-type()` operation.
+ */
+export function setCodeType(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.codeType = value;
+}
+
+/**
+ * `get-use-map()` operation.
+ */
+export function HtmlObjectElementGetUseMap(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.useMap;
+}
+
+/**
+ * `set-use-map()` operation.
+ */
+export function HtmlObjectElementSetUseMap(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.useMap = value;
+}
+
+/**
+ * `get-border()` operation.
+ */
+export function HtmlObjectElementGetBorder(self: bigint): string {
+  const obj = getHtmlObjectElement(self);
+  return obj.border;
+}
+
+/**
+ * `set-border()` operation.
+ */
+export function HtmlObjectElementSetBorder(self: bigint, value: string): void {
+  const obj = getHtmlObjectElement(self);
+  obj.border = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-video-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlVideoElementHandle = bigint;
+
+/** Handle table for HtmlVideoElement instances */
+const _htmlVideoElementhandles = new Map<bigint, HtmlVideoElement>();
+let _nextHtmlVideoElement = 1n;
+
+/** Get a HtmlVideoElement by handle, throwing if not found. */
+function getHtmlVideoElement(handle: bigint): HtmlVideoElement {
+  const obj = _htmlVideoElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlVideoElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlVideoElementGetWidth(self: bigint): number {
+  const obj = getHtmlVideoElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlVideoElementSetWidth(self: bigint, value: number): void {
+  const obj = getHtmlVideoElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlVideoElementGetHeight(self: bigint): number {
+  const obj = getHtmlVideoElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlVideoElementSetHeight(self: bigint, value: number): void {
+  const obj = getHtmlVideoElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-video-width()` operation.
+ */
+export function getVideoWidth(self: bigint): number {
+  const obj = getHtmlVideoElement(self);
+  return obj.videoWidth;
+}
+
+/**
+ * `get-video-height()` operation.
+ */
+export function getVideoHeight(self: bigint): number {
+  const obj = getHtmlVideoElement(self);
+  return obj.videoHeight;
+}
+
+/**
+ * `get-poster()` operation.
+ */
+export function getPoster(self: bigint): string {
+  const obj = getHtmlVideoElement(self);
+  return obj.poster;
+}
+
+/**
+ * `set-poster()` operation.
+ */
+export function setPoster(self: bigint, value: string): void {
+  const obj = getHtmlVideoElement(self);
+  obj.poster = value;
+}
+
+/**
+ * `get-plays-inline()` operation.
+ */
+export function getPlaysInline(self: bigint): boolean {
+  const obj = getHtmlVideoElement(self);
+  return obj.playsInline;
+}
+
+/**
+ * `set-plays-inline()` operation.
+ */
+export function setPlaysInline(self: bigint, value: boolean): void {
+  const obj = getHtmlVideoElement(self);
+  obj.playsInline = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-track-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTrackElementHandle = bigint;
+
+/** Handle table for HtmlTrackElement instances */
+const _htmlTrackElementhandles = new Map<bigint, HtmlTrackElement>();
+let _nextHtmlTrackElement = 1n;
+
+/** Get a HtmlTrackElement by handle, throwing if not found. */
+function getHtmlTrackElement(handle: bigint): HtmlTrackElement {
+  const obj = _htmlTrackElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTrackElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-kind()` operation.
+ */
+export function HtmlTrackElementGetKind(self: bigint): string {
+  const obj = getHtmlTrackElement(self);
+  return obj.kind;
+}
+
+/**
+ * `set-kind()` operation.
+ */
+export function setKind(self: bigint, value: string): void {
+  const obj = getHtmlTrackElement(self);
+  obj.kind = value;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlTrackElementGetSrc(self: bigint): string {
+  const obj = getHtmlTrackElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlTrackElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlTrackElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-srclang()` operation.
+ */
+export function getSrclang(self: bigint): string {
+  const obj = getHtmlTrackElement(self);
+  return obj.srclang;
+}
+
+/**
+ * `set-srclang()` operation.
+ */
+export function setSrclang(self: bigint, value: string): void {
+  const obj = getHtmlTrackElement(self);
+  obj.srclang = value;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function HtmlTrackElementGetLabel(self: bigint): string {
+  const obj = getHtmlTrackElement(self);
+  return obj.label;
+}
+
+/**
+ * `set-label()` operation.
+ */
+export function HtmlTrackElementSetLabel(self: bigint, value: string): void {
+  const obj = getHtmlTrackElement(self);
+  obj.label = value;
+}
+
+/**
+ * `get-default()` operation.
+ */
+export function getDefault(self: bigint): boolean {
+  const obj = getHtmlTrackElement(self);
+  return obj.default;
+}
+
+/**
+ * `set-default()` operation.
+ */
+export function setDefault(self: bigint, value: boolean): void {
+  const obj = getHtmlTrackElement(self);
+  obj.default = value;
+}
+
+/**
+ * `get-ready-state()` operation.
+ */
+export function HtmlTrackElementGetReadyState(self: bigint): number {
+  const obj = getHtmlTrackElement(self);
+  return obj.readyState;
+}
+
+/**
+ * `get-track()` operation.
+ */
+export function HtmlTrackElementGetTrack(self: bigint): bigint {
+  const obj = getHtmlTrackElement(self);
+  return obj.track;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-media-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMediaElementHandle = bigint;
+
+/** Handle table for HtmlMediaElement instances */
+const _htmlMediaElementhandles = new Map<bigint, HtmlMediaElement>();
+let _nextHtmlMediaElement = 1n;
+
+/** Get a HtmlMediaElement by handle, throwing if not found. */
+function getHtmlMediaElement(handle: bigint): HtmlMediaElement {
+  const obj = _htmlMediaElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMediaElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-error()` operation.
+ */
+export function HtmlMediaElementGetError(self: bigint): bigint | undefined {
+  const obj = getHtmlMediaElement(self);
+  return obj.error ?? undefined;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlMediaElementGetSrc(self: bigint): string {
+  const obj = getHtmlMediaElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlMediaElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlMediaElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-src-object()` operation.
+ */
+export function getSrcObject(self: bigint): bigint | undefined {
+  const obj = getHtmlMediaElement(self);
+  return obj.srcObject ?? undefined;
+}
+
+/**
+ * `set-src-object()` operation.
+ */
+export function setSrcObject(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlMediaElement(self);
+  obj.srcObject = value;
+}
+
+/**
+ * `get-current-src()` operation.
+ */
+export function getCurrentSrc(self: bigint): string {
+  const obj = getHtmlMediaElement(self);
+  return obj.currentSrc;
+}
+
+/**
+ * `get-cross-origin()` operation.
+ */
+export function HtmlMediaElementGetCrossOrigin(self: bigint): string | undefined {
+  const obj = getHtmlMediaElement(self);
+  return obj.crossOrigin ?? undefined;
+}
+
+/**
+ * `set-cross-origin()` operation.
+ */
+export function HtmlMediaElementSetCrossOrigin(self: bigint, value: string | undefined): void {
+  const obj = getHtmlMediaElement(self);
+  obj.crossOrigin = value;
+}
+
+/**
+ * `get-network-state()` operation.
+ */
+export function getNetworkState(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.networkState;
+}
+
+/**
+ * `get-preload()` operation.
+ */
+export function getPreload(self: bigint): string {
+  const obj = getHtmlMediaElement(self);
+  return obj.preload;
+}
+
+/**
+ * `set-preload()` operation.
+ */
+export function setPreload(self: bigint, value: string): void {
+  const obj = getHtmlMediaElement(self);
+  obj.preload = value;
+}
+
+/**
+ * `get-buffered()` operation.
+ */
+export function getBuffered(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.buffered;
+}
+
+/**
+ * `load()` operation.
+ */
+export function load(self: bigint): void {
+  const obj = getHtmlMediaElement(self);
+  obj.load();
+}
+
+/**
+ * `can-play-type()` operation.
+ */
+export function canPlayType(self: bigint, type: string): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.canPlayType(type);
+}
+
+/**
+ * `get-ready-state()` operation.
+ */
+export function HtmlMediaElementGetReadyState(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.readyState;
+}
+
+/**
+ * `get-seeking()` operation.
+ */
+export function getSeeking(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.seeking;
+}
+
+/**
+ * `get-current-time()` operation.
+ */
+export function getCurrentTime(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.currentTime;
+}
+
+/**
+ * `set-current-time()` operation.
+ */
+export function setCurrentTime(self: bigint, value: number): void {
+  const obj = getHtmlMediaElement(self);
+  obj.currentTime = value;
+}
+
+/**
+ * `fast-seek()` operation.
+ */
+export function fastSeek(self: bigint, time: number): void {
+  const obj = getHtmlMediaElement(self);
+  obj.fastSeek(time);
+}
+
+/**
+ * `get-duration()` operation.
+ */
+export function HtmlMediaElementGetDuration(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.duration;
+}
+
+/**
+ * `get-start-date()` operation.
+ */
+export function getStartDate(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.startDate;
+}
+
+/**
+ * `get-paused()` operation.
+ */
+export function getPaused(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.paused;
+}
+
+/**
+ * `get-default-playback-rate()` operation.
+ */
+export function getDefaultPlaybackRate(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.defaultPlaybackRate;
+}
+
+/**
+ * `set-default-playback-rate()` operation.
+ */
+export function setDefaultPlaybackRate(self: bigint, value: number): void {
+  const obj = getHtmlMediaElement(self);
+  obj.defaultPlaybackRate = value;
+}
+
+/**
+ * `get-playback-rate()` operation.
+ */
+export function getPlaybackRate(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.playbackRate;
+}
+
+/**
+ * `set-playback-rate()` operation.
+ */
+export function setPlaybackRate(self: bigint, value: number): void {
+  const obj = getHtmlMediaElement(self);
+  obj.playbackRate = value;
+}
+
+/**
+ * `get-preserves-pitch()` operation.
+ */
+export function getPreservesPitch(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.preservesPitch;
+}
+
+/**
+ * `set-preserves-pitch()` operation.
+ */
+export function setPreservesPitch(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.preservesPitch = value;
+}
+
+/**
+ * `get-played()` operation.
+ */
+export function getPlayed(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.played;
+}
+
+/**
+ * `get-seekable()` operation.
+ */
+export function getSeekable(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.seekable;
+}
+
+/**
+ * `get-ended()` operation.
+ */
+export function getEnded(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.ended;
+}
+
+/**
+ * `get-autoplay()` operation.
+ */
+export function getAutoplay(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.autoplay;
+}
+
+/**
+ * `set-autoplay()` operation.
+ */
+export function setAutoplay(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.autoplay = value;
+}
+
+/**
+ * `get-loop()` operation.
+ */
+export function HtmlMediaElementGetLoop(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.loop;
+}
+
+/**
+ * `set-loop()` operation.
+ */
+export function HtmlMediaElementSetLoop(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.loop = value;
+}
+
+/**
+ * `play()` operation.
+ */
+export function play(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.play();
+}
+
+/**
+ * `pause()` operation.
+ */
+export function pause(self: bigint): void {
+  const obj = getHtmlMediaElement(self);
+  obj.pause();
+}
+
+/**
+ * `get-controls()` operation.
+ */
+export function getControls(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.controls;
+}
+
+/**
+ * `set-controls()` operation.
+ */
+export function setControls(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.controls = value;
+}
+
+/**
+ * `get-volume()` operation.
+ */
+export function getVolume(self: bigint): number {
+  const obj = getHtmlMediaElement(self);
+  return obj.volume;
+}
+
+/**
+ * `set-volume()` operation.
+ */
+export function setVolume(self: bigint, value: number): void {
+  const obj = getHtmlMediaElement(self);
+  obj.volume = value;
+}
+
+/**
+ * `get-muted()` operation.
+ */
+export function getMuted(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.muted;
+}
+
+/**
+ * `set-muted()` operation.
+ */
+export function setMuted(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.muted = value;
+}
+
+/**
+ * `get-default-muted()` operation.
+ */
+export function getDefaultMuted(self: bigint): boolean {
+  const obj = getHtmlMediaElement(self);
+  return obj.defaultMuted;
+}
+
+/**
+ * `set-default-muted()` operation.
+ */
+export function setDefaultMuted(self: bigint, value: boolean): void {
+  const obj = getHtmlMediaElement(self);
+  obj.defaultMuted = value;
+}
+
+/**
+ * `get-audio-tracks()` operation.
+ */
+export function getAudioTracks(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.audioTracks;
+}
+
+/**
+ * `get-video-tracks()` operation.
+ */
+export function getVideoTracks(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.videoTracks;
+}
+
+/**
+ * `get-text-tracks()` operation.
+ */
+export function getTextTracks(self: bigint): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.textTracks;
+}
+
+/**
+ * `add-text-track()` operation.
+ */
+export function addTextTrack(self: bigint, kind: bigint, label: string | undefined, language: string | undefined): bigint {
+  const obj = getHtmlMediaElement(self);
+  return obj.addTextTrack(kind, label, language);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: media-error
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MediaErrorHandle = bigint;
+
+/** Handle table for MediaError instances */
+const _mediaErrorhandles = new Map<bigint, MediaError>();
+let _nextMediaError = 1n;
+
+/** Get a MediaError by handle, throwing if not found. */
+function getMediaError(handle: bigint): MediaError {
+  const obj = _mediaErrorhandles.get(handle);
+  if (!obj) {
+    throw new Error(`MediaError handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-code()` operation.
+ */
+export function MediaErrorGetCode(self: bigint): number {
+  const obj = getMediaError(self);
+  return obj.code;
+}
+
+/**
+ * `get-message()` operation.
+ */
+export function MediaErrorGetMessage(self: bigint): string {
+  const obj = getMediaError(self);
+  return obj.message;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-track-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioTrackListHandle = bigint;
+
+/** Handle table for AudioTrackList instances */
+const _audioTrackListhandles = new Map<bigint, AudioTrackList>();
+let _nextAudioTrackList = 1n;
+
+/** Get a AudioTrackList by handle, throwing if not found. */
+function getAudioTrackList(handle: bigint): AudioTrackList {
+  const obj = _audioTrackListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioTrackList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function AudioTrackListGetLength(self: bigint): number {
+  const obj = getAudioTrackList(self);
+  return obj.length;
+}
+
+/**
+ * `audio-track()` operation.
+ */
+export function audioTrack(self: bigint, index: number): void {
+  const obj = getAudioTrackList(self);
+  obj.audioTrack(index);
+}
+
+/**
+ * `get-track-by-id()` operation.
+ */
+export function AudioTrackListGetTrackById(self: bigint, id: string): bigint | undefined {
+  const obj = getAudioTrackList(self);
+  return obj.trackById ?? undefined;
+}
+
+/**
+ * `get-onchange()` operation.
+ */
+export function AudioTrackListGetOnchange(self: bigint): EventHandlerRecord {
+  const obj = getAudioTrackList(self);
+  return obj.onchange;
+}
+
+/**
+ * `set-onchange()` operation.
+ */
+export function AudioTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getAudioTrackList(self);
+  obj.onchange = value;
+}
+
+/**
+ * `get-onaddtrack()` operation.
+ */
+export function AudioTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+  const obj = getAudioTrackList(self);
+  return obj.onaddtrack;
+}
+
+/**
+ * `set-onaddtrack()` operation.
+ */
+export function AudioTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getAudioTrackList(self);
+  obj.onaddtrack = value;
+}
+
+/**
+ * `get-onremovetrack()` operation.
+ */
+export function AudioTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+  const obj = getAudioTrackList(self);
+  return obj.onremovetrack;
+}
+
+/**
+ * `set-onremovetrack()` operation.
+ */
+export function AudioTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getAudioTrackList(self);
+  obj.onremovetrack = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-track
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioTrackHandle = bigint;
+
+/** Handle table for AudioTrack instances */
+const _audioTrackhandles = new Map<bigint, AudioTrack>();
+let _nextAudioTrack = 1n;
+
+/** Get a AudioTrack by handle, throwing if not found. */
+function getAudioTrack(handle: bigint): AudioTrack {
+  const obj = _audioTrackhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioTrack handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function AudioTrackGetId(self: bigint): string {
+  const obj = getAudioTrack(self);
+  return obj.id;
+}
+
+/**
+ * `get-kind()` operation.
+ */
+export function AudioTrackGetKind(self: bigint): string {
+  const obj = getAudioTrack(self);
+  return obj.kind;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function AudioTrackGetLabel(self: bigint): string {
+  const obj = getAudioTrack(self);
+  return obj.label;
+}
+
+/**
+ * `get-language()` operation.
+ */
+export function AudioTrackGetLanguage(self: bigint): string {
+  const obj = getAudioTrack(self);
+  return obj.language;
+}
+
+/**
+ * `get-enabled()` operation.
+ */
+export function getEnabled(self: bigint): boolean {
+  const obj = getAudioTrack(self);
+  return obj.enabled;
+}
+
+/**
+ * `set-enabled()` operation.
+ */
+export function setEnabled(self: bigint, value: boolean): void {
+  const obj = getAudioTrack(self);
+  obj.enabled = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: video-track-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type VideoTrackListHandle = bigint;
+
+/** Handle table for VideoTrackList instances */
+const _videoTrackListhandles = new Map<bigint, VideoTrackList>();
+let _nextVideoTrackList = 1n;
+
+/** Get a VideoTrackList by handle, throwing if not found. */
+function getVideoTrackList(handle: bigint): VideoTrackList {
+  const obj = _videoTrackListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`VideoTrackList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function VideoTrackListGetLength(self: bigint): number {
+  const obj = getVideoTrackList(self);
+  return obj.length;
+}
+
+/**
+ * `video-track()` operation.
+ */
+export function videoTrack(self: bigint, index: number): void {
+  const obj = getVideoTrackList(self);
+  obj.videoTrack(index);
+}
+
+/**
+ * `get-track-by-id()` operation.
+ */
+export function VideoTrackListGetTrackById(self: bigint, id: string): bigint | undefined {
+  const obj = getVideoTrackList(self);
+  return obj.trackById ?? undefined;
+}
+
+/**
+ * `get-selected-index()` operation.
+ */
+export function VideoTrackListGetSelectedIndex(self: bigint): number {
+  const obj = getVideoTrackList(self);
+  return obj.selectedIndex;
+}
+
+/**
+ * `get-onchange()` operation.
+ */
+export function VideoTrackListGetOnchange(self: bigint): EventHandlerRecord {
+  const obj = getVideoTrackList(self);
+  return obj.onchange;
+}
+
+/**
+ * `set-onchange()` operation.
+ */
+export function VideoTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getVideoTrackList(self);
+  obj.onchange = value;
+}
+
+/**
+ * `get-onaddtrack()` operation.
+ */
+export function VideoTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+  const obj = getVideoTrackList(self);
+  return obj.onaddtrack;
+}
+
+/**
+ * `set-onaddtrack()` operation.
+ */
+export function VideoTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getVideoTrackList(self);
+  obj.onaddtrack = value;
+}
+
+/**
+ * `get-onremovetrack()` operation.
+ */
+export function VideoTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+  const obj = getVideoTrackList(self);
+  return obj.onremovetrack;
+}
+
+/**
+ * `set-onremovetrack()` operation.
+ */
+export function VideoTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getVideoTrackList(self);
+  obj.onremovetrack = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: video-track
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type VideoTrackHandle = bigint;
+
+/** Handle table for VideoTrack instances */
+const _videoTrackhandles = new Map<bigint, VideoTrack>();
+let _nextVideoTrack = 1n;
+
+/** Get a VideoTrack by handle, throwing if not found. */
+function getVideoTrack(handle: bigint): VideoTrack {
+  const obj = _videoTrackhandles.get(handle);
+  if (!obj) {
+    throw new Error(`VideoTrack handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function VideoTrackGetId(self: bigint): string {
+  const obj = getVideoTrack(self);
+  return obj.id;
+}
+
+/**
+ * `get-kind()` operation.
+ */
+export function VideoTrackGetKind(self: bigint): string {
+  const obj = getVideoTrack(self);
+  return obj.kind;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function VideoTrackGetLabel(self: bigint): string {
+  const obj = getVideoTrack(self);
+  return obj.label;
+}
+
+/**
+ * `get-language()` operation.
+ */
+export function VideoTrackGetLanguage(self: bigint): string {
+  const obj = getVideoTrack(self);
+  return obj.language;
+}
+
+/**
+ * `get-selected()` operation.
+ */
+export function VideoTrackGetSelected(self: bigint): boolean {
+  const obj = getVideoTrack(self);
+  return obj.selected;
+}
+
+/**
+ * `set-selected()` operation.
+ */
+export function VideoTrackSetSelected(self: bigint, value: boolean): void {
+  const obj = getVideoTrack(self);
+  obj.selected = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: text-track-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TextTrackListHandle = bigint;
+
+/** Handle table for TextTrackList instances */
+const _textTrackListhandles = new Map<bigint, TextTrackList>();
+let _nextTextTrackList = 1n;
+
+/** Get a TextTrackList by handle, throwing if not found. */
+function getTextTrackList(handle: bigint): TextTrackList {
+  const obj = _textTrackListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`TextTrackList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function TextTrackListGetLength(self: bigint): number {
+  const obj = getTextTrackList(self);
+  return obj.length;
+}
+
+/**
+ * `text-track()` operation.
+ */
+export function textTrack(self: bigint, index: number): void {
+  const obj = getTextTrackList(self);
+  obj.textTrack(index);
+}
+
+/**
+ * `get-track-by-id()` operation.
+ */
+export function TextTrackListGetTrackById(self: bigint, id: string): bigint | undefined {
+  const obj = getTextTrackList(self);
+  return obj.trackById ?? undefined;
+}
+
+/**
+ * `get-onchange()` operation.
+ */
+export function TextTrackListGetOnchange(self: bigint): EventHandlerRecord {
+  const obj = getTextTrackList(self);
+  return obj.onchange;
+}
+
+/**
+ * `set-onchange()` operation.
+ */
+export function TextTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrackList(self);
+  obj.onchange = value;
+}
+
+/**
+ * `get-onaddtrack()` operation.
+ */
+export function TextTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+  const obj = getTextTrackList(self);
+  return obj.onaddtrack;
+}
+
+/**
+ * `set-onaddtrack()` operation.
+ */
+export function TextTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrackList(self);
+  obj.onaddtrack = value;
+}
+
+/**
+ * `get-onremovetrack()` operation.
+ */
+export function TextTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+  const obj = getTextTrackList(self);
+  return obj.onremovetrack;
+}
+
+/**
+ * `set-onremovetrack()` operation.
+ */
+export function TextTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrackList(self);
+  obj.onremovetrack = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: text-track
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TextTrackHandle = bigint;
+
+/** Handle table for TextTrack instances */
+const _textTrackhandles = new Map<bigint, TextTrack>();
+let _nextTextTrack = 1n;
+
+/** Get a TextTrack by handle, throwing if not found. */
+function getTextTrack(handle: bigint): TextTrack {
+  const obj = _textTrackhandles.get(handle);
+  if (!obj) {
+    throw new Error(`TextTrack handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-kind()` operation.
+ */
+export function TextTrackGetKind(self: bigint): bigint {
+  const obj = getTextTrack(self);
+  return obj.kind;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function TextTrackGetLabel(self: bigint): string {
+  const obj = getTextTrack(self);
+  return obj.label;
+}
+
+/**
+ * `get-language()` operation.
+ */
+export function TextTrackGetLanguage(self: bigint): string {
+  const obj = getTextTrack(self);
+  return obj.language;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function TextTrackGetId(self: bigint): string {
+  const obj = getTextTrack(self);
+  return obj.id;
+}
+
+/**
+ * `get-in-band-metadata-track-dispatch-type()` operation.
+ */
+export function getInBandMetadataTrackDispatchType(self: bigint): string {
+  const obj = getTextTrack(self);
+  return obj.inBandMetadataTrackDispatchType;
+}
+
+/**
+ * `get-mode()` operation.
+ */
+export function getMode(self: bigint): bigint {
+  const obj = getTextTrack(self);
+  return obj.mode;
+}
+
+/**
+ * `set-mode()` operation.
+ */
+export function setMode(self: bigint, value: bigint): void {
+  const obj = getTextTrack(self);
+  obj.mode = value;
+}
+
+/**
+ * `get-cues()` operation.
+ */
+export function getCues(self: bigint): bigint | undefined {
+  const obj = getTextTrack(self);
+  return obj.cues ?? undefined;
+}
+
+/**
+ * `get-active-cues()` operation.
+ */
+export function getActiveCues(self: bigint): bigint | undefined {
+  const obj = getTextTrack(self);
+  return obj.activeCues ?? undefined;
+}
+
+/**
+ * `add-cue()` operation.
+ */
+export function addCue(self: bigint, cue: bigint): void {
+  const obj = getTextTrack(self);
+  obj.addCue(cue);
+}
+
+/**
+ * `remove-cue()` operation.
+ */
+export function removeCue(self: bigint, cue: bigint): void {
+  const obj = getTextTrack(self);
+  obj.removeCue(cue);
+}
+
+/**
+ * `get-oncuechange()` operation.
+ */
+export function getOncuechange(self: bigint): EventHandlerRecord {
+  const obj = getTextTrack(self);
+  return obj.oncuechange;
+}
+
+/**
+ * `set-oncuechange()` operation.
+ */
+export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrack(self);
+  obj.oncuechange = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: text-track-cue-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TextTrackCueListHandle = bigint;
+
+/** Handle table for TextTrackCueList instances */
+const _textTrackCueListhandles = new Map<bigint, TextTrackCueList>();
+let _nextTextTrackCueList = 1n;
+
+/** Get a TextTrackCueList by handle, throwing if not found. */
+function getTextTrackCueList(handle: bigint): TextTrackCueList {
+  const obj = _textTrackCueListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`TextTrackCueList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function TextTrackCueListGetLength(self: bigint): number {
+  const obj = getTextTrackCueList(self);
+  return obj.length;
+}
+
+/**
+ * `text-track-cue()` operation.
+ */
+export function textTrackCue(self: bigint, index: number): void {
+  const obj = getTextTrackCueList(self);
+  obj.textTrackCue(index);
+}
+
+/**
+ * `get-cue-by-id()` operation.
+ */
+export function getCueById(self: bigint, id: string): bigint | undefined {
+  const obj = getTextTrackCueList(self);
+  return obj.cueById ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: text-track-cue
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TextTrackCueHandle = bigint;
+
+/** Handle table for TextTrackCue instances */
+const _textTrackCuehandles = new Map<bigint, TextTrackCue>();
+let _nextTextTrackCue = 1n;
+
+/** Get a TextTrackCue by handle, throwing if not found. */
+function getTextTrackCue(handle: bigint): TextTrackCue {
+  const obj = _textTrackCuehandles.get(handle);
+  if (!obj) {
+    throw new Error(`TextTrackCue handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-track()` operation.
+ */
+export function TextTrackCueGetTrack(self: bigint): bigint | undefined {
+  const obj = getTextTrackCue(self);
+  return obj.track ?? undefined;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function TextTrackCueGetId(self: bigint): string {
+  const obj = getTextTrackCue(self);
+  return obj.id;
+}
+
+/**
+ * `set-id()` operation.
+ */
+export function setId(self: bigint, value: string): void {
+  const obj = getTextTrackCue(self);
+  obj.id = value;
+}
+
+/**
+ * `get-start-time()` operation.
+ */
+export function TextTrackCueGetStartTime(self: bigint): number {
+  const obj = getTextTrackCue(self);
+  return obj.startTime;
+}
+
+/**
+ * `set-start-time()` operation.
+ */
+export function setStartTime(self: bigint, value: number): void {
+  const obj = getTextTrackCue(self);
+  obj.startTime = value;
+}
+
+/**
+ * `get-end-time()` operation.
+ */
+export function getEndTime(self: bigint): number {
+  const obj = getTextTrackCue(self);
+  return obj.endTime;
+}
+
+/**
+ * `set-end-time()` operation.
+ */
+export function setEndTime(self: bigint, value: number): void {
+  const obj = getTextTrackCue(self);
+  obj.endTime = value;
+}
+
+/**
+ * `get-pause-on-exit()` operation.
+ */
+export function getPauseOnExit(self: bigint): boolean {
+  const obj = getTextTrackCue(self);
+  return obj.pauseOnExit;
+}
+
+/**
+ * `set-pause-on-exit()` operation.
+ */
+export function setPauseOnExit(self: bigint, value: boolean): void {
+  const obj = getTextTrackCue(self);
+  obj.pauseOnExit = value;
+}
+
+/**
+ * `get-onenter()` operation.
+ */
+export function getOnenter(self: bigint): EventHandlerRecord {
+  const obj = getTextTrackCue(self);
+  return obj.onenter;
+}
+
+/**
+ * `set-onenter()` operation.
+ */
+export function setOnenter(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrackCue(self);
+  obj.onenter = value;
+}
+
+/**
+ * `get-onexit()` operation.
+ */
+export function getOnexit(self: bigint): EventHandlerRecord {
+  const obj = getTextTrackCue(self);
+  return obj.onexit;
+}
+
+/**
+ * `set-onexit()` operation.
+ */
+export function setOnexit(self: bigint, value: EventHandlerRecord): void {
+  const obj = getTextTrackCue(self);
+  obj.onexit = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: time-ranges
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TimeRangesHandle = bigint;
+
+/** Handle table for TimeRanges instances */
+const _timeRangeshandles = new Map<bigint, TimeRanges>();
+let _nextTimeRanges = 1n;
+
+/** Get a TimeRanges by handle, throwing if not found. */
+function getTimeRanges(handle: bigint): TimeRanges {
+  const obj = _timeRangeshandles.get(handle);
+  if (!obj) {
+    throw new Error(`TimeRanges handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function TimeRangesGetLength(self: bigint): number {
+  const obj = getTimeRanges(self);
+  return obj.length;
+}
+
+/**
+ * `start()` operation.
+ */
+export function TimeRangesStart(self: bigint, index: number): number {
+  const obj = getTimeRanges(self);
+  return obj.start(index);
+}
+
+/**
+ * `end()` operation.
+ */
+export function end(self: bigint, index: number): number {
+  const obj = getTimeRanges(self);
+  return obj.end(index);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: track-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TrackEventHandle = bigint;
+
+/** Handle table for TrackEvent instances */
+const _trackEventhandles = new Map<bigint, TrackEvent>();
+let _nextTrackEvent = 1n;
+
+/** Get a TrackEvent by handle, throwing if not found. */
+function getTrackEvent(handle: bigint): TrackEvent {
+  const obj = _trackEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`TrackEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-track()` operation.
+ */
+export function TrackEventGetTrack(self: bigint): bigint | undefined {
+  const obj = getTrackEvent(self);
+  return obj.track ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-map-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMapElementHandle = bigint;
+
+/** Handle table for HtmlMapElement instances */
+const _htmlMapElementhandles = new Map<bigint, HtmlMapElement>();
+let _nextHtmlMapElement = 1n;
+
+/** Get a HtmlMapElement by handle, throwing if not found. */
+function getHtmlMapElement(handle: bigint): HtmlMapElement {
+  const obj = _htmlMapElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMapElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlMapElementGetName(self: bigint): string {
+  const obj = getHtmlMapElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlMapElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlMapElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-areas()` operation.
+ */
+export function getAreas(self: bigint): bigint {
+  const obj = getHtmlMapElement(self);
+  return obj.areas;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-area-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlAreaElementHandle = bigint;
+
+/** Handle table for HtmlAreaElement instances */
+const _htmlAreaElementhandles = new Map<bigint, HtmlAreaElement>();
+let _nextHtmlAreaElement = 1n;
+
+/** Get a HtmlAreaElement by handle, throwing if not found. */
+function getHtmlAreaElement(handle: bigint): HtmlAreaElement {
+  const obj = _htmlAreaElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlAreaElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-alt()` operation.
+ */
+export function HtmlAreaElementGetAlt(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.alt;
+}
+
+/**
+ * `set-alt()` operation.
+ */
+export function HtmlAreaElementSetAlt(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.alt = value;
+}
+
+/**
+ * `get-coords()` operation.
+ */
+export function HtmlAreaElementGetCoords(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.coords;
+}
+
+/**
+ * `set-coords()` operation.
+ */
+export function HtmlAreaElementSetCoords(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.coords = value;
+}
+
+/**
+ * `get-shape()` operation.
+ */
+export function HtmlAreaElementGetShape(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.shape;
+}
+
+/**
+ * `set-shape()` operation.
+ */
+export function HtmlAreaElementSetShape(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.shape = value;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlAreaElementGetTarget(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlAreaElementSetTarget(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.target = value;
+}
+
+/**
+ * `get-download()` operation.
+ */
+export function HtmlAreaElementGetDownload(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.download;
+}
+
+/**
+ * `set-download()` operation.
+ */
+export function HtmlAreaElementSetDownload(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.download = value;
+}
+
+/**
+ * `get-ping()` operation.
+ */
+export function HtmlAreaElementGetPing(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.ping;
+}
+
+/**
+ * `set-ping()` operation.
+ */
+export function HtmlAreaElementSetPing(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.ping = value;
+}
+
+/**
+ * `get-rel()` operation.
+ */
+export function HtmlAreaElementGetRel(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.rel;
+}
+
+/**
+ * `set-rel()` operation.
+ */
+export function HtmlAreaElementSetRel(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.rel = value;
+}
+
+/**
+ * `get-rel-list()` operation.
+ */
+export function HtmlAreaElementGetRelList(self: bigint): bigint {
+  const obj = getHtmlAreaElement(self);
+  return obj.relList;
+}
+
+/**
+ * `get-referrer-policy()` operation.
+ */
+export function HtmlAreaElementGetReferrerPolicy(self: bigint): string {
+  const obj = getHtmlAreaElement(self);
+  return obj.referrerPolicy;
+}
+
+/**
+ * `set-referrer-policy()` operation.
+ */
+export function HtmlAreaElementSetReferrerPolicy(self: bigint, value: string): void {
+  const obj = getHtmlAreaElement(self);
+  obj.referrerPolicy = value;
+}
+
+/**
+ * `get-no-href()` operation.
+ */
+export function getNoHref(self: bigint): boolean {
+  const obj = getHtmlAreaElement(self);
+  return obj.noHref;
+}
+
+/**
+ * `set-no-href()` operation.
+ */
+export function setNoHref(self: bigint, value: boolean): void {
+  const obj = getHtmlAreaElement(self);
+  obj.noHref = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableElementHandle = bigint;
+
+/** Handle table for HtmlTableElement instances */
+const _htmlTableElementhandles = new Map<bigint, HtmlTableElement>();
+let _nextHtmlTableElement = 1n;
+
+/** Register a new HtmlTableElement and return its handle. */
+function registerHtmlTableElement(obj: HtmlTableElement): bigint {
+  const handle = _nextHtmlTableElement++;
+  _htmlTableElementhandles.set(handle, obj);
+  return handle;
+}
+
+/** Get a HtmlTableElement by handle, throwing if not found. */
+function getHtmlTableElement(handle: bigint): HtmlTableElement {
+  const obj = _htmlTableElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-caption()` operation.
+ */
+export function getCaption(self: bigint): bigint | undefined {
+  const obj = getHtmlTableElement(self);
+  return obj.caption ?? undefined;
+}
+
+/**
+ * `set-caption()` operation.
+ */
+export function setCaption(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlTableElement(self);
+  obj.caption = value;
+}
+
+/**
+ * `create-caption()` operation.
+ */
+export function createCaption(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.createCaption();
+}
+
+/**
+ * `delete-caption()` operation.
+ */
+export function deleteCaption(self: bigint): void {
+  const obj = getHtmlTableElement(self);
+  obj.deleteCaption();
+}
+
+/**
+ * `get-t-head()` operation.
+ */
+export function getTHead(self: bigint): bigint | undefined {
+  const obj = getHtmlTableElement(self);
+  return obj.tHead ?? undefined;
+}
+
+/**
+ * `set-t-head()` operation.
+ */
+export function setTHead(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlTableElement(self);
+  obj.tHead = value;
+}
+
+/**
+ * `create-t-head()` operation.
+ */
+export function createTHead(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.createTHead();
+}
+
+/**
+ * `delete-t-head()` operation.
+ */
+export function deleteTHead(self: bigint): void {
+  const obj = getHtmlTableElement(self);
+  obj.deleteTHead();
+}
+
+/**
+ * `get-t-foot()` operation.
+ */
+export function getTFoot(self: bigint): bigint | undefined {
+  const obj = getHtmlTableElement(self);
+  return obj.tFoot ?? undefined;
+}
+
+/**
+ * `set-t-foot()` operation.
+ */
+export function setTFoot(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlTableElement(self);
+  obj.tFoot = value;
+}
+
+/**
+ * `create-t-foot()` operation.
+ */
+export function createTFoot(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.createTFoot();
+}
+
+/**
+ * `delete-t-foot()` operation.
+ */
+export function deleteTFoot(self: bigint): void {
+  const obj = getHtmlTableElement(self);
+  obj.deleteTFoot();
+}
+
+/**
+ * `get-t-bodies()` operation.
+ */
+export function getTBodies(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.tBodies;
+}
+
+/**
+ * `create-t-body()` operation.
+ */
+export function createTBody(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.createTBody();
+}
+
+/**
+ * `get-rows()` operation.
+ */
+export function HtmlTableElementGetRows(self: bigint): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.rows;
+}
+
+/**
+ * `insert-row()` operation.
+ */
+export function HtmlTableElementInsertRow(self: bigint, index: number | undefined): bigint {
+  const obj = getHtmlTableElement(self);
+  return obj.insertRow(index);
+}
+
+/**
+ * `delete-row()` operation.
+ */
+export function HtmlTableElementDeleteRow(self: bigint, index: number): void {
+  const obj = getHtmlTableElement(self);
+  obj.deleteRow(index);
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-border()` operation.
+ */
+export function HtmlTableElementGetBorder(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.border;
+}
+
+/**
+ * `set-border()` operation.
+ */
+export function HtmlTableElementSetBorder(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.border = value;
+}
+
+/**
+ * `get-frame()` operation.
+ */
+export function getFrame(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.frame;
+}
+
+/**
+ * `set-frame()` operation.
+ */
+export function setFrame(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.frame = value;
+}
+
+/**
+ * `get-rules()` operation.
+ */
+export function getRules(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.rules;
+}
+
+/**
+ * `set-rules()` operation.
+ */
+export function setRules(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.rules = value;
+}
+
+/**
+ * `get-summary()` operation.
+ */
+export function getSummary(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.summary;
+}
+
+/**
+ * `set-summary()` operation.
+ */
+export function setSummary(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.summary = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlTableElementGetWidth(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlTableElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-bg-color()` operation.
+ */
+export function HtmlTableElementGetBgColor(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.bgColor;
+}
+
+/**
+ * `set-bg-color()` operation.
+ */
+export function HtmlTableElementSetBgColor(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.bgColor = value;
+}
+
+/**
+ * `get-cell-padding()` operation.
+ */
+export function getCellPadding(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.cellPadding;
+}
+
+/**
+ * `set-cell-padding()` operation.
+ */
+export function setCellPadding(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.cellPadding = value;
+}
+
+/**
+ * `get-cell-spacing()` operation.
+ */
+export function getCellSpacing(self: bigint): string {
+  const obj = getHtmlTableElement(self);
+  return obj.cellSpacing;
+}
+
+/**
+ * `set-cell-spacing()` operation.
+ */
+export function setCellSpacing(self: bigint, value: string): void {
+  const obj = getHtmlTableElement(self);
+  obj.cellSpacing = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-caption-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableCaptionElementHandle = bigint;
+
+/** Handle table for HtmlTableCaptionElement instances */
+const _htmlTableCaptionElementhandles = new Map<bigint, HtmlTableCaptionElement>();
+let _nextHtmlTableCaptionElement = 1n;
+
+/** Get a HtmlTableCaptionElement by handle, throwing if not found. */
+function getHtmlTableCaptionElement(handle: bigint): HtmlTableCaptionElement {
+  const obj = _htmlTableCaptionElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableCaptionElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableCaptionElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableCaptionElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableCaptionElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableCaptionElement(self);
+  obj.align = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-col-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableColElementHandle = bigint;
+
+/** Handle table for HtmlTableColElement instances */
+const _htmlTableColElementhandles = new Map<bigint, HtmlTableColElement>();
+let _nextHtmlTableColElement = 1n;
+
+/** Get a HtmlTableColElement by handle, throwing if not found. */
+function getHtmlTableColElement(handle: bigint): HtmlTableColElement {
+  const obj = _htmlTableColElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableColElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-span()` operation.
+ */
+export function getSpan(self: bigint): number {
+  const obj = getHtmlTableColElement(self);
+  return obj.span;
+}
+
+/**
+ * `set-span()` operation.
+ */
+export function setSpan(self: bigint, value: number): void {
+  const obj = getHtmlTableColElement(self);
+  obj.span = value;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableColElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableColElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableColElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableColElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-ch()` operation.
+ */
+export function HtmlTableColElementGetCh(self: bigint): string {
+  const obj = getHtmlTableColElement(self);
+  return obj.ch;
+}
+
+/**
+ * `set-ch()` operation.
+ */
+export function HtmlTableColElementSetCh(self: bigint, value: string): void {
+  const obj = getHtmlTableColElement(self);
+  obj.ch = value;
+}
+
+/**
+ * `get-ch-off()` operation.
+ */
+export function HtmlTableColElementGetChOff(self: bigint): string {
+  const obj = getHtmlTableColElement(self);
+  return obj.chOff;
+}
+
+/**
+ * `set-ch-off()` operation.
+ */
+export function HtmlTableColElementSetChOff(self: bigint, value: string): void {
+  const obj = getHtmlTableColElement(self);
+  obj.chOff = value;
+}
+
+/**
+ * `get-v-align()` operation.
+ */
+export function HtmlTableColElementGetVAlign(self: bigint): string {
+  const obj = getHtmlTableColElement(self);
+  return obj.vAlign;
+}
+
+/**
+ * `set-v-align()` operation.
+ */
+export function HtmlTableColElementSetVAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableColElement(self);
+  obj.vAlign = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlTableColElementGetWidth(self: bigint): string {
+  const obj = getHtmlTableColElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlTableColElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlTableColElement(self);
+  obj.width = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-section-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableSectionElementHandle = bigint;
+
+/** Handle table for HtmlTableSectionElement instances */
+const _htmlTableSectionElementhandles = new Map<bigint, HtmlTableSectionElement>();
+let _nextHtmlTableSectionElement = 1n;
+
+/** Get a HtmlTableSectionElement by handle, throwing if not found. */
+function getHtmlTableSectionElement(handle: bigint): HtmlTableSectionElement {
+  const obj = _htmlTableSectionElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableSectionElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-rows()` operation.
+ */
+export function HtmlTableSectionElementGetRows(self: bigint): bigint {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.rows;
+}
+
+/**
+ * `insert-row()` operation.
+ */
+export function HtmlTableSectionElementInsertRow(self: bigint, index: number | undefined): bigint {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.insertRow(index);
+}
+
+/**
+ * `delete-row()` operation.
+ */
+export function HtmlTableSectionElementDeleteRow(self: bigint, index: number): void {
+  const obj = getHtmlTableSectionElement(self);
+  obj.deleteRow(index);
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableSectionElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableSectionElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableSectionElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-ch()` operation.
+ */
+export function HtmlTableSectionElementGetCh(self: bigint): string {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.ch;
+}
+
+/**
+ * `set-ch()` operation.
+ */
+export function HtmlTableSectionElementSetCh(self: bigint, value: string): void {
+  const obj = getHtmlTableSectionElement(self);
+  obj.ch = value;
+}
+
+/**
+ * `get-ch-off()` operation.
+ */
+export function HtmlTableSectionElementGetChOff(self: bigint): string {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.chOff;
+}
+
+/**
+ * `set-ch-off()` operation.
+ */
+export function HtmlTableSectionElementSetChOff(self: bigint, value: string): void {
+  const obj = getHtmlTableSectionElement(self);
+  obj.chOff = value;
+}
+
+/**
+ * `get-v-align()` operation.
+ */
+export function HtmlTableSectionElementGetVAlign(self: bigint): string {
+  const obj = getHtmlTableSectionElement(self);
+  return obj.vAlign;
+}
+
+/**
+ * `set-v-align()` operation.
+ */
+export function HtmlTableSectionElementSetVAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableSectionElement(self);
+  obj.vAlign = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-row-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableRowElementHandle = bigint;
+
+/** Handle table for HtmlTableRowElement instances */
+const _htmlTableRowElementhandles = new Map<bigint, HtmlTableRowElement>();
+let _nextHtmlTableRowElement = 1n;
+
+/** Get a HtmlTableRowElement by handle, throwing if not found. */
+function getHtmlTableRowElement(handle: bigint): HtmlTableRowElement {
+  const obj = _htmlTableRowElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableRowElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-row-index()` operation.
+ */
+export function getRowIndex(self: bigint): number {
+  const obj = getHtmlTableRowElement(self);
+  return obj.rowIndex;
+}
+
+/**
+ * `get-section-row-index()` operation.
+ */
+export function getSectionRowIndex(self: bigint): number {
+  const obj = getHtmlTableRowElement(self);
+  return obj.sectionRowIndex;
+}
+
+/**
+ * `get-cells()` operation.
+ */
+export function getCells(self: bigint): bigint {
+  const obj = getHtmlTableRowElement(self);
+  return obj.cells;
+}
+
+/**
+ * `insert-cell()` operation.
+ */
+export function insertCell(self: bigint, index: number | undefined): bigint {
+  const obj = getHtmlTableRowElement(self);
+  return obj.insertCell(index);
+}
+
+/**
+ * `delete-cell()` operation.
+ */
+export function deleteCell(self: bigint, index: number): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.deleteCell(index);
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableRowElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableRowElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableRowElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-ch()` operation.
+ */
+export function HtmlTableRowElementGetCh(self: bigint): string {
+  const obj = getHtmlTableRowElement(self);
+  return obj.ch;
+}
+
+/**
+ * `set-ch()` operation.
+ */
+export function HtmlTableRowElementSetCh(self: bigint, value: string): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.ch = value;
+}
+
+/**
+ * `get-ch-off()` operation.
+ */
+export function HtmlTableRowElementGetChOff(self: bigint): string {
+  const obj = getHtmlTableRowElement(self);
+  return obj.chOff;
+}
+
+/**
+ * `set-ch-off()` operation.
+ */
+export function HtmlTableRowElementSetChOff(self: bigint, value: string): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.chOff = value;
+}
+
+/**
+ * `get-v-align()` operation.
+ */
+export function HtmlTableRowElementGetVAlign(self: bigint): string {
+  const obj = getHtmlTableRowElement(self);
+  return obj.vAlign;
+}
+
+/**
+ * `set-v-align()` operation.
+ */
+export function HtmlTableRowElementSetVAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.vAlign = value;
+}
+
+/**
+ * `get-bg-color()` operation.
+ */
+export function HtmlTableRowElementGetBgColor(self: bigint): string {
+  const obj = getHtmlTableRowElement(self);
+  return obj.bgColor;
+}
+
+/**
+ * `set-bg-color()` operation.
+ */
+export function HtmlTableRowElementSetBgColor(self: bigint, value: string): void {
+  const obj = getHtmlTableRowElement(self);
+  obj.bgColor = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-table-cell-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTableCellElementHandle = bigint;
+
+/** Handle table for HtmlTableCellElement instances */
+const _htmlTableCellElementhandles = new Map<bigint, HtmlTableCellElement>();
+let _nextHtmlTableCellElement = 1n;
+
+/** Get a HtmlTableCellElement by handle, throwing if not found. */
+function getHtmlTableCellElement(handle: bigint): HtmlTableCellElement {
+  const obj = _htmlTableCellElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTableCellElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-col-span()` operation.
+ */
+export function getColSpan(self: bigint): number {
+  const obj = getHtmlTableCellElement(self);
+  return obj.colSpan;
+}
+
+/**
+ * `set-col-span()` operation.
+ */
+export function setColSpan(self: bigint, value: number): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.colSpan = value;
+}
+
+/**
+ * `get-row-span()` operation.
+ */
+export function getRowSpan(self: bigint): number {
+  const obj = getHtmlTableCellElement(self);
+  return obj.rowSpan;
+}
+
+/**
+ * `set-row-span()` operation.
+ */
+export function setRowSpan(self: bigint, value: number): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.rowSpan = value;
+}
+
+/**
+ * `get-headers()` operation.
+ */
+export function getHeaders(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.headers;
+}
+
+/**
+ * `set-headers()` operation.
+ */
+export function setHeaders(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.headers = value;
+}
+
+/**
+ * `get-cell-index()` operation.
+ */
+export function getCellIndex(self: bigint): number {
+  const obj = getHtmlTableCellElement(self);
+  return obj.cellIndex;
+}
+
+/**
+ * `get-scope()` operation.
+ */
+export function getScope(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.scope;
+}
+
+/**
+ * `set-scope()` operation.
+ */
+export function setScope(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.scope = value;
+}
+
+/**
+ * `get-abbr()` operation.
+ */
+export function getAbbr(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.abbr;
+}
+
+/**
+ * `set-abbr()` operation.
+ */
+export function setAbbr(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.abbr = value;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlTableCellElementGetAlign(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlTableCellElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-axis()` operation.
+ */
+export function getAxis(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.axis;
+}
+
+/**
+ * `set-axis()` operation.
+ */
+export function setAxis(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.axis = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlTableCellElementGetHeight(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlTableCellElementSetHeight(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlTableCellElementGetWidth(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlTableCellElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-ch()` operation.
+ */
+export function HtmlTableCellElementGetCh(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.ch;
+}
+
+/**
+ * `set-ch()` operation.
+ */
+export function HtmlTableCellElementSetCh(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.ch = value;
+}
+
+/**
+ * `get-ch-off()` operation.
+ */
+export function HtmlTableCellElementGetChOff(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.chOff;
+}
+
+/**
+ * `set-ch-off()` operation.
+ */
+export function HtmlTableCellElementSetChOff(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.chOff = value;
+}
+
+/**
+ * `get-no-wrap()` operation.
+ */
+export function getNoWrap(self: bigint): boolean {
+  const obj = getHtmlTableCellElement(self);
+  return obj.noWrap;
+}
+
+/**
+ * `set-no-wrap()` operation.
+ */
+export function setNoWrap(self: bigint, value: boolean): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.noWrap = value;
+}
+
+/**
+ * `get-v-align()` operation.
+ */
+export function HtmlTableCellElementGetVAlign(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.vAlign;
+}
+
+/**
+ * `set-v-align()` operation.
+ */
+export function HtmlTableCellElementSetVAlign(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.vAlign = value;
+}
+
+/**
+ * `get-bg-color()` operation.
+ */
+export function HtmlTableCellElementGetBgColor(self: bigint): string {
+  const obj = getHtmlTableCellElement(self);
+  return obj.bgColor;
+}
+
+/**
+ * `set-bg-color()` operation.
+ */
+export function HtmlTableCellElementSetBgColor(self: bigint, value: string): void {
+  const obj = getHtmlTableCellElement(self);
+  obj.bgColor = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-form-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlFormElementHandle = bigint;
+
+/** Handle table for HtmlFormElement instances */
+const _htmlFormElementhandles = new Map<bigint, HtmlFormElement>();
+let _nextHtmlFormElement = 1n;
+
+/** Get a HtmlFormElement by handle, throwing if not found. */
+function getHtmlFormElement(handle: bigint): HtmlFormElement {
+  const obj = _htmlFormElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlFormElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-accept-charset()` operation.
+ */
+export function getAcceptCharset(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.acceptCharset;
+}
+
+/**
+ * `set-accept-charset()` operation.
+ */
+export function setAcceptCharset(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.acceptCharset = value;
+}
+
+/**
+ * `get-action()` operation.
+ */
+export function getAction(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.action;
+}
+
+/**
+ * `set-action()` operation.
+ */
+export function setAction(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.action = value;
+}
+
+/**
+ * `get-autocomplete()` operation.
+ */
+export function HtmlFormElementGetAutocomplete(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.autocomplete;
+}
+
+/**
+ * `set-autocomplete()` operation.
+ */
+export function HtmlFormElementSetAutocomplete(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.autocomplete = value;
+}
+
+/**
+ * `get-enctype()` operation.
+ */
+export function getEnctype(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.enctype;
+}
+
+/**
+ * `set-enctype()` operation.
+ */
+export function setEnctype(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.enctype = value;
+}
+
+/**
+ * `get-encoding()` operation.
+ */
+export function getEncoding(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.encoding;
+}
+
+/**
+ * `set-encoding()` operation.
+ */
+export function setEncoding(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.encoding = value;
+}
+
+/**
+ * `get-method()` operation.
+ */
+export function getMethod(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.method;
+}
+
+/**
+ * `set-method()` operation.
+ */
+export function setMethod(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.method = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlFormElementGetName(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlFormElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-no-validate()` operation.
+ */
+export function getNoValidate(self: bigint): boolean {
+  const obj = getHtmlFormElement(self);
+  return obj.noValidate;
+}
+
+/**
+ * `set-no-validate()` operation.
+ */
+export function setNoValidate(self: bigint, value: boolean): void {
+  const obj = getHtmlFormElement(self);
+  obj.noValidate = value;
+}
+
+/**
+ * `get-target()` operation.
+ */
+export function HtmlFormElementGetTarget(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.target;
+}
+
+/**
+ * `set-target()` operation.
+ */
+export function HtmlFormElementSetTarget(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.target = value;
+}
+
+/**
+ * `get-rel()` operation.
+ */
+export function HtmlFormElementGetRel(self: bigint): string {
+  const obj = getHtmlFormElement(self);
+  return obj.rel;
+}
+
+/**
+ * `set-rel()` operation.
+ */
+export function HtmlFormElementSetRel(self: bigint, value: string): void {
+  const obj = getHtmlFormElement(self);
+  obj.rel = value;
+}
+
+/**
+ * `get-rel-list()` operation.
+ */
+export function HtmlFormElementGetRelList(self: bigint): bigint {
+  const obj = getHtmlFormElement(self);
+  return obj.relList;
+}
+
+/**
+ * `get-elements()` operation.
+ */
+export function HtmlFormElementGetElements(self: bigint): bigint {
+  const obj = getHtmlFormElement(self);
+  return obj.elements;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function HtmlFormElementGetLength(self: bigint): number {
+  const obj = getHtmlFormElement(self);
+  return obj.length;
+}
+
+/**
+ * `element()` operation.
+ */
+export function HtmlFormElementElement(self: bigint, index: number): void {
+  const obj = getHtmlFormElement(self);
+  obj.element(index);
+}
+
+/**
+ * `submit()` operation.
+ */
+export function submit(self: bigint): void {
+  const obj = getHtmlFormElement(self);
+  obj.submit();
+}
+
+/**
+ * `request-submit()` operation.
+ */
+export function requestSubmit(self: bigint, submitter: bigint | undefined): void {
+  const obj = getHtmlFormElement(self);
+  obj.requestSubmit(submitter);
+}
+
+/**
+ * `reset()` operation.
+ */
+export function HtmlFormElementReset(self: bigint): void {
+  const obj = getHtmlFormElement(self);
+  obj.reset();
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlFormElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlFormElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlFormElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlFormElement(self);
+  return obj.reportValidity();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-label-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlLabelElementHandle = bigint;
+
+/** Handle table for HtmlLabelElement instances */
+const _htmlLabelElementhandles = new Map<bigint, HtmlLabelElement>();
+let _nextHtmlLabelElement = 1n;
+
+/** Get a HtmlLabelElement by handle, throwing if not found. */
+function getHtmlLabelElement(handle: bigint): HtmlLabelElement {
+  const obj = _htmlLabelElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlLabelElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlLabelElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlLabelElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-html-for()` operation.
+ */
+export function HtmlLabelElementGetHtmlFor(self: bigint): string {
+  const obj = getHtmlLabelElement(self);
+  return obj.htmlFor;
+}
+
+/**
+ * `set-html-for()` operation.
+ */
+export function HtmlLabelElementSetHtmlFor(self: bigint, value: string): void {
+  const obj = getHtmlLabelElement(self);
+  obj.htmlFor = value;
+}
+
+/**
+ * `get-control()` operation.
+ */
+export function getControl(self: bigint): bigint | undefined {
+  const obj = getHtmlLabelElement(self);
+  return obj.control ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-input-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlInputElementHandle = bigint;
+
+/** Handle table for HtmlInputElement instances */
+const _htmlInputElementhandles = new Map<bigint, HtmlInputElement>();
+let _nextHtmlInputElement = 1n;
+
+/** Get a HtmlInputElement by handle, throwing if not found. */
+function getHtmlInputElement(handle: bigint): HtmlInputElement {
+  const obj = _htmlInputElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlInputElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-accept()` operation.
+ */
+export function getAccept(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.accept;
+}
+
+/**
+ * `set-accept()` operation.
+ */
+export function setAccept(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.accept = value;
+}
+
+/**
+ * `get-alpha()` operation.
+ */
+export function getAlpha(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.alpha;
+}
+
+/**
+ * `set-alpha()` operation.
+ */
+export function setAlpha(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.alpha = value;
+}
+
+/**
+ * `get-alt()` operation.
+ */
+export function HtmlInputElementGetAlt(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.alt;
+}
+
+/**
+ * `set-alt()` operation.
+ */
+export function HtmlInputElementSetAlt(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.alt = value;
+}
+
+/**
+ * `get-autocomplete()` operation.
+ */
+export function HtmlInputElementGetAutocomplete(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.autocomplete;
+}
+
+/**
+ * `set-autocomplete()` operation.
+ */
+export function HtmlInputElementSetAutocomplete(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.autocomplete = value;
+}
+
+/**
+ * `get-default-checked()` operation.
+ */
+export function getDefaultChecked(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.defaultChecked;
+}
+
+/**
+ * `set-default-checked()` operation.
+ */
+export function setDefaultChecked(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.defaultChecked = value;
+}
+
+/**
+ * `get-checked()` operation.
+ */
+export function getChecked(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.checked;
+}
+
+/**
+ * `set-checked()` operation.
+ */
+export function setChecked(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.checked = value;
+}
+
+/**
+ * `get-color-space()` operation.
+ */
+export function HtmlInputElementGetColorSpace(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.colorSpace;
+}
+
+/**
+ * `set-color-space()` operation.
+ */
+export function setColorSpace(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.colorSpace = value;
+}
+
+/**
+ * `get-dir-name()` operation.
+ */
+export function HtmlInputElementGetDirName(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.dirName;
+}
+
+/**
+ * `set-dir-name()` operation.
+ */
+export function HtmlInputElementSetDirName(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.dirName = value;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlInputElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlInputElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlInputElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-files()` operation.
+ */
+export function HtmlInputElementGetFiles(self: bigint): bigint | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.files ?? undefined;
+}
+
+/**
+ * `set-files()` operation.
+ */
+export function setFiles(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.files = value;
+}
+
+/**
+ * `get-form-action()` operation.
+ */
+export function HtmlInputElementGetFormAction(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.formAction;
+}
+
+/**
+ * `set-form-action()` operation.
+ */
+export function HtmlInputElementSetFormAction(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.formAction = value;
+}
+
+/**
+ * `get-form-enctype()` operation.
+ */
+export function HtmlInputElementGetFormEnctype(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.formEnctype;
+}
+
+/**
+ * `set-form-enctype()` operation.
+ */
+export function HtmlInputElementSetFormEnctype(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.formEnctype = value;
+}
+
+/**
+ * `get-form-method()` operation.
+ */
+export function HtmlInputElementGetFormMethod(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.formMethod;
+}
+
+/**
+ * `set-form-method()` operation.
+ */
+export function HtmlInputElementSetFormMethod(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.formMethod = value;
+}
+
+/**
+ * `get-form-no-validate()` operation.
+ */
+export function HtmlInputElementGetFormNoValidate(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.formNoValidate;
+}
+
+/**
+ * `set-form-no-validate()` operation.
+ */
+export function HtmlInputElementSetFormNoValidate(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.formNoValidate = value;
+}
+
+/**
+ * `get-form-target()` operation.
+ */
+export function HtmlInputElementGetFormTarget(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.formTarget;
+}
+
+/**
+ * `set-form-target()` operation.
+ */
+export function HtmlInputElementSetFormTarget(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.formTarget = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlInputElementGetHeight(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlInputElementSetHeight(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-indeterminate()` operation.
+ */
+export function getIndeterminate(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.indeterminate;
+}
+
+/**
+ * `set-indeterminate()` operation.
+ */
+export function setIndeterminate(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.indeterminate = value;
+}
+
+/**
+ * `get-list()` operation.
+ */
+export function getList(self: bigint): bigint | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.list ?? undefined;
+}
+
+/**
+ * `get-max()` operation.
+ */
+export function HtmlInputElementGetMax(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.max;
+}
+
+/**
+ * `set-max()` operation.
+ */
+export function HtmlInputElementSetMax(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.max = value;
+}
+
+/**
+ * `get-max-length()` operation.
+ */
+export function HtmlInputElementGetMaxLength(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.maxLength;
+}
+
+/**
+ * `set-max-length()` operation.
+ */
+export function HtmlInputElementSetMaxLength(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.maxLength = value;
+}
+
+/**
+ * `get-min()` operation.
+ */
+export function HtmlInputElementGetMin(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.min;
+}
+
+/**
+ * `set-min()` operation.
+ */
+export function HtmlInputElementSetMin(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.min = value;
+}
+
+/**
+ * `get-min-length()` operation.
+ */
+export function HtmlInputElementGetMinLength(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.minLength;
+}
+
+/**
+ * `set-min-length()` operation.
+ */
+export function HtmlInputElementSetMinLength(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.minLength = value;
+}
+
+/**
+ * `get-multiple()` operation.
+ */
+export function HtmlInputElementGetMultiple(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.multiple;
+}
+
+/**
+ * `set-multiple()` operation.
+ */
+export function HtmlInputElementSetMultiple(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.multiple = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlInputElementGetName(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlInputElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-pattern()` operation.
+ */
+export function getPattern(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.pattern;
+}
+
+/**
+ * `set-pattern()` operation.
+ */
+export function setPattern(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.pattern = value;
+}
+
+/**
+ * `get-placeholder()` operation.
+ */
+export function HtmlInputElementGetPlaceholder(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.placeholder;
+}
+
+/**
+ * `set-placeholder()` operation.
+ */
+export function HtmlInputElementSetPlaceholder(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.placeholder = value;
+}
+
+/**
+ * `get-read-only()` operation.
+ */
+export function HtmlInputElementGetReadOnly(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.readOnly;
+}
+
+/**
+ * `set-read-only()` operation.
+ */
+export function HtmlInputElementSetReadOnly(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.readOnly = value;
+}
+
+/**
+ * `get-required()` operation.
+ */
+export function HtmlInputElementGetRequired(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.required;
+}
+
+/**
+ * `set-required()` operation.
+ */
+export function HtmlInputElementSetRequired(self: bigint, value: boolean): void {
+  const obj = getHtmlInputElement(self);
+  obj.required = value;
+}
+
+/**
+ * `get-size()` operation.
+ */
+export function HtmlInputElementGetSize(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.size;
+}
+
+/**
+ * `set-size()` operation.
+ */
+export function HtmlInputElementSetSize(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.size = value;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlInputElementGetSrc(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlInputElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-step()` operation.
+ */
+export function getStep(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.step;
+}
+
+/**
+ * `set-step()` operation.
+ */
+export function setStep(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.step = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlInputElementGetType(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlInputElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-default-value()` operation.
+ */
+export function HtmlInputElementGetDefaultValue(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.defaultValue;
+}
+
+/**
+ * `set-default-value()` operation.
+ */
+export function HtmlInputElementSetDefaultValue(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.defaultValue = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlInputElementGetValue(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlInputElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-value-as-date()` operation.
+ */
+export function getValueAsDate(self: bigint): bigint | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.valueAsDate ?? undefined;
+}
+
+/**
+ * `set-value-as-date()` operation.
+ */
+export function setValueAsDate(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.valueAsDate = value;
+}
+
+/**
+ * `get-value-as-number()` operation.
+ */
+export function getValueAsNumber(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.valueAsNumber;
+}
+
+/**
+ * `set-value-as-number()` operation.
+ */
+export function setValueAsNumber(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.valueAsNumber = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlInputElementGetWidth(self: bigint): number {
+  const obj = getHtmlInputElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlInputElementSetWidth(self: bigint, value: number): void {
+  const obj = getHtmlInputElement(self);
+  obj.width = value;
+}
+
+/**
+ * `step-up()` operation.
+ */
+export function stepUp(self: bigint, n: number | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.stepUp(n);
+}
+
+/**
+ * `step-down()` operation.
+ */
+export function stepDown(self: bigint, n: number | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.stepDown(n);
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlInputElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlInputElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlInputElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlInputElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlInputElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlInputElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlInputElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlInputElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlInputElementGetLabels(self: bigint): bigint | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.labels ?? undefined;
+}
+
+/**
+ * `select()` operation.
+ */
+export function HtmlInputElementSelect(self: bigint): void {
+  const obj = getHtmlInputElement(self);
+  obj.select();
+}
+
+/**
+ * `get-selection-start()` operation.
+ */
+export function HtmlInputElementGetSelectionStart(self: bigint): number | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.selectionStart ?? undefined;
+}
+
+/**
+ * `set-selection-start()` operation.
+ */
+export function HtmlInputElementSetSelectionStart(self: bigint, value: number | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.selectionStart = value;
+}
+
+/**
+ * `get-selection-end()` operation.
+ */
+export function HtmlInputElementGetSelectionEnd(self: bigint): number | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.selectionEnd ?? undefined;
+}
+
+/**
+ * `set-selection-end()` operation.
+ */
+export function HtmlInputElementSetSelectionEnd(self: bigint, value: number | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.selectionEnd = value;
+}
+
+/**
+ * `get-selection-direction()` operation.
+ */
+export function HtmlInputElementGetSelectionDirection(self: bigint): string | undefined {
+  const obj = getHtmlInputElement(self);
+  return obj.selectionDirection ?? undefined;
+}
+
+/**
+ * `set-selection-direction()` operation.
+ */
+export function HtmlInputElementSetSelectionDirection(self: bigint, value: string | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.selectionDirection = value;
+}
+
+/**
+ * `set-range-text()` operation.
+ */
+export function HtmlInputElementSetRangeText(self: bigint, replacement: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.rangeText = replacement;
+}
+
+/**
+ * `set-selection-range()` operation.
+ */
+export function HtmlInputElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
+  const obj = getHtmlInputElement(self);
+  obj.selectionRange = direction;
+}
+
+/**
+ * `show-picker()` operation.
+ */
+export function HtmlInputElementShowPicker(self: bigint): void {
+  const obj = getHtmlInputElement(self);
+  obj.showPicker();
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlInputElementGetAlign(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlInputElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.align = value;
+}
+
+/**
+ * `get-use-map()` operation.
+ */
+export function HtmlInputElementGetUseMap(self: bigint): string {
+  const obj = getHtmlInputElement(self);
+  return obj.useMap;
+}
+
+/**
+ * `set-use-map()` operation.
+ */
+export function HtmlInputElementSetUseMap(self: bigint, value: string): void {
+  const obj = getHtmlInputElement(self);
+  obj.useMap = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-button-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlButtonElementHandle = bigint;
+
+/** Handle table for HtmlButtonElement instances */
+const _htmlButtonElementhandles = new Map<bigint, HtmlButtonElement>();
+let _nextHtmlButtonElement = 1n;
+
+/** Get a HtmlButtonElement by handle, throwing if not found. */
+function getHtmlButtonElement(handle: bigint): HtmlButtonElement {
+  const obj = _htmlButtonElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlButtonElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-command()` operation.
+ */
+export function HtmlButtonElementGetCommand(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.command;
+}
+
+/**
+ * `set-command()` operation.
+ */
+export function setCommand(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.command = value;
+}
+
+/**
+ * `get-command-for-element()` operation.
+ */
+export function getCommandForElement(self: bigint): bigint | undefined {
+  const obj = getHtmlButtonElement(self);
+  return obj.commandForElement ?? undefined;
+}
+
+/**
+ * `set-command-for-element()` operation.
+ */
+export function setCommandForElement(self: bigint, value: bigint | undefined): void {
+  const obj = getHtmlButtonElement(self);
+  obj.commandForElement = value;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlButtonElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlButtonElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlButtonElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlButtonElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlButtonElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlButtonElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-form-action()` operation.
+ */
+export function HtmlButtonElementGetFormAction(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.formAction;
+}
+
+/**
+ * `set-form-action()` operation.
+ */
+export function HtmlButtonElementSetFormAction(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.formAction = value;
+}
+
+/**
+ * `get-form-enctype()` operation.
+ */
+export function HtmlButtonElementGetFormEnctype(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.formEnctype;
+}
+
+/**
+ * `set-form-enctype()` operation.
+ */
+export function HtmlButtonElementSetFormEnctype(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.formEnctype = value;
+}
+
+/**
+ * `get-form-method()` operation.
+ */
+export function HtmlButtonElementGetFormMethod(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.formMethod;
+}
+
+/**
+ * `set-form-method()` operation.
+ */
+export function HtmlButtonElementSetFormMethod(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.formMethod = value;
+}
+
+/**
+ * `get-form-no-validate()` operation.
+ */
+export function HtmlButtonElementGetFormNoValidate(self: bigint): boolean {
+  const obj = getHtmlButtonElement(self);
+  return obj.formNoValidate;
+}
+
+/**
+ * `set-form-no-validate()` operation.
+ */
+export function HtmlButtonElementSetFormNoValidate(self: bigint, value: boolean): void {
+  const obj = getHtmlButtonElement(self);
+  obj.formNoValidate = value;
+}
+
+/**
+ * `get-form-target()` operation.
+ */
+export function HtmlButtonElementGetFormTarget(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.formTarget;
+}
+
+/**
+ * `set-form-target()` operation.
+ */
+export function HtmlButtonElementSetFormTarget(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.formTarget = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlButtonElementGetName(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlButtonElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlButtonElementGetType(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlButtonElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlButtonElementGetValue(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlButtonElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlButtonElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlButtonElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlButtonElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlButtonElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlButtonElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlButtonElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlButtonElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlButtonElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlButtonElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlButtonElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlButtonElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlButtonElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlButtonElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlButtonElement(self);
+  return obj.labels;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-select-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlSelectElementHandle = bigint;
+
+/** Handle table for HtmlSelectElement instances */
+const _htmlSelectElementhandles = new Map<bigint, HtmlSelectElement>();
+let _nextHtmlSelectElement = 1n;
+
+/** Get a HtmlSelectElement by handle, throwing if not found. */
+function getHtmlSelectElement(handle: bigint): HtmlSelectElement {
+  const obj = _htmlSelectElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlSelectElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-autocomplete()` operation.
+ */
+export function HtmlSelectElementGetAutocomplete(self: bigint): string {
+  const obj = getHtmlSelectElement(self);
+  return obj.autocomplete;
+}
+
+/**
+ * `set-autocomplete()` operation.
+ */
+export function HtmlSelectElementSetAutocomplete(self: bigint, value: string): void {
+  const obj = getHtmlSelectElement(self);
+  obj.autocomplete = value;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlSelectElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlSelectElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlSelectElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlSelectElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlSelectElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-multiple()` operation.
+ */
+export function HtmlSelectElementGetMultiple(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.multiple;
+}
+
+/**
+ * `set-multiple()` operation.
+ */
+export function HtmlSelectElementSetMultiple(self: bigint, value: boolean): void {
+  const obj = getHtmlSelectElement(self);
+  obj.multiple = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlSelectElementGetName(self: bigint): string {
+  const obj = getHtmlSelectElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlSelectElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlSelectElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-required()` operation.
+ */
+export function HtmlSelectElementGetRequired(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.required;
+}
+
+/**
+ * `set-required()` operation.
+ */
+export function HtmlSelectElementSetRequired(self: bigint, value: boolean): void {
+  const obj = getHtmlSelectElement(self);
+  obj.required = value;
+}
+
+/**
+ * `get-size()` operation.
+ */
+export function HtmlSelectElementGetSize(self: bigint): number {
+  const obj = getHtmlSelectElement(self);
+  return obj.size;
+}
+
+/**
+ * `set-size()` operation.
+ */
+export function HtmlSelectElementSetSize(self: bigint, value: number): void {
+  const obj = getHtmlSelectElement(self);
+  obj.size = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlSelectElementGetType(self: bigint): string {
+  const obj = getHtmlSelectElement(self);
+  return obj.type;
+}
+
+/**
+ * `get-options()` operation.
+ */
+export function HtmlSelectElementGetOptions(self: bigint): bigint {
+  const obj = getHtmlSelectElement(self);
+  return obj.options;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function HtmlSelectElementGetLength(self: bigint): number {
+  const obj = getHtmlSelectElement(self);
+  return obj.length;
+}
+
+/**
+ * `set-length()` operation.
+ */
+export function HtmlSelectElementSetLength(self: bigint, value: number): void {
+  const obj = getHtmlSelectElement(self);
+  obj.length = value;
+}
+
+/**
+ * `item()` operation.
+ */
+export function HtmlSelectElementItem(self: bigint, index: number): bigint | undefined {
+  const obj = getHtmlSelectElement(self);
+  return obj.item(index) ?? undefined;
+}
+
+/**
+ * `named-item()` operation.
+ */
+export function HtmlSelectElementNamedItem(self: bigint, name: string): bigint | undefined {
+  const obj = getHtmlSelectElement(self);
+  return obj.namedItem(name) ?? undefined;
+}
+
+/**
+ * `add()` operation.
+ */
+export function HtmlSelectElementAdd(self: bigint, element: bigint, before: bigint | undefined): void {
+  const obj = getHtmlSelectElement(self);
+  obj.add(element, before);
+}
+
+/**
+ * `remove()` operation.
+ */
+export function HtmlSelectElementRemove(self: bigint): void {
+  const obj = getHtmlSelectElement(self);
+  obj.remove();
+}
+
+/**
+ * `undefined()` operation.
+ */
+export function HtmlSelectElementUndefined(self: bigint, index: number, option: bigint | undefined): void {
+  const obj = getHtmlSelectElement(self);
+  obj._undefined(index, option);
+}
+
+/**
+ * `get-selected-options()` operation.
+ */
+export function getSelectedOptions(self: bigint): bigint {
+  const obj = getHtmlSelectElement(self);
+  return obj.selectedOptions;
+}
+
+/**
+ * `get-selected-index()` operation.
+ */
+export function HtmlSelectElementGetSelectedIndex(self: bigint): number {
+  const obj = getHtmlSelectElement(self);
+  return obj.selectedIndex;
+}
+
+/**
+ * `set-selected-index()` operation.
+ */
+export function HtmlSelectElementSetSelectedIndex(self: bigint, value: number): void {
+  const obj = getHtmlSelectElement(self);
+  obj.selectedIndex = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlSelectElementGetValue(self: bigint): string {
+  const obj = getHtmlSelectElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlSelectElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlSelectElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlSelectElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlSelectElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlSelectElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlSelectElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlSelectElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlSelectElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlSelectElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlSelectElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlSelectElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlSelectElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `show-picker()` operation.
+ */
+export function HtmlSelectElementShowPicker(self: bigint): void {
+  const obj = getHtmlSelectElement(self);
+  obj.showPicker();
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlSelectElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlSelectElement(self);
+  return obj.labels;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-data-list-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDataListElementHandle = bigint;
+
+/** Handle table for HtmlDataListElement instances */
+const _htmlDataListElementhandles = new Map<bigint, HtmlDataListElement>();
+let _nextHtmlDataListElement = 1n;
+
+/** Get a HtmlDataListElement by handle, throwing if not found. */
+function getHtmlDataListElement(handle: bigint): HtmlDataListElement {
+  const obj = _htmlDataListElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDataListElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-options()` operation.
+ */
+export function HtmlDataListElementGetOptions(self: bigint): bigint {
+  const obj = getHtmlDataListElement(self);
+  return obj.options;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-opt-group-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlOptGroupElementHandle = bigint;
+
+/** Handle table for HtmlOptGroupElement instances */
+const _htmlOptGroupElementhandles = new Map<bigint, HtmlOptGroupElement>();
+let _nextHtmlOptGroupElement = 1n;
+
+/** Get a HtmlOptGroupElement by handle, throwing if not found. */
+function getHtmlOptGroupElement(handle: bigint): HtmlOptGroupElement {
+  const obj = _htmlOptGroupElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlOptGroupElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlOptGroupElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlOptGroupElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlOptGroupElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlOptGroupElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function HtmlOptGroupElementGetLabel(self: bigint): string {
+  const obj = getHtmlOptGroupElement(self);
+  return obj.label;
+}
+
+/**
+ * `set-label()` operation.
+ */
+export function HtmlOptGroupElementSetLabel(self: bigint, value: string): void {
+  const obj = getHtmlOptGroupElement(self);
+  obj.label = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-option-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlOptionElementHandle = bigint;
+
+/** Handle table for HtmlOptionElement instances */
+const _htmlOptionElementhandles = new Map<bigint, HtmlOptionElement>();
+let _nextHtmlOptionElement = 1n;
+
+/** Get a HtmlOptionElement by handle, throwing if not found. */
+function getHtmlOptionElement(handle: bigint): HtmlOptionElement {
+  const obj = _htmlOptionElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlOptionElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlOptionElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlOptionElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlOptionElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlOptionElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlOptionElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlOptionElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-label()` operation.
+ */
+export function HtmlOptionElementGetLabel(self: bigint): string {
+  const obj = getHtmlOptionElement(self);
+  return obj.label;
+}
+
+/**
+ * `set-label()` operation.
+ */
+export function HtmlOptionElementSetLabel(self: bigint, value: string): void {
+  const obj = getHtmlOptionElement(self);
+  obj.label = value;
+}
+
+/**
+ * `get-default-selected()` operation.
+ */
+export function getDefaultSelected(self: bigint): boolean {
+  const obj = getHtmlOptionElement(self);
+  return obj.defaultSelected;
+}
+
+/**
+ * `set-default-selected()` operation.
+ */
+export function setDefaultSelected(self: bigint, value: boolean): void {
+  const obj = getHtmlOptionElement(self);
+  obj.defaultSelected = value;
+}
+
+/**
+ * `get-selected()` operation.
+ */
+export function HtmlOptionElementGetSelected(self: bigint): boolean {
+  const obj = getHtmlOptionElement(self);
+  return obj.selected;
+}
+
+/**
+ * `set-selected()` operation.
+ */
+export function HtmlOptionElementSetSelected(self: bigint, value: boolean): void {
+  const obj = getHtmlOptionElement(self);
+  obj.selected = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlOptionElementGetValue(self: bigint): string {
+  const obj = getHtmlOptionElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlOptionElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlOptionElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-text()` operation.
+ */
+export function HtmlOptionElementGetText(self: bigint): string {
+  const obj = getHtmlOptionElement(self);
+  return obj.text;
+}
+
+/**
+ * `set-text()` operation.
+ */
+export function HtmlOptionElementSetText(self: bigint, value: string): void {
+  const obj = getHtmlOptionElement(self);
+  obj.text = value;
+}
+
+/**
+ * `get-index()` operation.
+ */
+export function HtmlOptionElementGetIndex(self: bigint): number {
+  const obj = getHtmlOptionElement(self);
+  return obj.index;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-text-area-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTextAreaElementHandle = bigint;
+
+/** Handle table for HtmlTextAreaElement instances */
+const _htmlTextAreaElementhandles = new Map<bigint, HtmlTextAreaElement>();
+let _nextHtmlTextAreaElement = 1n;
+
+/** Get a HtmlTextAreaElement by handle, throwing if not found. */
+function getHtmlTextAreaElement(handle: bigint): HtmlTextAreaElement {
+  const obj = _htmlTextAreaElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTextAreaElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-autocomplete()` operation.
+ */
+export function HtmlTextAreaElementGetAutocomplete(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.autocomplete;
+}
+
+/**
+ * `set-autocomplete()` operation.
+ */
+export function HtmlTextAreaElementSetAutocomplete(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.autocomplete = value;
+}
+
+/**
+ * `get-cols()` operation.
+ */
+export function HtmlTextAreaElementGetCols(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.cols;
+}
+
+/**
+ * `set-cols()` operation.
+ */
+export function HtmlTextAreaElementSetCols(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.cols = value;
+}
+
+/**
+ * `get-dir-name()` operation.
+ */
+export function HtmlTextAreaElementGetDirName(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.dirName;
+}
+
+/**
+ * `set-dir-name()` operation.
+ */
+export function HtmlTextAreaElementSetDirName(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.dirName = value;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlTextAreaElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlTextAreaElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlTextAreaElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-max-length()` operation.
+ */
+export function HtmlTextAreaElementGetMaxLength(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.maxLength;
+}
+
+/**
+ * `set-max-length()` operation.
+ */
+export function HtmlTextAreaElementSetMaxLength(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.maxLength = value;
+}
+
+/**
+ * `get-min-length()` operation.
+ */
+export function HtmlTextAreaElementGetMinLength(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.minLength;
+}
+
+/**
+ * `set-min-length()` operation.
+ */
+export function HtmlTextAreaElementSetMinLength(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.minLength = value;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlTextAreaElementGetName(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlTextAreaElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-placeholder()` operation.
+ */
+export function HtmlTextAreaElementGetPlaceholder(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.placeholder;
+}
+
+/**
+ * `set-placeholder()` operation.
+ */
+export function HtmlTextAreaElementSetPlaceholder(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.placeholder = value;
+}
+
+/**
+ * `get-read-only()` operation.
+ */
+export function HtmlTextAreaElementGetReadOnly(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.readOnly;
+}
+
+/**
+ * `set-read-only()` operation.
+ */
+export function HtmlTextAreaElementSetReadOnly(self: bigint, value: boolean): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.readOnly = value;
+}
+
+/**
+ * `get-required()` operation.
+ */
+export function HtmlTextAreaElementGetRequired(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.required;
+}
+
+/**
+ * `set-required()` operation.
+ */
+export function HtmlTextAreaElementSetRequired(self: bigint, value: boolean): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.required = value;
+}
+
+/**
+ * `get-rows()` operation.
+ */
+export function HtmlTextAreaElementGetRows(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.rows;
+}
+
+/**
+ * `set-rows()` operation.
+ */
+export function HtmlTextAreaElementSetRows(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.rows = value;
+}
+
+/**
+ * `get-wrap()` operation.
+ */
+export function getWrap(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.wrap;
+}
+
+/**
+ * `set-wrap()` operation.
+ */
+export function setWrap(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.wrap = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlTextAreaElementGetType(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.type;
+}
+
+/**
+ * `get-default-value()` operation.
+ */
+export function HtmlTextAreaElementGetDefaultValue(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.defaultValue;
+}
+
+/**
+ * `set-default-value()` operation.
+ */
+export function HtmlTextAreaElementSetDefaultValue(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.defaultValue = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlTextAreaElementGetValue(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlTextAreaElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-text-length()` operation.
+ */
+export function getTextLength(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.textLength;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlTextAreaElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlTextAreaElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlTextAreaElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlTextAreaElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlTextAreaElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlTextAreaElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlTextAreaElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.labels;
+}
+
+/**
+ * `select()` operation.
+ */
+export function HtmlTextAreaElementSelect(self: bigint): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.select();
+}
+
+/**
+ * `get-selection-start()` operation.
+ */
+export function HtmlTextAreaElementGetSelectionStart(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.selectionStart;
+}
+
+/**
+ * `set-selection-start()` operation.
+ */
+export function HtmlTextAreaElementSetSelectionStart(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.selectionStart = value;
+}
+
+/**
+ * `get-selection-end()` operation.
+ */
+export function HtmlTextAreaElementGetSelectionEnd(self: bigint): number {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.selectionEnd;
+}
+
+/**
+ * `set-selection-end()` operation.
+ */
+export function HtmlTextAreaElementSetSelectionEnd(self: bigint, value: number): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.selectionEnd = value;
+}
+
+/**
+ * `get-selection-direction()` operation.
+ */
+export function HtmlTextAreaElementGetSelectionDirection(self: bigint): string {
+  const obj = getHtmlTextAreaElement(self);
+  return obj.selectionDirection;
+}
+
+/**
+ * `set-selection-direction()` operation.
+ */
+export function HtmlTextAreaElementSetSelectionDirection(self: bigint, value: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.selectionDirection = value;
+}
+
+/**
+ * `set-range-text()` operation.
+ */
+export function HtmlTextAreaElementSetRangeText(self: bigint, replacement: string): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.rangeText = replacement;
+}
+
+/**
+ * `set-selection-range()` operation.
+ */
+export function HtmlTextAreaElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
+  const obj = getHtmlTextAreaElement(self);
+  obj.selectionRange = direction;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-output-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlOutputElementHandle = bigint;
+
+/** Handle table for HtmlOutputElement instances */
+const _htmlOutputElementhandles = new Map<bigint, HtmlOutputElement>();
+let _nextHtmlOutputElement = 1n;
+
+/** Get a HtmlOutputElement by handle, throwing if not found. */
+function getHtmlOutputElement(handle: bigint): HtmlOutputElement {
+  const obj = _htmlOutputElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlOutputElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-html-for()` operation.
+ */
+export function HtmlOutputElementGetHtmlFor(self: bigint): bigint {
+  const obj = getHtmlOutputElement(self);
+  return obj.htmlFor;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlOutputElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlOutputElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlOutputElementGetName(self: bigint): string {
+  const obj = getHtmlOutputElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlOutputElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlOutputElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlOutputElementGetType(self: bigint): string {
+  const obj = getHtmlOutputElement(self);
+  return obj.type;
+}
+
+/**
+ * `get-default-value()` operation.
+ */
+export function HtmlOutputElementGetDefaultValue(self: bigint): string {
+  const obj = getHtmlOutputElement(self);
+  return obj.defaultValue;
+}
+
+/**
+ * `set-default-value()` operation.
+ */
+export function HtmlOutputElementSetDefaultValue(self: bigint, value: string): void {
+  const obj = getHtmlOutputElement(self);
+  obj.defaultValue = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlOutputElementGetValue(self: bigint): string {
+  const obj = getHtmlOutputElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlOutputElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlOutputElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlOutputElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlOutputElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlOutputElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlOutputElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlOutputElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlOutputElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlOutputElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlOutputElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlOutputElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlOutputElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlOutputElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlOutputElement(self);
+  obj.customValidity = error;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlOutputElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlOutputElement(self);
+  return obj.labels;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-progress-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlProgressElementHandle = bigint;
+
+/** Handle table for HtmlProgressElement instances */
+const _htmlProgressElementhandles = new Map<bigint, HtmlProgressElement>();
+let _nextHtmlProgressElement = 1n;
+
+/** Get a HtmlProgressElement by handle, throwing if not found. */
+function getHtmlProgressElement(handle: bigint): HtmlProgressElement {
+  const obj = _htmlProgressElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlProgressElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlProgressElementGetValue(self: bigint): number {
+  const obj = getHtmlProgressElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlProgressElementSetValue(self: bigint, value: number): void {
+  const obj = getHtmlProgressElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-max()` operation.
+ */
+export function HtmlProgressElementGetMax(self: bigint): number {
+  const obj = getHtmlProgressElement(self);
+  return obj.max;
+}
+
+/**
+ * `set-max()` operation.
+ */
+export function HtmlProgressElementSetMax(self: bigint, value: number): void {
+  const obj = getHtmlProgressElement(self);
+  obj.max = value;
+}
+
+/**
+ * `get-position()` operation.
+ */
+export function getPosition(self: bigint): number {
+  const obj = getHtmlProgressElement(self);
+  return obj.position;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlProgressElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlProgressElement(self);
+  return obj.labels;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-meter-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMeterElementHandle = bigint;
+
+/** Handle table for HtmlMeterElement instances */
+const _htmlMeterElementhandles = new Map<bigint, HtmlMeterElement>();
+let _nextHtmlMeterElement = 1n;
+
+/** Get a HtmlMeterElement by handle, throwing if not found. */
+function getHtmlMeterElement(handle: bigint): HtmlMeterElement {
+  const obj = _htmlMeterElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMeterElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlMeterElementGetValue(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlMeterElementSetValue(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-min()` operation.
+ */
+export function HtmlMeterElementGetMin(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.min;
+}
+
+/**
+ * `set-min()` operation.
+ */
+export function HtmlMeterElementSetMin(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.min = value;
+}
+
+/**
+ * `get-max()` operation.
+ */
+export function HtmlMeterElementGetMax(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.max;
+}
+
+/**
+ * `set-max()` operation.
+ */
+export function HtmlMeterElementSetMax(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.max = value;
+}
+
+/**
+ * `get-low()` operation.
+ */
+export function getLow(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.low;
+}
+
+/**
+ * `set-low()` operation.
+ */
+export function setLow(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.low = value;
+}
+
+/**
+ * `get-high()` operation.
+ */
+export function getHigh(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.high;
+}
+
+/**
+ * `set-high()` operation.
+ */
+export function setHigh(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.high = value;
+}
+
+/**
+ * `get-optimum()` operation.
+ */
+export function getOptimum(self: bigint): number {
+  const obj = getHtmlMeterElement(self);
+  return obj.optimum;
+}
+
+/**
+ * `set-optimum()` operation.
+ */
+export function setOptimum(self: bigint, value: number): void {
+  const obj = getHtmlMeterElement(self);
+  obj.optimum = value;
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function HtmlMeterElementGetLabels(self: bigint): bigint {
+  const obj = getHtmlMeterElement(self);
+  return obj.labels;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-field-set-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlFieldSetElementHandle = bigint;
+
+/** Handle table for HtmlFieldSetElement instances */
+const _htmlFieldSetElementhandles = new Map<bigint, HtmlFieldSetElement>();
+let _nextHtmlFieldSetElement = 1n;
+
+/** Get a HtmlFieldSetElement by handle, throwing if not found. */
+function getHtmlFieldSetElement(handle: bigint): HtmlFieldSetElement {
+  const obj = _htmlFieldSetElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlFieldSetElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-disabled()` operation.
+ */
+export function HtmlFieldSetElementGetDisabled(self: bigint): boolean {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.disabled;
+}
+
+/**
+ * `set-disabled()` operation.
+ */
+export function HtmlFieldSetElementSetDisabled(self: bigint, value: boolean): void {
+  const obj = getHtmlFieldSetElement(self);
+  obj.disabled = value;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlFieldSetElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlFieldSetElementGetName(self: bigint): string {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlFieldSetElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlFieldSetElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlFieldSetElementGetType(self: bigint): string {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.type;
+}
+
+/**
+ * `get-elements()` operation.
+ */
+export function HtmlFieldSetElementGetElements(self: bigint): bigint {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.elements;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function HtmlFieldSetElementGetWillValidate(self: bigint): boolean {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function HtmlFieldSetElementGetValidity(self: bigint): bigint {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function HtmlFieldSetElementGetValidationMessage(self: bigint): string {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function HtmlFieldSetElementCheckValidity(self: bigint): boolean {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function HtmlFieldSetElementReportValidity(self: bigint): boolean {
+  const obj = getHtmlFieldSetElement(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `set-custom-validity()` operation.
+ */
+export function HtmlFieldSetElementSetCustomValidity(self: bigint, error: string): void {
+  const obj = getHtmlFieldSetElement(self);
+  obj.customValidity = error;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-legend-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlLegendElementHandle = bigint;
+
+/** Handle table for HtmlLegendElement instances */
+const _htmlLegendElementhandles = new Map<bigint, HtmlLegendElement>();
+let _nextHtmlLegendElement = 1n;
+
+/** Get a HtmlLegendElement by handle, throwing if not found. */
+function getHtmlLegendElement(handle: bigint): HtmlLegendElement {
+  const obj = _htmlLegendElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlLegendElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function HtmlLegendElementGetForm(self: bigint): bigint | undefined {
+  const obj = getHtmlLegendElement(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `get-align()` operation.
+ */
+export function HtmlLegendElementGetAlign(self: bigint): string {
+  const obj = getHtmlLegendElement(self);
+  return obj.align;
+}
+
+/**
+ * `set-align()` operation.
+ */
+export function HtmlLegendElementSetAlign(self: bigint, value: string): void {
+  const obj = getHtmlLegendElement(self);
+  obj.align = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: validity-state
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ValidityStateHandle = bigint;
+
+/** Handle table for ValidityState instances */
+const _validityStatehandles = new Map<bigint, ValidityState>();
+let _nextValidityState = 1n;
+
+/** Get a ValidityState by handle, throwing if not found. */
+function getValidityState(handle: bigint): ValidityState {
+  const obj = _validityStatehandles.get(handle);
+  if (!obj) {
+    throw new Error(`ValidityState handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-value-missing()` operation.
+ */
+export function getValueMissing(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.valueMissing;
+}
+
+/**
+ * `get-type-mismatch()` operation.
+ */
+export function getTypeMismatch(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.typeMismatch;
+}
+
+/**
+ * `get-pattern-mismatch()` operation.
+ */
+export function getPatternMismatch(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.patternMismatch;
+}
+
+/**
+ * `get-too-long()` operation.
+ */
+export function getTooLong(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.tooLong;
+}
+
+/**
+ * `get-too-short()` operation.
+ */
+export function getTooShort(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.tooShort;
+}
+
+/**
+ * `get-range-underflow()` operation.
+ */
+export function getRangeUnderflow(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.rangeUnderflow;
+}
+
+/**
+ * `get-range-overflow()` operation.
+ */
+export function getRangeOverflow(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.rangeOverflow;
+}
+
+/**
+ * `get-step-mismatch()` operation.
+ */
+export function getStepMismatch(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.stepMismatch;
+}
+
+/**
+ * `get-bad-input()` operation.
+ */
+export function getBadInput(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.badInput;
+}
+
+/**
+ * `get-custom-error()` operation.
+ */
+export function getCustomError(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.customError;
+}
+
+/**
+ * `get-valid()` operation.
+ */
+export function getValid(self: bigint): boolean {
+  const obj = getValidityState(self);
+  return obj.valid;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: submit-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type SubmitEventHandle = bigint;
+
+/** Handle table for SubmitEvent instances */
+const _submitEventhandles = new Map<bigint, SubmitEvent>();
+let _nextSubmitEvent = 1n;
+
+/** Get a SubmitEvent by handle, throwing if not found. */
+function getSubmitEvent(handle: bigint): SubmitEvent {
+  const obj = _submitEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`SubmitEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-submitter()` operation.
+ */
+export function getSubmitter(self: bigint): bigint | undefined {
+  const obj = getSubmitEvent(self);
+  return obj.submitter ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: form-data-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type FormDataEventHandle = bigint;
+
+/** Handle table for FormDataEvent instances */
+const _formDataEventhandles = new Map<bigint, FormDataEvent>();
+let _nextFormDataEvent = 1n;
+
+/** Get a FormDataEvent by handle, throwing if not found. */
+function getFormDataEvent(handle: bigint): FormDataEvent {
+  const obj = _formDataEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`FormDataEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-form-data()` operation.
+ */
+export function FormDataEventGetFormData(self: bigint): bigint {
+  const obj = getFormDataEvent(self);
+  return obj.formData;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-details-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDetailsElementHandle = bigint;
+
+/** Handle table for HtmlDetailsElement instances */
+const _htmlDetailsElementhandles = new Map<bigint, HtmlDetailsElement>();
+let _nextHtmlDetailsElement = 1n;
+
+/** Get a HtmlDetailsElement by handle, throwing if not found. */
+function getHtmlDetailsElement(handle: bigint): HtmlDetailsElement {
+  const obj = _htmlDetailsElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDetailsElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlDetailsElementGetName(self: bigint): string {
+  const obj = getHtmlDetailsElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlDetailsElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlDetailsElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-open()` operation.
+ */
+export function HtmlDetailsElementGetOpen(self: bigint): boolean {
+  const obj = getHtmlDetailsElement(self);
+  return obj.open;
+}
+
+/**
+ * `set-open()` operation.
+ */
+export function HtmlDetailsElementSetOpen(self: bigint, value: boolean): void {
+  const obj = getHtmlDetailsElement(self);
+  obj.open = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-dialog-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDialogElementHandle = bigint;
+
+/** Handle table for HtmlDialogElement instances */
+const _htmlDialogElementhandles = new Map<bigint, HtmlDialogElement>();
+let _nextHtmlDialogElement = 1n;
+
+/** Get a HtmlDialogElement by handle, throwing if not found. */
+function getHtmlDialogElement(handle: bigint): HtmlDialogElement {
+  const obj = _htmlDialogElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDialogElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-open()` operation.
+ */
+export function HtmlDialogElementGetOpen(self: bigint): boolean {
+  const obj = getHtmlDialogElement(self);
+  return obj.open;
+}
+
+/**
+ * `set-open()` operation.
+ */
+export function HtmlDialogElementSetOpen(self: bigint, value: boolean): void {
+  const obj = getHtmlDialogElement(self);
+  obj.open = value;
+}
+
+/**
+ * `get-return-value()` operation.
+ */
+export function HtmlDialogElementGetReturnValue(self: bigint): string {
+  const obj = getHtmlDialogElement(self);
+  return obj.returnValue;
+}
+
+/**
+ * `set-return-value()` operation.
+ */
+export function HtmlDialogElementSetReturnValue(self: bigint, value: string): void {
+  const obj = getHtmlDialogElement(self);
+  obj.returnValue = value;
+}
+
+/**
+ * `get-closed-by()` operation.
+ */
+export function getClosedBy(self: bigint): string {
+  const obj = getHtmlDialogElement(self);
+  return obj.closedBy;
+}
+
+/**
+ * `set-closed-by()` operation.
+ */
+export function setClosedBy(self: bigint, value: string): void {
+  const obj = getHtmlDialogElement(self);
+  obj.closedBy = value;
+}
+
+/**
+ * `show()` operation.
+ */
+export function show(self: bigint): void {
+  const obj = getHtmlDialogElement(self);
+  obj.show();
+}
+
+/**
+ * `show-modal()` operation.
+ */
+export function showModal(self: bigint): void {
+  const obj = getHtmlDialogElement(self);
+  obj.showModal();
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `HtmlDialogElementPollClose()`
+ */
+export function HtmlDialogElementClose(self: bigint, returnValue: string | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getHtmlDialogElement(self);
+  const promise = obj.close(returnValue)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function HtmlDialogElementPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `request-close()` operation.
+ */
+export function HtmlDialogElementRequestClose(self: bigint, returnValue: string | undefined): void {
+  const obj = getHtmlDialogElement(self);
+  obj.requestClose(returnValue);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-script-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlScriptElementHandle = bigint;
+
+/** Handle table for HtmlScriptElement instances */
+const _htmlScriptElementhandles = new Map<bigint, HtmlScriptElement>();
+let _nextHtmlScriptElement = 1n;
+
+/** Get a HtmlScriptElement by handle, throwing if not found. */
+function getHtmlScriptElement(handle: bigint): HtmlScriptElement {
+  const obj = _htmlScriptElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlScriptElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlScriptElementGetType(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlScriptElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlScriptElementGetSrc(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlScriptElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-no-module()` operation.
+ */
+export function getNoModule(self: bigint): boolean {
+  const obj = getHtmlScriptElement(self);
+  return obj.noModule;
+}
+
+/**
+ * `set-no-module()` operation.
+ */
+export function setNoModule(self: bigint, value: boolean): void {
+  const obj = getHtmlScriptElement(self);
+  obj.noModule = value;
+}
+
+/**
+ * `get-async()` operation.
+ */
+export function getAsync(self: bigint): boolean {
+  const obj = getHtmlScriptElement(self);
+  return obj.async;
+}
+
+/**
+ * `set-async()` operation.
+ */
+export function setAsync(self: bigint, value: boolean): void {
+  const obj = getHtmlScriptElement(self);
+  obj.async = value;
+}
+
+/**
+ * `get-defer()` operation.
+ */
+export function getDefer(self: bigint): boolean {
+  const obj = getHtmlScriptElement(self);
+  return obj.defer;
+}
+
+/**
+ * `set-defer()` operation.
+ */
+export function setDefer(self: bigint, value: boolean): void {
+  const obj = getHtmlScriptElement(self);
+  obj.defer = value;
+}
+
+/**
+ * `get-blocking()` operation.
+ */
+export function HtmlScriptElementGetBlocking(self: bigint): bigint {
+  const obj = getHtmlScriptElement(self);
+  return obj.blocking;
+}
+
+/**
+ * `get-cross-origin()` operation.
+ */
+export function HtmlScriptElementGetCrossOrigin(self: bigint): string | undefined {
+  const obj = getHtmlScriptElement(self);
+  return obj.crossOrigin ?? undefined;
+}
+
+/**
+ * `set-cross-origin()` operation.
+ */
+export function HtmlScriptElementSetCrossOrigin(self: bigint, value: string | undefined): void {
+  const obj = getHtmlScriptElement(self);
+  obj.crossOrigin = value;
+}
+
+/**
+ * `get-referrer-policy()` operation.
+ */
+export function HtmlScriptElementGetReferrerPolicy(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.referrerPolicy;
+}
+
+/**
+ * `set-referrer-policy()` operation.
+ */
+export function HtmlScriptElementSetReferrerPolicy(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.referrerPolicy = value;
+}
+
+/**
+ * `get-integrity()` operation.
+ */
+export function HtmlScriptElementGetIntegrity(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.integrity;
+}
+
+/**
+ * `set-integrity()` operation.
+ */
+export function HtmlScriptElementSetIntegrity(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.integrity = value;
+}
+
+/**
+ * `get-fetch-priority()` operation.
+ */
+export function HtmlScriptElementGetFetchPriority(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.fetchPriority;
+}
+
+/**
+ * `set-fetch-priority()` operation.
+ */
+export function HtmlScriptElementSetFetchPriority(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.fetchPriority = value;
+}
+
+/**
+ * `get-text()` operation.
+ */
+export function HtmlScriptElementGetText(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.text;
+}
+
+/**
+ * `set-text()` operation.
+ */
+export function HtmlScriptElementSetText(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.text = value;
+}
+
+/**
+ * `supports()` operation.
+ */
+export function supports(type: string): boolean {
+  return HtmlScriptElement.supports(type);
+}
+
+/**
+ * `get-charset()` operation.
+ */
+export function HtmlScriptElementGetCharset(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.charset;
+}
+
+/**
+ * `set-charset()` operation.
+ */
+export function HtmlScriptElementSetCharset(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.charset = value;
+}
+
+/**
+ * `get-event()` operation.
+ */
+export function getEvent(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.event;
+}
+
+/**
+ * `set-event()` operation.
+ */
+export function setEvent(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.event = value;
+}
+
+/**
+ * `get-html-for()` operation.
+ */
+export function HtmlScriptElementGetHtmlFor(self: bigint): string {
+  const obj = getHtmlScriptElement(self);
+  return obj.htmlFor;
+}
+
+/**
+ * `set-html-for()` operation.
+ */
+export function HtmlScriptElementSetHtmlFor(self: bigint, value: string): void {
+  const obj = getHtmlScriptElement(self);
+  obj.htmlFor = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-template-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlTemplateElementHandle = bigint;
+
+/** Handle table for HtmlTemplateElement instances */
+const _htmlTemplateElementhandles = new Map<bigint, HtmlTemplateElement>();
+let _nextHtmlTemplateElement = 1n;
+
+/** Get a HtmlTemplateElement by handle, throwing if not found. */
+function getHtmlTemplateElement(handle: bigint): HtmlTemplateElement {
+  const obj = _htmlTemplateElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlTemplateElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-content()` operation.
+ */
+export function HtmlTemplateElementGetContent(self: bigint): bigint {
+  const obj = getHtmlTemplateElement(self);
+  return obj.content;
+}
+
+/**
+ * `get-shadow-root-mode()` operation.
+ */
+export function getShadowRootMode(self: bigint): string {
+  const obj = getHtmlTemplateElement(self);
+  return obj.shadowRootMode;
+}
+
+/**
+ * `set-shadow-root-mode()` operation.
+ */
+export function setShadowRootMode(self: bigint, value: string): void {
+  const obj = getHtmlTemplateElement(self);
+  obj.shadowRootMode = value;
+}
+
+/**
+ * `get-shadow-root-delegates-focus()` operation.
+ */
+export function getShadowRootDelegatesFocus(self: bigint): boolean {
+  const obj = getHtmlTemplateElement(self);
+  return obj.shadowRootDelegatesFocus;
+}
+
+/**
+ * `set-shadow-root-delegates-focus()` operation.
+ */
+export function setShadowRootDelegatesFocus(self: bigint, value: boolean): void {
+  const obj = getHtmlTemplateElement(self);
+  obj.shadowRootDelegatesFocus = value;
+}
+
+/**
+ * `get-shadow-root-clonable()` operation.
+ */
+export function getShadowRootClonable(self: bigint): boolean {
+  const obj = getHtmlTemplateElement(self);
+  return obj.shadowRootClonable;
+}
+
+/**
+ * `set-shadow-root-clonable()` operation.
+ */
+export function setShadowRootClonable(self: bigint, value: boolean): void {
+  const obj = getHtmlTemplateElement(self);
+  obj.shadowRootClonable = value;
+}
+
+/**
+ * `get-shadow-root-serializable()` operation.
+ */
+export function getShadowRootSerializable(self: bigint): boolean {
+  const obj = getHtmlTemplateElement(self);
+  return obj.shadowRootSerializable;
+}
+
+/**
+ * `set-shadow-root-serializable()` operation.
+ */
+export function setShadowRootSerializable(self: bigint, value: boolean): void {
+  const obj = getHtmlTemplateElement(self);
+  obj.shadowRootSerializable = value;
+}
+
+/**
+ * `get-shadow-root-custom-element-registry()` operation.
+ */
+export function getShadowRootCustomElementRegistry(self: bigint): string {
+  const obj = getHtmlTemplateElement(self);
+  return obj.shadowRootCustomElementRegistry;
+}
+
+/**
+ * `set-shadow-root-custom-element-registry()` operation.
+ */
+export function setShadowRootCustomElementRegistry(self: bigint, value: string): void {
+  const obj = getHtmlTemplateElement(self);
+  obj.shadowRootCustomElementRegistry = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-slot-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlSlotElementHandle = bigint;
+
+/** Handle table for HtmlSlotElement instances */
+const _htmlSlotElementhandles = new Map<bigint, HtmlSlotElement>();
+let _nextHtmlSlotElement = 1n;
+
+/** Get a HtmlSlotElement by handle, throwing if not found. */
+function getHtmlSlotElement(handle: bigint): HtmlSlotElement {
+  const obj = _htmlSlotElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlSlotElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlSlotElementGetName(self: bigint): string {
+  const obj = getHtmlSlotElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlSlotElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlSlotElement(self);
+  obj.name = value;
+}
+
+/**
+ * `assigned-nodes()` operation.
+ */
+export function assignedNodes(self: bigint, options: bigint | undefined): (bigint)[] {
+  const obj = getHtmlSlotElement(self);
+  return obj.assignedNodes(options);
+}
+
+/**
+ * `assigned-elements()` operation.
+ */
+export function assignedElements(self: bigint, options: bigint | undefined): (bigint)[] {
+  const obj = getHtmlSlotElement(self);
+  return obj.assignedElements(options);
+}
+
+/**
+ * `assign()` operation.
+ */
+export function HtmlSlotElementAssign(self: bigint, nodes: (bigint)[]): void {
+  const obj = getHtmlSlotElement(self);
+  obj.assign(nodes);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-canvas-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlCanvasElementHandle = bigint;
+
+/** Handle table for HtmlCanvasElement instances */
+const _htmlCanvasElementhandles = new Map<bigint, HtmlCanvasElement>();
+let _nextHtmlCanvasElement = 1n;
+
+/** Get a HtmlCanvasElement by handle, throwing if not found. */
+function getHtmlCanvasElement(handle: bigint): HtmlCanvasElement {
+  const obj = _htmlCanvasElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlCanvasElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlCanvasElementGetWidth(self: bigint): number {
+  const obj = getHtmlCanvasElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlCanvasElementSetWidth(self: bigint, value: number): void {
+  const obj = getHtmlCanvasElement(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlCanvasElementGetHeight(self: bigint): number {
+  const obj = getHtmlCanvasElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlCanvasElementSetHeight(self: bigint, value: number): void {
+  const obj = getHtmlCanvasElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-context()` operation.
+ */
+export function HtmlCanvasElementGetContext(self: bigint, contextId: string, options: string | undefined): bigint | undefined {
+  const obj = getHtmlCanvasElement(self);
+  return obj.context ?? undefined;
+}
+
+/**
+ * `to-data-url()` operation.
+ */
+export function toDataUrl(self: bigint, type: string | undefined, quality: string | undefined): string {
+  const obj = getHtmlCanvasElement(self);
+  return obj.toDataUrl(type, quality);
+}
+
+/**
+ * `to-blob()` operation.
+ */
+export function toBlob(self: bigint, callback: bigint, type: string | undefined, quality: string | undefined): void {
+  const obj = getHtmlCanvasElement(self);
+  obj.toBlob(callback, type, quality);
+}
+
+/**
+ * `transfer-control-to-offscreen()` operation.
+ */
+export function transferControlToOffscreen(self: bigint): bigint {
+  const obj = getHtmlCanvasElement(self);
+  return obj.transferControlToOffscreen();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-rendering-context2-d
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasRenderingContext2DHandle = bigint;
+
+/** Handle table for CanvasRenderingContext2D instances */
+const _canvasRenderingContext2Dhandles = new Map<bigint, CanvasRenderingContext2D>();
+let _nextCanvasRenderingContext2D = 1n;
+
+/** Get a CanvasRenderingContext2D by handle, throwing if not found. */
+function getCanvasRenderingContext2D(handle: bigint): CanvasRenderingContext2D {
+  const obj = _canvasRenderingContext2Dhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasRenderingContext2D handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-canvas()` operation.
+ */
+export function CanvasRenderingContext2DGetCanvas(self: bigint): bigint {
+  const obj = getCanvasRenderingContext2D(self);
+  return obj.canvas;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-settings
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasSettingsHandle = bigint;
+
+/** Handle table for CanvasSettings instances */
+const _canvasSettingshandles = new Map<bigint, CanvasSettings>();
+let _nextCanvasSettings = 1n;
+
+/** Get a CanvasSettings by handle, throwing if not found. */
+function getCanvasSettings(handle: bigint): CanvasSettings {
+  const obj = _canvasSettingshandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasSettings handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-context-attributes()` operation.
+ */
+export function getContextAttributes(self: bigint): bigint {
+  const obj = getCanvasSettings(self);
+  return obj.contextAttributes;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-state
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasStateHandle = bigint;
+
+/** Handle table for CanvasState instances */
+const _canvasStatehandles = new Map<bigint, CanvasState>();
+let _nextCanvasState = 1n;
+
+/** Get a CanvasState by handle, throwing if not found. */
+function getCanvasState(handle: bigint): CanvasState {
+  const obj = _canvasStatehandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasState handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `save()` operation.
+ */
+export function save(self: bigint): void {
+  const obj = getCanvasState(self);
+  obj.save();
+}
+
+/**
+ * `restore()` operation.
+ */
+export function restore(self: bigint): void {
+  const obj = getCanvasState(self);
+  obj.restore();
+}
+
+/**
+ * `reset()` operation.
+ */
+export function CanvasStateReset(self: bigint): void {
+  const obj = getCanvasState(self);
+  obj.reset();
+}
+
+/**
+ * `is-context-lost()` operation.
+ */
+export function isContextLost(self: bigint): boolean {
+  const obj = getCanvasState(self);
+  return obj.isContextLost();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-transform
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasTransformHandle = bigint;
+
+/** Handle table for CanvasTransform instances */
+const _canvasTransformhandles = new Map<bigint, CanvasTransform>();
+let _nextCanvasTransform = 1n;
+
+/** Get a CanvasTransform by handle, throwing if not found. */
+function getCanvasTransform(handle: bigint): CanvasTransform {
+  const obj = _canvasTransformhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasTransform handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `scale()` operation.
+ */
+export function scale(self: bigint, x: number, y: number): void {
+  const obj = getCanvasTransform(self);
+  obj.scale(x, y);
+}
+
+/**
+ * `rotate()` operation.
+ */
+export function rotate(self: bigint, angle: number): void {
+  const obj = getCanvasTransform(self);
+  obj.rotate(angle);
+}
+
+/**
+ * `translate()` operation.
+ */
+export function translate(self: bigint, x: number, y: number): void {
+  const obj = getCanvasTransform(self);
+  obj.translate(x, y);
+}
+
+/**
+ * `transform()` operation.
+ */
+export function transform(self: bigint, a: number, b: number, c: number, d: number, e: number, f: number): void {
+  const obj = getCanvasTransform(self);
+  obj.transform(a, b, c, d, e, f);
+}
+
+/**
+ * `get-transform()` operation.
+ */
+export function getTransform(self: bigint): bigint {
+  const obj = getCanvasTransform(self);
+  return obj.transform;
+}
+
+/**
+ * `set-transform()` operation.
+ */
+export function CanvasTransformSetTransform(self: bigint, a: number, b: number, c: number, d: number, e: number, f: number): void {
+  const obj = getCanvasTransform(self);
+  obj.transform = f;
+}
+
+/**
+ * `reset-transform()` operation.
+ */
+export function resetTransform(self: bigint): void {
+  const obj = getCanvasTransform(self);
+  obj.resetTransform();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-compositing
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasCompositingHandle = bigint;
+
+/** Handle table for CanvasCompositing instances */
+const _canvasCompositinghandles = new Map<bigint, CanvasCompositing>();
+let _nextCanvasCompositing = 1n;
+
+/** Get a CanvasCompositing by handle, throwing if not found. */
+function getCanvasCompositing(handle: bigint): CanvasCompositing {
+  const obj = _canvasCompositinghandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasCompositing handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-global-alpha()` operation.
+ */
+export function getGlobalAlpha(self: bigint): number {
+  const obj = getCanvasCompositing(self);
+  return obj.globalAlpha;
+}
+
+/**
+ * `set-global-alpha()` operation.
+ */
+export function setGlobalAlpha(self: bigint, value: number): void {
+  const obj = getCanvasCompositing(self);
+  obj.globalAlpha = value;
+}
+
+/**
+ * `get-global-composite-operation()` operation.
+ */
+export function getGlobalCompositeOperation(self: bigint): string {
+  const obj = getCanvasCompositing(self);
+  return obj.globalCompositeOperation;
+}
+
+/**
+ * `set-global-composite-operation()` operation.
+ */
+export function setGlobalCompositeOperation(self: bigint, value: string): void {
+  const obj = getCanvasCompositing(self);
+  obj.globalCompositeOperation = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-image-smoothing
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasImageSmoothingHandle = bigint;
+
+/** Handle table for CanvasImageSmoothing instances */
+const _canvasImageSmoothinghandles = new Map<bigint, CanvasImageSmoothing>();
+let _nextCanvasImageSmoothing = 1n;
+
+/** Get a CanvasImageSmoothing by handle, throwing if not found. */
+function getCanvasImageSmoothing(handle: bigint): CanvasImageSmoothing {
+  const obj = _canvasImageSmoothinghandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasImageSmoothing handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-image-smoothing-enabled()` operation.
+ */
+export function getImageSmoothingEnabled(self: bigint): boolean {
+  const obj = getCanvasImageSmoothing(self);
+  return obj.imageSmoothingEnabled;
+}
+
+/**
+ * `set-image-smoothing-enabled()` operation.
+ */
+export function setImageSmoothingEnabled(self: bigint, value: boolean): void {
+  const obj = getCanvasImageSmoothing(self);
+  obj.imageSmoothingEnabled = value;
+}
+
+/**
+ * `get-image-smoothing-quality()` operation.
+ */
+export function getImageSmoothingQuality(self: bigint): bigint {
+  const obj = getCanvasImageSmoothing(self);
+  return obj.imageSmoothingQuality;
+}
+
+/**
+ * `set-image-smoothing-quality()` operation.
+ */
+export function setImageSmoothingQuality(self: bigint, value: bigint): void {
+  const obj = getCanvasImageSmoothing(self);
+  obj.imageSmoothingQuality = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-fill-stroke-styles
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasFillStrokeStylesHandle = bigint;
+
+/** Handle table for CanvasFillStrokeStyles instances */
+const _canvasFillStrokeStyleshandles = new Map<bigint, CanvasFillStrokeStyles>();
+let _nextCanvasFillStrokeStyles = 1n;
+
+/** Register a new CanvasFillStrokeStyles and return its handle. */
+function registerCanvasFillStrokeStyles(obj: CanvasFillStrokeStyles): bigint {
+  const handle = _nextCanvasFillStrokeStyles++;
+  _canvasFillStrokeStyleshandles.set(handle, obj);
+  return handle;
+}
+
+/** Get a CanvasFillStrokeStyles by handle, throwing if not found. */
+function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
+  const obj = _canvasFillStrokeStyleshandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasFillStrokeStyles handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-stroke-style()` operation.
+ */
+export function getStrokeStyle(self: bigint): string {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.strokeStyle;
+}
+
+/**
+ * `set-stroke-style()` operation.
+ */
+export function setStrokeStyle(self: bigint, value: string): void {
+  const obj = getCanvasFillStrokeStyles(self);
+  obj.strokeStyle = value;
+}
+
+/**
+ * `get-fill-style()` operation.
+ */
+export function getFillStyle(self: bigint): string {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.fillStyle;
+}
+
+/**
+ * `set-fill-style()` operation.
+ */
+export function setFillStyle(self: bigint, value: string): void {
+  const obj = getCanvasFillStrokeStyles(self);
+  obj.fillStyle = value;
+}
+
+/**
+ * `create-linear-gradient()` operation.
+ */
+export function createLinearGradient(self: bigint, x0: number, y0: number, x1: number, y1: number): bigint {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.createLinearGradient(x0, y0, x1, y1);
+}
+
+/**
+ * `create-radial-gradient()` operation.
+ */
+export function createRadialGradient(self: bigint, x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): bigint {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.createRadialGradient(x0, y0, r0, x1, y1, r1);
+}
+
+/**
+ * `create-conic-gradient()` operation.
+ */
+export function createConicGradient(self: bigint, startAngle: number, x: number, y: number): bigint {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.createConicGradient(startAngle, x, y);
+}
+
+/**
+ * `create-pattern()` operation.
+ */
+export function createPattern(self: bigint, image: bigint, repetition: string): bigint | undefined {
+  const obj = getCanvasFillStrokeStyles(self);
+  return obj.createPattern(image, repetition) ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-shadow-styles
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasShadowStylesHandle = bigint;
+
+/** Handle table for CanvasShadowStyles instances */
+const _canvasShadowStyleshandles = new Map<bigint, CanvasShadowStyles>();
+let _nextCanvasShadowStyles = 1n;
+
+/** Get a CanvasShadowStyles by handle, throwing if not found. */
+function getCanvasShadowStyles(handle: bigint): CanvasShadowStyles {
+  const obj = _canvasShadowStyleshandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasShadowStyles handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-shadow-offset-x()` operation.
+ */
+export function getShadowOffsetX(self: bigint): number {
+  const obj = getCanvasShadowStyles(self);
+  return obj.shadowOffsetX;
+}
+
+/**
+ * `set-shadow-offset-x()` operation.
+ */
+export function setShadowOffsetX(self: bigint, value: number): void {
+  const obj = getCanvasShadowStyles(self);
+  obj.shadowOffsetX = value;
+}
+
+/**
+ * `get-shadow-offset-y()` operation.
+ */
+export function getShadowOffsetY(self: bigint): number {
+  const obj = getCanvasShadowStyles(self);
+  return obj.shadowOffsetY;
+}
+
+/**
+ * `set-shadow-offset-y()` operation.
+ */
+export function setShadowOffsetY(self: bigint, value: number): void {
+  const obj = getCanvasShadowStyles(self);
+  obj.shadowOffsetY = value;
+}
+
+/**
+ * `get-shadow-blur()` operation.
+ */
+export function getShadowBlur(self: bigint): number {
+  const obj = getCanvasShadowStyles(self);
+  return obj.shadowBlur;
+}
+
+/**
+ * `set-shadow-blur()` operation.
+ */
+export function setShadowBlur(self: bigint, value: number): void {
+  const obj = getCanvasShadowStyles(self);
+  obj.shadowBlur = value;
+}
+
+/**
+ * `get-shadow-color()` operation.
+ */
+export function getShadowColor(self: bigint): string {
+  const obj = getCanvasShadowStyles(self);
+  return obj.shadowColor;
+}
+
+/**
+ * `set-shadow-color()` operation.
+ */
+export function setShadowColor(self: bigint, value: string): void {
+  const obj = getCanvasShadowStyles(self);
+  obj.shadowColor = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-filters
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasFiltersHandle = bigint;
+
+/** Handle table for CanvasFilters instances */
+const _canvasFiltershandles = new Map<bigint, CanvasFilters>();
+let _nextCanvasFilters = 1n;
+
+/** Get a CanvasFilters by handle, throwing if not found. */
+function getCanvasFilters(handle: bigint): CanvasFilters {
+  const obj = _canvasFiltershandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasFilters handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-filter()` operation.
+ */
+export function getFilter(self: bigint): string {
+  const obj = getCanvasFilters(self);
+  return obj.filter;
+}
+
+/**
+ * `set-filter()` operation.
+ */
+export function setFilter(self: bigint, value: string): void {
+  const obj = getCanvasFilters(self);
+  obj.filter = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-rect
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasRectHandle = bigint;
+
+/** Handle table for CanvasRect instances */
+const _canvasRecthandles = new Map<bigint, CanvasRect>();
+let _nextCanvasRect = 1n;
+
+/** Get a CanvasRect by handle, throwing if not found. */
+function getCanvasRect(handle: bigint): CanvasRect {
+  const obj = _canvasRecthandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasRect handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `clear-rect()` operation.
+ */
+export function clearRect(self: bigint, x: number, y: number, w: number, h: number): void {
+  const obj = getCanvasRect(self);
+  obj.clearRect(x, y, w, h);
+}
+
+/**
+ * `fill-rect()` operation.
+ */
+export function fillRect(self: bigint, x: number, y: number, w: number, h: number): void {
+  const obj = getCanvasRect(self);
+  obj.fillRect(x, y, w, h);
+}
+
+/**
+ * `stroke-rect()` operation.
+ */
+export function strokeRect(self: bigint, x: number, y: number, w: number, h: number): void {
+  const obj = getCanvasRect(self);
+  obj.strokeRect(x, y, w, h);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-draw-path
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasDrawPathHandle = bigint;
+
+/** Handle table for CanvasDrawPath instances */
+const _canvasDrawPathhandles = new Map<bigint, CanvasDrawPath>();
+let _nextCanvasDrawPath = 1n;
+
+/** Get a CanvasDrawPath by handle, throwing if not found. */
+function getCanvasDrawPath(handle: bigint): CanvasDrawPath {
+  const obj = _canvasDrawPathhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasDrawPath handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `begin-path()` operation.
+ */
+export function beginPath(self: bigint): void {
+  const obj = getCanvasDrawPath(self);
+  obj.beginPath();
+}
+
+/**
+ * `fill()` operation.
+ */
+export function fill(self: bigint, fillRule: bigint | undefined): void {
+  const obj = getCanvasDrawPath(self);
+  obj.fill(fillRule);
+}
+
+/**
+ * `stroke()` operation.
+ */
+export function stroke(self: bigint): void {
+  const obj = getCanvasDrawPath(self);
+  obj.stroke();
+}
+
+/**
+ * `clip()` operation.
+ */
+export function clip(self: bigint, fillRule: bigint | undefined): void {
+  const obj = getCanvasDrawPath(self);
+  obj.clip(fillRule);
+}
+
+/**
+ * `is-point-in-path()` operation.
+ */
+export function isPointInPath(self: bigint, x: number, y: number, fillRule: bigint | undefined): boolean {
+  const obj = getCanvasDrawPath(self);
+  return obj.isPointInPath(x, y, fillRule);
+}
+
+/**
+ * `is-point-in-stroke()` operation.
+ */
+export function isPointInStroke(self: bigint, x: number, y: number): boolean {
+  const obj = getCanvasDrawPath(self);
+  return obj.isPointInStroke(x, y);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-user-interface
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasUserInterfaceHandle = bigint;
+
+/** Handle table for CanvasUserInterface instances */
+const _canvasUserInterfacehandles = new Map<bigint, CanvasUserInterface>();
+let _nextCanvasUserInterface = 1n;
+
+/** Get a CanvasUserInterface by handle, throwing if not found. */
+function getCanvasUserInterface(handle: bigint): CanvasUserInterface {
+  const obj = _canvasUserInterfacehandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasUserInterface handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `draw-focus-if-needed()` operation.
+ */
+export function drawFocusIfNeeded(self: bigint, element: bigint): void {
+  const obj = getCanvasUserInterface(self);
+  obj.drawFocusIfNeeded(element);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-text
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasTextHandle = bigint;
+
+/** Handle table for CanvasText instances */
+const _canvasTexthandles = new Map<bigint, CanvasText>();
+let _nextCanvasText = 1n;
+
+/** Get a CanvasText by handle, throwing if not found. */
+function getCanvasText(handle: bigint): CanvasText {
+  const obj = _canvasTexthandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasText handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `fill-text()` operation.
+ */
+export function fillText(self: bigint, text: string, x: number, y: number, maxWidth: number | undefined): void {
+  const obj = getCanvasText(self);
+  obj.fillText(text, x, y, maxWidth);
+}
+
+/**
+ * `stroke-text()` operation.
+ */
+export function strokeText(self: bigint, text: string, x: number, y: number, maxWidth: number | undefined): void {
+  const obj = getCanvasText(self);
+  obj.strokeText(text, x, y, maxWidth);
+}
+
+/**
+ * `measure-text()` operation.
+ */
+export function measureText(self: bigint, text: string): bigint {
+  const obj = getCanvasText(self);
+  return obj.measureText(text);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-draw-image
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasDrawImageHandle = bigint;
+
+/** Handle table for CanvasDrawImage instances */
+const _canvasDrawImagehandles = new Map<bigint, CanvasDrawImage>();
+let _nextCanvasDrawImage = 1n;
+
+/** Get a CanvasDrawImage by handle, throwing if not found. */
+function getCanvasDrawImage(handle: bigint): CanvasDrawImage {
+  const obj = _canvasDrawImagehandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasDrawImage handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `draw-image()` operation.
+ */
+export function drawImage(self: bigint, image: bigint, dx: number, dy: number): void {
+  const obj = getCanvasDrawImage(self);
+  obj.drawImage(image, dx, dy);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-image-data
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasImageDataHandle = bigint;
+
+/** Handle table for CanvasImageData instances */
+const _canvasImageDatahandles = new Map<bigint, CanvasImageData>();
+let _nextCanvasImageData = 1n;
+
+/** Register a new CanvasImageData and return its handle. */
+function registerCanvasImageData(obj: CanvasImageData): bigint {
+  const handle = _nextCanvasImageData++;
+  _canvasImageDatahandles.set(handle, obj);
+  return handle;
+}
+
+/** Get a CanvasImageData by handle, throwing if not found. */
+function getCanvasImageData(handle: bigint): CanvasImageData {
+  const obj = _canvasImageDatahandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasImageData handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `create-image-data()` operation.
+ */
+export function createImageData(self: bigint, sw: number, sh: number, settings: bigint | undefined): bigint {
+  const obj = getCanvasImageData(self);
+  return obj.createImageData(sw, sh, settings);
+}
+
+/**
+ * `get-image-data()` operation.
+ */
+export function getImageData(self: bigint, sx: number, sy: number, sw: number, sh: number, settings: bigint | undefined): bigint {
+  const obj = getCanvasImageData(self);
+  return obj.imageData;
+}
+
+/**
+ * `put-image-data()` operation.
+ */
+export function putImageData(self: bigint, imageData: bigint, dx: number, dy: number): void {
+  const obj = getCanvasImageData(self);
+  obj.putImageData(imageData, dx, dy);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-path-drawing-styles
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasPathDrawingStylesHandle = bigint;
+
+/** Handle table for CanvasPathDrawingStyles instances */
+const _canvasPathDrawingStyleshandles = new Map<bigint, CanvasPathDrawingStyles>();
+let _nextCanvasPathDrawingStyles = 1n;
+
+/** Get a CanvasPathDrawingStyles by handle, throwing if not found. */
+function getCanvasPathDrawingStyles(handle: bigint): CanvasPathDrawingStyles {
+  const obj = _canvasPathDrawingStyleshandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasPathDrawingStyles handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-line-width()` operation.
+ */
+export function getLineWidth(self: bigint): number {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.lineWidth;
+}
+
+/**
+ * `set-line-width()` operation.
+ */
+export function setLineWidth(self: bigint, value: number): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.lineWidth = value;
+}
+
+/**
+ * `get-line-cap()` operation.
+ */
+export function getLineCap(self: bigint): bigint {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.lineCap;
+}
+
+/**
+ * `set-line-cap()` operation.
+ */
+export function setLineCap(self: bigint, value: bigint): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.lineCap = value;
+}
+
+/**
+ * `get-line-join()` operation.
+ */
+export function getLineJoin(self: bigint): bigint {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.lineJoin;
+}
+
+/**
+ * `set-line-join()` operation.
+ */
+export function setLineJoin(self: bigint, value: bigint): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.lineJoin = value;
+}
+
+/**
+ * `get-miter-limit()` operation.
+ */
+export function getMiterLimit(self: bigint): number {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.miterLimit;
+}
+
+/**
+ * `set-miter-limit()` operation.
+ */
+export function setMiterLimit(self: bigint, value: number): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.miterLimit = value;
+}
+
+/**
+ * `set-line-dash()` operation.
+ */
+export function setLineDash(self: bigint, segments: (number)[]): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.lineDash = segments;
+}
+
+/**
+ * `get-line-dash()` operation.
+ */
+export function getLineDash(self: bigint): (number)[] {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.lineDash;
+}
+
+/**
+ * `get-line-dash-offset()` operation.
+ */
+export function getLineDashOffset(self: bigint): number {
+  const obj = getCanvasPathDrawingStyles(self);
+  return obj.lineDashOffset;
+}
+
+/**
+ * `set-line-dash-offset()` operation.
+ */
+export function setLineDashOffset(self: bigint, value: number): void {
+  const obj = getCanvasPathDrawingStyles(self);
+  obj.lineDashOffset = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-text-drawing-styles
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasTextDrawingStylesHandle = bigint;
+
+/** Handle table for CanvasTextDrawingStyles instances */
+const _canvasTextDrawingStyleshandles = new Map<bigint, CanvasTextDrawingStyles>();
+let _nextCanvasTextDrawingStyles = 1n;
+
+/** Get a CanvasTextDrawingStyles by handle, throwing if not found. */
+function getCanvasTextDrawingStyles(handle: bigint): CanvasTextDrawingStyles {
+  const obj = _canvasTextDrawingStyleshandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasTextDrawingStyles handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-lang()` operation.
+ */
+export function getLang(self: bigint): string {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.lang;
+}
+
+/**
+ * `set-lang()` operation.
+ */
+export function setLang(self: bigint, value: string): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.lang = value;
+}
+
+/**
+ * `get-font()` operation.
+ */
+export function getFont(self: bigint): string {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.font;
+}
+
+/**
+ * `set-font()` operation.
+ */
+export function setFont(self: bigint, value: string): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.font = value;
+}
+
+/**
+ * `get-text-align()` operation.
+ */
+export function getTextAlign(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.textAlign;
+}
+
+/**
+ * `set-text-align()` operation.
+ */
+export function setTextAlign(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.textAlign = value;
+}
+
+/**
+ * `get-text-baseline()` operation.
+ */
+export function getTextBaseline(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.textBaseline;
+}
+
+/**
+ * `set-text-baseline()` operation.
+ */
+export function setTextBaseline(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.textBaseline = value;
+}
+
+/**
+ * `get-direction()` operation.
+ */
+export function CanvasTextDrawingStylesGetDirection(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.direction;
+}
+
+/**
+ * `set-direction()` operation.
+ */
+export function CanvasTextDrawingStylesSetDirection(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.direction = value;
+}
+
+/**
+ * `get-letter-spacing()` operation.
+ */
+export function getLetterSpacing(self: bigint): string {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.letterSpacing;
+}
+
+/**
+ * `set-letter-spacing()` operation.
+ */
+export function setLetterSpacing(self: bigint, value: string): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.letterSpacing = value;
+}
+
+/**
+ * `get-font-kerning()` operation.
+ */
+export function getFontKerning(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.fontKerning;
+}
+
+/**
+ * `set-font-kerning()` operation.
+ */
+export function setFontKerning(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.fontKerning = value;
+}
+
+/**
+ * `get-font-stretch()` operation.
+ */
+export function getFontStretch(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.fontStretch;
+}
+
+/**
+ * `set-font-stretch()` operation.
+ */
+export function setFontStretch(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.fontStretch = value;
+}
+
+/**
+ * `get-font-variant-caps()` operation.
+ */
+export function getFontVariantCaps(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.fontVariantCaps;
+}
+
+/**
+ * `set-font-variant-caps()` operation.
+ */
+export function setFontVariantCaps(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.fontVariantCaps = value;
+}
+
+/**
+ * `get-text-rendering()` operation.
+ */
+export function getTextRendering(self: bigint): bigint {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.textRendering;
+}
+
+/**
+ * `set-text-rendering()` operation.
+ */
+export function setTextRendering(self: bigint, value: bigint): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.textRendering = value;
+}
+
+/**
+ * `get-word-spacing()` operation.
+ */
+export function getWordSpacing(self: bigint): string {
+  const obj = getCanvasTextDrawingStyles(self);
+  return obj.wordSpacing;
+}
+
+/**
+ * `set-word-spacing()` operation.
+ */
+export function setWordSpacing(self: bigint, value: string): void {
+  const obj = getCanvasTextDrawingStyles(self);
+  obj.wordSpacing = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-path
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasPathHandle = bigint;
+
+/** Handle table for CanvasPath instances */
+const _canvasPathhandles = new Map<bigint, CanvasPath>();
+let _nextCanvasPath = 1n;
+
+/** Get a CanvasPath by handle, throwing if not found. */
+function getCanvasPath(handle: bigint): CanvasPath {
+  const obj = _canvasPathhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasPath handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `close-path()` operation.
+ */
+export function closePath(self: bigint): void {
+  const obj = getCanvasPath(self);
+  obj.closePath();
+}
+
+/**
+ * `move-to()` operation.
+ */
+export function moveTo(self: bigint, x: number, y: number): void {
+  const obj = getCanvasPath(self);
+  obj.moveTo(x, y);
+}
+
+/**
+ * `line-to()` operation.
+ */
+export function lineTo(self: bigint, x: number, y: number): void {
+  const obj = getCanvasPath(self);
+  obj.lineTo(x, y);
+}
+
+/**
+ * `quadratic-curve-to()` operation.
+ */
+export function quadraticCurveTo(self: bigint, cpx: number, cpy: number, x: number, y: number): void {
+  const obj = getCanvasPath(self);
+  obj.quadraticCurveTo(cpx, cpy, x, y);
+}
+
+/**
+ * `bezier-curve-to()` operation.
+ */
+export function bezierCurveTo(self: bigint, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void {
+  const obj = getCanvasPath(self);
+  obj.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+}
+
+/**
+ * `arc-to()` operation.
+ */
+export function arcTo(self: bigint, x1: number, y1: number, x2: number, y2: number, radius: number): void {
+  const obj = getCanvasPath(self);
+  obj.arcTo(x1, y1, x2, y2, radius);
+}
+
+/**
+ * `rect()` operation.
+ */
+export function rect(self: bigint, x: number, y: number, w: number, h: number): void {
+  const obj = getCanvasPath(self);
+  obj.rect(x, y, w, h);
+}
+
+/**
+ * `round-rect()` operation.
+ */
+export function roundRect(self: bigint, x: number, y: number, w: number, h: number, radii: number | undefined): void {
+  const obj = getCanvasPath(self);
+  obj.roundRect(x, y, w, h, radii);
+}
+
+/**
+ * `arc()` operation.
+ */
+export function arc(self: bigint, x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise: boolean | undefined): void {
+  const obj = getCanvasPath(self);
+  obj.arc(x, y, radius, startAngle, endAngle, counterclockwise);
+}
+
+/**
+ * `ellipse()` operation.
+ */
+export function ellipse(self: bigint, x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, counterclockwise: boolean | undefined): void {
+  const obj = getCanvasPath(self);
+  obj.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, counterclockwise);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-gradient
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasGradientHandle = bigint;
+
+/** Handle table for CanvasGradient instances */
+const _canvasGradienthandles = new Map<bigint, CanvasGradient>();
+let _nextCanvasGradient = 1n;
+
+/** Get a CanvasGradient by handle, throwing if not found. */
+function getCanvasGradient(handle: bigint): CanvasGradient {
+  const obj = _canvasGradienthandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasGradient handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `add-color-stop()` operation.
+ */
+export function addColorStop(self: bigint, offset: number, color: string): void {
+  const obj = getCanvasGradient(self);
+  obj.addColorStop(offset, color);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: canvas-pattern
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CanvasPatternHandle = bigint;
+
+/** Handle table for CanvasPattern instances */
+const _canvasPatternhandles = new Map<bigint, CanvasPattern>();
+let _nextCanvasPattern = 1n;
+
+/** Get a CanvasPattern by handle, throwing if not found. */
+function getCanvasPattern(handle: bigint): CanvasPattern {
+  const obj = _canvasPatternhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CanvasPattern handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `set-transform()` operation.
+ */
+export function CanvasPatternSetTransform(self: bigint, transform: bigint | undefined): void {
+  const obj = getCanvasPattern(self);
+  obj.transform = transform;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: text-metrics
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type TextMetricsHandle = bigint;
+
+/** Handle table for TextMetrics instances */
+const _textMetricshandles = new Map<bigint, TextMetrics>();
+let _nextTextMetrics = 1n;
+
+/** Get a TextMetrics by handle, throwing if not found. */
+function getTextMetrics(handle: bigint): TextMetrics {
+  const obj = _textMetricshandles.get(handle);
+  if (!obj) {
+    throw new Error(`TextMetrics handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function TextMetricsGetWidth(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.width;
+}
+
+/**
+ * `get-actual-bounding-box-left()` operation.
+ */
+export function getActualBoundingBoxLeft(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.actualBoundingBoxLeft;
+}
+
+/**
+ * `get-actual-bounding-box-right()` operation.
+ */
+export function getActualBoundingBoxRight(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.actualBoundingBoxRight;
+}
+
+/**
+ * `get-font-bounding-box-ascent()` operation.
+ */
+export function getFontBoundingBoxAscent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.fontBoundingBoxAscent;
+}
+
+/**
+ * `get-font-bounding-box-descent()` operation.
+ */
+export function getFontBoundingBoxDescent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.fontBoundingBoxDescent;
+}
+
+/**
+ * `get-actual-bounding-box-ascent()` operation.
+ */
+export function getActualBoundingBoxAscent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.actualBoundingBoxAscent;
+}
+
+/**
+ * `get-actual-bounding-box-descent()` operation.
+ */
+export function getActualBoundingBoxDescent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.actualBoundingBoxDescent;
+}
+
+/**
+ * `get-em-height-ascent()` operation.
+ */
+export function getEmHeightAscent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.emHeightAscent;
+}
+
+/**
+ * `get-em-height-descent()` operation.
+ */
+export function getEmHeightDescent(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.emHeightDescent;
+}
+
+/**
+ * `get-hanging-baseline()` operation.
+ */
+export function getHangingBaseline(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.hangingBaseline;
+}
+
+/**
+ * `get-alphabetic-baseline()` operation.
+ */
+export function getAlphabeticBaseline(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.alphabeticBaseline;
+}
+
+/**
+ * `get-ideographic-baseline()` operation.
+ */
+export function getIdeographicBaseline(self: bigint): number {
+  const obj = getTextMetrics(self);
+  return obj.ideographicBaseline;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: path2-d
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type Path2DHandle = bigint;
+
+/** Handle table for Path2D instances */
+const _path2Dhandles = new Map<bigint, Path2D>();
+let _nextPath2D = 1n;
+
+/** Get a Path2D by handle, throwing if not found. */
+function getPath2D(handle: bigint): Path2D {
+  const obj = _path2Dhandles.get(handle);
+  if (!obj) {
+    throw new Error(`Path2D handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `add-path()` operation.
+ */
+export function addPath(self: bigint, path: bigint, transform: bigint | undefined): void {
+  const obj = getPath2D(self);
+  obj.addPath(path, transform);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: image-bitmap-rendering-context
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ImageBitmapRenderingContextHandle = bigint;
+
+/** Handle table for ImageBitmapRenderingContext instances */
+const _imageBitmapRenderingContexthandles = new Map<bigint, ImageBitmapRenderingContext>();
+let _nextImageBitmapRenderingContext = 1n;
+
+/** Get a ImageBitmapRenderingContext by handle, throwing if not found. */
+function getImageBitmapRenderingContext(handle: bigint): ImageBitmapRenderingContext {
+  const obj = _imageBitmapRenderingContexthandles.get(handle);
+  if (!obj) {
+    throw new Error(`ImageBitmapRenderingContext handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-canvas()` operation.
+ */
+export function ImageBitmapRenderingContextGetCanvas(self: bigint): bigint {
+  const obj = getImageBitmapRenderingContext(self);
+  return obj.canvas;
+}
+
+/**
+ * `transfer-from-image-bitmap()` operation.
+ */
+export function transferFromImageBitmap(self: bigint, bitmap: bigint | undefined): void {
+  const obj = getImageBitmapRenderingContext(self);
+  obj.transferFromImageBitmap(bitmap);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: offscreen-canvas
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OffscreenCanvasHandle = bigint;
+
+/** Handle table for OffscreenCanvas instances */
+const _offscreenCanvashandles = new Map<bigint, OffscreenCanvas>();
+let _nextOffscreenCanvas = 1n;
+
+/** Get a OffscreenCanvas by handle, throwing if not found. */
+function getOffscreenCanvas(handle: bigint): OffscreenCanvas {
+  const obj = _offscreenCanvashandles.get(handle);
+  if (!obj) {
+    throw new Error(`OffscreenCanvas handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function OffscreenCanvasGetWidth(self: bigint): bigint {
+  const obj = getOffscreenCanvas(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function OffscreenCanvasSetWidth(self: bigint, value: bigint): void {
+  const obj = getOffscreenCanvas(self);
+  obj.width = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function OffscreenCanvasGetHeight(self: bigint): bigint {
+  const obj = getOffscreenCanvas(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function OffscreenCanvasSetHeight(self: bigint, value: bigint): void {
+  const obj = getOffscreenCanvas(self);
+  obj.height = value;
+}
+
+/**
+ * `get-context()` operation.
+ */
+export function OffscreenCanvasGetContext(self: bigint, contextId: bigint, options: string | undefined): bigint | undefined {
+  const obj = getOffscreenCanvas(self);
+  return obj.context ?? undefined;
+}
+
+/**
+ * `transfer-to-image-bitmap()` operation.
+ */
+export function transferToImageBitmap(self: bigint): bigint {
+  const obj = getOffscreenCanvas(self);
+  return obj.transferToImageBitmap();
+}
+
+/**
+ * `convert-to-blob()` operation.
+ */
+export function convertToBlob(self: bigint, options: bigint | undefined): bigint {
+  const obj = getOffscreenCanvas(self);
+  return obj.convertToBlob(options);
+}
+
+/**
+ * `get-oncontextlost()` operation.
+ */
+export function getOncontextlost(self: bigint): EventHandlerRecord {
+  const obj = getOffscreenCanvas(self);
+  return obj.oncontextlost;
+}
+
+/**
+ * `set-oncontextlost()` operation.
+ */
+export function setOncontextlost(self: bigint, value: EventHandlerRecord): void {
+  const obj = getOffscreenCanvas(self);
+  obj.oncontextlost = value;
+}
+
+/**
+ * `get-oncontextrestored()` operation.
+ */
+export function getOncontextrestored(self: bigint): EventHandlerRecord {
+  const obj = getOffscreenCanvas(self);
+  return obj.oncontextrestored;
+}
+
+/**
+ * `set-oncontextrestored()` operation.
+ */
+export function setOncontextrestored(self: bigint, value: EventHandlerRecord): void {
+  const obj = getOffscreenCanvas(self);
+  obj.oncontextrestored = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: offscreen-canvas-rendering-context2-d
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OffscreenCanvasRenderingContext2DHandle = bigint;
+
+/** Handle table for OffscreenCanvasRenderingContext2D instances */
+const _offscreenCanvasRenderingContext2Dhandles = new Map<bigint, OffscreenCanvasRenderingContext2D>();
+let _nextOffscreenCanvasRenderingContext2D = 1n;
+
+/** Get a OffscreenCanvasRenderingContext2D by handle, throwing if not found. */
+function getOffscreenCanvasRenderingContext2D(handle: bigint): OffscreenCanvasRenderingContext2D {
+  const obj = _offscreenCanvasRenderingContext2Dhandles.get(handle);
+  if (!obj) {
+    throw new Error(`OffscreenCanvasRenderingContext2D handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-canvas()` operation.
+ */
+export function OffscreenCanvasRenderingContext2DGetCanvas(self: bigint): bigint {
+  const obj = getOffscreenCanvasRenderingContext2D(self);
+  return obj.canvas;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: custom-element-registry
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CustomElementRegistryHandle = bigint;
+
+/** Handle table for CustomElementRegistry instances */
+const _customElementRegistryhandles = new Map<bigint, CustomElementRegistry>();
+let _nextCustomElementRegistry = 1n;
+
+/** Get a CustomElementRegistry by handle, throwing if not found. */
+function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
+  const obj = _customElementRegistryhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CustomElementRegistry handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `define()` operation.
+ */
+export function define(self: bigint, name: string, constructor: bigint, options: bigint | undefined): void {
+  const obj = getCustomElementRegistry(self);
+  obj.define(name, constructor, options);
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function CustomElementRegistryGetName(self: bigint, constructor: bigint): string | undefined {
+  const obj = getCustomElementRegistry(self);
+  return obj.name ?? undefined;
+}
+
+/**
+ * `when-defined()` operation.
+ */
+export function whenDefined(self: bigint, name: string): bigint {
+  const obj = getCustomElementRegistry(self);
+  return obj.whenDefined(name);
+}
+
+/**
+ * `upgrade()` operation.
+ */
+export function upgrade(self: bigint, root: bigint): void {
+  const obj = getCustomElementRegistry(self);
+  obj.upgrade(root);
+}
+
+/**
+ * `initialize()` operation.
+ */
+export function initialize(self: bigint, root: bigint): void {
+  const obj = getCustomElementRegistry(self);
+  obj.initialize(root);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: element-internals
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ElementInternalsHandle = bigint;
+
+/** Handle table for ElementInternals instances */
+const _elementInternalshandles = new Map<bigint, ElementInternals>();
+let _nextElementInternals = 1n;
+
+/** Get a ElementInternals by handle, throwing if not found. */
+function getElementInternals(handle: bigint): ElementInternals {
+  const obj = _elementInternalshandles.get(handle);
+  if (!obj) {
+    throw new Error(`ElementInternals handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-shadow-root()` operation.
+ */
+export function getShadowRoot(self: bigint): bigint | undefined {
+  const obj = getElementInternals(self);
+  return obj.shadowRoot ?? undefined;
+}
+
+/**
+ * `set-form-value()` operation.
+ */
+export function setFormValue(self: bigint, value: bigint | undefined, state: bigint | undefined): void {
+  const obj = getElementInternals(self);
+  obj.formValue = state;
+}
+
+/**
+ * `get-form()` operation.
+ */
+export function ElementInternalsGetForm(self: bigint): bigint | undefined {
+  const obj = getElementInternals(self);
+  return obj.form ?? undefined;
+}
+
+/**
+ * `set-validity()` operation.
+ */
+export function setValidity(self: bigint, flags: bigint | undefined, message: string | undefined, anchor: bigint | undefined): void {
+  const obj = getElementInternals(self);
+  obj.validity = anchor;
+}
+
+/**
+ * `get-will-validate()` operation.
+ */
+export function ElementInternalsGetWillValidate(self: bigint): boolean {
+  const obj = getElementInternals(self);
+  return obj.willValidate;
+}
+
+/**
+ * `get-validity()` operation.
+ */
+export function ElementInternalsGetValidity(self: bigint): bigint {
+  const obj = getElementInternals(self);
+  return obj.validity;
+}
+
+/**
+ * `get-validation-message()` operation.
+ */
+export function ElementInternalsGetValidationMessage(self: bigint): string {
+  const obj = getElementInternals(self);
+  return obj.validationMessage;
+}
+
+/**
+ * `check-validity()` operation.
+ */
+export function ElementInternalsCheckValidity(self: bigint): boolean {
+  const obj = getElementInternals(self);
+  return obj.checkValidity();
+}
+
+/**
+ * `report-validity()` operation.
+ */
+export function ElementInternalsReportValidity(self: bigint): boolean {
+  const obj = getElementInternals(self);
+  return obj.reportValidity();
+}
+
+/**
+ * `get-labels()` operation.
+ */
+export function ElementInternalsGetLabels(self: bigint): bigint {
+  const obj = getElementInternals(self);
+  return obj.labels;
+}
+
+/**
+ * `get-states()` operation.
+ */
+export function getStates(self: bigint): bigint {
+  const obj = getElementInternals(self);
+  return obj.states;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: visibility-state-entry
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type VisibilityStateEntryHandle = bigint;
+
+/** Handle table for VisibilityStateEntry instances */
+const _visibilityStateEntryhandles = new Map<bigint, VisibilityStateEntry>();
+let _nextVisibilityStateEntry = 1n;
+
+/** Get a VisibilityStateEntry by handle, throwing if not found. */
+function getVisibilityStateEntry(handle: bigint): VisibilityStateEntry {
+  const obj = _visibilityStateEntryhandles.get(handle);
+  if (!obj) {
+    throw new Error(`VisibilityStateEntry handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function VisibilityStateEntryGetName(self: bigint): string {
+  const obj = getVisibilityStateEntry(self);
+  return obj.name;
+}
+
+/**
+ * `get-entry-type()` operation.
+ */
+export function getEntryType(self: bigint): string {
+  const obj = getVisibilityStateEntry(self);
+  return obj.entryType;
+}
+
+/**
+ * `get-start-time()` operation.
+ */
+export function VisibilityStateEntryGetStartTime(self: bigint): number {
+  const obj = getVisibilityStateEntry(self);
+  return obj.startTime;
+}
+
+/**
+ * `get-duration()` operation.
+ */
+export function VisibilityStateEntryGetDuration(self: bigint): number {
+  const obj = getVisibilityStateEntry(self);
+  return obj.duration;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: user-activation
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type UserActivationHandle = bigint;
+
+/** Handle table for UserActivation instances */
+const _userActivationhandles = new Map<bigint, UserActivation>();
+let _nextUserActivation = 1n;
+
+/** Get a UserActivation by handle, throwing if not found. */
+function getUserActivation(handle: bigint): UserActivation {
+  const obj = _userActivationhandles.get(handle);
+  if (!obj) {
+    throw new Error(`UserActivation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-has-been-active()` operation.
+ */
+export function getHasBeenActive(self: bigint): boolean {
+  const obj = getUserActivation(self);
+  return obj.hasBeenActive;
+}
+
+/**
+ * `get-is-active()` operation.
+ */
+export function getIsActive(self: bigint): boolean {
+  const obj = getUserActivation(self);
+  return obj.isActive;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: toggle-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ToggleEventHandle = bigint;
+
+/** Handle table for ToggleEvent instances */
+const _toggleEventhandles = new Map<bigint, ToggleEvent>();
+let _nextToggleEvent = 1n;
+
+/** Get a ToggleEvent by handle, throwing if not found. */
+function getToggleEvent(handle: bigint): ToggleEvent {
+  const obj = _toggleEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`ToggleEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-old-state()` operation.
+ */
+export function getOldState(self: bigint): string {
+  const obj = getToggleEvent(self);
+  return obj.oldState;
+}
+
+/**
+ * `get-new-state()` operation.
+ */
+export function getNewState(self: bigint): string {
+  const obj = getToggleEvent(self);
+  return obj.newState;
+}
+
+/**
+ * `get-source()` operation.
+ */
+export function ToggleEventGetSource(self: bigint): bigint | undefined {
+  const obj = getToggleEvent(self);
+  return obj.source ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: command-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CommandEventHandle = bigint;
+
+/** Handle table for CommandEvent instances */
+const _commandEventhandles = new Map<bigint, CommandEvent>();
+let _nextCommandEvent = 1n;
+
+/** Get a CommandEvent by handle, throwing if not found. */
+function getCommandEvent(handle: bigint): CommandEvent {
+  const obj = _commandEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CommandEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-source()` operation.
+ */
+export function CommandEventGetSource(self: bigint): bigint | undefined {
+  const obj = getCommandEvent(self);
+  return obj.source ?? undefined;
+}
+
+/**
+ * `get-command()` operation.
+ */
+export function CommandEventGetCommand(self: bigint): string {
+  const obj = getCommandEvent(self);
+  return obj.command;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: element-content-editable
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ElementContentEditableHandle = bigint;
+
+/** Handle table for ElementContentEditable instances */
+const _elementContentEditablehandles = new Map<bigint, ElementContentEditable>();
+let _nextElementContentEditable = 1n;
+
+/** Get a ElementContentEditable by handle, throwing if not found. */
+function getElementContentEditable(handle: bigint): ElementContentEditable {
+  const obj = _elementContentEditablehandles.get(handle);
+  if (!obj) {
+    throw new Error(`ElementContentEditable handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-content-editable()` operation.
+ */
+export function getContentEditable(self: bigint): string {
+  const obj = getElementContentEditable(self);
+  return obj.contentEditable;
+}
+
+/**
+ * `set-content-editable()` operation.
+ */
+export function setContentEditable(self: bigint, value: string): void {
+  const obj = getElementContentEditable(self);
+  obj.contentEditable = value;
+}
+
+/**
+ * `get-enter-key-hint()` operation.
+ */
+export function getEnterKeyHint(self: bigint): string {
+  const obj = getElementContentEditable(self);
+  return obj.enterKeyHint;
+}
+
+/**
+ * `set-enter-key-hint()` operation.
+ */
+export function setEnterKeyHint(self: bigint, value: string): void {
+  const obj = getElementContentEditable(self);
+  obj.enterKeyHint = value;
+}
+
+/**
+ * `get-is-content-editable()` operation.
+ */
+export function getIsContentEditable(self: bigint): boolean {
+  const obj = getElementContentEditable(self);
+  return obj.isContentEditable;
+}
+
+/**
+ * `get-input-mode()` operation.
+ */
+export function getInputMode(self: bigint): string {
+  const obj = getElementContentEditable(self);
+  return obj.inputMode;
+}
+
+/**
+ * `set-input-mode()` operation.
+ */
+export function setInputMode(self: bigint, value: string): void {
+  const obj = getElementContentEditable(self);
+  obj.inputMode = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: close-watcher
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type CloseWatcherHandle = bigint;
+
+/** Handle table for CloseWatcher instances */
+const _closeWatcherhandles = new Map<bigint, CloseWatcher>();
+let _nextCloseWatcher = 1n;
+
+/** Get a CloseWatcher by handle, throwing if not found. */
+function getCloseWatcher(handle: bigint): CloseWatcher {
+  const obj = _closeWatcherhandles.get(handle);
+  if (!obj) {
+    throw new Error(`CloseWatcher handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `request-close()` operation.
+ */
+export function CloseWatcherRequestClose(self: bigint): void {
+  const obj = getCloseWatcher(self);
+  obj.requestClose();
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `CloseWatcherPollClose()`
+ */
+export function CloseWatcherClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getCloseWatcher(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function CloseWatcherPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `destroy()` operation.
+ */
+export function destroy(self: bigint): void {
+  const obj = getCloseWatcher(self);
+  obj.destroy();
+}
+
+/**
+ * `get-oncancel()` operation.
+ */
+export function getOncancel(self: bigint): EventHandlerRecord {
+  const obj = getCloseWatcher(self);
+  return obj.oncancel;
+}
+
+/**
+ * `set-oncancel()` operation.
+ */
+export function setOncancel(self: bigint, value: EventHandlerRecord): void {
+  const obj = getCloseWatcher(self);
+  obj.oncancel = value;
+}
+
+/**
+ * `get-onclose()` operation.
+ */
+export function CloseWatcherGetOnclose(self: bigint): EventHandlerRecord {
+  const obj = getCloseWatcher(self);
+  return obj.onclose;
+}
+
+/**
+ * `set-onclose()` operation.
+ */
+export function CloseWatcherSetOnclose(self: bigint, value: EventHandlerRecord): void {
+  const obj = getCloseWatcher(self);
+  obj.onclose = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: data-transfer
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DataTransferHandle = bigint;
+
+/** Handle table for DataTransfer instances */
+const _dataTransferhandles = new Map<bigint, DataTransfer>();
+let _nextDataTransfer = 1n;
+
+/** Get a DataTransfer by handle, throwing if not found. */
+function getDataTransfer(handle: bigint): DataTransfer {
+  const obj = _dataTransferhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DataTransfer handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-drop-effect()` operation.
+ */
+export function getDropEffect(self: bigint): string {
+  const obj = getDataTransfer(self);
+  return obj.dropEffect;
+}
+
+/**
+ * `set-drop-effect()` operation.
+ */
+export function setDropEffect(self: bigint, value: string): void {
+  const obj = getDataTransfer(self);
+  obj.dropEffect = value;
+}
+
+/**
+ * `get-effect-allowed()` operation.
+ */
+export function getEffectAllowed(self: bigint): string {
+  const obj = getDataTransfer(self);
+  return obj.effectAllowed;
+}
+
+/**
+ * `set-effect-allowed()` operation.
+ */
+export function setEffectAllowed(self: bigint, value: string): void {
+  const obj = getDataTransfer(self);
+  obj.effectAllowed = value;
+}
+
+/**
+ * `get-items()` operation.
+ */
+export function getItems(self: bigint): bigint {
+  const obj = getDataTransfer(self);
+  return obj.items;
+}
+
+/**
+ * `set-drag-image()` operation.
+ */
+export function setDragImage(self: bigint, image: bigint, x: number, y: number): void {
+  const obj = getDataTransfer(self);
+  obj.dragImage = y;
+}
+
+/**
+ * `get-types()` operation.
+ */
+export function getTypes(self: bigint): (string)[] {
+  const obj = getDataTransfer(self);
+  return obj.types;
+}
+
+/**
+ * `get-data()` operation.
+ */
+export function DataTransferGetData(self: bigint, format: string): string {
+  const obj = getDataTransfer(self);
+  return obj.data;
+}
+
+/**
+ * `set-data()` operation.
+ */
+export function DataTransferSetData(self: bigint, format: string, data: string): void {
+  const obj = getDataTransfer(self);
+  obj.data = data;
+}
+
+/**
+ * `clear-data()` operation.
+ */
+export function clearData(self: bigint, format: string | undefined): void {
+  const obj = getDataTransfer(self);
+  obj.clearData(format);
+}
+
+/**
+ * `get-files()` operation.
+ */
+export function DataTransferGetFiles(self: bigint): bigint {
+  const obj = getDataTransfer(self);
+  return obj.files;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: data-transfer-item-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DataTransferItemListHandle = bigint;
+
+/** Handle table for DataTransferItemList instances */
+const _dataTransferItemListhandles = new Map<bigint, DataTransferItemList>();
+let _nextDataTransferItemList = 1n;
+
+/** Get a DataTransferItemList by handle, throwing if not found. */
+function getDataTransferItemList(handle: bigint): DataTransferItemList {
+  const obj = _dataTransferItemListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DataTransferItemList handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function DataTransferItemListGetLength(self: bigint): number {
+  const obj = getDataTransferItemList(self);
+  return obj.length;
+}
+
+/**
+ * `data-transfer-item()` operation.
+ */
+export function dataTransferItem(self: bigint, index: number): void {
+  const obj = getDataTransferItemList(self);
+  obj.dataTransferItem(index);
+}
+
+/**
+ * `add()` operation.
+ */
+export function DataTransferItemListAdd(self: bigint, data: string, type: string): bigint | undefined {
+  const obj = getDataTransferItemList(self);
+  return obj.add(data, type) ?? undefined;
+}
+
+/**
+ * `remove()` operation.
+ */
+export function DataTransferItemListRemove(self: bigint, index: number): void {
+  const obj = getDataTransferItemList(self);
+  obj.remove(index);
+}
+
+/**
+ * `clear()` operation.
+ */
+export function DataTransferItemListClear(self: bigint): void {
+  const obj = getDataTransferItemList(self);
+  obj.clear();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: data-transfer-item
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DataTransferItemHandle = bigint;
+
+/** Handle table for DataTransferItem instances */
+const _dataTransferItemhandles = new Map<bigint, DataTransferItem>();
+let _nextDataTransferItem = 1n;
+
+/** Get a DataTransferItem by handle, throwing if not found. */
+function getDataTransferItem(handle: bigint): DataTransferItem {
+  const obj = _dataTransferItemhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DataTransferItem handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-kind()` operation.
+ */
+export function DataTransferItemGetKind(self: bigint): string {
+  const obj = getDataTransferItem(self);
+  return obj.kind;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function DataTransferItemGetType(self: bigint): string {
+  const obj = getDataTransferItem(self);
+  return obj.type;
+}
+
+/**
+ * `get-as-string()` operation.
+ */
+export function getAsString(self: bigint, callback: bigint | undefined): void {
+  const obj = getDataTransferItem(self);
+  return obj.asString;
+}
+
+/**
+ * `get-as-file()` operation.
+ */
+export function getAsFile(self: bigint): bigint | undefined {
+  const obj = getDataTransferItem(self);
+  return obj.asFile ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: drag-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DragEventHandle = bigint;
+
+/** Handle table for DragEvent instances */
+const _dragEventhandles = new Map<bigint, DragEvent>();
+let _nextDragEvent = 1n;
+
+/** Get a DragEvent by handle, throwing if not found. */
+function getDragEvent(handle: bigint): DragEvent {
+  const obj = _dragEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DragEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-data-transfer()` operation.
+ */
+export function getDataTransfer(self: bigint): bigint | undefined {
+  const obj = getDragEvent(self);
+  return obj.dataTransfer ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: popover-target-attributes
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PopoverTargetAttributesHandle = bigint;
+
+/** Handle table for PopoverTargetAttributes instances */
+const _popoverTargetAttributeshandles = new Map<bigint, PopoverTargetAttributes>();
+let _nextPopoverTargetAttributes = 1n;
+
+/** Get a PopoverTargetAttributes by handle, throwing if not found. */
+function getPopoverTargetAttributes(handle: bigint): PopoverTargetAttributes {
+  const obj = _popoverTargetAttributeshandles.get(handle);
+  if (!obj) {
+    throw new Error(`PopoverTargetAttributes handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-popover-target-element()` operation.
+ */
+export function getPopoverTargetElement(self: bigint): bigint | undefined {
+  const obj = getPopoverTargetAttributes(self);
+  return obj.popoverTargetElement ?? undefined;
+}
+
+/**
+ * `set-popover-target-element()` operation.
+ */
+export function setPopoverTargetElement(self: bigint, value: bigint | undefined): void {
+  const obj = getPopoverTargetAttributes(self);
+  obj.popoverTargetElement = value;
+}
+
+/**
+ * `get-popover-target-action()` operation.
+ */
+export function getPopoverTargetAction(self: bigint): string {
+  const obj = getPopoverTargetAttributes(self);
+  return obj.popoverTargetAction;
+}
+
+/**
+ * `set-popover-target-action()` operation.
+ */
+export function setPopoverTargetAction(self: bigint, value: string): void {
+  const obj = getPopoverTargetAttributes(self);
+  obj.popoverTargetAction = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: origin
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OriginHandle = bigint;
+
+/** Handle table for Origin instances */
+const _originHandles = new Map<bigint, Origin>();
+let _nextOrigin = 1n;
+
+/** Get a Origin by handle, throwing if not found. */
+function getOrigin(handle: bigint): Origin {
+  const obj = _originHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Origin handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `from()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollFrom()`
+ */
+export function from(value: string): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getOrigin(self);
+  const promise = obj.from(value)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `from()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `get-opaque()` operation.
+ */
+export function getOpaque(self: bigint): boolean {
+  const obj = getOrigin(self);
+  return obj.opaque;
+}
+
+/**
+ * `is-same-origin()` operation.
+ */
+export function isSameOrigin(self: bigint, other: bigint): boolean {
+  const obj = getOrigin(self);
+  return obj.isSameOrigin(other);
+}
+
+/**
+ * `is-same-site()` operation.
+ */
+export function isSameSite(self: bigint, other: bigint): boolean {
+  const obj = getOrigin(self);
+  return obj.isSameSite(other);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: bar-prop
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BarPropHandle = bigint;
+
+/** Handle table for BarProp instances */
+const _barProphandles = new Map<bigint, BarProp>();
+let _nextBarProp = 1n;
+
+/** Get a BarProp by handle, throwing if not found. */
+function getBarProp(handle: bigint): BarProp {
+  const obj = _barProphandles.get(handle);
+  if (!obj) {
+    throw new Error(`BarProp handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-visible()` operation.
+ */
+export function getVisible(self: bigint): boolean {
+  const obj = getBarProp(self);
+  return obj.visible;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: location
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type LocationHandle = bigint;
+
+/** Handle table for Location instances */
+const _locationHandles = new Map<bigint, Location>();
+let _nextLocation = 1n;
+
+/** Get a Location by handle, throwing if not found. */
+function getLocation(handle: bigint): Location {
+  const obj = _locationHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Location handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function LocationGetHref(self: bigint): bigint {
+  const obj = getLocation(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function LocationSetHref(self: bigint, value: bigint): void {
+  const obj = getLocation(self);
+  obj.href = value;
+}
+
+/**
+ * `get-origin()` operation.
+ */
+export function LocationGetOrigin(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.origin;
+}
+
+/**
+ * `get-protocol()` operation.
+ */
+export function LocationGetProtocol(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.protocol;
+}
+
+/**
+ * `set-protocol()` operation.
+ */
+export function LocationSetProtocol(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.protocol = value;
+}
+
+/**
+ * `get-host()` operation.
+ */
+export function LocationGetHost(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.host;
+}
+
+/**
+ * `set-host()` operation.
+ */
+export function LocationSetHost(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.host = value;
+}
+
+/**
+ * `get-hostname()` operation.
+ */
+export function LocationGetHostname(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.hostname;
+}
+
+/**
+ * `set-hostname()` operation.
+ */
+export function LocationSetHostname(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.hostname = value;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function LocationGetPort(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.port;
+}
+
+/**
+ * `set-port()` operation.
+ */
+export function LocationSetPort(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.port = value;
+}
+
+/**
+ * `get-pathname()` operation.
+ */
+export function LocationGetPathname(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.pathname;
+}
+
+/**
+ * `set-pathname()` operation.
+ */
+export function LocationSetPathname(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.pathname = value;
+}
+
+/**
+ * `get-search()` operation.
+ */
+export function LocationGetSearch(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.search;
+}
+
+/**
+ * `set-search()` operation.
+ */
+export function LocationSetSearch(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.search = value;
+}
+
+/**
+ * `get-hash()` operation.
+ */
+export function LocationGetHash(self: bigint): string {
+  const obj = getLocation(self);
+  return obj.hash;
+}
+
+/**
+ * `set-hash()` operation.
+ */
+export function LocationSetHash(self: bigint, value: string): void {
+  const obj = getLocation(self);
+  obj.hash = value;
+}
+
+/**
+ * `assign()` operation.
+ */
+export function LocationAssign(self: bigint, url: string): void {
+  const obj = getLocation(self);
+  obj.assign(url);
+}
+
+/**
+ * `replace()` operation.
+ */
+export function replace(self: bigint, url: string): void {
+  const obj = getLocation(self);
+  obj.replace(url);
+}
+
+/**
+ * `reload()` operation.
+ */
+export function LocationReload(self: bigint): void {
+  const obj = getLocation(self);
+  obj.reload();
+}
+
+/**
+ * `get-ancestor-origins()` operation.
+ */
+export function getAncestorOrigins(self: bigint): (string)[] {
+  const obj = getLocation(self);
+  return obj.ancestorOrigins;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: history
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HistoryHandle = bigint;
+
+/** Handle table for History instances */
+const _historyHandles = new Map<bigint, History>();
+let _nextHistory = 1n;
+
+/** Get a History by handle, throwing if not found. */
+function getHistory(handle: bigint): History {
+  const obj = _historyHandles.get(handle);
+  if (!obj) {
+    throw new Error(`History handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function HistoryGetLength(self: bigint): number {
+  const obj = getHistory(self);
+  return obj.length;
+}
+
+/**
+ * `get-scroll-restoration()` operation.
+ */
+export function getScrollRestoration(self: bigint): bigint {
+  const obj = getHistory(self);
+  return obj.scrollRestoration;
+}
+
+/**
+ * `set-scroll-restoration()` operation.
+ */
+export function setScrollRestoration(self: bigint, value: bigint): void {
+  const obj = getHistory(self);
+  obj.scrollRestoration = value;
+}
+
+/**
+ * `get-state()` operation.
+ */
+export function HistoryGetState(self: bigint): string {
+  const obj = getHistory(self);
+  return obj.state;
+}
+
+/**
+ * `go()` operation.
+ */
+export function go(self: bigint, delta: number | undefined): void {
+  const obj = getHistory(self);
+  obj.go(delta);
+}
+
+/**
+ * `back()` operation.
+ */
+export function HistoryBack(self: bigint): void {
+  const obj = getHistory(self);
+  obj.back();
+}
+
+/**
+ * `forward()` operation.
+ */
+export function HistoryForward(self: bigint): void {
+  const obj = getHistory(self);
+  obj.forward();
+}
+
+/**
+ * `push-state()` operation.
+ */
+export function pushState(self: bigint, data: string, unused: string, url: string | undefined): void {
+  const obj = getHistory(self);
+  obj.pushState(data, unused, url);
+}
+
+/**
+ * `replace-state()` operation.
+ */
+export function replaceState(self: bigint, data: string, unused: string, url: string | undefined): void {
+  const obj = getHistory(self);
+  obj.replaceState(data, unused, url);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationHandle = bigint;
+
+/** Handle table for Navigation instances */
+const _navigationHandles = new Map<bigint, Navigation>();
+let _nextNavigation = 1n;
+
+/** Get a Navigation by handle, throwing if not found. */
+function getNavigation(handle: bigint): Navigation {
+  const obj = _navigationHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Navigation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `entries()` operation.
+ */
+export function entries(self: bigint): (bigint)[] {
+  const obj = getNavigation(self);
+  return obj.entries();
+}
+
+/**
+ * `get-current-entry()` operation.
+ */
+export function getCurrentEntry(self: bigint): bigint | undefined {
+  const obj = getNavigation(self);
+  return obj.currentEntry ?? undefined;
+}
+
+/**
+ * `update-current-entry()` operation.
+ */
+export function updateCurrentEntry(self: bigint, options: bigint): void {
+  const obj = getNavigation(self);
+  obj.updateCurrentEntry(options);
+}
+
+/**
+ * `get-transition()` operation.
+ */
+export function getTransition(self: bigint): bigint | undefined {
+  const obj = getNavigation(self);
+  return obj.transition ?? undefined;
+}
+
+/**
+ * `get-activation()` operation.
+ */
+export function NavigationGetActivation(self: bigint): bigint | undefined {
+  const obj = getNavigation(self);
+  return obj.activation ?? undefined;
+}
+
+/**
+ * `get-can-go-back()` operation.
+ */
+export function getCanGoBack(self: bigint): boolean {
+  const obj = getNavigation(self);
+  return obj.canGoBack;
+}
+
+/**
+ * `get-can-go-forward()` operation.
+ */
+export function getCanGoForward(self: bigint): boolean {
+  const obj = getNavigation(self);
+  return obj.canGoForward;
+}
+
+/**
+ * `navigate()` operation.
+ */
+export function navigate(self: bigint, url: string, options: bigint | undefined): bigint {
+  const obj = getNavigation(self);
+  return obj.navigate(url, options);
+}
+
+/**
+ * `reload()` operation.
+ */
+export function NavigationReload(self: bigint, options: bigint | undefined): bigint {
+  const obj = getNavigation(self);
+  return obj.reload(options);
+}
+
+/**
+ * `traverse-to()` operation.
+ */
+export function traverseTo(self: bigint, key: string, options: bigint | undefined): bigint {
+  const obj = getNavigation(self);
+  return obj.traverseTo(key, options);
+}
+
+/**
+ * `back()` operation.
+ */
+export function NavigationBack(self: bigint, options: bigint | undefined): bigint {
+  const obj = getNavigation(self);
+  return obj.back(options);
+}
+
+/**
+ * `forward()` operation.
+ */
+export function NavigationForward(self: bigint, options: bigint | undefined): bigint {
+  const obj = getNavigation(self);
+  return obj.forward(options);
+}
+
+/**
+ * `get-onnavigate()` operation.
+ */
+export function getOnnavigate(self: bigint): EventHandlerRecord {
+  const obj = getNavigation(self);
+  return obj.onnavigate;
+}
+
+/**
+ * `set-onnavigate()` operation.
+ */
+export function setOnnavigate(self: bigint, value: EventHandlerRecord): void {
+  const obj = getNavigation(self);
+  obj.onnavigate = value;
+}
+
+/**
+ * `get-onnavigatesuccess()` operation.
+ */
+export function getOnnavigatesuccess(self: bigint): EventHandlerRecord {
+  const obj = getNavigation(self);
+  return obj.onnavigatesuccess;
+}
+
+/**
+ * `set-onnavigatesuccess()` operation.
+ */
+export function setOnnavigatesuccess(self: bigint, value: EventHandlerRecord): void {
+  const obj = getNavigation(self);
+  obj.onnavigatesuccess = value;
+}
+
+/**
+ * `get-onnavigateerror()` operation.
+ */
+export function getOnnavigateerror(self: bigint): EventHandlerRecord {
+  const obj = getNavigation(self);
+  return obj.onnavigateerror;
+}
+
+/**
+ * `set-onnavigateerror()` operation.
+ */
+export function setOnnavigateerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = getNavigation(self);
+  obj.onnavigateerror = value;
+}
+
+/**
+ * `get-oncurrententrychange()` operation.
+ */
+export function getOncurrententrychange(self: bigint): EventHandlerRecord {
+  const obj = getNavigation(self);
+  return obj.oncurrententrychange;
+}
+
+/**
+ * `set-oncurrententrychange()` operation.
+ */
+export function setOncurrententrychange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getNavigation(self);
+  obj.oncurrententrychange = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-history-entry
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationHistoryEntryHandle = bigint;
+
+/** Handle table for NavigationHistoryEntry instances */
+const _navigationHistoryEntryhandles = new Map<bigint, NavigationHistoryEntry>();
+let _nextNavigationHistoryEntry = 1n;
+
+/** Get a NavigationHistoryEntry by handle, throwing if not found. */
+function getNavigationHistoryEntry(handle: bigint): NavigationHistoryEntry {
+  const obj = _navigationHistoryEntryhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationHistoryEntry handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-url()` operation.
+ */
+export function NavigationHistoryEntryGetUrl(self: bigint): string | undefined {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.url ?? undefined;
+}
+
+/**
+ * `get-key()` operation.
+ */
+export function NavigationHistoryEntryGetKey(self: bigint): string {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.key;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function NavigationHistoryEntryGetId(self: bigint): string {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.id;
+}
+
+/**
+ * `get-index()` operation.
+ */
+export function NavigationHistoryEntryGetIndex(self: bigint): bigint {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.index;
+}
+
+/**
+ * `get-same-document()` operation.
+ */
+export function NavigationHistoryEntryGetSameDocument(self: bigint): boolean {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.sameDocument;
+}
+
+/**
+ * `get-state()` operation.
+ */
+export function NavigationHistoryEntryGetState(self: bigint): string {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.state;
+}
+
+/**
+ * `get-ondispose()` operation.
+ */
+export function getOndispose(self: bigint): EventHandlerRecord {
+  const obj = getNavigationHistoryEntry(self);
+  return obj.ondispose;
+}
+
+/**
+ * `set-ondispose()` operation.
+ */
+export function setOndispose(self: bigint, value: EventHandlerRecord): void {
+  const obj = getNavigationHistoryEntry(self);
+  obj.ondispose = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-transition
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationTransitionHandle = bigint;
+
+/** Handle table for NavigationTransition instances */
+const _navigationTransitionhandles = new Map<bigint, NavigationTransition>();
+let _nextNavigationTransition = 1n;
+
+/** Get a NavigationTransition by handle, throwing if not found. */
+function getNavigationTransition(handle: bigint): NavigationTransition {
+  const obj = _navigationTransitionhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationTransition handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-navigation-type()` operation.
+ */
+export function NavigationTransitionGetNavigationType(self: bigint): bigint {
+  const obj = getNavigationTransition(self);
+  return obj.navigationType;
+}
+
+/**
+ * `get-from()` operation.
+ */
+export function NavigationTransitionGetFrom(self: bigint): bigint {
+  const obj = getNavigationTransition(self);
+  return obj.from;
+}
+
+/**
+ * `get-to()` operation.
+ */
+export function getTo(self: bigint): bigint {
+  const obj = getNavigationTransition(self);
+  return obj.to;
+}
+
+/**
+ * `get-committed()` operation.
+ */
+export function getCommitted(self: bigint): bigint {
+  const obj = getNavigationTransition(self);
+  return obj.committed;
+}
+
+/**
+ * `get-finished()` operation.
+ */
+export function getFinished(self: bigint): bigint {
+  const obj = getNavigationTransition(self);
+  return obj.finished;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-activation
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationActivationHandle = bigint;
+
+/** Handle table for NavigationActivation instances */
+const _navigationActivationhandles = new Map<bigint, NavigationActivation>();
+let _nextNavigationActivation = 1n;
+
+/** Get a NavigationActivation by handle, throwing if not found. */
+function getNavigationActivation(handle: bigint): NavigationActivation {
+  const obj = _navigationActivationhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationActivation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-from()` operation.
+ */
+export function NavigationActivationGetFrom(self: bigint): bigint | undefined {
+  const obj = getNavigationActivation(self);
+  return obj.from ?? undefined;
+}
+
+/**
+ * `get-entry()` operation.
+ */
+export function getEntry(self: bigint): bigint {
+  const obj = getNavigationActivation(self);
+  return obj.entry;
+}
+
+/**
+ * `get-navigation-type()` operation.
+ */
+export function NavigationActivationGetNavigationType(self: bigint): bigint {
+  const obj = getNavigationActivation(self);
+  return obj.navigationType;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigate-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigateEventHandle = bigint;
+
+/** Handle table for NavigateEvent instances */
+const _navigateEventhandles = new Map<bigint, NavigateEvent>();
+let _nextNavigateEvent = 1n;
+
+/** Get a NavigateEvent by handle, throwing if not found. */
+function getNavigateEvent(handle: bigint): NavigateEvent {
+  const obj = _navigateEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigateEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-navigation-type()` operation.
+ */
+export function NavigateEventGetNavigationType(self: bigint): bigint {
+  const obj = getNavigateEvent(self);
+  return obj.navigationType;
+}
+
+/**
+ * `get-destination()` operation.
+ */
+export function getDestination(self: bigint): bigint {
+  const obj = getNavigateEvent(self);
+  return obj.destination;
+}
+
+/**
+ * `get-can-intercept()` operation.
+ */
+export function getCanIntercept(self: bigint): boolean {
+  const obj = getNavigateEvent(self);
+  return obj.canIntercept;
+}
+
+/**
+ * `get-user-initiated()` operation.
+ */
+export function getUserInitiated(self: bigint): boolean {
+  const obj = getNavigateEvent(self);
+  return obj.userInitiated;
+}
+
+/**
+ * `get-hash-change()` operation.
+ */
+export function getHashChange(self: bigint): boolean {
+  const obj = getNavigateEvent(self);
+  return obj.hashChange;
+}
+
+/**
+ * `get-signal()` operation.
+ */
+export function getSignal(self: bigint): bigint {
+  const obj = getNavigateEvent(self);
+  return obj.signal;
+}
+
+/**
+ * `get-form-data()` operation.
+ */
+export function NavigateEventGetFormData(self: bigint): bigint | undefined {
+  const obj = getNavigateEvent(self);
+  return obj.formData ?? undefined;
+}
+
+/**
+ * `get-download-request()` operation.
+ */
+export function getDownloadRequest(self: bigint): string | undefined {
+  const obj = getNavigateEvent(self);
+  return obj.downloadRequest ?? undefined;
+}
+
+/**
+ * `get-info()` operation.
+ */
+export function getInfo(self: bigint): string {
+  const obj = getNavigateEvent(self);
+  return obj.info;
+}
+
+/**
+ * `get-has-ua-visual-transition()` operation.
+ */
+export function NavigateEventGetHasUaVisualTransition(self: bigint): boolean {
+  const obj = getNavigateEvent(self);
+  return obj.hasUaVisualTransition;
+}
+
+/**
+ * `get-source-element()` operation.
+ */
+export function getSourceElement(self: bigint): bigint | undefined {
+  const obj = getNavigateEvent(self);
+  return obj.sourceElement ?? undefined;
+}
+
+/**
+ * `intercept()` operation.
+ */
+export function intercept(self: bigint, options: bigint | undefined): void {
+  const obj = getNavigateEvent(self);
+  obj.intercept(options);
+}
+
+/**
+ * `scroll()` operation.
+ */
+export function scroll(self: bigint): void {
+  const obj = getNavigateEvent(self);
+  obj.scroll();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-precommit-controller
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationPrecommitControllerHandle = bigint;
+
+/** Handle table for NavigationPrecommitController instances */
+const _navigationPrecommitControllerhandles = new Map<bigint, NavigationPrecommitController>();
+let _nextNavigationPrecommitController = 1n;
+
+/** Get a NavigationPrecommitController by handle, throwing if not found. */
+function getNavigationPrecommitController(handle: bigint): NavigationPrecommitController {
+  const obj = _navigationPrecommitControllerhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationPrecommitController handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `redirect()` operation.
+ */
+export function redirect(self: bigint, url: string, options: bigint | undefined): void {
+  const obj = getNavigationPrecommitController(self);
+  obj.redirect(url, options);
+}
+
+/**
+ * `add-handler()` operation.
+ */
+export function addHandler(self: bigint, handler: bigint): void {
+  const obj = getNavigationPrecommitController(self);
+  obj.addHandler(handler);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-destination
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationDestinationHandle = bigint;
+
+/** Handle table for NavigationDestination instances */
+const _navigationDestinationhandles = new Map<bigint, NavigationDestination>();
+let _nextNavigationDestination = 1n;
+
+/** Get a NavigationDestination by handle, throwing if not found. */
+function getNavigationDestination(handle: bigint): NavigationDestination {
+  const obj = _navigationDestinationhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationDestination handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-url()` operation.
+ */
+export function NavigationDestinationGetUrl(self: bigint): string {
+  const obj = getNavigationDestination(self);
+  return obj.url;
+}
+
+/**
+ * `get-key()` operation.
+ */
+export function NavigationDestinationGetKey(self: bigint): string {
+  const obj = getNavigationDestination(self);
+  return obj.key;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function NavigationDestinationGetId(self: bigint): string {
+  const obj = getNavigationDestination(self);
+  return obj.id;
+}
+
+/**
+ * `get-index()` operation.
+ */
+export function NavigationDestinationGetIndex(self: bigint): bigint {
+  const obj = getNavigationDestination(self);
+  return obj.index;
+}
+
+/**
+ * `get-same-document()` operation.
+ */
+export function NavigationDestinationGetSameDocument(self: bigint): boolean {
+  const obj = getNavigationDestination(self);
+  return obj.sameDocument;
+}
+
+/**
+ * `get-state()` operation.
+ */
+export function NavigationDestinationGetState(self: bigint): string {
+  const obj = getNavigationDestination(self);
+  return obj.state;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigation-current-entry-change-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigationCurrentEntryChangeEventHandle = bigint;
+
+/** Handle table for NavigationCurrentEntryChangeEvent instances */
+const _navigationCurrentEntryChangeEventhandles = new Map<bigint, NavigationCurrentEntryChangeEvent>();
+let _nextNavigationCurrentEntryChangeEvent = 1n;
+
+/** Get a NavigationCurrentEntryChangeEvent by handle, throwing if not found. */
+function getNavigationCurrentEntryChangeEvent(handle: bigint): NavigationCurrentEntryChangeEvent {
+  const obj = _navigationCurrentEntryChangeEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigationCurrentEntryChangeEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-navigation-type()` operation.
+ */
+export function NavigationCurrentEntryChangeEventGetNavigationType(self: bigint): bigint | undefined {
+  const obj = getNavigationCurrentEntryChangeEvent(self);
+  return obj.navigationType ?? undefined;
+}
+
+/**
+ * `get-from()` operation.
+ */
+export function NavigationCurrentEntryChangeEventGetFrom(self: bigint): bigint {
+  const obj = getNavigationCurrentEntryChangeEvent(self);
+  return obj.from;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: pop-state-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PopStateEventHandle = bigint;
+
+/** Handle table for PopStateEvent instances */
+const _popStateEventhandles = new Map<bigint, PopStateEvent>();
+let _nextPopStateEvent = 1n;
+
+/** Get a PopStateEvent by handle, throwing if not found. */
+function getPopStateEvent(handle: bigint): PopStateEvent {
+  const obj = _popStateEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PopStateEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-state()` operation.
+ */
+export function PopStateEventGetState(self: bigint): string {
+  const obj = getPopStateEvent(self);
+  return obj.state;
+}
+
+/**
+ * `get-has-ua-visual-transition()` operation.
+ */
+export function PopStateEventGetHasUaVisualTransition(self: bigint): boolean {
+  const obj = getPopStateEvent(self);
+  return obj.hasUaVisualTransition;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: hash-change-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HashChangeEventHandle = bigint;
+
+/** Handle table for HashChangeEvent instances */
+const _hashChangeEventhandles = new Map<bigint, HashChangeEvent>();
+let _nextHashChangeEvent = 1n;
+
+/** Get a HashChangeEvent by handle, throwing if not found. */
+function getHashChangeEvent(handle: bigint): HashChangeEvent {
+  const obj = _hashChangeEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HashChangeEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-old-url()` operation.
+ */
+export function getOldUrl(self: bigint): string {
+  const obj = getHashChangeEvent(self);
+  return obj.oldUrl;
+}
+
+/**
+ * `get-new-url()` operation.
+ */
+export function getNewUrl(self: bigint): string {
+  const obj = getHashChangeEvent(self);
+  return obj.newUrl;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: page-swap-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PageSwapEventHandle = bigint;
+
+/** Handle table for PageSwapEvent instances */
+const _pageSwapEventhandles = new Map<bigint, PageSwapEvent>();
+let _nextPageSwapEvent = 1n;
+
+/** Get a PageSwapEvent by handle, throwing if not found. */
+function getPageSwapEvent(handle: bigint): PageSwapEvent {
+  const obj = _pageSwapEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PageSwapEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-activation()` operation.
+ */
+export function PageSwapEventGetActivation(self: bigint): bigint | undefined {
+  const obj = getPageSwapEvent(self);
+  return obj.activation ?? undefined;
+}
+
+/**
+ * `get-view-transition()` operation.
+ */
+export function PageSwapEventGetViewTransition(self: bigint): bigint | undefined {
+  const obj = getPageSwapEvent(self);
+  return obj.viewTransition ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: page-reveal-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PageRevealEventHandle = bigint;
+
+/** Handle table for PageRevealEvent instances */
+const _pageRevealEventhandles = new Map<bigint, PageRevealEvent>();
+let _nextPageRevealEvent = 1n;
+
+/** Get a PageRevealEvent by handle, throwing if not found. */
+function getPageRevealEvent(handle: bigint): PageRevealEvent {
+  const obj = _pageRevealEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PageRevealEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-view-transition()` operation.
+ */
+export function PageRevealEventGetViewTransition(self: bigint): bigint | undefined {
+  const obj = getPageRevealEvent(self);
+  return obj.viewTransition ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: page-transition-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PageTransitionEventHandle = bigint;
+
+/** Handle table for PageTransitionEvent instances */
+const _pageTransitionEventhandles = new Map<bigint, PageTransitionEvent>();
+let _nextPageTransitionEvent = 1n;
+
+/** Get a PageTransitionEvent by handle, throwing if not found. */
+function getPageTransitionEvent(handle: bigint): PageTransitionEvent {
+  const obj = _pageTransitionEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PageTransitionEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-persisted()` operation.
+ */
+export function getPersisted(self: bigint): boolean {
+  const obj = getPageTransitionEvent(self);
+  return obj.persisted;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: before-unload-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BeforeUnloadEventHandle = bigint;
+
+/** Handle table for BeforeUnloadEvent instances */
+const _beforeUnloadEventhandles = new Map<bigint, BeforeUnloadEvent>();
+let _nextBeforeUnloadEvent = 1n;
+
+/** Get a BeforeUnloadEvent by handle, throwing if not found. */
+function getBeforeUnloadEvent(handle: bigint): BeforeUnloadEvent {
+  const obj = _beforeUnloadEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`BeforeUnloadEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-return-value()` operation.
+ */
+export function BeforeUnloadEventGetReturnValue(self: bigint): string {
+  const obj = getBeforeUnloadEvent(self);
+  return obj.returnValue;
+}
+
+/**
+ * `set-return-value()` operation.
+ */
+export function BeforeUnloadEventSetReturnValue(self: bigint, value: string): void {
+  const obj = getBeforeUnloadEvent(self);
+  obj.returnValue = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: not-restored-reason-details
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NotRestoredReasonDetailsHandle = bigint;
+
+/** Handle table for NotRestoredReasonDetails instances */
+const _notRestoredReasonDetailshandles = new Map<bigint, NotRestoredReasonDetails>();
+let _nextNotRestoredReasonDetails = 1n;
+
+/** Get a NotRestoredReasonDetails by handle, throwing if not found. */
+function getNotRestoredReasonDetails(handle: bigint): NotRestoredReasonDetails {
+  const obj = _notRestoredReasonDetailshandles.get(handle);
+  if (!obj) {
+    throw new Error(`NotRestoredReasonDetails handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-reason()` operation.
+ */
+export function NotRestoredReasonDetailsGetReason(self: bigint): string {
+  const obj = getNotRestoredReasonDetails(self);
+  return obj.reason;
+}
+
+/**
+ * `to-json()` operation.
+ */
+export function NotRestoredReasonDetailsToJson(self: bigint): bigint {
+  const obj = getNotRestoredReasonDetails(self);
+  return obj.toJson();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: not-restored-reasons
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NotRestoredReasonsHandle = bigint;
+
+/** Handle table for NotRestoredReasons instances */
+const _notRestoredReasonshandles = new Map<bigint, NotRestoredReasons>();
+let _nextNotRestoredReasons = 1n;
+
+/** Get a NotRestoredReasons by handle, throwing if not found. */
+function getNotRestoredReasons(handle: bigint): NotRestoredReasons {
+  const obj = _notRestoredReasonshandles.get(handle);
+  if (!obj) {
+    throw new Error(`NotRestoredReasons handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function NotRestoredReasonsGetSrc(self: bigint): string | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.src ?? undefined;
+}
+
+/**
+ * `get-id()` operation.
+ */
+export function NotRestoredReasonsGetId(self: bigint): string | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.id ?? undefined;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function NotRestoredReasonsGetName(self: bigint): string | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.name ?? undefined;
+}
+
+/**
+ * `get-url()` operation.
+ */
+export function NotRestoredReasonsGetUrl(self: bigint): string | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.url ?? undefined;
+}
+
+/**
+ * `get-reasons()` operation.
+ */
+export function getReasons(self: bigint): (bigint)[] | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.reasons ?? undefined;
+}
+
+/**
+ * `get-children()` operation.
+ */
+export function getChildren(self: bigint): (bigint)[] | undefined {
+  const obj = getNotRestoredReasons(self);
+  return obj.children ?? undefined;
+}
+
+/**
+ * `to-json()` operation.
+ */
+export function NotRestoredReasonsToJson(self: bigint): bigint {
+  const obj = getNotRestoredReasons(self);
+  return obj.toJson();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: error-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ErrorEventHandle = bigint;
+
+/** Handle table for ErrorEvent instances */
+const _errorEventhandles = new Map<bigint, ErrorEvent>();
+let _nextErrorEvent = 1n;
+
+/** Get a ErrorEvent by handle, throwing if not found. */
+function getErrorEvent(handle: bigint): ErrorEvent {
+  const obj = _errorEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`ErrorEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-message()` operation.
+ */
+export function ErrorEventGetMessage(self: bigint): string {
+  const obj = getErrorEvent(self);
+  return obj.message;
+}
+
+/**
+ * `get-filename()` operation.
+ */
+export function ErrorEventGetFilename(self: bigint): string {
+  const obj = getErrorEvent(self);
+  return obj.filename;
+}
+
+/**
+ * `get-lineno()` operation.
+ */
+export function getLineno(self: bigint): number {
+  const obj = getErrorEvent(self);
+  return obj.lineno;
+}
+
+/**
+ * `get-colno()` operation.
+ */
+export function getColno(self: bigint): number {
+  const obj = getErrorEvent(self);
+  return obj.colno;
+}
+
+/**
+ * `get-error()` operation.
+ */
+export function ErrorEventGetError(self: bigint): string {
+  const obj = getErrorEvent(self);
+  return obj.error;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: promise-rejection-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PromiseRejectionEventHandle = bigint;
+
+/** Handle table for PromiseRejectionEvent instances */
+const _promiseRejectionEventhandles = new Map<bigint, PromiseRejectionEvent>();
+let _nextPromiseRejectionEvent = 1n;
+
+/** Get a PromiseRejectionEvent by handle, throwing if not found. */
+function getPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
+  const obj = _promiseRejectionEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PromiseRejectionEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-promise()` operation.
+ */
+export function getPromise(self: bigint): bigint {
+  const obj = getPromiseRejectionEvent(self);
+  return obj.promise;
+}
+
+/**
+ * `get-reason()` operation.
+ */
+export function PromiseRejectionEventGetReason(self: bigint): string {
+  const obj = getPromiseRejectionEvent(self);
+  return obj.reason;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: dom-parser
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DomParserHandle = bigint;
+
+/** Handle table for DomParser instances */
+const _domParserhandles = new Map<bigint, DomParser>();
+let _nextDomParser = 1n;
+
+/** Get a DomParser by handle, throwing if not found. */
+function getDomParser(handle: bigint): DomParser {
+  const obj = _domParserhandles.get(handle);
+  if (!obj) {
+    throw new Error(`DomParser handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `parse-from-string()` operation.
+ */
+export function parseFromString(self: bigint, string: bigint, type: bigint): bigint {
+  const obj = getDomParser(self);
+  return obj.parseFromString(string, type);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: xml-serializer
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type XmlSerializerHandle = bigint;
+
+/** Handle table for XmlSerializer instances */
+const _xmlSerializerhandles = new Map<bigint, XmlSerializer>();
+let _nextXmlSerializer = 1n;
+
+/** Get a XmlSerializer by handle, throwing if not found. */
+function getXmlSerializer(handle: bigint): XmlSerializer {
+  const obj = _xmlSerializerhandles.get(handle);
+  if (!obj) {
+    throw new Error(`XmlSerializer handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `serialize-to-string()` operation.
+ */
+export function serializeToString(self: bigint, root: bigint): string {
+  const obj = getXmlSerializer(self);
+  return obj.serializeToString(root);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-id
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorIdHandle = bigint;
+
+/** Handle table for NavigatorId instances */
+const _navigatorIdhandles = new Map<bigint, NavigatorId>();
+let _nextNavigatorId = 1n;
+
+/** Get a NavigatorId by handle, throwing if not found. */
+function getNavigatorId(handle: bigint): NavigatorId {
+  const obj = _navigatorIdhandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorId handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-app-code-name()` operation.
+ */
+export function getAppCodeName(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.appCodeName;
+}
+
+/**
+ * `get-app-name()` operation.
+ */
+export function getAppName(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.appName;
+}
+
+/**
+ * `get-app-version()` operation.
+ */
+export function getAppVersion(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.appVersion;
+}
+
+/**
+ * `get-platform()` operation.
+ */
+export function getPlatform(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.platform;
+}
+
+/**
+ * `get-product()` operation.
+ */
+export function getProduct(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.product;
+}
+
+/**
+ * `get-product-sub()` operation.
+ */
+export function getProductSub(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.productSub;
+}
+
+/**
+ * `get-user-agent()` operation.
+ */
+export function getUserAgent(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.userAgent;
+}
+
+/**
+ * `get-vendor()` operation.
+ */
+export function getVendor(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.vendor;
+}
+
+/**
+ * `get-vendor-sub()` operation.
+ */
+export function getVendorSub(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.vendorSub;
+}
+
+/**
+ * `taint-enabled()` operation.
+ */
+export function taintEnabled(self: bigint): boolean {
+  const obj = getNavigatorId(self);
+  return obj.taintEnabled();
+}
+
+/**
+ * `get-oscpu()` operation.
+ */
+export function getOscpu(self: bigint): string {
+  const obj = getNavigatorId(self);
+  return obj.oscpu;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-language
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorLanguageHandle = bigint;
+
+/** Handle table for NavigatorLanguage instances */
+const _navigatorLanguagehandles = new Map<bigint, NavigatorLanguage>();
+let _nextNavigatorLanguage = 1n;
+
+/** Get a NavigatorLanguage by handle, throwing if not found. */
+function getNavigatorLanguage(handle: bigint): NavigatorLanguage {
+  const obj = _navigatorLanguagehandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorLanguage handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-language()` operation.
+ */
+export function NavigatorLanguageGetLanguage(self: bigint): string {
+  const obj = getNavigatorLanguage(self);
+  return obj.language;
+}
+
+/**
+ * `get-languages()` operation.
+ */
+export function getLanguages(self: bigint): (string)[] {
+  const obj = getNavigatorLanguage(self);
+  return obj.languages;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-on-line
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorOnLineHandle = bigint;
+
+/** Handle table for NavigatorOnLine instances */
+const _navigatorOnLinehandles = new Map<bigint, NavigatorOnLine>();
+let _nextNavigatorOnLine = 1n;
+
+/** Get a NavigatorOnLine by handle, throwing if not found. */
+function getNavigatorOnLine(handle: bigint): NavigatorOnLine {
+  const obj = _navigatorOnLinehandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorOnLine handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-on-line()` operation.
+ */
+export function getOnLine(self: bigint): boolean {
+  const obj = getNavigatorOnLine(self);
+  return obj.onLine;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-content-utils
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorContentUtilsHandle = bigint;
+
+/** Handle table for NavigatorContentUtils instances */
+const _navigatorContentUtilshandles = new Map<bigint, NavigatorContentUtils>();
+let _nextNavigatorContentUtils = 1n;
+
+/** Get a NavigatorContentUtils by handle, throwing if not found. */
+function getNavigatorContentUtils(handle: bigint): NavigatorContentUtils {
+  const obj = _navigatorContentUtilshandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorContentUtils handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `register-protocol-handler()` operation.
+ */
+export function registerProtocolHandler(self: bigint, scheme: string, url: string): void {
+  const obj = getNavigatorContentUtils(self);
+  obj.registerProtocolHandler(scheme, url);
+}
+
+/**
+ * `unregister-protocol-handler()` operation.
+ */
+export function unregisterProtocolHandler(self: bigint, scheme: string, url: string): void {
+  const obj = getNavigatorContentUtils(self);
+  obj.unregisterProtocolHandler(scheme, url);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-cookies
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorCookiesHandle = bigint;
+
+/** Handle table for NavigatorCookies instances */
+const _navigatorCookieshandles = new Map<bigint, NavigatorCookies>();
+let _nextNavigatorCookies = 1n;
+
+/** Get a NavigatorCookies by handle, throwing if not found. */
+function getNavigatorCookies(handle: bigint): NavigatorCookies {
+  const obj = _navigatorCookieshandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorCookies handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-cookie-enabled()` operation.
+ */
+export function getCookieEnabled(self: bigint): boolean {
+  const obj = getNavigatorCookies(self);
+  return obj.cookieEnabled;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-plugins
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorPluginsHandle = bigint;
+
+/** Handle table for NavigatorPlugins instances */
+const _navigatorPluginshandles = new Map<bigint, NavigatorPlugins>();
+let _nextNavigatorPlugins = 1n;
+
+/** Get a NavigatorPlugins by handle, throwing if not found. */
+function getNavigatorPlugins(handle: bigint): NavigatorPlugins {
+  const obj = _navigatorPluginshandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorPlugins handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-plugins()` operation.
+ */
+export function getPlugins(self: bigint): bigint {
+  const obj = getNavigatorPlugins(self);
+  return obj.plugins;
+}
+
+/**
+ * `get-mime-types()` operation.
+ */
+export function getMimeTypes(self: bigint): bigint {
+  const obj = getNavigatorPlugins(self);
+  return obj.mimeTypes;
+}
+
+/**
+ * `java-enabled()` operation.
+ */
+export function javaEnabled(self: bigint): boolean {
+  const obj = getNavigatorPlugins(self);
+  return obj.javaEnabled();
+}
+
+/**
+ * `get-pdf-viewer-enabled()` operation.
+ */
+export function getPdfViewerEnabled(self: bigint): boolean {
+  const obj = getNavigatorPlugins(self);
+  return obj.pdfViewerEnabled;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: plugin-array
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PluginArrayHandle = bigint;
+
+/** Handle table for PluginArray instances */
+const _pluginArrayhandles = new Map<bigint, PluginArray>();
+let _nextPluginArray = 1n;
+
+/** Get a PluginArray by handle, throwing if not found. */
+function getPluginArray(handle: bigint): PluginArray {
+  const obj = _pluginArrayhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PluginArray handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `refresh()` operation.
+ */
+export function refresh(self: bigint): void {
+  const obj = getPluginArray(self);
+  obj.refresh();
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function PluginArrayGetLength(self: bigint): number {
+  const obj = getPluginArray(self);
+  return obj.length;
+}
+
+/**
+ * `item()` operation.
+ */
+export function PluginArrayItem(self: bigint, index: number): bigint | undefined {
+  const obj = getPluginArray(self);
+  return obj.item(index) ?? undefined;
+}
+
+/**
+ * `named-item()` operation.
+ */
+export function PluginArrayNamedItem(self: bigint, name: string): bigint | undefined {
+  const obj = getPluginArray(self);
+  return obj.namedItem(name) ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: mime-type-array
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MimeTypeArrayHandle = bigint;
+
+/** Handle table for MimeTypeArray instances */
+const _mimeTypeArrayhandles = new Map<bigint, MimeTypeArray>();
+let _nextMimeTypeArray = 1n;
+
+/** Get a MimeTypeArray by handle, throwing if not found. */
+function getMimeTypeArray(handle: bigint): MimeTypeArray {
+  const obj = _mimeTypeArrayhandles.get(handle);
+  if (!obj) {
+    throw new Error(`MimeTypeArray handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function MimeTypeArrayGetLength(self: bigint): number {
+  const obj = getMimeTypeArray(self);
+  return obj.length;
+}
+
+/**
+ * `item()` operation.
+ */
+export function MimeTypeArrayItem(self: bigint, index: number): bigint | undefined {
+  const obj = getMimeTypeArray(self);
+  return obj.item(index) ?? undefined;
+}
+
+/**
+ * `named-item()` operation.
+ */
+export function MimeTypeArrayNamedItem(self: bigint, name: string): bigint | undefined {
+  const obj = getMimeTypeArray(self);
+  return obj.namedItem(name) ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: plugin
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PluginHandle = bigint;
+
+/** Handle table for Plugin instances */
+const _pluginHandles = new Map<bigint, Plugin>();
+let _nextPlugin = 1n;
+
+/** Get a Plugin by handle, throwing if not found. */
+function getPlugin(handle: bigint): Plugin {
+  const obj = _pluginHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Plugin handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function PluginGetName(self: bigint): string {
+  const obj = getPlugin(self);
+  return obj.name;
+}
+
+/**
+ * `get-description()` operation.
+ */
+export function PluginGetDescription(self: bigint): string {
+  const obj = getPlugin(self);
+  return obj.description;
+}
+
+/**
+ * `get-filename()` operation.
+ */
+export function PluginGetFilename(self: bigint): string {
+  const obj = getPlugin(self);
+  return obj.filename;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function PluginGetLength(self: bigint): number {
+  const obj = getPlugin(self);
+  return obj.length;
+}
+
+/**
+ * `item()` operation.
+ */
+export function PluginItem(self: bigint, index: number): bigint | undefined {
+  const obj = getPlugin(self);
+  return obj.item(index) ?? undefined;
+}
+
+/**
+ * `named-item()` operation.
+ */
+export function PluginNamedItem(self: bigint, name: string): bigint | undefined {
+  const obj = getPlugin(self);
+  return obj.namedItem(name) ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: mime-type
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MimeTypeHandle = bigint;
+
+/** Handle table for MimeType instances */
+const _mimeTypehandles = new Map<bigint, MimeType>();
+let _nextMimeType = 1n;
+
+/** Get a MimeType by handle, throwing if not found. */
+function getMimeType(handle: bigint): MimeType {
+  const obj = _mimeTypehandles.get(handle);
+  if (!obj) {
+    throw new Error(`MimeType handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function MimeTypeGetType(self: bigint): string {
+  const obj = getMimeType(self);
+  return obj.type;
+}
+
+/**
+ * `get-description()` operation.
+ */
+export function MimeTypeGetDescription(self: bigint): string {
+  const obj = getMimeType(self);
+  return obj.description;
+}
+
+/**
+ * `get-suffixes()` operation.
+ */
+export function getSuffixes(self: bigint): string {
+  const obj = getMimeType(self);
+  return obj.suffixes;
+}
+
+/**
+ * `get-enabled-plugin()` operation.
+ */
+export function getEnabledPlugin(self: bigint): bigint {
+  const obj = getMimeType(self);
+  return obj.enabledPlugin;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: image-data
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ImageDataHandle = bigint;
+
+/** Handle table for ImageData instances */
+const _imageDatahandles = new Map<bigint, ImageData>();
+let _nextImageData = 1n;
+
+/** Get a ImageData by handle, throwing if not found. */
+function getImageData(handle: bigint): ImageData {
+  const obj = _imageDatahandles.get(handle);
+  if (!obj) {
+    throw new Error(`ImageData handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function ImageDataGetWidth(self: bigint): number {
+  const obj = getImageData(self);
+  return obj.width;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function ImageDataGetHeight(self: bigint): number {
+  const obj = getImageData(self);
+  return obj.height;
+}
+
+/**
+ * `get-data()` operation.
+ */
+export function ImageDataGetData(self: bigint): bigint {
+  const obj = getImageData(self);
+  return obj.data;
+}
+
+/**
+ * `get-pixel-format()` operation.
+ */
+export function getPixelFormat(self: bigint): bigint {
+  const obj = getImageData(self);
+  return obj.pixelFormat;
+}
+
+/**
+ * `get-color-space()` operation.
+ */
+export function ImageDataGetColorSpace(self: bigint): bigint {
+  const obj = getImageData(self);
+  return obj.colorSpace;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: image-bitmap
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ImageBitmapHandle = bigint;
+
+/** Handle table for ImageBitmap instances */
+const _imageBitmaphandles = new Map<bigint, ImageBitmap>();
+let _nextImageBitmap = 1n;
+
+/** Get a ImageBitmap by handle, throwing if not found. */
+function getImageBitmap(handle: bigint): ImageBitmap {
+  const obj = _imageBitmaphandles.get(handle);
+  if (!obj) {
+    throw new Error(`ImageBitmap handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function ImageBitmapGetWidth(self: bigint): number {
+  const obj = getImageBitmap(self);
+  return obj.width;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function ImageBitmapGetHeight(self: bigint): number {
+  const obj = getImageBitmap(self);
+  return obj.height;
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `ImageBitmapPollClose()`
+ */
+export function ImageBitmapClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getImageBitmap(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function ImageBitmapPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: animation-frame-provider
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AnimationFrameProviderHandle = bigint;
+
+/** Handle table for AnimationFrameProvider instances */
+const _animationFrameProviderhandles = new Map<bigint, AnimationFrameProvider>();
+let _nextAnimationFrameProvider = 1n;
+
+/** Get a AnimationFrameProvider by handle, throwing if not found. */
+function getAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
+  const obj = _animationFrameProviderhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AnimationFrameProvider handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `request-animation-frame()` operation.
+ */
+export function requestAnimationFrame(self: bigint, callback: bigint): number {
+  const obj = getAnimationFrameProvider(self);
+  return obj.requestAnimationFrame(callback);
+}
+
+/**
+ * `cancel-animation-frame()` operation.
+ */
+export function cancelAnimationFrame(self: bigint, handle: number): void {
+  const obj = getAnimationFrameProvider(self);
+  obj.cancelAnimationFrame(handle);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: message-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MessageEventHandle = bigint;
+
+/** Handle table for MessageEvent instances */
+const _messageEventhandles = new Map<bigint, MessageEvent>();
+let _nextMessageEvent = 1n;
+
+/** Get a MessageEvent by handle, throwing if not found. */
+function getMessageEvent(handle: bigint): MessageEvent {
+  const obj = _messageEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`MessageEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-data()` operation.
+ */
+export function MessageEventGetData(self: bigint): string {
+  const obj = getMessageEvent(self);
+  return obj.data;
+}
+
+/**
+ * `get-origin()` operation.
+ */
+export function MessageEventGetOrigin(self: bigint): string {
+  const obj = getMessageEvent(self);
+  return obj.origin;
+}
+
+/**
+ * `get-last-event-id()` operation.
+ */
+export function getLastEventId(self: bigint): string {
+  const obj = getMessageEvent(self);
+  return obj.lastEventId;
+}
+
+/**
+ * `get-source()` operation.
+ */
+export function MessageEventGetSource(self: bigint): bigint | undefined {
+  const obj = getMessageEvent(self);
+  return obj.source ?? undefined;
+}
+
+/**
+ * `get-ports()` operation.
+ */
+export function getPorts(self: bigint): (bigint)[] {
+  const obj = getMessageEvent(self);
+  return obj.ports;
+}
+
+/**
+ * `init-message-event()` operation.
+ */
+export function initMessageEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, data: string | undefined, origin: string | undefined, lastEventId: string | undefined, source: bigint | undefined, ports: (bigint)[] | undefined): void {
+  const obj = getMessageEvent(self);
+  obj.initMessageEvent(type, bubbles, cancelable, data, origin, lastEventId, source, ports);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: event-source
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type EventSourceHandle = bigint;
+
+/** Handle table for EventSource instances */
+const _eventSourcehandles = new Map<bigint, EventSource>();
+let _nextEventSource = 1n;
+
+/** Get a EventSource by handle, throwing if not found. */
+function getEventSource(handle: bigint): EventSource {
+  const obj = _eventSourcehandles.get(handle);
+  if (!obj) {
+    throw new Error(`EventSource handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-url()` operation.
+ */
+export function EventSourceGetUrl(self: bigint): string {
+  const obj = getEventSource(self);
+  return obj.url;
+}
+
+/**
+ * `get-with-credentials()` operation.
+ */
+export function getWithCredentials(self: bigint): boolean {
+  const obj = getEventSource(self);
+  return obj.withCredentials;
+}
+
+/**
+ * `get-ready-state()` operation.
+ */
+export function EventSourceGetReadyState(self: bigint): number {
+  const obj = getEventSource(self);
+  return obj.readyState;
+}
+
+/**
+ * `get-onopen()` operation.
+ */
+export function getOnopen(self: bigint): EventHandlerRecord {
+  const obj = getEventSource(self);
+  return obj.onopen;
+}
+
+/**
+ * `set-onopen()` operation.
+ */
+export function setOnopen(self: bigint, value: EventHandlerRecord): void {
+  const obj = getEventSource(self);
+  obj.onopen = value;
+}
+
+/**
+ * `get-onmessage()` operation.
+ */
+export function EventSourceGetOnmessage(self: bigint): EventHandlerRecord {
+  const obj = getEventSource(self);
+  return obj.onmessage;
+}
+
+/**
+ * `set-onmessage()` operation.
+ */
+export function EventSourceSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+  const obj = getEventSource(self);
+  obj.onmessage = value;
+}
+
+/**
+ * `get-onerror()` operation.
+ */
+export function EventSourceGetOnerror(self: bigint): EventHandlerRecord {
+  const obj = getEventSource(self);
+  return obj.onerror;
+}
+
+/**
+ * `set-onerror()` operation.
+ */
+export function EventSourceSetOnerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = getEventSource(self);
+  obj.onerror = value;
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `EventSourcePollClose()`
+ */
+export function EventSourceClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getEventSource(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function EventSourcePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: message-channel
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MessageChannelHandle = bigint;
+
+/** Handle table for MessageChannel instances */
+const _messageChannelhandles = new Map<bigint, MessageChannel>();
+let _nextMessageChannel = 1n;
+
+/** Get a MessageChannel by handle, throwing if not found. */
+function getMessageChannel(handle: bigint): MessageChannel {
+  const obj = _messageChannelhandles.get(handle);
+  if (!obj) {
+    throw new Error(`MessageChannel handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-port1()` operation.
+ */
+export function getPort1(self: bigint): bigint {
+  const obj = getMessageChannel(self);
+  return obj.port1;
+}
+
+/**
+ * `get-port2()` operation.
+ */
+export function getPort2(self: bigint): bigint {
+  const obj = getMessageChannel(self);
+  return obj.port2;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: message-event-target
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MessageEventTargetHandle = bigint;
+
+/** Handle table for MessageEventTarget instances */
+const _messageEventTargethandles = new Map<bigint, MessageEventTarget>();
+let _nextMessageEventTarget = 1n;
+
+/** Get a MessageEventTarget by handle, throwing if not found. */
+function getMessageEventTarget(handle: bigint): MessageEventTarget {
+  const obj = _messageEventTargethandles.get(handle);
+  if (!obj) {
+    throw new Error(`MessageEventTarget handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-onmessage()` operation.
+ */
+export function MessageEventTargetGetOnmessage(self: bigint): EventHandlerRecord {
+  const obj = getMessageEventTarget(self);
+  return obj.onmessage;
+}
+
+/**
+ * `set-onmessage()` operation.
+ */
+export function MessageEventTargetSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+  const obj = getMessageEventTarget(self);
+  obj.onmessage = value;
+}
+
+/**
+ * `get-onmessageerror()` operation.
+ */
+export function MessageEventTargetGetOnmessageerror(self: bigint): EventHandlerRecord {
+  const obj = getMessageEventTarget(self);
+  return obj.onmessageerror;
+}
+
+/**
+ * `set-onmessageerror()` operation.
+ */
+export function MessageEventTargetSetOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = getMessageEventTarget(self);
+  obj.onmessageerror = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: message-port
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MessagePortHandle = bigint;
+
+/** Handle table for MessagePort instances */
+const _messagePorthandles = new Map<bigint, MessagePort>();
+let _nextMessagePort = 1n;
+
+/** Get a MessagePort by handle, throwing if not found. */
+function getMessagePort(handle: bigint): MessagePort {
+  const obj = _messagePorthandles.get(handle);
+  if (!obj) {
+    throw new Error(`MessagePort handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `post-message()` operation.
+ */
+export function MessagePortPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
+  const obj = getMessagePort(self);
+  obj.postMessage(message, transfer);
+}
+
+/**
+ * `start()` operation.
+ */
+export function MessagePortStart(self: bigint): void {
+  const obj = getMessagePort(self);
+  obj.start();
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `MessagePortPollClose()`
+ */
+export function MessagePortClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getMessagePort(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function MessagePortPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `get-onclose()` operation.
+ */
+export function MessagePortGetOnclose(self: bigint): EventHandlerRecord {
+  const obj = getMessagePort(self);
+  return obj.onclose;
+}
+
+/**
+ * `set-onclose()` operation.
+ */
+export function MessagePortSetOnclose(self: bigint, value: EventHandlerRecord): void {
+  const obj = getMessagePort(self);
+  obj.onclose = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: broadcast-channel
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BroadcastChannelHandle = bigint;
+
+/** Handle table for BroadcastChannel instances */
+const _broadcastChannelhandles = new Map<bigint, BroadcastChannel>();
+let _nextBroadcastChannel = 1n;
+
+/** Get a BroadcastChannel by handle, throwing if not found. */
+function getBroadcastChannel(handle: bigint): BroadcastChannel {
+  const obj = _broadcastChannelhandles.get(handle);
+  if (!obj) {
+    throw new Error(`BroadcastChannel handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function BroadcastChannelGetName(self: bigint): string {
+  const obj = getBroadcastChannel(self);
+  return obj.name;
+}
+
+/**
+ * `post-message()` operation.
+ */
+export function BroadcastChannelPostMessage(self: bigint, message: string): void {
+  const obj = getBroadcastChannel(self);
+  obj.postMessage(message);
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `BroadcastChannelPollClose()`
+ */
+export function BroadcastChannelClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getBroadcastChannel(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function BroadcastChannelPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `get-onmessage()` operation.
+ */
+export function BroadcastChannelGetOnmessage(self: bigint): EventHandlerRecord {
+  const obj = getBroadcastChannel(self);
+  return obj.onmessage;
+}
+
+/**
+ * `set-onmessage()` operation.
+ */
+export function BroadcastChannelSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+  const obj = getBroadcastChannel(self);
+  obj.onmessage = value;
+}
+
+/**
+ * `get-onmessageerror()` operation.
+ */
+export function BroadcastChannelGetOnmessageerror(self: bigint): EventHandlerRecord {
+  const obj = getBroadcastChannel(self);
+  return obj.onmessageerror;
+}
+
+/**
+ * `set-onmessageerror()` operation.
+ */
+export function BroadcastChannelSetOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = getBroadcastChannel(self);
+  obj.onmessageerror = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: worker-global-scope
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WorkerGlobalScopeHandle = bigint;
+
+/** Handle table for WorkerGlobalScope instances */
+const _workerGlobalScopehandles = new Map<bigint, WorkerGlobalScope>();
+let _nextWorkerGlobalScope = 1n;
+
+/** Get a WorkerGlobalScope by handle, throwing if not found. */
+function getWorkerGlobalScope(handle: bigint): WorkerGlobalScope {
+  const obj = _workerGlobalScopehandles.get(handle);
+  if (!obj) {
+    throw new Error(`WorkerGlobalScope handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-self()` operation.
+ */
+export function getSelf(self: bigint): bigint {
+  const obj = getWorkerGlobalScope(self);
+  return obj.self;
+}
+
+/**
+ * `get-location()` operation.
+ */
+export function getLocation(self: bigint): bigint {
+  const obj = getWorkerGlobalScope(self);
+  return obj.location;
+}
+
+/**
+ * `get-navigator()` operation.
+ */
+export function getNavigator(self: bigint): bigint {
+  const obj = getWorkerGlobalScope(self);
+  return obj.navigator;
+}
+
+/**
+ * `import-scripts()` operation.
+ */
+export function importScripts(self: bigint, urls: (bigint)[]): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.importScripts(urls);
+}
+
+/**
+ * `get-onerror()` operation.
+ */
+export function WorkerGlobalScopeGetOnerror(self: bigint): OnErrorEventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.onerror;
+}
+
+/**
+ * `set-onerror()` operation.
+ */
+export function WorkerGlobalScopeSetOnerror(self: bigint, value: OnErrorEventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.onerror = value;
+}
+
+/**
+ * `get-onlanguagechange()` operation.
+ */
+export function getOnlanguagechange(self: bigint): EventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.onlanguagechange;
+}
+
+/**
+ * `set-onlanguagechange()` operation.
+ */
+export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.onlanguagechange = value;
+}
+
+/**
+ * `get-onoffline()` operation.
+ */
+export function getOnoffline(self: bigint): EventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.onoffline;
+}
+
+/**
+ * `set-onoffline()` operation.
+ */
+export function setOnoffline(self: bigint, value: EventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.onoffline = value;
+}
+
+/**
+ * `get-ononline()` operation.
+ */
+export function getOnonline(self: bigint): EventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.ononline;
+}
+
+/**
+ * `set-ononline()` operation.
+ */
+export function setOnonline(self: bigint, value: EventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.ononline = value;
+}
+
+/**
+ * `get-onrejectionhandled()` operation.
+ */
+export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.onrejectionhandled;
+}
+
+/**
+ * `set-onrejectionhandled()` operation.
+ */
+export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.onrejectionhandled = value;
+}
+
+/**
+ * `get-onunhandledrejection()` operation.
+ */
+export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
+  const obj = getWorkerGlobalScope(self);
+  return obj.onunhandledrejection;
+}
+
+/**
+ * `set-onunhandledrejection()` operation.
+ */
+export function setOnunhandledrejection(self: bigint, value: EventHandlerRecord): void {
+  const obj = getWorkerGlobalScope(self);
+  obj.onunhandledrejection = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: dedicated-worker-global-scope
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DedicatedWorkerGlobalScopeHandle = bigint;
+
+/** Handle table for DedicatedWorkerGlobalScope instances */
+const _dedicatedWorkerGlobalScopehandles = new Map<bigint, DedicatedWorkerGlobalScope>();
+let _nextDedicatedWorkerGlobalScope = 1n;
+
+/** Get a DedicatedWorkerGlobalScope by handle, throwing if not found. */
+function getDedicatedWorkerGlobalScope(handle: bigint): DedicatedWorkerGlobalScope {
+  const obj = _dedicatedWorkerGlobalScopehandles.get(handle);
+  if (!obj) {
+    throw new Error(`DedicatedWorkerGlobalScope handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function DedicatedWorkerGlobalScopeGetName(self: bigint): string {
+  const obj = getDedicatedWorkerGlobalScope(self);
+  return obj.name;
+}
+
+/**
+ * `post-message()` operation.
+ */
+export function DedicatedWorkerGlobalScopePostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
+  const obj = getDedicatedWorkerGlobalScope(self);
+  obj.postMessage(message, transfer);
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `DedicatedWorkerGlobalScopePollClose()`
+ */
+export function DedicatedWorkerGlobalScopeClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getDedicatedWorkerGlobalScope(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function DedicatedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: shared-worker-global-scope
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type SharedWorkerGlobalScopeHandle = bigint;
+
+/** Handle table for SharedWorkerGlobalScope instances */
+const _sharedWorkerGlobalScopehandles = new Map<bigint, SharedWorkerGlobalScope>();
+let _nextSharedWorkerGlobalScope = 1n;
+
+/** Get a SharedWorkerGlobalScope by handle, throwing if not found. */
+function getSharedWorkerGlobalScope(handle: bigint): SharedWorkerGlobalScope {
+  const obj = _sharedWorkerGlobalScopehandles.get(handle);
+  if (!obj) {
+    throw new Error(`SharedWorkerGlobalScope handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function SharedWorkerGlobalScopeGetName(self: bigint): string {
+  const obj = getSharedWorkerGlobalScope(self);
+  return obj.name;
+}
+
+/**
+ * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `SharedWorkerGlobalScopePollClose()`
+ */
+export function SharedWorkerGlobalScopeClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = getSharedWorkerGlobalScope(self);
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function SharedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
+}
+
+/**
+ * `get-onconnect()` operation.
+ */
+export function getOnconnect(self: bigint): EventHandlerRecord {
+  const obj = getSharedWorkerGlobalScope(self);
+  return obj.onconnect;
+}
+
+/**
+ * `set-onconnect()` operation.
+ */
+export function setOnconnect(self: bigint, value: EventHandlerRecord): void {
+  const obj = getSharedWorkerGlobalScope(self);
+  obj.onconnect = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: abstract-worker
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AbstractWorkerHandle = bigint;
+
+/** Handle table for AbstractWorker instances */
+const _abstractWorkerhandles = new Map<bigint, AbstractWorker>();
+let _nextAbstractWorker = 1n;
+
+/** Get a AbstractWorker by handle, throwing if not found. */
+function getAbstractWorker(handle: bigint): AbstractWorker {
+  const obj = _abstractWorkerhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AbstractWorker handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-onerror()` operation.
+ */
+export function AbstractWorkerGetOnerror(self: bigint): EventHandlerRecord {
+  const obj = getAbstractWorker(self);
+  return obj.onerror;
+}
+
+/**
+ * `set-onerror()` operation.
+ */
+export function AbstractWorkerSetOnerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = getAbstractWorker(self);
+  obj.onerror = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: worker
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WorkerHandle = bigint;
+
+/** Handle table for Worker instances */
+const _workerHandles = new Map<bigint, Worker>();
+let _nextWorker = 1n;
+
+/** Get a Worker by handle, throwing if not found. */
+function getWorker(handle: bigint): Worker {
+  const obj = _workerHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Worker handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `terminate()` operation.
+ */
+export function terminate(self: bigint): void {
+  const obj = getWorker(self);
+  obj.terminate();
+}
+
+/**
+ * `post-message()` operation.
+ */
+export function WorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
+  const obj = getWorker(self);
+  obj.postMessage(message, transfer);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: shared-worker
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type SharedWorkerHandle = bigint;
+
+/** Handle table for SharedWorker instances */
+const _sharedWorkerhandles = new Map<bigint, SharedWorker>();
+let _nextSharedWorker = 1n;
+
+/** Get a SharedWorker by handle, throwing if not found. */
+function getSharedWorker(handle: bigint): SharedWorker {
+  const obj = _sharedWorkerhandles.get(handle);
+  if (!obj) {
+    throw new Error(`SharedWorker handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function SharedWorkerGetPort(self: bigint): bigint {
+  const obj = getSharedWorker(self);
+  return obj.port;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: navigator-concurrent-hardware
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type NavigatorConcurrentHardwareHandle = bigint;
+
+/** Handle table for NavigatorConcurrentHardware instances */
+const _navigatorConcurrentHardwarehandles = new Map<bigint, NavigatorConcurrentHardware>();
+let _nextNavigatorConcurrentHardware = 1n;
+
+/** Get a NavigatorConcurrentHardware by handle, throwing if not found. */
+function getNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentHardware {
+  const obj = _navigatorConcurrentHardwarehandles.get(handle);
+  if (!obj) {
+    throw new Error(`NavigatorConcurrentHardware handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-hardware-concurrency()` operation.
+ */
+export function getHardwareConcurrency(self: bigint): bigint {
+  const obj = getNavigatorConcurrentHardware(self);
+  return obj.hardwareConcurrency;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: worker-navigator
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WorkerNavigatorHandle = bigint;
+
+/** Handle table for WorkerNavigator instances */
+const _workerNavigatorhandles = new Map<bigint, WorkerNavigator>();
+let _nextWorkerNavigator = 1n;
+
+/** Get a WorkerNavigator by handle, throwing if not found. */
+function getWorkerNavigator(handle: bigint): WorkerNavigator {
+  const obj = _workerNavigatorhandles.get(handle);
+  if (!obj) {
+    throw new Error(`WorkerNavigator handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-media-capabilities()` operation.
+ */
+export function getMediaCapabilities(self: bigint): bigint {
+  const obj = getWorkerNavigator(self);
+  return obj.mediaCapabilities;
+}
+
+/**
+ * `get-permissions()` operation.
+ */
+export function getPermissions(self: bigint): bigint {
+  const obj = getWorkerNavigator(self);
+  return obj.permissions;
+}
+
+/**
+ * `get-service-worker()` operation.
+ */
+export function getServiceWorker(self: bigint): bigint {
+  const obj = getWorkerNavigator(self);
+  return obj.serviceWorker;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: worker-location
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WorkerLocationHandle = bigint;
+
+/** Handle table for WorkerLocation instances */
+const _workerLocationhandles = new Map<bigint, WorkerLocation>();
+let _nextWorkerLocation = 1n;
+
+/** Get a WorkerLocation by handle, throwing if not found. */
+function getWorkerLocation(handle: bigint): WorkerLocation {
+  const obj = _workerLocationhandles.get(handle);
+  if (!obj) {
+    throw new Error(`WorkerLocation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function WorkerLocationGetHref(self: bigint): bigint {
+  const obj = getWorkerLocation(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function WorkerLocationSetHref(self: bigint, value: bigint): void {
+  const obj = getWorkerLocation(self);
+  obj.href = value;
+}
+
+/**
+ * `get-origin()` operation.
+ */
+export function WorkerLocationGetOrigin(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.origin;
+}
+
+/**
+ * `get-protocol()` operation.
+ */
+export function WorkerLocationGetProtocol(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.protocol;
+}
+
+/**
+ * `get-host()` operation.
+ */
+export function WorkerLocationGetHost(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.host;
+}
+
+/**
+ * `get-hostname()` operation.
+ */
+export function WorkerLocationGetHostname(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.hostname;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function WorkerLocationGetPort(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.port;
+}
+
+/**
+ * `get-pathname()` operation.
+ */
+export function WorkerLocationGetPathname(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.pathname;
+}
+
+/**
+ * `get-search()` operation.
+ */
+export function WorkerLocationGetSearch(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.search;
+}
+
+/**
+ * `get-hash()` operation.
+ */
+export function WorkerLocationGetHash(self: bigint): string {
+  const obj = getWorkerLocation(self);
+  return obj.hash;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: worklet
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WorkletHandle = bigint;
+
+/** Handle table for Worklet instances */
+const _workletHandles = new Map<bigint, Worklet>();
+let _nextWorklet = 1n;
+
+/** Get a Worklet by handle, throwing if not found. */
+function getWorklet(handle: bigint): Worklet {
+  const obj = _workletHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Worklet handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `add-module()` operation.
+ */
+export function addModule(self: bigint, moduleUrl: string, options: bigint | undefined): bigint {
+  const obj = getWorklet(self);
+  return obj.addModule(moduleUrl, options);
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: storage
 // ---------------------------------------------------------------------------
 
@@ -30,24 +14977,827 @@ function getStorage(handle: bigint): Storage {
 }
 
 /**
- * `length()` operation.
+ * `get-length()` operation.
  */
-export function length(handle: bigint): number {
-  return Storage.length(handle);
+export function StorageGetLength(self: bigint): number {
+  const obj = getStorage(self);
+  return obj.length;
 }
 
 /**
  * `key()` operation.
  */
-export function key(handle: bigint, index: string): string | undefined {
-  return Storage.key(handle, index);
+export function key(self: bigint, index: number): string | undefined {
+  const obj = getStorage(self);
+  return obj.key(index) ?? undefined;
+}
+
+/**
+ * `get-item()` operation.
+ */
+export function getItem(self: bigint, key: string): string | undefined {
+  const obj = getStorage(self);
+  return obj.item ?? undefined;
+}
+
+/**
+ * `set-item()` operation.
+ */
+export function setItem(self: bigint, key: string, value: string): void {
+  const obj = getStorage(self);
+  obj.item = value;
+}
+
+/**
+ * `remove-item()` operation.
+ */
+export function removeItem(self: bigint, key: string): void {
+  const obj = getStorage(self);
+  obj.removeItem(key);
 }
 
 /**
  * `clear()` operation.
  */
-export function clear(handle: bigint): void {
-  return Storage.clear(handle);
+export function StorageClear(self: bigint): void {
+  const obj = getStorage(self);
+  obj.clear();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: window-session-storage
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WindowSessionStorageHandle = bigint;
+
+/** Handle table for WindowSessionStorage instances */
+const _windowSessionStoragehandles = new Map<bigint, WindowSessionStorage>();
+let _nextWindowSessionStorage = 1n;
+
+/** Get a WindowSessionStorage by handle, throwing if not found. */
+function getWindowSessionStorage(handle: bigint): WindowSessionStorage {
+  const obj = _windowSessionStoragehandles.get(handle);
+  if (!obj) {
+    throw new Error(`WindowSessionStorage handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-session-storage()` operation.
+ */
+export function getSessionStorage(self: bigint): bigint {
+  const obj = getWindowSessionStorage(self);
+  return obj.sessionStorage;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: window-local-storage
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WindowLocalStorageHandle = bigint;
+
+/** Handle table for WindowLocalStorage instances */
+const _windowLocalStoragehandles = new Map<bigint, WindowLocalStorage>();
+let _nextWindowLocalStorage = 1n;
+
+/** Get a WindowLocalStorage by handle, throwing if not found. */
+function getWindowLocalStorage(handle: bigint): WindowLocalStorage {
+  const obj = _windowLocalStoragehandles.get(handle);
+  if (!obj) {
+    throw new Error(`WindowLocalStorage handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-local-storage()` operation.
+ */
+export function getLocalStorage(self: bigint): bigint {
+  const obj = getWindowLocalStorage(self);
+  return obj.localStorage;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: storage-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type StorageEventHandle = bigint;
+
+/** Handle table for StorageEvent instances */
+const _storageEventhandles = new Map<bigint, StorageEvent>();
+let _nextStorageEvent = 1n;
+
+/** Get a StorageEvent by handle, throwing if not found. */
+function getStorageEvent(handle: bigint): StorageEvent {
+  const obj = _storageEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`StorageEvent handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-key()` operation.
+ */
+export function StorageEventGetKey(self: bigint): string | undefined {
+  const obj = getStorageEvent(self);
+  return obj.key ?? undefined;
+}
+
+/**
+ * `get-old-value()` operation.
+ */
+export function getOldValue(self: bigint): string | undefined {
+  const obj = getStorageEvent(self);
+  return obj.oldValue ?? undefined;
+}
+
+/**
+ * `get-new-value()` operation.
+ */
+export function getNewValue(self: bigint): string | undefined {
+  const obj = getStorageEvent(self);
+  return obj.newValue ?? undefined;
+}
+
+/**
+ * `get-url()` operation.
+ */
+export function StorageEventGetUrl(self: bigint): string {
+  const obj = getStorageEvent(self);
+  return obj.url;
+}
+
+/**
+ * `get-storage-area()` operation.
+ */
+export function getStorageArea(self: bigint): bigint | undefined {
+  const obj = getStorageEvent(self);
+  return obj.storageArea ?? undefined;
+}
+
+/**
+ * `init-storage-event()` operation.
+ */
+export function initStorageEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, key: string | undefined, oldValue: string | undefined, newValue: string | undefined, url: string | undefined, storageArea: bigint | undefined): void {
+  const obj = getStorageEvent(self);
+  obj.initStorageEvent(type, bubbles, cancelable, key, oldValue, newValue, url, storageArea);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-marquee-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlMarqueeElementHandle = bigint;
+
+/** Handle table for HtmlMarqueeElement instances */
+const _htmlMarqueeElementhandles = new Map<bigint, HtmlMarqueeElement>();
+let _nextHtmlMarqueeElement = 1n;
+
+/** Get a HtmlMarqueeElement by handle, throwing if not found. */
+function getHtmlMarqueeElement(handle: bigint): HtmlMarqueeElement {
+  const obj = _htmlMarqueeElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlMarqueeElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-behavior()` operation.
+ */
+export function getBehavior(self: bigint): string {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.behavior;
+}
+
+/**
+ * `set-behavior()` operation.
+ */
+export function setBehavior(self: bigint, value: string): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.behavior = value;
+}
+
+/**
+ * `get-bg-color()` operation.
+ */
+export function HtmlMarqueeElementGetBgColor(self: bigint): string {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.bgColor;
+}
+
+/**
+ * `set-bg-color()` operation.
+ */
+export function HtmlMarqueeElementSetBgColor(self: bigint, value: string): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.bgColor = value;
+}
+
+/**
+ * `get-direction()` operation.
+ */
+export function HtmlMarqueeElementGetDirection(self: bigint): string {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.direction;
+}
+
+/**
+ * `set-direction()` operation.
+ */
+export function HtmlMarqueeElementSetDirection(self: bigint, value: string): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.direction = value;
+}
+
+/**
+ * `get-height()` operation.
+ */
+export function HtmlMarqueeElementGetHeight(self: bigint): string {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.height;
+}
+
+/**
+ * `set-height()` operation.
+ */
+export function HtmlMarqueeElementSetHeight(self: bigint, value: string): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.height = value;
+}
+
+/**
+ * `get-hspace()` operation.
+ */
+export function HtmlMarqueeElementGetHspace(self: bigint): number {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.hspace;
+}
+
+/**
+ * `set-hspace()` operation.
+ */
+export function HtmlMarqueeElementSetHspace(self: bigint, value: number): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.hspace = value;
+}
+
+/**
+ * `get-loop()` operation.
+ */
+export function HtmlMarqueeElementGetLoop(self: bigint): number {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.loop;
+}
+
+/**
+ * `set-loop()` operation.
+ */
+export function HtmlMarqueeElementSetLoop(self: bigint, value: number): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.loop = value;
+}
+
+/**
+ * `get-scroll-amount()` operation.
+ */
+export function getScrollAmount(self: bigint): number {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.scrollAmount;
+}
+
+/**
+ * `set-scroll-amount()` operation.
+ */
+export function setScrollAmount(self: bigint, value: number): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.scrollAmount = value;
+}
+
+/**
+ * `get-scroll-delay()` operation.
+ */
+export function getScrollDelay(self: bigint): number {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.scrollDelay;
+}
+
+/**
+ * `set-scroll-delay()` operation.
+ */
+export function setScrollDelay(self: bigint, value: number): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.scrollDelay = value;
+}
+
+/**
+ * `get-true-speed()` operation.
+ */
+export function getTrueSpeed(self: bigint): boolean {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.trueSpeed;
+}
+
+/**
+ * `set-true-speed()` operation.
+ */
+export function setTrueSpeed(self: bigint, value: boolean): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.trueSpeed = value;
+}
+
+/**
+ * `get-vspace()` operation.
+ */
+export function HtmlMarqueeElementGetVspace(self: bigint): number {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.vspace;
+}
+
+/**
+ * `set-vspace()` operation.
+ */
+export function HtmlMarqueeElementSetVspace(self: bigint, value: number): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.vspace = value;
+}
+
+/**
+ * `get-width()` operation.
+ */
+export function HtmlMarqueeElementGetWidth(self: bigint): string {
+  const obj = getHtmlMarqueeElement(self);
+  return obj.width;
+}
+
+/**
+ * `set-width()` operation.
+ */
+export function HtmlMarqueeElementSetWidth(self: bigint, value: string): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.width = value;
+}
+
+/**
+ * `start()` operation.
+ */
+export function HtmlMarqueeElementStart(self: bigint): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.start();
+}
+
+/**
+ * `stop()` operation.
+ */
+export function stop(self: bigint): void {
+  const obj = getHtmlMarqueeElement(self);
+  obj.stop();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-frame-set-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlFrameSetElementHandle = bigint;
+
+/** Handle table for HtmlFrameSetElement instances */
+const _htmlFrameSetElementhandles = new Map<bigint, HtmlFrameSetElement>();
+let _nextHtmlFrameSetElement = 1n;
+
+/** Get a HtmlFrameSetElement by handle, throwing if not found. */
+function getHtmlFrameSetElement(handle: bigint): HtmlFrameSetElement {
+  const obj = _htmlFrameSetElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlFrameSetElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-cols()` operation.
+ */
+export function HtmlFrameSetElementGetCols(self: bigint): string {
+  const obj = getHtmlFrameSetElement(self);
+  return obj.cols;
+}
+
+/**
+ * `set-cols()` operation.
+ */
+export function HtmlFrameSetElementSetCols(self: bigint, value: string): void {
+  const obj = getHtmlFrameSetElement(self);
+  obj.cols = value;
+}
+
+/**
+ * `get-rows()` operation.
+ */
+export function HtmlFrameSetElementGetRows(self: bigint): string {
+  const obj = getHtmlFrameSetElement(self);
+  return obj.rows;
+}
+
+/**
+ * `set-rows()` operation.
+ */
+export function HtmlFrameSetElementSetRows(self: bigint, value: string): void {
+  const obj = getHtmlFrameSetElement(self);
+  obj.rows = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-frame-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlFrameElementHandle = bigint;
+
+/** Handle table for HtmlFrameElement instances */
+const _htmlFrameElementhandles = new Map<bigint, HtmlFrameElement>();
+let _nextHtmlFrameElement = 1n;
+
+/** Get a HtmlFrameElement by handle, throwing if not found. */
+function getHtmlFrameElement(handle: bigint): HtmlFrameElement {
+  const obj = _htmlFrameElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlFrameElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlFrameElementGetName(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlFrameElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-scrolling()` operation.
+ */
+export function HtmlFrameElementGetScrolling(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.scrolling;
+}
+
+/**
+ * `set-scrolling()` operation.
+ */
+export function HtmlFrameElementSetScrolling(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.scrolling = value;
+}
+
+/**
+ * `get-src()` operation.
+ */
+export function HtmlFrameElementGetSrc(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.src;
+}
+
+/**
+ * `set-src()` operation.
+ */
+export function HtmlFrameElementSetSrc(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.src = value;
+}
+
+/**
+ * `get-frame-border()` operation.
+ */
+export function HtmlFrameElementGetFrameBorder(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.frameBorder;
+}
+
+/**
+ * `set-frame-border()` operation.
+ */
+export function HtmlFrameElementSetFrameBorder(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.frameBorder = value;
+}
+
+/**
+ * `get-long-desc()` operation.
+ */
+export function HtmlFrameElementGetLongDesc(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.longDesc;
+}
+
+/**
+ * `set-long-desc()` operation.
+ */
+export function HtmlFrameElementSetLongDesc(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.longDesc = value;
+}
+
+/**
+ * `get-no-resize()` operation.
+ */
+export function getNoResize(self: bigint): boolean {
+  const obj = getHtmlFrameElement(self);
+  return obj.noResize;
+}
+
+/**
+ * `set-no-resize()` operation.
+ */
+export function setNoResize(self: bigint, value: boolean): void {
+  const obj = getHtmlFrameElement(self);
+  obj.noResize = value;
+}
+
+/**
+ * `get-content-document()` operation.
+ */
+export function HtmlFrameElementGetContentDocument(self: bigint): bigint | undefined {
+  const obj = getHtmlFrameElement(self);
+  return obj.contentDocument ?? undefined;
+}
+
+/**
+ * `get-content-window()` operation.
+ */
+export function HtmlFrameElementGetContentWindow(self: bigint): bigint | undefined {
+  const obj = getHtmlFrameElement(self);
+  return obj.contentWindow ?? undefined;
+}
+
+/**
+ * `get-margin-height()` operation.
+ */
+export function HtmlFrameElementGetMarginHeight(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.marginHeight;
+}
+
+/**
+ * `set-margin-height()` operation.
+ */
+export function HtmlFrameElementSetMarginHeight(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.marginHeight = value;
+}
+
+/**
+ * `get-margin-width()` operation.
+ */
+export function HtmlFrameElementGetMarginWidth(self: bigint): string {
+  const obj = getHtmlFrameElement(self);
+  return obj.marginWidth;
+}
+
+/**
+ * `set-margin-width()` operation.
+ */
+export function HtmlFrameElementSetMarginWidth(self: bigint, value: string): void {
+  const obj = getHtmlFrameElement(self);
+  obj.marginWidth = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-directory-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlDirectoryElementHandle = bigint;
+
+/** Handle table for HtmlDirectoryElement instances */
+const _htmlDirectoryElementhandles = new Map<bigint, HtmlDirectoryElement>();
+let _nextHtmlDirectoryElement = 1n;
+
+/** Get a HtmlDirectoryElement by handle, throwing if not found. */
+function getHtmlDirectoryElement(handle: bigint): HtmlDirectoryElement {
+  const obj = _htmlDirectoryElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlDirectoryElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-compact()` operation.
+ */
+export function HtmlDirectoryElementGetCompact(self: bigint): boolean {
+  const obj = getHtmlDirectoryElement(self);
+  return obj.compact;
+}
+
+/**
+ * `set-compact()` operation.
+ */
+export function HtmlDirectoryElementSetCompact(self: bigint, value: boolean): void {
+  const obj = getHtmlDirectoryElement(self);
+  obj.compact = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-font-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlFontElementHandle = bigint;
+
+/** Handle table for HtmlFontElement instances */
+const _htmlFontElementhandles = new Map<bigint, HtmlFontElement>();
+let _nextHtmlFontElement = 1n;
+
+/** Get a HtmlFontElement by handle, throwing if not found. */
+function getHtmlFontElement(handle: bigint): HtmlFontElement {
+  const obj = _htmlFontElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlFontElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-color()` operation.
+ */
+export function HtmlFontElementGetColor(self: bigint): string {
+  const obj = getHtmlFontElement(self);
+  return obj.color;
+}
+
+/**
+ * `set-color()` operation.
+ */
+export function HtmlFontElementSetColor(self: bigint, value: string): void {
+  const obj = getHtmlFontElement(self);
+  obj.color = value;
+}
+
+/**
+ * `get-face()` operation.
+ */
+export function getFace(self: bigint): string {
+  const obj = getHtmlFontElement(self);
+  return obj.face;
+}
+
+/**
+ * `set-face()` operation.
+ */
+export function setFace(self: bigint, value: string): void {
+  const obj = getHtmlFontElement(self);
+  obj.face = value;
+}
+
+/**
+ * `get-size()` operation.
+ */
+export function HtmlFontElementGetSize(self: bigint): string {
+  const obj = getHtmlFontElement(self);
+  return obj.size;
+}
+
+/**
+ * `set-size()` operation.
+ */
+export function HtmlFontElementSetSize(self: bigint, value: string): void {
+  const obj = getHtmlFontElement(self);
+  obj.size = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: html-param-element
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type HtmlParamElementHandle = bigint;
+
+/** Handle table for HtmlParamElement instances */
+const _htmlParamElementhandles = new Map<bigint, HtmlParamElement>();
+let _nextHtmlParamElement = 1n;
+
+/** Get a HtmlParamElement by handle, throwing if not found. */
+function getHtmlParamElement(handle: bigint): HtmlParamElement {
+  const obj = _htmlParamElementhandles.get(handle);
+  if (!obj) {
+    throw new Error(`HtmlParamElement handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `get-name()` operation.
+ */
+export function HtmlParamElementGetName(self: bigint): string {
+  const obj = getHtmlParamElement(self);
+  return obj.name;
+}
+
+/**
+ * `set-name()` operation.
+ */
+export function HtmlParamElementSetName(self: bigint, value: string): void {
+  const obj = getHtmlParamElement(self);
+  obj.name = value;
+}
+
+/**
+ * `get-value()` operation.
+ */
+export function HtmlParamElementGetValue(self: bigint): string {
+  const obj = getHtmlParamElement(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function HtmlParamElementSetValue(self: bigint, value: string): void {
+  const obj = getHtmlParamElement(self);
+  obj.value = value;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function HtmlParamElementGetType(self: bigint): string {
+  const obj = getHtmlParamElement(self);
+  return obj.type;
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function HtmlParamElementSetType(self: bigint, value: string): void {
+  const obj = getHtmlParamElement(self);
+  obj.type = value;
+}
+
+/**
+ * `get-value-type()` operation.
+ */
+export function getValueType(self: bigint): string {
+  const obj = getHtmlParamElement(self);
+  return obj.valueType;
+}
+
+/**
+ * `set-value-type()` operation.
+ */
+export function setValueType(self: bigint, value: string): void {
+  const obj = getHtmlParamElement(self);
+  obj.valueType = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: external
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ExternalHandle = bigint;
+
+/** Handle table for External instances */
+const _externalHandles = new Map<bigint, External>();
+let _nextExternal = 1n;
+
+/** Get a External by handle, throwing if not found. */
+function getExternal(handle: bigint): External {
+  const obj = _externalHandles.get(handle);
+  if (!obj) {
+    throw new Error(`External handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/**
+ * `add-search-provider()` operation.
+ */
+export function addSearchProvider(self: bigint): void {
+  const obj = getExternal(self);
+  obj.addSearchProvider();
+}
+
+/**
+ * `is-search-provider-installed()` operation.
+ */
+export function isSearchProviderInstalled(self: bigint): void {
+  const obj = getExternal(self);
+  obj.isSearchProviderInstalled();
 }
 
 // ---------------------------------------------------------------------------
@@ -55,7 +15805,1494 @@ export function clear(handle: bigint): void {
 // ---------------------------------------------------------------------------
 
 export default {
-  length,
+  HtmlAllCollectionGetLength,
+  HtmlAllCollectionElement,
+  RadioNodeListGetValue,
+  RadioNodeListSetValue,
+  HtmlOptionsCollectionGetLength,
+  HtmlOptionsCollectionSetLength,
+  HtmlOptionsCollectionUndefined,
+  HtmlOptionsCollectionAdd,
+  HtmlOptionsCollectionRemove,
+  HtmlOptionsCollectionGetSelectedIndex,
+  HtmlOptionsCollectionSetSelectedIndex,
+  DomStringListGetLength,
+  DomStringListItem,
+  contains,
+  getDataset,
+  getNonce,
+  setNonce,
+  getAutofocus,
+  setAutofocus,
+  getTabIndex,
+  setTabIndex,
+  focus,
+  blur,
+  domString,
+  DomStringMapUndefined,
+  getVersion,
+  setVersion,
+  HtmlTitleElementGetText,
+  HtmlTitleElementSetText,
+  HtmlBaseElementGetHref,
+  HtmlBaseElementSetHref,
+  HtmlBaseElementGetTarget,
+  HtmlBaseElementSetTarget,
+  HtmlLinkElementGetHref,
+  HtmlLinkElementSetHref,
+  HtmlLinkElementGetCrossOrigin,
+  HtmlLinkElementSetCrossOrigin,
+  HtmlLinkElementGetRel,
+  HtmlLinkElementSetRel,
+  getAs,
+  setAs,
+  HtmlLinkElementGetRelList,
+  HtmlLinkElementGetMedia,
+  HtmlLinkElementSetMedia,
+  HtmlLinkElementGetIntegrity,
+  HtmlLinkElementSetIntegrity,
+  HtmlLinkElementGetHreflang,
+  HtmlLinkElementSetHreflang,
+  HtmlLinkElementGetType,
+  HtmlLinkElementSetType,
+  HtmlLinkElementGetSizes,
+  getImageSrcset,
+  setImageSrcset,
+  getImageSizes,
+  setImageSizes,
+  HtmlLinkElementGetReferrerPolicy,
+  HtmlLinkElementSetReferrerPolicy,
+  HtmlLinkElementGetBlocking,
+  HtmlLinkElementGetDisabled,
+  HtmlLinkElementSetDisabled,
+  HtmlLinkElementGetFetchPriority,
+  HtmlLinkElementSetFetchPriority,
+  HtmlLinkElementGetCharset,
+  HtmlLinkElementSetCharset,
+  HtmlLinkElementGetRev,
+  HtmlLinkElementSetRev,
+  HtmlLinkElementGetTarget,
+  HtmlLinkElementSetTarget,
+  HtmlMetaElementGetName,
+  HtmlMetaElementSetName,
+  getHttpEquiv,
+  setHttpEquiv,
+  HtmlMetaElementGetContent,
+  setContent,
+  HtmlMetaElementGetMedia,
+  HtmlMetaElementSetMedia,
+  getScheme,
+  setScheme,
+  HtmlStyleElementGetDisabled,
+  HtmlStyleElementSetDisabled,
+  HtmlStyleElementGetMedia,
+  HtmlStyleElementSetMedia,
+  HtmlStyleElementGetBlocking,
+  HtmlStyleElementGetType,
+  HtmlStyleElementSetType,
+  HtmlBodyElementGetText,
+  HtmlBodyElementSetText,
+  getLink,
+  setLink,
+  getVLink,
+  setVLink,
+  getALink,
+  setALink,
+  HtmlBodyElementGetBgColor,
+  HtmlBodyElementSetBgColor,
+  getBackground,
+  setBackground,
+  HtmlHeadingElementGetAlign,
+  HtmlHeadingElementSetAlign,
+  HtmlParagraphElementGetAlign,
+  HtmlParagraphElementSetAlign,
+  HtmlhrElementGetAlign,
+  HtmlhrElementSetAlign,
+  HtmlhrElementGetColor,
+  HtmlhrElementSetColor,
+  getNoShade,
+  setNoShade,
+  HtmlhrElementGetSize,
+  HtmlhrElementSetSize,
+  HtmlhrElementGetWidth,
+  HtmlhrElementSetWidth,
+  HtmlPreElementGetWidth,
+  HtmlPreElementSetWidth,
+  HtmlQuoteElementGetCite,
+  HtmlQuoteElementSetCite,
+  getReversed,
+  setReversed,
+  getStart,
+  setStart,
+  HtmloListElementGetType,
+  HtmloListElementSetType,
+  HtmloListElementGetCompact,
+  HtmloListElementSetCompact,
+  HtmluListElementGetCompact,
+  HtmluListElementSetCompact,
+  HtmluListElementGetType,
+  HtmluListElementSetType,
+  HtmlMenuElementGetCompact,
+  HtmlMenuElementSetCompact,
+  HtmlliElementGetValue,
+  HtmlliElementSetValue,
+  HtmlliElementGetType,
+  HtmlliElementSetType,
+  HtmldListElementGetCompact,
+  HtmldListElementSetCompact,
+  HtmlDivElementGetAlign,
+  HtmlDivElementSetAlign,
+  HtmlAnchorElementGetTarget,
+  HtmlAnchorElementSetTarget,
+  HtmlAnchorElementGetDownload,
+  HtmlAnchorElementSetDownload,
+  HtmlAnchorElementGetPing,
+  HtmlAnchorElementSetPing,
+  HtmlAnchorElementGetRel,
+  HtmlAnchorElementSetRel,
+  HtmlAnchorElementGetRelList,
+  HtmlAnchorElementGetHreflang,
+  HtmlAnchorElementSetHreflang,
+  HtmlAnchorElementGetType,
+  HtmlAnchorElementSetType,
+  HtmlAnchorElementGetText,
+  HtmlAnchorElementSetText,
+  HtmlAnchorElementGetReferrerPolicy,
+  HtmlAnchorElementSetReferrerPolicy,
+  HtmlAnchorElementGetCoords,
+  HtmlAnchorElementSetCoords,
+  HtmlAnchorElementGetCharset,
+  HtmlAnchorElementSetCharset,
+  HtmlAnchorElementGetName,
+  HtmlAnchorElementSetName,
+  HtmlAnchorElementGetRev,
+  HtmlAnchorElementSetRev,
+  HtmlAnchorElementGetShape,
+  HtmlAnchorElementSetShape,
+  HtmlDataElementGetValue,
+  HtmlDataElementSetValue,
+  HtmlTimeElementGetDateTime,
+  HtmlTimeElementSetDateTime,
+  getClear,
+  setClear,
+  HyperlinkElementUtilsGetOrigin,
+  HyperlinkElementUtilsGetProtocol,
+  HyperlinkElementUtilsSetProtocol,
+  getUsername,
+  setUsername,
+  getPassword,
+  setPassword,
+  HyperlinkElementUtilsGetHost,
+  HyperlinkElementUtilsSetHost,
+  HyperlinkElementUtilsGetHostname,
+  HyperlinkElementUtilsSetHostname,
+  HyperlinkElementUtilsGetPort,
+  HyperlinkElementUtilsSetPort,
+  HyperlinkElementUtilsGetPathname,
+  HyperlinkElementUtilsSetPathname,
+  HyperlinkElementUtilsGetSearch,
+  HyperlinkElementUtilsSetSearch,
+  HyperlinkElementUtilsGetHash,
+  HyperlinkElementUtilsSetHash,
+  HtmlHyperlinkElementUtilsGetHref,
+  HtmlHyperlinkElementUtilsSetHref,
+  HtmlModElementGetCite,
+  HtmlModElementSetCite,
+  HtmlModElementGetDateTime,
+  HtmlModElementSetDateTime,
+  HtmlSourceElementGetSrc,
+  HtmlSourceElementSetSrc,
+  HtmlSourceElementGetType,
+  HtmlSourceElementSetType,
+  getSrcset,
+  setSrcset,
+  HtmlSourceElementGetSizes,
+  setSizes,
+  HtmlSourceElementGetMedia,
+  HtmlSourceElementSetMedia,
+  HtmlSourceElementGetWidth,
+  HtmlSourceElementSetWidth,
+  HtmlSourceElementGetHeight,
+  HtmlSourceElementSetHeight,
+  HtmliFrameElementGetSrc,
+  HtmliFrameElementSetSrc,
+  getSrcdoc,
+  setSrcdoc,
+  HtmliFrameElementGetName,
+  HtmliFrameElementSetName,
+  getSandbox,
+  getAllow,
+  setAllow,
+  getAllowFullscreen,
+  setAllowFullscreen,
+  HtmliFrameElementGetWidth,
+  HtmliFrameElementSetWidth,
+  HtmliFrameElementGetHeight,
+  HtmliFrameElementSetHeight,
+  HtmliFrameElementGetReferrerPolicy,
+  HtmliFrameElementSetReferrerPolicy,
+  getLoading,
+  setLoading,
+  HtmliFrameElementGetContentDocument,
+  HtmliFrameElementGetContentWindow,
+  HtmliFrameElementGetSvgDocument,
+  HtmliFrameElementGetAlign,
+  HtmliFrameElementSetAlign,
+  HtmliFrameElementGetScrolling,
+  HtmliFrameElementSetScrolling,
+  HtmliFrameElementGetFrameBorder,
+  HtmliFrameElementSetFrameBorder,
+  HtmliFrameElementGetLongDesc,
+  HtmliFrameElementSetLongDesc,
+  HtmliFrameElementGetMarginHeight,
+  HtmliFrameElementSetMarginHeight,
+  HtmliFrameElementGetMarginWidth,
+  HtmliFrameElementSetMarginWidth,
+  HtmlEmbedElementGetSrc,
+  HtmlEmbedElementSetSrc,
+  HtmlEmbedElementGetType,
+  HtmlEmbedElementSetType,
+  HtmlEmbedElementGetWidth,
+  HtmlEmbedElementSetWidth,
+  HtmlEmbedElementGetHeight,
+  HtmlEmbedElementSetHeight,
+  HtmlEmbedElementGetSvgDocument,
+  HtmlEmbedElementGetAlign,
+  HtmlEmbedElementSetAlign,
+  HtmlEmbedElementGetName,
+  HtmlEmbedElementSetName,
+  HtmlObjectElementGetData,
+  HtmlObjectElementSetData,
+  HtmlObjectElementGetType,
+  HtmlObjectElementSetType,
+  HtmlObjectElementGetName,
+  HtmlObjectElementSetName,
+  HtmlObjectElementGetForm,
+  HtmlObjectElementGetWidth,
+  HtmlObjectElementSetWidth,
+  HtmlObjectElementGetHeight,
+  HtmlObjectElementSetHeight,
+  HtmlObjectElementGetContentDocument,
+  HtmlObjectElementGetContentWindow,
+  HtmlObjectElementGetSvgDocument,
+  HtmlObjectElementGetWillValidate,
+  HtmlObjectElementGetValidity,
+  HtmlObjectElementGetValidationMessage,
+  HtmlObjectElementCheckValidity,
+  HtmlObjectElementReportValidity,
+  HtmlObjectElementSetCustomValidity,
+  HtmlObjectElementGetAlign,
+  HtmlObjectElementSetAlign,
+  getArchive,
+  setArchive,
+  HtmlObjectElementGetCode,
+  setCode,
+  getDeclare,
+  setDeclare,
+  HtmlObjectElementGetHspace,
+  HtmlObjectElementSetHspace,
+  getStandby,
+  setStandby,
+  HtmlObjectElementGetVspace,
+  HtmlObjectElementSetVspace,
+  getCodeBase,
+  setCodeBase,
+  getCodeType,
+  setCodeType,
+  HtmlObjectElementGetUseMap,
+  HtmlObjectElementSetUseMap,
+  HtmlObjectElementGetBorder,
+  HtmlObjectElementSetBorder,
+  HtmlVideoElementGetWidth,
+  HtmlVideoElementSetWidth,
+  HtmlVideoElementGetHeight,
+  HtmlVideoElementSetHeight,
+  getVideoWidth,
+  getVideoHeight,
+  getPoster,
+  setPoster,
+  getPlaysInline,
+  setPlaysInline,
+  HtmlTrackElementGetKind,
+  setKind,
+  HtmlTrackElementGetSrc,
+  HtmlTrackElementSetSrc,
+  getSrclang,
+  setSrclang,
+  HtmlTrackElementGetLabel,
+  HtmlTrackElementSetLabel,
+  getDefault,
+  setDefault,
+  HtmlTrackElementGetReadyState,
+  HtmlTrackElementGetTrack,
+  HtmlMediaElementGetError,
+  HtmlMediaElementGetSrc,
+  HtmlMediaElementSetSrc,
+  getSrcObject,
+  setSrcObject,
+  getCurrentSrc,
+  HtmlMediaElementGetCrossOrigin,
+  HtmlMediaElementSetCrossOrigin,
+  getNetworkState,
+  getPreload,
+  setPreload,
+  getBuffered,
+  load,
+  canPlayType,
+  HtmlMediaElementGetReadyState,
+  getSeeking,
+  getCurrentTime,
+  setCurrentTime,
+  fastSeek,
+  HtmlMediaElementGetDuration,
+  getStartDate,
+  getPaused,
+  getDefaultPlaybackRate,
+  setDefaultPlaybackRate,
+  getPlaybackRate,
+  setPlaybackRate,
+  getPreservesPitch,
+  setPreservesPitch,
+  getPlayed,
+  getSeekable,
+  getEnded,
+  getAutoplay,
+  setAutoplay,
+  HtmlMediaElementGetLoop,
+  HtmlMediaElementSetLoop,
+  play,
+  pause,
+  getControls,
+  setControls,
+  getVolume,
+  setVolume,
+  getMuted,
+  setMuted,
+  getDefaultMuted,
+  setDefaultMuted,
+  getAudioTracks,
+  getVideoTracks,
+  getTextTracks,
+  addTextTrack,
+  MediaErrorGetCode,
+  MediaErrorGetMessage,
+  AudioTrackListGetLength,
+  audioTrack,
+  AudioTrackListGetTrackById,
+  AudioTrackListGetOnchange,
+  AudioTrackListSetOnchange,
+  AudioTrackListGetOnaddtrack,
+  AudioTrackListSetOnaddtrack,
+  AudioTrackListGetOnremovetrack,
+  AudioTrackListSetOnremovetrack,
+  AudioTrackGetId,
+  AudioTrackGetKind,
+  AudioTrackGetLabel,
+  AudioTrackGetLanguage,
+  getEnabled,
+  setEnabled,
+  VideoTrackListGetLength,
+  videoTrack,
+  VideoTrackListGetTrackById,
+  VideoTrackListGetSelectedIndex,
+  VideoTrackListGetOnchange,
+  VideoTrackListSetOnchange,
+  VideoTrackListGetOnaddtrack,
+  VideoTrackListSetOnaddtrack,
+  VideoTrackListGetOnremovetrack,
+  VideoTrackListSetOnremovetrack,
+  VideoTrackGetId,
+  VideoTrackGetKind,
+  VideoTrackGetLabel,
+  VideoTrackGetLanguage,
+  VideoTrackGetSelected,
+  VideoTrackSetSelected,
+  TextTrackListGetLength,
+  textTrack,
+  TextTrackListGetTrackById,
+  TextTrackListGetOnchange,
+  TextTrackListSetOnchange,
+  TextTrackListGetOnaddtrack,
+  TextTrackListSetOnaddtrack,
+  TextTrackListGetOnremovetrack,
+  TextTrackListSetOnremovetrack,
+  TextTrackGetKind,
+  TextTrackGetLabel,
+  TextTrackGetLanguage,
+  TextTrackGetId,
+  getInBandMetadataTrackDispatchType,
+  getMode,
+  setMode,
+  getCues,
+  getActiveCues,
+  addCue,
+  removeCue,
+  getOncuechange,
+  setOncuechange,
+  TextTrackCueListGetLength,
+  textTrackCue,
+  getCueById,
+  TextTrackCueGetTrack,
+  TextTrackCueGetId,
+  setId,
+  TextTrackCueGetStartTime,
+  setStartTime,
+  getEndTime,
+  setEndTime,
+  getPauseOnExit,
+  setPauseOnExit,
+  getOnenter,
+  setOnenter,
+  getOnexit,
+  setOnexit,
+  TimeRangesGetLength,
+  TimeRangesStart,
+  end,
+  TrackEventGetTrack,
+  HtmlMapElementGetName,
+  HtmlMapElementSetName,
+  getAreas,
+  HtmlAreaElementGetAlt,
+  HtmlAreaElementSetAlt,
+  HtmlAreaElementGetCoords,
+  HtmlAreaElementSetCoords,
+  HtmlAreaElementGetShape,
+  HtmlAreaElementSetShape,
+  HtmlAreaElementGetTarget,
+  HtmlAreaElementSetTarget,
+  HtmlAreaElementGetDownload,
+  HtmlAreaElementSetDownload,
+  HtmlAreaElementGetPing,
+  HtmlAreaElementSetPing,
+  HtmlAreaElementGetRel,
+  HtmlAreaElementSetRel,
+  HtmlAreaElementGetRelList,
+  HtmlAreaElementGetReferrerPolicy,
+  HtmlAreaElementSetReferrerPolicy,
+  getNoHref,
+  setNoHref,
+  getCaption,
+  setCaption,
+  createCaption,
+  deleteCaption,
+  getTHead,
+  setTHead,
+  createTHead,
+  deleteTHead,
+  getTFoot,
+  setTFoot,
+  createTFoot,
+  deleteTFoot,
+  getTBodies,
+  createTBody,
+  HtmlTableElementGetRows,
+  HtmlTableElementInsertRow,
+  HtmlTableElementDeleteRow,
+  HtmlTableElementGetAlign,
+  HtmlTableElementSetAlign,
+  HtmlTableElementGetBorder,
+  HtmlTableElementSetBorder,
+  getFrame,
+  setFrame,
+  getRules,
+  setRules,
+  getSummary,
+  setSummary,
+  HtmlTableElementGetWidth,
+  HtmlTableElementSetWidth,
+  HtmlTableElementGetBgColor,
+  HtmlTableElementSetBgColor,
+  getCellPadding,
+  setCellPadding,
+  getCellSpacing,
+  setCellSpacing,
+  HtmlTableCaptionElementGetAlign,
+  HtmlTableCaptionElementSetAlign,
+  getSpan,
+  setSpan,
+  HtmlTableColElementGetAlign,
+  HtmlTableColElementSetAlign,
+  HtmlTableColElementGetCh,
+  HtmlTableColElementSetCh,
+  HtmlTableColElementGetChOff,
+  HtmlTableColElementSetChOff,
+  HtmlTableColElementGetVAlign,
+  HtmlTableColElementSetVAlign,
+  HtmlTableColElementGetWidth,
+  HtmlTableColElementSetWidth,
+  HtmlTableSectionElementGetRows,
+  HtmlTableSectionElementInsertRow,
+  HtmlTableSectionElementDeleteRow,
+  HtmlTableSectionElementGetAlign,
+  HtmlTableSectionElementSetAlign,
+  HtmlTableSectionElementGetCh,
+  HtmlTableSectionElementSetCh,
+  HtmlTableSectionElementGetChOff,
+  HtmlTableSectionElementSetChOff,
+  HtmlTableSectionElementGetVAlign,
+  HtmlTableSectionElementSetVAlign,
+  getRowIndex,
+  getSectionRowIndex,
+  getCells,
+  insertCell,
+  deleteCell,
+  HtmlTableRowElementGetAlign,
+  HtmlTableRowElementSetAlign,
+  HtmlTableRowElementGetCh,
+  HtmlTableRowElementSetCh,
+  HtmlTableRowElementGetChOff,
+  HtmlTableRowElementSetChOff,
+  HtmlTableRowElementGetVAlign,
+  HtmlTableRowElementSetVAlign,
+  HtmlTableRowElementGetBgColor,
+  HtmlTableRowElementSetBgColor,
+  getColSpan,
+  setColSpan,
+  getRowSpan,
+  setRowSpan,
+  getHeaders,
+  setHeaders,
+  getCellIndex,
+  getScope,
+  setScope,
+  getAbbr,
+  setAbbr,
+  HtmlTableCellElementGetAlign,
+  HtmlTableCellElementSetAlign,
+  getAxis,
+  setAxis,
+  HtmlTableCellElementGetHeight,
+  HtmlTableCellElementSetHeight,
+  HtmlTableCellElementGetWidth,
+  HtmlTableCellElementSetWidth,
+  HtmlTableCellElementGetCh,
+  HtmlTableCellElementSetCh,
+  HtmlTableCellElementGetChOff,
+  HtmlTableCellElementSetChOff,
+  getNoWrap,
+  setNoWrap,
+  HtmlTableCellElementGetVAlign,
+  HtmlTableCellElementSetVAlign,
+  HtmlTableCellElementGetBgColor,
+  HtmlTableCellElementSetBgColor,
+  getAcceptCharset,
+  setAcceptCharset,
+  getAction,
+  setAction,
+  HtmlFormElementGetAutocomplete,
+  HtmlFormElementSetAutocomplete,
+  getEnctype,
+  setEnctype,
+  getEncoding,
+  setEncoding,
+  getMethod,
+  setMethod,
+  HtmlFormElementGetName,
+  HtmlFormElementSetName,
+  getNoValidate,
+  setNoValidate,
+  HtmlFormElementGetTarget,
+  HtmlFormElementSetTarget,
+  HtmlFormElementGetRel,
+  HtmlFormElementSetRel,
+  HtmlFormElementGetRelList,
+  HtmlFormElementGetElements,
+  HtmlFormElementGetLength,
+  HtmlFormElementElement,
+  submit,
+  requestSubmit,
+  HtmlFormElementReset,
+  HtmlFormElementCheckValidity,
+  HtmlFormElementReportValidity,
+  HtmlLabelElementGetForm,
+  HtmlLabelElementGetHtmlFor,
+  HtmlLabelElementSetHtmlFor,
+  getControl,
+  getAccept,
+  setAccept,
+  getAlpha,
+  setAlpha,
+  HtmlInputElementGetAlt,
+  HtmlInputElementSetAlt,
+  HtmlInputElementGetAutocomplete,
+  HtmlInputElementSetAutocomplete,
+  getDefaultChecked,
+  setDefaultChecked,
+  getChecked,
+  setChecked,
+  HtmlInputElementGetColorSpace,
+  setColorSpace,
+  HtmlInputElementGetDirName,
+  HtmlInputElementSetDirName,
+  HtmlInputElementGetDisabled,
+  HtmlInputElementSetDisabled,
+  HtmlInputElementGetForm,
+  HtmlInputElementGetFiles,
+  setFiles,
+  HtmlInputElementGetFormAction,
+  HtmlInputElementSetFormAction,
+  HtmlInputElementGetFormEnctype,
+  HtmlInputElementSetFormEnctype,
+  HtmlInputElementGetFormMethod,
+  HtmlInputElementSetFormMethod,
+  HtmlInputElementGetFormNoValidate,
+  HtmlInputElementSetFormNoValidate,
+  HtmlInputElementGetFormTarget,
+  HtmlInputElementSetFormTarget,
+  HtmlInputElementGetHeight,
+  HtmlInputElementSetHeight,
+  getIndeterminate,
+  setIndeterminate,
+  getList,
+  HtmlInputElementGetMax,
+  HtmlInputElementSetMax,
+  HtmlInputElementGetMaxLength,
+  HtmlInputElementSetMaxLength,
+  HtmlInputElementGetMin,
+  HtmlInputElementSetMin,
+  HtmlInputElementGetMinLength,
+  HtmlInputElementSetMinLength,
+  HtmlInputElementGetMultiple,
+  HtmlInputElementSetMultiple,
+  HtmlInputElementGetName,
+  HtmlInputElementSetName,
+  getPattern,
+  setPattern,
+  HtmlInputElementGetPlaceholder,
+  HtmlInputElementSetPlaceholder,
+  HtmlInputElementGetReadOnly,
+  HtmlInputElementSetReadOnly,
+  HtmlInputElementGetRequired,
+  HtmlInputElementSetRequired,
+  HtmlInputElementGetSize,
+  HtmlInputElementSetSize,
+  HtmlInputElementGetSrc,
+  HtmlInputElementSetSrc,
+  getStep,
+  setStep,
+  HtmlInputElementGetType,
+  HtmlInputElementSetType,
+  HtmlInputElementGetDefaultValue,
+  HtmlInputElementSetDefaultValue,
+  HtmlInputElementGetValue,
+  HtmlInputElementSetValue,
+  getValueAsDate,
+  setValueAsDate,
+  getValueAsNumber,
+  setValueAsNumber,
+  HtmlInputElementGetWidth,
+  HtmlInputElementSetWidth,
+  stepUp,
+  stepDown,
+  HtmlInputElementGetWillValidate,
+  HtmlInputElementGetValidity,
+  HtmlInputElementGetValidationMessage,
+  HtmlInputElementCheckValidity,
+  HtmlInputElementReportValidity,
+  HtmlInputElementSetCustomValidity,
+  HtmlInputElementGetLabels,
+  HtmlInputElementSelect,
+  HtmlInputElementGetSelectionStart,
+  HtmlInputElementSetSelectionStart,
+  HtmlInputElementGetSelectionEnd,
+  HtmlInputElementSetSelectionEnd,
+  HtmlInputElementGetSelectionDirection,
+  HtmlInputElementSetSelectionDirection,
+  HtmlInputElementSetRangeText,
+  HtmlInputElementSetSelectionRange,
+  HtmlInputElementShowPicker,
+  HtmlInputElementGetAlign,
+  HtmlInputElementSetAlign,
+  HtmlInputElementGetUseMap,
+  HtmlInputElementSetUseMap,
+  HtmlButtonElementGetCommand,
+  setCommand,
+  getCommandForElement,
+  setCommandForElement,
+  HtmlButtonElementGetDisabled,
+  HtmlButtonElementSetDisabled,
+  HtmlButtonElementGetForm,
+  HtmlButtonElementGetFormAction,
+  HtmlButtonElementSetFormAction,
+  HtmlButtonElementGetFormEnctype,
+  HtmlButtonElementSetFormEnctype,
+  HtmlButtonElementGetFormMethod,
+  HtmlButtonElementSetFormMethod,
+  HtmlButtonElementGetFormNoValidate,
+  HtmlButtonElementSetFormNoValidate,
+  HtmlButtonElementGetFormTarget,
+  HtmlButtonElementSetFormTarget,
+  HtmlButtonElementGetName,
+  HtmlButtonElementSetName,
+  HtmlButtonElementGetType,
+  HtmlButtonElementSetType,
+  HtmlButtonElementGetValue,
+  HtmlButtonElementSetValue,
+  HtmlButtonElementGetWillValidate,
+  HtmlButtonElementGetValidity,
+  HtmlButtonElementGetValidationMessage,
+  HtmlButtonElementCheckValidity,
+  HtmlButtonElementReportValidity,
+  HtmlButtonElementSetCustomValidity,
+  HtmlButtonElementGetLabels,
+  HtmlSelectElementGetAutocomplete,
+  HtmlSelectElementSetAutocomplete,
+  HtmlSelectElementGetDisabled,
+  HtmlSelectElementSetDisabled,
+  HtmlSelectElementGetForm,
+  HtmlSelectElementGetMultiple,
+  HtmlSelectElementSetMultiple,
+  HtmlSelectElementGetName,
+  HtmlSelectElementSetName,
+  HtmlSelectElementGetRequired,
+  HtmlSelectElementSetRequired,
+  HtmlSelectElementGetSize,
+  HtmlSelectElementSetSize,
+  HtmlSelectElementGetType,
+  HtmlSelectElementGetOptions,
+  HtmlSelectElementGetLength,
+  HtmlSelectElementSetLength,
+  HtmlSelectElementItem,
+  HtmlSelectElementNamedItem,
+  HtmlSelectElementAdd,
+  HtmlSelectElementRemove,
+  HtmlSelectElementUndefined,
+  getSelectedOptions,
+  HtmlSelectElementGetSelectedIndex,
+  HtmlSelectElementSetSelectedIndex,
+  HtmlSelectElementGetValue,
+  HtmlSelectElementSetValue,
+  HtmlSelectElementGetWillValidate,
+  HtmlSelectElementGetValidity,
+  HtmlSelectElementGetValidationMessage,
+  HtmlSelectElementCheckValidity,
+  HtmlSelectElementReportValidity,
+  HtmlSelectElementSetCustomValidity,
+  HtmlSelectElementShowPicker,
+  HtmlSelectElementGetLabels,
+  HtmlDataListElementGetOptions,
+  HtmlOptGroupElementGetDisabled,
+  HtmlOptGroupElementSetDisabled,
+  HtmlOptGroupElementGetLabel,
+  HtmlOptGroupElementSetLabel,
+  HtmlOptionElementGetDisabled,
+  HtmlOptionElementSetDisabled,
+  HtmlOptionElementGetForm,
+  HtmlOptionElementGetLabel,
+  HtmlOptionElementSetLabel,
+  getDefaultSelected,
+  setDefaultSelected,
+  HtmlOptionElementGetSelected,
+  HtmlOptionElementSetSelected,
+  HtmlOptionElementGetValue,
+  HtmlOptionElementSetValue,
+  HtmlOptionElementGetText,
+  HtmlOptionElementSetText,
+  HtmlOptionElementGetIndex,
+  HtmlTextAreaElementGetAutocomplete,
+  HtmlTextAreaElementSetAutocomplete,
+  HtmlTextAreaElementGetCols,
+  HtmlTextAreaElementSetCols,
+  HtmlTextAreaElementGetDirName,
+  HtmlTextAreaElementSetDirName,
+  HtmlTextAreaElementGetDisabled,
+  HtmlTextAreaElementSetDisabled,
+  HtmlTextAreaElementGetForm,
+  HtmlTextAreaElementGetMaxLength,
+  HtmlTextAreaElementSetMaxLength,
+  HtmlTextAreaElementGetMinLength,
+  HtmlTextAreaElementSetMinLength,
+  HtmlTextAreaElementGetName,
+  HtmlTextAreaElementSetName,
+  HtmlTextAreaElementGetPlaceholder,
+  HtmlTextAreaElementSetPlaceholder,
+  HtmlTextAreaElementGetReadOnly,
+  HtmlTextAreaElementSetReadOnly,
+  HtmlTextAreaElementGetRequired,
+  HtmlTextAreaElementSetRequired,
+  HtmlTextAreaElementGetRows,
+  HtmlTextAreaElementSetRows,
+  getWrap,
+  setWrap,
+  HtmlTextAreaElementGetType,
+  HtmlTextAreaElementGetDefaultValue,
+  HtmlTextAreaElementSetDefaultValue,
+  HtmlTextAreaElementGetValue,
+  HtmlTextAreaElementSetValue,
+  getTextLength,
+  HtmlTextAreaElementGetWillValidate,
+  HtmlTextAreaElementGetValidity,
+  HtmlTextAreaElementGetValidationMessage,
+  HtmlTextAreaElementCheckValidity,
+  HtmlTextAreaElementReportValidity,
+  HtmlTextAreaElementSetCustomValidity,
+  HtmlTextAreaElementGetLabels,
+  HtmlTextAreaElementSelect,
+  HtmlTextAreaElementGetSelectionStart,
+  HtmlTextAreaElementSetSelectionStart,
+  HtmlTextAreaElementGetSelectionEnd,
+  HtmlTextAreaElementSetSelectionEnd,
+  HtmlTextAreaElementGetSelectionDirection,
+  HtmlTextAreaElementSetSelectionDirection,
+  HtmlTextAreaElementSetRangeText,
+  HtmlTextAreaElementSetSelectionRange,
+  HtmlOutputElementGetHtmlFor,
+  HtmlOutputElementGetForm,
+  HtmlOutputElementGetName,
+  HtmlOutputElementSetName,
+  HtmlOutputElementGetType,
+  HtmlOutputElementGetDefaultValue,
+  HtmlOutputElementSetDefaultValue,
+  HtmlOutputElementGetValue,
+  HtmlOutputElementSetValue,
+  HtmlOutputElementGetWillValidate,
+  HtmlOutputElementGetValidity,
+  HtmlOutputElementGetValidationMessage,
+  HtmlOutputElementCheckValidity,
+  HtmlOutputElementReportValidity,
+  HtmlOutputElementSetCustomValidity,
+  HtmlOutputElementGetLabels,
+  HtmlProgressElementGetValue,
+  HtmlProgressElementSetValue,
+  HtmlProgressElementGetMax,
+  HtmlProgressElementSetMax,
+  getPosition,
+  HtmlProgressElementGetLabels,
+  HtmlMeterElementGetValue,
+  HtmlMeterElementSetValue,
+  HtmlMeterElementGetMin,
+  HtmlMeterElementSetMin,
+  HtmlMeterElementGetMax,
+  HtmlMeterElementSetMax,
+  getLow,
+  setLow,
+  getHigh,
+  setHigh,
+  getOptimum,
+  setOptimum,
+  HtmlMeterElementGetLabels,
+  HtmlFieldSetElementGetDisabled,
+  HtmlFieldSetElementSetDisabled,
+  HtmlFieldSetElementGetForm,
+  HtmlFieldSetElementGetName,
+  HtmlFieldSetElementSetName,
+  HtmlFieldSetElementGetType,
+  HtmlFieldSetElementGetElements,
+  HtmlFieldSetElementGetWillValidate,
+  HtmlFieldSetElementGetValidity,
+  HtmlFieldSetElementGetValidationMessage,
+  HtmlFieldSetElementCheckValidity,
+  HtmlFieldSetElementReportValidity,
+  HtmlFieldSetElementSetCustomValidity,
+  HtmlLegendElementGetForm,
+  HtmlLegendElementGetAlign,
+  HtmlLegendElementSetAlign,
+  getValueMissing,
+  getTypeMismatch,
+  getPatternMismatch,
+  getTooLong,
+  getTooShort,
+  getRangeUnderflow,
+  getRangeOverflow,
+  getStepMismatch,
+  getBadInput,
+  getCustomError,
+  getValid,
+  getSubmitter,
+  FormDataEventGetFormData,
+  HtmlDetailsElementGetName,
+  HtmlDetailsElementSetName,
+  HtmlDetailsElementGetOpen,
+  HtmlDetailsElementSetOpen,
+  HtmlDialogElementGetOpen,
+  HtmlDialogElementSetOpen,
+  HtmlDialogElementGetReturnValue,
+  HtmlDialogElementSetReturnValue,
+  getClosedBy,
+  setClosedBy,
+  show,
+  showModal,
+  HtmlDialogElementClose,
+  HtmlDialogElementPollClose,
+  HtmlDialogElementRequestClose,
+  HtmlScriptElementGetType,
+  HtmlScriptElementSetType,
+  HtmlScriptElementGetSrc,
+  HtmlScriptElementSetSrc,
+  getNoModule,
+  setNoModule,
+  getAsync,
+  setAsync,
+  getDefer,
+  setDefer,
+  HtmlScriptElementGetBlocking,
+  HtmlScriptElementGetCrossOrigin,
+  HtmlScriptElementSetCrossOrigin,
+  HtmlScriptElementGetReferrerPolicy,
+  HtmlScriptElementSetReferrerPolicy,
+  HtmlScriptElementGetIntegrity,
+  HtmlScriptElementSetIntegrity,
+  HtmlScriptElementGetFetchPriority,
+  HtmlScriptElementSetFetchPriority,
+  HtmlScriptElementGetText,
+  HtmlScriptElementSetText,
+  supports,
+  HtmlScriptElementGetCharset,
+  HtmlScriptElementSetCharset,
+  getEvent,
+  setEvent,
+  HtmlScriptElementGetHtmlFor,
+  HtmlScriptElementSetHtmlFor,
+  HtmlTemplateElementGetContent,
+  getShadowRootMode,
+  setShadowRootMode,
+  getShadowRootDelegatesFocus,
+  setShadowRootDelegatesFocus,
+  getShadowRootClonable,
+  setShadowRootClonable,
+  getShadowRootSerializable,
+  setShadowRootSerializable,
+  getShadowRootCustomElementRegistry,
+  setShadowRootCustomElementRegistry,
+  HtmlSlotElementGetName,
+  HtmlSlotElementSetName,
+  assignedNodes,
+  assignedElements,
+  HtmlSlotElementAssign,
+  HtmlCanvasElementGetWidth,
+  HtmlCanvasElementSetWidth,
+  HtmlCanvasElementGetHeight,
+  HtmlCanvasElementSetHeight,
+  HtmlCanvasElementGetContext,
+  toDataUrl,
+  toBlob,
+  transferControlToOffscreen,
+  CanvasRenderingContext2DGetCanvas,
+  getContextAttributes,
+  save,
+  restore,
+  CanvasStateReset,
+  isContextLost,
+  scale,
+  rotate,
+  translate,
+  transform,
+  getTransform,
+  CanvasTransformSetTransform,
+  resetTransform,
+  getGlobalAlpha,
+  setGlobalAlpha,
+  getGlobalCompositeOperation,
+  setGlobalCompositeOperation,
+  getImageSmoothingEnabled,
+  setImageSmoothingEnabled,
+  getImageSmoothingQuality,
+  setImageSmoothingQuality,
+  getStrokeStyle,
+  setStrokeStyle,
+  getFillStyle,
+  setFillStyle,
+  createLinearGradient,
+  createRadialGradient,
+  createConicGradient,
+  createPattern,
+  getShadowOffsetX,
+  setShadowOffsetX,
+  getShadowOffsetY,
+  setShadowOffsetY,
+  getShadowBlur,
+  setShadowBlur,
+  getShadowColor,
+  setShadowColor,
+  getFilter,
+  setFilter,
+  clearRect,
+  fillRect,
+  strokeRect,
+  beginPath,
+  fill,
+  stroke,
+  clip,
+  isPointInPath,
+  isPointInStroke,
+  drawFocusIfNeeded,
+  fillText,
+  strokeText,
+  measureText,
+  drawImage,
+  createImageData,
+  getImageData,
+  putImageData,
+  getLineWidth,
+  setLineWidth,
+  getLineCap,
+  setLineCap,
+  getLineJoin,
+  setLineJoin,
+  getMiterLimit,
+  setMiterLimit,
+  setLineDash,
+  getLineDash,
+  getLineDashOffset,
+  setLineDashOffset,
+  getLang,
+  setLang,
+  getFont,
+  setFont,
+  getTextAlign,
+  setTextAlign,
+  getTextBaseline,
+  setTextBaseline,
+  CanvasTextDrawingStylesGetDirection,
+  CanvasTextDrawingStylesSetDirection,
+  getLetterSpacing,
+  setLetterSpacing,
+  getFontKerning,
+  setFontKerning,
+  getFontStretch,
+  setFontStretch,
+  getFontVariantCaps,
+  setFontVariantCaps,
+  getTextRendering,
+  setTextRendering,
+  getWordSpacing,
+  setWordSpacing,
+  closePath,
+  moveTo,
+  lineTo,
+  quadraticCurveTo,
+  bezierCurveTo,
+  arcTo,
+  rect,
+  roundRect,
+  arc,
+  ellipse,
+  addColorStop,
+  CanvasPatternSetTransform,
+  TextMetricsGetWidth,
+  getActualBoundingBoxLeft,
+  getActualBoundingBoxRight,
+  getFontBoundingBoxAscent,
+  getFontBoundingBoxDescent,
+  getActualBoundingBoxAscent,
+  getActualBoundingBoxDescent,
+  getEmHeightAscent,
+  getEmHeightDescent,
+  getHangingBaseline,
+  getAlphabeticBaseline,
+  getIdeographicBaseline,
+  addPath,
+  ImageBitmapRenderingContextGetCanvas,
+  transferFromImageBitmap,
+  OffscreenCanvasGetWidth,
+  OffscreenCanvasSetWidth,
+  OffscreenCanvasGetHeight,
+  OffscreenCanvasSetHeight,
+  OffscreenCanvasGetContext,
+  transferToImageBitmap,
+  convertToBlob,
+  getOncontextlost,
+  setOncontextlost,
+  getOncontextrestored,
+  setOncontextrestored,
+  OffscreenCanvasRenderingContext2DGetCanvas,
+  define,
+  CustomElementRegistryGetName,
+  whenDefined,
+  upgrade,
+  initialize,
+  getShadowRoot,
+  setFormValue,
+  ElementInternalsGetForm,
+  setValidity,
+  ElementInternalsGetWillValidate,
+  ElementInternalsGetValidity,
+  ElementInternalsGetValidationMessage,
+  ElementInternalsCheckValidity,
+  ElementInternalsReportValidity,
+  ElementInternalsGetLabels,
+  getStates,
+  VisibilityStateEntryGetName,
+  getEntryType,
+  VisibilityStateEntryGetStartTime,
+  VisibilityStateEntryGetDuration,
+  getHasBeenActive,
+  getIsActive,
+  getOldState,
+  getNewState,
+  ToggleEventGetSource,
+  CommandEventGetSource,
+  CommandEventGetCommand,
+  getContentEditable,
+  setContentEditable,
+  getEnterKeyHint,
+  setEnterKeyHint,
+  getIsContentEditable,
+  getInputMode,
+  setInputMode,
+  CloseWatcherRequestClose,
+  CloseWatcherClose,
+  CloseWatcherPollClose,
+  destroy,
+  getOncancel,
+  setOncancel,
+  CloseWatcherGetOnclose,
+  CloseWatcherSetOnclose,
+  getDropEffect,
+  setDropEffect,
+  getEffectAllowed,
+  setEffectAllowed,
+  getItems,
+  setDragImage,
+  getTypes,
+  DataTransferGetData,
+  DataTransferSetData,
+  clearData,
+  DataTransferGetFiles,
+  DataTransferItemListGetLength,
+  dataTransferItem,
+  DataTransferItemListAdd,
+  DataTransferItemListRemove,
+  DataTransferItemListClear,
+  DataTransferItemGetKind,
+  DataTransferItemGetType,
+  getAsString,
+  getAsFile,
+  getDataTransfer,
+  getPopoverTargetElement,
+  setPopoverTargetElement,
+  getPopoverTargetAction,
+  setPopoverTargetAction,
+  from,
+  pollFrom,
+  getOpaque,
+  isSameOrigin,
+  isSameSite,
+  getVisible,
+  LocationGetHref,
+  LocationSetHref,
+  LocationGetOrigin,
+  LocationGetProtocol,
+  LocationSetProtocol,
+  LocationGetHost,
+  LocationSetHost,
+  LocationGetHostname,
+  LocationSetHostname,
+  LocationGetPort,
+  LocationSetPort,
+  LocationGetPathname,
+  LocationSetPathname,
+  LocationGetSearch,
+  LocationSetSearch,
+  LocationGetHash,
+  LocationSetHash,
+  LocationAssign,
+  replace,
+  LocationReload,
+  getAncestorOrigins,
+  HistoryGetLength,
+  getScrollRestoration,
+  setScrollRestoration,
+  HistoryGetState,
+  go,
+  HistoryBack,
+  HistoryForward,
+  pushState,
+  replaceState,
+  entries,
+  getCurrentEntry,
+  updateCurrentEntry,
+  getTransition,
+  NavigationGetActivation,
+  getCanGoBack,
+  getCanGoForward,
+  navigate,
+  NavigationReload,
+  traverseTo,
+  NavigationBack,
+  NavigationForward,
+  getOnnavigate,
+  setOnnavigate,
+  getOnnavigatesuccess,
+  setOnnavigatesuccess,
+  getOnnavigateerror,
+  setOnnavigateerror,
+  getOncurrententrychange,
+  setOncurrententrychange,
+  NavigationHistoryEntryGetUrl,
+  NavigationHistoryEntryGetKey,
+  NavigationHistoryEntryGetId,
+  NavigationHistoryEntryGetIndex,
+  NavigationHistoryEntryGetSameDocument,
+  NavigationHistoryEntryGetState,
+  getOndispose,
+  setOndispose,
+  NavigationTransitionGetNavigationType,
+  NavigationTransitionGetFrom,
+  getTo,
+  getCommitted,
+  getFinished,
+  NavigationActivationGetFrom,
+  getEntry,
+  NavigationActivationGetNavigationType,
+  NavigateEventGetNavigationType,
+  getDestination,
+  getCanIntercept,
+  getUserInitiated,
+  getHashChange,
+  getSignal,
+  NavigateEventGetFormData,
+  getDownloadRequest,
+  getInfo,
+  NavigateEventGetHasUaVisualTransition,
+  getSourceElement,
+  intercept,
+  scroll,
+  redirect,
+  addHandler,
+  NavigationDestinationGetUrl,
+  NavigationDestinationGetKey,
+  NavigationDestinationGetId,
+  NavigationDestinationGetIndex,
+  NavigationDestinationGetSameDocument,
+  NavigationDestinationGetState,
+  NavigationCurrentEntryChangeEventGetNavigationType,
+  NavigationCurrentEntryChangeEventGetFrom,
+  PopStateEventGetState,
+  PopStateEventGetHasUaVisualTransition,
+  getOldUrl,
+  getNewUrl,
+  PageSwapEventGetActivation,
+  PageSwapEventGetViewTransition,
+  PageRevealEventGetViewTransition,
+  getPersisted,
+  BeforeUnloadEventGetReturnValue,
+  BeforeUnloadEventSetReturnValue,
+  NotRestoredReasonDetailsGetReason,
+  NotRestoredReasonDetailsToJson,
+  NotRestoredReasonsGetSrc,
+  NotRestoredReasonsGetId,
+  NotRestoredReasonsGetName,
+  NotRestoredReasonsGetUrl,
+  getReasons,
+  getChildren,
+  NotRestoredReasonsToJson,
+  ErrorEventGetMessage,
+  ErrorEventGetFilename,
+  getLineno,
+  getColno,
+  ErrorEventGetError,
+  getPromise,
+  PromiseRejectionEventGetReason,
+  parseFromString,
+  serializeToString,
+  getAppCodeName,
+  getAppName,
+  getAppVersion,
+  getPlatform,
+  getProduct,
+  getProductSub,
+  getUserAgent,
+  getVendor,
+  getVendorSub,
+  taintEnabled,
+  getOscpu,
+  NavigatorLanguageGetLanguage,
+  getLanguages,
+  getOnLine,
+  registerProtocolHandler,
+  unregisterProtocolHandler,
+  getCookieEnabled,
+  getPlugins,
+  getMimeTypes,
+  javaEnabled,
+  getPdfViewerEnabled,
+  refresh,
+  PluginArrayGetLength,
+  PluginArrayItem,
+  PluginArrayNamedItem,
+  MimeTypeArrayGetLength,
+  MimeTypeArrayItem,
+  MimeTypeArrayNamedItem,
+  PluginGetName,
+  PluginGetDescription,
+  PluginGetFilename,
+  PluginGetLength,
+  PluginItem,
+  PluginNamedItem,
+  MimeTypeGetType,
+  MimeTypeGetDescription,
+  getSuffixes,
+  getEnabledPlugin,
+  ImageDataGetWidth,
+  ImageDataGetHeight,
+  ImageDataGetData,
+  getPixelFormat,
+  ImageDataGetColorSpace,
+  ImageBitmapGetWidth,
+  ImageBitmapGetHeight,
+  ImageBitmapClose,
+  ImageBitmapPollClose,
+  requestAnimationFrame,
+  cancelAnimationFrame,
+  MessageEventGetData,
+  MessageEventGetOrigin,
+  getLastEventId,
+  MessageEventGetSource,
+  getPorts,
+  initMessageEvent,
+  EventSourceGetUrl,
+  getWithCredentials,
+  EventSourceGetReadyState,
+  getOnopen,
+  setOnopen,
+  EventSourceGetOnmessage,
+  EventSourceSetOnmessage,
+  EventSourceGetOnerror,
+  EventSourceSetOnerror,
+  EventSourceClose,
+  EventSourcePollClose,
+  getPort1,
+  getPort2,
+  MessageEventTargetGetOnmessage,
+  MessageEventTargetSetOnmessage,
+  MessageEventTargetGetOnmessageerror,
+  MessageEventTargetSetOnmessageerror,
+  MessagePortPostMessage,
+  MessagePortStart,
+  MessagePortClose,
+  MessagePortPollClose,
+  MessagePortGetOnclose,
+  MessagePortSetOnclose,
+  BroadcastChannelGetName,
+  BroadcastChannelPostMessage,
+  BroadcastChannelClose,
+  BroadcastChannelPollClose,
+  BroadcastChannelGetOnmessage,
+  BroadcastChannelSetOnmessage,
+  BroadcastChannelGetOnmessageerror,
+  BroadcastChannelSetOnmessageerror,
+  getSelf,
+  getLocation,
+  getNavigator,
+  importScripts,
+  WorkerGlobalScopeGetOnerror,
+  WorkerGlobalScopeSetOnerror,
+  getOnlanguagechange,
+  setOnlanguagechange,
+  getOnoffline,
+  setOnoffline,
+  getOnonline,
+  setOnonline,
+  getOnrejectionhandled,
+  setOnrejectionhandled,
+  getOnunhandledrejection,
+  setOnunhandledrejection,
+  DedicatedWorkerGlobalScopeGetName,
+  DedicatedWorkerGlobalScopePostMessage,
+  DedicatedWorkerGlobalScopeClose,
+  DedicatedWorkerGlobalScopePollClose,
+  SharedWorkerGlobalScopeGetName,
+  SharedWorkerGlobalScopeClose,
+  SharedWorkerGlobalScopePollClose,
+  getOnconnect,
+  setOnconnect,
+  AbstractWorkerGetOnerror,
+  AbstractWorkerSetOnerror,
+  terminate,
+  WorkerPostMessage,
+  SharedWorkerGetPort,
+  getHardwareConcurrency,
+  getMediaCapabilities,
+  getPermissions,
+  getServiceWorker,
+  WorkerLocationGetHref,
+  WorkerLocationSetHref,
+  WorkerLocationGetOrigin,
+  WorkerLocationGetProtocol,
+  WorkerLocationGetHost,
+  WorkerLocationGetHostname,
+  WorkerLocationGetPort,
+  WorkerLocationGetPathname,
+  WorkerLocationGetSearch,
+  WorkerLocationGetHash,
+  addModule,
+  StorageGetLength,
   key,
-  clear
+  getItem,
+  setItem,
+  removeItem,
+  StorageClear,
+  getSessionStorage,
+  getLocalStorage,
+  StorageEventGetKey,
+  getOldValue,
+  getNewValue,
+  StorageEventGetUrl,
+  getStorageArea,
+  initStorageEvent,
+  getBehavior,
+  setBehavior,
+  HtmlMarqueeElementGetBgColor,
+  HtmlMarqueeElementSetBgColor,
+  HtmlMarqueeElementGetDirection,
+  HtmlMarqueeElementSetDirection,
+  HtmlMarqueeElementGetHeight,
+  HtmlMarqueeElementSetHeight,
+  HtmlMarqueeElementGetHspace,
+  HtmlMarqueeElementSetHspace,
+  HtmlMarqueeElementGetLoop,
+  HtmlMarqueeElementSetLoop,
+  getScrollAmount,
+  setScrollAmount,
+  getScrollDelay,
+  setScrollDelay,
+  getTrueSpeed,
+  setTrueSpeed,
+  HtmlMarqueeElementGetVspace,
+  HtmlMarqueeElementSetVspace,
+  HtmlMarqueeElementGetWidth,
+  HtmlMarqueeElementSetWidth,
+  HtmlMarqueeElementStart,
+  stop,
+  HtmlFrameSetElementGetCols,
+  HtmlFrameSetElementSetCols,
+  HtmlFrameSetElementGetRows,
+  HtmlFrameSetElementSetRows,
+  HtmlFrameElementGetName,
+  HtmlFrameElementSetName,
+  HtmlFrameElementGetScrolling,
+  HtmlFrameElementSetScrolling,
+  HtmlFrameElementGetSrc,
+  HtmlFrameElementSetSrc,
+  HtmlFrameElementGetFrameBorder,
+  HtmlFrameElementSetFrameBorder,
+  HtmlFrameElementGetLongDesc,
+  HtmlFrameElementSetLongDesc,
+  getNoResize,
+  setNoResize,
+  HtmlFrameElementGetContentDocument,
+  HtmlFrameElementGetContentWindow,
+  HtmlFrameElementGetMarginHeight,
+  HtmlFrameElementSetMarginHeight,
+  HtmlFrameElementGetMarginWidth,
+  HtmlFrameElementSetMarginWidth,
+  HtmlDirectoryElementGetCompact,
+  HtmlDirectoryElementSetCompact,
+  HtmlFontElementGetColor,
+  HtmlFontElementSetColor,
+  getFace,
+  setFace,
+  HtmlFontElementGetSize,
+  HtmlFontElementSetSize,
+  HtmlParamElementGetName,
+  HtmlParamElementSetName,
+  HtmlParamElementGetValue,
+  HtmlParamElementSetValue,
+  HtmlParamElementGetType,
+  HtmlParamElementSetType,
+  getValueType,
+  setValueType,
+  addSearchProvider,
+  isSearchProviderInstalled
 };

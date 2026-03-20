@@ -79,7 +79,7 @@ export function name(handle: bigint): string {
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): bigint {
+export function version(handle: bigint): string {
   return IDBDatabase.version(handle);
 }
 
@@ -237,14 +237,14 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
 /**
  * `key-path()` operation.
  */
-export function IdbIndexKeyPath(handle: bigint): number | undefined {
+export function IdbIndexKeyPath(handle: bigint): string {
   return IdbIndex.keyPath(handle);
 }
 
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): bigint {
+export function multiEntry(handle: bigint): boolean {
   return IdbIndex.multiEntry(handle);
 }
 
@@ -306,14 +306,14 @@ export function advance(handle: bigint, count: number): void {
 /**
  * `continue()` operation.
  */
-export function _continue(handle: bigint, key: string | undefined): void {
+export function _continue(handle: bigint, key: string): void {
   return IdbCursor._continue(handle, key);
 }
 
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: string, primaryKey: bigint): void {
+export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
   return IdbCursor.continuePrimaryKey(handle, key, primaryKey);
 }
 
@@ -347,7 +347,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string {
+export function IdbRequestSource(handle: bigint): boolean | undefined {
   return IDBRequest.source(handle);
 }
 

@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): string | undefined {
+export function newFileReader(): EventHandlerRecord {
   return FileReader.newFileReader();
 }
 
@@ -90,14 +90,14 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): string {
   return FileReader.readyState(handle);
 }
 
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): bigint | undefined | undefined {
+export function resultVal(handle: bigint): string {
   return FileReader.resultVal(handle);
 }
 

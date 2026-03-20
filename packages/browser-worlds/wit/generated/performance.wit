@@ -48,9 +48,9 @@ interface performance {
     set-resource-timing-buffer-size: func(self: performance-handle, max-size: u32);
 
     /// `onresourcetimingbufferfull` attribute — getter.
-    get-onresourcetimingbufferfull: func(self: performance-handle) -> u64;
+    get-onresourcetimingbufferfull: func(self: performance-handle) -> event-handler-record;
     /// `onresourcetimingbufferfull` attribute — setter.
-    set-onresourcetimingbufferfull: func(self: performance-handle, value: u64);
+    set-onresourcetimingbufferfull: func(self: performance-handle, value: event-handler-record);
 
     /// `mark()` operation.
     mark: func(self: performance-handle, mark-name: string, mark-options: option<u64>) -> u64;

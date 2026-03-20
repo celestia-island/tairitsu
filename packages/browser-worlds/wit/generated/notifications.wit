@@ -27,24 +27,24 @@ interface notification {
     get-max-actions: func() -> u32;
 
     /// `onclick` attribute — getter.
-    get-onclick: func(self: notification-handle) -> u64;
+    get-onclick: func(self: notification-handle) -> event-handler-record;
     /// `onclick` attribute — setter.
-    set-onclick: func(self: notification-handle, value: u64);
+    set-onclick: func(self: notification-handle, value: event-handler-record);
 
     /// `onshow` attribute — getter.
-    get-onshow: func(self: notification-handle) -> u64;
+    get-onshow: func(self: notification-handle) -> event-handler-record;
     /// `onshow` attribute — setter.
-    set-onshow: func(self: notification-handle, value: u64);
+    set-onshow: func(self: notification-handle, value: event-handler-record);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: notification-handle) -> u64;
+    get-onerror: func(self: notification-handle) -> event-handler-record;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: notification-handle, value: u64);
+    set-onerror: func(self: notification-handle, value: event-handler-record);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: notification-handle) -> u64;
+    get-onclose: func(self: notification-handle) -> event-handler-record;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: notification-handle, value: u64);
+    set-onclose: func(self: notification-handle, value: event-handler-record);
 
     /// `title` attribute — getter.
     get-title: func(self: notification-handle) -> string;
@@ -135,9 +135,9 @@ interface service-worker-registration {
     unregister: func(self: service-worker-registration-handle) -> u64;
 
     /// `onupdatefound` attribute — getter.
-    get-onupdatefound: func(self: service-worker-registration-handle) -> u64;
+    get-onupdatefound: func(self: service-worker-registration-handle) -> event-handler-record;
     /// `onupdatefound` attribute — setter.
-    set-onupdatefound: func(self: service-worker-registration-handle, value: u64);
+    set-onupdatefound: func(self: service-worker-registration-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `NotificationEvent`
@@ -161,14 +161,14 @@ interface service-worker-global-scope {
     type service-worker-global-scope-handle = u64;
 
     /// `onnotificationclick` attribute — getter.
-    get-onnotificationclick: func(self: service-worker-global-scope-handle) -> u64;
+    get-onnotificationclick: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onnotificationclick` attribute — setter.
-    set-onnotificationclick: func(self: service-worker-global-scope-handle, value: u64);
+    set-onnotificationclick: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `onnotificationclose` attribute — getter.
-    get-onnotificationclose: func(self: service-worker-global-scope-handle) -> u64;
+    get-onnotificationclose: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onnotificationclose` attribute — setter.
-    set-onnotificationclose: func(self: service-worker-global-scope-handle, value: u64);
+    set-onnotificationclose: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `clients` attribute — getter.
     get-clients: func(self: service-worker-global-scope-handle) -> u64;
@@ -183,29 +183,29 @@ interface service-worker-global-scope {
     skip-waiting: func(self: service-worker-global-scope-handle) -> u64;
 
     /// `oninstall` attribute — getter.
-    get-oninstall: func(self: service-worker-global-scope-handle) -> u64;
+    get-oninstall: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `oninstall` attribute — setter.
-    set-oninstall: func(self: service-worker-global-scope-handle, value: u64);
+    set-oninstall: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `onactivate` attribute — getter.
-    get-onactivate: func(self: service-worker-global-scope-handle) -> u64;
+    get-onactivate: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onactivate` attribute — setter.
-    set-onactivate: func(self: service-worker-global-scope-handle, value: u64);
+    set-onactivate: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `onfetch` attribute — getter.
-    get-onfetch: func(self: service-worker-global-scope-handle) -> u64;
+    get-onfetch: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onfetch` attribute — setter.
-    set-onfetch: func(self: service-worker-global-scope-handle, value: u64);
+    set-onfetch: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: service-worker-global-scope-handle) -> u64;
+    get-onmessage: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: service-worker-global-scope-handle, value: u64);
+    set-onmessage: func(self: service-worker-global-scope-handle, value: event-handler-record);
 
     /// `onmessageerror` attribute — getter.
-    get-onmessageerror: func(self: service-worker-global-scope-handle) -> u64;
+    get-onmessageerror: func(self: service-worker-global-scope-handle) -> event-handler-record;
     /// `onmessageerror` attribute — setter.
-    set-onmessageerror: func(self: service-worker-global-scope-handle, value: u64);
+    set-onmessageerror: func(self: service-worker-global-scope-handle, value: event-handler-record);
 }
 
 /// Browser notifications world — all 4 auto-generated interfaces.

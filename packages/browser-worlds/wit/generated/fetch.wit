@@ -207,7 +207,7 @@ interface window-or-worker-global-scope {
     clear-interval: func(self: window-or-worker-global-scope-handle, id: option<s32>);
 
     /// `queueMicrotask()` operation.
-    queue-microtask: func(self: window-or-worker-global-scope-handle, callback: u64);
+    queue-microtask: func(self: window-or-worker-global-scope-handle, callback: void-function-record);
 
     /// `createImageBitmap()` operation.
     create-image-bitmap: func(self: window-or-worker-global-scope-handle, image: u64, options: option<u64>) -> u64;
@@ -495,39 +495,39 @@ interface xml-http-request-event-target {
     type xml-http-request-event-target-handle = u64;
 
     /// `onloadstart` attribute — getter.
-    get-onloadstart: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onloadstart: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onloadstart` attribute — setter.
-    set-onloadstart: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onloadstart: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `onprogress` attribute — getter.
-    get-onprogress: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onprogress: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onprogress` attribute — setter.
-    set-onprogress: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onprogress: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `onabort` attribute — getter.
-    get-onabort: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onabort: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onabort` attribute — setter.
-    set-onabort: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onabort: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onerror: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onerror: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `onload` attribute — getter.
-    get-onload: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onload: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onload` attribute — setter.
-    set-onload: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onload: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `ontimeout` attribute — getter.
-    get-ontimeout: func(self: xml-http-request-event-target-handle) -> u64;
+    get-ontimeout: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `ontimeout` attribute — setter.
-    set-ontimeout: func(self: xml-http-request-event-target-handle, value: u64);
+    set-ontimeout: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 
     /// `onloadend` attribute — getter.
-    get-onloadend: func(self: xml-http-request-event-target-handle) -> u64;
+    get-onloadend: func(self: xml-http-request-event-target-handle) -> event-handler-record;
     /// `onloadend` attribute — setter.
-    set-onloadend: func(self: xml-http-request-event-target-handle, value: u64);
+    set-onloadend: func(self: xml-http-request-event-target-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `XMLHttpRequest`
@@ -538,9 +538,9 @@ interface xml-http-request {
     type xml-http-request-handle = u64;
 
     /// `onreadystatechange` attribute — getter.
-    get-onreadystatechange: func(self: xml-http-request-handle) -> u64;
+    get-onreadystatechange: func(self: xml-http-request-handle) -> event-handler-record;
     /// `onreadystatechange` attribute — setter.
-    set-onreadystatechange: func(self: xml-http-request-handle, value: u64);
+    set-onreadystatechange: func(self: xml-http-request-handle, value: event-handler-record);
 
     /// `readyState` attribute — getter.
     get-ready-state: func(self: xml-http-request-handle) -> u16;
