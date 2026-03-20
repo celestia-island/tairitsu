@@ -49,7 +49,7 @@ export function getType(self: bigint): string {
  * `is-conditional-mediation-available()` operation.
  */
 export function isConditionalMediationAvailable(): bigint {
-  return obj.isConditionalMediationAvailable();
+  return Credential.isConditionalMediationAvailable();
 }
 
 // ---------------------------------------------------------------------------
