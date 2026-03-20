@@ -49,18 +49,17 @@ function getWs(handle: bigint): WebSocket {
   }
   return obj;
 }
-
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: bigint | undefined, protocols: number): number {
   return WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): string | undefined {
+export function url(handle: bigint): bigint | undefined {
   return WebSocket.url(handle);
 }
 
@@ -74,14 +73,14 @@ export function readyState(handle: bigint): number {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): string {
+export function bufferedAmount(handle: bigint): bigint {
   return WebSocket.bufferedAmount(handle);
 }
 
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): bigint | undefined {
+export function extensions(handle: bigint): string {
   return WebSocket.extensions(handle);
 }
 
@@ -132,7 +131,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string): void {
+export function send(handle: bigint, data: (string)[]): void {
   return WebSocket.send(handle, data);
 }
 

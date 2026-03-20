@@ -36,7 +36,6 @@ function getRo(handle: bigint): ResizeObserver {
   }
   return obj;
 }
-
 /**
  * `observe()` operation.
  */

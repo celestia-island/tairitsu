@@ -49,7 +49,6 @@ function getHTMLAllCollection(handle: bigint): HTMLAllCollection {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -85,7 +84,6 @@ function getRadioNodeList(handle: bigint): RadioNodeList {
   }
   return obj;
 }
-
 /**
  * `get-value()` operation.
  */
@@ -121,7 +119,6 @@ function getHTMLOptionsCollection(handle: bigint): HTMLOptionsCollection {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -197,7 +194,6 @@ function getDOMStringList(handle: bigint): DOMStringList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -241,7 +237,6 @@ function getHTMLOrSVGElement(handle: bigint): HTMLOrSVGElement {
   }
   return obj;
 }
-
 /**
  * `get-dataset()` operation.
  */
@@ -333,7 +328,6 @@ function getDOMStringMap(handle: bigint): DOMStringMap {
   }
   return obj;
 }
-
 /**
  * `dom-string()` operation.
  */
@@ -369,7 +363,6 @@ function getHTMLHtmlElement(handle: bigint): HTMLHtmlElement {
   }
   return obj;
 }
-
 /**
  * `get-version()` operation.
  */
@@ -405,7 +398,6 @@ function getHTMLTitleElement(handle: bigint): HTMLTitleElement {
   }
   return obj;
 }
-
 /**
  * `get-text()` operation.
  */
@@ -441,7 +433,6 @@ function getHTMLBaseElement(handle: bigint): HTMLBaseElement {
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -493,7 +484,6 @@ function getHTMLLinkElement(handle: bigint): HTMLLinkElement {
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -793,7 +783,6 @@ function getHTMLMetaElement(handle: bigint): HTMLMetaElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -893,7 +882,6 @@ function getHTMLStyleElement(handle: bigint): HTMLStyleElement {
   }
   return obj;
 }
-
 /**
  * `get-disabled()` operation.
  */
@@ -969,7 +957,6 @@ function getHTMLBodyElement(handle: bigint): HTMLBodyElement {
   }
   return obj;
 }
-
 /**
  * `get-text()` operation.
  */
@@ -1085,7 +1072,6 @@ function getHTMLHeadingElement(handle: bigint): HTMLHeadingElement {
   }
   return obj;
 }
-
 /**
  * `get-align()` operation.
  */
@@ -1121,7 +1107,6 @@ function getHTMLParagraphElement(handle: bigint): HTMLParagraphElement {
   }
   return obj;
 }
-
 /**
  * `get-align()` operation.
  */
@@ -1157,7 +1142,6 @@ function getHtmlhrElement(handle: bigint): HtmlhrElement {
   }
   return obj;
 }
-
 /**
  * `get-align()` operation.
  */
@@ -1257,7 +1241,6 @@ function getHTMLPreElement(handle: bigint): HTMLPreElement {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -1293,7 +1276,6 @@ function getHTMLQuoteElement(handle: bigint): HTMLQuoteElement {
   }
   return obj;
 }
-
 /**
  * `get-cite()` operation.
  */
@@ -1329,7 +1311,6 @@ function getHtmloListElement(handle: bigint): HtmloListElement {
   }
   return obj;
 }
-
 /**
  * `get-reversed()` operation.
  */
@@ -1413,7 +1394,6 @@ function getHtmluListElement(handle: bigint): HtmluListElement {
   }
   return obj;
 }
-
 /**
  * `get-compact()` operation.
  */
@@ -1465,7 +1445,6 @@ function getHTMLMenuElement(handle: bigint): HTMLMenuElement {
   }
   return obj;
 }
-
 /**
  * `get-compact()` operation.
  */
@@ -1501,7 +1480,6 @@ function getHtmlliElement(handle: bigint): HtmlliElement {
   }
   return obj;
 }
-
 /**
  * `get-value()` operation.
  */
@@ -1553,7 +1531,6 @@ function getHtmldListElement(handle: bigint): HtmldListElement {
   }
   return obj;
 }
-
 /**
  * `get-compact()` operation.
  */
@@ -1589,7 +1566,6 @@ function getHTMLDivElement(handle: bigint): HTMLDivElement {
   }
   return obj;
 }
-
 /**
  * `get-align()` operation.
  */
@@ -1625,7 +1601,6 @@ function getHTMLAnchorElement(handle: bigint): HTMLAnchorElement {
   }
   return obj;
 }
-
 /**
  * `get-target()` operation.
  */
@@ -1861,7 +1836,6 @@ function getHTMLDataElement(handle: bigint): HTMLDataElement {
   }
   return obj;
 }
-
 /**
  * `get-value()` operation.
  */
@@ -1897,7 +1871,6 @@ function getHTMLTimeElement(handle: bigint): HTMLTimeElement {
   }
   return obj;
 }
-
 /**
  * `get-date-time()` operation.
  */
@@ -1933,7 +1906,6 @@ function getHtmlbrElement(handle: bigint): HtmlbrElement {
   }
   return obj;
 }
-
 /**
  * `get-clear()` operation.
  */
@@ -1969,7 +1941,6 @@ function getHyperlinkElementUtils(handle: bigint): HyperlinkElementUtils {
   }
   return obj;
 }
-
 /**
  * `get-origin()` operation.
  */
@@ -2141,7 +2112,6 @@ function getHTMLHyperlinkElementUtils(handle: bigint): HTMLHyperlinkElementUtils
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -2177,7 +2147,6 @@ function getHTMLModElement(handle: bigint): HTMLModElement {
   }
   return obj;
 }
-
 /**
  * `get-cite()` operation.
  */
@@ -2229,7 +2198,6 @@ function getHTMLSourceElement(handle: bigint): HTMLSourceElement {
   }
   return obj;
 }
-
 /**
  * `get-src()` operation.
  */
@@ -2361,7 +2329,6 @@ function getHtmliFrameElement(handle: bigint): HtmliFrameElement {
   }
   return obj;
 }
-
 /**
  * `get-src()` operation.
  */
@@ -2653,7 +2620,6 @@ function getHTMLEmbedElement(handle: bigint): HTMLEmbedElement {
   }
   return obj;
 }
-
 /**
  * `get-src()` operation.
  */
@@ -2777,7 +2743,6 @@ function getHTMLObjectElement(handle: bigint): HTMLObjectElement {
   }
   return obj;
 }
-
 /**
  * `get-data()` operation.
  */
@@ -3133,7 +3098,6 @@ function getHTMLVideoElement(handle: bigint): HTMLVideoElement {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -3233,7 +3197,6 @@ function getHTMLTrackElement(handle: bigint): HTMLTrackElement {
   }
   return obj;
 }
-
 /**
  * `get-kind()` operation.
  */
@@ -3349,7 +3312,6 @@ function getHTMLMediaElement(handle: bigint): HTMLMediaElement {
   }
   return obj;
 }
-
 /**
  * `get-error()` operation.
  */
@@ -3761,7 +3723,6 @@ function getMediaError(handle: bigint): MediaError {
   }
   return obj;
 }
-
 /**
  * `get-code()` operation.
  */
@@ -3797,7 +3758,6 @@ function getAudioTrackList(handle: bigint): AudioTrackList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -3889,7 +3849,6 @@ function getAudioTrack(handle: bigint): AudioTrack {
   }
   return obj;
 }
-
 /**
  * `get-id()` operation.
  */
@@ -3957,7 +3916,6 @@ function getVideoTrackList(handle: bigint): VideoTrackList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -4057,7 +4015,6 @@ function getVideoTrack(handle: bigint): VideoTrack {
   }
   return obj;
 }
-
 /**
  * `get-id()` operation.
  */
@@ -4125,7 +4082,6 @@ function getTextTrackList(handle: bigint): TextTrackList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -4217,7 +4173,6 @@ function getTextTrack(handle: bigint): TextTrack {
   }
   return obj;
 }
-
 /**
  * `get-kind()` operation.
  */
@@ -4341,7 +4296,6 @@ function getTextTrackCueList(handle: bigint): TextTrackCueList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -4385,7 +4339,6 @@ function getTextTrackCue(handle: bigint): TextTrackCue {
   }
   return obj;
 }
-
 /**
  * `get-track()` operation.
  */
@@ -4509,7 +4462,6 @@ function getTimeRanges(handle: bigint): TimeRanges {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -4583,7 +4535,6 @@ function getTrackEvent(handle: bigint): TrackEvent {
   }
   return obj;
 }
-
 /**
  * `get-track()` operation.
  */
@@ -4611,7 +4562,6 @@ function getHTMLMapElement(handle: bigint): HTMLMapElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -4655,7 +4605,6 @@ function getHTMLAreaElement(handle: bigint): HTMLAreaElement {
   }
   return obj;
 }
-
 /**
  * `get-alt()` operation.
  */
@@ -4825,7 +4774,6 @@ function registerHTMLTableElement(obj: HTMLTableElement): bigint {
   _htmlTableElementhandles.set(handle, obj);
   return handle;
 }
-
 /** Get a HTMLTableElement by handle, throwing if not found. */
 function getHTMLTableElement(handle: bigint): HTMLTableElement {
   const obj = _htmlTableElementhandles.get(handle);
@@ -4834,7 +4782,6 @@ function getHTMLTableElement(handle: bigint): HTMLTableElement {
   }
   return obj;
 }
-
 /**
  * `get-caption()` operation.
  */
@@ -5134,7 +5081,6 @@ function getHTMLTableCaptionElement(handle: bigint): HTMLTableCaptionElement {
   }
   return obj;
 }
-
 /**
  * `get-align()` operation.
  */
@@ -5170,7 +5116,6 @@ function getHTMLTableColElement(handle: bigint): HTMLTableColElement {
   }
   return obj;
 }
-
 /**
  * `get-span()` operation.
  */
@@ -5286,7 +5231,6 @@ function getHTMLTableSectionElement(handle: bigint): HTMLTableSectionElement {
   }
   return obj;
 }
-
 /**
  * `get-rows()` operation.
  */
@@ -5394,7 +5338,6 @@ function getHTMLTableRowElement(handle: bigint): HTMLTableRowElement {
   }
   return obj;
 }
-
 /**
  * `get-row-index()` operation.
  */
@@ -5534,7 +5477,6 @@ function getHTMLTableCellElement(handle: bigint): HTMLTableCellElement {
   }
   return obj;
 }
-
 /**
  * `get-col-span()` operation.
  */
@@ -5786,7 +5728,6 @@ function getHTMLFormElement(handle: bigint): HTMLFormElement {
   }
   return obj;
 }
-
 /**
  * `get-accept-charset()` operation.
  */
@@ -6038,7 +5979,6 @@ function getHTMLLabelElement(handle: bigint): HTMLLabelElement {
   }
   return obj;
 }
-
 /**
  * `get-form()` operation.
  */
@@ -6090,7 +6030,6 @@ function getHTMLInputElement(handle: bigint): HTMLInputElement {
   }
   return obj;
 }
-
 /**
  * `get-accept()` operation.
  */
@@ -6886,7 +6825,6 @@ function getHTMLButtonElement(handle: bigint): HTMLButtonElement {
   }
   return obj;
 }
-
 /**
  * `get-command()` operation.
  */
@@ -7146,7 +7084,6 @@ function getHTMLSelectElement(handle: bigint): HTMLSelectElement {
   }
   return obj;
 }
-
 /**
  * `get-autocomplete()` operation.
  */
@@ -7446,7 +7383,6 @@ function getHTMLDataListElement(handle: bigint): HTMLDataListElement {
   }
   return obj;
 }
-
 /**
  * `get-options()` operation.
  */
@@ -7474,7 +7410,6 @@ function getHTMLOptGroupElement(handle: bigint): HTMLOptGroupElement {
   }
   return obj;
 }
-
 /**
  * `get-disabled()` operation.
  */
@@ -7526,7 +7461,6 @@ function getHTMLOptionElement(handle: bigint): HTMLOptionElement {
   }
   return obj;
 }
-
 /**
  * `get-disabled()` operation.
  */
@@ -7658,7 +7592,6 @@ function getHTMLTextAreaElement(handle: bigint): HTMLTextAreaElement {
   }
   return obj;
 }
-
 /**
  * `get-autocomplete()` operation.
  */
@@ -8054,7 +7987,6 @@ function getHTMLOutputElement(handle: bigint): HTMLOutputElement {
   }
   return obj;
 }
-
 /**
  * `get-html-for()` operation.
  */
@@ -8202,7 +8134,6 @@ function getHTMLProgressElement(handle: bigint): HTMLProgressElement {
   }
   return obj;
 }
-
 /**
  * `get-value()` operation.
  */
@@ -8270,7 +8201,6 @@ function getHTMLMeterElement(handle: bigint): HTMLMeterElement {
   }
   return obj;
 }
-
 /**
  * `get-value()` operation.
  */
@@ -8394,7 +8324,6 @@ function getHTMLFieldSetElement(handle: bigint): HTMLFieldSetElement {
   }
   return obj;
 }
-
 /**
  * `get-disabled()` operation.
  */
@@ -8518,7 +8447,6 @@ function getHTMLLegendElement(handle: bigint): HTMLLegendElement {
   }
   return obj;
 }
-
 /**
  * `get-form()` operation.
  */
@@ -8562,7 +8490,6 @@ function getValidityState(handle: bigint): ValidityState {
   }
   return obj;
 }
-
 /**
  * `get-value-missing()` operation.
  */
@@ -8670,7 +8597,6 @@ function getSubmitEvent(handle: bigint): SubmitEvent {
   }
   return obj;
 }
-
 /**
  * `get-submitter()` operation.
  */
@@ -8698,7 +8624,6 @@ function getFormDataEvent(handle: bigint): FormDataEvent {
   }
   return obj;
 }
-
 /**
  * `get-form-data()` operation.
  */
@@ -8726,7 +8651,6 @@ function getHTMLDetailsElement(handle: bigint): HTMLDetailsElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -8778,7 +8702,6 @@ function getHTMLDialogElement(handle: bigint): HTMLDialogElement {
   }
   return obj;
 }
-
 /**
  * `get-open()` operation.
  */
@@ -8908,7 +8831,6 @@ function getHTMLScriptElement(handle: bigint): HTMLScriptElement {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -9151,7 +9073,6 @@ function getHTMLTemplateElement(handle: bigint): HTMLTemplateElement {
   }
   return obj;
 }
-
 /**
  * `get-content()` operation.
  */
@@ -9259,7 +9180,6 @@ function getHTMLSlotElement(handle: bigint): HTMLSlotElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -9319,7 +9239,6 @@ function getHTMLCanvasElement(handle: bigint): HTMLCanvasElement {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -9403,7 +9322,6 @@ function getCanvasRenderingContext2D(handle: bigint): CanvasRenderingContext2D {
   }
   return obj;
 }
-
 /**
  * `get-canvas()` operation.
  */
@@ -9431,7 +9349,6 @@ function getCanvasSettings(handle: bigint): CanvasSettings {
   }
   return obj;
 }
-
 /**
  * `get-context-attributes()` operation.
  */
@@ -9459,7 +9376,6 @@ function getCanvasState(handle: bigint): CanvasState {
   }
   return obj;
 }
-
 /**
  * `save()` operation.
  */
@@ -9511,7 +9427,6 @@ function getCanvasTransform(handle: bigint): CanvasTransform {
   }
   return obj;
 }
-
 /**
  * `scale()` operation.
  */
@@ -9587,7 +9502,6 @@ function getCanvasCompositing(handle: bigint): CanvasCompositing {
   }
   return obj;
 }
-
 /**
  * `get-global-alpha()` operation.
  */
@@ -9639,7 +9553,6 @@ function getCanvasImageSmoothing(handle: bigint): CanvasImageSmoothing {
   }
   return obj;
 }
-
 /**
  * `get-image-smoothing-enabled()` operation.
  */
@@ -9689,7 +9602,6 @@ function registerCanvasFillStrokeStyles(obj: CanvasFillStrokeStyles): bigint {
   _canvasFillStrokeStyleshandles.set(handle, obj);
   return handle;
 }
-
 /** Get a CanvasFillStrokeStyles by handle, throwing if not found. */
 function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
   const obj = _canvasFillStrokeStyleshandles.get(handle);
@@ -9698,7 +9610,6 @@ function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
   }
   return obj;
 }
-
 /**
  * `get-stroke-style()` operation.
  */
@@ -9782,7 +9693,6 @@ function getCanvasShadowStyles(handle: bigint): CanvasShadowStyles {
   }
   return obj;
 }
-
 /**
  * `get-shadow-offset-x()` operation.
  */
@@ -9866,7 +9776,6 @@ function getCanvasFilters(handle: bigint): CanvasFilters {
   }
   return obj;
 }
-
 /**
  * `get-filter()` operation.
  */
@@ -9902,7 +9811,6 @@ function getCanvasRect(handle: bigint): CanvasRect {
   }
   return obj;
 }
-
 /**
  * `clear-rect()` operation.
  */
@@ -9946,7 +9854,6 @@ function getCanvasDrawPath(handle: bigint): CanvasDrawPath {
   }
   return obj;
 }
-
 /**
  * `begin-path()` operation.
  */
@@ -10014,7 +9921,6 @@ function getCanvasUserInterface(handle: bigint): CanvasUserInterface {
   }
   return obj;
 }
-
 /**
  * `draw-focus-if-needed()` operation.
  */
@@ -10042,7 +9948,6 @@ function getCanvasText(handle: bigint): CanvasText {
   }
   return obj;
 }
-
 /**
  * `fill-text()` operation.
  */
@@ -10086,7 +9991,6 @@ function getCanvasDrawImage(handle: bigint): CanvasDrawImage {
   }
   return obj;
 }
-
 /**
  * `draw-image()` operation.
  */
@@ -10112,7 +10016,6 @@ function registerCanvasImageData(obj: CanvasImageData): bigint {
   _canvasImageDatahandles.set(handle, obj);
   return handle;
 }
-
 /** Get a CanvasImageData by handle, throwing if not found. */
 function getCanvasImageData(handle: bigint): CanvasImageData {
   const obj = _canvasImageDatahandles.get(handle);
@@ -10121,7 +10024,6 @@ function getCanvasImageData(handle: bigint): CanvasImageData {
   }
   return obj;
 }
-
 /**
  * `create-image-data()` operation.
  */
@@ -10165,7 +10067,6 @@ function getCanvasPathDrawingStyles(handle: bigint): CanvasPathDrawingStyles {
   }
   return obj;
 }
-
 /**
  * `get-line-width()` operation.
  */
@@ -10281,7 +10182,6 @@ function getCanvasTextDrawingStyles(handle: bigint): CanvasTextDrawingStyles {
   }
   return obj;
 }
-
 /**
  * `get-lang()` operation.
  */
@@ -10477,7 +10377,6 @@ function getCanvasPath(handle: bigint): CanvasPath {
   }
   return obj;
 }
-
 /**
  * `close-path()` operation.
  */
@@ -10577,7 +10476,6 @@ function getCanvasGradient(handle: bigint): CanvasGradient {
   }
   return obj;
 }
-
 /**
  * `add-color-stop()` operation.
  */
@@ -10605,7 +10503,6 @@ function getCanvasPattern(handle: bigint): CanvasPattern {
   }
   return obj;
 }
-
 /**
  * `set-transform()` operation.
  */
@@ -10633,7 +10530,6 @@ function getTextMetrics(handle: bigint): TextMetrics {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -10749,7 +10645,6 @@ function getPath2D(handle: bigint): Path2D {
   }
   return obj;
 }
-
 /**
  * `add-path()` operation.
  */
@@ -10777,7 +10672,6 @@ function getImageBitmapRenderingContext(handle: bigint): ImageBitmapRenderingCon
   }
   return obj;
 }
-
 /**
  * `get-canvas()` operation.
  */
@@ -10813,7 +10707,6 @@ function getOffscreenCanvas(handle: bigint): OffscreenCanvas {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -10921,7 +10814,6 @@ function getOffscreenCanvasRenderingContext2D(handle: bigint): OffscreenCanvasRe
   }
   return obj;
 }
-
 /**
  * `get-canvas()` operation.
  */
@@ -10949,7 +10841,6 @@ function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
   }
   return obj;
 }
-
 /**
  * `define()` operation.
  */
@@ -11009,7 +10900,6 @@ function getElementInternals(handle: bigint): ElementInternals {
   }
   return obj;
 }
-
 /**
  * `get-shadow-root()` operation.
  */
@@ -11117,7 +11007,6 @@ function getVisibilityStateEntry(handle: bigint): VisibilityStateEntry {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -11169,7 +11058,6 @@ function getUserActivation(handle: bigint): UserActivation {
   }
   return obj;
 }
-
 /**
  * `get-has-been-active()` operation.
  */
@@ -11205,7 +11093,6 @@ function getToggleEvent(handle: bigint): ToggleEvent {
   }
   return obj;
 }
-
 /**
  * `get-old-state()` operation.
  */
@@ -11249,7 +11136,6 @@ function getCommandEvent(handle: bigint): CommandEvent {
   }
   return obj;
 }
-
 /**
  * `get-source()` operation.
  */
@@ -11285,7 +11171,6 @@ function getElementContentEditable(handle: bigint): ElementContentEditable {
   }
   return obj;
 }
-
 /**
  * `get-content-editable()` operation.
  */
@@ -11361,7 +11246,6 @@ function getCloseWatcher(handle: bigint): CloseWatcher {
   }
   return obj;
 }
-
 /**
  * `request-close()` operation.
  */
@@ -11467,7 +11351,6 @@ function getDataTransfer(handle: bigint): DataTransfer {
   }
   return obj;
 }
-
 /**
  * `get-drop-effect()` operation.
  */
@@ -11575,7 +11458,6 @@ function getDataTransferItemList(handle: bigint): DataTransferItemList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -11635,7 +11517,6 @@ function getDataTransferItem(handle: bigint): DataTransferItem {
   }
   return obj;
 }
-
 /**
  * `get-kind()` operation.
  */
@@ -11687,7 +11568,6 @@ function getDragEvent(handle: bigint): DragEvent {
   }
   return obj;
 }
-
 /**
  * `get-data-transfer()` operation.
  */
@@ -11715,7 +11595,6 @@ function getPopoverTargetAttributes(handle: bigint): PopoverTargetAttributes {
   }
   return obj;
 }
-
 /**
  * `get-popover-target-element()` operation.
  */
@@ -11767,7 +11646,6 @@ function getOrigin(handle: bigint): Origin {
   }
   return obj;
 }
-
 /**
  * `from()` operation.
  *
@@ -11848,7 +11726,6 @@ function getBarProp(handle: bigint): BarProp {
   }
   return obj;
 }
-
 /**
  * `get-visible()` operation.
  */
@@ -11876,7 +11753,6 @@ function getLocation(handle: bigint): Location {
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -12064,7 +11940,6 @@ function getHistory(handle: bigint): History {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -12156,7 +12031,6 @@ function getNavigation(handle: bigint): Navigation {
   }
   return obj;
 }
-
 /**
  * `entries()` operation.
  */
@@ -12336,7 +12210,6 @@ function getNavigationHistoryEntry(handle: bigint): NavigationHistoryEntry {
   }
   return obj;
 }
-
 /**
  * `get-url()` operation.
  */
@@ -12420,7 +12293,6 @@ function getNavigationTransition(handle: bigint): NavigationTransition {
   }
   return obj;
 }
-
 /**
  * `get-navigation-type()` operation.
  */
@@ -12480,7 +12352,6 @@ function getNavigationActivation(handle: bigint): NavigationActivation {
   }
   return obj;
 }
-
 /**
  * `get-from()` operation.
  */
@@ -12524,7 +12395,6 @@ function getNavigateEvent(handle: bigint): NavigateEvent {
   }
   return obj;
 }
-
 /**
  * `get-navigation-type()` operation.
  */
@@ -12648,7 +12518,6 @@ function getNavigationPrecommitController(handle: bigint): NavigationPrecommitCo
   }
   return obj;
 }
-
 /**
  * `redirect()` operation.
  */
@@ -12684,7 +12553,6 @@ function getNavigationDestination(handle: bigint): NavigationDestination {
   }
   return obj;
 }
-
 /**
  * `get-url()` operation.
  */
@@ -12752,7 +12620,6 @@ function getNavigationCurrentEntryChangeEvent(handle: bigint): NavigationCurrent
   }
   return obj;
 }
-
 /**
  * `get-navigation-type()` operation.
  */
@@ -12788,7 +12655,6 @@ function getPopStateEvent(handle: bigint): PopStateEvent {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -12824,7 +12690,6 @@ function getHashChangeEvent(handle: bigint): HashChangeEvent {
   }
   return obj;
 }
-
 /**
  * `get-old-url()` operation.
  */
@@ -12860,7 +12725,6 @@ function getPageSwapEvent(handle: bigint): PageSwapEvent {
   }
   return obj;
 }
-
 /**
  * `get-activation()` operation.
  */
@@ -12896,7 +12760,6 @@ function getPageRevealEvent(handle: bigint): PageRevealEvent {
   }
   return obj;
 }
-
 /**
  * `get-view-transition()` operation.
  */
@@ -12924,7 +12787,6 @@ function getPageTransitionEvent(handle: bigint): PageTransitionEvent {
   }
   return obj;
 }
-
 /**
  * `get-persisted()` operation.
  */
@@ -12952,7 +12814,6 @@ function getBeforeUnloadEvent(handle: bigint): BeforeUnloadEvent {
   }
   return obj;
 }
-
 /**
  * `get-return-value()` operation.
  */
@@ -12988,7 +12849,6 @@ function getNotRestoredReasonDetails(handle: bigint): NotRestoredReasonDetails {
   }
   return obj;
 }
-
 /**
  * `get-reason()` operation.
  */
@@ -13024,7 +12884,6 @@ function getNotRestoredReasons(handle: bigint): NotRestoredReasons {
   }
   return obj;
 }
-
 /**
  * `get-src()` operation.
  */
@@ -13100,7 +12959,6 @@ function getErrorEvent(handle: bigint): ErrorEvent {
   }
   return obj;
 }
-
 /**
  * `get-message()` operation.
  */
@@ -13160,7 +13018,6 @@ function getPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
   }
   return obj;
 }
-
 /**
  * `get-promise()` operation.
  */
@@ -13196,7 +13053,6 @@ function getDOMParser(handle: bigint): DOMParser {
   }
   return obj;
 }
-
 /**
  * `parse-from-string()` operation.
  */
@@ -13224,7 +13080,6 @@ function getXMLSerializer(handle: bigint): XMLSerializer {
   }
   return obj;
 }
-
 /**
  * `serialize-to-string()` operation.
  */
@@ -13252,7 +13107,6 @@ function getNavigatorID(handle: bigint): NavigatorID {
   }
   return obj;
 }
-
 /**
  * `get-app-code-name()` operation.
  */
@@ -13360,7 +13214,6 @@ function getNavigatorLanguage(handle: bigint): NavigatorLanguage {
   }
   return obj;
 }
-
 /**
  * `get-language()` operation.
  */
@@ -13396,7 +13249,6 @@ function getNavigatorOnLine(handle: bigint): NavigatorOnLine {
   }
   return obj;
 }
-
 /**
  * `get-on-line()` operation.
  */
@@ -13424,7 +13276,6 @@ function getNavigatorContentUtils(handle: bigint): NavigatorContentUtils {
   }
   return obj;
 }
-
 /**
  * `register-protocol-handler()` operation.
  */
@@ -13460,7 +13311,6 @@ function getNavigatorCookies(handle: bigint): NavigatorCookies {
   }
   return obj;
 }
-
 /**
  * `get-cookie-enabled()` operation.
  */
@@ -13488,7 +13338,6 @@ function getNavigatorPlugins(handle: bigint): NavigatorPlugins {
   }
   return obj;
 }
-
 /**
  * `get-plugins()` operation.
  */
@@ -13540,7 +13389,6 @@ function getPluginArray(handle: bigint): PluginArray {
   }
   return obj;
 }
-
 /**
  * `refresh()` operation.
  */
@@ -13592,7 +13440,6 @@ function getMimeTypeArray(handle: bigint): MimeTypeArray {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -13636,7 +13483,6 @@ function getPlugin(handle: bigint): Plugin {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -13704,7 +13550,6 @@ function getMimeType(handle: bigint): MimeType {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -13756,7 +13601,6 @@ function getImageData(handle: bigint): ImageData {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -13816,7 +13660,6 @@ function getImageBitmap(handle: bigint): ImageBitmap {
   }
   return obj;
 }
-
 /**
  * `get-width()` operation.
  */
@@ -13890,7 +13733,6 @@ function getAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
   }
   return obj;
 }
-
 /**
  * `request-animation-frame()` operation.
  */
@@ -13926,7 +13768,6 @@ function getMessageEvent(handle: bigint): MessageEvent {
   }
   return obj;
 }
-
 /**
  * `get-data()` operation.
  */
@@ -13994,7 +13835,6 @@ function getEventSource(handle: bigint): EventSource {
   }
   return obj;
 }
-
 /**
  * `get-url()` operation.
  */
@@ -14124,7 +13964,6 @@ function getMessageChannel(handle: bigint): MessageChannel {
   }
   return obj;
 }
-
 /**
  * `get-port1()` operation.
  */
@@ -14160,7 +13999,6 @@ function getMessageEventTarget(handle: bigint): MessageEventTarget {
   }
   return obj;
 }
-
 /**
  * `get-onmessage()` operation.
  */
@@ -14212,7 +14050,6 @@ function getMessagePort(handle: bigint): MessagePort {
   }
   return obj;
 }
-
 /**
  * `post-message()` operation.
  */
@@ -14332,7 +14169,6 @@ function getBroadcastChannel(handle: bigint): BroadcastChannel {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -14438,7 +14274,6 @@ function getWorkerGlobalScope(handle: bigint): WorkerGlobalScope {
   }
   return obj;
 }
-
 /**
  * `get-self()` operation.
  */
@@ -14586,7 +14421,6 @@ function getDedicatedWorkerGlobalScope(handle: bigint): DedicatedWorkerGlobalSco
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -14660,7 +14494,6 @@ function getSharedWorkerGlobalScope(handle: bigint): SharedWorkerGlobalScope {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -14742,7 +14575,6 @@ function getAbstractWorker(handle: bigint): AbstractWorker {
   }
   return obj;
 }
-
 /**
  * `get-onerror()` operation.
  */
@@ -14778,7 +14610,6 @@ function getWorker(handle: bigint): Worker {
   }
   return obj;
 }
-
 /**
  * `terminate()` operation.
  */
@@ -14814,7 +14645,6 @@ function getSharedWorker(handle: bigint): SharedWorker {
   }
   return obj;
 }
-
 /**
  * `get-port()` operation.
  */
@@ -14842,7 +14672,6 @@ function getNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentHard
   }
   return obj;
 }
-
 /**
  * `get-hardware-concurrency()` operation.
  */
@@ -14870,7 +14699,6 @@ function getWorkerNavigator(handle: bigint): WorkerNavigator {
   }
   return obj;
 }
-
 /**
  * `get-media-capabilities()` operation.
  */
@@ -14914,7 +14742,6 @@ function getWorkerLocation(handle: bigint): WorkerLocation {
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -15014,7 +14841,6 @@ function getWorklet(handle: bigint): Worklet {
   }
   return obj;
 }
-
 /**
  * `add-module()` operation.
  */
@@ -15042,7 +14868,6 @@ function getStorage(handle: bigint): Storage {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -15110,7 +14935,6 @@ function getWindowSessionStorage(handle: bigint): WindowSessionStorage {
   }
   return obj;
 }
-
 /**
  * `get-session-storage()` operation.
  */
@@ -15138,7 +14962,6 @@ function getWindowLocalStorage(handle: bigint): WindowLocalStorage {
   }
   return obj;
 }
-
 /**
  * `get-local-storage()` operation.
  */
@@ -15166,7 +14989,6 @@ function getStorageEvent(handle: bigint): StorageEvent {
   }
   return obj;
 }
-
 /**
  * `get-key()` operation.
  */
@@ -15234,7 +15056,6 @@ function getHTMLMarqueeElement(handle: bigint): HTMLMarqueeElement {
   }
   return obj;
 }
-
 /**
  * `get-behavior()` operation.
  */
@@ -15506,7 +15327,6 @@ function getHTMLFrameSetElement(handle: bigint): HTMLFrameSetElement {
   }
   return obj;
 }
-
 /**
  * `get-cols()` operation.
  */
@@ -15558,7 +15378,6 @@ function getHTMLFrameElement(handle: bigint): HTMLFrameElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -15722,7 +15541,6 @@ function getHTMLDirectoryElement(handle: bigint): HTMLDirectoryElement {
   }
   return obj;
 }
-
 /**
  * `get-compact()` operation.
  */
@@ -15758,7 +15576,6 @@ function getHTMLFontElement(handle: bigint): HTMLFontElement {
   }
   return obj;
 }
-
 /**
  * `get-color()` operation.
  */
@@ -15826,7 +15643,6 @@ function getHTMLParamElement(handle: bigint): HTMLParamElement {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -15910,7 +15726,6 @@ function getExternal(handle: bigint): External {
   }
   return obj;
 }
-
 /**
  * `add-search-provider()` operation.
  */

@@ -36,7 +36,6 @@ function getSwReg(handle: bigint): ServiceWorkerRegistration {
   }
   return obj;
 }
-
 /**
  * `scope()` operation.
  */
@@ -63,7 +62,6 @@ function getSw(handle: bigint): ServiceWorker {
   }
   return obj;
 }
-
 /**
  * `script-url()` operation.
  */
@@ -74,7 +72,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: bigint, transfer: (Uint8Array)[]): void {
+export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
   return ServiceWorker.postMessage(handle, message, transfer);
 }
 

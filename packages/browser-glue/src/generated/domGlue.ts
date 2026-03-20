@@ -49,11 +49,10 @@ function getEvent(handle: bigint): Event {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
-export function EventGetType(self: bigint): string {
+export function EventGetType(self: bigint): bigint | undefined {
   const obj = getEvent(self);
   return obj.type;
 }
@@ -61,7 +60,7 @@ export function EventGetType(self: bigint): string {
 /**
  * `get-target()` operation.
  */
-export function EventGetTarget(self: bigint): bigint | undefined | undefined {
+export function EventGetTarget(self: bigint): Uint8Array {
   const obj = getEvent(self);
   return obj.target ?? undefined;
 }
@@ -85,7 +84,7 @@ export function getCurrentTarget(self: bigint): bigint | undefined {
 /**
  * `composed-path()` operation.
  */
-export function composedPath(self: bigint): (bigint)[] {
+export function composedPath(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.composedPath();
 }
@@ -117,7 +116,7 @@ export function getCancelBubble(self: bigint): boolean {
 /**
  * `set-cancel-bubble()` operation.
  */
-export function setCancelBubble(self: bigint, value: bigint | undefined): void {
+export function setCancelBubble(self: bigint, value: bigint): void {
   const obj = getEvent(self);
   obj.cancelBubble = value;
 }
@@ -133,7 +132,7 @@ export function stopImmediatePropagation(self: bigint): void {
 /**
  * `get-bubbles()` operation.
  */
-export function getBubbles(self: bigint): bigint | undefined {
+export function getBubbles(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.bubbles;
 }
@@ -157,7 +156,7 @@ export function getReturnValue(self: bigint): boolean {
 /**
  * `set-return-value()` operation.
  */
-export function setReturnValue(self: bigint, value: bigint | undefined): void {
+export function setReturnValue(self: bigint, value: boolean): void {
   const obj = getEvent(self);
   obj.returnValue = value;
 }
@@ -205,7 +204,7 @@ export function getTimeStamp(self: bigint): number {
 /**
  * `init-event()` operation.
  */
-export function initEvent(self: bigint, type: bigint | undefined, bubbles: boolean | undefined, cancelable: boolean | undefined): void {
+export function initEvent(self: bigint, type: string, bubbles: bigint | undefined | undefined, cancelable: bigint | undefined): void {
   const obj = getEvent(self);
   obj.initEvent(type, bubbles, cancelable);
 }
@@ -229,7 +228,6 @@ function getCustomEvent(handle: bigint): CustomEvent {
   }
   return obj;
 }
-
 /**
  * `get-detail()` operation.
  */
@@ -241,7 +239,7 @@ export function getDetail(self: bigint): string {
 /**
  * `init-custom-event()` operation.
  */
-export function initCustomEvent(self: bigint, type: string, bubbles: Uint8Array, cancelable: boolean | undefined, detail: string | undefined): void {
+export function initCustomEvent(self: bigint, type: string, bubbles: bigint, cancelable: Uint8Array | undefined, detail: number | undefined): void {
   const obj = getCustomEvent(self);
   obj.initCustomEvent(type, bubbles, cancelable, detail);
 }
@@ -265,7 +263,6 @@ function getEventTarget(handle: bigint): EventTarget {
   }
   return obj;
 }
-
 /**
  * `add-event-listener()` operation.
  */
@@ -309,7 +306,6 @@ function getEventListener(handle: bigint): EventListener {
   }
   return obj;
 }
-
 /**
  * `handle-event()` operation.
  */
@@ -337,7 +333,6 @@ function getAbortController(handle: bigint): AbortController {
   }
   return obj;
 }
-
 /**
  * `get-signal()` operation.
  */
@@ -403,7 +398,6 @@ function getAbortSignal(handle: bigint): AbortSignal {
   }
   return obj;
 }
-
 /**
  * `abort()` operation.
  *
@@ -514,7 +508,6 @@ function getNonElementParentNode(handle: bigint): NonElementParentNode {
   }
   return obj;
 }
-
 /**
  * `get-element-by-id()` operation.
  */
@@ -542,7 +535,6 @@ function getParentNode(handle: bigint): ParentNode {
   }
   return obj;
 }
-
 /**
  * `get-children()` operation.
  */
@@ -642,7 +634,6 @@ function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
   }
   return obj;
 }
-
 /**
  * `get-previous-element-sibling()` operation.
  */
@@ -678,7 +669,6 @@ function getChildNode(handle: bigint): ChildNode {
   }
   return obj;
 }
-
 /**
  * `before()` operation.
  */
@@ -730,7 +720,6 @@ function getSlottable(handle: bigint): Slottable {
   }
   return obj;
 }
-
 /**
  * `get-assigned-slot()` operation.
  */
@@ -758,7 +747,6 @@ function getNodeList(handle: bigint): NodeList {
   }
   return obj;
 }
-
 /**
  * `item()` operation.
  */
@@ -794,7 +782,6 @@ function getHTMLCollection(handle: bigint): HTMLCollection {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -838,7 +825,6 @@ function getMutationObserver(handle: bigint): MutationObserver {
   }
   return obj;
 }
-
 /**
  * `observe()` operation.
  */
@@ -882,7 +868,6 @@ function getMutationRecord(handle: bigint): MutationRecord {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -974,7 +959,6 @@ function getNode(handle: bigint): Node {
   }
   return obj;
 }
-
 /**
  * `get-node-type()` operation.
  */
@@ -1240,7 +1224,6 @@ function registerDOMImplementation(obj: DOMImplementation): bigint {
   _domImplementationhandles.set(handle, obj);
   return handle;
 }
-
 /** Get a DOMImplementation by handle, throwing if not found. */
 function getDOMImplementation(handle: bigint): DOMImplementation {
   const obj = _domImplementationhandles.get(handle);
@@ -1249,7 +1232,6 @@ function getDOMImplementation(handle: bigint): DOMImplementation {
   }
   return obj;
 }
-
 /**
  * `create-document-type()` operation.
  */
@@ -1301,7 +1283,6 @@ function getDocumentType(handle: bigint): DocumentType {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -1345,7 +1326,6 @@ function getShadowRoot(handle: bigint): ShadowRoot {
   }
   return obj;
 }
-
 /**
  * `get-mode()` operation.
  */
@@ -1461,7 +1441,6 @@ function getNamedNodeMap(handle: bigint): NamedNodeMap {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -1545,7 +1524,6 @@ function getAttr(handle: bigint): Attr {
   }
   return obj;
 }
-
 /**
  * `get-namespace-uri()` operation.
  */
@@ -1629,7 +1607,6 @@ function getCharacterData(handle: bigint): CharacterData {
   }
   return obj;
 }
-
 /**
  * `get-data()` operation.
  */
@@ -1713,7 +1690,6 @@ function getText(handle: bigint): Text {
   }
   return obj;
 }
-
 /**
  * `split-text()` operation.
  */
@@ -1749,7 +1725,6 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
   }
   return obj;
 }
-
 /**
  * `get-target()` operation.
  */
@@ -1777,7 +1752,6 @@ function getAbstractRange(handle: bigint): AbstractRange {
   }
   return obj;
 }
-
 /**
  * `get-start-container()` operation.
  */
@@ -1837,7 +1811,6 @@ function getNodeIterator(handle: bigint): NodeIterator {
   }
   return obj;
 }
-
 /**
  * `get-root()` operation.
  */
@@ -1921,7 +1894,6 @@ function getTreeWalker(handle: bigint): TreeWalker {
   }
   return obj;
 }
-
 /**
  * `get-root()` operation.
  */
@@ -2037,7 +2009,6 @@ function getNodeFilter(handle: bigint): NodeFilter {
   }
   return obj;
 }
-
 /**
  * `accept-node()` operation.
  */
@@ -2065,7 +2036,6 @@ function getDOMTokenList(handle: bigint): DOMTokenList {
   }
   return obj;
 }
-
 /**
  * `get-length()` operation.
  */
@@ -2165,7 +2135,6 @@ function getXPathResult(handle: bigint): XPathResult {
   }
   return obj;
 }
-
 /**
  * `get-result-type()` operation.
  */
@@ -2257,7 +2226,6 @@ function getXPathExpression(handle: bigint): XPathExpression {
   }
   return obj;
 }
-
 /**
  * `evaluate()` operation.
  */
@@ -2285,7 +2253,6 @@ function getXPathNSResolver(handle: bigint): XPathNSResolver {
   }
   return obj;
 }
-
 /**
  * `lookup-namespace-uri()` operation.
  */
@@ -2311,7 +2278,6 @@ function registerXPathEvaluatorBase(obj: XPathEvaluatorBase): bigint {
   _xPathEvaluatorBasehandles.set(handle, obj);
   return handle;
 }
-
 /** Get a XPathEvaluatorBase by handle, throwing if not found. */
 function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
   const obj = _xPathEvaluatorBasehandles.get(handle);
@@ -2320,7 +2286,6 @@ function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
   }
   return obj;
 }
-
 /**
  * `create-expression()` operation.
  */
@@ -2364,7 +2329,6 @@ function getXSLTProcessor(handle: bigint): XSLTProcessor {
   }
   return obj;
 }
-
 /**
  * `import-stylesheet()` operation.
  */

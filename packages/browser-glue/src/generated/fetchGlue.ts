@@ -49,7 +49,6 @@ function getHeaders(handle: bigint): Headers {
   }
   return obj;
 }
-
 /**
  * `append()` operation.
  */
@@ -147,7 +146,6 @@ function getBody(handle: bigint): Body {
   }
   return obj;
 }
-
 /**
  * `get-body()` operation.
  */
@@ -411,7 +409,6 @@ function getRequest(handle: bigint): Request {
   }
   return obj;
 }
-
 /**
  * `get-method()` operation.
  */
@@ -567,7 +564,6 @@ function getResponse(handle: bigint): Response {
   }
   return obj;
 }
-
 /**
  * `error()` operation.
  */
@@ -700,7 +696,6 @@ function registerWindowOrWorkerGlobalScope(obj: WindowOrWorkerGlobalScope): bigi
   _windowOrWorkerGlobalScopehandles.set(handle, obj);
   return handle;
 }
-
 /** Get a WindowOrWorkerGlobalScope by handle, throwing if not found. */
 function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
   const obj = _windowOrWorkerGlobalScopehandles.get(handle);
@@ -709,7 +704,6 @@ function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope
   }
   return obj;
 }
-
 /**
  * `fetch()` operation.
  *
@@ -925,7 +919,6 @@ function getFetchLaterResult(handle: bigint): FetchLaterResult {
   }
   return obj;
 }
-
 /**
  * `get-activated()` operation.
  */
@@ -953,7 +946,6 @@ function getReadableStream(handle: bigint): ReadableStream {
   }
   return obj;
 }
-
 /**
  * `from()` operation.
  *
@@ -1118,7 +1110,6 @@ function getReadableStreamGenericReader(handle: bigint): ReadableStreamGenericRe
   }
   return obj;
 }
-
 /**
  * `get-closed()` operation.
  */
@@ -1154,7 +1145,6 @@ function getReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultRe
   }
   return obj;
 }
-
 /**
  * `read()` operation.
  */
@@ -1190,7 +1180,6 @@ function getReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReader {
   }
   return obj;
 }
-
 /**
  * `read()` operation.
  */
@@ -1226,7 +1215,6 @@ function getReadableStreamDefaultController(handle: bigint): ReadableStreamDefau
   }
   return obj;
 }
-
 /**
  * `get-desired-size()` operation.
  */
@@ -1308,7 +1296,6 @@ function getReadableByteStreamController(handle: bigint): ReadableByteStreamCont
   }
   return obj;
 }
-
 /**
  * `get-byob-request()` operation.
  */
@@ -1398,7 +1385,6 @@ function getReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequest
   }
   return obj;
 }
-
 /**
  * `get-view()` operation.
  */
@@ -1472,7 +1458,6 @@ function getWritableStream(handle: bigint): WritableStream {
   }
   return obj;
 }
-
 /**
  * `get-locked()` operation.
  */
@@ -1584,7 +1569,6 @@ function getWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWr
   }
   return obj;
 }
-
 /**
  * `get-closed()` operation.
  */
@@ -1720,7 +1704,6 @@ function getWritableStreamDefaultController(handle: bigint): WritableStreamDefau
   }
   return obj;
 }
-
 /**
  * `get-signal()` operation.
  */
@@ -1756,7 +1739,6 @@ function getTransformStream(handle: bigint): TransformStream {
   }
   return obj;
 }
-
 /**
  * `get-readable()` operation.
  */
@@ -1792,7 +1774,6 @@ function getTransformStreamDefaultController(handle: bigint): TransformStreamDef
   }
   return obj;
 }
-
 /**
  * `get-desired-size()` operation.
  */
@@ -1844,7 +1825,6 @@ function getByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy
   }
   return obj;
 }
-
 /**
  * `get-high-water-mark()` operation.
  */
@@ -1880,7 +1860,6 @@ function getCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
   }
   return obj;
 }
-
 /**
  * `get-high-water-mark()` operation.
  */
@@ -1916,7 +1895,6 @@ function getGenericTransformStream(handle: bigint): GenericTransformStream {
   }
   return obj;
 }
-
 /**
  * `get-readable()` operation.
  */
@@ -1952,7 +1930,6 @@ function getXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTarget
   }
   return obj;
 }
-
 /**
  * `get-onloadstart()` operation.
  */
@@ -2084,7 +2061,6 @@ function getXMLHttpRequest(handle: bigint): XMLHttpRequest {
   }
   return obj;
 }
-
 /**
  * `get-onreadystatechange()` operation.
  */
@@ -2318,7 +2294,6 @@ function getFormData(handle: bigint): FormData {
   }
   return obj;
 }
-
 /**
  * `append()` operation.
  */
@@ -2416,7 +2391,6 @@ function getProgressEvent(handle: bigint): ProgressEvent {
   }
   return obj;
 }
-
 /**
  * `get-length-computable()` operation.
  */

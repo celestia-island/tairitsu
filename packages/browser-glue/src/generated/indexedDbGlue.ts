@@ -49,11 +49,10 @@ function getIDBFactory(handle: bigint): IDBFactory {
   }
   return obj;
 }
-
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): boolean {
   return IDBFactory.cmp(handle, first, second);
 }
 
@@ -76,7 +75,6 @@ function getIdbDb(handle: bigint): IDBDatabase {
   }
   return obj;
 }
-
 /**
  * `name()` operation.
  */
@@ -110,7 +108,6 @@ function getIdbTx(handle: bigint): IDBTransaction {
   }
   return obj;
 }
-
 /**
  * `commit()` operation.
  */
@@ -174,7 +171,6 @@ function getIdbStore(handle: bigint): IDBObjectStore {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -224,7 +220,6 @@ function getIDBIndex(handle: bigint): IDBIndex {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -281,7 +276,6 @@ function getIDBCursor(handle: bigint): IDBCursor {
   }
   return obj;
 }
-
 /**
  * `source()` operation.
  */
@@ -343,7 +337,6 @@ function getIDBRequest(handle: bigint): IDBRequest {
   }
   return obj;
 }
-
 /**
  * `result-val()` operation.
  */

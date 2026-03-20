@@ -49,11 +49,10 @@ function getModule(handle: bigint): Module {
   }
   return obj;
 }
-
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (bigint)[] {
+export function exports(moduleObject: bigint): (string)[] {
   return Module.exports(moduleObject);
 }
 
@@ -67,7 +66,7 @@ export function imports(moduleObject: bigint): (bigint)[] {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: string, sectionName: string): (Uint8Array)[] {
+export function customSections(moduleObject: bigint, sectionName: string): (string)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -90,11 +89,10 @@ function getInstance(handle: bigint): Instance {
   }
   return obj;
 }
-
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): string {
+export function getExports(self: bigint): bigint {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -118,7 +116,6 @@ function getMemory(handle: bigint): Memory {
   }
   return obj;
 }
-
 /**
  * `grow()` operation.
  */
@@ -146,7 +143,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): string {
+export function getBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -170,11 +167,10 @@ function getTable(handle: bigint): Table {
   }
   return obj;
 }
-
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: string): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
@@ -220,7 +216,7 @@ export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: string, value: string | undefined): void {
   const obj = getTable(self);
   obj.set(index, value);
 }
@@ -252,7 +248,6 @@ function getGlobal(handle: bigint): Global {
   }
   return obj;
 }
-
 /**
  * `value-of()` operation.
  */
@@ -296,11 +291,10 @@ function getException(handle: bigint): Exception {
   }
   return obj;
 }
-
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: string, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = getException(self);
   return obj.arg;
 }
@@ -308,7 +302,7 @@ export function getArg(self: bigint, exceptionTag: string, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: string): boolean {
+export function is(self: bigint, exceptionTag: bigint): number | undefined {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }

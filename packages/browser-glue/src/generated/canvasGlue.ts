@@ -49,7 +49,6 @@ function getAudioDecoder(handle: bigint): AudioDecoder {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -60,7 +59,7 @@ export function AudioDecoderGetState(self: bigint): bigint {
     case 'unconfigured': return 0n;
     case 'configured': return 1n;
     case 'closed': return 2n;
-    default: return 0n;  // Unknown value
+    default: return 0n;
   }
 }
 
@@ -214,7 +213,6 @@ function getVideoDecoder(handle: bigint): VideoDecoder {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -225,7 +223,7 @@ export function VideoDecoderGetState(self: bigint): bigint {
     case 'unconfigured': return 0n;
     case 'configured': return 1n;
     case 'closed': return 2n;
-    default: return 0n;  // Unknown value
+    default: return 0n;
   }
 }
 
@@ -379,7 +377,6 @@ function getAudioEncoder(handle: bigint): AudioEncoder {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -390,7 +387,7 @@ export function AudioEncoderGetState(self: bigint): bigint {
     case 'unconfigured': return 0n;
     case 'configured': return 1n;
     case 'closed': return 2n;
-    default: return 0n;  // Unknown value
+    default: return 0n;
   }
 }
 
@@ -544,7 +541,6 @@ function getVideoEncoder(handle: bigint): VideoEncoder {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -555,7 +551,7 @@ export function VideoEncoderGetState(self: bigint): bigint {
     case 'unconfigured': return 0n;
     case 'configured': return 1n;
     case 'closed': return 2n;
-    default: return 0n;  // Unknown value
+    default: return 0n;
   }
 }
 
@@ -709,7 +705,6 @@ function getEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -769,7 +764,6 @@ function getEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -829,7 +823,6 @@ function getAudioData(handle: bigint): AudioData {
   }
   return obj;
 }
-
 /**
  * `get-format()` operation.
  */
@@ -959,7 +952,6 @@ function getVideoFrame(handle: bigint): VideoFrame {
   }
   return obj;
 }
-
 /**
  * `get-format()` operation.
  */
@@ -1145,7 +1137,6 @@ function getVideoColorSpace(handle: bigint): VideoColorSpace {
   }
   return obj;
 }
-
 /**
  * `get-primaries()` operation.
  */
@@ -1205,7 +1196,6 @@ function getImageDecoder(handle: bigint): ImageDecoder {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -1318,7 +1308,6 @@ function getImageTrackList(handle: bigint): ImageTrackList {
   }
   return obj;
 }
-
 /**
  * `image-track()` operation.
  */
@@ -1378,7 +1367,6 @@ function getImageTrack(handle: bigint): ImageTrack {
   }
   return obj;
 }
-
 /**
  * `get-animated()` operation.
  */
@@ -1438,7 +1426,6 @@ function getWebGLObject(handle: bigint): WebGLObject {
   }
   return obj;
 }
-
 /**
  * `get-label()` operation.
  */
@@ -1474,7 +1461,6 @@ function getWebGLActiveInfo(handle: bigint): WebGLActiveInfo {
   }
   return obj;
 }
-
 /**
  * `get-size()` operation.
  */
@@ -1518,7 +1504,6 @@ function getWebGLShaderPrecisionFormat(handle: bigint): WebGLShaderPrecisionForm
   }
   return obj;
 }
-
 /**
  * `get-range-min()` operation.
  */
@@ -1560,7 +1545,6 @@ function registerWebGLRenderingContextBase(obj: WebGLRenderingContextBase): bigi
   _webGlRenderingContextBasehandles.set(handle, obj);
   return handle;
 }
-
 /** Get a WebGLRenderingContextBase by handle, throwing if not found. */
 function getWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextBase {
   const obj = _webGlRenderingContextBasehandles.get(handle);
@@ -1569,7 +1553,6 @@ function getWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextBase
   }
   return obj;
 }
-
 /**
  * `get-canvas()` operation.
  */
@@ -2635,7 +2618,6 @@ function getWebGLRenderingContextOverloads(handle: bigint): WebGLRenderingContex
   }
   return obj;
 }
-
 /**
  * `buffer-data()` operation.
  */
@@ -2799,7 +2781,6 @@ function getWebGLContextEvent(handle: bigint): WebGLContextEvent {
   }
   return obj;
 }
-
 /**
  * `get-status-message()` operation.
  */
@@ -2825,7 +2806,6 @@ function registerWebGL2RenderingContextBase(obj: WebGL2RenderingContextBase): bi
   _webGl2RenderingContextBasehandles.set(handle, obj);
   return handle;
 }
-
 /** Get a WebGL2RenderingContextBase by handle, throwing if not found. */
 function getWebGL2RenderingContextBase(handle: bigint): WebGL2RenderingContextBase {
   const obj = _webGl2RenderingContextBasehandles.get(handle);
@@ -2834,7 +2814,6 @@ function getWebGL2RenderingContextBase(handle: bigint): WebGL2RenderingContextBa
   }
   return obj;
 }
-
 /**
  * `copy-buffer-sub-data()` operation.
  */
@@ -3558,7 +3537,6 @@ function getWebGL2RenderingContextOverloads(handle: bigint): WebGL2RenderingCont
   }
   return obj;
 }
-
 /**
  * `buffer-data()` operation.
  */

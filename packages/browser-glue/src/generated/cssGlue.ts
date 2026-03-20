@@ -49,7 +49,6 @@ function getAnimationEvent(handle: bigint): AnimationEvent {
   }
   return obj;
 }
-
 /**
  * `get-animation-name()` operation.
  */
@@ -93,7 +92,6 @@ function getCSSRule(handle: bigint): CSSRule {
   }
   return obj;
 }
-
 /**
  * `get-css-text()` operation.
  */
@@ -153,7 +151,6 @@ function getCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
   }
   return obj;
 }
-
 /**
  * `get-key-text()` operation.
  */
@@ -197,7 +194,6 @@ function getCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -281,7 +277,6 @@ function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
   }
   return obj;
 }
-
 /**
  * `get-onanimationstart()` operation.
  */
@@ -1885,7 +1880,6 @@ function getCSSConditionRule(handle: bigint): CSSConditionRule {
   }
   return obj;
 }
-
 /**
  * `get-condition-text()` operation.
  */
@@ -1913,7 +1907,6 @@ function getCSSMediaRule(handle: bigint): CSSMediaRule {
   }
   return obj;
 }
-
 /**
  * `get-media()` operation.
  */
@@ -1949,7 +1942,6 @@ function getCSSSupportsRule(handle: bigint): CSSSupportsRule {
   }
   return obj;
 }
-
 /**
  * `get-matches()` operation.
  */
@@ -1977,7 +1969,6 @@ function getCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
   }
   return obj;
 }
-
 /**
  * `get-src()` operation.
  */
@@ -2237,7 +2228,6 @@ function getCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
   }
   return obj;
 }
-
 /**
  * `get-style()` operation.
  */
@@ -2265,7 +2255,6 @@ function getCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRule {
   }
   return obj;
 }
-
 /**
  * `get-font-family()` operation.
  */
@@ -2357,7 +2346,6 @@ function getCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap {
   }
   return obj;
 }
-
 /**
  * `set()` operation.
  */
@@ -2385,7 +2373,6 @@ function getCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRule {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -2437,7 +2424,6 @@ function getTransitionEvent(handle: bigint): TransitionEvent {
   }
   return obj;
 }
-
 /**
  * `get-property-name()` operation.
  */
@@ -3039,7 +3025,6 @@ function getMediaQueryList(handle: bigint): MediaQueryList {
   }
   return obj;
 }
-
 /**
  * `get-media()` operation.
  */
@@ -3107,7 +3092,6 @@ function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
   }
   return obj;
 }
-
 /**
  * `get-media()` operation.
  */
@@ -3143,7 +3127,6 @@ function getScreen(handle: bigint): Screen {
   }
   return obj;
 }
-
 /**
  * `get-avail-width()` operation.
  */
@@ -3964,7 +3947,6 @@ function getCaretPosition(handle: bigint): CaretPosition {
   }
   return obj;
 }
-
 /**
  * `get-offset-node()` operation.
  */
@@ -4008,7 +3990,6 @@ function getElement(handle: bigint): Element {
   }
   return obj;
 }
-
 /**
  * `get-client-rects()` operation.
  */
@@ -4604,7 +4585,6 @@ function getHTMLElement(handle: bigint): HTMLElement {
   }
   return obj;
 }
-
 /**
  * `get-scroll-parent()` operation.
  */
@@ -4992,7 +4972,6 @@ function getHTMLImageElement(handle: bigint): HTMLImageElement {
   }
   return obj;
 }
-
 /**
  * `get-x()` operation.
  */
@@ -5386,7 +5365,6 @@ function registerRange(obj: Range): bigint {
   _rangeHandles.set(handle, obj);
   return handle;
 }
-
 /** Get a Range by handle, throwing if not found. */
 function getRange(handle: bigint): Range {
   const obj = _rangeHandles.get(handle);
@@ -5395,7 +5373,6 @@ function getRange(handle: bigint): Range {
   }
   return obj;
 }
-
 /**
  * `get-client-rects()` operation.
  */
@@ -5607,7 +5584,6 @@ function getMouseEvent(handle: bigint): MouseEvent {
   }
   return obj;
 }
-
 /**
  * `get-screen-x()` operation.
  */
@@ -5795,7 +5771,6 @@ function getGeometryUtils(handle: bigint): GeometryUtils {
   }
   return obj;
 }
-
 /**
  * `get-box-quads()` operation.
  */
@@ -5847,7 +5822,6 @@ function getVisualViewport(handle: bigint): VisualViewport {
   }
   return obj;
 }
-
 /**
  * `get-offset-left()` operation.
  */
@@ -5971,7 +5945,6 @@ function getMediaList(handle: bigint): MediaList {
   }
   return obj;
 }
-
 /**
  * `get-media-text()` operation.
  */
@@ -6039,7 +6012,6 @@ function getStyleSheet(handle: bigint): StyleSheet {
   }
   return obj;
 }
-
 /**
  * `get-type()` operation.
  */
@@ -6123,7 +6095,6 @@ function getCSSStyleSheet(handle: bigint): CSSStyleSheet {
   }
   return obj;
 }
-
 /**
  * `get-owner-rule()` operation.
  */
@@ -6215,7 +6186,6 @@ function getStyleSheetList(handle: bigint): StyleSheetList {
   }
   return obj;
 }
-
 /**
  * `item()` operation.
  */
@@ -6251,7 +6221,6 @@ function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
   }
   return obj;
 }
-
 /**
  * `get-style-sheets()` operation.
  */
@@ -6319,7 +6288,6 @@ function getLinkStyle(handle: bigint): LinkStyle {
   }
   return obj;
 }
-
 /**
  * `get-sheet()` operation.
  */
@@ -6347,7 +6315,6 @@ function getCSSRuleList(handle: bigint): CSSRuleList {
   }
   return obj;
 }
-
 /**
  * `item()` operation.
  */
@@ -6383,7 +6350,6 @@ function getCSSStyleRule(handle: bigint): CSSStyleRule {
   }
   return obj;
 }
-
 /**
  * `get-selector-text()` operation.
  */
@@ -6427,7 +6393,6 @@ function getCSSImportRule(handle: bigint): CSSImportRule {
   }
   return obj;
 }
-
 /**
  * `get-href()` operation.
  */
@@ -6487,7 +6452,6 @@ function getCSSGroupingRule(handle: bigint): CSSGroupingRule {
   }
   return obj;
 }
-
 /**
  * `get-css-rules()` operation.
  */
@@ -6531,7 +6495,6 @@ function getCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
   }
   return obj;
 }
-
 /**
  * `get-margin()` operation.
  */
@@ -6695,7 +6658,6 @@ function getCSSPageRule(handle: bigint): CSSPageRule {
   }
   return obj;
 }
-
 /**
  * `get-selector-text()` operation.
  */
@@ -6739,7 +6701,6 @@ function getCSSMarginRule(handle: bigint): CSSMarginRule {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -6775,7 +6736,6 @@ function getCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
   }
   return obj;
 }
-
 /**
  * `get-namespace-uri()` operation.
  */
@@ -6811,7 +6771,6 @@ function getCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   }
   return obj;
 }
-
 /**
  * `get-css-text()` operation.
  */
@@ -6903,7 +6862,6 @@ function getCSSStyleProperties(handle: bigint): CSSStyleProperties {
   }
   return obj;
 }
-
 /**
  * `get-css-float()` operation.
  */
@@ -6939,7 +6897,6 @@ function getElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
   }
   return obj;
 }
-
 /**
  * `get-style()` operation.
  */
