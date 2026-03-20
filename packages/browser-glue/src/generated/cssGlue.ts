@@ -14,8 +14,21 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
+
+// ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
 // WIT interface: animation-event
@@ -222,7 +235,7 @@ export function CssKeyframesRuleGetLength(self: bigint): number {
  */
 export function cssKeyframeRule(self: bigint, index: number): void {
   const obj = getCSSKeyframesRule(self);
-  obj.cssKeyframeRule(index);
+  obj.KEYFRAME_RULE(index);
 }
 
 /**
@@ -2468,7 +2481,7 @@ function getWindow(): Window {
  * `match-media()` operation.
  */
 export function matchMedia(query: string): bigint {
-  return window.matchMedia(query);
+  return window.matchMedia();
 }
 
 /**
@@ -2489,28 +2502,28 @@ export function getVisualViewport(): bigint | undefined {
  * `move-to()` operation.
  */
 export function moveTo(x: number, y: number): void {
-  window.moveTo(x, y);
+  window.moveTo(y);
 }
 
 /**
  * `move-by()` operation.
  */
 export function moveBy(x: number, y: number): void {
-  window.moveBy(x, y);
+  window.moveBy(y);
 }
 
 /**
  * `resize-to()` operation.
  */
 export function resizeTo(width: number, height: number): void {
-  window.resizeTo(width, height);
+  window.resizeTo(height);
 }
 
 /**
  * `resize-by()` operation.
  */
 export function resizeBy(x: number, y: number): void {
-  window.resizeBy(x, y);
+  window.resizeBy(y);
 }
 
 /**
@@ -2559,21 +2572,21 @@ export function getPageYOffset(): number {
  * `scroll()` operation.
  */
 export function WindowScroll(options: bigint | undefined): bigint {
-  return window.scroll(options);
+  return window.scroll();
 }
 
 /**
  * `scroll-to()` operation.
  */
 export function WindowScrollTo(options: bigint | undefined): bigint {
-  return window.scrollTo(options);
+  return window.scrollTo();
 }
 
 /**
  * `scroll-by()` operation.
  */
 export function WindowScrollBy(options: bigint | undefined): bigint {
-  return window.scrollBy(options);
+  return window.scrollBy();
 }
 
 /**
@@ -2643,7 +2656,7 @@ export function getEvent(): bigint {
  * `fetch-later()` operation.
  */
 export function fetchLater(input: bigint, init: bigint | undefined): bigint {
-  return window.fetchLater(input, init);
+  return window.fetchLater(init);
 }
 
 /**
@@ -2767,9 +2780,39 @@ export function setStatus(value: string): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `WindowPollClose()`
  */
-export function WindowClose(): void {
-  window.close();
+export function WindowClose(): bigint {
+  const requestId = _nextAsyncHandle++;
+  const promise = window.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WindowPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -2781,9 +2824,39 @@ export function getClosed(): boolean {
 
 /**
  * `stop()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollStop()`
  */
-export function stop(): void {
-  window.stop();
+export function stop(): bigint {
+  const requestId = _nextAsyncHandle++;
+  const promise = window.stop()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `stop()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollStop(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -2853,14 +2926,14 @@ export function getFrameElement(): bigint | undefined {
  * `open()` operation.
  */
 export function WindowOpen(url: string | undefined, target: string | undefined, features: string | undefined): bigint | undefined {
-  return window.open(url, target, features) ?? undefined;
+  return window.open(target, features) ?? undefined;
 }
 
 /**
  * `object()` operation.
  */
 export function WindowObject(name: string): void {
-  window.object(name);
+  window.object();
 }
 
 /**
@@ -2895,14 +2968,14 @@ export function alert(): void {
  * `confirm()` operation.
  */
 export function confirm(message: string | undefined): boolean {
-  return window.confirm(message);
+  return window.confirm();
 }
 
 /**
  * `prompt()` operation.
  */
 export function prompt(message: string | undefined, _default: string | undefined): string | undefined {
-  return window.prompt(message, _default) ?? undefined;
+  return window.prompt(_default) ?? undefined;
 }
 
 /**
@@ -2916,7 +2989,7 @@ export function print(): void {
  * `post-message()` operation.
  */
 export function postMessage(message: string, targetOrigin: string, transfer: (bigint)[] | undefined): void {
-  window.postMessage(message, targetOrigin, transfer);
+  window.postMessage(targetOrigin, transfer);
 }
 
 /**
@@ -3146,21 +3219,21 @@ function getDocument(): Document {
  * `element-from-point()` operation.
  */
 export function elementFromPoint(x: number, y: number): bigint | undefined {
-  return document.elementFromPoint(x, y) ?? undefined;
+  return document.elementFromPoint(y) ?? undefined;
 }
 
 /**
  * `elements-from-point()` operation.
  */
 export function elementsFromPoint(x: number, y: number): (bigint)[] {
-  return document.elementsFromPoint(x, y);
+  return document.elementsFromPoint(y);
 }
 
 /**
  * `caret-position-from-point()` operation.
  */
 export function caretPositionFromPoint(x: number, y: number, options: bigint | undefined): bigint | undefined {
-  return document.caretPositionFromPoint(x, y, options) ?? undefined;
+  return document.caretPositionFromPoint(y, options) ?? undefined;
 }
 
 /**
@@ -3265,14 +3338,14 @@ export function DocumentGetElementsByClassName(classNames: string): bigint {
  * `create-element()` operation.
  */
 export function createElement(localName: string, options: string | undefined): bigint {
-  return document.createElement(localName, options);
+  return document.createElement(options);
 }
 
 /**
  * `create-element-ns()` operation.
  */
 export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  return document.createElementNS(namespace, qualifiedName, options);
+  return document.createElementNS(qualifiedName, options);
 }
 
 /**
@@ -3286,63 +3359,63 @@ export function createDocumentFragment(): bigint {
  * `create-text-node()` operation.
  */
 export function createTextNode(data: string): bigint {
-  return document.createTextNode(data);
+  return document.createTextNode();
 }
 
 /**
  * `create-cdata-section()` operation.
  */
 export function createCdataSection(data: string): bigint {
-  return document.createCDATASection(data);
+  return document.createCDATASection();
 }
 
 /**
  * `create-comment()` operation.
  */
 export function createComment(data: string): bigint {
-  return document.createComment(data);
+  return document.createComment();
 }
 
 /**
  * `create-processing-instruction()` operation.
  */
 export function createProcessingInstruction(target: string, data: string): bigint {
-  return document.createProcessingInstruction(target, data);
+  return document.createProcessingInstruction(data);
 }
 
 /**
  * `import-node()` operation.
  */
 export function importNode(node: bigint, options: boolean | undefined): bigint {
-  return document.importNode(node, options);
+  return document.importNode(options);
 }
 
 /**
  * `adopt-node()` operation.
  */
 export function adoptNode(node: bigint): bigint {
-  return document.adoptNode(node);
+  return document.adoptNode();
 }
 
 /**
  * `create-attribute()` operation.
  */
 export function createAttribute(localName: string): bigint {
-  return document.createAttribute(localName);
+  return document.createAttribute();
 }
 
 /**
  * `create-attribute-ns()` operation.
  */
 export function createAttributeNs(namespace: string | undefined, qualifiedName: string): bigint {
-  return document.createAttributeNS(namespace, qualifiedName);
+  return document.createAttributeNS(qualifiedName);
 }
 
 /**
  * `create-event()` operation.
  */
 export function createEvent(_interface: string): bigint {
-  return document.createEvent(_interface);
+  return document.createEvent();
 }
 
 /**
@@ -3356,14 +3429,14 @@ export function createRange(): bigint {
  * `create-node-iterator()` operation.
  */
 export function createNodeIterator(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  return document.createNodeIterator(root, whatToShow, filter);
+  return document.createNodeIterator(whatToShow, filter);
 }
 
 /**
  * `create-tree-walker()` operation.
  */
 export function createTreeWalker(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  return document.createTreeWalker(root, whatToShow, filter);
+  return document.createTreeWalker(whatToShow, filter);
 }
 
 /**
@@ -3419,7 +3492,7 @@ export function DocumentSetOnfullscreenerror(value: EventHandlerRecord): void {
  * `parse-html-unsafe()` operation.
  */
 export function parseHtmlUnsafe(html: bigint): bigint {
-  return document.parseHtmlUnsafe();
+  return document.parseHtmlUnsafe(html);
 }
 
 /**
@@ -3482,7 +3555,7 @@ export function getReadyState(): bigint {
  * `object()` operation.
  */
 export function DocumentObject(name: string): void {
-  document.object(name);
+  document.object();
 }
 
 /**
@@ -3594,28 +3667,58 @@ export function getCurrentScript(): bigint | undefined {
  * `open()` operation.
  */
 export function DocumentOpen(unused1: string | undefined, unused2: string | undefined): bigint {
-  return document.open(unused1, unused2);
+  return document.open(unused2);
 }
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `DocumentPollClose()`
  */
-export function DocumentClose(): void {
-  document.close();
+export function DocumentClose(): bigint {
+  const requestId = _nextAsyncHandle++;
+  const promise = document.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function DocumentPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `write()` operation.
  */
 export function write(text: (bigint)[]): void {
-  document.write(text);
+  document.write();
 }
 
 /**
  * `writeln()` operation.
  */
 export function writeln(text: (bigint)[]): void {
-  document.writeln(text);
+  document.writeln();
 }
 
 /**
@@ -3650,42 +3753,42 @@ export function setDesignMode(value: string): void {
  * `exec-command()` operation.
  */
 export function execCommand(commandId: string, showUi: boolean | undefined, value: string | undefined): boolean {
-  return document.execCommand(commandId, showUi, value);
+  return document.execCommand(showUi, value);
 }
 
 /**
  * `query-command-enabled()` operation.
  */
 export function queryCommandEnabled(commandId: string): boolean {
-  return document.queryCommandEnabled(commandId);
+  return document.queryCommandEnabled();
 }
 
 /**
  * `query-command-indeterm()` operation.
  */
 export function queryCommandIndeterm(commandId: string): boolean {
-  return document.queryCommandIndeterm(commandId);
+  return document.queryCommandIndeterm();
 }
 
 /**
  * `query-command-state()` operation.
  */
 export function queryCommandState(commandId: string): boolean {
-  return document.queryCommandState(commandId);
+  return document.queryCommandState();
 }
 
 /**
  * `query-command-supported()` operation.
  */
 export function queryCommandSupported(commandId: string): boolean {
-  return document.queryCommandSupported(commandId);
+  return document.queryCommandSupported();
 }
 
 /**
  * `query-command-value()` operation.
  */
 export function queryCommandValue(commandId: string): string {
-  return document.queryCommandValue(commandId);
+  return document.queryCommandValue();
 }
 
 /**
@@ -7163,8 +7266,10 @@ export default {
   getStatus,
   setStatus,
   WindowClose,
+  WindowPollClose,
   getClosed,
   stop,
+  pollStop,
   focus,
   blur,
   getFrames,
@@ -7269,6 +7374,7 @@ export default {
   getCurrentScript,
   DocumentOpen,
   DocumentClose,
+  DocumentPollClose,
   write,
   writeln,
   getDefaultView,

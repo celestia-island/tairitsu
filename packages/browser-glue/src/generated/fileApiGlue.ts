@@ -14,8 +14,21 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
+
+// ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
 // WIT interface: file-reader
@@ -40,28 +53,58 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: bigint } {
   return FileReader.newFileReader();
 }
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(handle: bigint): void {
-  return FileReader.abort(handle);
+export function abort(handle: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const promise = FileReader.abort(handle)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): boolean {
+export function readyState(handle: bigint): bigint {
   return FileReader.readyState(handle);
 }
 
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): number | undefined {
+export function resultVal(handle: bigint): string | undefined {
   return FileReader.resultVal(handle);
 }
 
@@ -99,6 +142,7 @@ export function length(handle: bigint): number {
 export default {
   newFileReader,
   abort,
+  pollAbort,
   readyState,
   resultVal,
   length

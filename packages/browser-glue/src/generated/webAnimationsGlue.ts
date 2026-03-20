@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ export function setId(handle: bigint, value: string): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): number {
+export function getPlaybackRate(handle: bigint): bigint {
   const obj = getAnimation(self);
   return obj.playbackRate;
 }
@@ -120,7 +120,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: string): void {
   return Animation.updatePlaybackRate(handle, playbackRate);
 }
 

@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -67,14 +67,14 @@ function getSw(handle: bigint): ServiceWorker {
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): bigint {
+export function scriptUrl(handle: bigint): string {
   return ServiceWorker.scriptURL(handle);
 }
 
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: ((string)[])[]): void {
+export function postMessage(handle: bigint, message: bigint, transfer: (Uint8Array)[]): void {
   return ServiceWorker.postMessage(handle, message, transfer);
 }
 

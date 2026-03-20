@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ function getURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: bigint, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
@@ -67,7 +67,7 @@ export function canParse(url: string, base: string | undefined): boolean {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): EventHandlerRecord {
+export function getHref(self: bigint): bigint {
   const obj = getURL(self);
   return obj.href;
 }
@@ -139,7 +139,7 @@ export function setPassword(self: bigint, value: string): void {
 /**
  * `get-host()` operation.
  */
-export function getHost(self: bigint): number {
+export function getHost(self: bigint): string {
   const obj = getURL(self);
   return obj.host;
 }
@@ -219,7 +219,7 @@ export function setSearch(self: bigint, value: string): void {
 /**
  * `get-search-params()` operation.
  */
-export function getSearchParams(self: bigint): bigint {
+export function getSearchParams(self: bigint): string {
   const obj = getURL(self);
   return obj.searchParams;
 }
@@ -287,7 +287,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: EventHandlerRecord): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = getURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -349,7 +349,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: bigint, value: string): void {
+export function _set(self: bigint, name: string, value: string): void {
   const obj = getURLSearchParams(self);
   obj.set(name, value);
 }

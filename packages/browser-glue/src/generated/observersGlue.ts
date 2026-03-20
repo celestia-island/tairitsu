@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ function getIntersectionObserver(handle: bigint): IntersectionObserver {
 /**
  * `get-root()` operation.
  */
-export function getRoot(self: bigint): bigint | undefined {
+export function getRoot(self: bigint): string {
   const obj = getIntersectionObserver(self);
   return obj.root ?? undefined;
 }
@@ -148,7 +148,7 @@ export function getTime(self: bigint): number {
 /**
  * `get-root-bounds()` operation.
  */
-export function getRootBounds(self: bigint): string | undefined {
+export function getRootBounds(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.rootBounds ?? undefined;
 }
@@ -164,7 +164,7 @@ export function getBoundingClientRect(self: bigint): bigint {
 /**
  * `get-intersection-rect()` operation.
  */
-export function getIntersectionRect(self: bigint): bigint {
+export function getIntersectionRect(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRect;
 }
@@ -172,7 +172,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): boolean {
+export function getIsIntersecting(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -180,7 +180,7 @@ export function getIsIntersecting(self: bigint): boolean {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): string {
   const obj = getIntersectionObserverEntry(self);
   return obj.isVisible;
 }
@@ -188,7 +188,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): bigint | undefined {
+export function getIntersectionRatio(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -196,7 +196,7 @@ export function getIntersectionRatio(self: bigint): bigint | undefined {
 /**
  * `get-target()` operation.
  */
-export function IntersectionObserverEntryGetTarget(self: bigint): boolean {
+export function IntersectionObserverEntryGetTarget(self: bigint): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.target;
 }
@@ -224,7 +224,7 @@ function getResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: boolean, options: bigint): void {
+export function ResizeObserverObserve(self: bigint, target: string, options: boolean): void {
   const obj = getResizeObserver(self);
   obj.observe(target, options);
 }
@@ -268,7 +268,7 @@ function getResizeObserverEntry(handle: bigint): ResizeObserverEntry {
 /**
  * `get-target()` operation.
  */
-export function ResizeObserverEntryGetTarget(self: bigint): bigint {
+export function ResizeObserverEntryGetTarget(self: bigint): boolean {
   const obj = getResizeObserverEntry(self);
   return obj.target;
 }
@@ -284,7 +284,7 @@ export function getContentRect(self: bigint): bigint {
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: bigint): EventHandlerRecord {
+export function getBorderBoxSize(self: bigint): (bigint)[] {
   const obj = getResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -292,7 +292,7 @@ export function getBorderBoxSize(self: bigint): EventHandlerRecord {
 /**
  * `get-content-box-size()` operation.
  */
-export function getContentBoxSize(self: bigint): string {
+export function getContentBoxSize(self: bigint): (bigint)[] {
   const obj = getResizeObserverEntry(self);
   return obj.contentBoxSize;
 }
@@ -300,7 +300,7 @@ export function getContentBoxSize(self: bigint): string {
 /**
  * `get-device-pixel-content-box-size()` operation.
  */
-export function getDevicePixelContentBoxSize(self: bigint): (bigint)[] {
+export function getDevicePixelContentBoxSize(self: bigint): (string)[] {
   const obj = getResizeObserverEntry(self);
   return obj.devicePixelContentBoxSize;
 }

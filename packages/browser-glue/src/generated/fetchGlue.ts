@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -151,7 +151,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint {
+export function getBody(self: bigint): bigint | undefined {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -423,7 +423,7 @@ export function getMethod(self: bigint): string {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): bigint {
+export function RequestGetUrl(self: bigint): string {
   const obj = getRequest(self);
   return obj.url;
 }
@@ -439,7 +439,7 @@ export function RequestGetHeaders(self: bigint): bigint {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: bigint): number {
+export function getDestination(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.destination;
 }
@@ -495,7 +495,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): EventHandlerRecord {
+export function getIntegrity(self: bigint): string {
   const obj = getRequest(self);
   return obj.integrity;
 }
@@ -503,7 +503,7 @@ export function getIntegrity(self: bigint): EventHandlerRecord {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): EventHandlerRecord {
+export function getKeepalive(self: bigint): boolean {
   const obj = getRequest(self);
   return obj.keepalive;
 }
@@ -543,7 +543,7 @@ export function getDuplex(self: bigint): bigint {
 /**
  * `clone()` operation.
  */
-export function RequestClone(self: bigint): EventHandlerRecord {
+export function RequestClone(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.clone();
 }
@@ -587,7 +587,7 @@ export function redirect(url: string, status: number | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `ResponsePollJson()`
  */
-export function ResponseJson(data: string, init: number): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Response.json(data, init)
     .then((result) => {
@@ -1130,7 +1130,7 @@ export function ReadableStreamGenericReaderGetClosed(self: bigint): bigint {
 /**
  * `cancel()` operation.
  */
-export function ReadableStreamGenericReaderCancel(self: bigint, reason: bigint): bigint | undefined {
+export function ReadableStreamGenericReaderCancel(self: bigint, reason: string | undefined): bigint {
   const obj = getReadableStreamGenericReader(self);
   return obj.cancel(reason);
 }
@@ -1194,7 +1194,7 @@ function getReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReader {
 /**
  * `read()` operation.
  */
-export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): string {
+export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): bigint {
   const obj = getReadableStreamBYOBReader(self);
   return obj.read(view, options);
 }
@@ -1237,10 +1237,40 @@ export function ReadableStreamDefaultControllerGetDesiredSize(self: bigint): num
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `ReadableStreamDefaultControllerPollClose()`
  */
-export function ReadableStreamDefaultControllerClose(self: bigint): void {
+export function ReadableStreamDefaultControllerClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getReadableStreamDefaultController(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function ReadableStreamDefaultControllerPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -1297,10 +1327,40 @@ export function ReadableByteStreamControllerGetDesiredSize(self: bigint): number
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `ReadableByteStreamControllerPollClose()`
  */
-export function ReadableByteStreamControllerClose(self: bigint): void {
+export function ReadableByteStreamControllerClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getReadableByteStreamController(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function ReadableByteStreamControllerPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -1423,18 +1483,78 @@ export function WritableStreamGetLocked(self: bigint): boolean {
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `WritableStreamPollAbort()`
  */
 export function WritableStreamAbort(self: bigint, reason: string | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWritableStream(self);
-  return obj.abort(reason);
+  const promise = obj.abort(reason)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WritableStreamPollAbort(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `WritableStreamPollClose()`
  */
 export function WritableStreamClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWritableStream(self);
-  return obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WritableStreamPollClose(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1491,18 +1611,78 @@ export function getReady(self: bigint): bigint {
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `WritableStreamDefaultWriterPollAbort()`
  */
 export function WritableStreamDefaultWriterAbort(self: bigint, reason: string | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWritableStreamDefaultWriter(self);
-  return obj.abort(reason);
+  const promise = obj.abort(reason)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WritableStreamDefaultWriterPollAbort(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `WritableStreamDefaultWriterPollClose()`
  */
 export function WritableStreamDefaultWriterClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWritableStreamDefaultWriter(self);
-  return obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WritableStreamDefaultWriterPollClose(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1995,10 +2175,40 @@ export function send(self: bigint, body: bigint | undefined): void {
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `XmlHttpRequestPollAbort()`
  */
-export function XmlHttpRequestAbort(self: bigint): void {
+export function XmlHttpRequestAbort(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getXMLHttpRequest(self);
-  obj.abort();
+  const promise = obj.abort()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function XmlHttpRequestPollAbort(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -2324,11 +2534,13 @@ export default {
   ReadableStreamByobReaderReleaseLock,
   ReadableStreamDefaultControllerGetDesiredSize,
   ReadableStreamDefaultControllerClose,
+  ReadableStreamDefaultControllerPollClose,
   ReadableStreamDefaultControllerEnqueue,
   ReadableStreamDefaultControllerError,
   getByobRequest,
   ReadableByteStreamControllerGetDesiredSize,
   ReadableByteStreamControllerClose,
+  ReadableByteStreamControllerPollClose,
   ReadableByteStreamControllerEnqueue,
   ReadableByteStreamControllerError,
   getView,
@@ -2337,13 +2549,17 @@ export default {
   respondWithNewView,
   WritableStreamGetLocked,
   WritableStreamAbort,
+  WritableStreamPollAbort,
   WritableStreamClose,
+  WritableStreamPollClose,
   getWriter,
   WritableStreamDefaultWriterGetClosed,
   WritableStreamDefaultWriterGetDesiredSize,
   getReady,
   WritableStreamDefaultWriterAbort,
+  WritableStreamDefaultWriterPollAbort,
   WritableStreamDefaultWriterClose,
+  WritableStreamDefaultWriterPollClose,
   WritableStreamDefaultWriterReleaseLock,
   write,
   WritableStreamDefaultControllerGetSignal,
@@ -2386,6 +2602,7 @@ export default {
   getUpload,
   send,
   XmlHttpRequestAbort,
+  XmlHttpRequestPollAbort,
   getResponseUrl,
   XmlHttpRequestGetStatus,
   XmlHttpRequestGetStatusText,
