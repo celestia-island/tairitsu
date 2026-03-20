@@ -248,6 +248,14 @@ let _nextDocument = 1n;
 const _domMatrixhandles = new Map<bigint, DOMMatrix>();
 let _nextDomMatrix = 1n;
 
+/** Handle table for dom-string-map values */
+const _domStringMapHandles = new Map<bigint, DOMStringMap>();
+let _nextDomStringMap = 1n;
+
+/** Handle table for dom-token-list values */
+const _domTokenListHandles = new Map<bigint, DOMTokenList>();
+let _nextDomTokenList = 1n;
+
 /** Handle table for element-list values */
 const _elementListHandles = new Map<bigint, Element[]>();
 let _nextElementList = 1n;
@@ -283,6 +291,10 @@ let _nextMediaError = 1n;
 /** Handle table for media-provider values */
 const _mediaProviderHandles = new Map<bigint, MediaProvider>();
 let _nextMediaProvider = 1n;
+
+/** Handle table for message-port values */
+const _messagePortHandles = new Map<bigint, MessagePort>();
+let _nextMessagePort = 1n;
 
 /** Handle table for node-list values */
 const _nodeListHandles = new Map<bigint, NodeList>();
@@ -390,6 +402,40 @@ function lookupOptionDomMatrix(handle: bigint | undefined): DOMMatrix | null {
     return null;
   }
   return _domMatrixhandles.get(handle) ?? null;
+}
+
+/** Lookup a dom-string-map value by handle. */
+function lookupDomStringMap(handle: bigint): DOMStringMap {
+  const obj = _domStringMapHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`dom-string-map handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional dom-string-map value by handle. */
+function lookupOptionDomStringMap(handle: bigint | undefined): DOMStringMap | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _domStringMapHandles.get(handle) ?? null;
+}
+
+/** Lookup a dom-token-list value by handle. */
+function lookupDomTokenList(handle: bigint): DOMTokenList {
+  const obj = _domTokenListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`dom-token-list handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional dom-token-list value by handle. */
+function lookupOptionDomTokenList(handle: bigint | undefined): DOMTokenList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _domTokenListHandles.get(handle) ?? null;
 }
 
 /** Lookup a element-list value by handle. */
@@ -543,6 +589,23 @@ function lookupOptionMediaProvider(handle: bigint | undefined): MediaProvider | 
     return null;
   }
   return _mediaProviderHandles.get(handle) ?? null;
+}
+
+/** Lookup a message-port value by handle. */
+function lookupMessagePort(handle: bigint): MessagePort {
+  const obj = _messagePortHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`message-port handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional message-port value by handle. */
+function lookupOptionMessagePort(handle: bigint | undefined): MessagePort | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _messagePortHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-list value by handle. */
@@ -910,7 +973,10 @@ function lookupHTMLOrSVGElement(handle: bigint): HTMLOrSVGElement {
  */
 export function getDataset(self: bigint): bigint {
   const obj = lookupHTMLOrSVGElement(self);
-  return obj.dataset;
+  const _callResult = obj.dataset;
+  const handle = _nextDomStringMap++;
+  _domStringMapHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -1221,7 +1287,10 @@ export function setAs(self: bigint, value: string): void {
  */
 export function HtmlLinkElementGetRelList(self: bigint): bigint {
   const obj = lookupHTMLLinkElement(self);
-  return obj.relList;
+  const _callResult = obj.relList;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -1293,7 +1362,10 @@ export function HtmlLinkElementSetType(self: bigint, value: string): void {
  */
 export function HtmlLinkElementGetSizes(self: bigint): bigint {
   const obj = lookupHTMLLinkElement(self);
-  return obj.sizes;
+  const _callResult = obj.sizes;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -1349,7 +1421,10 @@ export function HtmlLinkElementSetReferrerPolicy(self: bigint, value: string): v
  */
 export function HtmlLinkElementGetBlocking(self: bigint): bigint {
   const obj = lookupHTMLLinkElement(self);
-  return obj.blocking;
+  const _callResult = obj.blocking;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -1587,7 +1662,10 @@ export function HtmlStyleElementSetMedia(self: bigint, value: string): void {
  */
 export function HtmlStyleElementGetBlocking(self: bigint): bigint {
   const obj = lookupHTMLStyleElement(self);
-  return obj.blocking;
+  const _callResult = obj.blocking;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -2338,7 +2416,10 @@ export function HtmlAnchorElementSetRel(self: bigint, value: string): void {
  */
 export function HtmlAnchorElementGetRelList(self: bigint): bigint {
   const obj = lookupHTMLAnchorElement(self);
-  return obj.relList;
+  const _callResult = obj.relList;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -3025,7 +3106,11 @@ export function HtmliFrameElementSetSrc(self: bigint, value: string): void {
  */
 export function getSrcdoc(self: bigint): bigint {
   const obj = lookupHTMLIFrameElement(self);
-  return obj.srcdoc;
+  const value = obj.srcdoc;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -3057,7 +3142,10 @@ export function HtmliFrameElementSetName(self: bigint, value: string): void {
  */
 export function getSandbox(self: bigint): bigint {
   const obj = lookupHTMLIFrameElement(self);
-  return obj.sandbox;
+  const _callResult = obj.sandbox;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -3472,6 +3560,7 @@ export function HtmlObjectElementSetName(self: bigint, value: string): void {
 export function HtmlObjectElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLObjectElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -3515,6 +3604,7 @@ export function HtmlObjectElementSetHeight(self: bigint, value: string): void {
 export function HtmlObjectElementGetContentDocument(self: bigint): bigint | undefined {
   const obj = lookupHTMLObjectElement(self);
   const _callResult = obj.contentDocument;
+  if (_callResult === null) return undefined;
   const handle = _nextDocument++;
   _documentHandles.set(handle, _callResult);
   return handle;
@@ -3526,6 +3616,7 @@ export function HtmlObjectElementGetContentDocument(self: bigint): bigint | unde
 export function HtmlObjectElementGetContentWindow(self: bigint): bigint | undefined {
   const obj = lookupHTMLObjectElement(self);
   const _callResult = obj.contentWindow;
+  if (_callResult === null) return undefined;
   const handle = _nextWindow++;
   _windowHandles.set(handle, _callResult);
   return handle;
@@ -4011,6 +4102,7 @@ function lookupHTMLMediaElement(handle: bigint): HTMLMediaElement {
 export function HtmlMediaElementGetError(self: bigint): bigint | undefined {
   const obj = lookupHTMLMediaElement(self);
   const _callResult = obj.error;
+  if (_callResult === null) return undefined;
   const handle = _nextMediaError++;
   _mediaErrorHandles.set(handle, _callResult);
   return handle;
@@ -4038,6 +4130,7 @@ export function HtmlMediaElementSetSrc(self: bigint, value: string): void {
 export function getSrcObject(self: bigint): bigint | undefined {
   const obj = lookupHTMLMediaElement(self);
   const _callResult = obj.srcObject;
+  if (_callResult === null) return undefined;
   const handle = _nextMediaProvider++;
   _mediaProviderHandles.set(handle, _callResult);
   return handle;
@@ -4964,6 +5057,7 @@ export function setMode(self: bigint, value: bigint): void {
 export function getCues(self: bigint): bigint | undefined {
   const obj = lookupTextTrack(self);
   const _callResult = obj.cues;
+  if (_callResult === null) return undefined;
   const handle = _nextTextTrackCueList++;
   _textTrackCueListHandles.set(handle, _callResult);
   return handle;
@@ -4975,6 +5069,7 @@ export function getCues(self: bigint): bigint | undefined {
 export function getActiveCues(self: bigint): bigint | undefined {
   const obj = lookupTextTrack(self);
   const _callResult = obj.activeCues;
+  if (_callResult === null) return undefined;
   const handle = _nextTextTrackCueList++;
   _textTrackCueListHandles.set(handle, _callResult);
   return handle;
@@ -5406,7 +5501,10 @@ export function HtmlAreaElementSetRel(self: bigint, value: string): void {
  */
 export function HtmlAreaElementGetRelList(self: bigint): bigint {
   const obj = lookupHTMLAreaElement(self);
-  return obj.relList;
+  const _callResult = obj.relList;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5472,6 +5570,7 @@ function lookupHTMLTableElement(handle: bigint): HTMLTableElement {
 export function getCaption(self: bigint): bigint | undefined {
   const obj = lookupHTMLTableElement(self);
   const _callResult = obj.caption;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlTableCaptionElement++;
   _htmlTableCaptionElementHandles.set(handle, _callResult);
   return handle;
@@ -5507,6 +5606,7 @@ export function deleteCaption(self: bigint): void {
 export function getTHead(self: bigint): bigint | undefined {
   const obj = lookupHTMLTableElement(self);
   const _callResult = obj.tHead;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlTableSectionElement++;
   _htmlTableSectionElementHandles.set(handle, _callResult);
   return handle;
@@ -5542,6 +5642,7 @@ export function deleteTHead(self: bigint): void {
 export function getTFoot(self: bigint): bigint | undefined {
   const obj = lookupHTMLTableElement(self);
   const _callResult = obj.tFoot;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlTableSectionElement++;
   _htmlTableSectionElementHandles.set(handle, _callResult);
   return handle;
@@ -6598,7 +6699,10 @@ export function HtmlFormElementSetRel(self: bigint, value: string): void {
  */
 export function HtmlFormElementGetRelList(self: bigint): bigint {
   const obj = lookupHTMLFormElement(self);
-  return obj.relList;
+  const _callResult = obj.relList;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -6652,7 +6756,7 @@ export function requestSubmit(self: bigint, submitter: bigint | undefined): void
  */
 export function HtmlFormElementReset(self: bigint): void {
   const obj = lookupHTMLFormElement(self);
-  obj.reset();
+  (obj as any).reset();
 }
 
 /**
@@ -6696,6 +6800,7 @@ function lookupHTMLLabelElement(handle: bigint): HTMLLabelElement {
 export function HtmlLabelElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLLabelElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -6723,6 +6828,7 @@ export function HtmlLabelElementSetHtmlFor(self: bigint, value: string): void {
 export function getControl(self: bigint): bigint | undefined {
   const obj = lookupHTMLLabelElement(self);
   const _callResult = obj.control;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -6897,6 +7003,7 @@ export function HtmlInputElementSetDisabled(self: bigint, value: boolean): void 
 export function HtmlInputElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -7036,6 +7143,7 @@ export function setIndeterminate(self: bigint, value: boolean): void {
 export function getList(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
   const _callResult = obj.list;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -7421,6 +7529,7 @@ export function HtmlInputElementSetCustomValidity(self: bigint, error: string): 
 export function HtmlInputElementGetLabels(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
   const _callResult = obj.labels;
+  if (_callResult === null) return undefined;
   const handle = _nextNodeList++;
   _nodeListHandles.set(handle, _callResult);
   return handle;
@@ -7613,6 +7722,7 @@ export function HtmlButtonElementSetDisabled(self: bigint, value: boolean): void
 export function HtmlButtonElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLButtonElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -7865,6 +7975,7 @@ export function HtmlSelectElementSetDisabled(self: bigint, value: boolean): void
 export function HtmlSelectElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLSelectElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -8423,6 +8534,7 @@ export function HtmlTextAreaElementSetDisabled(self: bigint, value: boolean): vo
 export function HtmlTextAreaElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLTextAreaElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -8762,7 +8874,10 @@ function lookupHTMLOutputElement(handle: bigint): HTMLOutputElement {
  */
 export function HtmlOutputElementGetHtmlFor(self: bigint): bigint {
   const obj = lookupHTMLOutputElement(self);
-  return obj.htmlFor;
+  const _callResult = obj.htmlFor;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -8771,6 +8886,7 @@ export function HtmlOutputElementGetHtmlFor(self: bigint): bigint {
 export function HtmlOutputElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLOutputElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -9131,6 +9247,7 @@ export function HtmlFieldSetElementSetDisabled(self: bigint, value: boolean): vo
 export function HtmlFieldSetElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLFieldSetElement(self);
   const _callResult = obj.form;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlFormElement++;
   _htmlFormElementHandles.set(handle, _callResult);
   return handle;
@@ -9382,6 +9499,7 @@ function lookupSubmitEvent(handle: bigint): SubmitEvent {
 export function getSubmitter(self: bigint): bigint | undefined {
   const obj = lookupSubmitEvent(self);
   const _callResult = obj.submitter;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -9668,7 +9786,10 @@ export function setDefer(self: bigint, value: boolean): void {
  */
 export function HtmlScriptElementGetBlocking(self: bigint): bigint {
   const obj = lookupHTMLScriptElement(self);
-  return obj.blocking;
+  const _callResult = obj.blocking;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10035,6 +10156,7 @@ export function HtmlCanvasElementSetHeight(self: bigint, value: number): void {
 export function HtmlCanvasElementGetContext(self: bigint, contextId: string, options: any): bigint | undefined {
   const obj = lookupHTMLCanvasElement(self);
   const _callResult = (obj as any).context;
+  if (_callResult === null) return undefined;
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
   return handle;
@@ -10643,7 +10765,7 @@ export function beginPath(self: bigint): void {
  */
 export function fill(self: bigint, fillRule: bigint | undefined): void {
   const obj = lookupCanvasDrawPath(self);
-  obj.fill(fillRule);
+  (obj as any).fill(Number(fillRule));
 }
 
 /**
@@ -10659,7 +10781,7 @@ export function stroke(self: bigint): void {
  */
 export function clip(self: bigint, fillRule: bigint | undefined): void {
   const obj = lookupCanvasDrawPath(self);
-  obj.clip(fillRule);
+  (obj as any).clip(Number(fillRule));
 }
 
 /**
@@ -10667,7 +10789,7 @@ export function clip(self: bigint, fillRule: bigint | undefined): void {
  */
 export function isPointInPath(self: bigint, x: number, y: number, fillRule: bigint | undefined): boolean {
   const obj = lookupCanvasDrawPath(self);
-  return obj.isPointInPath(x, y, fillRule);
+  return (obj as any).isPointInPath(x, y, Number(fillRule));
 }
 
 /**
@@ -12486,6 +12608,7 @@ function lookupDragEvent(handle: bigint): DragEvent {
 export function getDataTransfer(self: bigint): bigint | undefined {
   const obj = lookupDragEvent(self);
   const _callResult = obj.dataTransfer;
+  if (_callResult === null) return undefined;
   const handle = _nextDataTransfer++;
   _dataTransferHandles.set(handle, _callResult);
   return handle;
@@ -14758,7 +14881,7 @@ export function getPorts(self: bigint): (bigint)[] {
  */
 export function initMessageEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, data: string | undefined, origin: string | undefined, lastEventId: string | undefined, source: bigint | undefined, ports: (bigint)[] | undefined): void {
   const obj = lookupMessageEvent(self);
-  obj.initMessageEvent(type, bubbles, cancelable, data, origin, lastEventId, source, ports);
+  (obj as any).initMessageEvent(type, bubbles, cancelable, data, origin, lastEventId, source, ports);
 }
 
 // ---------------------------------------------------------------------------
@@ -14884,7 +15007,10 @@ function lookupMessageChannel(handle: bigint): MessageChannel {
  */
 export function getPort1(self: bigint): bigint {
   const obj = lookupMessageChannel(self);
-  return obj.port1;
+  const _callResult = obj.port1;
+  const handle = _nextMessagePort++;
+  _messagePortHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -14892,7 +15018,10 @@ export function getPort1(self: bigint): bigint {
  */
 export function getPort2(self: bigint): bigint {
   const obj = lookupMessageChannel(self);
-  return obj.port2;
+  const _callResult = obj.port2;
+  const handle = _nextMessagePort++;
+  _messagePortHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14953,18 +15082,6 @@ export function MessageEventTargetSetOnmessageerror(self: bigint, value: EventHa
 /** Type alias */
 export type MessagePortHandle = bigint;
 
-/** Handle table for MessagePort instances */
-const _messagePorthandles = new Map<bigint, MessagePort>();
-let _nextMessagePort = 1n;
-
-/** Lookup a MessagePort by handle, throwing if not found. */
-function lookupMessagePort(handle: bigint): MessagePort {
-  const obj = _messagePorthandles.get(handle);
-  if (!obj) {
-    throw new Error(`MessagePort handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `post-message()` operation.
  */
@@ -15388,7 +15505,7 @@ export function terminate(self: bigint): void {
  */
 export function WorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupWorker(self);
-  obj.postMessage(message, transfer);
+  (obj as any).postMessage(message, transfer);
 }
 
 // ---------------------------------------------------------------------------

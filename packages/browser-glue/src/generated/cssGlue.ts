@@ -244,6 +244,10 @@ let _nextBarProp = 1n;
 const _booleanHandles = new Map<bigint, boolean>();
 let _nextBoolean = 1n;
 
+/** Handle table for c-data-section values */
+const _cdataSectionHandles = new Map<bigint, CDATASection>();
+let _nextCdataSection = 1n;
+
 /** Handle table for comment values */
 const _commentHandles = new Map<bigint, Comment>();
 let _nextComment = 1n;
@@ -328,6 +332,10 @@ let _nextExternal = 1n;
 const _historyHandles = new Map<bigint, History>();
 let _nextHistory = 1n;
 
+/** Handle table for html-all-collection values */
+const _htmlAllCollectionHandles = new Map<bigint, HTMLAllCollection>();
+let _nextHtmlAllCollection = 1n;
+
 /** Handle table for html-collection values */
 const _htmlCollectionHandles = new Map<bigint, HTMLCollection>();
 let _nextHtmlCollection = 1n;
@@ -375,6 +383,10 @@ let _nextProcessingInstruction = 1n;
 /** Handle table for promise-void values */
 const _promiseVoidHandles = new Map<bigint, Promise<void>>();
 let _nextPromiseVoid = 1n;
+
+/** Handle table for range values */
+const _rangeHandles = new Map<bigint, Range>();
+let _nextRange = 1n;
 
 /** Handle table for screen values */
 const _screenHandles = new Map<bigint, Screen>();
@@ -477,6 +489,23 @@ function lookupOptionBoolean(handle: bigint | undefined): boolean | null {
     return null;
   }
   return _booleanHandles.get(handle) ?? null;
+}
+
+/** Lookup a c-data-section value by handle. */
+function lookupCdataSection(handle: bigint): CDATASection {
+  const obj = _cdataSectionHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`c-data-section handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional c-data-section value by handle. */
+function lookupOptionCdataSection(handle: bigint | undefined): CDATASection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cdataSectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a comment value by handle. */
@@ -836,6 +865,23 @@ function lookupOptionHistory(handle: bigint | undefined): History | null {
   return _historyHandles.get(handle) ?? null;
 }
 
+/** Lookup a html-all-collection value by handle. */
+function lookupHtmlAllCollection(handle: bigint): HTMLAllCollection {
+  const obj = _htmlAllCollectionHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`html-all-collection handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional html-all-collection value by handle. */
+function lookupOptionHtmlAllCollection(handle: bigint | undefined): HTMLAllCollection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlAllCollectionHandles.get(handle) ?? null;
+}
+
 /** Lookup a html-collection value by handle. */
 function lookupHtmlCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionHandles.get(handle);
@@ -1038,6 +1084,23 @@ function lookupOptionPromiseVoid(handle: bigint | undefined): Promise<void> | nu
     return null;
   }
   return _promiseVoidHandles.get(handle) ?? null;
+}
+
+/** Lookup a range value by handle. */
+function lookupRange(handle: bigint): Range {
+  const obj = _rangeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`range handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional range value by handle. */
+function lookupOptionRange(handle: bigint | undefined): Range | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _rangeHandles.get(handle) ?? null;
 }
 
 /** Lookup a screen value by handle. */
@@ -1328,6 +1391,7 @@ export function CssRuleSetCssText(self: bigint, value: string): void {
 export function CssRuleGetParentRule(self: bigint): bigint | undefined {
   const obj = lookupCSSRule(self);
   const _callResult = obj.parentRule;
+  if (_callResult === null) return undefined;
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, _callResult);
   return handle;
@@ -1339,6 +1403,7 @@ export function CssRuleGetParentRule(self: bigint): bigint | undefined {
 export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
   const obj = lookupCSSRule(self);
   const _callResult = obj.parentStyleSheet;
+  if (_callResult === null) return undefined;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, _callResult);
   return handle;
@@ -3723,6 +3788,7 @@ export function getScreen(): bigint {
  */
 export function getVisualViewport(): bigint | undefined {
   const _callResult = window.visualViewport;
+  if (_callResult === null) return undefined;
   const handle = _nextVisualViewport++;
   _visualViewportHandles.set(handle, _callResult);
   return handle;
@@ -3802,7 +3868,7 @@ export function getPageYOffset(): number {
  * `scroll()` operation.
  */
 export function WindowScroll(options: bigint | undefined): bigint {
-  const _callResult = window.scroll(options);
+  const _callResult = window.scroll(options as any);
   const handle = _nextVoid++;
   _voidHandles.set(handle, _callResult);
   return handle;
@@ -3812,7 +3878,7 @@ export function WindowScroll(options: bigint | undefined): bigint {
  * `scroll-to()` operation.
  */
 export function WindowScrollTo(options: bigint | undefined): bigint {
-  const _callResult = window.scrollTo(options);
+  const _callResult = window.scrollTo(options as any);
   const handle = _nextVoid++;
   _voidHandles.set(handle, _callResult);
   return handle;
@@ -3822,7 +3888,7 @@ export function WindowScrollTo(options: bigint | undefined): bigint {
  * `scroll-by()` operation.
  */
 export function WindowScrollBy(options: bigint | undefined): bigint {
-  const _callResult = window.scrollBy(options);
+  const _callResult = window.scrollBy(options as any);
   const handle = _nextVoid++;
   _voidHandles.set(handle, _callResult);
   return handle;
@@ -4119,6 +4185,7 @@ export function WindowGetLength(): number {
  */
 export function getTop(): bigint | undefined {
   const _callResult = window.top;
+  if (_callResult === null) return undefined;
   const handle = _nextWindow++;
   _windowHandles.set(handle, _callResult);
   return handle;
@@ -4146,6 +4213,7 @@ export function setOpener(value: string): void {
  */
 export function getParent(): bigint | undefined {
   const _callResult = window.parent;
+  if (_callResult === null) return undefined;
   const handle = _nextWindow++;
   _windowHandles.set(handle, _callResult);
   return handle;
@@ -4156,6 +4224,7 @@ export function getParent(): bigint | undefined {
  */
 export function getFrameElement(): bigint | undefined {
   const _callResult = window.frameElement;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4320,7 +4389,7 @@ export function MediaQueryListGetMatches(self: bigint): boolean {
  */
 export function addListener(self: bigint, callback: bigint | undefined): void {
   const obj = lookupMediaQueryList(self);
-  obj.addListener(callback);
+  obj.addListener(callback !== undefined ? lookupEventListener(callback) : null);
 }
 
 /**
@@ -4328,7 +4397,7 @@ export function addListener(self: bigint, callback: bigint | undefined): void {
  */
 export function removeListener(self: bigint, callback: bigint | undefined): void {
   const obj = lookupMediaQueryList(self);
-  obj.removeListener(callback);
+  obj.removeListener(callback !== undefined ? lookupEventListener(callback) : null);
 }
 
 /**
@@ -4498,6 +4567,7 @@ export function caretPositionFromPoint(x: number, y: number, options: bigint | u
  */
 export function getScrollingElement(): bigint | undefined {
   const _callResult = document.scrollingElement;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4567,6 +4637,7 @@ export function getContentType(): string {
  */
 export function getDoctype(): bigint | undefined {
   const _callResult = document.doctype;
+  if (_callResult === null) return undefined;
   const handle = _nextDocumentType++;
   _documentTypeHandles.set(handle, _callResult);
   return handle;
@@ -4577,6 +4648,7 @@ export function getDoctype(): bigint | undefined {
  */
 export function getDocumentElement(): bigint | undefined {
   const _callResult = document.documentElement;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4596,7 +4668,7 @@ export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  const _callResult = document.getElementsByTagNameNS(namespace, localName);
+  const _callResult = (document as any).getElementsByTagNameNS(namespace, localName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, _callResult);
   return handle;
@@ -4616,7 +4688,7 @@ export function DocumentGetElementsByClassName(classNames: string): bigint {
  * `create-element()` operation.
  */
 export function createElement(localName: string, options: string | undefined): bigint {
-  const _callResult = document.createElement(localName, options);
+  const _callResult = (document as any).createElement(localName, options);
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4626,7 +4698,7 @@ export function createElement(localName: string, options: string | undefined): b
  * `create-element-ns()` operation.
  */
 export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  const _callResult = document.createElementNS(namespace, qualifiedName, options);
+  const _callResult = (document as any).createElementNS(namespace, qualifiedName, options);
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4656,7 +4728,10 @@ export function createTextNode(data: string): bigint {
  * `create-cdata-section()` operation.
  */
 export function createCdataSection(data: string): bigint {
-  return document.createCDATASection(data);
+  const _callResult = document.createCDATASection(data);
+  const handle = _nextCdataSection++;
+  _cdataSectionHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -4683,7 +4758,7 @@ export function createProcessingInstruction(target: string, data: string): bigin
  * `import-node()` operation.
  */
 export function importNode(node: bigint, options: boolean | undefined): bigint {
-  const _callResult = document.importNode(node, options);
+  const _callResult = document.importNode(lookupNode(node), options);
   const handle = _nextNode++;
   _nodeHandles.set(handle, _callResult);
   return handle;
@@ -4693,7 +4768,7 @@ export function importNode(node: bigint, options: boolean | undefined): bigint {
  * `adopt-node()` operation.
  */
 export function adoptNode(node: bigint): bigint {
-  const _callResult = document.adoptNode(node);
+  const _callResult = document.adoptNode(lookupNode(node));
   const handle = _nextNode++;
   _nodeHandles.set(handle, _callResult);
   return handle;
@@ -4743,7 +4818,7 @@ export function createRange(): bigint {
  * `create-node-iterator()` operation.
  */
 export function createNodeIterator(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const _callResult = document.createNodeIterator(root, whatToShow, filter);
+  const _callResult = document.createNodeIterator(lookupNode(root), whatToShow, lookupOptionNodeFilter(filter));
   const handle = _nextNodeIterator++;
   _nodeIteratorHandles.set(handle, _callResult);
   return handle;
@@ -4753,7 +4828,7 @@ export function createNodeIterator(root: bigint, whatToShow: number | undefined,
  * `create-tree-walker()` operation.
  */
 export function createTreeWalker(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const _callResult = document.createTreeWalker(root, whatToShow, filter);
+  const _callResult = document.createTreeWalker(lookupNode(root), whatToShow, lookupOptionNodeFilter(filter));
   const handle = _nextTreeWalker++;
   _treeWalkerHandles.set(handle, _callResult);
   return handle;
@@ -4850,6 +4925,7 @@ export function parseHtmlUnsafe(html: bigint): bigint {
  */
 export function DocumentGetLocation(): bigint | undefined {
   const _callResult = document.location;
+  if (_callResult === null) return undefined;
   const handle = _nextLocation++;
   _locationHandles.set(handle, _callResult);
   return handle;
@@ -4965,6 +5041,7 @@ export function DocumentSetDir(value: string): void {
  */
 export function getBody(): bigint | undefined {
   const _callResult = document.body;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -4982,6 +5059,7 @@ export function setBody(value: bigint | undefined): void {
  */
 export function getHead(): bigint | undefined {
   const _callResult = document.head;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -5062,6 +5140,7 @@ export function getElementsByName(elementName: string): bigint {
  */
 export function getCurrentScript(): bigint | undefined {
   const _callResult = document.currentScript;
+  if (_callResult === null) return undefined;
   const handle = _nextHtmlElement++;
   _htmlElementHandles.set(handle, _callResult);
   return handle;
@@ -5088,7 +5167,7 @@ export function DocumentClose(): void {
  * `write()` operation.
  */
 export function write(text: (bigint)[]): void {
-  document.write(text);
+  document.write(String.fromCodePoint(...Array.from(text).map(Number)));
 }
 
 /**
@@ -5103,6 +5182,7 @@ export function writeln(text: (bigint)[]): void {
  */
 export function getDefaultView(): bigint | undefined {
   const _callResult = document.defaultView;
+  if (_callResult === null) return undefined;
   const handle = _nextWindow++;
   _windowHandles.set(handle, _callResult);
   return handle;
@@ -5354,7 +5434,10 @@ export function DocumentReleaseEvents(): void {
  * `get-all()` operation.
  */
 export function getAll(): bigint {
-  return document.all;
+  const _callResult = document.all;
+  const handle = _nextHtmlAllCollection++;
+  _htmlAllCollectionHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -5814,7 +5897,7 @@ export function getAttributeNodeNs(self: bigint, namespace: string | undefined, 
  */
 export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  const _callResult = obj.setAttributeNode(attr);
+  const _callResult = obj.setAttributeNode(lookupAttr(attr));
   if (_callResult === null) return undefined;
   const handle = _nextAttr++;
   _attrHandles.set(handle, _callResult);
@@ -5826,7 +5909,7 @@ export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined
  */
 export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  return obj.setAttributeNodeNS(attr) ?? undefined;
+  return obj.setAttributeNodeNS(lookupAttr(attr)) ?? undefined;
 }
 
 /**
@@ -5834,7 +5917,7 @@ export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefin
  */
 export function removeAttributeNode(self: bigint, attr: bigint): bigint {
   const obj = lookupElement(self);
-  const _callResult = obj.removeAttributeNode(attr);
+  const _callResult = obj.removeAttributeNode(lookupAttr(attr));
   const handle = _nextAttr++;
   _attrHandles.set(handle, _callResult);
   return handle;
@@ -5845,7 +5928,7 @@ export function removeAttributeNode(self: bigint, attr: bigint): bigint {
  */
 export function attachShadow(self: bigint, init: bigint): bigint {
   const obj = lookupElement(self);
-  const _callResult = obj.attachShadow(init);
+  const _callResult = obj.attachShadow(init as any);
   const handle = _nextShadowRoot++;
   _shadowRootHandles.set(handle, _callResult);
   return handle;
@@ -5857,6 +5940,7 @@ export function attachShadow(self: bigint, init: bigint): bigint {
 export function getShadowRoot(self: bigint): bigint | undefined {
   const obj = lookupElement(self);
   const _callResult = obj.shadowRoot;
+  if (_callResult === null) return undefined;
   const handle = _nextShadowRoot++;
   _shadowRootHandles.set(handle, _callResult);
   return handle;
@@ -5919,7 +6003,7 @@ export function ElementGetElementsByTagName(self: bigint, qualifiedName: string)
  */
 export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
-  const _callResult = obj.getElementsByTagNameNS(namespace, localName);
+  const _callResult = (obj as any).getElementsByTagNameNS(namespace, localName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, _callResult);
   return handle;
@@ -6154,6 +6238,7 @@ export function getScrollParent(self: bigint): bigint | undefined {
 export function getOffsetParent(self: bigint): bigint | undefined {
   const obj = lookupHTMLElement(self);
   const _callResult = obj.offsetParent;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -6958,24 +7043,6 @@ export function setBorder(self: bigint, value: string): void {
 /** Type alias */
 export type RangeHandle = bigint;
 
-/** Handle table for Range instances */
-const _rangeHandles = new Map<bigint, Range>();
-let _nextRange = 1n;
-
-/** Register a new Range and return its handle. */
-function registerRange(obj: Range): bigint {
-  const handle = _nextRange++;
-  _rangeHandles.set(handle, obj);
-  return handle;
-}
-/** Lookup a Range by handle, throwing if not found. */
-function lookupRange(handle: bigint): Range {
-  const obj = _rangeHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Range handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `get-client-rects()` operation.
  */
@@ -7014,7 +7081,7 @@ export function getCommonAncestorContainer(self: bigint): bigint {
  */
 export function setStart(self: bigint, node: bigint, offset: number): void {
   const obj = lookupRange(self);
-  (obj as any).setStart(node, offset);
+  (obj as any).setStart(lookupNode(node), offset);
 }
 
 /**
@@ -7022,7 +7089,7 @@ export function setStart(self: bigint, node: bigint, offset: number): void {
  */
 export function setEnd(self: bigint, node: bigint, offset: number): void {
   const obj = lookupRange(self);
-  (obj as any).setEnd(node, offset);
+  (obj as any).setEnd(lookupNode(node), offset);
 }
 
 /**
@@ -7030,7 +7097,7 @@ export function setEnd(self: bigint, node: bigint, offset: number): void {
  */
 export function setStartBefore(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setStartBefore(node);
+  obj.setStartBefore(lookupNode(node));
 }
 
 /**
@@ -7038,7 +7105,7 @@ export function setStartBefore(self: bigint, node: bigint): void {
  */
 export function setStartAfter(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setStartAfter(node);
+  obj.setStartAfter(lookupNode(node));
 }
 
 /**
@@ -7046,7 +7113,7 @@ export function setStartAfter(self: bigint, node: bigint): void {
  */
 export function setEndBefore(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setEndBefore(node);
+  obj.setEndBefore(lookupNode(node));
 }
 
 /**
@@ -7054,7 +7121,7 @@ export function setEndBefore(self: bigint, node: bigint): void {
  */
 export function setEndAfter(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  (obj as any).setEndAfter(node);
+  (obj as any).setEndAfter(lookupNode(node));
 }
 
 /**
@@ -7102,7 +7169,10 @@ export function deleteContents(self: bigint): void {
  */
 export function extractContents(self: bigint): bigint {
   const obj = lookupRange(self);
-  return obj.extractContents();
+  const _callResult = obj.extractContents();
+  const handle = _nextDocumentFragment++;
+  _documentFragmentHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -7121,7 +7191,7 @@ export function cloneContents(self: bigint): bigint {
  */
 export function insertNode(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.insertNode(node);
+  obj.insertNode(lookupNode(node));
 }
 
 /**
@@ -7129,7 +7199,7 @@ export function insertNode(self: bigint, node: bigint): void {
  */
 export function surroundContents(self: bigint, newParent: bigint): void {
   const obj = lookupRange(self);
-  obj.surroundContents(newParent);
+  obj.surroundContents(lookupNode(newParent));
 }
 
 /**
@@ -7137,7 +7207,10 @@ export function surroundContents(self: bigint, newParent: bigint): void {
  */
 export function cloneRange(self: bigint): bigint {
   const obj = lookupRange(self);
-  return obj.cloneRange();
+  const _callResult = obj.cloneRange();
+  const handle = _nextRange++;
+  _rangeHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -7662,6 +7735,7 @@ export function StyleSheetGetHref(self: bigint): string | undefined {
 export function getOwnerNode(self: bigint): bigint | undefined {
   const obj = lookupStyleSheet(self);
   const _callResult = obj.ownerNode;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -7673,6 +7747,7 @@ export function getOwnerNode(self: bigint): bigint | undefined {
 export function StyleSheetGetParentStyleSheet(self: bigint): bigint | undefined {
   const obj = lookupStyleSheet(self);
   const _callResult = obj.parentStyleSheet;
+  if (_callResult === null) return undefined;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, _callResult);
   return handle;
@@ -7738,6 +7813,7 @@ function lookupCSSStyleSheet(handle: bigint): CSSStyleSheet {
 export function getOwnerRule(self: bigint): bigint | undefined {
   const obj = lookupCSSStyleSheet(self);
   const _callResult = obj.ownerRule;
+  if (_callResult === null) return undefined;
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, _callResult);
   return handle;
@@ -7759,7 +7835,7 @@ export function CssStyleSheetGetCssRules(self: bigint): bigint {
  */
 export function CssStyleSheetInsertRule(self: bigint, rule: string, index: number | undefined): bigint {
   const obj = lookupCSSStyleSheet(self);
-  const _callResult = obj.insertRule(rule, index);
+  const _callResult = (obj as any).insertRule(rule, index);
   const handle = _nextNumber++;
   _numberHandles.set(handle, _callResult);
   return handle;
@@ -7946,6 +8022,7 @@ export function getFullscreenElement(self: bigint): bigint | undefined {
 export function getActiveElement(self: bigint): bigint | undefined {
   const obj = lookupDocumentOrShadowRoot(self);
   const _callResult = obj.activeElement;
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -7976,6 +8053,7 @@ function lookupLinkStyle(handle: bigint): LinkStyle {
 export function getSheet(self: bigint): bigint | undefined {
   const obj = lookupLinkStyle(self);
   const _callResult = obj.sheet;
+  if (_callResult === null) return undefined;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, _callResult);
   return handle;
@@ -8109,6 +8187,7 @@ export function CssImportRuleGetMedia(self: bigint): bigint {
 export function getStyleSheet(self: bigint): bigint | undefined {
   const obj = lookupCSSImportRule(self);
   const _callResult = obj.styleSheet;
+  if (_callResult === null) return undefined;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, _callResult);
   return handle;
@@ -8623,7 +8702,10 @@ function lookupElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
  */
 export function ElementCssInlineStyleGetStyle(self: bigint): bigint {
   const obj = lookupElementCSSInlineStyle(self);
-  return obj.style;
+  const _callResult = obj.style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------

@@ -237,7 +237,7 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): string {
+export function cmp(handle: bigint, first: string, second: string): number {
   const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -342,7 +342,7 @@ export function IdbObjectStoreGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbObjectStoreSetName(handle: bigint, value: string): void {
+export function IdbObjectStoreSetName(handle: bigint, value: boolean): void {
   const obj = lookupIdbStore(handle);
   obj.name = value;
 }
@@ -393,7 +393,7 @@ export function IdbIndexGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbIndexSetName(handle: bigint, value: string): void {
+export function IdbIndexSetName(handle: bigint, value: bigint): void {
   const obj = lookupIDBIndex(handle);
   obj.name = value;
 }
@@ -417,7 +417,7 @@ export function multiEntry(handle: bigint): boolean {
 /**
  * `unique()` operation.
  */
-export function unique(handle: bigint): boolean {
+export function unique(handle: bigint): string {
   const obj = lookupIDBIndex(handle);
   return (obj as any).unique();
 }

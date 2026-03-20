@@ -374,6 +374,7 @@ class CodeGenerator:
         if func.is_getter_but_method:
             method_name = func.browser_attr
             args = self._get_converted_browser_args(func, iface, skip_self=True)
+            enum_key = (iface.wit_name, prop_name)
             if handle_key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
@@ -383,6 +384,15 @@ class CodeGenerator:
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
+            elif enum_key in ENUM_PROPERTIES:
+                enum_name = ENUM_PROPERTIES[enum_key]
+                enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
+                lines.append(f"  const value = {obj_ref_with_assertion}.{method_name}({args});")
+                lines.append(f"  switch (value) {{")
+                for enum_str, enum_int in enum_values.items():
+                    lines.append(f"    case '{enum_str}': return {enum_int}n;")
+                lines.append(f"    default: return 0n;")
+                lines.append(f"  }}")
             elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
                     lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
@@ -399,6 +409,8 @@ class CodeGenerator:
             target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.wit_name, kebab_to_camel(func.wit_name))]
             target_var, target_pascal = self._get_handle_info(target_iface)
             lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_attr};")
+            if func.return_is_optional:
+                lines.append(f"  if (_callResult === null) return undefined;")
             lines.append(f"  const handle = _next{target_pascal}++;")
             lines.append(f"  _{target_var}.set(handle, _callResult);")
             lines.append("  return handle;")
@@ -663,6 +675,18 @@ class CodeGenerator:
                         converted_args.append(f"Array.from({param.name}).map(Number)")
                     elif conversion_type == "boolean":
                         converted_args.append(f"Boolean({param.name})")
+                    elif isinstance(conversion_type, str) and conversion_type.startswith("dictionary:"):
+                        converted_args.append(f"{param.name} as any")
+                    elif conversion_type == "string-from-array":
+                        converted_args.append(f"String.fromCodePoint(...Array.from({param.name}).map(Number))")
+                    elif conversion_type == "buffer-source":
+                        converted_args.append(f"lookupBufferSource({param.name})")
+                    elif conversion_type == "event-listener":
+                        converted_args.append(f"{param.name} !== undefined ? lookupEventListener({param.name}) : null")
+                    elif isinstance(conversion_type, str) and conversion_type.startswith("enum:"):
+                        converted_args.append(f"{param.name} as any")
+                    elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
+                        converted_args.append(f"{param.name} as any")
                     else:
                         converted_args.append(f"Number({param.name})")
                 else:
