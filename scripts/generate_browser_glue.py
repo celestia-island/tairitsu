@@ -341,7 +341,10 @@ class BrowserGlueGenerator:
         is_getter = wit_name.startswith("get-")
         is_setter = wit_name.startswith("set-")
         is_async = self._is_async_function(wit_name, func, interface.name)
-        is_static = func.is_static
+        
+        # Detect static functions: functions without a self parameter
+        has_self_param = any(p.name == "self" for p in func.params)
+        is_static = func.is_static or (not has_self_param and not is_global_singleton)
 
         # For async functions, return type is always bigint (request ID)
         if is_async:
