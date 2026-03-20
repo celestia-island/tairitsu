@@ -40,7 +40,7 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): string {
+export function getRootMargin(self: bigint): bigint | undefined {
   const obj = getIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -48,7 +48,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): EventHandlerRecord {
+export function getScrollMargin(self: bigint): string {
   const obj = getIntersectionObserver(self);
   return obj.scrollMargin;
 }
@@ -164,7 +164,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): number {
+export function getIsIntersecting(self: bigint): boolean {
   const obj = getIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -180,7 +180,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): number {
+export function getIntersectionRatio(self: bigint): boolean {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -216,7 +216,7 @@ function getResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: number, options: bigint): void {
   const obj = getResizeObserver(self);
   obj.observe(target, options);
 }
@@ -276,7 +276,7 @@ export function getContentRect(self: bigint): bigint {
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: bigint): (bigint)[] {
+export function getBorderBoxSize(self: bigint): bigint {
   const obj = getResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -284,7 +284,7 @@ export function getBorderBoxSize(self: bigint): (bigint)[] {
 /**
  * `get-content-box-size()` operation.
  */
-export function getContentBoxSize(self: bigint): (bigint)[] {
+export function getContentBoxSize(self: bigint): (string)[] {
   const obj = getResizeObserverEntry(self);
   return obj.contentBoxSize;
 }
@@ -320,7 +320,7 @@ function getResizeObserverSize(handle: bigint): ResizeObserverSize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): bigint {
+export function getInlineSize(self: bigint): string {
   const obj = getResizeObserverSize(self);
   return obj.inlineSize;
 }
@@ -328,7 +328,7 @@ export function getInlineSize(self: bigint): bigint {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): bigint {
+export function getBlockSize(self: bigint): number {
   const obj = getResizeObserverSize(self);
   return obj.blockSize;
 }

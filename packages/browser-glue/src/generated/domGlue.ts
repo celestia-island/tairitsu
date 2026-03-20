@@ -1990,7 +1990,7 @@ export function previousSibling(self: bigint): bigint | undefined {
 /**
  * `next-sibling()` operation.
  */
-export function nextSibling(self: bigint): bigint {
+export function nextSibling(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.nextSibling() ?? undefined;
 }
@@ -2218,7 +2218,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): bigint | undefined {
+export function iterateNext(self: bigint): number | undefined {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2226,7 +2226,7 @@ export function iterateNext(self: bigint): bigint | undefined {
 /**
  * `snapshot-item()` operation.
  */
-export function snapshotItem(self: bigint, index: number): bigint | undefined {
+export function snapshotItem(self: bigint, index: number): EventHandlerRecord {
   const obj = getXPathResult(self);
   return obj.snapshotItem(index) ?? undefined;
 }
@@ -2333,7 +2333,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
   const obj = getXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }
@@ -2377,7 +2377,7 @@ export function transformToFragment(self: bigint, source: bigint, output: bigint
 /**
  * `transform-to-document()` operation.
  */
-export function transformToDocument(self: bigint, source: string): bigint {
+export function transformToDocument(self: bigint, source: bigint): bigint {
   const obj = getXsltProcessor(self);
   return obj.transformToDocument(source);
 }

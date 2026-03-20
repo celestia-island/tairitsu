@@ -299,7 +299,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: number): void {
+export function advance(handle: bigint, count: string): void {
   return IdbCursor.advance(handle, count);
 }
 

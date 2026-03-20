@@ -45,21 +45,21 @@ function getModule(handle: bigint): Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: string): (bigint)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): EventHandlerRecord {
+export function imports(moduleObject: bigint): (bigint)[] {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: string, sectionName: string): (EventHandlerRecord)[] {
+export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -86,7 +86,7 @@ function getInstance(handle: bigint): Instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): string {
+export function getExports(self: bigint): bigint {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -114,7 +114,7 @@ function getMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): string {
+export function MemoryGrow(self: bigint, delta: bigint): bigint {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -122,7 +122,7 @@ export function MemoryGrow(self: bigint, delta: bigint): string {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): Uint8Array {
+export function toFixedLengthBuffer(self: bigint): (bigint)[] {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -138,7 +138,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): (boolean)[] {
+export function getBuffer(self: bigint): (EventHandlerRecord)[] {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -166,7 +166,7 @@ function getTable(handle: bigint): Table {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: bigint | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
@@ -212,7 +212,7 @@ export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: string, value: string | undefined): void {
   const obj = getTable(self);
   obj.set(index, value);
 }
@@ -292,7 +292,7 @@ function getException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): bigint {
   const obj = getException(self);
   return obj.arg;
 }
@@ -300,7 +300,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): bigint {
+export function is(self: bigint, exceptionTag: bigint): bigint | undefined {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }
