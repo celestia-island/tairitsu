@@ -224,8 +224,8 @@ export type CredentialHandle = bigint;
 const _credentialHandles = new Map<bigint, Credential>();
 let _nextCredential = 1n;
 
-/** Get a Credential by handle, throwing if not found. */
-function getCredential(handle: bigint): Credential {
+/** Lookup a Credential by handle, throwing if not found. */
+function lookupCredential(handle: bigint): Credential {
   const obj = _credentialHandles.get(handle);
   if (!obj) {
     throw new Error(`Credential handle ${handle} not found`);
@@ -236,7 +236,7 @@ function getCredential(handle: bigint): Credential {
  * `get-id()` operation.
  */
 export function getId(self: bigint): string {
-  const obj = getCredential(self);
+  const obj = lookupCredential(self);
   return obj.id;
 }
 
@@ -244,7 +244,7 @@ export function getId(self: bigint): string {
  * `get-type()` operation.
  */
 export function getType(self: bigint): string {
-  const obj = getCredential(self);
+  const obj = lookupCredential(self);
   return obj.type;
 }
 
@@ -296,8 +296,8 @@ export type CredentialUserDataHandle = bigint;
 const _credentialUserDatahandles = new Map<bigint, any>();
 let _nextCredentialUserData = 1n;
 
-/** Get a any by handle, throwing if not found. */
-function getCredentialUserData(handle: bigint): any {
+/** Lookup a any by handle, throwing if not found. */
+function lookupCredentialUserData(handle: bigint): any {
   const obj = _credentialUserDatahandles.get(handle);
   if (!obj) {
     throw new Error(`any handle ${handle} not found`);
@@ -308,7 +308,7 @@ function getCredentialUserData(handle: bigint): any {
  * `get-name()` operation.
  */
 export function getName(self: bigint): string {
-  const obj = getCredentialUserData(self);
+  const obj = lookupCredentialUserData(self);
   return obj.name;
 }
 
@@ -316,7 +316,7 @@ export function getName(self: bigint): string {
  * `get-icon-url()` operation.
  */
 export function getIconUrl(self: bigint): string {
-  const obj = getCredentialUserData(self);
+  const obj = lookupCredentialUserData(self);
   return obj.iconUrl;
 }
 
@@ -337,8 +337,8 @@ function registerCredentialsContainer(obj: CredentialsContainer): bigint {
   _credentialsContainerhandles.set(handle, obj);
   return handle;
 }
-/** Get a CredentialsContainer by handle, throwing if not found. */
-function getCredentialsContainer(handle: bigint): CredentialsContainer {
+/** Lookup a CredentialsContainer by handle, throwing if not found. */
+function lookupCredentialsContainer(handle: bigint): CredentialsContainer {
   const obj = _credentialsContainerhandles.get(handle);
   if (!obj) {
     throw new Error(`CredentialsContainer handle ${handle} not found`);
@@ -352,7 +352,7 @@ function getCredentialsContainer(handle: bigint): CredentialsContainer {
  */
 export function _get(self: bigint, options: CredentialRequestOptions | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getCredentialsContainer(self);
+  const obj = lookupCredentialsContainer(self);
   const promise = obj.get(options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -390,8 +390,8 @@ export function pollGet(requestId: bigint): { ok: true; value: bigint } | { ok: 
  */
 export function store(self: bigint, credential: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getCredentialsContainer(self);
-  const promise = obj.store(getCredential(credential))
+  const obj = lookupCredentialsContainer(self);
+  const promise = obj.store(lookupCredential(credential))
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -428,7 +428,7 @@ export function pollStore(requestId: bigint): { ok: true; value: bigint } | { ok
  */
 export function create(self: bigint, options: CredentialCreationOptions | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getCredentialsContainer(self);
+  const obj = lookupCredentialsContainer(self);
   const promise = obj.create(options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -466,7 +466,7 @@ export function pollCreate(requestId: bigint): { ok: true; value: bigint } | { o
  */
 export function preventSilentAccess(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getCredentialsContainer(self);
+  const obj = lookupCredentialsContainer(self);
   const promise = obj.preventSilentAccess()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -508,8 +508,8 @@ export type PasswordCredentialHandle = bigint;
 const _passwordCredentialhandles = new Map<bigint, any>();
 let _nextPasswordCredential = 1n;
 
-/** Get a PasswordCredential by handle, throwing if not found. */
-function getPasswordCredential(handle: bigint): any {
+/** Lookup a PasswordCredential by handle, throwing if not found. */
+function lookupPasswordCredential(handle: bigint): any {
   const obj = _passwordCredentialhandles.get(handle);
   if (!obj) {
     throw new Error(`PasswordCredential handle ${handle} not found`);
@@ -520,7 +520,7 @@ function getPasswordCredential(handle: bigint): any {
  * `get-password()` operation.
  */
 export function getPassword(self: bigint): string {
-  const obj = getPasswordCredential(self);
+  const obj = lookupPasswordCredential(self);
   return obj.password;
 }
 
@@ -535,8 +535,8 @@ export type FederatedCredentialHandle = bigint;
 const _federatedCredentialhandles = new Map<bigint, any>();
 let _nextFederatedCredential = 1n;
 
-/** Get a FederatedCredential by handle, throwing if not found. */
-function getFederatedCredential(handle: bigint): any {
+/** Lookup a FederatedCredential by handle, throwing if not found. */
+function lookupFederatedCredential(handle: bigint): any {
   const obj = _federatedCredentialhandles.get(handle);
   if (!obj) {
     throw new Error(`FederatedCredential handle ${handle} not found`);
@@ -547,7 +547,7 @@ function getFederatedCredential(handle: bigint): any {
  * `get-provider()` operation.
  */
 export function getProvider(self: bigint): string {
-  const obj = getFederatedCredential(self);
+  const obj = lookupFederatedCredential(self);
   return obj.provider;
 }
 
@@ -555,7 +555,7 @@ export function getProvider(self: bigint): string {
  * `get-protocol()` operation.
  */
 export function getProtocol(self: bigint): string | undefined {
-  const obj = getFederatedCredential(self);
+  const obj = lookupFederatedCredential(self);
   return obj.protocol ?? undefined;
 }
 

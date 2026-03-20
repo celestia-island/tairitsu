@@ -214,6 +214,35 @@ interface AsyncHandle<T> {
 const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
+// Synthetic handle tables for primitive/utility types
+// ---------------------------------------------------------------------------
+
+/** Handle table for promise-permission-status values */
+const _promisePermissionStatusHandles = new Map<bigint, Promise<PermissionStatus>>();
+let _nextPromisePermissionStatus = 1n;
+
+// ---------------------------------------------------------------------------
+// Helper functions for handle lookups
+// ---------------------------------------------------------------------------
+
+/** Lookup a promise-permission-status value by handle. */
+function lookupPromisePermissionStatus(handle: bigint): Promise<PermissionStatus> {
+  const obj = _promisePermissionStatusHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`promise-permission-status handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional promise-permission-status value by handle. */
+function lookupOptionPromisePermissionStatus(handle: bigint | undefined): Promise<PermissionStatus> | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _promisePermissionStatusHandles.get(handle);
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: permissions
 // ---------------------------------------------------------------------------
 
@@ -224,8 +253,8 @@ export type PermissionsHandle = bigint;
 const _permissionsHandles = new Map<bigint, Permissions>();
 let _nextPermissions = 1n;
 
-/** Get a Permissions by handle, throwing if not found. */
-function getPermissions(handle: bigint): Permissions {
+/** Lookup a Permissions by handle, throwing if not found. */
+function lookupPermissions(handle: bigint): Permissions {
   const obj = _permissionsHandles.get(handle);
   if (!obj) {
     throw new Error(`Permissions handle ${handle} not found`);
@@ -237,9 +266,9 @@ function getPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: string): bigint {
+export function query(self: bigint, permissionDesc: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getPermissions(self);
+  const obj = lookupPermissions(self);
   const promise = (obj as any).getQuery(permissionDesc)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -262,12 +291,12 @@ export function query(self: bigint, permissionDesc: string): bigint {
  * Poll an async `query()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollQuery(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -281,8 +310,8 @@ export type PermissionStatusHandle = bigint;
 const _permissionStatushandles = new Map<bigint, PermissionStatus>();
 let _nextPermissionStatus = 1n;
 
-/** Get a PermissionStatus by handle, throwing if not found. */
-function getPermissionStatus(handle: bigint): PermissionStatus {
+/** Lookup a PermissionStatus by handle, throwing if not found. */
+function lookupPermissionStatus(handle: bigint): PermissionStatus {
   const obj = _permissionStatushandles.get(handle);
   if (!obj) {
     throw new Error(`PermissionStatus handle ${handle} not found`);
@@ -292,8 +321,8 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): string {
-  const obj = getPermissionStatus(self);
+export function getState(self: bigint): bigint {
+  const obj = lookupPermissionStatus(self);
   return obj.state;
 }
 
@@ -301,23 +330,23 @@ export function getState(self: bigint): string {
  * `get-name()` operation.
  */
 export function getName(self: bigint): string {
-  const obj = getPermissionStatus(self);
+  const obj = lookupPermissionStatus(self);
   return obj.name;
 }
 
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): string {
-  const obj = getPermissionStatus(self);
+export function getOnchange(self: bigint): EventHandlerRecord {
+  const obj = lookupPermissionStatus(self);
   return obj.onchange;
 }
 
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getPermissionStatus(self);
+export function setOnchange(self: bigint, value: bigint): void {
+  const obj = lookupPermissionStatus(self);
   obj.onchange = value;
 }
 

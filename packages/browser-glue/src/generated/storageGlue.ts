@@ -224,8 +224,8 @@ export type NavigatorStorageHandle = bigint;
 const _navigatorStoragehandles = new Map<bigint, NavigatorStorage>();
 let _nextNavigatorStorage = 1n;
 
-/** Get a NavigatorStorage by handle, throwing if not found. */
-function getNavigatorStorage(handle: bigint): NavigatorStorage {
+/** Lookup a NavigatorStorage by handle, throwing if not found. */
+function lookupNavigatorStorage(handle: bigint): NavigatorStorage {
   const obj = _navigatorStoragehandles.get(handle);
   if (!obj) {
     throw new Error(`NavigatorStorage handle ${handle} not found`);
@@ -235,8 +235,8 @@ function getNavigatorStorage(handle: bigint): NavigatorStorage {
 /**
  * `get-storage()` operation.
  */
-export function getStorage(self: bigint): bigint {
-  const obj = getNavigatorStorage(self);
+export function getStorage(self: bigint): boolean {
+  const obj = lookupNavigatorStorage(self);
   return obj.storage;
 }
 
@@ -251,8 +251,8 @@ export type StorageManagerHandle = bigint;
 const _storageManagerhandles = new Map<bigint, StorageManager>();
 let _nextStorageManager = 1n;
 
-/** Get a StorageManager by handle, throwing if not found. */
-function getStorageManager(handle: bigint): StorageManager {
+/** Lookup a StorageManager by handle, throwing if not found. */
+function lookupStorageManager(handle: bigint): StorageManager {
   const obj = _storageManagerhandles.get(handle);
   if (!obj) {
     throw new Error(`StorageManager handle ${handle} not found`);
@@ -266,7 +266,7 @@ function getStorageManager(handle: bigint): StorageManager {
  */
 export function persisted(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getStorageManager(self);
+  const obj = lookupStorageManager(self);
   const promise = obj.persisted()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -304,7 +304,7 @@ export function pollPersisted(requestId: bigint): { ok: true; value: bigint } | 
  */
 export function persist(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getStorageManager(self);
+  const obj = lookupStorageManager(self);
   const promise = obj.persist()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -327,12 +327,12 @@ export function persist(self: bigint): bigint {
  * Poll an async `persist()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersist(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollPersist(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -342,7 +342,7 @@ export function pollPersist(requestId: bigint): { ok: true; value: bigint } | { 
  */
 export function estimate(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getStorageManager(self);
+  const obj = lookupStorageManager(self);
   const promise = obj.estimate()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);

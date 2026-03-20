@@ -211,8 +211,8 @@ export type IdbFactoryHandle = bigint;
 const _idbFactoryhandles = new Map<bigint, IDBFactory>();
 let _nextIDBFactory = 1n;
 
-/** Get a IDBFactory by handle, throwing if not found. */
-function getIDBFactory(handle: bigint): IDBFactory {
+/** Lookup a IDBFactory by handle, throwing if not found. */
+function lookupIDBFactory(handle: bigint): IDBFactory {
   const obj = _idbFactoryhandles.get(handle);
   if (!obj) {
     throw new Error(`IDBFactory handle ${handle} not found`);
@@ -222,8 +222,8 @@ function getIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): string {
-  const obj = getIDBFactory(handle);
+export function cmp(handle: bigint, first: string, second: string): number {
+  const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
 
@@ -238,8 +238,8 @@ export type IdbDbHandle = bigint;
 const _idbDbhandles = new Map<bigint, IDBDatabase>();
 let _nextIdbDb = 1n;
 
-/** Get a IDBDatabase by handle, throwing if not found. */
-function getIdbDb(handle: bigint): IDBDatabase {
+/** Lookup a IDBDatabase by handle, throwing if not found. */
+function lookupIdbDb(handle: bigint): IDBDatabase {
   const obj = _idbDbhandles.get(handle);
   if (!obj) {
     throw new Error(`IDBDatabase handle ${handle} not found`);
@@ -250,7 +250,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
  * `name()` operation.
  */
 export function name(handle: bigint): string {
-  const obj = getIdbDb(handle);
+  const obj = lookupIdbDb(handle);
   return obj.name();
 }
 
@@ -258,7 +258,7 @@ export function name(handle: bigint): string {
  * `version()` operation.
  */
 export function version(handle: bigint): bigint {
-  const obj = getIdbDb(handle);
+  const obj = lookupIdbDb(handle);
   return obj.version();
 }
 
@@ -273,8 +273,8 @@ export type IdbTxHandle = bigint;
 const _idbTxhandles = new Map<bigint, IDBTransaction>();
 let _nextIdbTx = 1n;
 
-/** Get a IDBTransaction by handle, throwing if not found. */
-function getIdbTx(handle: bigint): IDBTransaction {
+/** Lookup a IDBTransaction by handle, throwing if not found. */
+function lookupIdbTx(handle: bigint): IDBTransaction {
   const obj = _idbTxhandles.get(handle);
   if (!obj) {
     throw new Error(`IDBTransaction handle ${handle} not found`);
@@ -285,7 +285,7 @@ function getIdbTx(handle: bigint): IDBTransaction {
  * `commit()` operation.
  */
 export function commit(handle: bigint): void {
-  const obj = getIdbTx(handle);
+  const obj = lookupIdbTx(handle);
   obj.commit();
 }
 
@@ -293,7 +293,7 @@ export function commit(handle: bigint): void {
  * `abort()` operation.
  */
 export function abort(handle: bigint): void {
-  const obj = getIdbTx(handle);
+  const obj = lookupIdbTx(handle);
   obj.abort();
 }
 
@@ -308,8 +308,8 @@ export type IdbStoreHandle = bigint;
 const _idbStorehandles = new Map<bigint, IDBObjectStore>();
 let _nextIdbStore = 1n;
 
-/** Get a IDBObjectStore by handle, throwing if not found. */
-function getIdbStore(handle: bigint): IDBObjectStore {
+/** Lookup a IDBObjectStore by handle, throwing if not found. */
+function lookupIdbStore(handle: bigint): IDBObjectStore {
   const obj = _idbStorehandles.get(handle);
   if (!obj) {
     throw new Error(`IDBObjectStore handle ${handle} not found`);
@@ -320,7 +320,7 @@ function getIdbStore(handle: bigint): IDBObjectStore {
  * `get-name()` operation.
  */
 export function IdbObjectStoreGetName(handle: bigint): string {
-  const obj = getIdbStore(handle);
+  const obj = lookupIdbStore(handle);
   return obj.name;
 }
 
@@ -328,7 +328,7 @@ export function IdbObjectStoreGetName(handle: bigint): string {
  * `set-name()` operation.
  */
 export function IdbObjectStoreSetName(handle: bigint, value: string): void {
-  const obj = getIdbStore(handle);
+  const obj = lookupIdbStore(handle);
   obj.name = value;
 }
 
@@ -336,15 +336,15 @@ export function IdbObjectStoreSetName(handle: bigint, value: string): void {
  * `key-path()` operation.
  */
 export function IdbObjectStoreKeyPath(handle: bigint): string {
-  const obj = getIdbStore(handle);
+  const obj = lookupIdbStore(handle);
   return obj.keyPath();
 }
 
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): boolean {
-  const obj = getIdbStore(handle);
+export function autoIncrement(handle: bigint): string {
+  const obj = lookupIdbStore(handle);
   return obj.autoIncrement();
 }
 
@@ -359,8 +359,8 @@ export type IdbIndexHandle = bigint;
 const _idbIndexhandles = new Map<bigint, IDBIndex>();
 let _nextIDBIndex = 1n;
 
-/** Get a IDBIndex by handle, throwing if not found. */
-function getIDBIndex(handle: bigint): IDBIndex {
+/** Lookup a IDBIndex by handle, throwing if not found. */
+function lookupIDBIndex(handle: bigint): IDBIndex {
   const obj = _idbIndexhandles.get(handle);
   if (!obj) {
     throw new Error(`IDBIndex handle ${handle} not found`);
@@ -371,7 +371,7 @@ function getIDBIndex(handle: bigint): IDBIndex {
  * `get-name()` operation.
  */
 export function IdbIndexGetName(handle: bigint): string {
-  const obj = getIDBIndex(handle);
+  const obj = lookupIDBIndex(handle);
   return obj.name;
 }
 
@@ -379,7 +379,7 @@ export function IdbIndexGetName(handle: bigint): string {
  * `set-name()` operation.
  */
 export function IdbIndexSetName(handle: bigint, value: string): void {
-  const obj = getIDBIndex(handle);
+  const obj = lookupIDBIndex(handle);
   obj.name = value;
 }
 
@@ -387,15 +387,15 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
  * `key-path()` operation.
  */
 export function IdbIndexKeyPath(handle: bigint): string {
-  const obj = getIDBIndex(handle);
+  const obj = lookupIDBIndex(handle);
   return obj.keyPath();
 }
 
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): boolean {
-  const obj = getIDBIndex(handle);
+export function multiEntry(handle: bigint): string {
+  const obj = lookupIDBIndex(handle);
   return obj.multiEntry();
 }
 
@@ -403,7 +403,7 @@ export function multiEntry(handle: bigint): boolean {
  * `unique()` operation.
  */
 export function unique(handle: bigint): boolean {
-  const obj = getIDBIndex(handle);
+  const obj = lookupIDBIndex(handle);
   return obj.unique();
 }
 
@@ -418,8 +418,8 @@ export type IdbCursorHandle = bigint;
 const _idbCursorhandles = new Map<bigint, IDBCursor>();
 let _nextIDBCursor = 1n;
 
-/** Get a IDBCursor by handle, throwing if not found. */
-function getIDBCursor(handle: bigint): IDBCursor {
+/** Lookup a IDBCursor by handle, throwing if not found. */
+function lookupIDBCursor(handle: bigint): IDBCursor {
   const obj = _idbCursorhandles.get(handle);
   if (!obj) {
     throw new Error(`IDBCursor handle ${handle} not found`);
@@ -430,7 +430,7 @@ function getIDBCursor(handle: bigint): IDBCursor {
  * `source()` operation.
  */
 export function IdbCursorSource(handle: bigint): string {
-  const obj = getIDBCursor(handle);
+  const obj = lookupIDBCursor(handle);
   return obj.source();
 }
 
@@ -438,7 +438,7 @@ export function IdbCursorSource(handle: bigint): string {
  * `key()` operation.
  */
 export function key(handle: bigint): string {
-  const obj = getIDBCursor(handle);
+  const obj = lookupIDBCursor(handle);
   return obj.key();
 }
 
@@ -446,7 +446,7 @@ export function key(handle: bigint): string {
  * `primary-key()` operation.
  */
 export function primaryKey(handle: bigint): string {
-  const obj = getIDBCursor(handle);
+  const obj = lookupIDBCursor(handle);
   return obj.primaryKey();
 }
 
@@ -454,7 +454,7 @@ export function primaryKey(handle: bigint): string {
  * `advance()` operation.
  */
 export function advance(handle: bigint, count: number): void {
-  const obj = getIDBCursor(handle);
+  const obj = lookupIDBCursor(handle);
   obj.advance(count);
 }
 
@@ -462,15 +462,15 @@ export function advance(handle: bigint, count: number): void {
  * `continue()` operation.
  */
 export function _continue(handle: bigint, key: string): void {
-  const obj = getIDBCursor(handle);
+  const obj = lookupIDBCursor(handle);
   obj.continue(key);
 }
 
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: number, primaryKey: string): void {
-  const obj = getIDBCursor(handle);
+export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
+  const obj = lookupIDBCursor(handle);
   obj.continuePrimaryKey(key, primaryKey);
 }
 
@@ -485,8 +485,8 @@ export type IdbRequestHandle = bigint;
 const _idbRequesthandles = new Map<bigint, IDBRequest>();
 let _nextIDBRequest = 1n;
 
-/** Get a IDBRequest by handle, throwing if not found. */
-function getIDBRequest(handle: bigint): IDBRequest {
+/** Lookup a IDBRequest by handle, throwing if not found. */
+function lookupIDBRequest(handle: bigint): IDBRequest {
   const obj = _idbRequesthandles.get(handle);
   if (!obj) {
     throw new Error(`IDBRequest handle ${handle} not found`);
@@ -497,7 +497,7 @@ function getIDBRequest(handle: bigint): IDBRequest {
  * `result-val()` operation.
  */
 export function resultVal(handle: bigint): string {
-  const obj = getIDBRequest(handle);
+  const obj = lookupIDBRequest(handle);
   return obj.result();
 }
 
@@ -505,7 +505,7 @@ export function resultVal(handle: bigint): string {
  * `source()` operation.
  */
 export function IdbRequestSource(handle: bigint): string | undefined {
-  const obj = getIDBRequest(handle);
+  const obj = lookupIDBRequest(handle);
   return obj.source() ?? undefined;
 }
 

@@ -211,8 +211,8 @@ export type SwRegHandle = bigint;
 const _swReghandles = new Map<bigint, ServiceWorkerRegistration>();
 let _nextSwReg = 1n;
 
-/** Get a ServiceWorkerRegistration by handle, throwing if not found. */
-function getSwReg(handle: bigint): ServiceWorkerRegistration {
+/** Lookup a ServiceWorkerRegistration by handle, throwing if not found. */
+function lookupSwReg(handle: bigint): ServiceWorkerRegistration {
   const obj = _swReghandles.get(handle);
   if (!obj) {
     throw new Error(`ServiceWorkerRegistration handle ${handle} not found`);
@@ -222,8 +222,8 @@ function getSwReg(handle: bigint): ServiceWorkerRegistration {
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): bigint | undefined {
-  const obj = getSwReg(handle);
+export function scope(handle: bigint): bigint {
+  const obj = lookupSwReg(handle);
   return obj.scope();
 }
 
@@ -238,8 +238,8 @@ export type SwHandle = bigint;
 const _swHandles = new Map<bigint, ServiceWorker>();
 let _nextSw = 1n;
 
-/** Get a ServiceWorker by handle, throwing if not found. */
-function getSw(handle: bigint): ServiceWorker {
+/** Lookup a ServiceWorker by handle, throwing if not found. */
+function lookupSw(handle: bigint): ServiceWorker {
   const obj = _swHandles.get(handle);
   if (!obj) {
     throw new Error(`ServiceWorker handle ${handle} not found`);
@@ -250,15 +250,15 @@ function getSw(handle: bigint): ServiceWorker {
  * `script-url()` operation.
  */
 export function scriptUrl(handle: bigint): string {
-  const obj = getSw(handle);
+  const obj = lookupSw(handle);
   return obj.scriptURL();
 }
 
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
-  const obj = getSw(handle);
+export function postMessage(handle: bigint, message: boolean, transfer: bigint): void {
+  const obj = lookupSw(handle);
   obj.postMessage(message, transfer);
 }
 

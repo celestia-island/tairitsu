@@ -224,8 +224,8 @@ export type AnimationHandle = bigint;
 const _animationHandles = new Map<bigint, Animation>();
 let _nextAnimation = 1n;
 
-/** Get a Animation by handle, throwing if not found. */
-function getAnimation(handle: bigint): Animation {
+/** Lookup a Animation by handle, throwing if not found. */
+function lookupAnimation(handle: bigint): Animation {
   const obj = _animationHandles.get(handle);
   if (!obj) {
     throw new Error(`Animation handle ${handle} not found`);
@@ -236,7 +236,7 @@ function getAnimation(handle: bigint): Animation {
  * `get-id()` operation.
  */
 export function getId(handle: bigint): string {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   return obj.id;
 }
 
@@ -244,7 +244,7 @@ export function getId(handle: bigint): string {
  * `set-id()` operation.
  */
 export function setId(handle: bigint, value: string): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.id = value;
 }
 
@@ -252,23 +252,23 @@ export function setId(handle: bigint, value: string): void {
  * `get-playback-rate()` operation.
  */
 export function getPlaybackRate(handle: bigint): number {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   return obj.playbackRate;
 }
 
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: string): void {
-  const obj = getAnimation(handle);
+export function setPlaybackRate(handle: bigint, value: number): void {
+  const obj = lookupAnimation(handle);
   obj.playbackRate = value;
 }
 
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): boolean {
-  const obj = getAnimation(handle);
+export function pending(handle: bigint): string {
+  const obj = lookupAnimation(handle);
   return obj.pending();
 }
 
@@ -276,7 +276,7 @@ export function pending(handle: bigint): boolean {
  * `cancel()` operation.
  */
 export function cancel(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.cancel();
 }
 
@@ -284,7 +284,7 @@ export function cancel(handle: bigint): void {
  * `finish()` operation.
  */
 export function finish(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.finish();
 }
 
@@ -292,7 +292,7 @@ export function finish(handle: bigint): void {
  * `play()` operation.
  */
 export function play(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.play();
 }
 
@@ -300,7 +300,7 @@ export function play(handle: bigint): void {
  * `pause()` operation.
  */
 export function pause(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.pause();
 }
 
@@ -308,7 +308,7 @@ export function pause(handle: bigint): void {
  * `update-playback-rate()` operation.
  */
 export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.updatePlaybackRate(playbackRate);
 }
 
@@ -316,7 +316,7 @@ export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
  * `reverse()` operation.
  */
 export function reverse(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.reverse();
 }
 
@@ -327,7 +327,7 @@ export function reverse(handle: bigint): void {
  */
 export function persist(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   const promise = (obj as any).persist()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -362,7 +362,7 @@ export function pollPersist(requestId: bigint): { ok: true } | { ok: false; erro
  * `commit-styles()` operation.
  */
 export function commitStyles(handle: bigint): void {
-  const obj = getAnimation(handle);
+  const obj = lookupAnimation(handle);
   obj.commitStyles();
 }
 

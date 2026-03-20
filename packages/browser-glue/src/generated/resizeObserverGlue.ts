@@ -211,8 +211,8 @@ export type RoHandle = bigint;
 const _roHandles = new Map<bigint, ResizeObserver>();
 let _nextRo = 1n;
 
-/** Get a ResizeObserver by handle, throwing if not found. */
-function getRo(handle: bigint): ResizeObserver {
+/** Lookup a ResizeObserver by handle, throwing if not found. */
+function lookupRo(handle: bigint): ResizeObserver {
   const obj = _roHandles.get(handle);
   if (!obj) {
     throw new Error(`ResizeObserver handle ${handle} not found`);
@@ -223,7 +223,7 @@ function getRo(handle: bigint): ResizeObserver {
  * `observe()` operation.
  */
 export function observe(handle: bigint): void {
-  const obj = getRo(handle);
+  const obj = lookupRo(handle);
   obj.observe();
 }
 

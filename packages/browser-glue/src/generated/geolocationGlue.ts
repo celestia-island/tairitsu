@@ -224,8 +224,8 @@ export type GeoHandle = bigint;
 const _geoHandles = new Map<bigint, Geolocation>();
 let _nextGeo = 1n;
 
-/** Get a Geolocation by handle, throwing if not found. */
-function getGeo(handle: bigint): Geolocation {
+/** Lookup a Geolocation by handle, throwing if not found. */
+function lookupGeo(handle: bigint): Geolocation {
   const obj = _geoHandles.get(handle);
   if (!obj) {
     throw new Error(`Geolocation handle ${handle} not found`);
@@ -239,7 +239,7 @@ function getGeo(handle: bigint): Geolocation {
  */
 export function getCurrentPosition(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getGeo(handle);
+  const obj = lookupGeo(handle);
   const promise = (obj as any).getCurrentPosition()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);

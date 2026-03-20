@@ -13,6 +13,7 @@ class GeneratedParam:
     wit_type_str: str
     needs_handle_lookup: bool = False
     target_handle_pascal: str = ""
+    wit_name: str = ""
 
 
 @dataclass

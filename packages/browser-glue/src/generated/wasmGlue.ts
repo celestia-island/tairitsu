@@ -214,6 +214,35 @@ interface AsyncHandle<T> {
 const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
+// Synthetic handle tables for primitive/utility types
+// ---------------------------------------------------------------------------
+
+/** Handle table for any values */
+const _anyHandles = new Map<bigint, any>();
+let _nextAny = 1n;
+
+// ---------------------------------------------------------------------------
+// Helper functions for handle lookups
+// ---------------------------------------------------------------------------
+
+/** Lookup a any value by handle. */
+function lookupAny(handle: bigint): any {
+  const obj = _anyHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`any handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional any value by handle. */
+function lookupOptionAny(handle: bigint | undefined): any | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _anyHandles.get(handle);
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: module
 // ---------------------------------------------------------------------------
 
@@ -224,8 +253,8 @@ export type ModuleHandle = bigint;
 const _moduleHandles = new Map<bigint, WebAssembly.Module>();
 let _nextModule = 1n;
 
-/** Get a WebAssembly.Module by handle, throwing if not found. */
-function getModule(handle: bigint): WebAssembly.Module {
+/** Lookup a WebAssembly.Module by handle, throwing if not found. */
+function lookupModule(handle: bigint): WebAssembly.Module {
   const obj = _moduleHandles.get(handle);
   if (!obj) {
     throw new Error(`WebAssembly.Module handle ${handle} not found`);
@@ -235,21 +264,21 @@ function getModule(handle: bigint): WebAssembly.Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (string)[] {
+export function exports(moduleObject: string): (bigint | undefined)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): string {
+export function imports(moduleObject: bigint): (string)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: string, sectionName: string): string {
+export function customSections(moduleObject: number, sectionName: string): bigint {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -264,8 +293,8 @@ export type InstanceHandle = bigint;
 const _instanceHandles = new Map<bigint, Instance>();
 let _nextInstance = 1n;
 
-/** Get a Instance by handle, throwing if not found. */
-function getInstance(handle: bigint): Instance {
+/** Lookup a Instance by handle, throwing if not found. */
+function lookupInstance(handle: bigint): Instance {
   const obj = _instanceHandles.get(handle);
   if (!obj) {
     throw new Error(`Instance handle ${handle} not found`);
@@ -275,9 +304,12 @@ function getInstance(handle: bigint): Instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): number {
-  const obj = getInstance(self);
-  return (obj as any).exports;
+export function getExports(self: bigint): bigint {
+  const obj = lookupInstance(self);
+  const result = (obj as any).exports;
+  const handle = _nextAny++;
+  _anyHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -291,8 +323,8 @@ export type MemoryHandle = bigint;
 const _memoryHandles = new Map<bigint, Memory>();
 let _nextMemory = 1n;
 
-/** Get a Memory by handle, throwing if not found. */
-function getMemory(handle: bigint): Memory {
+/** Lookup a Memory by handle, throwing if not found. */
+function lookupMemory(handle: bigint): Memory {
   const obj = _memoryHandles.get(handle);
   if (!obj) {
     throw new Error(`Memory handle ${handle} not found`);
@@ -303,31 +335,31 @@ function getMemory(handle: bigint): Memory {
  * `grow()` operation.
  */
 export function MemoryGrow(self: bigint, delta: bigint): bigint {
-  const obj = getMemory(self);
-  return (obj as any).grow(delta);
+  const obj = lookupMemory(self);
+  return BigInt((obj as any).grow(delta));
 }
 
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): Uint8Array {
-  const obj = getMemory(self);
+export function toFixedLengthBuffer(self: bigint): (string)[] {
+  const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
 
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): Uint8Array {
-  const obj = getMemory(self);
+export function toResizableBuffer(self: bigint): (string)[] {
+  const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
 
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): (string)[] {
-  const obj = getMemory(self);
+export function getBuffer(self: bigint): Uint8Array {
+  const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
 
@@ -342,8 +374,8 @@ export type TableHandle = bigint;
 const _tableHandles = new Map<bigint, Table>();
 let _nextTable = 1n;
 
-/** Get a Table by handle, throwing if not found. */
-function getTable(handle: bigint): Table {
+/** Lookup a Table by handle, throwing if not found. */
+function lookupTable(handle: bigint): Table {
   const obj = _tableHandles.get(handle);
   if (!obj) {
     throw new Error(`Table handle ${handle} not found`);
@@ -354,8 +386,8 @@ function getTable(handle: bigint): Table {
  * `grow()` operation.
  */
 export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
-  const obj = getTable(self);
-  return (obj as any).grow(delta, value);
+  const obj = lookupTable(self);
+  return BigInt((obj as any).grow(delta, value));
 }
 
 /**
@@ -365,7 +397,7 @@ export function TableGrow(self: bigint, delta: bigint, value: string | undefined
  */
 export function _get(self: bigint, index: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getTable(self);
+  const obj = lookupTable(self);
   const promise = (obj as any).get(index)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -388,19 +420,19 @@ export function _get(self: bigint, index: bigint): bigint {
  * Poll an async `_get()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
+  return entry.result ?? undefined;
 }
 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
-  const obj = getTable(self);
+export function _set(self: bigint, index: string, value: string | undefined): void {
+  const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
 
@@ -408,7 +440,7 @@ export function _set(self: bigint, index: bigint, value: string | undefined): vo
  * `get-length()` operation.
  */
 export function getLength(self: bigint): bigint {
-  const obj = getTable(self);
+  const obj = lookupTable(self);
   return obj.length;
 }
 
@@ -423,8 +455,8 @@ export type GlobalHandle = bigint;
 const _globalHandles = new Map<bigint, Global>();
 let _nextGlobal = 1n;
 
-/** Get a Global by handle, throwing if not found. */
-function getGlobal(handle: bigint): Global {
+/** Lookup a Global by handle, throwing if not found. */
+function lookupGlobal(handle: bigint): Global {
   const obj = _globalHandles.get(handle);
   if (!obj) {
     throw new Error(`Global handle ${handle} not found`);
@@ -435,23 +467,26 @@ function getGlobal(handle: bigint): Global {
  * `value-of()` operation.
  */
 export function valueOf(self: bigint): string {
-  const obj = getGlobal(self);
+  const obj = lookupGlobal(self);
   return obj.valueOf();
 }
 
 /**
  * `get-value()` operation.
  */
-export function getValue(self: bigint): string {
-  const obj = getGlobal(self);
-  return (obj as any).value;
+export function getValue(self: bigint): bigint {
+  const obj = lookupGlobal(self);
+  const result = (obj as any).value;
+  const handle = _nextAny++;
+  _anyHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `set-value()` operation.
  */
 export function setValue(self: bigint, value: string): void {
-  const obj = getGlobal(self);
+  const obj = lookupGlobal(self);
   (obj as any).value = value;
 }
 
@@ -466,8 +501,8 @@ export type ExceptionHandle = bigint;
 const _exceptionHandles = new Map<bigint, Exception>();
 let _nextException = 1n;
 
-/** Get a Exception by handle, throwing if not found. */
-function getException(handle: bigint): Exception {
+/** Lookup a Exception by handle, throwing if not found. */
+function lookupException(handle: bigint): Exception {
   const obj = _exceptionHandles.get(handle);
   if (!obj) {
     throw new Error(`Exception handle ${handle} not found`);
@@ -478,15 +513,15 @@ function getException(handle: bigint): Exception {
  * `get-arg()` operation.
  */
 export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
-  const obj = getException(self);
+  const obj = lookupException(self);
   return obj.arg;
 }
 
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: string): boolean {
-  const obj = getException(self);
+export function is(self: bigint, exceptionTag: bigint): boolean {
+  const obj = lookupException(self);
   return obj.is(exceptionTag);
 }
 
@@ -494,7 +529,7 @@ export function is(self: bigint, exceptionTag: string): boolean {
  * `get-stack()` operation.
  */
 export function getStack(self: bigint): string {
-  const obj = getException(self);
+  const obj = lookupException(self);
   return obj.stack;
 }
 

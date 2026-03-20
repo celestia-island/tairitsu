@@ -211,8 +211,8 @@ export type WebSocketHandle = bigint;
 const _webSockethandles = new Map<bigint, WebSocket>();
 let _nextWebSocket = 1n;
 
-/** Get a WebSocket by handle, throwing if not found. */
-function getWebSocket(handle: bigint): WebSocket {
+/** Lookup a WebSocket by handle, throwing if not found. */
+function lookupWebSocket(handle: bigint): WebSocket {
   const obj = _webSockethandles.get(handle);
   if (!obj) {
     throw new Error(`WebSocket handle ${handle} not found`);
@@ -222,24 +222,24 @@ function getWebSocket(handle: bigint): WebSocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): string {
-  const obj = getWebSocket(self);
+export function getUrl(self: bigint): bigint {
+  const obj = lookupWebSocket(self);
   return obj.url;
 }
 
 /**
  * `get-ready-state()` operation.
  */
-export function getReadyState(self: bigint): bigint | undefined {
-  const obj = getWebSocket(self);
+export function getReadyState(self: bigint): number {
+  const obj = lookupWebSocket(self);
   return obj.readyState;
 }
 
 /**
  * `get-buffered-amount()` operation.
  */
-export function getBufferedAmount(self: bigint): string {
-  const obj = getWebSocket(self);
+export function getBufferedAmount(self: bigint): bigint {
+  const obj = lookupWebSocket(self);
   return obj.bufferedAmount;
 }
 
@@ -247,31 +247,31 @@ export function getBufferedAmount(self: bigint): string {
  * `get-onopen()` operation.
  */
 export function getOnopen(self: bigint): EventHandlerRecord {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   return obj.onopen;
 }
 
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: EventHandlerRecord): void {
-  const obj = getWebSocket(self);
+export function setOnopen(self: bigint, value: bigint | undefined): void {
+  const obj = lookupWebSocket(self);
   obj.onopen = value;
 }
 
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): EventHandlerRecord {
-  const obj = getWebSocket(self);
+export function getOnerror(self: bigint): number | undefined {
+  const obj = lookupWebSocket(self);
   return obj.onerror;
 }
 
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: bigint): void {
-  const obj = getWebSocket(self);
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
+  const obj = lookupWebSocket(self);
   obj.onerror = value;
 }
 
@@ -279,7 +279,7 @@ export function setOnerror(self: bigint, value: bigint): void {
  * `get-onclose()` operation.
  */
 export function getOnclose(self: bigint): EventHandlerRecord {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   return obj.onclose;
 }
 
@@ -287,23 +287,23 @@ export function getOnclose(self: bigint): EventHandlerRecord {
  * `set-onclose()` operation.
  */
 export function setOnclose(self: bigint, value: EventHandlerRecord): void {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   obj.onclose = value;
 }
 
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): bigint | undefined {
-  const obj = getWebSocket(self);
+export function getExtensions(self: bigint): string {
+  const obj = lookupWebSocket(self);
   return obj.extensions;
 }
 
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): string {
-  const obj = getWebSocket(self);
+export function getProtocol(self: bigint): bigint | undefined {
+  const obj = lookupWebSocket(self);
   return obj.protocol;
 }
 
@@ -311,31 +311,31 @@ export function getProtocol(self: bigint): string {
  * `close()` operation.
  */
 export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   obj.close(code, reason);
 }
 
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
-  const obj = getWebSocket(self);
+export function getOnmessage(self: bigint): bigint {
+  const obj = lookupWebSocket(self);
   return obj.onmessage;
 }
 
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: number | undefined): void {
-  const obj = getWebSocket(self);
+export function setOnmessage(self: bigint, value: bigint | undefined): void {
+  const obj = lookupWebSocket(self);
   obj.onmessage = value;
 }
 
 /**
  * `get-binary-type()` operation.
  */
-export function getBinaryType(self: bigint): bigint {
-  const obj = getWebSocket(self);
+export function getBinaryType(self: bigint): string {
+  const obj = lookupWebSocket(self);
   return obj.binaryType;
 }
 
@@ -343,7 +343,7 @@ export function getBinaryType(self: bigint): bigint {
  * `set-binary-type()` operation.
  */
 export function setBinaryType(self: bigint, value: bigint): void {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   obj.binaryType = value;
 }
 
@@ -351,7 +351,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
  * `send()` operation.
  */
 export function send(self: bigint, data: Uint8Array): void {
-  const obj = getWebSocket(self);
+  const obj = lookupWebSocket(self);
   obj.send(data);
 }
 
@@ -366,8 +366,8 @@ export type CloseEventHandle = bigint;
 const _closeEventhandles = new Map<bigint, CloseEvent>();
 let _nextCloseEvent = 1n;
 
-/** Get a CloseEvent by handle, throwing if not found. */
-function getCloseEvent(handle: bigint): CloseEvent {
+/** Lookup a CloseEvent by handle, throwing if not found. */
+function lookupCloseEvent(handle: bigint): CloseEvent {
   const obj = _closeEventhandles.get(handle);
   if (!obj) {
     throw new Error(`CloseEvent handle ${handle} not found`);
@@ -378,23 +378,23 @@ function getCloseEvent(handle: bigint): CloseEvent {
  * `get-was-clean()` operation.
  */
 export function getWasClean(self: bigint): bigint {
-  const obj = getCloseEvent(self);
+  const obj = lookupCloseEvent(self);
   return obj.wasClean ? 1n : 0n;
 }
 
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): number {
-  const obj = getCloseEvent(self);
+export function getCode(self: bigint): string {
+  const obj = lookupCloseEvent(self);
   return obj.code;
 }
 
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): (number)[] {
-  const obj = getCloseEvent(self);
+export function getReason(self: bigint): string {
+  const obj = lookupCloseEvent(self);
   return obj.reason;
 }
 
