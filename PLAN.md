@@ -56,64 +56,36 @@ browser-glue/
 
 ---
 
-## 执行步骤
+## ✅ 所有任务已完成
 
-### Phase 1: 文件重命名 ✅ 已完成
+所有 4 个 Phase 任务均已完成：
 
-#### 1.1 重命名手写文件 ✅
-- 已完成：`src/dom.ts`, `src/events.ts`, `src/http.ts`, `src/canvas.ts`, `src/handles.ts`
+### Phase 1: 文件重命名 ✅
+- 修复生成器脚本使用正确的 camelCase 命名
+- 删除 5 个重复文件
+- 移动 index.ts 到 generated/ 目录
 
-#### 1.2 重命名生成文件 (kebab → camelCase) ✅
-- 已完成：所有 28 个文件使用正确的 camelCase 命名
+### Phase 2: 修复 import 语句 ✅
+- 移除所有 `.js` 扩展名
+- 更新所有引用路径
 
-#### 1.3 更新生成器脚本 ✅
-- 已完成：使用 `kebab_to_camel()` 替代 `replace("-", "")`
+### Phase 3: 架构增强 ✅
+- handles.ts: 类型安全、批量操作、垃圾回收钩子
+- dom.ts: 选择器缓存、批量 DOM 操作、模板字符串
+- events.ts: 事件委托、防抖/节流、一次性事件
+- http.ts: 请求拦截器、响应缓存、重试逻辑
+- async.ts: Promise 桥接、定时器、异步迭代器
+- index.ts: 导出 async 模块
 
-### Phase 2: 修复 import 语句 ✅ 已完成
+### Phase 4: 构建验证 ✅
+- ✅ npm run build: swc 编译成功（37 files，0 TypeScript errors）
+- ✅ cargo test -p tairitsu-browser-worlds: 5 tests passed
+- ✅ cargo build --all: 整体构建成功
+- ✅ E2E tests: 7 tests passed
 
-#### 2.1 移除 `.js` 扩展名 ✅
-- 已完成：所有 import 语句移除 `.js` 扩展名
-
-#### 2.2 更新所有引用 ✅
-- 已完成：所有手写文件和生成文件的 import 路径已更新
-- 已完成：`generated/index.ts` 移动到 `src/generated/index.ts` 并更新引用路径
-
-### Phase 3: 架构增强 ✅ 已完成
-
-#### 3.1 增强 handles.ts ✅
-- 添加类型安全的句柄注册（isInstanceOfType, registerTypedHandle with strict check）
-- 添加批量操作支持（registerTypedHandleBatch, getTypedHandleBatch）
-- 添加垃圾回收钩子（setGCHandleHook, invokeGCHandleHook）
-- 扩展 HandleDiagnosticError 类型
-
-#### 3.2 增强 dom.ts ✅
-- 添加选择器缓存（queryCached, clearSelectorCache）
-- 添加批量 DOM 操作（batchAppendChildren, batchSetAttributes, batchRemoveChildren）
-- 添加模板字符串支持（parseTemplate, createElementFromTemplate）
-
-#### 3.3 增强 events.ts ✅
-- 添加事件委托（addDelegatedEventListener, removeDelegatedEventListener）
-- 添加防抖/节流（createDebouncedCallback, createThrottledCallback）
-- 添加一次性事件（addOneTimeEventListener, removeOneTimeEventListener）
-
-#### 3.4 增强 http.ts ✅
-- 添加请求拦截器（RequestInterceptor, addRequestInterceptor, fetchAsyncWithInterceptors）
-- 添加响应缓存（ResponseCache, enableResponseCache, getCachedResponse, setCachedResponse）
-- 添加重试逻辑（RetryConfig, fetchWithRetry, calculateRetryDelay）
-- 扩展 RequestData 接口
-
-#### 3.5 新增 async.ts ✅
-- 实现 Promise 桥接到 WIT（registerPromise, pollPromise）
-- 实现 setTimeout/setInterval 封装（setTimeoutAsync, setIntervalAsync, clearTimer）
-- 实现异步迭代器支持（registerAsyncIterator, pollIterator）
-- 添加异步操作统计（getAsyncStats, clearAllAsyncState）
-
-### Phase 4: 构建验证 ✅ 已完成
-
-1. ✅ 运行 `npm run build` 验证编译 - 成功
-2. ✅ 运行 `cargo test -p tairitsu-browser-worlds` 验证 WIT - 通过（5 tests）
-3. ✅ 运行 `cargo build --all` 验证整体构建 - 成功
-4. ✅ 运行 E2E 测试 - 通过（7 tests）
+### 额外修复
+- ✅ tsconfig.json: 添加必要的 lib 引用（DOM, WebCrypto, WebAudio 等）
+- ✅ 修复所有生成文件的 TypeScript 类型错误（从数百个错误降至 0 个）
 
 ---
 
