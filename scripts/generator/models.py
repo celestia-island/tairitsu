@@ -30,6 +30,7 @@ class GeneratedFunction:
     is_getter: bool = False
     is_setter: bool = False
     is_getter_but_method: bool = False
+    is_setter_but_method: bool = False
     is_static: bool = False
     return_is_void: bool = False
     return_is_optional: bool = False

@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -293,6 +293,10 @@ let _nextDomTokenList = 1n;
 const _elementHandles = new Map<bigint, Element>();
 let _nextElement = 1n;
 
+/** Handle table for element-internals values */
+const _elementInternalsHandles = new Map<bigint, ElementInternals>();
+let _nextElementInternals = 1n;
+
 /** Handle table for element-list values */
 const _elementListHandles = new Map<bigint, Element[]>();
 let _nextElementList = 1n;
@@ -415,7 +419,7 @@ function lookupAttr(handle: bigint): Attr {
   if (obj === undefined) {
     throw new Error(`attr handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional attr value by handle. */
@@ -432,7 +436,7 @@ function lookupBarProp(handle: bigint): BarProp {
   if (obj === undefined) {
     throw new Error(`bar-prop handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional bar-prop value by handle. */
@@ -449,7 +453,7 @@ function lookupBoolean(handle: bigint): boolean {
   if (obj === undefined) {
     throw new Error(`boolean handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional boolean value by handle. */
@@ -466,7 +470,7 @@ function lookupComment(handle: bigint): Comment {
   if (obj === undefined) {
     throw new Error(`comment handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional comment value by handle. */
@@ -483,7 +487,7 @@ function lookupCssKeyframeRule(handle: bigint): CSSKeyframeRule {
   if (obj === undefined) {
     throw new Error(`css-keyframe-rule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-keyframe-rule value by handle. */
@@ -500,7 +504,7 @@ function lookupCssRule(handle: bigint): CSSRule {
   if (obj === undefined) {
     throw new Error(`css-rule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-rule value by handle. */
@@ -517,7 +521,7 @@ function lookupCssRuleList(handle: bigint): CSSRuleList {
   if (obj === undefined) {
     throw new Error(`css-rule-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-rule-list value by handle. */
@@ -534,7 +538,7 @@ function lookupCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   if (obj === undefined) {
     throw new Error(`css-style-declaration handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-style-declaration value by handle. */
@@ -551,7 +555,7 @@ function lookupCssStyleSheet(handle: bigint): CSSStyleSheet {
   if (obj === undefined) {
     throw new Error(`css-style-sheet handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-style-sheet value by handle. */
@@ -568,7 +572,7 @@ function lookupCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
   if (obj === undefined) {
     throw new Error(`css-style-sheet-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional css-style-sheet-list value by handle. */
@@ -585,7 +589,7 @@ function lookupCustomElementRegistry(handle: bigint): CustomElementRegistry {
   if (obj === undefined) {
     throw new Error(`custom-element-registry handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional custom-element-registry value by handle. */
@@ -602,7 +606,7 @@ function lookupDocument(handle: bigint): Document {
   if (obj === undefined) {
     throw new Error(`document handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional document value by handle. */
@@ -619,7 +623,7 @@ function lookupDocumentFragment(handle: bigint): DocumentFragment {
   if (obj === undefined) {
     throw new Error(`document-fragment handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional document-fragment value by handle. */
@@ -636,7 +640,7 @@ function lookupDocumentType(handle: bigint): DocumentType {
   if (obj === undefined) {
     throw new Error(`document-type handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional document-type value by handle. */
@@ -653,7 +657,7 @@ function lookupDomImplementation(handle: bigint): DOMImplementation {
   if (obj === undefined) {
     throw new Error(`dom-implementation handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional dom-implementation value by handle. */
@@ -670,7 +674,7 @@ function lookupDomRect(handle: bigint): DOMRect {
   if (obj === undefined) {
     throw new Error(`dom-rect handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional dom-rect value by handle. */
@@ -687,7 +691,7 @@ function lookupDomRectList(handle: bigint): DOMRectList {
   if (obj === undefined) {
     throw new Error(`dom-rect-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional dom-rect-list value by handle. */
@@ -704,7 +708,7 @@ function lookupDomTokenList(handle: bigint): DOMTokenList {
   if (obj === undefined) {
     throw new Error(`dom-token-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional dom-token-list value by handle. */
@@ -721,7 +725,7 @@ function lookupElement(handle: bigint): Element {
   if (obj === undefined) {
     throw new Error(`element handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional element value by handle. */
@@ -732,13 +736,30 @@ function lookupOptionElement(handle: bigint | undefined): Element | undefined {
   return _elementHandles.get(handle);
 }
 
+/** Lookup a element-internals value by handle. */
+function lookupElementInternals(handle: bigint): ElementInternals {
+  const obj = _elementInternalsHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`element-internals handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional element-internals value by handle. */
+function lookupOptionElementInternals(handle: bigint | undefined): ElementInternals | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _elementInternalsHandles.get(handle);
+}
+
 /** Lookup a element-list value by handle. */
 function lookupElementList(handle: bigint): Element[] {
   const obj = _elementListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`element-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional element-list value by handle. */
@@ -755,7 +776,7 @@ function lookupEvent(handle: bigint): Event {
   if (obj === undefined) {
     throw new Error(`event handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional event value by handle. */
@@ -772,7 +793,7 @@ function lookupExternal(handle: bigint): External {
   if (obj === undefined) {
     throw new Error(`external handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional external value by handle. */
@@ -789,7 +810,7 @@ function lookupHistory(handle: bigint): History {
   if (obj === undefined) {
     throw new Error(`history handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional history value by handle. */
@@ -806,7 +827,7 @@ function lookupHtmlCollection(handle: bigint): HTMLCollection {
   if (obj === undefined) {
     throw new Error(`html-collection handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional html-collection value by handle. */
@@ -823,7 +844,7 @@ function lookupHtmlElement(handle: bigint): HTMLElement {
   if (obj === undefined) {
     throw new Error(`html-element handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional html-element value by handle. */
@@ -840,7 +861,7 @@ function lookupLocation(handle: bigint): Location {
   if (obj === undefined) {
     throw new Error(`location handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional location value by handle. */
@@ -857,7 +878,7 @@ function lookupMediaList(handle: bigint): MediaList {
   if (obj === undefined) {
     throw new Error(`media-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional media-list value by handle. */
@@ -874,7 +895,7 @@ function lookupNamedNodeMap(handle: bigint): NamedNodeMap {
   if (obj === undefined) {
     throw new Error(`named-node-map handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional named-node-map value by handle. */
@@ -891,7 +912,7 @@ function lookupNavigator(handle: bigint): Navigator {
   if (obj === undefined) {
     throw new Error(`navigator handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional navigator value by handle. */
@@ -908,7 +929,7 @@ function lookupNode(handle: bigint): Node {
   if (obj === undefined) {
     throw new Error(`node handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional node value by handle. */
@@ -925,7 +946,7 @@ function lookupNodeIterator(handle: bigint): NodeIterator {
   if (obj === undefined) {
     throw new Error(`node-iterator handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional node-iterator value by handle. */
@@ -942,7 +963,7 @@ function lookupNodeList(handle: bigint): NodeList {
   if (obj === undefined) {
     throw new Error(`node-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional node-list value by handle. */
@@ -959,7 +980,7 @@ function lookupNumber(handle: bigint): number {
   if (obj === undefined) {
     throw new Error(`number handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional number value by handle. */
@@ -976,7 +997,7 @@ function lookupProcessingInstruction(handle: bigint): ProcessingInstruction {
   if (obj === undefined) {
     throw new Error(`processing-instruction handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional processing-instruction value by handle. */
@@ -993,7 +1014,7 @@ function lookupPromiseVoid(handle: bigint): Promise<void> {
   if (obj === undefined) {
     throw new Error(`promise-void handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional promise-void value by handle. */
@@ -1010,7 +1031,7 @@ function lookupScreen(handle: bigint): Screen {
   if (obj === undefined) {
     throw new Error(`screen handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional screen value by handle. */
@@ -1027,7 +1048,7 @@ function lookupScreenOrientation(handle: bigint): ScreenOrientation {
   if (obj === undefined) {
     throw new Error(`screen-orientation handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional screen-orientation value by handle. */
@@ -1044,7 +1065,7 @@ function lookupShadowRoot(handle: bigint): ShadowRoot {
   if (obj === undefined) {
     throw new Error(`shadow-root handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional shadow-root value by handle. */
@@ -1061,7 +1082,7 @@ function lookupSpeechSynthesis(handle: bigint): SpeechSynthesis {
   if (obj === undefined) {
     throw new Error(`speech-synthesis handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional speech-synthesis value by handle. */
@@ -1078,7 +1099,7 @@ function lookupString(handle: bigint): string {
   if (obj === undefined) {
     throw new Error(`string handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional string value by handle. */
@@ -1095,7 +1116,7 @@ function lookupStringList(handle: bigint): string[] {
   if (obj === undefined) {
     throw new Error(`string-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional string-list value by handle. */
@@ -1112,7 +1133,7 @@ function lookupStyleSheetList(handle: bigint): StyleSheetList {
   if (obj === undefined) {
     throw new Error(`style-sheet-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional style-sheet-list value by handle. */
@@ -1129,7 +1150,7 @@ function lookupText(handle: bigint): Text {
   if (obj === undefined) {
     throw new Error(`text handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional text value by handle. */
@@ -1146,7 +1167,7 @@ function lookupTreeWalker(handle: bigint): TreeWalker {
   if (obj === undefined) {
     throw new Error(`tree-walker handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional tree-walker value by handle. */
@@ -1163,7 +1184,7 @@ function lookupVisualViewport(handle: bigint): VisualViewport {
   if (obj === undefined) {
     throw new Error(`visual-viewport handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional visual-viewport value by handle. */
@@ -1180,7 +1201,7 @@ function lookupVoid(handle: bigint): void {
   if (obj === undefined) {
     throw new Error(`void handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional void value by handle. */
@@ -1197,7 +1218,7 @@ function lookupWindow(handle: bigint): Window {
   if (obj === undefined) {
     throw new Error(`window handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional window value by handle. */
@@ -1225,7 +1246,7 @@ function lookupAnimationEvent(handle: bigint): AnimationEvent {
   if (!obj) {
     throw new Error(`AnimationEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-animation-name()` operation.
@@ -1268,7 +1289,7 @@ function lookupCSSRule(handle: bigint): CSSRule {
   if (!obj) {
     throw new Error(`CSSRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-css-text()` operation.
@@ -1333,7 +1354,7 @@ function lookupCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
   if (!obj) {
     throw new Error(`CSSKeyframeRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-key-text()` operation.
@@ -1379,7 +1400,7 @@ function lookupCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
   if (!obj) {
     throw new Error(`CSSKeyframesRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-name()` operation.
@@ -1468,7 +1489,7 @@ function lookupGlobalEventrs(handle: bigint): GlobalEventHandlers {
   if (!obj) {
     throw new Error(`GlobalEventHandlers handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-onanimationstart()` operation.
@@ -3071,7 +3092,7 @@ function lookupCSSConditionRule(handle: bigint): CSSConditionRule {
   if (!obj) {
     throw new Error(`CSSConditionRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-condition-text()` operation.
@@ -3098,7 +3119,7 @@ function lookupCSSMediaRule(handle: bigint): CSSMediaRule {
   if (!obj) {
     throw new Error(`CSSMediaRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-media()` operation.
@@ -3136,7 +3157,7 @@ function lookupCSSSupportsRule(handle: bigint): CSSSupportsRule {
   if (!obj) {
     throw new Error(`CSSSupportsRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-matches()` operation.
@@ -3163,7 +3184,7 @@ function lookupCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
   if (!obj) {
     throw new Error(`CSSFontFaceDescriptors handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-src()` operation.
@@ -3422,7 +3443,7 @@ function lookupCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
   if (!obj) {
     throw new Error(`CSSFontFaceRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-style()` operation.
@@ -3452,7 +3473,7 @@ function lookupCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRul
   if (!obj) {
     throw new Error(`CSSFontFeatureValuesRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-font-family()` operation.
@@ -3543,7 +3564,7 @@ function lookupCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap 
   if (!obj) {
     throw new Error(`CSSFontFeatureValuesMap handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `set()` operation.
@@ -3570,7 +3591,7 @@ function lookupCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRul
   if (!obj) {
     throw new Error(`CSSFontPaletteValuesRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-name()` operation.
@@ -3621,7 +3642,7 @@ function lookupTransitionEvent(handle: bigint): TransitionEvent {
   if (!obj) {
     throw new Error(`TransitionEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-property-name()` operation.
@@ -4261,7 +4282,7 @@ function lookupMediaQueryList(handle: bigint): MediaQueryList {
   if (!obj) {
     throw new Error(`MediaQueryList handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-media()` operation.
@@ -4328,7 +4349,7 @@ function lookupMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
   if (!obj) {
     throw new Error(`MediaQueryListEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-media()` operation.
@@ -4560,7 +4581,10 @@ export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  return document.getElementsByTagNameNS(localName);
+  const result = document.getElementsByTagNameNS(localName);
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4587,7 +4611,10 @@ export function createElement(localName: string, options: string | undefined): b
  * `create-element-ns()` operation.
  */
 export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  return document.createElementNS(qualifiedName, options);
+  const result = document.createElementNS(qualifiedName, options);
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4671,7 +4698,10 @@ export function createAttribute(localName: string): bigint {
  * `create-attribute-ns()` operation.
  */
 export function createAttributeNs(namespace: string | undefined, qualifiedName: string): bigint {
-  return document.createAttributeNS(qualifiedName);
+  const result = document.createAttributeNS(qualifiedName);
+  const handle = _nextAttr++;
+  _attrHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5273,7 +5303,10 @@ export function getAnchors(): bigint {
  * `get-applets()` operation.
  */
 export function getApplets(): bigint {
-  return document.applets;
+  const result = document.applets;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5321,14 +5354,17 @@ function lookupCaretPosition(handle: bigint): CaretPosition {
   if (!obj) {
     throw new Error(`CaretPosition handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-offset-node()` operation.
  */
 export function getOffsetNode(self: bigint): bigint {
   const obj = lookupCaretPosition(self);
-  return obj.offsetNode;
+  const result = obj.offsetNode;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5344,7 +5380,11 @@ export function getOffset(self: bigint): number {
  */
 export function getClientRect(self: bigint): bigint | undefined {
   const obj = lookupCaretPosition(self);
-  return obj.getClientRect() ?? undefined;
+  const result = obj.getClientRect();
+  if (result === null) return undefined;
+  const handle = _nextDomRect++;
+  _domRectHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -5668,7 +5708,7 @@ export function getAttributeNs(self: bigint, namespace: string | undefined, loca
  */
 export function setAttribute(self: bigint, qualifiedName: string, value: bigint): void {
   const obj = lookupElement(self);
-  obj.getAttribute = value;
+  obj.setAttribute(qualifiedName, value);
 }
 
 /**
@@ -5676,7 +5716,7 @@ export function setAttribute(self: bigint, qualifiedName: string, value: bigint)
  */
 export function setAttributeNs(self: bigint, namespace: string | undefined, qualifiedName: string, value: bigint): void {
   const obj = lookupElement(self);
-  obj.getAttributeNS = value;
+  obj.setAttributeNS(namespace, qualifiedName, value);
 }
 
 /**
@@ -5742,7 +5782,11 @@ export function getAttributeNode(self: bigint, qualifiedName: string): bigint | 
  */
 export function getAttributeNodeNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
   const obj = lookupElement(self);
-  return obj.getAttributeNodeNS(namespace, localName) ?? undefined;
+  const result = obj.getAttributeNodeNS(namespace, localName);
+  if (result === null) return undefined;
+  const handle = _nextAttr++;
+  _attrHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5750,7 +5794,11 @@ export function getAttributeNodeNs(self: bigint, namespace: string | undefined, 
  */
 export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  obj.getAttributeNode = attr;
+  const result = obj.setAttributeNode(attr);
+  if (result === null) return undefined;
+  const handle = _nextAttr++;
+  _attrHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5758,7 +5806,7 @@ export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined
  */
 export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  obj.getAttributeNodeNS = attr;
+  return obj.setAttributeNodeNs(attr) ?? undefined;
 }
 
 /**
@@ -5851,7 +5899,10 @@ export function ElementGetElementsByTagName(self: bigint, qualifiedName: string)
  */
 export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
-  return obj.getElementsByTagNameNS(namespace, localName);
+  const result = obj.getElementsByTagNameNS(namespace, localName);
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5959,7 +6010,7 @@ export function ElementSetOnfullscreenerror(self: bigint, value: EventHandlerRec
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
   const obj = lookupElement(self);
-  obj.setHTMLUnsafe = html;
+  obj.setHtmlUnsafe(html);
 }
 
 /**
@@ -6015,7 +6066,7 @@ export function insertAdjacentHtml(self: bigint, position: string, string: bigin
  */
 export function setPointerCapture(self: bigint, pointerId: number): void {
   const obj = lookupElement(self);
-  obj.hasPointerCapture = pointerId;
+  obj.setPointerCapture(pointerId);
 }
 
 /**
@@ -6051,7 +6102,7 @@ function lookupHTMLElement(handle: bigint): HTMLElement {
   if (!obj) {
     throw new Error(`HTMLElement handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-scroll-parent()` operation.
@@ -6349,7 +6400,10 @@ export function setOuterText(self: bigint, value: string): void {
  */
 export function attachInternals(self: bigint): bigint {
   const obj = lookupHTMLElement(self);
-  return obj.attachInternals();
+  const result = obj.attachInternals();
+  const handle = _nextElementInternals++;
+  _elementInternalsHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6441,7 +6495,7 @@ function lookupHTMLImageElement(handle: bigint): HTMLImageElement {
   if (!obj) {
     throw new Error(`HTMLImageElement handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-x()` operation.
@@ -6884,7 +6938,7 @@ function lookupRange(handle: bigint): Range {
   if (!obj) {
     throw new Error(`Range handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-client-rects()` operation.
@@ -6924,7 +6978,7 @@ export function getCommonAncestorContainer(self: bigint): bigint {
  */
 export function setStart(self: bigint, node: bigint, offset: number): void {
   const obj = lookupRange(self);
-  (obj as any).start = offset;
+  (obj as any).setStart(node, offset);
 }
 
 /**
@@ -6932,7 +6986,7 @@ export function setStart(self: bigint, node: bigint, offset: number): void {
  */
 export function setEnd(self: bigint, node: bigint, offset: number): void {
   const obj = lookupRange(self);
-  (obj as any).end = offset;
+  (obj as any).setEnd(node, offset);
 }
 
 /**
@@ -6940,7 +6994,7 @@ export function setEnd(self: bigint, node: bigint, offset: number): void {
  */
 export function setStartBefore(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setStartBefore = node;
+  obj.setStartBefore(node);
 }
 
 /**
@@ -6948,7 +7002,7 @@ export function setStartBefore(self: bigint, node: bigint): void {
  */
 export function setStartAfter(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setStartAfter = node;
+  obj.setStartAfter(node);
 }
 
 /**
@@ -6956,7 +7010,7 @@ export function setStartAfter(self: bigint, node: bigint): void {
  */
 export function setEndBefore(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  obj.setEndBefore = node;
+  obj.setEndBefore(node);
 }
 
 /**
@@ -6964,7 +7018,7 @@ export function setEndBefore(self: bigint, node: bigint): void {
  */
 export function setEndAfter(self: bigint, node: bigint): void {
   const obj = lookupRange(self);
-  (obj as any).endAfter = node;
+  (obj as any).setEndAfter(node);
 }
 
 /**
@@ -7110,7 +7164,7 @@ function lookupMouseEvent(handle: bigint): MouseEvent {
   if (!obj) {
     throw new Error(`MouseEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-screen-x()` operation.
@@ -7297,7 +7351,7 @@ function lookupGeometryUtils(handle: bigint): GeometryUtils {
   if (!obj) {
     throw new Error(`GeometryUtils handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-box-quads()` operation.
@@ -7544,7 +7598,7 @@ function lookupStyleSheet(handle: bigint): StyleSheet {
   if (!obj) {
     throw new Error(`StyleSheet handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-type()` operation.
@@ -7597,7 +7651,10 @@ export function StyleSheetGetTitle(self: bigint): string | undefined {
  */
 export function StyleSheetGetMedia(self: bigint): bigint {
   const obj = lookupStyleSheet(self);
-  return obj.media;
+  const result = obj.media;
+  const handle = _nextMediaList++;
+  _mediaListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7633,7 +7690,7 @@ function lookupCSSStyleSheet(handle: bigint): CSSStyleSheet {
   if (!obj) {
     throw new Error(`CSSStyleSheet handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-owner-rule()` operation.
@@ -7727,7 +7784,10 @@ export function replaceSync(self: bigint, text: string): void {
  */
 export function getRules(self: bigint): bigint {
   const obj = lookupCSSStyleSheet(self);
-  return obj.rules;
+  const result = obj.rules;
+  const handle = _nextCssRuleList++;
+  _cssRuleListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7761,7 +7821,10 @@ export type StyleSheetListHandle = bigint;
  */
 export function StyleSheetListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupStyleSheetList(self);
-  return obj.item(index) ?? undefined;
+  const result = obj.item(index);
+  const handle = _nextCssStyleSheet++;
+  _cssStyleSheetHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7789,7 +7852,7 @@ function lookupDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
   if (!obj) {
     throw new Error(`DocumentOrShadowRoot handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-style-sheets()` operation.
@@ -7865,7 +7928,7 @@ function lookupLinkStyle(handle: bigint): LinkStyle {
   if (!obj) {
     throw new Error(`LinkStyle handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-sheet()` operation.
@@ -7895,7 +7958,7 @@ function lookupCSSRuleList(handle: bigint): CSSRuleList {
   if (!obj) {
     throw new Error(`CSSRuleList handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `item()` operation.
@@ -7933,7 +7996,7 @@ function lookupCSSStyleRule(handle: bigint): CSSStyleRule {
   if (!obj) {
     throw new Error(`CSSStyleRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-selector-text()` operation.
@@ -7979,7 +8042,7 @@ function lookupCSSImportRule(handle: bigint): CSSImportRule {
   if (!obj) {
     throw new Error(`CSSImportRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-href()` operation.
@@ -8044,7 +8107,7 @@ function lookupCSSGroupingRule(handle: bigint): CSSGroupingRule {
   if (!obj) {
     throw new Error(`CSSGroupingRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-css-rules()` operation.
@@ -8093,7 +8156,7 @@ function lookupCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
   if (!obj) {
     throw new Error(`CSSPageDescriptors handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-margin()` operation.
@@ -8256,7 +8319,7 @@ function lookupCSSPageRule(handle: bigint): CSSPageRule {
   if (!obj) {
     throw new Error(`CSSPageRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-selector-text()` operation.
@@ -8302,7 +8365,7 @@ function lookupCSSMarginRule(handle: bigint): CSSMarginRule {
   if (!obj) {
     throw new Error(`CSSMarginRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-name()` operation.
@@ -8340,7 +8403,7 @@ function lookupCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
   if (!obj) {
     throw new Error(`CSSNamespaceRule handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-namespace-uri()` operation.
@@ -8375,7 +8438,7 @@ function lookupCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   if (!obj) {
     throw new Error(`CSSStyleDeclaration handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-css-text()` operation.
@@ -8478,7 +8541,7 @@ function lookupCSSStyleProperties(handle: bigint): CSSStyleProperties {
   if (!obj) {
     throw new Error(`CSSStyleProperties handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-css-float()` operation.
@@ -8513,7 +8576,7 @@ function lookupElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
   if (!obj) {
     throw new Error(`ElementCSSInlineStyle handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-style()` operation.

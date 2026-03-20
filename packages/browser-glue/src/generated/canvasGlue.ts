@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -291,7 +291,7 @@ function lookupAny(handle: bigint): any {
   if (obj === undefined) {
     throw new Error(`any handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional any value by handle. */
@@ -308,7 +308,7 @@ function lookupDomRect(handle: bigint): DOMRect {
   if (obj === undefined) {
     throw new Error(`dom-rect handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional dom-rect value by handle. */
@@ -325,7 +325,7 @@ function lookupFloat32List(handle: bigint): Float32Array {
   if (obj === undefined) {
     throw new Error(`float-32-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional float-32-list value by handle. */
@@ -342,7 +342,7 @@ function lookupImageTrack(handle: bigint): ImageTrack {
   if (obj === undefined) {
     throw new Error(`image-track handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional image-track value by handle. */
@@ -359,7 +359,7 @@ function lookupImageTrackList(handle: bigint): ImageTrackList {
   if (obj === undefined) {
     throw new Error(`image-track-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional image-track-list value by handle. */
@@ -376,7 +376,7 @@ function lookupInt32List(handle: bigint): Int32Array {
   if (obj === undefined) {
     throw new Error(`int-32-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional int-32-list value by handle. */
@@ -393,7 +393,7 @@ function lookupNumber(handle: bigint): number {
   if (obj === undefined) {
     throw new Error(`number handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional number value by handle. */
@@ -410,7 +410,7 @@ function lookupNumberList(handle: bigint): number[] {
   if (obj === undefined) {
     throw new Error(`number-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional number-list value by handle. */
@@ -427,7 +427,7 @@ function lookupString(handle: bigint): string {
   if (obj === undefined) {
     throw new Error(`string handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional string value by handle. */
@@ -444,7 +444,7 @@ function lookupStringList(handle: bigint): string[] {
   if (obj === undefined) {
     throw new Error(`string-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional string-list value by handle. */
@@ -461,7 +461,7 @@ function lookupUint32List(handle: bigint): Uint32Array {
   if (obj === undefined) {
     throw new Error(`uint-32-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional uint-32-list value by handle. */
@@ -478,7 +478,7 @@ function lookupWebGlActiveInfo(handle: bigint): WebGLActiveInfo {
   if (obj === undefined) {
     throw new Error(`web-gl-active-info handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional web-gl-active-info value by handle. */
@@ -495,7 +495,7 @@ function lookupWebGlObject(handle: bigint): WebGLObject {
   if (obj === undefined) {
     throw new Error(`web-gl-object handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional web-gl-object value by handle. */
@@ -512,7 +512,7 @@ function lookupWebGlShaderList(handle: bigint): WebGLShader[] {
   if (obj === undefined) {
     throw new Error(`web-gl-shader-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional web-gl-shader-list value by handle. */
@@ -529,7 +529,7 @@ function lookupWebGlShaderPrecisionFormat(handle: bigint): WebGLShaderPrecisionF
   if (obj === undefined) {
     throw new Error(`web-gl-shader-precision-format handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional web-gl-shader-precision-format value by handle. */
@@ -546,7 +546,7 @@ function lookupWebGlUniformLocation(handle: bigint): WebGLUniformLocation {
   if (obj === undefined) {
     throw new Error(`web-gl-uniform-location handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional web-gl-uniform-location value by handle. */
@@ -574,7 +574,7 @@ function lookupAudioDecoder(handle: bigint): AudioDecoder {
   if (!obj) {
     throw new Error(`AudioDecoder handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-state()` operation.
@@ -738,7 +738,7 @@ function lookupVideoDecoder(handle: bigint): VideoDecoder {
   if (!obj) {
     throw new Error(`VideoDecoder handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-state()` operation.
@@ -902,7 +902,7 @@ function lookupAudioEncoder(handle: bigint): AudioEncoder {
   if (!obj) {
     throw new Error(`AudioEncoder handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-state()` operation.
@@ -1066,7 +1066,7 @@ function lookupVideoEncoder(handle: bigint): VideoEncoder {
   if (!obj) {
     throw new Error(`VideoEncoder handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-state()` operation.
@@ -1230,7 +1230,7 @@ function lookupEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
   if (!obj) {
     throw new Error(`EncodedAudioChunk handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-type()` operation.
@@ -1295,7 +1295,7 @@ function lookupEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
   if (!obj) {
     throw new Error(`EncodedVideoChunk handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-type()` operation.
@@ -1360,7 +1360,7 @@ function lookupAudioData(handle: bigint): AudioData {
   if (!obj) {
     throw new Error(`AudioData handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-format()` operation.
@@ -1473,7 +1473,7 @@ function lookupVideoFrame(handle: bigint): VideoFrame {
   if (!obj) {
     throw new Error(`VideoFrame handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-format()` operation.
@@ -1680,7 +1680,7 @@ function lookupVideoColorSpace(handle: bigint): VideoColorSpace {
   if (!obj) {
     throw new Error(`VideoColorSpace handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-primaries()` operation.
@@ -1760,7 +1760,7 @@ function lookupImageDecoder(handle: bigint): ImageDecoder {
   if (!obj) {
     throw new Error(`ImageDecoder handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-type()` operation.
@@ -2065,7 +2065,7 @@ function lookupWebGLObject(handle: bigint): WebGLObject {
   if (!obj) {
     throw new Error(`WebGLObject handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-label()` operation.
@@ -2100,7 +2100,7 @@ function lookupWebGLActiveInfo(handle: bigint): WebGLActiveInfo {
   if (!obj) {
     throw new Error(`WebGLActiveInfo handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-size()` operation.
@@ -2143,7 +2143,7 @@ function lookupWebGLShaderPrecisionFormat(handle: bigint): WebGLShaderPrecisionF
   if (!obj) {
     throw new Error(`WebGLShaderPrecisionFormat handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-range-min()` operation.
@@ -2192,7 +2192,7 @@ function lookupWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextB
   if (!obj) {
     throw new Error(`WebGLRenderingContextBase handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-canvas()` operation.
@@ -3330,7 +3330,7 @@ function lookupWebGLRenderingContextOverloads(handle: bigint): WebGLRenderingCon
   if (!obj) {
     throw new Error(`WebGLRenderingContextOverloads handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `buffer-data()` operation.
@@ -3493,7 +3493,7 @@ function lookupWebGLContextEvent(handle: bigint): WebGLContextEvent {
   if (!obj) {
     throw new Error(`WebGLContextEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-status-message()` operation.
@@ -3526,7 +3526,7 @@ function lookupWebGL2RenderingContextBase(handle: bigint): WebGL2RenderingContex
   if (!obj) {
     throw new Error(`WebGL2RenderingContextBase handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `copy-buffer-sub-data()` operation.
@@ -4307,7 +4307,7 @@ function lookupWebGL2RenderingContextOverloads(handle: bigint): WebGL2RenderingC
   if (!obj) {
     throw new Error(`WebGL2RenderingContextOverloads handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `buffer-data()` operation.

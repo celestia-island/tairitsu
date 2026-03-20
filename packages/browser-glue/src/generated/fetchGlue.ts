@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -251,7 +251,7 @@ function lookupAbortSignal(handle: bigint): AbortSignal {
   if (obj === undefined) {
     throw new Error(`abort-signal handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional abort-signal value by handle. */
@@ -268,7 +268,7 @@ function lookupAny(handle: bigint): any {
   if (obj === undefined) {
     throw new Error(`any handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional any value by handle. */
@@ -285,7 +285,7 @@ function lookupHeaders(handle: bigint): Headers {
   if (obj === undefined) {
     throw new Error(`headers handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional headers value by handle. */
@@ -302,7 +302,7 @@ function lookupReadableStreamPair(handle: bigint): [ReadableStream, ReadableStre
   if (obj === undefined) {
     throw new Error(`readable-stream-pair handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional readable-stream-pair value by handle. */
@@ -319,7 +319,7 @@ function lookupString(handle: bigint): string {
   if (obj === undefined) {
     throw new Error(`string handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional string value by handle. */
@@ -336,7 +336,7 @@ function lookupXmlHttpRequestUpload(handle: bigint): XMLHttpRequestUpload {
   if (obj === undefined) {
     throw new Error(`xml-http-request-upload handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional xml-http-request-upload value by handle. */
@@ -400,7 +400,7 @@ export function HeadersHas(self: bigint, name: string): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: bigint, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
   obj.set(name, value);
 }
@@ -422,7 +422,7 @@ function lookupBody(handle: bigint): Body {
   if (!obj) {
     throw new Error(`Body handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-body()` operation.
@@ -435,7 +435,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): string | undefined {
+export function getBodyUsed(self: bigint): boolean {
   const obj = lookupBody(self);
   return obj.bodyUsed;
 }
@@ -470,12 +470,12 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint | undefined } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -508,12 +508,12 @@ export function blob(self: bigint): bigint {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -546,12 +546,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -622,12 +622,12 @@ export function BodyJson(self: bigint): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollJson(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -685,7 +685,7 @@ function lookupRequest(handle: bigint): Request {
   if (!obj) {
     throw new Error(`Request handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-method()` operation.
@@ -714,7 +714,7 @@ export function RequestGetHeaders(self: bigint): bigint {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: bigint): (bigint)[] {
+export function getDestination(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.destination;
 }
@@ -730,7 +730,7 @@ export function getReferrer(self: bigint): string {
 /**
  * `get-referrer-policy()` operation.
  */
-export function getReferrerPolicy(self: bigint): bigint {
+export function getReferrerPolicy(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.referrerPolicy;
 }
@@ -738,7 +738,7 @@ export function getReferrerPolicy(self: bigint): bigint {
 /**
  * `get-mode()` operation.
  */
-export function getMode(self: bigint): string {
+export function getMode(self: bigint): string | undefined {
   const obj = lookupRequest(self);
   return obj.mode;
 }
@@ -778,7 +778,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): EventHandlerRecord {
+export function getKeepalive(self: bigint): boolean {
   const obj = lookupRequest(self);
   return obj.keepalive;
 }
@@ -794,7 +794,7 @@ export function getIsReloadNavigation(self: bigint): boolean {
 /**
  * `get-is-history-navigation()` operation.
  */
-export function getIsHistoryNavigation(self: bigint): boolean {
+export function getIsHistoryNavigation(self: bigint): bigint {
   const obj = lookupRequest(self);
   return (obj as any).isHistoryNavigation;
 }
@@ -843,7 +843,7 @@ function lookupResponse(handle: bigint): Response {
   if (!obj) {
     throw new Error(`Response handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `error()` operation.
@@ -855,14 +855,14 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): number {
+export function redirect(url: string, status: number | undefined): bigint {
   return Response.redirect(url, status);
 }
 
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: number, init: bigint | undefined): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   return Response.json(data, init);
 }
 
@@ -956,7 +956,7 @@ function lookupWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalSc
   if (!obj) {
     throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `fetch()` operation.
@@ -1063,7 +1063,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: bigint | undefined): void {
+export function clearTimeout(self: bigint, id: number | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }
@@ -1071,7 +1071,7 @@ export function clearTimeout(self: bigint, id: bigint | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: bigint | undefined): number {
+export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   (obj as any).interval = _arguments;
 }
@@ -1079,7 +1079,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: bigint | und
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: bigint | undefined): void {
+export function clearInterval(self: bigint, id: number | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
@@ -1133,7 +1133,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: bigint | undefined, options: bigint | undefined): string {
+export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value, options);
 }
@@ -1171,7 +1171,7 @@ function lookupFetchLaterResult(handle: bigint): FetchLaterResult {
   if (!obj) {
     throw new Error(`FetchLaterResult handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-activated()` operation.
@@ -1198,12 +1198,12 @@ function lookupReadableStream(handle: bigint): ReadableStream {
   if (!obj) {
     throw new Error(`ReadableStream handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: Uint8Array | undefined): number {
+export function from(asyncIterable: string): bigint {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 
@@ -1338,7 +1338,7 @@ function lookupReadableStreamGenericReader(handle: bigint): ReadableStreamGeneri
   if (!obj) {
     throw new Error(`ReadableStreamGenericReader handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-closed()` operation.
@@ -1433,7 +1433,7 @@ function lookupReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaul
   if (!obj) {
     throw new Error(`ReadableStreamDefaultReader handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `read()` operation.
@@ -1498,7 +1498,7 @@ function lookupReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReade
   if (!obj) {
     throw new Error(`ReadableStreamBYOBReader handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `read()` operation.
@@ -1563,7 +1563,7 @@ function lookupReadableStreamDefaultController(handle: bigint): ReadableStreamDe
   if (!obj) {
     throw new Error(`ReadableStreamDefaultController handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-desired-size()` operation.
@@ -1614,7 +1614,7 @@ function lookupReadableByteStreamController(handle: bigint): ReadableByteStreamC
   if (!obj) {
     throw new Error(`ReadableByteStreamController handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-byob-request()` operation.
@@ -1673,7 +1673,7 @@ function lookupReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequ
   if (!obj) {
     throw new Error(`ReadableStreamBYOBRequest handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-view()` operation.
@@ -1716,7 +1716,7 @@ function lookupWritableStream(handle: bigint): WritableStream {
   if (!obj) {
     throw new Error(`WritableStream handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-locked()` operation.
@@ -1830,7 +1830,7 @@ function lookupWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaul
   if (!obj) {
     throw new Error(`WritableStreamDefaultWriter handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-closed()` operation.
@@ -2025,7 +2025,7 @@ function lookupWritableStreamDefaultController(handle: bigint): WritableStreamDe
   if (!obj) {
     throw new Error(`WritableStreamDefaultController handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-signal()` operation.
@@ -2060,7 +2060,7 @@ function lookupTransformStream(handle: bigint): TransformStream {
   if (!obj) {
     throw new Error(`TransformStream handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-readable()` operation.
@@ -2095,7 +2095,7 @@ function lookupTransformStreamDefaultController(handle: bigint): TransformStream
   if (!obj) {
     throw new Error(`TransformStreamDefaultController handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-desired-size()` operation.
@@ -2146,7 +2146,7 @@ function lookupByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrat
   if (!obj) {
     throw new Error(`ByteLengthQueuingStrategy handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-high-water-mark()` operation.
@@ -2181,7 +2181,7 @@ function lookupCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
   if (!obj) {
     throw new Error(`CountQueuingStrategy handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-high-water-mark()` operation.
@@ -2216,7 +2216,7 @@ function lookupGenericTransformStream(handle: bigint): GenericTransformStream {
   if (!obj) {
     throw new Error(`GenericTransformStream handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-readable()` operation.
@@ -2251,7 +2251,7 @@ function lookupXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTar
   if (!obj) {
     throw new Error(`XMLHttpRequestEventTarget handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-onloadstart()` operation.
@@ -2382,7 +2382,7 @@ function lookupXMLHttpRequest(handle: bigint): XMLHttpRequest {
   if (!obj) {
     throw new Error(`XMLHttpRequest handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-onreadystatechange()` operation.
@@ -2421,7 +2421,7 @@ export function open(self: bigint, method: string, url: string): void {
  */
 export function setRequestHeader(self: bigint, name: string, value: string): void {
   const obj = lookupXMLHttpRequest(self);
-  obj.setRequestHeader = value;
+  obj.setRequestHeader(name, value);
 }
 
 /**
@@ -2588,7 +2588,7 @@ function lookupFormData(handle: bigint): FormData {
   if (!obj) {
     throw new Error(`FormData handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `append()` operation.
@@ -2658,7 +2658,7 @@ function lookupProgressEvent(handle: bigint): ProgressEvent {
   if (!obj) {
     throw new Error(`ProgressEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-length-computable()` operation.

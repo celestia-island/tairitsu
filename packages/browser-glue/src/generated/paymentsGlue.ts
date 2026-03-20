@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -230,14 +230,14 @@ function lookupPaymentRequest(handle: bigint): PaymentRequest {
   if (!obj) {
     throw new Error(`PaymentRequest handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `show()` operation.
  *
  * Async operation: returns request ID, poll with `pollShow()`
  */
-export function show(self: bigint, detailsPromise: EventHandlerRecord | undefined): bigint {
+export function show(self: bigint, detailsPromise: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPaymentRequest(self);
   const promise = obj.show(detailsPromise)
@@ -349,7 +349,7 @@ export function pollCanMakePayment(requestId: bigint): { ok: true; value: bigint
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): EventHandlerRecord {
+export function getId(self: bigint): string {
   const obj = lookupPaymentRequest(self);
   return obj.id;
 }
@@ -357,7 +357,7 @@ export function getId(self: bigint): EventHandlerRecord {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentRequestGetShippingAddress(self: bigint): string | undefined {
+export function PaymentRequestGetShippingAddress(self: bigint): string {
   const obj = lookupPaymentRequest(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -373,7 +373,7 @@ export function PaymentRequestGetShippingOption(self: bigint): string | undefine
 /**
  * `get-shipping-type()` operation.
  */
-export function getShippingType(self: bigint): string | undefined {
+export function getShippingType(self: bigint): boolean | undefined {
   const obj = lookupPaymentRequest(self);
   return obj.shippingType ?? undefined;
 }
@@ -389,7 +389,7 @@ export function getOnshippingaddresschange(self: bigint): EventHandlerRecord {
 /**
  * `set-onshippingaddresschange()` operation.
  */
-export function setOnshippingaddresschange(self: bigint, value: number): void {
+export function setOnshippingaddresschange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupPaymentRequest(self);
   obj.onshippingaddresschange = value;
 }
@@ -405,7 +405,7 @@ export function getOnshippingoptionchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onshippingoptionchange()` operation.
  */
-export function setOnshippingoptionchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnshippingoptionchange(self: bigint, value: (bigint)[]): void {
   const obj = lookupPaymentRequest(self);
   obj.onshippingoptionchange = value;
 }
@@ -443,7 +443,7 @@ function lookupPaymentResponse(handle: bigint): PaymentResponse {
   if (!obj) {
     throw new Error(`PaymentResponse handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `to-json()` operation.
@@ -456,7 +456,7 @@ export function toJson(self: bigint): bigint {
 /**
  * `get-request-id()` operation.
  */
-export function getRequestId(self: bigint): string {
+export function getRequestId(self: bigint): number {
   const obj = lookupPaymentResponse(self);
   return obj.requestId;
 }
@@ -480,7 +480,7 @@ export function getDetails(self: bigint): bigint {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentResponseGetShippingAddress(self: bigint): EventHandlerRecord | undefined {
+export function PaymentResponseGetShippingAddress(self: bigint): EventHandlerRecord {
   const obj = lookupPaymentResponse(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -488,7 +488,7 @@ export function PaymentResponseGetShippingAddress(self: bigint): EventHandlerRec
 /**
  * `get-shipping-option()` operation.
  */
-export function PaymentResponseGetShippingOption(self: bigint): bigint {
+export function PaymentResponseGetShippingOption(self: bigint): EventHandlerRecord | undefined {
   const obj = lookupPaymentResponse(self);
   return obj.shippingOption ?? undefined;
 }
@@ -496,7 +496,7 @@ export function PaymentResponseGetShippingOption(self: bigint): bigint {
 /**
  * `get-payer-name()` operation.
  */
-export function getPayerName(self: bigint): bigint | undefined {
+export function getPayerName(self: bigint): string {
   const obj = lookupPaymentResponse(self);
   return obj.payerName ?? undefined;
 }
@@ -504,7 +504,7 @@ export function getPayerName(self: bigint): bigint | undefined {
 /**
  * `get-payer-email()` operation.
  */
-export function getPayerEmail(self: bigint): boolean {
+export function getPayerEmail(self: bigint): string | undefined {
   const obj = lookupPaymentResponse(self);
   return obj.payerEmail ?? undefined;
 }
@@ -560,7 +560,7 @@ export function pollComplete(requestId: bigint): { ok: true; value: bigint } | {
  *
  * Async operation: returns request ID, poll with `pollRetry()`
  */
-export function retry(self: bigint, errorFields: string): bigint {
+export function retry(self: bigint, errorFields: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPaymentResponse(self);
   const promise = obj.retry(errorFields)
@@ -626,12 +626,12 @@ function lookupPaymentMethodChangeEvent(handle: bigint): PaymentMethodChangeEven
   if (!obj) {
     throw new Error(`PaymentMethodChangeEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-method-name()` operation.
  */
-export function PaymentMethodChangeEventGetMethodName(self: bigint): number {
+export function PaymentMethodChangeEventGetMethodName(self: bigint): string {
   const obj = lookupPaymentMethodChangeEvent(self);
   return obj.methodName;
 }
@@ -639,7 +639,7 @@ export function PaymentMethodChangeEventGetMethodName(self: bigint): number {
 /**
  * `get-method-details()` operation.
  */
-export function getMethodDetails(self: bigint): number {
+export function getMethodDetails(self: bigint): bigint | undefined {
   const obj = lookupPaymentMethodChangeEvent(self);
   return obj.methodDetails ?? undefined;
 }
@@ -661,12 +661,12 @@ function lookupPaymentRequestUpdateEvent(handle: bigint): PaymentRequestUpdateEv
   if (!obj) {
     throw new Error(`PaymentRequestUpdateEvent handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `update-with()` operation.
  */
-export function updateWith(self: bigint, detailsPromise: bigint): void {
+export function updateWith(self: bigint, detailsPromise: string): void {
   const obj = lookupPaymentRequestUpdateEvent(self);
   obj.updateWith(detailsPromise);
 }

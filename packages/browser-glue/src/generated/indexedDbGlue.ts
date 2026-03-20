@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -217,7 +217,7 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
   if (!obj) {
     throw new Error(`IDBFactory handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `cmp()` operation.
@@ -244,7 +244,7 @@ function lookupIdbDb(handle: bigint): IDBDatabase {
   if (!obj) {
     throw new Error(`IDBDatabase handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `name()` operation.
@@ -279,7 +279,7 @@ function lookupIdbTx(handle: bigint): IDBTransaction {
   if (!obj) {
     throw new Error(`IDBTransaction handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `commit()` operation.
@@ -314,7 +314,7 @@ function lookupIdbStore(handle: bigint): IDBObjectStore {
   if (!obj) {
     throw new Error(`IDBObjectStore handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-name()` operation.
@@ -365,7 +365,7 @@ function lookupIDBIndex(handle: bigint): IDBIndex {
   if (!obj) {
     throw new Error(`IDBIndex handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-name()` operation.
@@ -378,7 +378,7 @@ export function IdbIndexGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbIndexSetName(handle: bigint, value: boolean): void {
+export function IdbIndexSetName(handle: bigint, value: string): void {
   const obj = lookupIDBIndex(handle);
   obj.name = value;
 }
@@ -424,7 +424,7 @@ function lookupIDBCursor(handle: bigint): IDBCursor {
   if (!obj) {
     throw new Error(`IDBCursor handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `source()` operation.
@@ -491,7 +491,7 @@ function lookupIDBRequest(handle: bigint): IDBRequest {
   if (!obj) {
     throw new Error(`IDBRequest handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `result-val()` operation.
@@ -504,7 +504,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string {
+export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = lookupIDBRequest(handle);
   return obj.source() ?? undefined;
 }

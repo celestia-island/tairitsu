@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -217,26 +217,26 @@ function lookupURL(handle: bigint): URL {
   if (!obj) {
     throw new Error(`URL handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): boolean {
+export function parse(url: string, base: string | undefined): number {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: string | undefined): bigint {
+export function canParse(url: string, base: string): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): boolean {
+export function getHref(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.href;
 }
@@ -268,7 +268,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `set-protocol()` operation.
  */
-export function setProtocol(self: bigint, value: bigint): void {
+export function setProtocol(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.protocol = value;
 }
@@ -284,7 +284,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: bigint): void {
+export function setUsername(self: bigint, value: number): void {
   const obj = lookupURL(self);
   obj.username = value;
 }
@@ -316,7 +316,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: bigint): void {
+export function setHost(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.host = value;
 }
@@ -324,7 +324,7 @@ export function setHost(self: bigint, value: bigint): void {
 /**
  * `get-hostname()` operation.
  */
-export function getHostname(self: bigint): string {
+export function getHostname(self: bigint): boolean {
   const obj = lookupURL(self);
   return obj.hostname;
 }
@@ -332,7 +332,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: string): void {
+export function setHostname(self: bigint, value: number): void {
   const obj = lookupURL(self);
   obj.hostname = value;
 }
@@ -356,7 +356,7 @@ export function setPort(self: bigint, value: string): void {
 /**
  * `get-pathname()` operation.
  */
-export function getPathname(self: bigint): number {
+export function getPathname(self: bigint): string {
   const obj = lookupURL(self);
   return obj.pathname;
 }
@@ -434,7 +434,7 @@ function lookupURLSearchParams(handle: bigint): URLSearchParams {
   if (!obj) {
     throw new Error(`URLSearchParams handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-size()` operation.
@@ -455,7 +455,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string): void {
+export function _delete(self: bigint, name: string, value: EventHandlerRecord): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -479,7 +479,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: string, value: EventHandlerRecord): boolean {
+export function has(self: bigint, name: string, value: string | undefined): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value);
 }
@@ -487,7 +487,7 @@ export function has(self: bigint, name: string, value: EventHandlerRecord): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: string, value: string): void {
+export function _set(self: bigint, name: bigint | undefined, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.set(name, value);
 }

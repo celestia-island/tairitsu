@@ -1303,9 +1303,96 @@ HANDLE_RETURNING_FUNCTIONS = {
     # TreeWalker
     ("tree-walker", "getRoot"): "node",
     ("tree-walker", "getCurrentNode"): "node",
+    ("tree-walker", "parentNode"): "node",
+    ("tree-walker", "firstChild"): "node",
+    ("tree-walker", "lastChild"): "node",
+    ("tree-walker", "nextSibling"): "node",
+    ("tree-walker", "previousSibling"): "node",
+    ("tree-walker", "nextNode"): "node",
+    ("tree-walker", "previousNode"): "node",
+    ("tree-walker", "getFilter"): "node-filter",
     # NodeIterator
     ("node-iterator", "getRoot"): "node",
     ("node-iterator", "getReferenceNode"): "node",
+    ("node-iterator", "getFilter"): "node-filter",
+    ("node-iterator", "nextNode"): "node",
+    ("node-iterator", "previousNode"): "node",
+    # Node methods that return Node
+    ("node", "cloneNode"): "node",
+    ("node", "insertBefore"): "node",
+    ("node", "appendChild"): "node",
+    ("node", "replaceChild"): "node",
+    ("node", "removeChild"): "node",
+    # ParentNode
+    ("parent-node", "getChildren"): "html-collection",
+    # AbstractRange
+    ("abstract-range", "getStartContainer"): "node",
+    ("abstract-range", "getEndContainer"): "node",
+    # NamedNodeMap
+    ("named-node-map", "getNamedItemNs"): "attr",
+    ("named-node-map", "getNamedItem"): "attr",
+    ("named-node-map", "setNamedItem"): "attr",
+    ("named-node-map", "setNamedItemNs"): "attr",
+    ("named-node-map", "removeNamedItem"): "attr",
+    ("named-node-map", "removeNamedItemNs"): "attr",
+    # XPathResult
+    ("xpath-result", "getSingleNodeValue"): "node",
+    ("xpath-result", "iterateNext"): "node",
+    ("xpath-result", "snapshotItem"): "node",
+    ("x-path-result", "getSingleNodeValue"): "node",
+    ("x-path-result", "iterateNext"): "node",
+    ("x-path-result", "snapshotItem"): "node",
+    # XPathEvaluatorBase
+    ("xpath-evaluator-base", "createNsResolver"): "xpath-ns-resolver",
+    ("xpath-evaluator-base", "evaluate"): "xpath-result",
+    ("x-path-evaluator-base", "createNsResolver"): "xpath-ns-resolver",
+    ("x-path-evaluator-base", "evaluate"): "xpath-result",
+    # CaretPosition
+    ("caret-position", "getOffsetNode"): "node",
+    ("caret-position", "getClientRect"): "dom-rect",
+    # Document - additional methods
+    ("document", "getApplets"): "html-collection",
+    ("document", "getElementsByTagNameNs"): "html-collection",
+    ("document", "createElementNs"): "element",
+    ("document", "createAttributeNs"): "attr",
+    # Element - additional methods
+    ("element", "getAttributeNodeNs"): "attr",
+    ("element", "getElementsByTagNameNs"): "html-collection",
+    # HTMLElement
+    ("html-element", "attachInternals"): "element-internals",
+    # StyleSheet
+    ("style-sheet", "getMedia"): "media-list",
+    # CSSStyleSheet
+    ("css-style-sheet", "getRules"): "css-rule-list",
+    # StyleSheetList
+    ("style-sheet-list", "item"): "css-style-sheet",
+    # HTMLMapElement
+    ("html-map-element", "getAreas"): "html-collection",
+    # HTMLTableSectionElement
+    ("html-table-section-element", "getRows"): "html-collection",
+    # HTMLTableRowElement
+    ("html-table-row-element", "getCells"): "html-collection",
+    # HTMLDataListElement
+    ("html-data-list-element", "getOptions"): "html-collection",
+    # Labels getters (return NodeList)
+    ("html-button-element", "getLabels"): "node-list",
+    ("html-select-element", "getLabels"): "node-list",
+    ("html-text-area-element", "getLabels"): "node-list",
+    ("html-output-element", "getLabels"): "node-list",
+    ("html-progress-element", "getLabels"): "node-list",
+    ("html-meter-element", "getLabels"): "node-list",
+    ("element-internals", "getLabels"): "node-list",
+    # SubmitEvent
+    ("submit-event", "getSubmitter"): "html-element",
+    # HTMLSlotElement
+    ("html-slot-element", "assignedNodes"): "node-list",
+    ("html-slot-element", "assignedElements"): "element-list",
+    # IntersectionObserverEntry
+    ("intersection-observer-entry", "getRootBounds"): "dom-rect-read-only",
+    ("intersection-observer-entry", "getBoundingClientRect"): "dom-rect-read-only",
+    ("intersection-observer-entry", "getIntersectionRect"): "dom-rect-read-only",
+    # ResizeObserverEntry
+    ("resize-observer-entry", "getContentRect"): "dom-rect-read-only",
 }
 
 
@@ -2246,6 +2333,20 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "ready", "controller", "metadata", "voices", "voices-and-voice",
 }
 
+# Functions that are defined as setters in WIT but are actually methods in DOM API
+# These should call a method instead of setting a property
+SETTER_BUT_ACTUALLY_METHOD = {
+    "attribute", "attribute-ns", "attribute-node", "attribute-node-ns",
+    "html-unsafe", "pointer-capture",
+    "start", "start-before", "start-after", "end", "end-before", "end-after",
+    "selection-range", "range-text", "custom-validity",
+    "request-header", "header-value",
+    "action-handler", "position-state", "microphone-active", "camera-active",
+    "resource-timing-buffer-size", "codec-preferences",
+    "form-value", "drag-image",
+    "popover-target-element",
+}
+
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces
 # Maps wit_type_name -> (ts_type, handle_var_suffix, handle_pascal)
 # handle_var_suffix: the suffix for the handle variable (e.g., "Handles" -> "_stringHandles")
@@ -2379,6 +2480,8 @@ SYNTHETIC_HANDLE_TYPES = {
     "xpath-expression": ("XPathExpression", "xpathExpressionHandles", "XPathExpression"),
     "xpath-ns-resolver": ("XPathNSResolver", "xpathNsResolverHandles", "XPathNsResolver"),
     "xpath-result": ("XPathResult", "xpathResultHandles", "XPathResult"),
+    "node-filter": ("NodeFilter", "nodeFilterHandles", "NodeFilter"),
+    "dom-rect-read-only": ("DOMRectReadOnly", "domRectReadOnlyHandles", "DomRectReadOnly"),
     "xml-http-request-upload": ("XMLHttpRequestUpload", "xmlHttpRequestUploadHandles", "XmlHttpRequestUpload"),
     "selection": ("Selection", "selectionHandles", "Selection"),
     "mutation-observer": ("MutationObserver", "mutationObserverHandles", "MutationObserver"),
@@ -2396,29 +2499,29 @@ CUSTOM_TYPE_DEFINITIONS = {
     "OnBeforeUnloadEventHandlerRecord": "OnBeforeUnloadEventHandlerNonNull | null",
     "OnErrorEventHandlerRecord": "OnErrorEventHandlerNonNull | null",
     "VoidFunctionRecord": "VoidFunction",
-    "GeometryUtils": "unknown",
-    "HyperlinkElementUtils": "unknown",
-    "PopoverTargetAttributes": "unknown",
-    "CSSPageDescriptors": "unknown",
+    "GeometryUtils": "any",
+    "HyperlinkElementUtils": "any",
+    "PopoverTargetAttributes": "any",
+    "CSSPageDescriptors": "any",
     "CSSMarginRule": "CSSRule",
     "CSSStyleProperties": "Record<string, string>",
     "Origin": "string",
-    "FetchLaterResult": "unknown",
-    "NotRestoredReasonDetails": "unknown",
-    "NotRestoredReasons": "unknown",
+    "FetchLaterResult": "any",
+    "NotRestoredReasonDetails": "any",
+    "NotRestoredReasons": "any",
     "DeviceChangeEvent": "Event",
-    "ChapterInformation": "unknown",
-    "PerformanceTimingConfidence": "unknown",
+    "ChapterInformation": "any",
+    "PerformanceTimingConfidence": "any",
     "NotificationEvent": "Event",
     "VisibilityStateEntry": "PerformanceEntry",
     "CommandEvent": "Event",
     "CloseWatcher": "EventTarget",
-    "CaptureController": "unknown",
-    "Navigation": "unknown",
-    "NavigationTransition": "unknown",
+    "CaptureController": "any",
+    "Navigation": "any",
+    "NavigationTransition": "any",
     "NavigateEvent": "Event",
-    "NavigationPrecommitController": "unknown",
-    "NavigationDestination": "unknown",
+    "NavigationPrecommitController": "any",
+    "NavigationDestination": "any",
     "NavigationCurrentEntryChangeEvent": "Event",
     # Battery API
     "BatteryManager": "any",
