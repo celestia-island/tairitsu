@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): number {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: number } {
   return FileReader.newFileReader();
 }
 
@@ -97,7 +97,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): boolean | undefined {
+export function resultVal(handle: bigint): EventHandlerRecord | undefined {
   return FileReader.resultVal(handle);
 }
 

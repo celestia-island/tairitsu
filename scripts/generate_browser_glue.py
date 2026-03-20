@@ -193,6 +193,18 @@ HANDLE_GETTER_PATTERNS = [
     "get-storage", "get-crypto", "get-performance",
 ]
 
+# Special browser API name mappings (WIT name -> browser API name)
+BROWSER_API_NAME_MAPPINGS = {
+    "get-random-values": "getRandomValues",
+    "random-uuid": "randomUUID",
+    "is-conditional-mediation-available": "isConditionalMediationAvailable",
+}
+
+# Functions that return browser objects (need to wrap in handle)
+HANDLE_RETURNING_FUNCTIONS = {
+    ("crypto", "getSubtle"): "subtle-crypto",
+}
+
 
 # ---------------------------------------------------------------------------
 # Code Generation Data Structures
@@ -215,12 +227,14 @@ class GeneratedFunction:
     params: List[GeneratedParam]
     ts_return: str
     ts_return_inner: str = ""
+    ts_return_inner_original: str = ""
     is_async: bool = False
     is_getter: bool = False
     is_setter: bool = False
     is_static: bool = False
     return_is_void: bool = False
     return_is_optional: bool = False
+    return_is_handle: bool = False
     browser_method: str = ""
     browser_attr: str = ""
     browser_args: str = ""
@@ -302,6 +316,9 @@ class BrowserGlueGenerator:
         ts_name = kebab_to_camel(wit_name)
         # Store original method name before escaping reserved words
         browser_method = ts_name
+        # Check for special browser API name mappings
+        if wit_name in BROWSER_API_NAME_MAPPINGS:
+            browser_method = BROWSER_API_NAME_MAPPINGS[wit_name]
         # Escape reserved words by prefixing with underscore
         if ts_name in self.JS_RESERVED_WORDS:
             ts_name = f"_{ts_name}"
@@ -345,8 +362,10 @@ class BrowserGlueGenerator:
         # Determine return type
         ts_return = "void"
         ts_return_inner = ""
+        ts_return_inner_original = ""
         return_is_void = True
         return_is_optional = False
+        return_is_handle = False
 
         if func.result:
             ts_return = self.type_mapper.map_type(func.result)
@@ -354,6 +373,15 @@ class BrowserGlueGenerator:
             return_is_optional = isinstance(func.result, WitOption)
             if not return_is_void:
                 ts_return_inner = ts_return
+                # Check if return type is a handle (bigint from WitHandle or type alias ending with -handle)
+                return_is_handle = (ts_return == "bigint" and 
+                                   (isinstance(func.result, WitHandle) or
+                                    any(ta.name == wit_type_to_string(func.result) and ta.name.endswith("-handle")
+                                        for ta in interface.type_aliases)))
+                # Also check explicit mapping
+                key = (interface.name, kebab_to_camel(wit_name))
+                if key in HANDLE_RETURNING_FUNCTIONS:
+                    return_is_handle = True
 
         # Determine function characteristics
         is_getter = wit_name.startswith("get-")
@@ -363,9 +391,10 @@ class BrowserGlueGenerator:
         # Detect static functions: functions without a self parameter
         has_self_param = any(p.name == "self" for p in func.params)
         is_static = func.is_static or (not has_self_param and not is_global_singleton)
-
+ 
         # For async functions, return type is always bigint (request ID)
         if is_async:
+            ts_return_inner_original = ts_return_inner
             ts_return = "bigint"
             return_is_void = False
 
@@ -396,12 +425,14 @@ class BrowserGlueGenerator:
             params=params,
             ts_return=ts_return,
             ts_return_inner=ts_return_inner,
+            ts_return_inner_original=ts_return_inner_original,
             is_async=is_async,
             is_getter=is_getter,
             is_setter=is_setter,
             is_static=is_static,
             return_is_void=return_is_void,
             return_is_optional=return_is_optional,
+            return_is_handle=return_is_handle,
             browser_method=browser_method,
             browser_attr=browser_attr,
             browser_args=browser_args,
@@ -775,7 +806,17 @@ class BrowserGlueGenerator:
         else:
             obj_ref = "obj"
         
-        if func.return_is_optional:
+        # Check if this getter returns a browser object that needs to be wrapped
+        key = (iface.name, kebab_to_camel(func.wit_name))
+        if key in HANDLE_RETURNING_FUNCTIONS:
+            target_iface = HANDLE_RETURNING_FUNCTIONS[key]
+            target_pascal = kebab_to_pascal(target_iface)
+            target_var = kebab_to_camel(target_iface + "Handles")
+            lines.append(f"  const result = {obj_ref}.{func.browser_attr};")
+            lines.append(f"  const handle = _next{target_pascal}++;")
+            lines.append(f"  _{target_var}.set(handle, result);")
+            lines.append("  return handle;")
+        elif func.return_is_optional:
             lines.append(f"  return {obj_ref}.{func.browser_attr} ?? undefined;")
         else:
             lines.append(f"  return {obj_ref}.{func.browser_attr};")
@@ -819,6 +860,19 @@ class BrowserGlueGenerator:
 
         if func.return_is_void:
             lines.append(f"  {obj_ref}.{func.browser_method}({args});")
+        elif func.return_is_handle:
+            # Register returned object to handle table
+            key = (iface.name, kebab_to_camel(func.wit_name))
+            if key in HANDLE_RETURNING_FUNCTIONS:
+                target_iface = HANDLE_RETURNING_FUNCTIONS[key]
+                target_pascal = kebab_to_pascal(target_iface)
+                target_var = kebab_to_camel(target_iface + "Handles")
+                lines.append(f"  const result = {obj_ref}.{func.browser_method}({args});")
+                lines.append(f"  const handle = _next{target_pascal}++;")
+                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append("  return handle;")
+            else:
+                lines.append(f"  return {obj_ref}.{func.browser_method}({args});")
         elif func.return_is_optional:
             lines.append(f"  return {obj_ref}.{func.browser_method}({args}) ?? undefined;")
         else:

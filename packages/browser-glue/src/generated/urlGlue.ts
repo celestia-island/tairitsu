@@ -45,7 +45,7 @@ function getUrl(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: bigint, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
@@ -139,7 +139,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: number): void {
+export function setHost(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.host = value;
 }
@@ -203,7 +203,7 @@ export function getSearch(self: bigint): string {
 /**
  * `set-search()` operation.
  */
-export function setSearch(self: bigint, value: number): void {
+export function setSearch(self: bigint, value: bigint): void {
   const obj = getUrl(self);
   obj.search = value;
 }
@@ -279,7 +279,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = getUrlSearchParams(self);
   obj.delete(name, value);
 }
@@ -341,7 +341,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: string, value: string): void {
+export function _set(self: bigint, name: bigint, value: string): void {
   const obj = getUrlSearchParams(self);
   obj.set(name, value);
 }

@@ -45,7 +45,7 @@ function getAnimation(handle: bigint): Animation {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): string {
+export function getId(handle: bigint): EventHandlerRecord {
   const obj = getAnimation(self);
   return obj.id;
 }
@@ -61,7 +61,7 @@ export function setId(handle: bigint, value: string): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): bigint {
+export function getPlaybackRate(handle: bigint): number {
   const obj = getAnimation(self);
   return obj.playbackRate;
 }
@@ -69,7 +69,7 @@ export function getPlaybackRate(handle: bigint): bigint {
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: string): void {
+export function setPlaybackRate(handle: bigint, value: number): void {
   const obj = getAnimation(self);
   obj.playbackRate = value;
 }

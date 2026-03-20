@@ -72,7 +72,7 @@ export function query(self: bigint, permissionDesc: bigint): bigint {
  * Poll an async `query()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollQuery(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): string {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
