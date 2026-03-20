@@ -14,8 +14,21 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
+
+// ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
 // WIT interface: audio-decoder
@@ -42,7 +55,13 @@ function getAudioDecoder(handle: bigint): AudioDecoder {
  */
 export function AudioDecoderGetState(self: bigint): bigint {
   const obj = getAudioDecoder(self);
-  return obj.state;
+  const value = obj.state;
+  switch (value) {
+    case 'unconfigured': return 0n;
+    case 'configured': return 1n;
+    case 'closed': return 2n;
+    default: return 0n;  // Unknown value
+  }
 }
 
 /**
@@ -72,7 +91,7 @@ export function AudioDecoderSetOndequeue(self: bigint, value: EventHandlerRecord
 /**
  * `configure()` operation.
  */
-export function AudioDecoderConfigure(self: bigint, config: bigint): void {
+export function AudioDecoderConfigure(self: bigint, config: AudioDecoderConfig): void {
   const obj = getAudioDecoder(self);
   obj.configure(config);
 }
@@ -87,10 +106,40 @@ export function AudioDecoderDecode(self: bigint, chunk: bigint): void {
 
 /**
  * `flush()` operation.
+ *
+ * Async operation: returns request ID, poll with `AudioDecoderPollFlush()`
  */
 export function AudioDecoderFlush(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAudioDecoder(self);
-  return obj.flush();
+  const promise = obj.flush()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `flush()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AudioDecoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -103,16 +152,46 @@ export function AudioDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `AudioDecoderPollClose()`
  */
-export function AudioDecoderClose(self: bigint): void {
+export function AudioDecoderClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAudioDecoder(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AudioDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `is-config-supported()` operation.
  */
-export function AudioDecoderIsConfigSupported(config: bigint): bigint {
+export function AudioDecoderIsConfigSupported(config: AudioDecoderConfig): bigint {
   return AudioDecoder.isConfigSupported(config);
 }
 
@@ -141,7 +220,13 @@ function getVideoDecoder(handle: bigint): VideoDecoder {
  */
 export function VideoDecoderGetState(self: bigint): bigint {
   const obj = getVideoDecoder(self);
-  return obj.state;
+  const value = obj.state;
+  switch (value) {
+    case 'unconfigured': return 0n;
+    case 'configured': return 1n;
+    case 'closed': return 2n;
+    default: return 0n;  // Unknown value
+  }
 }
 
 /**
@@ -171,7 +256,7 @@ export function VideoDecoderSetOndequeue(self: bigint, value: EventHandlerRecord
 /**
  * `configure()` operation.
  */
-export function VideoDecoderConfigure(self: bigint, config: bigint): void {
+export function VideoDecoderConfigure(self: bigint, config: VideoDecoderConfig): void {
   const obj = getVideoDecoder(self);
   obj.configure(config);
 }
@@ -186,10 +271,40 @@ export function VideoDecoderDecode(self: bigint, chunk: bigint): void {
 
 /**
  * `flush()` operation.
+ *
+ * Async operation: returns request ID, poll with `VideoDecoderPollFlush()`
  */
 export function VideoDecoderFlush(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getVideoDecoder(self);
-  return obj.flush();
+  const promise = obj.flush()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `flush()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function VideoDecoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -202,16 +317,46 @@ export function VideoDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `VideoDecoderPollClose()`
  */
-export function VideoDecoderClose(self: bigint): void {
+export function VideoDecoderClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getVideoDecoder(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function VideoDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `is-config-supported()` operation.
  */
-export function VideoDecoderIsConfigSupported(config: bigint): bigint {
+export function VideoDecoderIsConfigSupported(config: VideoDecoderConfig): bigint {
   return VideoDecoder.isConfigSupported(config);
 }
 
@@ -240,7 +385,13 @@ function getAudioEncoder(handle: bigint): AudioEncoder {
  */
 export function AudioEncoderGetState(self: bigint): bigint {
   const obj = getAudioEncoder(self);
-  return obj.state;
+  const value = obj.state;
+  switch (value) {
+    case 'unconfigured': return 0n;
+    case 'configured': return 1n;
+    case 'closed': return 2n;
+    default: return 0n;  // Unknown value
+  }
 }
 
 /**
@@ -270,7 +421,7 @@ export function AudioEncoderSetOndequeue(self: bigint, value: EventHandlerRecord
 /**
  * `configure()` operation.
  */
-export function AudioEncoderConfigure(self: bigint, config: bigint): void {
+export function AudioEncoderConfigure(self: bigint, config: AudioEncoderConfig): void {
   const obj = getAudioEncoder(self);
   obj.configure(config);
 }
@@ -285,10 +436,40 @@ export function AudioEncoderEncode(self: bigint, data: bigint): void {
 
 /**
  * `flush()` operation.
+ *
+ * Async operation: returns request ID, poll with `AudioEncoderPollFlush()`
  */
 export function AudioEncoderFlush(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAudioEncoder(self);
-  return obj.flush();
+  const promise = obj.flush()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `flush()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AudioEncoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -301,16 +482,46 @@ export function AudioEncoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `AudioEncoderPollClose()`
  */
-export function AudioEncoderClose(self: bigint): void {
+export function AudioEncoderClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAudioEncoder(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AudioEncoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `is-config-supported()` operation.
  */
-export function AudioEncoderIsConfigSupported(config: bigint): bigint {
+export function AudioEncoderIsConfigSupported(config: AudioEncoderConfig): bigint {
   return AudioEncoder.isConfigSupported(config);
 }
 
@@ -339,7 +550,13 @@ function getVideoEncoder(handle: bigint): VideoEncoder {
  */
 export function VideoEncoderGetState(self: bigint): bigint {
   const obj = getVideoEncoder(self);
-  return obj.state;
+  const value = obj.state;
+  switch (value) {
+    case 'unconfigured': return 0n;
+    case 'configured': return 1n;
+    case 'closed': return 2n;
+    default: return 0n;  // Unknown value
+  }
 }
 
 /**
@@ -369,7 +586,7 @@ export function VideoEncoderSetOndequeue(self: bigint, value: EventHandlerRecord
 /**
  * `configure()` operation.
  */
-export function VideoEncoderConfigure(self: bigint, config: bigint): void {
+export function VideoEncoderConfigure(self: bigint, config: VideoEncoderConfig): void {
   const obj = getVideoEncoder(self);
   obj.configure(config);
 }
@@ -377,17 +594,47 @@ export function VideoEncoderConfigure(self: bigint, config: bigint): void {
 /**
  * `encode()` operation.
  */
-export function VideoEncoderEncode(self: bigint, frame: bigint, options: bigint | undefined): void {
+export function VideoEncoderEncode(self: bigint, frame: bigint, options: VideoEncoderEncodeOptions): void {
   const obj = getVideoEncoder(self);
   obj.encode(frame, options);
 }
 
 /**
  * `flush()` operation.
+ *
+ * Async operation: returns request ID, poll with `VideoEncoderPollFlush()`
  */
 export function VideoEncoderFlush(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getVideoEncoder(self);
-  return obj.flush();
+  const promise = obj.flush()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `flush()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function VideoEncoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -400,16 +647,46 @@ export function VideoEncoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `VideoEncoderPollClose()`
  */
-export function VideoEncoderClose(self: bigint): void {
+export function VideoEncoderClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getVideoEncoder(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function VideoEncoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `is-config-supported()` operation.
  */
-export function VideoEncoderIsConfigSupported(config: bigint): bigint {
+export function VideoEncoderIsConfigSupported(config: VideoEncoderConfig): bigint {
   return VideoEncoder.isConfigSupported(config);
 }
 
@@ -627,10 +904,40 @@ export function AudioDataClone(self: bigint): bigint {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `AudioDataPollClose()`
  */
-export function AudioDataClose(self: bigint): void {
+export function AudioDataClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAudioData(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AudioDataPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -783,10 +1090,40 @@ export function VideoFrameClone(self: bigint): bigint {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `VideoFramePollClose()`
  */
-export function VideoFrameClose(self: bigint): void {
+export function VideoFrameClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getVideoFrame(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function VideoFramePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -919,10 +1256,40 @@ export function ImageDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `ImageDecoderPollClose()`
  */
-export function ImageDecoderClose(self: bigint): void {
+export function ImageDecoderClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getImageDecoder(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function ImageDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -1272,7 +1639,7 @@ export function setUnpackColorSpace(self: bigint, value: bigint): void {
  */
 export function getContextAttributes(self: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.contextAttributes ?? undefined;
+  return obj.contextAttributes() ?? undefined;
 }
 
 /**
@@ -1288,7 +1655,7 @@ export function isContextLost(self: bigint): boolean {
  */
 export function getSupportedExtensions(self: bigint): (string)[] | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.supportedExtensions ?? undefined;
+  return obj.supportedExtensions() ?? undefined;
 }
 
 /**
@@ -1296,7 +1663,7 @@ export function getSupportedExtensions(self: bigint): (string)[] | undefined {
  */
 export function getExtension(self: bigint, name: string): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.extension ?? undefined;
+  return obj.extension(name) ?? undefined;
 }
 
 /**
@@ -1669,10 +2036,40 @@ export function finish(self: bigint): void {
 
 /**
  * `flush()` operation.
+ *
+ * Async operation: returns request ID, poll with `WebGlRenderingContextBasePollFlush()`
  */
-export function WebGlRenderingContextBaseFlush(self: bigint): void {
+export function WebGlRenderingContextBaseFlush(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWebGLRenderingContextBase(self);
-  obj.flush();
+  const promise = obj.flush()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `flush()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function WebGlRenderingContextBasePollFlush(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -1712,7 +2109,7 @@ export function generateMipmap(self: bigint, target: bigint): void {
  */
 export function getActiveAttrib(self: bigint, program: bigint, index: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.activeAttrib ?? undefined;
+  return obj.activeAttrib(program, index) ?? undefined;
 }
 
 /**
@@ -1720,7 +2117,7 @@ export function getActiveAttrib(self: bigint, program: bigint, index: bigint): b
  */
 export function getActiveUniform(self: bigint, program: bigint, index: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.activeUniform ?? undefined;
+  return obj.activeUniform(program, index) ?? undefined;
 }
 
 /**
@@ -1728,7 +2125,7 @@ export function getActiveUniform(self: bigint, program: bigint, index: bigint): 
  */
 export function getAttachedShaders(self: bigint, program: bigint): (bigint)[] | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.attachedShaders ?? undefined;
+  return obj.attachedShaders(program) ?? undefined;
 }
 
 /**
@@ -1736,7 +2133,7 @@ export function getAttachedShaders(self: bigint, program: bigint): (bigint)[] | 
  */
 export function getAttribLocation(self: bigint, program: bigint, name: string): bigint {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.attribLocation;
+  return obj.attribLocation(program, name);
 }
 
 /**
@@ -1744,7 +2141,7 @@ export function getAttribLocation(self: bigint, program: bigint, name: string): 
  */
 export function getBufferParameter(self: bigint, target: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.bufferParameter;
+  return obj.bufferParameter(target, pname);
 }
 
 /**
@@ -1752,7 +2149,7 @@ export function getBufferParameter(self: bigint, target: bigint, pname: bigint):
  */
 export function getParameter(self: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.parameter;
+  return obj.parameter(pname);
 }
 
 /**
@@ -1768,7 +2165,7 @@ export function getError(self: bigint): bigint {
  */
 export function getFramebufferAttachmentParameter(self: bigint, target: bigint, attachment: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.framebufferAttachmentParameter;
+  return obj.framebufferAttachmentParameter(target, attachment, pname);
 }
 
 /**
@@ -1776,7 +2173,7 @@ export function getFramebufferAttachmentParameter(self: bigint, target: bigint, 
  */
 export function getProgramParameter(self: bigint, program: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.programParameter;
+  return obj.programParameter(program, pname);
 }
 
 /**
@@ -1784,7 +2181,7 @@ export function getProgramParameter(self: bigint, program: bigint, pname: bigint
  */
 export function getProgramInfoLog(self: bigint, program: bigint): string | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.programInfoLog ?? undefined;
+  return obj.programInfoLog(program) ?? undefined;
 }
 
 /**
@@ -1792,7 +2189,7 @@ export function getProgramInfoLog(self: bigint, program: bigint): string | undef
  */
 export function getRenderbufferParameter(self: bigint, target: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.renderbufferParameter;
+  return obj.renderbufferParameter(target, pname);
 }
 
 /**
@@ -1800,7 +2197,7 @@ export function getRenderbufferParameter(self: bigint, target: bigint, pname: bi
  */
 export function getShaderParameter(self: bigint, shader: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.shaderParameter;
+  return obj.shaderParameter(shader, pname);
 }
 
 /**
@@ -1808,7 +2205,7 @@ export function getShaderParameter(self: bigint, shader: bigint, pname: bigint):
  */
 export function getShaderPrecisionFormat(self: bigint, shadertype: bigint, precisiontype: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.shaderPrecisionFormat ?? undefined;
+  return obj.shaderPrecisionFormat(shadertype, precisiontype) ?? undefined;
 }
 
 /**
@@ -1816,7 +2213,7 @@ export function getShaderPrecisionFormat(self: bigint, shadertype: bigint, preci
  */
 export function getShaderInfoLog(self: bigint, shader: bigint): string | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.shaderInfoLog ?? undefined;
+  return obj.shaderInfoLog(shader) ?? undefined;
 }
 
 /**
@@ -1824,7 +2221,7 @@ export function getShaderInfoLog(self: bigint, shader: bigint): string | undefin
  */
 export function getShaderSource(self: bigint, shader: bigint): string | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.shaderSource ?? undefined;
+  return obj.shaderSource(shader) ?? undefined;
 }
 
 /**
@@ -1832,7 +2229,7 @@ export function getShaderSource(self: bigint, shader: bigint): string | undefine
  */
 export function getTexParameter(self: bigint, target: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.texParameter;
+  return obj.texParameter(target, pname);
 }
 
 /**
@@ -1840,7 +2237,7 @@ export function getTexParameter(self: bigint, target: bigint, pname: bigint): st
  */
 export function getUniform(self: bigint, program: bigint, location: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.uniform;
+  return obj.uniform(program, location);
 }
 
 /**
@@ -1848,7 +2245,7 @@ export function getUniform(self: bigint, program: bigint, location: bigint): str
  */
 export function getUniformLocation(self: bigint, program: bigint, name: string): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.uniformLocation ?? undefined;
+  return obj.uniformLocation(program, name) ?? undefined;
 }
 
 /**
@@ -1856,7 +2253,7 @@ export function getUniformLocation(self: bigint, program: bigint, name: string):
  */
 export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): string {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.vertexAttrib;
+  return obj.vertexAttrib(index, pname);
 }
 
 /**
@@ -1864,7 +2261,7 @@ export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): str
  */
 export function getVertexAttribOffset(self: bigint, index: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
-  return obj.vertexAttribOffset;
+  return obj.vertexAttribOffset(index, pname);
 }
 
 /**
@@ -1992,7 +2389,7 @@ export function scissor(self: bigint, x: bigint, y: bigint, width: bigint, heigh
  */
 export function shaderSource(self: bigint, shader: bigint, source: string): void {
   const obj = getWebGLRenderingContextBase(self);
-  obj.shaderSource(shader, source);
+  obj.getShaderSource(shader, source);
 }
 
 /**
@@ -3318,8 +3715,10 @@ export default {
   AudioDecoderConfigure,
   AudioDecoderDecode,
   AudioDecoderFlush,
+  AudioDecoderPollFlush,
   AudioDecoderReset,
   AudioDecoderClose,
+  AudioDecoderPollClose,
   AudioDecoderIsConfigSupported,
   VideoDecoderGetState,
   VideoDecoderGetDecodeQueueSize,
@@ -3328,8 +3727,10 @@ export default {
   VideoDecoderConfigure,
   VideoDecoderDecode,
   VideoDecoderFlush,
+  VideoDecoderPollFlush,
   VideoDecoderReset,
   VideoDecoderClose,
+  VideoDecoderPollClose,
   VideoDecoderIsConfigSupported,
   AudioEncoderGetState,
   AudioEncoderGetEncodeQueueSize,
@@ -3338,8 +3739,10 @@ export default {
   AudioEncoderConfigure,
   AudioEncoderEncode,
   AudioEncoderFlush,
+  AudioEncoderPollFlush,
   AudioEncoderReset,
   AudioEncoderClose,
+  AudioEncoderPollClose,
   AudioEncoderIsConfigSupported,
   VideoEncoderGetState,
   VideoEncoderGetEncodeQueueSize,
@@ -3348,8 +3751,10 @@ export default {
   VideoEncoderConfigure,
   VideoEncoderEncode,
   VideoEncoderFlush,
+  VideoEncoderPollFlush,
   VideoEncoderReset,
   VideoEncoderClose,
+  VideoEncoderPollClose,
   VideoEncoderIsConfigSupported,
   EncodedAudioChunkGetType,
   EncodedAudioChunkGetTimestamp,
@@ -3371,6 +3776,7 @@ export default {
   AudioDataCopyTo,
   AudioDataClone,
   AudioDataClose,
+  AudioDataPollClose,
   VideoFrameGetFormat,
   getCodedWidth,
   getCodedHeight,
@@ -3388,6 +3794,7 @@ export default {
   VideoFrameCopyTo,
   VideoFrameClone,
   VideoFrameClose,
+  VideoFramePollClose,
   getPrimaries,
   getTransfer,
   getMatrix,
@@ -3400,6 +3807,7 @@ export default {
   ImageDecoderDecode,
   ImageDecoderReset,
   ImageDecoderClose,
+  ImageDecoderPollClose,
   isTypeSupported,
   imageTrack,
   getReady,
@@ -3478,6 +3886,7 @@ export default {
   enableVertexAttribArray,
   finish,
   WebGlRenderingContextBaseFlush,
+  WebGlRenderingContextBasePollFlush,
   framebufferRenderbuffer,
   framebufferTexture2D,
   frontFace,

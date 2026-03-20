@@ -184,6 +184,14 @@ ASYNC_PATTERNS = [
     "query", "request",
     # Credentials API (CredentialsContainer methods)
     "get", "store", "create", "prevent-silent-access",
+    # Async operations that return Promise<void>
+    "flush",
+    "abort",
+    "close",
+    "start",
+    "stop",
+    "lock",
+    "unlock",
 ]
 
 # Attribute getters that return handles (need wrapping)
@@ -275,16 +283,40 @@ BROWSER_API_NAME_MAPPINGS = {
     "transceivers": "getTransceivers",
     "capabilities": "getCapabilities",
     "configuration": "getConfiguration",
+    # Additional mappings for CSS
+    "css-keyframe-rule": "KEYFRAME_RULE",
+    # Additional mappings for geolocation
     "current-position": "getCurrentPosition",
+    # Additional mappings for properties
+    "random-values": "getRandomValues",
     "registrations": "getRegistrations",
     "header-value": "setHeaderValue",
     "computed-style": "getComputedStyle",
     "html-unsafe": "setHTMLUnsafe",
-    # Static constants (uppercase)
-    "attribute-node-constant": "ATTRIBUTE_NODE",
-    "close-constant": "CLOSED",
+    # WebGL method mappings (WIT defines as getters but DOM has methods)
+    "context-attributes": "getContextAttributes",
+    "supported-extensions": "getSupportedExtensions",
+    "extension": "getExtension",
+    "active-attrib": "getActiveAttrib",
+    "active-uniform": "getActiveUniform",
+    "attached-shaders": "getAttachedShaders",
+    "attrib-location": "getAttribLocation",
+    "buffer-parameter": "getBufferParameter",
+    "parameter": "getParameter",
+    "framebuffer-attachment-parameter": "getFramebufferAttachmentParameter",
+    "program-parameter": "getProgramParameter",
+    "program-info-log": "getProgramInfoLog",
+    "renderbuffer-parameter": "getRenderbufferParameter",
+    "shader-parameter": "getShaderParameter",
+    "shader-precision-format": "getShaderPrecisionFormat",
+    "shader-info-log": "getShaderInfoLog",
+    "shader-source": "getShaderSource",
+    "tex-parameter": "getTexParameter",
+    "uniform": "getUniform",
+    "uniform-location": "getUniformLocation",
+    "vertex-attrib": "getVertexAttrib",
+    "vertex-attrib-offset": "getVertexAttribOffset",
 }
-
 # Static method return type overrides (method name -> actual return type)
 STATIC_METHOD_RETURN_OVERRIDES = {
     ("credential", "isConditionalMediationAvailable"): "Promise<boolean>",
@@ -300,9 +332,151 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("crypto", "getSubtle"): "subtle-crypto",
 }
 
+# Parameters that are handles and need to be looked up
+# Maps (interface, function, param_name) -> (target_interface, target_type)
+PARAMETER_HANDLE_MAPPING = {
+    # canvas - audio-decoder
+    ("audio-decoder", "decode", "chunk"): ("canvas", "EncodedAudioChunk"),
+    # canvas - video-decoder
+    ("video-decoder", "decode", "chunk"): ("canvas", "EncodedVideoChunk"),
+    # canvas - audio-encoder
+    ("audio-encoder", "encode", "data"): ("canvas", "AudioData"),
+    ("audio-encoder", "encode", "options"): ("canvas", "AudioEncoderEncodeOptions"),
+    # canvas - video-encoder
+    ("video-encoder", "encode", "frame"): ("canvas", "VideoFrame"),
+    ("video-encoder", "encode", "options"): ("canvas", "VideoEncoderEncodeOptions"),
+    # Additional mappings will be added as needed
+}
+
+# Parameters that are dictionary types (not handles) - should be passed directly as objects
+# Maps (interface, function, param_name) -> TypeScript type
+DICTIONARY_PARAMETER_TYPES = {
+    # canvas - audio-decoder
+    ("audio-decoder", "configure", "config"): "AudioDecoderConfig",
+    ("audio-decoder", "is-config-supported", "config"): "AudioDecoderConfig",
+    # canvas - video-decoder
+    ("video-decoder", "configure", "config"): "VideoDecoderConfig",
+    ("video-decoder", "is-config-supported", "config"): "VideoDecoderConfig",
+    # canvas - audio-encoder
+    ("audio-encoder", "configure", "config"): "AudioEncoderConfig",
+    ("audio-encoder", "is-config-supported", "config"): "AudioEncoderConfig",
+    ("audio-encoder", "encode", "options"): "AudioEncoderEncodeOptions",
+    # canvas - video-encoder
+    ("video-encoder", "configure", "config"): "VideoEncoderConfig",
+    ("video-encoder", "is-config-supported", "config"): "VideoEncoderConfig",
+    ("video-encoder", "encode", "options"): "VideoEncoderEncodeOptions",
+}
+
+# Parameters that need bigint to number conversion
+# Maps (interface, function, param_name) -> boolean (true if number conversion needed)
+PARAMETER_BIGINT_TO_NUMBER = {
+    # WebGL methods that require number parameters
+    ("webgl-rendering-context-base", "bind-buffer", "target"): True,
+    ("webgl-rendering-context-base", "bind-framebuffer", "target"): True,
+    ("webgl-rendering-context-base", "bind-renderbuffer", "target"): True,
+    ("webgl-rendering-context-base", "bind-texture", "target"): True,
+    ("webgl-rendering-context-base", "disable", "cap"): True,
+    ("webgl-rendering-context-base", "enable", "cap"): True,
+    ("webgl-rendering-context-base", "get-attribute", "index"): True,
+    ("webgl-rendering-context-base", "get-boolean", "pname"): True,
+    ("webgl-rendering-context-base", "get-buffer-parameter", "target"): True,
+    ("webgl-rendering-context-base", "get-framebuffer-attachment-parameter", "target"): True,
+    ("webgl-rendering-context-base", "get-program-parameter", "pname"): True,
+    ("webgl-rendering-context-base", "get-renderbuffer-parameter", "target"): True,
+    ("webgl-rendering-context-base", "get-shader-parameter", "pname"): True,
+    ("webgl-rendering-context-base", "get-tex-parameter", "target"): True,
+    ("webgl-rendering-context-base", "get-uniform", "location"): True,
+    ("webgl-rendering-context-base", "get-vertex-attrib", "index"): True,
+    ("webgl-rendering-context-base", "vertex-attrib-pointer", "index"): True,
+    ("webgl2-rendering-context-base", "bind-buffer", "target"): True,
+    ("webgl2-rendering-context-base", "bind-framebuffer", "target"): True,
+    ("webgl2-rendering-context-base", "bind-renderbuffer", "target"): True,
+    ("webgl2-rendering-context-base", "bind-texture", "target"): True,
+    ("webgl2-rendering-context-base", "bind-vertex-array", "array"): True,
+    ("webgl2-rendering-context-base", "disable", "cap"): True,
+    ("webgl2-rendering-context-base", "enable", "cap"): True,
+    ("webgl2-rendering-context-base", "get-buffer-parameter", "target"): True,
+    ("webgl2-rendering-context-base", "get-framebuffer-attachment-parameter", "target"): True,
+    ("webgl2-rendering-context-base", "get-program-parameter", "pname"): True,
+    ("webgl2-rendering-context-base", "get-renderbuffer-parameter", "target"): True,
+    ("webgl2-rendering-context-base", "get-tex-parameter", "target"): True,
+    ("webgl2-rendering-context-base", "get-uniform", "location"): True,
+    ("webgl2-rendering-context-base", "get-vertex-attrib", "index"): True,
+    ("webgl2-rendering-context-base", "vertex-attrib-pointer", "index"): True,
+    ("webgl2-rendering-context-base", "vertex-attrib-pointer", "index"): True,
+}
+
+# Parameters that are dictionary types (not handles) - should be passed directly as objects
+# Maps (interface, function, param_name) -> TypeScript type
+DICTIONARY_PARAMETER_TYPES = {
+    # canvas - audio-decoder
+    ("audio-decoder", "configure", "config"): "AudioDecoderConfig",
+    ("audio-decoder", "is-config-supported", "config"): "AudioDecoderConfig",
+    # canvas - video-decoder
+    ("video-decoder", "configure", "config"): "VideoDecoderConfig",
+    ("video-decoder", "is-config-supported", "config"): "VideoDecoderConfig",
+    # canvas - audio-encoder
+    ("audio-encoder", "configure", "config"): "AudioEncoderConfig",
+    ("audio-encoder", "is-config-supported", "config"): "AudioEncoderConfig",
+    ("audio-encoder", "encode", "options"): "AudioEncoderEncodeOptions",
+    # canvas - video-encoder
+    ("video-encoder", "configure", "config"): "VideoEncoderConfig",
+    ("video-encoder", "is-config-supported", "config"): "VideoEncoderConfig",
+    ("video-encoder", "encode", "options"): "VideoEncoderEncodeOptions",
+}
+
+# Properties that are enums (string in DOM, bigint in WIT)
+# Maps (interface, property) to enum type name
+ENUM_PROPERTIES = {
+    # AudioDecoder/Encoder/VideoDecoder/VideoEncoder state enum
+    ("audio-decoder", "state"): "CodecState",
+    ("video-decoder", "state"): "CodecState",
+    ("audio-encoder", "state"): "CodecState",
+    ("video-encoder", "state"): "CodecState",
+}
+
+# Enum value mappings (string → bigint)
+# Values are Python integers that will be rendered as bigint literals (e.g., 0n)
+ENUM_VALUE_MAPPINGS = {
+    # CodecState enum
+    "CodecState": {
+        "unconfigured": 0,
+        "configured": 1,
+        "closed": 2,
+    },
+}
+
+# Functions that are defined as getters in WIT but are actually methods in DOM API
+# These should be called as methods, not accessed as properties
+GETTER_BUT_ACTUALLY_METHOD = {
+    # WebGL methods
+    "context-attributes",
+    "supported-extensions",
+    "extension",
+    "active-attrib",
+    "active-uniform",
+    "attached-shaders",
+    "attrib-location",
+    "buffer-parameter",
+    "parameter",
+    "framebuffer-attachment-parameter",
+    "program-parameter",
+    "program-info-log",
+    "renderbuffer-parameter",
+    "shader-parameter",
+    "shader-precision-format",
+    "shader-info-log",
+    "shader-source",
+    "tex-parameter",
+    "uniform",
+    "uniform-location",
+    "vertex-attrib",
+    "vertex-attrib-offset",
+}
+
 # Type definitions that need to be generated in glue code
 CUSTOM_TYPE_DEFINITIONS = {
-    "EventHandlerRecord": "{ [key: string]: ((...args: any[]) => void) | null | undefined; };",
+    "EventHandlerRecord": "any",
 }
 
 # Type name casing corrections for TypeScript DOM types
@@ -593,6 +767,8 @@ class GeneratedParam:
     name: str
     ts_type: str
     wit_type_str: str
+    needs_handle_lookup: bool = False  # True if parameter is a handle type that needs lookup
+    target_handle_pascal: str = ""  # PascalCase name of the handle type (e.g., "EncodedAudioChunk")
 
 
 @dataclass
@@ -608,6 +784,7 @@ class GeneratedFunction:
     is_async: bool = False
     is_getter: bool = False
     is_setter: bool = False
+    is_getter_but_method: bool = False
     is_static: bool = False
     return_is_void: bool = False
     return_is_optional: bool = False
@@ -716,19 +893,34 @@ class BrowserGlueGenerator:
             if param_name in self.JS_RESERVED_WORDS:
                 param_name = f"_{param_name}"
             
-            # Fix: Ensure all handle types are bigint, not other types
+            # Check if this parameter is a dictionary type (not a handle)
+            key = (interface.name, wit_name, p.name)
+            needs_lookup = False
+            target_pascal = ""
+            
             if isinstance(p.type_, WitHandle):
                 ts_type = "bigint"
+            elif key in DICTIONARY_PARAMETER_TYPES:
+                # Dictionary type - pass as object directly
+                ts_type = DICTIONARY_PARAMETER_TYPES[key]
             else:
                 ts_type = self.type_mapper.map_type(p.type_)
+                # Check if parameter is a handle type (wit_type_str ends with "-handle")
+                wit_type_str_check = wit_type_to_string(p.type_)
+                if wit_type_str_check.endswith("-handle"):
+                    needs_lookup = True
+                    # Extract the interface name from handle type
+                    handle_iface = wit_type_str_check[:-7]  # Remove "-handle" suffix
+                    target_pascal = correct_type_casing(kebab_to_pascal(handle_iface))
+            
             wit_type_str = wit_type_to_string(p.type_)
-
+            
             # For global singletons, skip the 'self' parameter in the generated function
             if is_global_singleton and i == 0 and p.name == "self":
                 skip_first_param = True
                 continue
             
-            params.append(GeneratedParam(param_name, ts_type, wit_type_str))
+            params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal))
 
             # First param is often 'self' for instance methods
             if i == 0 and p.name == "self":
@@ -764,21 +956,24 @@ class BrowserGlueGenerator:
         is_getter = wit_name.startswith("get-")
         is_setter = wit_name.startswith("set-")
         is_async = self._is_async_function(wit_name, func, interface.name)
+        # Check if this getter is actually a method in DOM API
+        is_getter_but_method = is_getter and wit_name[4:] in GETTER_BUT_ACTUALLY_METHOD
         
         # Detect static functions: functions without a self parameter
         has_self_param = any(p.name == "self" for p in func.params)
         is_static = func.is_static or (not has_self_param and not is_global_singleton)
- 
+  
         # For async functions, return type is always bigint (request ID)
         if is_async:
             ts_return_inner_original = ts_return_inner
             ts_return = "bigint"
             return_is_void = False
-
+ 
         # Determine browser API mapping
         # browser_method is already set above (before reserved word prefixing)
         browser_attr = ""
         browser_args = ", ".join(browser_args_list)
+        value_param = "value"  # Default value for setter
         
         # For global singletons, browser class access is different
         if is_global_singleton:
@@ -819,6 +1014,7 @@ class BrowserGlueGenerator:
             is_getter=is_getter,
             is_setter=is_setter,
             is_static=is_static,
+            is_getter_but_method=is_getter_but_method,
             return_is_void=return_is_void,
             return_is_optional=return_is_optional,
             return_is_handle=return_is_handle,
@@ -827,6 +1023,8 @@ class BrowserGlueGenerator:
             browser_args=browser_args,
             browser_class=browser_class if is_static or is_global_singleton else "",
             self_param=self_param,
+            value_param=value_param,
+            has_explicit_poll=False,  # Will be set later
             is_global_singleton=is_global_singleton,
             skip_first_param=skip_first_param,
             docs=func.docs,
@@ -1178,7 +1376,7 @@ class BrowserGlueGenerator:
         else:
             lines.append("  // No handle lookup needed")
             obj_ref = "" if func.is_global_singleton else "obj"
-            args = func.browser_args if func.browser_args else ""
+            args = self._get_converted_browser_args(func, iface, skip_self=False)
             if obj_ref:
                 lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
             else:
@@ -1206,6 +1404,33 @@ class BrowserGlueGenerator:
         lines.append("  _asyncHandles.set(requestId, { promise, result: null });")
         lines.append("  return requestId;")
 
+    def _get_converted_browser_args(self, func: GeneratedFunction, iface: GeneratedInterface, skip_self: bool = True) -> str:
+        """Generate converted browser arguments with handle lookups and type conversions."""
+        converted_args = []
+        for param in func.params:
+            # Skip self parameter for instance methods
+            if skip_self and param.name == func.self_param:
+                continue
+            # Skip self parameter for global singletons
+            if func.skip_first_param and param.name == func.params[0].name:
+                continue
+            
+            # Check if this parameter needs handle lookup
+            if param.needs_handle_lookup and param.target_handle_pascal:
+                # Lookup handle in appropriate table
+                converted_args.append(f"get{param.target_handle_pascal}({param.name})")
+            else:
+                # Check if this parameter needs bigint to number conversion
+                key = (iface.name, func.wit_name, param.name)
+                if key in PARAMETER_BIGINT_TO_NUMBER:
+                    # Convert bigint to number
+                    converted_args.append(f"Number({param.name})")
+                else:
+                    # Pass parameter directly
+                    converted_args.append(param.name)
+        
+        return ", ".join(converted_args)
+
     def _render_getter_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
         """Render getter function body."""
@@ -1217,20 +1442,44 @@ class BrowserGlueGenerator:
         else:
             obj_ref = "obj"
         
-        # Check if this getter returns a browser object that needs to be wrapped
-        key = (iface.name, kebab_to_camel(func.wit_name))
-        if key in HANDLE_RETURNING_FUNCTIONS:
-            target_iface = HANDLE_RETURNING_FUNCTIONS[key]
+        # Check if this getter is actually a method call in DOM API
+        if func.is_getter_but_method:
+            # Use method call syntax: obj.methodName(...)
+            method_name = func.browser_attr
+            args = self._get_converted_browser_args(func, iface, skip_self=True)
+            if func.return_is_optional:
+                lines.append(f"  return {obj_ref}.{method_name}({args}) ?? undefined;")
+            elif func.return_is_void:
+                lines.append(f"  {obj_ref}.{method_name}({args});")
+            else:
+                lines.append(f"  return {obj_ref}.{method_name}({args});")
+        elif (iface.name, kebab_to_camel(func.wit_name)) in HANDLE_RETURNING_FUNCTIONS:
+            # Check if this getter returns a browser object that needs to be wrapped
+            target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.name, kebab_to_camel(func.wit_name))]
             target_pascal = kebab_to_pascal(target_iface)
             target_var = kebab_to_camel(target_iface + "Handles")
             lines.append(f"  const result = {obj_ref}.{func.browser_attr};")
             lines.append(f"  const handle = _next{target_pascal}++;")
             lines.append(f"  _{target_var}.set(handle, result);")
             lines.append("  return handle;")
-        elif func.return_is_optional:
-            lines.append(f"  return {obj_ref}.{func.browser_attr} ?? undefined;")
         else:
-            lines.append(f"  return {obj_ref}.{func.browser_attr};")
+            # Check if this getter returns an enum (string → bigint conversion)
+            # Extract property name from getter name (e.g., "get-state" → "state")
+            prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
+            enum_key = (iface.wit_name, prop_name)
+            if enum_key in ENUM_PROPERTIES:
+                enum_name = ENUM_PROPERTIES[enum_key]
+                enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
+                lines.append(f"  const value = {obj_ref}.{func.browser_attr};")
+                lines.append(f"  switch (value) {{")
+                for enum_str, enum_int in enum_values.items():
+                    lines.append(f"    case '{enum_str}': return {enum_int}n;")
+                lines.append(f"    default: return 0n;  // Unknown value")
+                lines.append(f"  }}")
+            elif func.return_is_optional:
+                lines.append(f"  return {obj_ref}.{func.browser_attr} ?? undefined;")
+            else:
+                lines.append(f"  return {obj_ref}.{func.browser_attr};")
 
     def _render_setter_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
@@ -1245,13 +1494,18 @@ class BrowserGlueGenerator:
         
         if func.params:
             value_param = func.params[-1].name
-            lines.append(f"  {obj_ref}.{func.browser_attr} = {value_param};")
+            # Check if value parameter needs handle lookup
+            value_expr = value_param
+            if func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
+                value_expr = f"get{func.params[-1].target_handle_pascal}({value_param})"
+            lines.append(f"  {obj_ref}.{func.browser_attr} = {value_expr};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
         """Render static function body."""
         if func.browser_class:
-            lines.append(f"  return {func.browser_class}.{func.browser_method}({func.browser_args});")
+            args = self._get_converted_browser_args(func, iface, skip_self=False)
+            lines.append(f"  return {func.browser_class}.{func.browser_method}({args});")
         else:
             lines.append(f"  // Static operation: {func.wit_name}")
             lines.append(f"  throw new Error('Static operation not implemented: {func.wit_name}');")
@@ -1267,7 +1521,8 @@ class BrowserGlueGenerator:
         else:
             obj_ref = "" if func.is_global_singleton else "obj"
         
-        args = func.browser_args
+        # Generate converted browser arguments with handle lookups
+        args = self._get_converted_browser_args(func, iface, skip_self=True)
 
         if func.return_is_void:
             lines.append(f"  {obj_ref}.{func.browser_method}({args});")

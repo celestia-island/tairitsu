@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
 
 // ---------------------------------------------------------------------------
@@ -4520,10 +4520,40 @@ export function TimeRangesGetLength(self: bigint): number {
 
 /**
  * `start()` operation.
+ *
+ * Async operation: returns request ID, poll with `TimeRangesPollStart()`
  */
-export function TimeRangesStart(self: bigint, index: number): number {
+export function TimeRangesStart(self: bigint, index: number): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getTimeRanges(self);
-  return obj.start(index);
+  const promise = obj.start(index)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `start()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function TimeRangesPollStart(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -8815,10 +8845,40 @@ export function showModal(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `HtmlDialogElementPollClose()`
  */
-export function HtmlDialogElementClose(self: bigint, returnValue: string | undefined): void {
+export function HtmlDialogElementClose(self: bigint, returnValue: string | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getHTMLDialogElement(self);
-  obj.close(returnValue);
+  const promise = obj.close(returnValue)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function HtmlDialogElementPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -9377,7 +9437,7 @@ function getCanvasSettings(handle: bigint): CanvasSettings {
  */
 export function getContextAttributes(self: bigint): bigint {
   const obj = getCanvasSettings(self);
-  return obj.contextAttributes;
+  return obj.contextAttributes();
 }
 
 // ---------------------------------------------------------------------------
@@ -11312,10 +11372,40 @@ export function CloseWatcherRequestClose(self: bigint): void {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `CloseWatcherPollClose()`
  */
-export function CloseWatcherClose(self: bigint): void {
+export function CloseWatcherClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getCloseWatcher(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function CloseWatcherPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -13745,10 +13835,40 @@ export function ImageBitmapGetHeight(self: bigint): number {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `ImageBitmapPollClose()`
  */
-export function ImageBitmapClose(self: bigint): void {
+export function ImageBitmapClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getImageBitmap(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function ImageBitmapPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -13949,10 +14069,40 @@ export function EventSourceSetOnerror(self: bigint, value: EventHandlerRecord): 
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `EventSourcePollClose()`
  */
-export function EventSourceClose(self: bigint): void {
+export function EventSourceClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getEventSource(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function EventSourcePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -14073,18 +14223,78 @@ export function MessagePortPostMessage(self: bigint, message: string, transfer: 
 
 /**
  * `start()` operation.
+ *
+ * Async operation: returns request ID, poll with `MessagePortPollStart()`
  */
-export function MessagePortStart(self: bigint): void {
+export function MessagePortStart(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getMessagePort(self);
-  obj.start();
+  const promise = obj.start()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `start()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function MessagePortPollStart(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `MessagePortPollClose()`
  */
-export function MessagePortClose(self: bigint): void {
+export function MessagePortClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getMessagePort(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function MessagePortPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -14141,10 +14351,40 @@ export function BroadcastChannelPostMessage(self: bigint, message: string): void
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `BroadcastChannelPollClose()`
  */
-export function BroadcastChannelClose(self: bigint): void {
+export function BroadcastChannelClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getBroadcastChannel(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function BroadcastChannelPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -14365,10 +14605,40 @@ export function DedicatedWorkerGlobalScopePostMessage(self: bigint, message: str
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `DedicatedWorkerGlobalScopePollClose()`
  */
-export function DedicatedWorkerGlobalScopeClose(self: bigint): void {
+export function DedicatedWorkerGlobalScopeClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getDedicatedWorkerGlobalScope(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function DedicatedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -14401,10 +14671,40 @@ export function SharedWorkerGlobalScopeGetName(self: bigint): string {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `SharedWorkerGlobalScopePollClose()`
  */
-export function SharedWorkerGlobalScopeClose(self: bigint): void {
+export function SharedWorkerGlobalScopeClose(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getSharedWorkerGlobalScope(self);
-  obj.close();
+  const promise = obj.close()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function SharedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -15113,18 +15413,78 @@ export function HtmlMarqueeElementSetWidth(self: bigint, value: string): void {
 
 /**
  * `start()` operation.
+ *
+ * Async operation: returns request ID, poll with `HtmlMarqueeElementPollStart()`
  */
-export function HtmlMarqueeElementStart(self: bigint): void {
+export function HtmlMarqueeElementStart(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getHTMLMarqueeElement(self);
-  obj.start();
+  const promise = obj.start()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `start()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function HtmlMarqueeElementPollStart(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `stop()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollStop()`
  */
-export function stop(self: bigint): void {
+export function stop(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getHTMLMarqueeElement(self);
-  obj.stop();
+  const promise = obj.stop()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `stop()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollStop(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -16014,6 +16374,7 @@ export default {
   setOnexit,
   TimeRangesGetLength,
   TimeRangesStart,
+  TimeRangesPollStart,
   end,
   TrackEventGetTrack,
   HtmlMapElementGetName,
@@ -16480,6 +16841,7 @@ export default {
   show,
   showModal,
   HtmlDialogElementClose,
+  HtmlDialogElementPollClose,
   HtmlDialogElementRequestClose,
   HtmlScriptElementGetType,
   HtmlScriptElementSetType,
@@ -16698,6 +17060,7 @@ export default {
   setInputMode,
   CloseWatcherRequestClose,
   CloseWatcherClose,
+  CloseWatcherPollClose,
   destroy,
   getOncancel,
   setOncancel,
@@ -16897,6 +17260,7 @@ export default {
   ImageBitmapGetWidth,
   ImageBitmapGetHeight,
   ImageBitmapClose,
+  ImageBitmapPollClose,
   requestAnimationFrame,
   cancelAnimationFrame,
   MessageEventGetData,
@@ -16915,6 +17279,7 @@ export default {
   EventSourceGetOnerror,
   EventSourceSetOnerror,
   EventSourceClose,
+  EventSourcePollClose,
   getPort1,
   getPort2,
   MessageEventTargetGetOnmessage,
@@ -16923,12 +17288,15 @@ export default {
   MessageEventTargetSetOnmessageerror,
   MessagePortPostMessage,
   MessagePortStart,
+  MessagePortPollStart,
   MessagePortClose,
+  MessagePortPollClose,
   MessagePortGetOnclose,
   MessagePortSetOnclose,
   BroadcastChannelGetName,
   BroadcastChannelPostMessage,
   BroadcastChannelClose,
+  BroadcastChannelPollClose,
   BroadcastChannelGetOnmessage,
   BroadcastChannelSetOnmessage,
   BroadcastChannelGetOnmessageerror,
@@ -16952,8 +17320,10 @@ export default {
   DedicatedWorkerGlobalScopeGetName,
   DedicatedWorkerGlobalScopePostMessage,
   DedicatedWorkerGlobalScopeClose,
+  DedicatedWorkerGlobalScopePollClose,
   SharedWorkerGlobalScopeGetName,
   SharedWorkerGlobalScopeClose,
+  SharedWorkerGlobalScopePollClose,
   getOnconnect,
   setOnconnect,
   AbstractWorkerGetOnerror,
@@ -17013,7 +17383,9 @@ export default {
   HtmlMarqueeElementGetWidth,
   HtmlMarqueeElementSetWidth,
   HtmlMarqueeElementStart,
+  HtmlMarqueeElementPollStart,
   stop,
+  pollStop,
   HtmlFrameSetElementGetCols,
   HtmlFrameSetElementSetCols,
   HtmlFrameSetElementGetRows,

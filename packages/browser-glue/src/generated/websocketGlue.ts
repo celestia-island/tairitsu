@@ -14,8 +14,21 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
+
+// ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
 // WIT interface: web-socket
@@ -64,7 +77,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): number | undefined {
+export function getOnopen(self: bigint): EventHandlerRecord {
   const obj = getWebSocket(self);
   return obj.onopen;
 }
@@ -80,7 +93,7 @@ export function setOnopen(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): EventHandlerRecord {
+export function getOnerror(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.onerror;
 }
@@ -88,7 +101,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: string | undefined): void {
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
   const obj = getWebSocket(self);
   obj.onerror = value;
 }
@@ -96,7 +109,7 @@ export function setOnerror(self: bigint, value: string | undefined): void {
 /**
  * `get-onclose()` operation.
  */
-export function getOnclose(self: bigint): bigint | undefined {
+export function getOnclose(self: bigint): EventHandlerRecord {
   const obj = getWebSocket(self);
   return obj.onclose;
 }
@@ -127,16 +140,46 @@ export function getProtocol(self: bigint): string {
 
 /**
  * `close()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
+export function close(self: bigint, code: number | undefined, reason: number | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getWebSocket(self);
-  obj.close(code, reason);
+  const promise = obj.close(code, reason)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `close()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.onmessage;
 }
@@ -144,7 +187,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: bigint | undefined): void {
+export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
   const obj = getWebSocket(self);
   obj.onmessage = value;
 }
@@ -168,7 +211,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: (string)[]): void {
+export function send(self: bigint, data: bigint): void {
   const obj = getWebSocket(self);
   obj.send(data);
 }
@@ -204,7 +247,7 @@ export function getWasClean(self: bigint): bigint | undefined {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): number {
+export function getCode(self: bigint): string {
   const obj = getCloseEvent(self);
   return obj.code;
 }
@@ -234,6 +277,7 @@ export default {
   getExtensions,
   getProtocol,
   close,
+  pollClose,
   getOnmessage,
   setOnmessage,
   getBinaryType,

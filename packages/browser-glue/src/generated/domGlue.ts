@@ -14,8 +14,21 @@
 // ---------------------------------------------------------------------------
 
 /** Type definition for EventHandlerRecord */
-export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+export type EventHandlerRecord = any;
 
+
+// ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
 // WIT interface: event
@@ -48,7 +61,7 @@ export function EventGetType(self: bigint): string {
 /**
  * `get-target()` operation.
  */
-export function EventGetTarget(self: bigint): bigint | undefined {
+export function EventGetTarget(self: bigint): bigint | undefined | undefined {
   const obj = getEvent(self);
   return obj.target ?? undefined;
 }
@@ -104,7 +117,7 @@ export function getCancelBubble(self: bigint): boolean {
 /**
  * `set-cancel-bubble()` operation.
  */
-export function setCancelBubble(self: bigint, value: boolean): void {
+export function setCancelBubble(self: bigint, value: bigint | undefined): void {
   const obj = getEvent(self);
   obj.cancelBubble = value;
 }
@@ -120,7 +133,7 @@ export function stopImmediatePropagation(self: bigint): void {
 /**
  * `get-bubbles()` operation.
  */
-export function getBubbles(self: bigint): boolean {
+export function getBubbles(self: bigint): bigint | undefined {
   const obj = getEvent(self);
   return obj.bubbles;
 }
@@ -128,7 +141,7 @@ export function getBubbles(self: bigint): boolean {
 /**
  * `get-cancelable()` operation.
  */
-export function getCancelable(self: bigint): boolean {
+export function getCancelable(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.cancelable;
 }
@@ -144,7 +157,7 @@ export function getReturnValue(self: bigint): boolean {
 /**
  * `set-return-value()` operation.
  */
-export function setReturnValue(self: bigint, value: boolean): void {
+export function setReturnValue(self: bigint, value: bigint | undefined): void {
   const obj = getEvent(self);
   obj.returnValue = value;
 }
@@ -192,7 +205,7 @@ export function getTimeStamp(self: bigint): number {
 /**
  * `init-event()` operation.
  */
-export function initEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined): void {
+export function initEvent(self: bigint, type: bigint | undefined, bubbles: boolean | undefined, cancelable: boolean | undefined): void {
   const obj = getEvent(self);
   obj.initEvent(type, bubbles, cancelable);
 }
@@ -228,7 +241,7 @@ export function getDetail(self: bigint): string {
 /**
  * `init-custom-event()` operation.
  */
-export function initCustomEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, detail: string | undefined): void {
+export function initCustomEvent(self: bigint, type: string, bubbles: Uint8Array, cancelable: boolean | undefined, detail: string | undefined): void {
   const obj = getCustomEvent(self);
   obj.initCustomEvent(type, bubbles, cancelable, detail);
 }
@@ -335,10 +348,40 @@ export function getSignal(self: bigint): bigint {
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `AbortControllerPollAbort()`
  */
-export function AbortControllerAbort(self: bigint, reason: string | undefined): void {
+export function AbortControllerAbort(self: bigint, reason: string | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getAbortController(self);
-  obj.abort(reason);
+  const promise = obj.abort(reason)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AbortControllerPollAbort(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -363,9 +406,39 @@ function getAbortSignal(handle: bigint): AbortSignal {
 
 /**
  * `abort()` operation.
+ *
+ * Async operation: returns request ID, poll with `AbortSignalPollAbort()`
  */
 export function AbortSignalAbort(reason: string | undefined): bigint {
-  return AbortSignal.abort(reason);
+  const requestId = _nextAsyncHandle++;
+  const promise = AbortSignal.abort(reason)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `abort()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function AbortSignalPollAbort(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -2329,7 +2402,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
  */
 export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
   const obj = getXSLTProcessor(self);
-  return obj.parameter;
+  return obj.parameter(namespaceUri, localName);
 }
 
 /**
@@ -2389,7 +2462,9 @@ export default {
   handleEvent,
   getSignal,
   AbortControllerAbort,
+  AbortControllerPollAbort,
   AbortSignalAbort,
+  AbortSignalPollAbort,
   timeout,
   any,
   getAborted,
