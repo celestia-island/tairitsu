@@ -225,6 +225,10 @@ let _nextAny = 1n;
 const _domRectHandles = new Map<bigint, DOMRect>();
 let _nextDomRect = 1n;
 
+/** Handle table for float-32-list values */
+const _float32ListHandles = new Map<bigint, Float32Array>();
+let _nextFloat32List = 1n;
+
 /** Handle table for image-track values */
 const _imageTrackHandles = new Map<bigint, ImageTrack>();
 let _nextImageTrack = 1n;
@@ -232,6 +236,10 @@ let _nextImageTrack = 1n;
 /** Handle table for image-track-list values */
 const _imageTrackListHandles = new Map<bigint, ImageTrackList>();
 let _nextImageTrackList = 1n;
+
+/** Handle table for int-32-list values */
+const _int32ListHandles = new Map<bigint, Int32Array>();
+let _nextInt32List = 1n;
 
 /** Handle table for number values */
 const _numberHandles = new Map<bigint, number>();
@@ -248,6 +256,10 @@ let _nextString = 1n;
 /** Handle table for string-list values */
 const _stringListHandles = new Map<bigint, string[]>();
 let _nextStringList = 1n;
+
+/** Handle table for uint-32-list values */
+const _uint32ListHandles = new Map<bigint, Uint32Array>();
+let _nextUint32List = 1n;
 
 /** Handle table for web-gl-active-info values */
 const _webGlActiveInfoHandles = new Map<bigint, WebGLActiveInfo>();
@@ -307,6 +319,23 @@ function lookupOptionDomRect(handle: bigint | undefined): DOMRect | undefined {
   return _domRectHandles.get(handle);
 }
 
+/** Lookup a float-32-list value by handle. */
+function lookupFloat32List(handle: bigint): Float32Array {
+  const obj = _float32ListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`float-32-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional float-32-list value by handle. */
+function lookupOptionFloat32List(handle: bigint | undefined): Float32Array | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _float32ListHandles.get(handle);
+}
+
 /** Lookup a image-track value by handle. */
 function lookupImageTrack(handle: bigint): ImageTrack {
   const obj = _imageTrackHandles.get(handle);
@@ -339,6 +368,23 @@ function lookupOptionImageTrackList(handle: bigint | undefined): ImageTrackList 
     return undefined;
   }
   return _imageTrackListHandles.get(handle);
+}
+
+/** Lookup a int-32-list value by handle. */
+function lookupInt32List(handle: bigint): Int32Array {
+  const obj = _int32ListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`int-32-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional int-32-list value by handle. */
+function lookupOptionInt32List(handle: bigint | undefined): Int32Array | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _int32ListHandles.get(handle);
 }
 
 /** Lookup a number value by handle. */
@@ -407,6 +453,23 @@ function lookupOptionStringList(handle: bigint | undefined): string[] | undefine
     return undefined;
   }
   return _stringListHandles.get(handle);
+}
+
+/** Lookup a uint-32-list value by handle. */
+function lookupUint32List(handle: bigint): Uint32Array {
+  const obj = _uint32ListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`uint-32-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional uint-32-list value by handle. */
+function lookupOptionUint32List(handle: bigint | undefined): Uint32Array | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _uint32ListHandles.get(handle);
 }
 
 /** Lookup a web-gl-active-info value by handle. */
@@ -2371,7 +2434,7 @@ export function blendFuncSeparate(self: bigint, srcRgb: bigint, dstRgb: bigint, 
  */
 export function checkFramebufferStatus(self: bigint, target: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  return BigInt(obj.checkFramebufferStatus(Number(target)));
+  return obj.checkFramebufferStatus(Number(target));
 }
 
 /**
@@ -2517,7 +2580,7 @@ export function cullFace(self: bigint, mode: bigint): void {
  */
 export function deleteBuffer(self: bigint, buffer: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteBuffer(lookupWebGlObject(buffer));
+  obj.deleteBuffer(lookupOptionWebGlObject(buffer));
 }
 
 /**
@@ -2525,7 +2588,7 @@ export function deleteBuffer(self: bigint, buffer: bigint | undefined): void {
  */
 export function deleteFramebuffer(self: bigint, framebuffer: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteFramebuffer(lookupWebGlObject(framebuffer));
+  obj.deleteFramebuffer(lookupOptionWebGlObject(framebuffer));
 }
 
 /**
@@ -2533,7 +2596,7 @@ export function deleteFramebuffer(self: bigint, framebuffer: bigint | undefined)
  */
 export function deleteProgram(self: bigint, program: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteProgram(lookupWebGlObject(program));
+  obj.deleteProgram(lookupOptionWebGlObject(program));
 }
 
 /**
@@ -2541,7 +2604,7 @@ export function deleteProgram(self: bigint, program: bigint | undefined): void {
  */
 export function deleteRenderbuffer(self: bigint, renderbuffer: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteRenderbuffer(lookupWebGlObject(renderbuffer));
+  obj.deleteRenderbuffer(lookupOptionWebGlObject(renderbuffer));
 }
 
 /**
@@ -2549,7 +2612,7 @@ export function deleteRenderbuffer(self: bigint, renderbuffer: bigint | undefine
  */
 export function deleteShader(self: bigint, shader: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteShader(lookupWebGlObject(shader));
+  obj.deleteShader(lookupOptionWebGlObject(shader));
 }
 
 /**
@@ -2557,7 +2620,7 @@ export function deleteShader(self: bigint, shader: bigint | undefined): void {
  */
 export function deleteTexture(self: bigint, texture: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.deleteTexture(lookupWebGlObject(texture));
+  obj.deleteTexture(lookupOptionWebGlObject(texture));
 }
 
 /**
@@ -2903,7 +2966,7 @@ export function getVertexAttribOffset(self: bigint, index: bigint, pname: bigint
  */
 export function hint(self: bigint, target: bigint, mode: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.hint(Number(target), mode);
+  obj.hint(Number(target), Number(mode));
 }
 
 /**
@@ -3159,7 +3222,7 @@ export function uniform4i(self: bigint, location: bigint | undefined, x: bigint,
  */
 export function useProgram(self: bigint, program: bigint | undefined): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.useProgram(lookupWebGlObject(program));
+  obj.useProgram(lookupOptionWebGlObject(program));
 }
 
 /**
@@ -3207,7 +3270,7 @@ export function vertexAttrib4f(self: bigint, index: bigint, x: bigint, y: bigint
  */
 export function vertexAttrib1fv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.vertexAttrib1fv(index, values);
+  obj.vertexAttrib1fv(Number(index), lookupFloat32List(values));
 }
 
 /**
@@ -3215,7 +3278,7 @@ export function vertexAttrib1fv(self: bigint, index: bigint, values: bigint): vo
  */
 export function vertexAttrib2fv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.vertexAttrib2fv(index, values);
+  obj.vertexAttrib2fv(Number(index), lookupFloat32List(values));
 }
 
 /**
@@ -3223,7 +3286,7 @@ export function vertexAttrib2fv(self: bigint, index: bigint, values: bigint): vo
  */
 export function vertexAttrib3fv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.vertexAttrib3fv(index, values);
+  obj.vertexAttrib3fv(Number(index), lookupFloat32List(values));
 }
 
 /**
@@ -3231,7 +3294,7 @@ export function vertexAttrib3fv(self: bigint, index: bigint, values: bigint): vo
  */
 export function vertexAttrib4fv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  obj.vertexAttrib4fv(index, values);
+  obj.vertexAttrib4fv(Number(index), lookupFloat32List(values));
 }
 
 /**
@@ -3274,7 +3337,7 @@ function lookupWebGLRenderingContextOverloads(handle: bigint): WebGLRenderingCon
  */
 export function WebGlRenderingContextOverloadsBufferData(self: bigint, target: bigint, size: bigint, usage: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.bufferData(target, size, usage);
+  obj.bufferData(Number(target), Number(size), Number(usage));
 }
 
 /**
@@ -3282,7 +3345,7 @@ export function WebGlRenderingContextOverloadsBufferData(self: bigint, target: b
  */
 export function WebGlRenderingContextOverloadsBufferSubData(self: bigint, target: bigint, offset: bigint, data: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.bufferSubData(target, offset, data);
+  obj.bufferSubData(Number(target), Number(offset), data);
 }
 
 /**
@@ -3290,7 +3353,7 @@ export function WebGlRenderingContextOverloadsBufferSubData(self: bigint, target
  */
 export function WebGlRenderingContextOverloadsCompressedTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, data: Uint8Array): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.compressedTexImage2D(target, level, internalformat, width, height, border, data);
+  obj.compressedTexImage2D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(border), data);
 }
 
 /**
@@ -3298,7 +3361,7 @@ export function WebGlRenderingContextOverloadsCompressedTexImage2D(self: bigint,
  */
 export function WebGlRenderingContextOverloadsCompressedTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, data: Uint8Array): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data);
+  obj.compressedTexSubImage2D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(width), Number(height), Number(format), data);
 }
 
 /**
@@ -3306,7 +3369,7 @@ export function WebGlRenderingContextOverloadsCompressedTexSubImage2D(self: bigi
  */
 export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.readPixels(x, y, width, height, format, type, pixels);
+  obj.readPixels(Number(x), Number(y), Number(width), Number(height), Number(format), Number(type), pixels);
 }
 
 /**
@@ -3314,7 +3377,7 @@ export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint
  */
 export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+  obj.texImage2D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(border), Number(format), Number(type), pixels);
 }
 
 /**
@@ -3322,7 +3385,7 @@ export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: b
  */
 export function WebGlRenderingContextOverloadsTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+  obj.texSubImage2D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(width), Number(height), Number(format), Number(type), pixels);
 }
 
 /**
@@ -3330,7 +3393,7 @@ export function WebGlRenderingContextOverloadsTexSubImage2D(self: bigint, target
  */
 export function WebGlRenderingContextOverloadsUniform1fv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform1fv(location, v);
+  obj.uniform1fv(lookupOptionWebGlUniformLocation(location), lookupFloat32List(v));
 }
 
 /**
@@ -3338,7 +3401,7 @@ export function WebGlRenderingContextOverloadsUniform1fv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform2fv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform2fv(location, v);
+  obj.uniform2fv(lookupOptionWebGlUniformLocation(location), lookupFloat32List(v));
 }
 
 /**
@@ -3346,7 +3409,7 @@ export function WebGlRenderingContextOverloadsUniform2fv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform3fv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform3fv(location, v);
+  obj.uniform3fv(lookupOptionWebGlUniformLocation(location), lookupFloat32List(v));
 }
 
 /**
@@ -3354,7 +3417,7 @@ export function WebGlRenderingContextOverloadsUniform3fv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform4fv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform4fv(location, v);
+  obj.uniform4fv(lookupOptionWebGlUniformLocation(location), lookupFloat32List(v));
 }
 
 /**
@@ -3362,7 +3425,7 @@ export function WebGlRenderingContextOverloadsUniform4fv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform1iv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform1iv(location, v);
+  obj.uniform1iv(lookupOptionWebGlUniformLocation(location), lookupInt32List(v));
 }
 
 /**
@@ -3370,7 +3433,7 @@ export function WebGlRenderingContextOverloadsUniform1iv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform2iv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform2iv(location, v);
+  obj.uniform2iv(lookupOptionWebGlUniformLocation(location), lookupInt32List(v));
 }
 
 /**
@@ -3378,7 +3441,7 @@ export function WebGlRenderingContextOverloadsUniform2iv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform3iv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform3iv(location, v);
+  obj.uniform3iv(lookupOptionWebGlUniformLocation(location), lookupInt32List(v));
 }
 
 /**
@@ -3386,7 +3449,7 @@ export function WebGlRenderingContextOverloadsUniform3iv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniform4iv(self: bigint, location: bigint | undefined, v: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniform4iv(location, v);
+  obj.uniform4iv(lookupOptionWebGlUniformLocation(location), lookupInt32List(v));
 }
 
 /**
@@ -3394,7 +3457,7 @@ export function WebGlRenderingContextOverloadsUniform4iv(self: bigint, location:
  */
 export function WebGlRenderingContextOverloadsUniformMatrix2fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniformMatrix2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), value);
+  obj.uniformMatrix2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(value));
 }
 
 /**
@@ -3402,7 +3465,7 @@ export function WebGlRenderingContextOverloadsUniformMatrix2fv(self: bigint, loc
  */
 export function WebGlRenderingContextOverloadsUniformMatrix3fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniformMatrix3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), value);
+  obj.uniformMatrix3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(value));
 }
 
 /**
@@ -3410,7 +3473,7 @@ export function WebGlRenderingContextOverloadsUniformMatrix3fv(self: bigint, loc
  */
 export function WebGlRenderingContextOverloadsUniformMatrix4fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.uniformMatrix4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), value);
+  obj.uniformMatrix4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(value));
 }
 
 // ---------------------------------------------------------------------------
@@ -3478,7 +3541,7 @@ export function copyBufferSubData(self: bigint, readTarget: bigint, writeTarget:
  */
 export function getBufferSubData(self: bigint, target: bigint, srcByteOffset: bigint, dstBuffer: Uint8Array, dstOffset: bigint | undefined, length: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.bufferSubData(Number(target), srcByteOffset, dstBuffer, dstOffset, length);
+  obj.bufferSubData(Number(target), Number(srcByteOffset), dstBuffer, Number(dstOffset), Number(length));
 }
 
 /**
@@ -3494,7 +3557,7 @@ export function blitFramebuffer(self: bigint, srcX0: bigint, srcY0: bigint, srcX
  */
 export function framebufferTextureLayer(self: bigint, target: bigint, attachment: bigint, texture: bigint | undefined, level: bigint, layer: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.framebufferTextureLayer(target, attachment, texture, level, layer);
+  obj.framebufferTextureLayer(Number(target), Number(attachment), lookupOptionWebGlObject(texture), Number(level), Number(layer));
 }
 
 /**
@@ -3537,7 +3600,7 @@ export function getInternalformatParameter(self: bigint, target: bigint, interna
  */
 export function renderbufferStorageMultisample(self: bigint, target: bigint, samples: bigint, internalformat: bigint, width: bigint, height: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.renderbufferStorageMultisample(Number(target), samples, internalformat, width, height);
+  obj.renderbufferStorageMultisample(Number(target), Number(samples), Number(internalformat), Number(width), Number(height));
 }
 
 /**
@@ -3545,7 +3608,7 @@ export function renderbufferStorageMultisample(self: bigint, target: bigint, sam
  */
 export function texStorage2D(self: bigint, target: bigint, levels: bigint, internalformat: bigint, width: bigint, height: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.texStorage2D(target, levels, internalformat, width, height);
+  obj.texStorage2D(Number(target), Number(levels), Number(internalformat), Number(width), Number(height));
 }
 
 /**
@@ -3553,7 +3616,7 @@ export function texStorage2D(self: bigint, target: bigint, levels: bigint, inter
  */
 export function texStorage3D(self: bigint, target: bigint, levels: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.texStorage3D(target, levels, internalformat, width, height, depth);
+  obj.texStorage3D(Number(target), Number(levels), Number(internalformat), Number(width), Number(height), Number(depth));
 }
 
 /**
@@ -3561,7 +3624,7 @@ export function texStorage3D(self: bigint, target: bigint, levels: bigint, inter
  */
 export function texImage3D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint, border: bigint, format: bigint, type: bigint, pboOffset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.texImage3D(target, level, internalformat, width, height, depth, border, format, type, pboOffset);
+  obj.texImage3D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(depth), Number(border), Number(format), Number(type), Number(pboOffset));
 }
 
 /**
@@ -3569,7 +3632,7 @@ export function texImage3D(self: bigint, target: bigint, level: bigint, internal
  */
 export function texSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, width: bigint, height: bigint, depth: bigint, format: bigint, type: bigint, pboOffset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pboOffset);
+  obj.texSubImage3D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(zoffset), Number(width), Number(height), Number(depth), Number(format), Number(type), Number(pboOffset));
 }
 
 /**
@@ -3577,7 +3640,7 @@ export function texSubImage3D(self: bigint, target: bigint, level: bigint, xoffs
  */
 export function copyTexSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, x: bigint, y: bigint, width: bigint, height: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
+  obj.copyTexSubImage3D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(zoffset), Number(x), Number(y), Number(width), Number(height));
 }
 
 /**
@@ -3585,7 +3648,7 @@ export function copyTexSubImage3D(self: bigint, target: bigint, level: bigint, x
  */
 export function compressedTexImage3D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint, border: bigint, imageSize: bigint, offset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.compressedTexImage3D(target, level, internalformat, width, height, depth, border, imageSize, offset);
+  obj.compressedTexImage3D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(depth), Number(border), Number(imageSize), Number(offset));
 }
 
 /**
@@ -3593,7 +3656,7 @@ export function compressedTexImage3D(self: bigint, target: bigint, level: bigint
  */
 export function compressedTexSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, width: bigint, height: bigint, depth: bigint, format: bigint, imageSize: bigint, offset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.compressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, offset);
+  obj.compressedTexSubImage3D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(zoffset), Number(width), Number(height), Number(depth), Number(format), Number(imageSize), Number(offset));
 }
 
 /**
@@ -3601,7 +3664,7 @@ export function compressedTexSubImage3D(self: bigint, target: bigint, level: big
  */
 export function getFragDataLocation(self: bigint, program: bigint, name: string): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getFragDataLocation(program, name);
+  const result = obj.getFragDataLocation(lookupWebGlObject(program), name);
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
   return handle;
@@ -3612,7 +3675,7 @@ export function getFragDataLocation(self: bigint, program: bigint, name: string)
  */
 export function uniform1ui(self: bigint, location: bigint | undefined, v0: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform1ui(location, v0);
+  obj.uniform1ui(location, Number(v0));
 }
 
 /**
@@ -3620,7 +3683,7 @@ export function uniform1ui(self: bigint, location: bigint | undefined, v0: bigin
  */
 export function uniform2ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform2ui(location, v0, v1);
+  obj.uniform2ui(location, Number(v0), Number(v1));
 }
 
 /**
@@ -3628,7 +3691,7 @@ export function uniform2ui(self: bigint, location: bigint | undefined, v0: bigin
  */
 export function uniform3ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint, v2: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform3ui(location, v0, v1, v2);
+  obj.uniform3ui(location, Number(v0), Number(v1), Number(v2));
 }
 
 /**
@@ -3636,7 +3699,7 @@ export function uniform3ui(self: bigint, location: bigint | undefined, v0: bigin
  */
 export function uniform4ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint, v2: bigint, v3: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform4ui(location, v0, v1, v2, v3);
+  obj.uniform4ui(location, Number(v0), Number(v1), Number(v2), Number(v3));
 }
 
 /**
@@ -3644,7 +3707,7 @@ export function uniform4ui(self: bigint, location: bigint | undefined, v0: bigin
  */
 export function uniform1uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform1uiv(location, data, srcOffset, srcLength);
+  obj.uniform1uiv(location, lookupUint32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3652,7 +3715,7 @@ export function uniform1uiv(self: bigint, location: bigint | undefined, data: bi
  */
 export function uniform2uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform2uiv(location, data, srcOffset, srcLength);
+  obj.uniform2uiv(location, lookupUint32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3660,7 +3723,7 @@ export function uniform2uiv(self: bigint, location: bigint | undefined, data: bi
  */
 export function uniform3uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform3uiv(location, data, srcOffset, srcLength);
+  obj.uniform3uiv(location, lookupUint32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3668,7 +3731,7 @@ export function uniform3uiv(self: bigint, location: bigint | undefined, data: bi
  */
 export function uniform4uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniform4uiv(location, data, srcOffset, srcLength);
+  obj.uniform4uiv(location, lookupUint32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3676,7 +3739,7 @@ export function uniform4uiv(self: bigint, location: bigint | undefined, data: bi
  */
 export function uniformMatrix3x2fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix3x2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix3x2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3684,7 +3747,7 @@ export function uniformMatrix3x2fv(self: bigint, location: bigint | undefined, t
  */
 export function uniformMatrix4x2fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix4x2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix4x2fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3692,7 +3755,7 @@ export function uniformMatrix4x2fv(self: bigint, location: bigint | undefined, t
  */
 export function uniformMatrix2x3fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix2x3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix2x3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3700,7 +3763,7 @@ export function uniformMatrix2x3fv(self: bigint, location: bigint | undefined, t
  */
 export function uniformMatrix4x3fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix4x3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix4x3fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3708,7 +3771,7 @@ export function uniformMatrix4x3fv(self: bigint, location: bigint | undefined, t
  */
 export function uniformMatrix2x4fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix2x4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix2x4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3716,7 +3779,7 @@ export function uniformMatrix2x4fv(self: bigint, location: bigint | undefined, t
  */
 export function uniformMatrix3x4fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.uniformMatrix3x4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), data, srcOffset, srcLength);
+  obj.uniformMatrix3x4fv(lookupOptionWebGlUniformLocation(location), Boolean(transpose), lookupFloat32List(data), Number(srcOffset), Number(srcLength));
 }
 
 /**
@@ -3724,7 +3787,7 @@ export function uniformMatrix3x4fv(self: bigint, location: bigint | undefined, t
  */
 export function vertexAttribI4i(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint, w: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribI4i(index, x, y, z, w);
+  obj.vertexAttribI4i(Number(index), Number(x), Number(y), Number(z), Number(w));
 }
 
 /**
@@ -3732,7 +3795,7 @@ export function vertexAttribI4i(self: bigint, index: bigint, x: bigint, y: bigin
  */
 export function vertexAttribI4iv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribI4iv(index, values);
+  obj.vertexAttribI4iv(Number(index), lookupInt32List(values));
 }
 
 /**
@@ -3740,7 +3803,7 @@ export function vertexAttribI4iv(self: bigint, index: bigint, values: bigint): v
  */
 export function vertexAttribI4ui(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint, w: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribI4ui(index, x, y, z, w);
+  obj.vertexAttribI4ui(Number(index), Number(x), Number(y), Number(z), Number(w));
 }
 
 /**
@@ -3748,7 +3811,7 @@ export function vertexAttribI4ui(self: bigint, index: bigint, x: bigint, y: bigi
  */
 export function vertexAttribI4uiv(self: bigint, index: bigint, values: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribI4uiv(index, values);
+  obj.vertexAttribI4uiv(Number(index), lookupUint32List(values));
 }
 
 /**
@@ -3756,7 +3819,7 @@ export function vertexAttribI4uiv(self: bigint, index: bigint, values: bigint): 
  */
 export function vertexAttribIPointer(self: bigint, index: bigint, size: bigint, type: bigint, stride: bigint, offset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribIPointer(Number(index), size, type, stride, offset);
+  obj.vertexAttribIPointer(Number(index), Number(size), Number(type), Number(stride), Number(offset));
 }
 
 /**
@@ -3764,7 +3827,7 @@ export function vertexAttribIPointer(self: bigint, index: bigint, size: bigint, 
  */
 export function vertexAttribDivisor(self: bigint, index: bigint, divisor: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.vertexAttribDivisor(Number(index), divisor);
+  obj.vertexAttribDivisor(Number(index), Number(divisor));
 }
 
 /**
@@ -3772,7 +3835,7 @@ export function vertexAttribDivisor(self: bigint, index: bigint, divisor: bigint
  */
 export function drawArraysInstanced(self: bigint, mode: bigint, first: bigint, count: bigint, instanceCount: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.drawArraysInstanced(Number(mode), first, count, instanceCount);
+  obj.drawArraysInstanced(Number(mode), Number(first), Number(count), Number(instanceCount));
 }
 
 /**
@@ -3780,7 +3843,7 @@ export function drawArraysInstanced(self: bigint, mode: bigint, first: bigint, c
  */
 export function drawElementsInstanced(self: bigint, mode: bigint, count: bigint, type: bigint, offset: bigint, instanceCount: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.drawElementsInstanced(Number(mode), count, type, offset, instanceCount);
+  obj.drawElementsInstanced(Number(mode), Number(count), Number(type), Number(offset), Number(instanceCount));
 }
 
 /**
@@ -3788,7 +3851,7 @@ export function drawElementsInstanced(self: bigint, mode: bigint, count: bigint,
  */
 export function drawRangeElements(self: bigint, mode: bigint, start: bigint, end: bigint, count: bigint, type: bigint, offset: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.drawRangeElements(Number(mode), start, end, count, type, offset);
+  obj.drawRangeElements(Number(mode), Number(start), Number(end), Number(count), Number(type), Number(offset));
 }
 
 /**
@@ -3804,7 +3867,7 @@ export function drawBuffers(self: bigint, buffers: (bigint)[]): void {
  */
 export function clearBufferfv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.clearBufferfv(buffer, drawbuffer, values, srcOffset);
+  obj.clearBufferfv(Number(buffer), Number(drawbuffer), lookupFloat32List(values), Number(srcOffset));
 }
 
 /**
@@ -3812,7 +3875,7 @@ export function clearBufferfv(self: bigint, buffer: bigint, drawbuffer: bigint, 
  */
 export function clearBufferiv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.clearBufferiv(buffer, drawbuffer, values, srcOffset);
+  obj.clearBufferiv(Number(buffer), Number(drawbuffer), lookupInt32List(values), Number(srcOffset));
 }
 
 /**
@@ -3820,7 +3883,7 @@ export function clearBufferiv(self: bigint, buffer: bigint, drawbuffer: bigint, 
  */
 export function clearBufferuiv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.clearBufferuiv(buffer, drawbuffer, values, srcOffset);
+  obj.clearBufferuiv(Number(buffer), Number(drawbuffer), lookupUint32List(values), Number(srcOffset));
 }
 
 /**
@@ -3828,7 +3891,7 @@ export function clearBufferuiv(self: bigint, buffer: bigint, drawbuffer: bigint,
  */
 export function clearBufferfi(self: bigint, buffer: bigint, drawbuffer: bigint, depth: bigint, stencil: bigint): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.clearBufferfi(buffer, drawbuffer, depth, stencil);
+  obj.clearBufferfi(Number(buffer), Number(drawbuffer), Number(depth), Number(stencil));
 }
 
 /**

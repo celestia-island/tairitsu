@@ -129,6 +129,15 @@ class CodeGenerator:
                     target_type = HANDLE_RETURNING_FUNCTIONS[key]
                     if target_type in SYNTHETIC_HANDLE_TYPES:
                         needed_synthetic_types.add(target_type)
+                
+                for param in func.params:
+                    param_key = (iface.wit_name, func.wit_name, param.wit_name)
+                    if param_key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
+                        conversion_type = PARAMETER_BIGINT_TO_NUMBER_ALIAS[param_key]
+                        if isinstance(conversion_type, str) and conversion_type.startswith("handle:"):
+                            target_type = conversion_type[7:]
+                            if target_type in SYNTHETIC_HANDLE_TYPES:
+                                needed_synthetic_types.add(target_type)
 
         generated_helpers = set()
         

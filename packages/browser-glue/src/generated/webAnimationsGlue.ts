@@ -267,7 +267,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): string {
+export function pending(handle: bigint): boolean {
   const obj = lookupAnimation(handle);
   return obj.pending();
 }

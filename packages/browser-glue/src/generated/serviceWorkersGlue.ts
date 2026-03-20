@@ -222,7 +222,7 @@ function lookupSwReg(handle: bigint): ServiceWorkerRegistration {
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): bigint {
+export function scope(handle: bigint): string {
   const obj = lookupSwReg(handle);
   return obj.scope();
 }
@@ -257,7 +257,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: boolean, transfer: bigint): void {
+export function postMessage(handle: bigint, message: number, transfer: bigint): void {
   const obj = lookupSw(handle);
   obj.postMessage(message, transfer);
 }

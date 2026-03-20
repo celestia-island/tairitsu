@@ -222,14 +222,14 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): string {
+export function url(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
   return obj.url();
 }
@@ -277,7 +277,7 @@ export function close(handle: bigint, code: number, reason: string): void {
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string): void {
+export function send(handle: bigint, data: boolean): void {
   const obj = lookupWs(handle);
   obj.send(data);
 }
