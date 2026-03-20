@@ -29,15 +29,15 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type MediaCapabilitiesHandle = bigint;
 
-/** Handle table for mediacapabilities instances */
-const _mediaCapabilitieshandles = new Map<bigint, mediacapabilities>();
+/** Handle table for MediaCapabilities instances */
+const _mediaCapabilitieshandles = new Map<bigint, MediaCapabilities>();
 let _nextMediaCapabilities = 1n;
 
-/** Get a mediacapabilities by handle, throwing if not found. */
-function getMediaCapabilities(handle: bigint): mediacapabilities {
+/** Get a MediaCapabilities by handle, throwing if not found. */
+function getMediaCapabilities(handle: bigint): MediaCapabilities {
   const obj = _mediaCapabilitieshandles.get(handle);
   if (!obj) {
-    throw new Error(`mediacapabilities handle ${handle} not found`);
+    throw new Error(`MediaCapabilities handle ${handle} not found`);
   }
   return obj;
 }
@@ -219,15 +219,15 @@ export function setOnremovetrack(self: bigint, value: bigint): void {
 /** Type alias */
 export type MediaStreamTrackHandle = bigint;
 
-/** Handle table for mediastreamtrack instances */
-const _mediaStreamTrackhandles = new Map<bigint, mediastreamtrack>();
+/** Handle table for MediaStreamTrack instances */
+const _mediaStreamTrackhandles = new Map<bigint, MediaStreamTrack>();
 let _nextMediaStreamTrack = 1n;
 
-/** Get a mediastreamtrack by handle, throwing if not found. */
-function getMediaStreamTrack(handle: bigint): mediastreamtrack {
+/** Get a MediaStreamTrack by handle, throwing if not found. */
+function getMediaStreamTrack(handle: bigint): MediaStreamTrack {
   const obj = _mediaStreamTrackhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediastreamtrack handle ${handle} not found`);
+    throw new Error(`MediaStreamTrack handle ${handle} not found`);
   }
   return obj;
 }
@@ -421,15 +421,15 @@ export function applyConstraints(self: bigint, constraints: bigint | undefined):
 /** Type alias */
 export type MediaStreamTrackEventHandle = bigint;
 
-/** Handle table for mediastreamtrackevent instances */
-const _mediaStreamTrackEventhandles = new Map<bigint, mediastreamtrackevent>();
+/** Handle table for MediaStreamTrackEvent instances */
+const _mediaStreamTrackEventhandles = new Map<bigint, MediaStreamTrackEvent>();
 let _nextMediaStreamTrackEvent = 1n;
 
-/** Get a mediastreamtrackevent by handle, throwing if not found. */
-function getMediaStreamTrackEvent(handle: bigint): mediastreamtrackevent {
+/** Get a MediaStreamTrackEvent by handle, throwing if not found. */
+function getMediaStreamTrackEvent(handle: bigint): MediaStreamTrackEvent {
   const obj = _mediaStreamTrackEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediastreamtrackevent handle ${handle} not found`);
+    throw new Error(`MediaStreamTrackEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -449,15 +449,15 @@ export function getTrack(self: bigint): bigint {
 /** Type alias */
 export type OverconstrainedErrorHandle = bigint;
 
-/** Handle table for overconstrainederror instances */
-const _overconstrainedErrorhandles = new Map<bigint, overconstrainederror>();
+/** Handle table for OverconstrainedError instances */
+const _overconstrainedErrorhandles = new Map<bigint, OverconstrainedError>();
 let _nextOverconstrainedError = 1n;
 
-/** Get a overconstrainederror by handle, throwing if not found. */
-function getOverconstrainedError(handle: bigint): overconstrainederror {
+/** Get a OverconstrainedError by handle, throwing if not found. */
+function getOverconstrainedError(handle: bigint): OverconstrainedError {
   const obj = _overconstrainedErrorhandles.get(handle);
   if (!obj) {
-    throw new Error(`overconstrainederror handle ${handle} not found`);
+    throw new Error(`OverconstrainedError handle ${handle} not found`);
   }
   return obj;
 }
@@ -575,15 +575,15 @@ export function getDisplayMedia(self: bigint, options: bigint | undefined): bigi
 /** Type alias */
 export type MediaDeviceInfoHandle = bigint;
 
-/** Handle table for mediadeviceinfo instances */
-const _mediaDeviceInfohandles = new Map<bigint, mediadeviceinfo>();
+/** Handle table for MediaDeviceInfo instances */
+const _mediaDeviceInfohandles = new Map<bigint, MediaDeviceInfo>();
 let _nextMediaDeviceInfo = 1n;
 
-/** Get a mediadeviceinfo by handle, throwing if not found. */
-function getMediaDeviceInfo(handle: bigint): mediadeviceinfo {
+/** Get a MediaDeviceInfo by handle, throwing if not found. */
+function getMediaDeviceInfo(handle: bigint): MediaDeviceInfo {
   const obj = _mediaDeviceInfohandles.get(handle);
   if (!obj) {
-    throw new Error(`mediadeviceinfo handle ${handle} not found`);
+    throw new Error(`MediaDeviceInfo handle ${handle} not found`);
   }
   return obj;
 }
@@ -635,15 +635,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type InputDeviceInfoHandle = bigint;
 
-/** Handle table for inputdeviceinfo instances */
-const _inputDeviceInfohandles = new Map<bigint, inputdeviceinfo>();
+/** Handle table for InputDeviceInfo instances */
+const _inputDeviceInfohandles = new Map<bigint, InputDeviceInfo>();
 let _nextInputDeviceInfo = 1n;
 
-/** Get a inputdeviceinfo by handle, throwing if not found. */
-function getInputDeviceInfo(handle: bigint): inputdeviceinfo {
+/** Get a InputDeviceInfo by handle, throwing if not found. */
+function getInputDeviceInfo(handle: bigint): InputDeviceInfo {
   const obj = _inputDeviceInfohandles.get(handle);
   if (!obj) {
-    throw new Error(`inputdeviceinfo handle ${handle} not found`);
+    throw new Error(`InputDeviceInfo handle ${handle} not found`);
   }
   return obj;
 }
@@ -663,15 +663,15 @@ export function getCapabilities(self: bigint): bigint {
 /** Type alias */
 export type DeviceChangeEventHandle = bigint;
 
-/** Handle table for devicechangeevent instances */
-const _deviceChangeEventhandles = new Map<bigint, devicechangeevent>();
+/** Handle table for DeviceChangeEvent instances */
+const _deviceChangeEventhandles = new Map<bigint, DeviceChangeEvent>();
 let _nextDeviceChangeEvent = 1n;
 
-/** Get a devicechangeevent by handle, throwing if not found. */
-function getDeviceChangeEvent(handle: bigint): devicechangeevent {
+/** Get a DeviceChangeEvent by handle, throwing if not found. */
+function getDeviceChangeEvent(handle: bigint): DeviceChangeEvent {
   const obj = _deviceChangeEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`devicechangeevent handle ${handle} not found`);
+    throw new Error(`DeviceChangeEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -699,15 +699,15 @@ export function getUserInsertedDevices(self: bigint): (bigint)[] {
 /** Type alias */
 export type MediaSessionHandle = bigint;
 
-/** Handle table for mediasession instances */
-const _mediaSessionhandles = new Map<bigint, mediasession>();
+/** Handle table for MediaSession instances */
+const _mediaSessionhandles = new Map<bigint, MediaSession>();
 let _nextMediaSession = 1n;
 
-/** Get a mediasession by handle, throwing if not found. */
-function getMediaSession(handle: bigint): mediasession {
+/** Get a MediaSession by handle, throwing if not found. */
+function getMediaSession(handle: bigint): MediaSession {
   const obj = _mediaSessionhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediasession handle ${handle} not found`);
+    throw new Error(`MediaSession handle ${handle} not found`);
   }
   return obj;
 }
@@ -791,15 +791,15 @@ export function setScreenshareActive(self: bigint, active: boolean): bigint {
 /** Type alias */
 export type MediaMetadataHandle = bigint;
 
-/** Handle table for mediametadata instances */
-const _mediaMetadatahandles = new Map<bigint, mediametadata>();
+/** Handle table for MediaMetadata instances */
+const _mediaMetadatahandles = new Map<bigint, MediaMetadata>();
 let _nextMediaMetadata = 1n;
 
-/** Get a mediametadata by handle, throwing if not found. */
-function getMediaMetadata(handle: bigint): mediametadata {
+/** Get a MediaMetadata by handle, throwing if not found. */
+function getMediaMetadata(handle: bigint): MediaMetadata {
   const obj = _mediaMetadatahandles.get(handle);
   if (!obj) {
-    throw new Error(`mediametadata handle ${handle} not found`);
+    throw new Error(`MediaMetadata handle ${handle} not found`);
   }
   return obj;
 }
@@ -883,15 +883,15 @@ export function getChapterInfo(self: bigint): (bigint)[] {
 /** Type alias */
 export type ChapterInformationHandle = bigint;
 
-/** Handle table for chapterinformation instances */
-const _chapterInformationhandles = new Map<bigint, chapterinformation>();
+/** Handle table for ChapterInformation instances */
+const _chapterInformationhandles = new Map<bigint, ChapterInformation>();
 let _nextChapterInformation = 1n;
 
-/** Get a chapterinformation by handle, throwing if not found. */
-function getChapterInformation(handle: bigint): chapterinformation {
+/** Get a ChapterInformation by handle, throwing if not found. */
+function getChapterInformation(handle: bigint): ChapterInformation {
   const obj = _chapterInformationhandles.get(handle);
   if (!obj) {
-    throw new Error(`chapterinformation handle ${handle} not found`);
+    throw new Error(`ChapterInformation handle ${handle} not found`);
   }
   return obj;
 }
@@ -927,15 +927,15 @@ export function getArtwork(self: bigint): (bigint)[] {
 /** Type alias */
 export type MediaRecorderHandle = bigint;
 
-/** Handle table for mediarecorder instances */
-const _mediaRecorderhandles = new Map<bigint, mediarecorder>();
+/** Handle table for MediaRecorder instances */
+const _mediaRecorderhandles = new Map<bigint, MediaRecorder>();
 let _nextMediaRecorder = 1n;
 
-/** Get a mediarecorder by handle, throwing if not found. */
-function getMediaRecorder(handle: bigint): mediarecorder {
+/** Get a MediaRecorder by handle, throwing if not found. */
+function getMediaRecorder(handle: bigint): MediaRecorder {
   const obj = _mediaRecorderhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediarecorder handle ${handle} not found`);
+    throw new Error(`MediaRecorder handle ${handle} not found`);
   }
   return obj;
 }
@@ -1139,15 +1139,15 @@ export function isTypeSupported(type: string): boolean {
 /** Type alias */
 export type BlobEventHandle = bigint;
 
-/** Handle table for blobevent instances */
-const _blobEventhandles = new Map<bigint, blobevent>();
+/** Handle table for BlobEvent instances */
+const _blobEventhandles = new Map<bigint, BlobEvent>();
 let _nextBlobEvent = 1n;
 
-/** Get a blobevent by handle, throwing if not found. */
-function getBlobEvent(handle: bigint): blobevent {
+/** Get a BlobEvent by handle, throwing if not found. */
+function getBlobEvent(handle: bigint): BlobEvent {
   const obj = _blobEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`blobevent handle ${handle} not found`);
+    throw new Error(`BlobEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1175,15 +1175,15 @@ export function getTimecode(self: bigint): number {
 /** Type alias */
 export type CaptureControllerHandle = bigint;
 
-/** Handle table for capturecontroller instances */
-const _captureControllerhandles = new Map<bigint, capturecontroller>();
+/** Handle table for CaptureController instances */
+const _captureControllerhandles = new Map<bigint, CaptureController>();
 let _nextCaptureController = 1n;
 
-/** Get a capturecontroller by handle, throwing if not found. */
-function getCaptureController(handle: bigint): capturecontroller {
+/** Get a CaptureController by handle, throwing if not found. */
+function getCaptureController(handle: bigint): CaptureController {
   const obj = _captureControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`capturecontroller handle ${handle} not found`);
+    throw new Error(`CaptureController handle ${handle} not found`);
   }
   return obj;
 }
@@ -1203,15 +1203,15 @@ export function setFocusBehavior(self: bigint, focusBehavior: bigint): void {
 /** Type alias */
 export type SpeechRecognitionHandle = bigint;
 
-/** Handle table for speechrecognition instances */
-const _speechRecognitionhandles = new Map<bigint, speechrecognition>();
+/** Handle table for SpeechRecognition instances */
+const _speechRecognitionhandles = new Map<bigint, SpeechRecognition>();
 let _nextSpeechRecognition = 1n;
 
-/** Get a speechrecognition by handle, throwing if not found. */
-function getSpeechRecognition(handle: bigint): speechrecognition {
+/** Get a SpeechRecognition by handle, throwing if not found. */
+function getSpeechRecognition(handle: bigint): SpeechRecognition {
   const obj = _speechRecognitionhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognition handle ${handle} not found`);
+    throw new Error(`SpeechRecognition handle ${handle} not found`);
   }
   return obj;
 }
@@ -1581,15 +1581,15 @@ export function setOnend(self: bigint, value: bigint): void {
 /** Type alias */
 export type SpeechRecognitionErrorEventHandle = bigint;
 
-/** Handle table for speechrecognitionerrorevent instances */
-const _speechRecognitionErrorEventhandles = new Map<bigint, speechrecognitionerrorevent>();
+/** Handle table for SpeechRecognitionErrorEvent instances */
+const _speechRecognitionErrorEventhandles = new Map<bigint, SpeechRecognitionErrorEvent>();
 let _nextSpeechRecognitionErrorEvent = 1n;
 
-/** Get a speechrecognitionerrorevent by handle, throwing if not found. */
-function getSpeechRecognitionErrorEvent(handle: bigint): speechrecognitionerrorevent {
+/** Get a SpeechRecognitionErrorEvent by handle, throwing if not found. */
+function getSpeechRecognitionErrorEvent(handle: bigint): SpeechRecognitionErrorEvent {
   const obj = _speechRecognitionErrorEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionerrorevent handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionErrorEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1617,15 +1617,15 @@ export function getMessage(self: bigint): string {
 /** Type alias */
 export type SpeechRecognitionAlternativeHandle = bigint;
 
-/** Handle table for speechrecognitionalternative instances */
-const _speechRecognitionAlternativehandles = new Map<bigint, speechrecognitionalternative>();
+/** Handle table for SpeechRecognitionAlternative instances */
+const _speechRecognitionAlternativehandles = new Map<bigint, SpeechRecognitionAlternative>();
 let _nextSpeechRecognitionAlternative = 1n;
 
-/** Get a speechrecognitionalternative by handle, throwing if not found. */
-function getSpeechRecognitionAlternative(handle: bigint): speechrecognitionalternative {
+/** Get a SpeechRecognitionAlternative by handle, throwing if not found. */
+function getSpeechRecognitionAlternative(handle: bigint): SpeechRecognitionAlternative {
   const obj = _speechRecognitionAlternativehandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionalternative handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionAlternative handle ${handle} not found`);
   }
   return obj;
 }
@@ -1653,15 +1653,15 @@ export function getConfidence(self: bigint): number {
 /** Type alias */
 export type SpeechRecognitionResultHandle = bigint;
 
-/** Handle table for speechrecognitionresult instances */
-const _speechRecognitionResulthandles = new Map<bigint, speechrecognitionresult>();
+/** Handle table for SpeechRecognitionResult instances */
+const _speechRecognitionResulthandles = new Map<bigint, SpeechRecognitionResult>();
 let _nextSpeechRecognitionResult = 1n;
 
-/** Get a speechrecognitionresult by handle, throwing if not found. */
-function getSpeechRecognitionResult(handle: bigint): speechrecognitionresult {
+/** Get a SpeechRecognitionResult by handle, throwing if not found. */
+function getSpeechRecognitionResult(handle: bigint): SpeechRecognitionResult {
   const obj = _speechRecognitionResulthandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionresult handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionResult handle ${handle} not found`);
   }
   return obj;
 }
@@ -1697,15 +1697,15 @@ export function getIsFinal(self: bigint): boolean {
 /** Type alias */
 export type SpeechRecognitionResultListHandle = bigint;
 
-/** Handle table for speechrecognitionresultlist instances */
-const _speechRecognitionResultListhandles = new Map<bigint, speechrecognitionresultlist>();
+/** Handle table for SpeechRecognitionResultList instances */
+const _speechRecognitionResultListhandles = new Map<bigint, SpeechRecognitionResultList>();
 let _nextSpeechRecognitionResultList = 1n;
 
-/** Get a speechrecognitionresultlist by handle, throwing if not found. */
-function getSpeechRecognitionResultList(handle: bigint): speechrecognitionresultlist {
+/** Get a SpeechRecognitionResultList by handle, throwing if not found. */
+function getSpeechRecognitionResultList(handle: bigint): SpeechRecognitionResultList {
   const obj = _speechRecognitionResultListhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionresultlist handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionResultList handle ${handle} not found`);
   }
   return obj;
 }
@@ -1733,15 +1733,15 @@ export function item(self: bigint, index: number): bigint {
 /** Type alias */
 export type SpeechRecognitionEventHandle = bigint;
 
-/** Handle table for speechrecognitionevent instances */
-const _speechRecognitionEventhandles = new Map<bigint, speechrecognitionevent>();
+/** Handle table for SpeechRecognitionEvent instances */
+const _speechRecognitionEventhandles = new Map<bigint, SpeechRecognitionEvent>();
 let _nextSpeechRecognitionEvent = 1n;
 
-/** Get a speechrecognitionevent by handle, throwing if not found. */
-function getSpeechRecognitionEvent(handle: bigint): speechrecognitionevent {
+/** Get a SpeechRecognitionEvent by handle, throwing if not found. */
+function getSpeechRecognitionEvent(handle: bigint): SpeechRecognitionEvent {
   const obj = _speechRecognitionEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionevent handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1769,15 +1769,15 @@ export function getResults(self: bigint): bigint {
 /** Type alias */
 export type SpeechGrammarHandle = bigint;
 
-/** Handle table for speechgrammar instances */
-const _speechGrammarhandles = new Map<bigint, speechgrammar>();
+/** Handle table for SpeechGrammar instances */
+const _speechGrammarhandles = new Map<bigint, SpeechGrammar>();
 let _nextSpeechGrammar = 1n;
 
-/** Get a speechgrammar by handle, throwing if not found. */
-function getSpeechGrammar(handle: bigint): speechgrammar {
+/** Get a SpeechGrammar by handle, throwing if not found. */
+function getSpeechGrammar(handle: bigint): SpeechGrammar {
   const obj = _speechGrammarhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechgrammar handle ${handle} not found`);
+    throw new Error(`SpeechGrammar handle ${handle} not found`);
   }
   return obj;
 }
@@ -1821,15 +1821,15 @@ export function setWeight(self: bigint, value: number): void {
 /** Type alias */
 export type SpeechGrammarListHandle = bigint;
 
-/** Handle table for speechgrammarlist instances */
-const _speechGrammarListhandles = new Map<bigint, speechgrammarlist>();
+/** Handle table for SpeechGrammarList instances */
+const _speechGrammarListhandles = new Map<bigint, SpeechGrammarList>();
 let _nextSpeechGrammarList = 1n;
 
-/** Get a speechgrammarlist by handle, throwing if not found. */
-function getSpeechGrammarList(handle: bigint): speechgrammarlist {
+/** Get a SpeechGrammarList by handle, throwing if not found. */
+function getSpeechGrammarList(handle: bigint): SpeechGrammarList {
   const obj = _speechGrammarListhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechgrammarlist handle ${handle} not found`);
+    throw new Error(`SpeechGrammarList handle ${handle} not found`);
   }
   return obj;
 }
@@ -1873,15 +1873,15 @@ export function addFromString(self: bigint, string: string, weight: number | und
 /** Type alias */
 export type SpeechRecognitionPhraseHandle = bigint;
 
-/** Handle table for speechrecognitionphrase instances */
-const _speechRecognitionPhrasehandles = new Map<bigint, speechrecognitionphrase>();
+/** Handle table for SpeechRecognitionPhrase instances */
+const _speechRecognitionPhrasehandles = new Map<bigint, SpeechRecognitionPhrase>();
 let _nextSpeechRecognitionPhrase = 1n;
 
-/** Get a speechrecognitionphrase by handle, throwing if not found. */
-function getSpeechRecognitionPhrase(handle: bigint): speechrecognitionphrase {
+/** Get a SpeechRecognitionPhrase by handle, throwing if not found. */
+function getSpeechRecognitionPhrase(handle: bigint): SpeechRecognitionPhrase {
   const obj = _speechRecognitionPhrasehandles.get(handle);
   if (!obj) {
-    throw new Error(`speechrecognitionphrase handle ${handle} not found`);
+    throw new Error(`SpeechRecognitionPhrase handle ${handle} not found`);
   }
   return obj;
 }
@@ -1909,15 +1909,15 @@ export function getBoost(self: bigint): number {
 /** Type alias */
 export type SpeechSynthesisHandle = bigint;
 
-/** Handle table for speechsynthesis instances */
-const _speechSynthesishandles = new Map<bigint, speechsynthesis>();
+/** Handle table for SpeechSynthesis instances */
+const _speechSynthesishandles = new Map<bigint, SpeechSynthesis>();
 let _nextSpeechSynthesis = 1n;
 
-/** Get a speechsynthesis by handle, throwing if not found. */
-function getSpeechSynthesis(handle: bigint): speechsynthesis {
+/** Get a SpeechSynthesis by handle, throwing if not found. */
+function getSpeechSynthesis(handle: bigint): SpeechSynthesis {
   const obj = _speechSynthesishandles.get(handle);
   if (!obj) {
-    throw new Error(`speechsynthesis handle ${handle} not found`);
+    throw new Error(`SpeechSynthesis handle ${handle} not found`);
   }
   return obj;
 }
@@ -2039,15 +2039,15 @@ export function getVoices(self: bigint): (bigint)[] {
 /** Type alias */
 export type SpeechSynthesisUtteranceHandle = bigint;
 
-/** Handle table for speechsynthesisutterance instances */
-const _speechSynthesisUtterancehandles = new Map<bigint, speechsynthesisutterance>();
+/** Handle table for SpeechSynthesisUtterance instances */
+const _speechSynthesisUtterancehandles = new Map<bigint, SpeechSynthesisUtterance>();
 let _nextSpeechSynthesisUtterance = 1n;
 
-/** Get a speechsynthesisutterance by handle, throwing if not found. */
-function getSpeechSynthesisUtterance(handle: bigint): speechsynthesisutterance {
+/** Get a SpeechSynthesisUtterance by handle, throwing if not found. */
+function getSpeechSynthesisUtterance(handle: bigint): SpeechSynthesisUtterance {
   const obj = _speechSynthesisUtterancehandles.get(handle);
   if (!obj) {
-    throw new Error(`speechsynthesisutterance handle ${handle} not found`);
+    throw new Error(`SpeechSynthesisUtterance handle ${handle} not found`);
   }
   return obj;
 }
@@ -2267,15 +2267,15 @@ export function setOnboundary(self: bigint, value: bigint): void {
 /** Type alias */
 export type SpeechSynthesisEventHandle = bigint;
 
-/** Handle table for speechsynthesisevent instances */
-const _speechSynthesisEventhandles = new Map<bigint, speechsynthesisevent>();
+/** Handle table for SpeechSynthesisEvent instances */
+const _speechSynthesisEventhandles = new Map<bigint, SpeechSynthesisEvent>();
 let _nextSpeechSynthesisEvent = 1n;
 
-/** Get a speechsynthesisevent by handle, throwing if not found. */
-function getSpeechSynthesisEvent(handle: bigint): speechsynthesisevent {
+/** Get a SpeechSynthesisEvent by handle, throwing if not found. */
+function getSpeechSynthesisEvent(handle: bigint): SpeechSynthesisEvent {
   const obj = _speechSynthesisEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechsynthesisevent handle ${handle} not found`);
+    throw new Error(`SpeechSynthesisEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -2327,15 +2327,15 @@ export function getName(self: bigint): string {
 /** Type alias */
 export type SpeechSynthesisErrorEventHandle = bigint;
 
-/** Handle table for speechsynthesiserrorevent instances */
-const _speechSynthesisErrorEventhandles = new Map<bigint, speechsynthesiserrorevent>();
+/** Handle table for SpeechSynthesisErrorEvent instances */
+const _speechSynthesisErrorEventhandles = new Map<bigint, SpeechSynthesisErrorEvent>();
 let _nextSpeechSynthesisErrorEvent = 1n;
 
-/** Get a speechsynthesiserrorevent by handle, throwing if not found. */
-function getSpeechSynthesisErrorEvent(handle: bigint): speechsynthesiserrorevent {
+/** Get a SpeechSynthesisErrorEvent by handle, throwing if not found. */
+function getSpeechSynthesisErrorEvent(handle: bigint): SpeechSynthesisErrorEvent {
   const obj = _speechSynthesisErrorEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`speechsynthesiserrorevent handle ${handle} not found`);
+    throw new Error(`SpeechSynthesisErrorEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -2355,15 +2355,15 @@ export function getError(self: bigint): bigint {
 /** Type alias */
 export type SpeechSynthesisVoiceHandle = bigint;
 
-/** Handle table for speechsynthesisvoice instances */
-const _speechSynthesisVoicehandles = new Map<bigint, speechsynthesisvoice>();
+/** Handle table for SpeechSynthesisVoice instances */
+const _speechSynthesisVoicehandles = new Map<bigint, SpeechSynthesisVoice>();
 let _nextSpeechSynthesisVoice = 1n;
 
-/** Get a speechsynthesisvoice by handle, throwing if not found. */
-function getSpeechSynthesisVoice(handle: bigint): speechsynthesisvoice {
+/** Get a SpeechSynthesisVoice by handle, throwing if not found. */
+function getSpeechSynthesisVoice(handle: bigint): SpeechSynthesisVoice {
   const obj = _speechSynthesisVoicehandles.get(handle);
   if (!obj) {
-    throw new Error(`speechsynthesisvoice handle ${handle} not found`);
+    throw new Error(`SpeechSynthesisVoice handle ${handle} not found`);
   }
   return obj;
 }

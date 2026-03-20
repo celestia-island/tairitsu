@@ -14,17 +14,17 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ModuleHandle = string;
+export type ModuleHandle = bigint;
 
-/** Handle table for module instances */
-const _moduleHandles = new Map<bigint, module>();
+/** Handle table for Module instances */
+const _moduleHandles = new Map<bigint, Module>();
 let _nextModule = 1n;
 
-/** Get a module by handle, throwing if not found. */
-function getModule(handle: bigint): module {
+/** Get a Module by handle, throwing if not found. */
+function getModule(handle: bigint): Module {
   const obj = _moduleHandles.get(handle);
   if (!obj) {
-    throw new Error(`module handle ${handle} not found`);
+    throw new Error(`Module handle ${handle} not found`);
   }
   return obj;
 }
@@ -32,7 +32,7 @@ function getModule(handle: bigint): module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: string): bigint {
+export function exports(moduleObject: bigint): bigint {
   const obj = getModule(self);
   return obj.exports(moduleObject);
 }
@@ -40,7 +40,7 @@ export function exports(moduleObject: string): bigint {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: string): (bigint)[] {
+export function imports(moduleObject: bigint): (string)[] {
   const obj = getModule(self);
   return obj.imports(moduleObject);
 }
@@ -48,7 +48,7 @@ export function imports(moduleObject: string): (bigint)[] {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string | undefined): (bigint)[] {
+export function customSections(moduleObject: bigint, sectionName: bigint): bigint {
   const obj = getModule(self);
   return obj.customSections(moduleObject, sectionName);
 }
@@ -60,15 +60,15 @@ export function customSections(moduleObject: bigint, sectionName: string | undef
 /** Type alias */
 export type InstanceHandle = bigint;
 
-/** Handle table for instance instances */
-const _instanceHandles = new Map<bigint, instance>();
+/** Handle table for Instance instances */
+const _instanceHandles = new Map<bigint, Instance>();
 let _nextInstance = 1n;
 
-/** Get a instance by handle, throwing if not found. */
-function getInstance(handle: bigint): instance {
+/** Get a Instance by handle, throwing if not found. */
+function getInstance(handle: bigint): Instance {
   const obj = _instanceHandles.get(handle);
   if (!obj) {
-    throw new Error(`instance handle ${handle} not found`);
+    throw new Error(`Instance handle ${handle} not found`);
   }
   return obj;
 }
@@ -76,7 +76,7 @@ function getInstance(handle: bigint): instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): bigint {
+export function getExports(self: string): string {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -88,15 +88,15 @@ export function getExports(self: bigint): bigint {
 /** Type alias */
 export type MemoryHandle = bigint;
 
-/** Handle table for memory instances */
-const _memoryHandles = new Map<bigint, memory>();
+/** Handle table for Memory instances */
+const _memoryHandles = new Map<bigint, Memory>();
 let _nextMemory = 1n;
 
-/** Get a memory by handle, throwing if not found. */
-function getMemory(handle: bigint): memory {
+/** Get a Memory by handle, throwing if not found. */
+function getMemory(handle: bigint): Memory {
   const obj = _memoryHandles.get(handle);
   if (!obj) {
-    throw new Error(`memory handle ${handle} not found`);
+    throw new Error(`Memory handle ${handle} not found`);
   }
   return obj;
 }
@@ -104,7 +104,7 @@ function getMemory(handle: bigint): memory {
 /**
  * `grow()` operation.
  */
-export function grow(self: bigint, delta: bigint): bigint {
+export function grow(self: bigint, delta: string): string | undefined {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -112,7 +112,7 @@ export function grow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): string {
+export function toFixedLengthBuffer(self: bigint): (string)[] {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -140,15 +140,15 @@ export function getBuffer(self: bigint): Uint8Array {
 /** Type alias */
 export type TableHandle = bigint;
 
-/** Handle table for table instances */
-const _tableHandles = new Map<bigint, table>();
+/** Handle table for Table instances */
+const _tableHandles = new Map<bigint, Table>();
 let _nextTable = 1n;
 
-/** Get a table by handle, throwing if not found. */
-function getTable(handle: bigint): table {
+/** Get a Table by handle, throwing if not found. */
+function getTable(handle: bigint): Table {
   const obj = _tableHandles.get(handle);
   if (!obj) {
-    throw new Error(`table handle ${handle} not found`);
+    throw new Error(`Table handle ${handle} not found`);
   }
   return obj;
 }
@@ -192,15 +192,15 @@ export function getLength(self: bigint): bigint {
 /** Type alias */
 export type GlobalHandle = bigint;
 
-/** Handle table for global instances */
-const _globalHandles = new Map<bigint, global>();
+/** Handle table for Global instances */
+const _globalHandles = new Map<bigint, Global>();
 let _nextGlobal = 1n;
 
-/** Get a global by handle, throwing if not found. */
-function getGlobal(handle: bigint): global {
+/** Get a Global by handle, throwing if not found. */
+function getGlobal(handle: bigint): Global {
   const obj = _globalHandles.get(handle);
   if (!obj) {
-    throw new Error(`global handle ${handle} not found`);
+    throw new Error(`Global handle ${handle} not found`);
   }
   return obj;
 }
@@ -236,15 +236,15 @@ export function setValue(self: bigint, value: string): void {
 /** Type alias */
 export type ExceptionHandle = bigint;
 
-/** Handle table for exception instances */
-const _exceptionHandles = new Map<bigint, exception>();
+/** Handle table for Exception instances */
+const _exceptionHandles = new Map<bigint, Exception>();
 let _nextException = 1n;
 
-/** Get a exception by handle, throwing if not found. */
-function getException(handle: bigint): exception {
+/** Get a Exception by handle, throwing if not found. */
+function getException(handle: bigint): Exception {
   const obj = _exceptionHandles.get(handle);
   if (!obj) {
-    throw new Error(`exception handle ${handle} not found`);
+    throw new Error(`Exception handle ${handle} not found`);
   }
   return obj;
 }

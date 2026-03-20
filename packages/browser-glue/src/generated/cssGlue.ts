@@ -29,15 +29,15 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type AnimationEventHandle = bigint;
 
-/** Handle table for animationevent instances */
-const _animationEventhandles = new Map<bigint, animationevent>();
+/** Handle table for AnimationEvent instances */
+const _animationEventhandles = new Map<bigint, AnimationEvent>();
 let _nextAnimationEvent = 1n;
 
-/** Get a animationevent by handle, throwing if not found. */
-function getAnimationEvent(handle: bigint): animationevent {
+/** Get a AnimationEvent by handle, throwing if not found. */
+function getAnimationEvent(handle: bigint): AnimationEvent {
   const obj = _animationEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`animationevent handle ${handle} not found`);
+    throw new Error(`AnimationEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -73,15 +73,15 @@ export function getPseudoElement(self: bigint): string {
 /** Type alias */
 export type CssRuleHandle = bigint;
 
-/** Handle table for cssrule instances */
-const _cssRulehandles = new Map<bigint, cssrule>();
+/** Handle table for CssRule instances */
+const _cssRulehandles = new Map<bigint, CssRule>();
 let _nextCssRule = 1n;
 
-/** Get a cssrule by handle, throwing if not found. */
-function getCssRule(handle: bigint): cssrule {
+/** Get a CssRule by handle, throwing if not found. */
+function getCssRule(handle: bigint): CssRule {
   const obj = _cssRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssrule handle ${handle} not found`);
+    throw new Error(`CssRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -133,15 +133,15 @@ export function getType(self: bigint): number {
 /** Type alias */
 export type CssKeyframeRuleHandle = bigint;
 
-/** Handle table for csskeyframerule instances */
-const _cssKeyframeRulehandles = new Map<bigint, csskeyframerule>();
+/** Handle table for CssKeyframeRule instances */
+const _cssKeyframeRulehandles = new Map<bigint, CssKeyframeRule>();
 let _nextCssKeyframeRule = 1n;
 
-/** Get a csskeyframerule by handle, throwing if not found. */
-function getCssKeyframeRule(handle: bigint): csskeyframerule {
+/** Get a CssKeyframeRule by handle, throwing if not found. */
+function getCssKeyframeRule(handle: bigint): CssKeyframeRule {
   const obj = _cssKeyframeRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`csskeyframerule handle ${handle} not found`);
+    throw new Error(`CssKeyframeRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -177,15 +177,15 @@ export function getStyle(self: bigint): bigint {
 /** Type alias */
 export type CssKeyframesRuleHandle = bigint;
 
-/** Handle table for csskeyframesrule instances */
-const _cssKeyframesRulehandles = new Map<bigint, csskeyframesrule>();
+/** Handle table for CssKeyframesRule instances */
+const _cssKeyframesRulehandles = new Map<bigint, CssKeyframesRule>();
 let _nextCssKeyframesRule = 1n;
 
-/** Get a csskeyframesrule by handle, throwing if not found. */
-function getCssKeyframesRule(handle: bigint): csskeyframesrule {
+/** Get a CssKeyframesRule by handle, throwing if not found. */
+function getCssKeyframesRule(handle: bigint): CssKeyframesRule {
   const obj = _cssKeyframesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`csskeyframesrule handle ${handle} not found`);
+    throw new Error(`CssKeyframesRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -261,15 +261,15 @@ export function findRule(self: bigint, select: string): bigint | undefined {
 /** Type alias */
 export type GlobalEventHandlersHandle = bigint;
 
-/** Handle table for globaleventhandlers instances */
-const _globalEventhandlesrshandles = new Map<bigint, globaleventhandlers>();
+/** Handle table for GlobalEventHandlers instances */
+const _globalEventhandlesrshandles = new Map<bigint, GlobalEventHandlers>();
 let _nextGlobalEventrs = 1n;
 
-/** Get a globaleventhandlers by handle, throwing if not found. */
-function getGlobalEventrs(handle: bigint): globaleventhandlers {
+/** Get a GlobalEventHandlers by handle, throwing if not found. */
+function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
   const obj = _globalEventhandlesrshandles.get(handle);
   if (!obj) {
-    throw new Error(`globaleventhandlers handle ${handle} not found`);
+    throw new Error(`GlobalEventHandlers handle ${handle} not found`);
   }
   return obj;
 }
@@ -1865,15 +1865,15 @@ export function setOntouchcancel(self: bigint, value: bigint): void {
 /** Type alias */
 export type CssConditionRuleHandle = bigint;
 
-/** Handle table for cssconditionrule instances */
-const _cssConditionRulehandles = new Map<bigint, cssconditionrule>();
+/** Handle table for CssConditionRule instances */
+const _cssConditionRulehandles = new Map<bigint, CssConditionRule>();
 let _nextCssConditionRule = 1n;
 
-/** Get a cssconditionrule by handle, throwing if not found. */
-function getCssConditionRule(handle: bigint): cssconditionrule {
+/** Get a CssConditionRule by handle, throwing if not found. */
+function getCssConditionRule(handle: bigint): CssConditionRule {
   const obj = _cssConditionRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssconditionrule handle ${handle} not found`);
+    throw new Error(`CssConditionRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -1893,15 +1893,15 @@ export function getConditionText(self: bigint): string {
 /** Type alias */
 export type CssMediaRuleHandle = bigint;
 
-/** Handle table for cssmediarule instances */
-const _cssMediaRulehandles = new Map<bigint, cssmediarule>();
+/** Handle table for CssMediaRule instances */
+const _cssMediaRulehandles = new Map<bigint, CssMediaRule>();
 let _nextCssMediaRule = 1n;
 
-/** Get a cssmediarule by handle, throwing if not found. */
-function getCssMediaRule(handle: bigint): cssmediarule {
+/** Get a CssMediaRule by handle, throwing if not found. */
+function getCssMediaRule(handle: bigint): CssMediaRule {
   const obj = _cssMediaRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssmediarule handle ${handle} not found`);
+    throw new Error(`CssMediaRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -1929,15 +1929,15 @@ export function getMatches(self: bigint): boolean {
 /** Type alias */
 export type CssSupportsRuleHandle = bigint;
 
-/** Handle table for csssupportsrule instances */
-const _cssSupportsRulehandles = new Map<bigint, csssupportsrule>();
+/** Handle table for CssSupportsRule instances */
+const _cssSupportsRulehandles = new Map<bigint, CssSupportsRule>();
 let _nextCssSupportsRule = 1n;
 
-/** Get a csssupportsrule by handle, throwing if not found. */
-function getCssSupportsRule(handle: bigint): csssupportsrule {
+/** Get a CssSupportsRule by handle, throwing if not found. */
+function getCssSupportsRule(handle: bigint): CssSupportsRule {
   const obj = _cssSupportsRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`csssupportsrule handle ${handle} not found`);
+    throw new Error(`CssSupportsRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -1957,15 +1957,15 @@ export function getMatches(self: bigint): boolean {
 /** Type alias */
 export type CssFontFaceDescriptorsHandle = bigint;
 
-/** Handle table for cssfontfacedescriptors instances */
-const _cssFontFaceDescriptorshandles = new Map<bigint, cssfontfacedescriptors>();
+/** Handle table for CssFontFaceDescriptors instances */
+const _cssFontFaceDescriptorshandles = new Map<bigint, CssFontFaceDescriptors>();
 let _nextCssFontFaceDescriptors = 1n;
 
-/** Get a cssfontfacedescriptors by handle, throwing if not found. */
-function getCssFontFaceDescriptors(handle: bigint): cssfontfacedescriptors {
+/** Get a CssFontFaceDescriptors by handle, throwing if not found. */
+function getCssFontFaceDescriptors(handle: bigint): CssFontFaceDescriptors {
   const obj = _cssFontFaceDescriptorshandles.get(handle);
   if (!obj) {
-    throw new Error(`cssfontfacedescriptors handle ${handle} not found`);
+    throw new Error(`CssFontFaceDescriptors handle ${handle} not found`);
   }
   return obj;
 }
@@ -2217,15 +2217,15 @@ export function setLineGapOverride(self: bigint, value: string): void {
 /** Type alias */
 export type CssFontFaceRuleHandle = bigint;
 
-/** Handle table for cssfontfacerule instances */
-const _cssFontFaceRulehandles = new Map<bigint, cssfontfacerule>();
+/** Handle table for CssFontFaceRule instances */
+const _cssFontFaceRulehandles = new Map<bigint, CssFontFaceRule>();
 let _nextCssFontFaceRule = 1n;
 
-/** Get a cssfontfacerule by handle, throwing if not found. */
-function getCssFontFaceRule(handle: bigint): cssfontfacerule {
+/** Get a CssFontFaceRule by handle, throwing if not found. */
+function getCssFontFaceRule(handle: bigint): CssFontFaceRule {
   const obj = _cssFontFaceRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssfontfacerule handle ${handle} not found`);
+    throw new Error(`CssFontFaceRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -2245,15 +2245,15 @@ export function getStyle(self: bigint): bigint {
 /** Type alias */
 export type CssFontFeatureValuesRuleHandle = bigint;
 
-/** Handle table for cssfontfeaturevaluesrule instances */
-const _cssFontFeatureValuesRulehandles = new Map<bigint, cssfontfeaturevaluesrule>();
+/** Handle table for CssFontFeatureValuesRule instances */
+const _cssFontFeatureValuesRulehandles = new Map<bigint, CssFontFeatureValuesRule>();
 let _nextCssFontFeatureValuesRule = 1n;
 
-/** Get a cssfontfeaturevaluesrule by handle, throwing if not found. */
-function getCssFontFeatureValuesRule(handle: bigint): cssfontfeaturevaluesrule {
+/** Get a CssFontFeatureValuesRule by handle, throwing if not found. */
+function getCssFontFeatureValuesRule(handle: bigint): CssFontFeatureValuesRule {
   const obj = _cssFontFeatureValuesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssfontfeaturevaluesrule handle ${handle} not found`);
+    throw new Error(`CssFontFeatureValuesRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -2337,15 +2337,15 @@ export function getHistoricalForms(self: bigint): bigint {
 /** Type alias */
 export type CssFontFeatureValuesMapHandle = bigint;
 
-/** Handle table for cssfontfeaturevaluesmap instances */
-const _cssFontFeatureValuesMaphandles = new Map<bigint, cssfontfeaturevaluesmap>();
+/** Handle table for CssFontFeatureValuesMap instances */
+const _cssFontFeatureValuesMaphandles = new Map<bigint, CssFontFeatureValuesMap>();
 let _nextCssFontFeatureValuesMap = 1n;
 
-/** Get a cssfontfeaturevaluesmap by handle, throwing if not found. */
-function getCssFontFeatureValuesMap(handle: bigint): cssfontfeaturevaluesmap {
+/** Get a CssFontFeatureValuesMap by handle, throwing if not found. */
+function getCssFontFeatureValuesMap(handle: bigint): CssFontFeatureValuesMap {
   const obj = _cssFontFeatureValuesMaphandles.get(handle);
   if (!obj) {
-    throw new Error(`cssfontfeaturevaluesmap handle ${handle} not found`);
+    throw new Error(`CssFontFeatureValuesMap handle ${handle} not found`);
   }
   return obj;
 }
@@ -2365,15 +2365,15 @@ export function _set(self: bigint, featureValueName: string, values: number): vo
 /** Type alias */
 export type CssFontPaletteValuesRuleHandle = bigint;
 
-/** Handle table for cssfontpalettevaluesrule instances */
-const _cssFontPaletteValuesRulehandles = new Map<bigint, cssfontpalettevaluesrule>();
+/** Handle table for CssFontPaletteValuesRule instances */
+const _cssFontPaletteValuesRulehandles = new Map<bigint, CssFontPaletteValuesRule>();
 let _nextCssFontPaletteValuesRule = 1n;
 
-/** Get a cssfontpalettevaluesrule by handle, throwing if not found. */
-function getCssFontPaletteValuesRule(handle: bigint): cssfontpalettevaluesrule {
+/** Get a CssFontPaletteValuesRule by handle, throwing if not found. */
+function getCssFontPaletteValuesRule(handle: bigint): CssFontPaletteValuesRule {
   const obj = _cssFontPaletteValuesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssfontpalettevaluesrule handle ${handle} not found`);
+    throw new Error(`CssFontPaletteValuesRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -2417,15 +2417,15 @@ export function getOverrideColors(self: bigint): string {
 /** Type alias */
 export type TransitionEventHandle = bigint;
 
-/** Handle table for transitionevent instances */
-const _transitionEventhandles = new Map<bigint, transitionevent>();
+/** Handle table for TransitionEvent instances */
+const _transitionEventhandles = new Map<bigint, TransitionEvent>();
 let _nextTransitionEvent = 1n;
 
-/** Get a transitionevent by handle, throwing if not found. */
-function getTransitionEvent(handle: bigint): transitionevent {
+/** Get a TransitionEvent by handle, throwing if not found. */
+function getTransitionEvent(handle: bigint): TransitionEvent {
   const obj = _transitionEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`transitionevent handle ${handle} not found`);
+    throw new Error(`TransitionEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -2461,17 +2461,12 @@ export function getPseudoElement(self: bigint): string {
 /** Type alias */
 export type WindowHandle = bigint;
 
-/** Handle table for Window instances */
-const _windowHandles = new Map<bigint, Window>();
-let _nextWindow = 1n;
+/** Handle for global singleton Window (fixed to 0n). */
+const _Window_HANDLE = 0n;
 
-/** Get a Window by handle, throwing if not found. */
-function getWindow(handle: bigint): Window {
-  const obj = _windowHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Window handle ${handle} not found`);
-  }
-  return obj;
+/** Get the global Window object. */
+function getWindow(): Window {
+  return window;
 }
 
 /**
@@ -3063,15 +3058,15 @@ export function getSpeechSynthesis(self: bigint): bigint {
 /** Type alias */
 export type MediaQueryListHandle = bigint;
 
-/** Handle table for mediaquerylist instances */
-const _mediaQueryListhandles = new Map<bigint, mediaquerylist>();
+/** Handle table for MediaQueryList instances */
+const _mediaQueryListhandles = new Map<bigint, MediaQueryList>();
 let _nextMediaQueryList = 1n;
 
-/** Get a mediaquerylist by handle, throwing if not found. */
-function getMediaQueryList(handle: bigint): mediaquerylist {
+/** Get a MediaQueryList by handle, throwing if not found. */
+function getMediaQueryList(handle: bigint): MediaQueryList {
   const obj = _mediaQueryListhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediaquerylist handle ${handle} not found`);
+    throw new Error(`MediaQueryList handle ${handle} not found`);
   }
   return obj;
 }
@@ -3131,15 +3126,15 @@ export function setOnchange(self: bigint, value: bigint): void {
 /** Type alias */
 export type MediaQueryListEventHandle = bigint;
 
-/** Handle table for mediaquerylistevent instances */
-const _mediaQueryListEventhandles = new Map<bigint, mediaquerylistevent>();
+/** Handle table for MediaQueryListEvent instances */
+const _mediaQueryListEventhandles = new Map<bigint, MediaQueryListEvent>();
 let _nextMediaQueryListEvent = 1n;
 
-/** Get a mediaquerylistevent by handle, throwing if not found. */
-function getMediaQueryListEvent(handle: bigint): mediaquerylistevent {
+/** Get a MediaQueryListEvent by handle, throwing if not found. */
+function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
   const obj = _mediaQueryListEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`mediaquerylistevent handle ${handle} not found`);
+    throw new Error(`MediaQueryListEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -3167,15 +3162,15 @@ export function getMatches(self: bigint): boolean {
 /** Type alias */
 export type ScreenHandle = bigint;
 
-/** Handle table for screen instances */
-const _screenHandles = new Map<bigint, screen>();
+/** Handle table for Screen instances */
+const _screenHandles = new Map<bigint, Screen>();
 let _nextScreen = 1n;
 
-/** Get a screen by handle, throwing if not found. */
-function getScreen(handle: bigint): screen {
+/** Get a Screen by handle, throwing if not found. */
+function getScreen(handle: bigint): Screen {
   const obj = _screenHandles.get(handle);
   if (!obj) {
-    throw new Error(`screen handle ${handle} not found`);
+    throw new Error(`Screen handle ${handle} not found`);
   }
   return obj;
 }
@@ -3243,24 +3238,12 @@ export function getOrientation(self: bigint): bigint {
 /** Type alias */
 export type DocumentHandle = bigint;
 
-/** Handle table for Document instances */
-const _documentHandles = new Map<bigint, Document>();
-let _nextDocument = 1n;
+/** Handle for global singleton Document (fixed to 0n). */
+const _Document_HANDLE = 0n;
 
-/** Register a new Document and return its handle. */
-function registerDocument(obj: Document): bigint {
-  const handle = _nextDocument++;
-  _documentHandles.set(handle, obj);
-  return handle;
-}
-
-/** Get a Document by handle, throwing if not found. */
-function getDocument(handle: bigint): Document {
-  const obj = _documentHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Document handle ${handle} not found`);
-  }
-  return obj;
+/** Get the global Document object. */
+function getDocument(): Document {
+  return document;
 }
 
 /**
@@ -4130,15 +4113,15 @@ export function getAll(self: bigint): bigint {
 /** Type alias */
 export type CaretPositionHandle = bigint;
 
-/** Handle table for caretposition instances */
-const _caretPositionhandles = new Map<bigint, caretposition>();
+/** Handle table for CaretPosition instances */
+const _caretPositionhandles = new Map<bigint, CaretPosition>();
 let _nextCaretPosition = 1n;
 
-/** Get a caretposition by handle, throwing if not found. */
-function getCaretPosition(handle: bigint): caretposition {
+/** Get a CaretPosition by handle, throwing if not found. */
+function getCaretPosition(handle: bigint): CaretPosition {
   const obj = _caretPositionhandles.get(handle);
   if (!obj) {
-    throw new Error(`caretposition handle ${handle} not found`);
+    throw new Error(`CaretPosition handle ${handle} not found`);
   }
   return obj;
 }
@@ -4770,15 +4753,15 @@ export function hasPointerCapture(self: bigint, pointerId: number): boolean {
 /** Type alias */
 export type HtmlElementHandle = bigint;
 
-/** Handle table for htmlelement instances */
-const _htmlElementhandles = new Map<bigint, htmlelement>();
+/** Handle table for HtmlElement instances */
+const _htmlElementhandles = new Map<bigint, HtmlElement>();
 let _nextHtmlElement = 1n;
 
-/** Get a htmlelement by handle, throwing if not found. */
-function getHtmlElement(handle: bigint): htmlelement {
+/** Get a HtmlElement by handle, throwing if not found. */
+function getHtmlElement(handle: bigint): HtmlElement {
   const obj = _htmlElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`htmlelement handle ${handle} not found`);
+    throw new Error(`HtmlElement handle ${handle} not found`);
   }
   return obj;
 }
@@ -5158,15 +5141,15 @@ export function setHeadingReset(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlImageElementHandle = bigint;
 
-/** Handle table for htmlimageelement instances */
-const _htmlImageElementhandles = new Map<bigint, htmlimageelement>();
+/** Handle table for HtmlImageElement instances */
+const _htmlImageElementhandles = new Map<bigint, HtmlImageElement>();
 let _nextHtmlImageElement = 1n;
 
-/** Get a htmlimageelement by handle, throwing if not found. */
-function getHtmlImageElement(handle: bigint): htmlimageelement {
+/** Get a HtmlImageElement by handle, throwing if not found. */
+function getHtmlImageElement(handle: bigint): HtmlImageElement {
   const obj = _htmlImageElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`htmlimageelement handle ${handle} not found`);
+    throw new Error(`HtmlImageElement handle ${handle} not found`);
   }
   return obj;
 }
@@ -5554,22 +5537,22 @@ export function setBorder(self: bigint, value: string): void {
 /** Type alias */
 export type RangeHandle = bigint;
 
-/** Handle table for range instances */
-const _rangeHandles = new Map<bigint, range>();
+/** Handle table for Range instances */
+const _rangeHandles = new Map<bigint, Range>();
 let _nextRange = 1n;
 
-/** Register a new range and return its handle. */
-function registerRange(obj: range): bigint {
+/** Register a new Range and return its handle. */
+function registerRange(obj: Range): bigint {
   const handle = _nextRange++;
   _rangeHandles.set(handle, obj);
   return handle;
 }
 
-/** Get a range by handle, throwing if not found. */
-function getRange(handle: bigint): range {
+/** Get a Range by handle, throwing if not found. */
+function getRange(handle: bigint): Range {
   const obj = _rangeHandles.get(handle);
   if (!obj) {
-    throw new Error(`range handle ${handle} not found`);
+    throw new Error(`Range handle ${handle} not found`);
   }
   return obj;
 }
@@ -5773,15 +5756,15 @@ export function createContextualFragment(self: bigint, string: bigint): bigint {
 /** Type alias */
 export type MouseEventHandle = bigint;
 
-/** Handle table for mouseevent instances */
-const _mouseEventhandles = new Map<bigint, mouseevent>();
+/** Handle table for MouseEvent instances */
+const _mouseEventhandles = new Map<bigint, MouseEvent>();
 let _nextMouseEvent = 1n;
 
-/** Get a mouseevent by handle, throwing if not found. */
-function getMouseEvent(handle: bigint): mouseevent {
+/** Get a MouseEvent by handle, throwing if not found. */
+function getMouseEvent(handle: bigint): MouseEvent {
   const obj = _mouseEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`mouseevent handle ${handle} not found`);
+    throw new Error(`MouseEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -5961,15 +5944,15 @@ export function initMouseEvent(self: bigint, typeArg: string, bubblesArg: boolea
 /** Type alias */
 export type GeometryUtilsHandle = bigint;
 
-/** Handle table for geometryutils instances */
-const _geometryUtilshandles = new Map<bigint, geometryutils>();
+/** Handle table for GeometryUtils instances */
+const _geometryUtilshandles = new Map<bigint, GeometryUtils>();
 let _nextGeometryUtils = 1n;
 
-/** Get a geometryutils by handle, throwing if not found. */
-function getGeometryUtils(handle: bigint): geometryutils {
+/** Get a GeometryUtils by handle, throwing if not found. */
+function getGeometryUtils(handle: bigint): GeometryUtils {
   const obj = _geometryUtilshandles.get(handle);
   if (!obj) {
-    throw new Error(`geometryutils handle ${handle} not found`);
+    throw new Error(`GeometryUtils handle ${handle} not found`);
   }
   return obj;
 }
@@ -6013,15 +5996,15 @@ export function convertPointFromNode(self: bigint, point: bigint, from: bigint, 
 /** Type alias */
 export type VisualViewportHandle = bigint;
 
-/** Handle table for visualviewport instances */
-const _visualViewporthandles = new Map<bigint, visualviewport>();
+/** Handle table for VisualViewport instances */
+const _visualViewporthandles = new Map<bigint, VisualViewport>();
 let _nextVisualViewport = 1n;
 
-/** Get a visualviewport by handle, throwing if not found. */
-function getVisualViewport(handle: bigint): visualviewport {
+/** Get a VisualViewport by handle, throwing if not found. */
+function getVisualViewport(handle: bigint): VisualViewport {
   const obj = _visualViewporthandles.get(handle);
   if (!obj) {
-    throw new Error(`visualviewport handle ${handle} not found`);
+    throw new Error(`VisualViewport handle ${handle} not found`);
   }
   return obj;
 }
@@ -6137,15 +6120,15 @@ export function setOnscrollend(self: bigint, value: bigint): void {
 /** Type alias */
 export type MediaListHandle = bigint;
 
-/** Handle table for medialist instances */
-const _mediaListhandles = new Map<bigint, medialist>();
+/** Handle table for MediaList instances */
+const _mediaListhandles = new Map<bigint, MediaList>();
 let _nextMediaList = 1n;
 
-/** Get a medialist by handle, throwing if not found. */
-function getMediaList(handle: bigint): medialist {
+/** Get a MediaList by handle, throwing if not found. */
+function getMediaList(handle: bigint): MediaList {
   const obj = _mediaListhandles.get(handle);
   if (!obj) {
-    throw new Error(`medialist handle ${handle} not found`);
+    throw new Error(`MediaList handle ${handle} not found`);
   }
   return obj;
 }
@@ -6205,15 +6188,15 @@ export function deleteMedium(self: bigint, medium: string): void {
 /** Type alias */
 export type StyleSheetHandle = bigint;
 
-/** Handle table for stylesheet instances */
-const _styleSheethandles = new Map<bigint, stylesheet>();
+/** Handle table for StyleSheet instances */
+const _styleSheethandles = new Map<bigint, StyleSheet>();
 let _nextStyleSheet = 1n;
 
-/** Get a stylesheet by handle, throwing if not found. */
-function getStyleSheet(handle: bigint): stylesheet {
+/** Get a StyleSheet by handle, throwing if not found. */
+function getStyleSheet(handle: bigint): StyleSheet {
   const obj = _styleSheethandles.get(handle);
   if (!obj) {
-    throw new Error(`stylesheet handle ${handle} not found`);
+    throw new Error(`StyleSheet handle ${handle} not found`);
   }
   return obj;
 }
@@ -6289,15 +6272,15 @@ export function setDisabled(self: bigint, value: boolean): void {
 /** Type alias */
 export type CssStyleSheetHandle = bigint;
 
-/** Handle table for cssstylesheet instances */
-const _cssStyleSheethandles = new Map<bigint, cssstylesheet>();
+/** Handle table for CssStyleSheet instances */
+const _cssStyleSheethandles = new Map<bigint, CssStyleSheet>();
 let _nextCssStyleSheet = 1n;
 
-/** Get a cssstylesheet by handle, throwing if not found. */
-function getCssStyleSheet(handle: bigint): cssstylesheet {
+/** Get a CssStyleSheet by handle, throwing if not found. */
+function getCssStyleSheet(handle: bigint): CssStyleSheet {
   const obj = _cssStyleSheethandles.get(handle);
   if (!obj) {
-    throw new Error(`cssstylesheet handle ${handle} not found`);
+    throw new Error(`CssStyleSheet handle ${handle} not found`);
   }
   return obj;
 }
@@ -6381,15 +6364,15 @@ export function removeRule(self: bigint, index: number | undefined): void {
 /** Type alias */
 export type StyleSheetListHandle = bigint;
 
-/** Handle table for stylesheetlist instances */
-const _styleSheetListhandles = new Map<bigint, stylesheetlist>();
+/** Handle table for StyleSheetList instances */
+const _styleSheetListhandles = new Map<bigint, StyleSheetList>();
 let _nextStyleSheetList = 1n;
 
-/** Get a stylesheetlist by handle, throwing if not found. */
-function getStyleSheetList(handle: bigint): stylesheetlist {
+/** Get a StyleSheetList by handle, throwing if not found. */
+function getStyleSheetList(handle: bigint): StyleSheetList {
   const obj = _styleSheetListhandles.get(handle);
   if (!obj) {
-    throw new Error(`stylesheetlist handle ${handle} not found`);
+    throw new Error(`StyleSheetList handle ${handle} not found`);
   }
   return obj;
 }
@@ -6417,15 +6400,15 @@ export function getLength(self: bigint): number {
 /** Type alias */
 export type DocumentOrShadowRootHandle = bigint;
 
-/** Handle table for documentorshadowroot instances */
-const _documentOrShadowRoothandles = new Map<bigint, documentorshadowroot>();
+/** Handle table for DocumentOrShadowRoot instances */
+const _documentOrShadowRoothandles = new Map<bigint, DocumentOrShadowRoot>();
 let _nextDocumentOrShadowRoot = 1n;
 
-/** Get a documentorshadowroot by handle, throwing if not found. */
-function getDocumentOrShadowRoot(handle: bigint): documentorshadowroot {
+/** Get a DocumentOrShadowRoot by handle, throwing if not found. */
+function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
   const obj = _documentOrShadowRoothandles.get(handle);
   if (!obj) {
-    throw new Error(`documentorshadowroot handle ${handle} not found`);
+    throw new Error(`DocumentOrShadowRoot handle ${handle} not found`);
   }
   return obj;
 }
@@ -6485,15 +6468,15 @@ export function getActiveElement(self: bigint): bigint | undefined {
 /** Type alias */
 export type LinkStyleHandle = bigint;
 
-/** Handle table for linkstyle instances */
-const _linkStylehandles = new Map<bigint, linkstyle>();
+/** Handle table for LinkStyle instances */
+const _linkStylehandles = new Map<bigint, LinkStyle>();
 let _nextLinkStyle = 1n;
 
-/** Get a linkstyle by handle, throwing if not found. */
-function getLinkStyle(handle: bigint): linkstyle {
+/** Get a LinkStyle by handle, throwing if not found. */
+function getLinkStyle(handle: bigint): LinkStyle {
   const obj = _linkStylehandles.get(handle);
   if (!obj) {
-    throw new Error(`linkstyle handle ${handle} not found`);
+    throw new Error(`LinkStyle handle ${handle} not found`);
   }
   return obj;
 }
@@ -6513,15 +6496,15 @@ export function getSheet(self: bigint): bigint | undefined {
 /** Type alias */
 export type CssRuleListHandle = bigint;
 
-/** Handle table for cssrulelist instances */
-const _cssRuleListhandles = new Map<bigint, cssrulelist>();
+/** Handle table for CssRuleList instances */
+const _cssRuleListhandles = new Map<bigint, CssRuleList>();
 let _nextCssRuleList = 1n;
 
-/** Get a cssrulelist by handle, throwing if not found. */
-function getCssRuleList(handle: bigint): cssrulelist {
+/** Get a CssRuleList by handle, throwing if not found. */
+function getCssRuleList(handle: bigint): CssRuleList {
   const obj = _cssRuleListhandles.get(handle);
   if (!obj) {
-    throw new Error(`cssrulelist handle ${handle} not found`);
+    throw new Error(`CssRuleList handle ${handle} not found`);
   }
   return obj;
 }
@@ -6549,15 +6532,15 @@ export function getLength(self: bigint): number {
 /** Type alias */
 export type CssStyleRuleHandle = bigint;
 
-/** Handle table for cssstylerule instances */
-const _cssStyleRulehandles = new Map<bigint, cssstylerule>();
+/** Handle table for CssStyleRule instances */
+const _cssStyleRulehandles = new Map<bigint, CssStyleRule>();
 let _nextCssStyleRule = 1n;
 
-/** Get a cssstylerule by handle, throwing if not found. */
-function getCssStyleRule(handle: bigint): cssstylerule {
+/** Get a CssStyleRule by handle, throwing if not found. */
+function getCssStyleRule(handle: bigint): CssStyleRule {
   const obj = _cssStyleRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssstylerule handle ${handle} not found`);
+    throw new Error(`CssStyleRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6593,15 +6576,15 @@ export function getStyle(self: bigint): bigint {
 /** Type alias */
 export type CssImportRuleHandle = bigint;
 
-/** Handle table for cssimportrule instances */
-const _cssImportRulehandles = new Map<bigint, cssimportrule>();
+/** Handle table for CssImportRule instances */
+const _cssImportRulehandles = new Map<bigint, CssImportRule>();
 let _nextCssImportRule = 1n;
 
-/** Get a cssimportrule by handle, throwing if not found. */
-function getCssImportRule(handle: bigint): cssimportrule {
+/** Get a CssImportRule by handle, throwing if not found. */
+function getCssImportRule(handle: bigint): CssImportRule {
   const obj = _cssImportRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssimportrule handle ${handle} not found`);
+    throw new Error(`CssImportRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6653,15 +6636,15 @@ export function getSupportsText(self: bigint): string | undefined {
 /** Type alias */
 export type CssGroupingRuleHandle = bigint;
 
-/** Handle table for cssgroupingrule instances */
-const _cssGroupingRulehandles = new Map<bigint, cssgroupingrule>();
+/** Handle table for CssGroupingRule instances */
+const _cssGroupingRulehandles = new Map<bigint, CssGroupingRule>();
 let _nextCssGroupingRule = 1n;
 
-/** Get a cssgroupingrule by handle, throwing if not found. */
-function getCssGroupingRule(handle: bigint): cssgroupingrule {
+/** Get a CssGroupingRule by handle, throwing if not found. */
+function getCssGroupingRule(handle: bigint): CssGroupingRule {
   const obj = _cssGroupingRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssgroupingrule handle ${handle} not found`);
+    throw new Error(`CssGroupingRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6697,15 +6680,15 @@ export function deleteRule(self: bigint, index: number): void {
 /** Type alias */
 export type CssPageDescriptorsHandle = bigint;
 
-/** Handle table for csspagedescriptors instances */
-const _cssPageDescriptorshandles = new Map<bigint, csspagedescriptors>();
+/** Handle table for CssPageDescriptors instances */
+const _cssPageDescriptorshandles = new Map<bigint, CssPageDescriptors>();
 let _nextCssPageDescriptors = 1n;
 
-/** Get a csspagedescriptors by handle, throwing if not found. */
-function getCssPageDescriptors(handle: bigint): csspagedescriptors {
+/** Get a CssPageDescriptors by handle, throwing if not found. */
+function getCssPageDescriptors(handle: bigint): CssPageDescriptors {
   const obj = _cssPageDescriptorshandles.get(handle);
   if (!obj) {
-    throw new Error(`csspagedescriptors handle ${handle} not found`);
+    throw new Error(`CssPageDescriptors handle ${handle} not found`);
   }
   return obj;
 }
@@ -6861,15 +6844,15 @@ export function setBleed(self: bigint, value: string): void {
 /** Type alias */
 export type CssPageRuleHandle = bigint;
 
-/** Handle table for csspagerule instances */
-const _cssPageRulehandles = new Map<bigint, csspagerule>();
+/** Handle table for CssPageRule instances */
+const _cssPageRulehandles = new Map<bigint, CssPageRule>();
 let _nextCssPageRule = 1n;
 
-/** Get a csspagerule by handle, throwing if not found. */
-function getCssPageRule(handle: bigint): csspagerule {
+/** Get a CssPageRule by handle, throwing if not found. */
+function getCssPageRule(handle: bigint): CssPageRule {
   const obj = _cssPageRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`csspagerule handle ${handle} not found`);
+    throw new Error(`CssPageRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6905,15 +6888,15 @@ export function getStyle(self: bigint): bigint {
 /** Type alias */
 export type CssMarginRuleHandle = bigint;
 
-/** Handle table for cssmarginrule instances */
-const _cssMarginRulehandles = new Map<bigint, cssmarginrule>();
+/** Handle table for CssMarginRule instances */
+const _cssMarginRulehandles = new Map<bigint, CssMarginRule>();
 let _nextCssMarginRule = 1n;
 
-/** Get a cssmarginrule by handle, throwing if not found. */
-function getCssMarginRule(handle: bigint): cssmarginrule {
+/** Get a CssMarginRule by handle, throwing if not found. */
+function getCssMarginRule(handle: bigint): CssMarginRule {
   const obj = _cssMarginRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssmarginrule handle ${handle} not found`);
+    throw new Error(`CssMarginRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6941,15 +6924,15 @@ export function getStyle(self: bigint): bigint {
 /** Type alias */
 export type CssNamespaceRuleHandle = bigint;
 
-/** Handle table for cssnamespacerule instances */
-const _cssNamespaceRulehandles = new Map<bigint, cssnamespacerule>();
+/** Handle table for CssNamespaceRule instances */
+const _cssNamespaceRulehandles = new Map<bigint, CssNamespaceRule>();
 let _nextCssNamespaceRule = 1n;
 
-/** Get a cssnamespacerule by handle, throwing if not found. */
-function getCssNamespaceRule(handle: bigint): cssnamespacerule {
+/** Get a CssNamespaceRule by handle, throwing if not found. */
+function getCssNamespaceRule(handle: bigint): CssNamespaceRule {
   const obj = _cssNamespaceRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`cssnamespacerule handle ${handle} not found`);
+    throw new Error(`CssNamespaceRule handle ${handle} not found`);
   }
   return obj;
 }
@@ -6977,15 +6960,15 @@ export function getPrefix(self: bigint): string {
 /** Type alias */
 export type CssStyleDeclarationHandle = bigint;
 
-/** Handle table for cssstyledeclaration instances */
-const _cssStyleDeclarationhandles = new Map<bigint, cssstyledeclaration>();
+/** Handle table for CssStyleDeclaration instances */
+const _cssStyleDeclarationhandles = new Map<bigint, CssStyleDeclaration>();
 let _nextCssStyleDeclaration = 1n;
 
-/** Get a cssstyledeclaration by handle, throwing if not found. */
-function getCssStyleDeclaration(handle: bigint): cssstyledeclaration {
+/** Get a CssStyleDeclaration by handle, throwing if not found. */
+function getCssStyleDeclaration(handle: bigint): CssStyleDeclaration {
   const obj = _cssStyleDeclarationhandles.get(handle);
   if (!obj) {
-    throw new Error(`cssstyledeclaration handle ${handle} not found`);
+    throw new Error(`CssStyleDeclaration handle ${handle} not found`);
   }
   return obj;
 }
@@ -7069,15 +7052,15 @@ export function getParentRule(self: bigint): bigint | undefined {
 /** Type alias */
 export type CssStylePropertiesHandle = bigint;
 
-/** Handle table for cssstyleproperties instances */
-const _cssStylePropertieshandles = new Map<bigint, cssstyleproperties>();
+/** Handle table for CssStyleProperties instances */
+const _cssStylePropertieshandles = new Map<bigint, CssStyleProperties>();
 let _nextCssStyleProperties = 1n;
 
-/** Get a cssstyleproperties by handle, throwing if not found. */
-function getCssStyleProperties(handle: bigint): cssstyleproperties {
+/** Get a CssStyleProperties by handle, throwing if not found. */
+function getCssStyleProperties(handle: bigint): CssStyleProperties {
   const obj = _cssStylePropertieshandles.get(handle);
   if (!obj) {
-    throw new Error(`cssstyleproperties handle ${handle} not found`);
+    throw new Error(`CssStyleProperties handle ${handle} not found`);
   }
   return obj;
 }
@@ -7105,15 +7088,15 @@ export function setCssFloat(self: bigint, value: string): void {
 /** Type alias */
 export type ElementCssInlineStyleHandle = bigint;
 
-/** Handle table for elementcssinlinestyle instances */
-const _elementCssInlineStylehandles = new Map<bigint, elementcssinlinestyle>();
+/** Handle table for ElementCssInlineStyle instances */
+const _elementCssInlineStylehandles = new Map<bigint, ElementCssInlineStyle>();
 let _nextElementCssInlineStyle = 1n;
 
-/** Get a elementcssinlinestyle by handle, throwing if not found. */
-function getElementCssInlineStyle(handle: bigint): elementcssinlinestyle {
+/** Get a ElementCssInlineStyle by handle, throwing if not found. */
+function getElementCssInlineStyle(handle: bigint): ElementCssInlineStyle {
   const obj = _elementCssInlineStylehandles.get(handle);
   if (!obj) {
-    throw new Error(`elementcssinlinestyle handle ${handle} not found`);
+    throw new Error(`ElementCssInlineStyle handle ${handle} not found`);
   }
   return obj;
 }

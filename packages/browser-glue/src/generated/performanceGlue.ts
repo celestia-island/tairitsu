@@ -164,15 +164,15 @@ export function clearMeasures(self: bigint, measureName: string | undefined): vo
 /** Type alias */
 export type PerformanceNavigationTimingHandle = bigint;
 
-/** Handle table for performancenavigationtiming instances */
-const _performanceNavigationTiminghandles = new Map<bigint, performancenavigationtiming>();
+/** Handle table for PerformanceNavigationTiming instances */
+const _performanceNavigationTiminghandles = new Map<bigint, PerformanceNavigationTiming>();
 let _nextPerformanceNavigationTiming = 1n;
 
-/** Get a performancenavigationtiming by handle, throwing if not found. */
-function getPerformanceNavigationTiming(handle: bigint): performancenavigationtiming {
+/** Get a PerformanceNavigationTiming by handle, throwing if not found. */
+function getPerformanceNavigationTiming(handle: bigint): PerformanceNavigationTiming {
   const obj = _performanceNavigationTiminghandles.get(handle);
   if (!obj) {
-    throw new Error(`performancenavigationtiming handle ${handle} not found`);
+    throw new Error(`PerformanceNavigationTiming handle ${handle} not found`);
   }
   return obj;
 }
@@ -296,15 +296,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type PerformanceTimingConfidenceHandle = bigint;
 
-/** Handle table for performancetimingconfidence instances */
-const _performanceTimingConfidencehandles = new Map<bigint, performancetimingconfidence>();
+/** Handle table for PerformanceTimingConfidence instances */
+const _performanceTimingConfidencehandles = new Map<bigint, PerformanceTimingConfidence>();
 let _nextPerformanceTimingConfidence = 1n;
 
-/** Get a performancetimingconfidence by handle, throwing if not found. */
-function getPerformanceTimingConfidence(handle: bigint): performancetimingconfidence {
+/** Get a PerformanceTimingConfidence by handle, throwing if not found. */
+function getPerformanceTimingConfidence(handle: bigint): PerformanceTimingConfidence {
   const obj = _performanceTimingConfidencehandles.get(handle);
   if (!obj) {
-    throw new Error(`performancetimingconfidence handle ${handle} not found`);
+    throw new Error(`PerformanceTimingConfidence handle ${handle} not found`);
   }
   return obj;
 }
@@ -340,15 +340,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type PerformanceTimingHandle = bigint;
 
-/** Handle table for performancetiming instances */
-const _performanceTiminghandles = new Map<bigint, performancetiming>();
+/** Handle table for PerformanceTiming instances */
+const _performanceTiminghandles = new Map<bigint, PerformanceTiming>();
 let _nextPerformanceTiming = 1n;
 
-/** Get a performancetiming by handle, throwing if not found. */
-function getPerformanceTiming(handle: bigint): performancetiming {
+/** Get a PerformanceTiming by handle, throwing if not found. */
+function getPerformanceTiming(handle: bigint): PerformanceTiming {
   const obj = _performanceTiminghandles.get(handle);
   if (!obj) {
-    throw new Error(`performancetiming handle ${handle} not found`);
+    throw new Error(`PerformanceTiming handle ${handle} not found`);
   }
   return obj;
 }
@@ -536,15 +536,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type PerformanceNavigationHandle = bigint;
 
-/** Handle table for performancenavigation instances */
-const _performanceNavigationhandles = new Map<bigint, performancenavigation>();
+/** Handle table for PerformanceNavigation instances */
+const _performanceNavigationhandles = new Map<bigint, PerformanceNavigation>();
 let _nextPerformanceNavigation = 1n;
 
-/** Get a performancenavigation by handle, throwing if not found. */
-function getPerformanceNavigation(handle: bigint): performancenavigation {
+/** Get a PerformanceNavigation by handle, throwing if not found. */
+function getPerformanceNavigation(handle: bigint): PerformanceNavigation {
   const obj = _performanceNavigationhandles.get(handle);
   if (!obj) {
-    throw new Error(`performancenavigation handle ${handle} not found`);
+    throw new Error(`PerformanceNavigation handle ${handle} not found`);
   }
   return obj;
 }
@@ -560,7 +560,7 @@ export function getType(self: bigint): number {
 /**
  * `get-redirect-count()` operation.
  */
-export function getRedirectCount(self: bigint): number {
+export function getRedirectCount(self: bigint): bigint {
   const obj = getPerformanceNavigation(self);
   return obj.redirectCount;
 }
@@ -580,15 +580,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type PerformanceEntryHandle = bigint;
 
-/** Handle table for performanceentry instances */
-const _performanceEntryhandles = new Map<bigint, performanceentry>();
+/** Handle table for PerformanceEntry instances */
+const _performanceEntryhandles = new Map<bigint, PerformanceEntry>();
 let _nextPerformanceEntry = 1n;
 
-/** Get a performanceentry by handle, throwing if not found. */
-function getPerformanceEntry(handle: bigint): performanceentry {
+/** Get a PerformanceEntry by handle, throwing if not found. */
+function getPerformanceEntry(handle: bigint): PerformanceEntry {
   const obj = _performanceEntryhandles.get(handle);
   if (!obj) {
-    throw new Error(`performanceentry handle ${handle} not found`);
+    throw new Error(`PerformanceEntry handle ${handle} not found`);
   }
   return obj;
 }
@@ -644,7 +644,7 @@ export function getNavigationId(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): string | undefined {
+export function toJson(self: bigint): bigint {
   const obj = getPerformanceEntry(self);
   return obj.toJson();
 }
@@ -656,15 +656,15 @@ export function toJson(self: bigint): string | undefined {
 /** Type alias */
 export type PerformanceObserverHandle = bigint;
 
-/** Handle table for performanceobserver instances */
-const _performanceObserverhandles = new Map<bigint, performanceobserver>();
+/** Handle table for PerformanceObserver instances */
+const _performanceObserverhandles = new Map<bigint, PerformanceObserver>();
 let _nextPerformanceObserver = 1n;
 
-/** Get a performanceobserver by handle, throwing if not found. */
-function getPerformanceObserver(handle: bigint): performanceobserver {
+/** Get a PerformanceObserver by handle, throwing if not found. */
+function getPerformanceObserver(handle: bigint): PerformanceObserver {
   const obj = _performanceObserverhandles.get(handle);
   if (!obj) {
-    throw new Error(`performanceobserver handle ${handle} not found`);
+    throw new Error(`PerformanceObserver handle ${handle} not found`);
   }
   return obj;
 }
@@ -696,7 +696,7 @@ export function takeRecords(self: bigint): bigint {
 /**
  * `get-supported-entry-types()` operation.
  */
-export function getSupportedEntryTypes(): (bigint | undefined)[] {
+export function getSupportedEntryTypes(): (string)[] {
   return obj.supportedEntryTypes;
 }
 
@@ -705,17 +705,17 @@ export function getSupportedEntryTypes(): (bigint | undefined)[] {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PerformanceObserverEntryListHandle = bigint | undefined;
+export type PerformanceObserverEntryListHandle = string;
 
-/** Handle table for performanceobserverentrylist instances */
-const _performanceObserverEntryListhandles = new Map<bigint, performanceobserverentrylist>();
+/** Handle table for PerformanceObserverEntryList instances */
+const _performanceObserverEntryListhandles = new Map<bigint, PerformanceObserverEntryList>();
 let _nextPerformanceObserverEntryList = 1n;
 
-/** Get a performanceobserverentrylist by handle, throwing if not found. */
-function getPerformanceObserverEntryList(handle: bigint): performanceobserverentrylist {
+/** Get a PerformanceObserverEntryList by handle, throwing if not found. */
+function getPerformanceObserverEntryList(handle: bigint): PerformanceObserverEntryList {
   const obj = _performanceObserverEntryListhandles.get(handle);
   if (!obj) {
-    throw new Error(`performanceobserverentrylist handle ${handle} not found`);
+    throw new Error(`PerformanceObserverEntryList handle ${handle} not found`);
   }
   return obj;
 }
@@ -723,7 +723,7 @@ function getPerformanceObserverEntryList(handle: bigint): performanceobserverent
 /**
  * `get-entries()` operation.
  */
-export function getEntries(self: bigint): bigint {
+export function getEntries(self: bigint | undefined): bigint {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entries;
 }
@@ -731,7 +731,7 @@ export function getEntries(self: bigint): bigint {
 /**
  * `get-entries-by-type()` operation.
  */
-export function getEntriesByType(self: bigint, type: number | undefined): bigint {
+export function getEntriesByType(self: bigint, type: bigint): bigint {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entriesByType;
 }
@@ -739,7 +739,7 @@ export function getEntriesByType(self: bigint, type: number | undefined): bigint
 /**
  * `get-entries-by-name()` operation.
  */
-export function getEntriesByName(self: string, name: number | undefined, type: bigint | undefined): bigint {
+export function getEntriesByName(self: bigint, name: number, type: string | undefined): bigint {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entriesByName;
 }
@@ -751,15 +751,15 @@ export function getEntriesByName(self: string, name: number | undefined, type: b
 /** Type alias */
 export type PerformanceResourceTimingHandle = bigint;
 
-/** Handle table for performanceresourcetiming instances */
-const _performanceResourceTiminghandles = new Map<bigint, performanceresourcetiming>();
+/** Handle table for PerformanceResourceTiming instances */
+const _performanceResourceTiminghandles = new Map<bigint, PerformanceResourceTiming>();
 let _nextPerformanceResourceTiming = 1n;
 
-/** Get a performanceresourcetiming by handle, throwing if not found. */
-function getPerformanceResourceTiming(handle: bigint): performanceresourcetiming {
+/** Get a PerformanceResourceTiming by handle, throwing if not found. */
+function getPerformanceResourceTiming(handle: bigint): PerformanceResourceTiming {
   const obj = _performanceResourceTiminghandles.get(handle);
   if (!obj) {
-    throw new Error(`performanceresourcetiming handle ${handle} not found`);
+    throw new Error(`PerformanceResourceTiming handle ${handle} not found`);
   }
   return obj;
 }
@@ -767,7 +767,7 @@ function getPerformanceResourceTiming(handle: bigint): performanceresourcetiming
 /**
  * `get-initiator-type()` operation.
  */
-export function getInitiatorType(self: bigint): number {
+export function getInitiatorType(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.initiatorType;
 }
@@ -775,7 +775,7 @@ export function getInitiatorType(self: bigint): number {
 /**
  * `get-delivery-type()` operation.
  */
-export function getDeliveryType(self: bigint): bigint {
+export function getDeliveryType(self: number | undefined): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.deliveryType;
 }
@@ -783,7 +783,7 @@ export function getDeliveryType(self: bigint): bigint {
 /**
  * `get-next-hop-protocol()` operation.
  */
-export function getNextHopProtocol(self: bigint): string {
+export function getNextHopProtocol(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.nextHopProtocol;
 }
@@ -799,7 +799,7 @@ export function getWorkerStart(self: bigint): number {
 /**
  * `get-redirect-start()` operation.
  */
-export function getRedirectStart(self: bigint): string {
+export function getRedirectStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.redirectStart;
 }
@@ -815,7 +815,7 @@ export function getRedirectEnd(self: bigint): number {
 /**
  * `get-fetch-start()` operation.
  */
-export function getFetchStart(self: bigint): number {
+export function getFetchStart(self: Uint8Array): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.fetchStart;
 }
@@ -823,7 +823,7 @@ export function getFetchStart(self: bigint): number {
 /**
  * `get-domain-lookup-start()` operation.
  */
-export function getDomainLookupStart(self: boolean): number {
+export function getDomainLookupStart(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupStart;
 }
@@ -831,7 +831,7 @@ export function getDomainLookupStart(self: boolean): number {
 /**
  * `get-domain-lookup-end()` operation.
  */
-export function getDomainLookupEnd(self: bigint): bigint | undefined {
+export function getDomainLookupEnd(self: bigint): string | undefined {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupEnd;
 }
@@ -863,7 +863,7 @@ export function getSecureConnectionStart(self: bigint): number {
 /**
  * `get-request-start()` operation.
  */
-export function getRequestStart(self: bigint): number {
+export function getRequestStart(self: string | undefined): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.requestStart;
 }
@@ -871,7 +871,7 @@ export function getRequestStart(self: bigint): number {
 /**
  * `get-final-response-headers-start()` operation.
  */
-export function getFinalResponseHeadersStart(self: number): number {
+export function getFinalResponseHeadersStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.finalResponseHeadersStart;
 }
@@ -879,7 +879,7 @@ export function getFinalResponseHeadersStart(self: number): number {
 /**
  * `get-first-interim-response-start()` operation.
  */
-export function getFirstInterimResponseStart(self: bigint): string {
+export function getFirstInterimResponseStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.firstInterimResponseStart;
 }
@@ -887,7 +887,7 @@ export function getFirstInterimResponseStart(self: bigint): string {
 /**
  * `get-response-start()` operation.
  */
-export function getResponseStart(self: bigint): string {
+export function getResponseStart(self: string | undefined): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseStart;
 }
@@ -895,7 +895,7 @@ export function getResponseStart(self: bigint): string {
 /**
  * `get-response-end()` operation.
  */
-export function getResponseEnd(self: bigint): string {
+export function getResponseEnd(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseEnd;
 }
@@ -919,7 +919,7 @@ export function getWorkerCacheLookupStart(self: bigint): number {
 /**
  * `get-worker-matched-router-source()` operation.
  */
-export function getWorkerMatchedRouterSource(self: bigint): string {
+export function getWorkerMatchedRouterSource(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerMatchedRouterSource;
 }
@@ -927,7 +927,7 @@ export function getWorkerMatchedRouterSource(self: bigint): string {
 /**
  * `get-worker-final-router-source()` operation.
  */
-export function getWorkerFinalRouterSource(self: bigint): string {
+export function getWorkerFinalRouterSource(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerFinalRouterSource;
 }
@@ -935,7 +935,7 @@ export function getWorkerFinalRouterSource(self: bigint): string {
 /**
  * `get-transfer-size()` operation.
  */
-export function getTransferSize(self: boolean): bigint {
+export function getTransferSize(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.transferSize;
 }
@@ -959,7 +959,7 @@ export function getDecodedBodySize(self: bigint): bigint {
 /**
  * `get-response-status()` operation.
  */
-export function getResponseStatus(self: bigint): bigint {
+export function getResponseStatus(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseStatus;
 }
@@ -975,7 +975,7 @@ export function getRenderBlockingStatus(self: bigint): bigint {
 /**
  * `get-content-type()` operation.
  */
-export function getContentType(self: bigint): string {
+export function getContentType(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.contentType;
 }
@@ -1001,17 +1001,17 @@ export function toJson(self: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PerformanceMarkHandle = bigint;
+export type PerformanceMarkHandle = (string)[];
 
-/** Handle table for performancemark instances */
-const _performanceMarkhandles = new Map<bigint, performancemark>();
+/** Handle table for PerformanceMark instances */
+const _performanceMarkhandles = new Map<bigint, PerformanceMark>();
 let _nextPerformanceMark = 1n;
 
-/** Get a performancemark by handle, throwing if not found. */
-function getPerformanceMark(handle: bigint): performancemark {
+/** Get a PerformanceMark by handle, throwing if not found. */
+function getPerformanceMark(handle: bigint): PerformanceMark {
   const obj = _performanceMarkhandles.get(handle);
   if (!obj) {
-    throw new Error(`performancemark handle ${handle} not found`);
+    throw new Error(`PerformanceMark handle ${handle} not found`);
   }
   return obj;
 }
@@ -1019,7 +1019,7 @@ function getPerformanceMark(handle: bigint): performancemark {
 /**
  * `get-detail()` operation.
  */
-export function getDetail(self: bigint): bigint {
+export function getDetail(self: bigint): string {
   const obj = getPerformanceMark(self);
   return obj.detail;
 }
@@ -1031,15 +1031,15 @@ export function getDetail(self: bigint): bigint {
 /** Type alias */
 export type PerformanceMeasureHandle = bigint;
 
-/** Handle table for performancemeasure instances */
-const _performanceMeasurehandles = new Map<bigint, performancemeasure>();
+/** Handle table for PerformanceMeasure instances */
+const _performanceMeasurehandles = new Map<bigint, PerformanceMeasure>();
 let _nextPerformanceMeasure = 1n;
 
-/** Get a performancemeasure by handle, throwing if not found. */
-function getPerformanceMeasure(handle: bigint): performancemeasure {
+/** Get a PerformanceMeasure by handle, throwing if not found. */
+function getPerformanceMeasure(handle: bigint): PerformanceMeasure {
   const obj = _performanceMeasurehandles.get(handle);
   if (!obj) {
-    throw new Error(`performancemeasure handle ${handle} not found`);
+    throw new Error(`PerformanceMeasure handle ${handle} not found`);
   }
   return obj;
 }
@@ -1047,7 +1047,7 @@ function getPerformanceMeasure(handle: bigint): performancemeasure {
 /**
  * `get-detail()` operation.
  */
-export function getDetail(self: bigint): string {
+export function getDetail(self: number | undefined): string {
   const obj = getPerformanceMeasure(self);
   return obj.detail;
 }

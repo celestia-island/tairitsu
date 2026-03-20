@@ -29,15 +29,15 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type AudioDecoderHandle = bigint;
 
-/** Handle table for audiodecoder instances */
-const _audioDecoderhandles = new Map<bigint, audiodecoder>();
+/** Handle table for AudioDecoder instances */
+const _audioDecoderhandles = new Map<bigint, AudioDecoder>();
 let _nextAudioDecoder = 1n;
 
-/** Get a audiodecoder by handle, throwing if not found. */
-function getAudioDecoder(handle: bigint): audiodecoder {
+/** Get a AudioDecoder by handle, throwing if not found. */
+function getAudioDecoder(handle: bigint): AudioDecoder {
   const obj = _audioDecoderhandles.get(handle);
   if (!obj) {
-    throw new Error(`audiodecoder handle ${handle} not found`);
+    throw new Error(`AudioDecoder handle ${handle} not found`);
   }
   return obj;
 }
@@ -189,15 +189,15 @@ export function isConfigSupported(config: bigint): bigint {
 /** Type alias */
 export type VideoDecoderHandle = bigint;
 
-/** Handle table for videodecoder instances */
-const _videoDecoderhandles = new Map<bigint, videodecoder>();
+/** Handle table for VideoDecoder instances */
+const _videoDecoderhandles = new Map<bigint, VideoDecoder>();
 let _nextVideoDecoder = 1n;
 
-/** Get a videodecoder by handle, throwing if not found. */
-function getVideoDecoder(handle: bigint): videodecoder {
+/** Get a VideoDecoder by handle, throwing if not found. */
+function getVideoDecoder(handle: bigint): VideoDecoder {
   const obj = _videoDecoderhandles.get(handle);
   if (!obj) {
-    throw new Error(`videodecoder handle ${handle} not found`);
+    throw new Error(`VideoDecoder handle ${handle} not found`);
   }
   return obj;
 }
@@ -349,15 +349,15 @@ export function isConfigSupported(config: bigint): bigint {
 /** Type alias */
 export type AudioEncoderHandle = bigint;
 
-/** Handle table for audioencoder instances */
-const _audioEncoderhandles = new Map<bigint, audioencoder>();
+/** Handle table for AudioEncoder instances */
+const _audioEncoderhandles = new Map<bigint, AudioEncoder>();
 let _nextAudioEncoder = 1n;
 
-/** Get a audioencoder by handle, throwing if not found. */
-function getAudioEncoder(handle: bigint): audioencoder {
+/** Get a AudioEncoder by handle, throwing if not found. */
+function getAudioEncoder(handle: bigint): AudioEncoder {
   const obj = _audioEncoderhandles.get(handle);
   if (!obj) {
-    throw new Error(`audioencoder handle ${handle} not found`);
+    throw new Error(`AudioEncoder handle ${handle} not found`);
   }
   return obj;
 }
@@ -509,15 +509,15 @@ export function isConfigSupported(config: bigint): bigint {
 /** Type alias */
 export type VideoEncoderHandle = bigint;
 
-/** Handle table for videoencoder instances */
-const _videoEncoderhandles = new Map<bigint, videoencoder>();
+/** Handle table for VideoEncoder instances */
+const _videoEncoderhandles = new Map<bigint, VideoEncoder>();
 let _nextVideoEncoder = 1n;
 
-/** Get a videoencoder by handle, throwing if not found. */
-function getVideoEncoder(handle: bigint): videoencoder {
+/** Get a VideoEncoder by handle, throwing if not found. */
+function getVideoEncoder(handle: bigint): VideoEncoder {
   const obj = _videoEncoderhandles.get(handle);
   if (!obj) {
-    throw new Error(`videoencoder handle ${handle} not found`);
+    throw new Error(`VideoEncoder handle ${handle} not found`);
   }
   return obj;
 }
@@ -669,15 +669,15 @@ export function isConfigSupported(config: bigint): bigint {
 /** Type alias */
 export type EncodedAudioChunkHandle = bigint;
 
-/** Handle table for encodedaudiochunk instances */
-const _encodedAudioChunkhandles = new Map<bigint, encodedaudiochunk>();
+/** Handle table for EncodedAudioChunk instances */
+const _encodedAudioChunkhandles = new Map<bigint, EncodedAudioChunk>();
 let _nextEncodedAudioChunk = 1n;
 
-/** Get a encodedaudiochunk by handle, throwing if not found. */
-function getEncodedAudioChunk(handle: bigint): encodedaudiochunk {
+/** Get a EncodedAudioChunk by handle, throwing if not found. */
+function getEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
   const obj = _encodedAudioChunkhandles.get(handle);
   if (!obj) {
-    throw new Error(`encodedaudiochunk handle ${handle} not found`);
+    throw new Error(`EncodedAudioChunk handle ${handle} not found`);
   }
   return obj;
 }
@@ -729,15 +729,15 @@ export function copyTo(self: bigint, destination: bigint): void {
 /** Type alias */
 export type EncodedVideoChunkHandle = bigint;
 
-/** Handle table for encodedvideochunk instances */
-const _encodedVideoChunkhandles = new Map<bigint, encodedvideochunk>();
+/** Handle table for EncodedVideoChunk instances */
+const _encodedVideoChunkhandles = new Map<bigint, EncodedVideoChunk>();
 let _nextEncodedVideoChunk = 1n;
 
-/** Get a encodedvideochunk by handle, throwing if not found. */
-function getEncodedVideoChunk(handle: bigint): encodedvideochunk {
+/** Get a EncodedVideoChunk by handle, throwing if not found. */
+function getEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
   const obj = _encodedVideoChunkhandles.get(handle);
   if (!obj) {
-    throw new Error(`encodedvideochunk handle ${handle} not found`);
+    throw new Error(`EncodedVideoChunk handle ${handle} not found`);
   }
   return obj;
 }
@@ -789,15 +789,15 @@ export function copyTo(self: bigint, destination: bigint): void {
 /** Type alias */
 export type AudioDataHandle = bigint;
 
-/** Handle table for audiodata instances */
-const _audioDatahandles = new Map<bigint, audiodata>();
+/** Handle table for AudioData instances */
+const _audioDatahandles = new Map<bigint, AudioData>();
 let _nextAudioData = 1n;
 
-/** Get a audiodata by handle, throwing if not found. */
-function getAudioData(handle: bigint): audiodata {
+/** Get a AudioData by handle, throwing if not found. */
+function getAudioData(handle: bigint): AudioData {
   const obj = _audioDatahandles.get(handle);
   if (!obj) {
-    throw new Error(`audiodata handle ${handle} not found`);
+    throw new Error(`AudioData handle ${handle} not found`);
   }
   return obj;
 }
@@ -949,15 +949,15 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /** Type alias */
 export type VideoFrameHandle = bigint;
 
-/** Handle table for videoframe instances */
-const _videoFramehandles = new Map<bigint, videoframe>();
+/** Handle table for VideoFrame instances */
+const _videoFramehandles = new Map<bigint, VideoFrame>();
 let _nextVideoFrame = 1n;
 
-/** Get a videoframe by handle, throwing if not found. */
-function getVideoFrame(handle: bigint): videoframe {
+/** Get a VideoFrame by handle, throwing if not found. */
+function getVideoFrame(handle: bigint): VideoFrame {
   const obj = _videoFramehandles.get(handle);
   if (!obj) {
-    throw new Error(`videoframe handle ${handle} not found`);
+    throw new Error(`VideoFrame handle ${handle} not found`);
   }
   return obj;
 }
@@ -1165,15 +1165,15 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /** Type alias */
 export type VideoColorSpaceHandle = bigint;
 
-/** Handle table for videocolorspace instances */
-const _videoColorSpacehandles = new Map<bigint, videocolorspace>();
+/** Handle table for VideoColorSpace instances */
+const _videoColorSpacehandles = new Map<bigint, VideoColorSpace>();
 let _nextVideoColorSpace = 1n;
 
-/** Get a videocolorspace by handle, throwing if not found. */
-function getVideoColorSpace(handle: bigint): videocolorspace {
+/** Get a VideoColorSpace by handle, throwing if not found. */
+function getVideoColorSpace(handle: bigint): VideoColorSpace {
   const obj = _videoColorSpacehandles.get(handle);
   if (!obj) {
-    throw new Error(`videocolorspace handle ${handle} not found`);
+    throw new Error(`VideoColorSpace handle ${handle} not found`);
   }
   return obj;
 }
@@ -1225,15 +1225,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type ImageDecoderHandle = bigint;
 
-/** Handle table for imagedecoder instances */
-const _imageDecoderhandles = new Map<bigint, imagedecoder>();
+/** Handle table for ImageDecoder instances */
+const _imageDecoderhandles = new Map<bigint, ImageDecoder>();
 let _nextImageDecoder = 1n;
 
-/** Get a imagedecoder by handle, throwing if not found. */
-function getImageDecoder(handle: bigint): imagedecoder {
+/** Get a ImageDecoder by handle, throwing if not found. */
+function getImageDecoder(handle: bigint): ImageDecoder {
   const obj = _imageDecoderhandles.get(handle);
   if (!obj) {
-    throw new Error(`imagedecoder handle ${handle} not found`);
+    throw new Error(`ImageDecoder handle ${handle} not found`);
   }
   return obj;
 }
@@ -1339,15 +1339,15 @@ export function isTypeSupported(type: string): bigint {
 /** Type alias */
 export type ImageTrackListHandle = bigint;
 
-/** Handle table for imagetracklist instances */
-const _imageTrackListhandles = new Map<bigint, imagetracklist>();
+/** Handle table for ImageTrackList instances */
+const _imageTrackListhandles = new Map<bigint, ImageTrackList>();
 let _nextImageTrackList = 1n;
 
-/** Get a imagetracklist by handle, throwing if not found. */
-function getImageTrackList(handle: bigint): imagetracklist {
+/** Get a ImageTrackList by handle, throwing if not found. */
+function getImageTrackList(handle: bigint): ImageTrackList {
   const obj = _imageTrackListhandles.get(handle);
   if (!obj) {
-    throw new Error(`imagetracklist handle ${handle} not found`);
+    throw new Error(`ImageTrackList handle ${handle} not found`);
   }
   return obj;
 }
@@ -1399,15 +1399,15 @@ export function getSelectedTrack(self: bigint): bigint | undefined {
 /** Type alias */
 export type ImageTrackHandle = bigint;
 
-/** Handle table for imagetrack instances */
-const _imageTrackhandles = new Map<bigint, imagetrack>();
+/** Handle table for ImageTrack instances */
+const _imageTrackhandles = new Map<bigint, ImageTrack>();
 let _nextImageTrack = 1n;
 
-/** Get a imagetrack by handle, throwing if not found. */
-function getImageTrack(handle: bigint): imagetrack {
+/** Get a ImageTrack by handle, throwing if not found. */
+function getImageTrack(handle: bigint): ImageTrack {
   const obj = _imageTrackhandles.get(handle);
   if (!obj) {
-    throw new Error(`imagetrack handle ${handle} not found`);
+    throw new Error(`ImageTrack handle ${handle} not found`);
   }
   return obj;
 }
@@ -1459,15 +1459,15 @@ export function setSelected(self: bigint, value: boolean): void {
 /** Type alias */
 export type WebGlObjectHandle = bigint;
 
-/** Handle table for webglobject instances */
-const _webGlObjecthandles = new Map<bigint, webglobject>();
+/** Handle table for WebGlObject instances */
+const _webGlObjecthandles = new Map<bigint, WebGlObject>();
 let _nextWebGlObject = 1n;
 
-/** Get a webglobject by handle, throwing if not found. */
-function getWebGlObject(handle: bigint): webglobject {
+/** Get a WebGlObject by handle, throwing if not found. */
+function getWebGlObject(handle: bigint): WebGlObject {
   const obj = _webGlObjecthandles.get(handle);
   if (!obj) {
-    throw new Error(`webglobject handle ${handle} not found`);
+    throw new Error(`WebGlObject handle ${handle} not found`);
   }
   return obj;
 }
@@ -1495,15 +1495,15 @@ export function setLabel(self: bigint, value: string): void {
 /** Type alias */
 export type WebGlActiveInfoHandle = bigint;
 
-/** Handle table for webglactiveinfo instances */
-const _webGlActiveInfohandles = new Map<bigint, webglactiveinfo>();
+/** Handle table for WebGlActiveInfo instances */
+const _webGlActiveInfohandles = new Map<bigint, WebGlActiveInfo>();
 let _nextWebGlActiveInfo = 1n;
 
-/** Get a webglactiveinfo by handle, throwing if not found. */
-function getWebGlActiveInfo(handle: bigint): webglactiveinfo {
+/** Get a WebGlActiveInfo by handle, throwing if not found. */
+function getWebGlActiveInfo(handle: bigint): WebGlActiveInfo {
   const obj = _webGlActiveInfohandles.get(handle);
   if (!obj) {
-    throw new Error(`webglactiveinfo handle ${handle} not found`);
+    throw new Error(`WebGlActiveInfo handle ${handle} not found`);
   }
   return obj;
 }
@@ -1539,15 +1539,15 @@ export function getName(self: bigint): string {
 /** Type alias */
 export type WebGlShaderPrecisionFormatHandle = bigint;
 
-/** Handle table for webglshaderprecisionformat instances */
-const _webGlShaderPrecisionFormathandles = new Map<bigint, webglshaderprecisionformat>();
+/** Handle table for WebGlShaderPrecisionFormat instances */
+const _webGlShaderPrecisionFormathandles = new Map<bigint, WebGlShaderPrecisionFormat>();
 let _nextWebGlShaderPrecisionFormat = 1n;
 
-/** Get a webglshaderprecisionformat by handle, throwing if not found. */
-function getWebGlShaderPrecisionFormat(handle: bigint): webglshaderprecisionformat {
+/** Get a WebGlShaderPrecisionFormat by handle, throwing if not found. */
+function getWebGlShaderPrecisionFormat(handle: bigint): WebGlShaderPrecisionFormat {
   const obj = _webGlShaderPrecisionFormathandles.get(handle);
   if (!obj) {
-    throw new Error(`webglshaderprecisionformat handle ${handle} not found`);
+    throw new Error(`WebGlShaderPrecisionFormat handle ${handle} not found`);
   }
   return obj;
 }
@@ -1583,22 +1583,22 @@ export function getPrecision(self: bigint): bigint {
 /** Type alias */
 export type WebGlRenderingContextBaseHandle = bigint;
 
-/** Handle table for webglrenderingcontextbase instances */
-const _webGlRenderingContextBasehandles = new Map<bigint, webglrenderingcontextbase>();
+/** Handle table for WebGlRenderingContextBase instances */
+const _webGlRenderingContextBasehandles = new Map<bigint, WebGlRenderingContextBase>();
 let _nextWebGlRenderingContextBase = 1n;
 
-/** Register a new webglrenderingcontextbase and return its handle. */
-function registerWebGlRenderingContextBase(obj: webglrenderingcontextbase): bigint {
+/** Register a new WebGlRenderingContextBase and return its handle. */
+function registerWebGlRenderingContextBase(obj: WebGlRenderingContextBase): bigint {
   const handle = _nextWebGlRenderingContextBase++;
   _webGlRenderingContextBasehandles.set(handle, obj);
   return handle;
 }
 
-/** Get a webglrenderingcontextbase by handle, throwing if not found. */
-function getWebGlRenderingContextBase(handle: bigint): webglrenderingcontextbase {
+/** Get a WebGlRenderingContextBase by handle, throwing if not found. */
+function getWebGlRenderingContextBase(handle: bigint): WebGlRenderingContextBase {
   const obj = _webGlRenderingContextBasehandles.get(handle);
   if (!obj) {
-    throw new Error(`webglrenderingcontextbase handle ${handle} not found`);
+    throw new Error(`WebGlRenderingContextBase handle ${handle} not found`);
   }
   return obj;
 }
@@ -2656,15 +2656,15 @@ export function viewport(self: bigint, x: bigint, y: bigint, width: bigint, heig
 /** Type alias */
 export type WebGlRenderingContextOverloadsHandle = bigint;
 
-/** Handle table for webglrenderingcontextoverloads instances */
-const _webGlRenderingContextOverloadshandles = new Map<bigint, webglrenderingcontextoverloads>();
+/** Handle table for WebGlRenderingContextOverloads instances */
+const _webGlRenderingContextOverloadshandles = new Map<bigint, WebGlRenderingContextOverloads>();
 let _nextWebGlRenderingContextOverloads = 1n;
 
-/** Get a webglrenderingcontextoverloads by handle, throwing if not found. */
-function getWebGlRenderingContextOverloads(handle: bigint): webglrenderingcontextoverloads {
+/** Get a WebGlRenderingContextOverloads by handle, throwing if not found. */
+function getWebGlRenderingContextOverloads(handle: bigint): WebGlRenderingContextOverloads {
   const obj = _webGlRenderingContextOverloadshandles.get(handle);
   if (!obj) {
-    throw new Error(`webglrenderingcontextoverloads handle ${handle} not found`);
+    throw new Error(`WebGlRenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
 }
@@ -2820,15 +2820,15 @@ export function uniformMatrix4fv(self: bigint, location: bigint | undefined, tra
 /** Type alias */
 export type WebGlContextEventHandle = bigint;
 
-/** Handle table for webglcontextevent instances */
-const _webGlContextEventhandles = new Map<bigint, webglcontextevent>();
+/** Handle table for WebGlContextEvent instances */
+const _webGlContextEventhandles = new Map<bigint, WebGlContextEvent>();
 let _nextWebGlContextEvent = 1n;
 
-/** Get a webglcontextevent by handle, throwing if not found. */
-function getWebGlContextEvent(handle: bigint): webglcontextevent {
+/** Get a WebGlContextEvent by handle, throwing if not found. */
+function getWebGlContextEvent(handle: bigint): WebGlContextEvent {
   const obj = _webGlContextEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`webglcontextevent handle ${handle} not found`);
+    throw new Error(`WebGlContextEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -2848,22 +2848,22 @@ export function getStatusMessage(self: bigint): string {
 /** Type alias */
 export type WebGl2RenderingContextBaseHandle = bigint;
 
-/** Handle table for webgl2renderingcontextbase instances */
-const _webGl2RenderingContextBasehandles = new Map<bigint, webgl2renderingcontextbase>();
+/** Handle table for WebGl2RenderingContextBase instances */
+const _webGl2RenderingContextBasehandles = new Map<bigint, WebGl2RenderingContextBase>();
 let _nextWebGl2RenderingContextBase = 1n;
 
-/** Register a new webgl2renderingcontextbase and return its handle. */
-function registerWebGl2RenderingContextBase(obj: webgl2renderingcontextbase): bigint {
+/** Register a new WebGl2RenderingContextBase and return its handle. */
+function registerWebGl2RenderingContextBase(obj: WebGl2RenderingContextBase): bigint {
   const handle = _nextWebGl2RenderingContextBase++;
   _webGl2RenderingContextBasehandles.set(handle, obj);
   return handle;
 }
 
-/** Get a webgl2renderingcontextbase by handle, throwing if not found. */
-function getWebGl2RenderingContextBase(handle: bigint): webgl2renderingcontextbase {
+/** Get a WebGl2RenderingContextBase by handle, throwing if not found. */
+function getWebGl2RenderingContextBase(handle: bigint): WebGl2RenderingContextBase {
   const obj = _webGl2RenderingContextBasehandles.get(handle);
   if (!obj) {
-    throw new Error(`webgl2renderingcontextbase handle ${handle} not found`);
+    throw new Error(`WebGl2RenderingContextBase handle ${handle} not found`);
   }
   return obj;
 }
@@ -3579,15 +3579,15 @@ export function bindVertexArray(self: bigint, array: bigint | undefined): void {
 /** Type alias */
 export type WebGl2RenderingContextOverloadsHandle = bigint;
 
-/** Handle table for webgl2renderingcontextoverloads instances */
-const _webGl2RenderingContextOverloadshandles = new Map<bigint, webgl2renderingcontextoverloads>();
+/** Handle table for WebGl2RenderingContextOverloads instances */
+const _webGl2RenderingContextOverloadshandles = new Map<bigint, WebGl2RenderingContextOverloads>();
 let _nextWebGl2RenderingContextOverloads = 1n;
 
-/** Get a webgl2renderingcontextoverloads by handle, throwing if not found. */
-function getWebGl2RenderingContextOverloads(handle: bigint): webgl2renderingcontextoverloads {
+/** Get a WebGl2RenderingContextOverloads by handle, throwing if not found. */
+function getWebGl2RenderingContextOverloads(handle: bigint): WebGl2RenderingContextOverloads {
   const obj = _webGl2RenderingContextOverloadshandles.get(handle);
   if (!obj) {
-    throw new Error(`webgl2renderingcontextoverloads handle ${handle} not found`);
+    throw new Error(`WebGl2RenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
 }

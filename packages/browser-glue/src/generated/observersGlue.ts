@@ -16,15 +16,15 @@
 /** Type alias */
 export type IntersectionObserverHandle = bigint;
 
-/** Handle table for intersectionobserver instances */
-const _intersectionObserverhandles = new Map<bigint, intersectionobserver>();
+/** Handle table for IntersectionObserver instances */
+const _intersectionObserverhandles = new Map<bigint, IntersectionObserver>();
 let _nextIntersectionObserver = 1n;
 
-/** Get a intersectionobserver by handle, throwing if not found. */
-function getIntersectionObserver(handle: bigint): intersectionobserver {
+/** Get a IntersectionObserver by handle, throwing if not found. */
+function getIntersectionObserver(handle: bigint): IntersectionObserver {
   const obj = _intersectionObserverhandles.get(handle);
   if (!obj) {
-    throw new Error(`intersectionobserver handle ${handle} not found`);
+    throw new Error(`IntersectionObserver handle ${handle} not found`);
   }
   return obj;
 }
@@ -32,7 +32,7 @@ function getIntersectionObserver(handle: bigint): intersectionobserver {
 /**
  * `get-root()` operation.
  */
-export function getRoot(self: boolean): string | undefined {
+export function getRoot(self: bigint): bigint | undefined {
   const obj = getIntersectionObserver(self);
   return obj.root ?? undefined;
 }
@@ -48,7 +48,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): string {
+export function getScrollMargin(self: boolean): bigint {
   const obj = getIntersectionObserver(self);
   return obj.scrollMargin;
 }
@@ -56,7 +56,7 @@ export function getScrollMargin(self: bigint): string {
 /**
  * `get-thresholds()` operation.
  */
-export function getThresholds(self: number): (bigint)[] {
+export function getThresholds(self: bigint): boolean {
   const obj = getIntersectionObserver(self);
   return obj.thresholds;
 }
@@ -64,7 +64,7 @@ export function getThresholds(self: number): (bigint)[] {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): number {
+export function getDelay(self: boolean): number {
   const obj = getIntersectionObserver(self);
   return obj.delay;
 }
@@ -72,7 +72,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): bigint {
+export function getTrackVisibility(self: bigint): boolean {
   const obj = getIntersectionObserver(self);
   return obj.trackVisibility;
 }
@@ -104,7 +104,7 @@ export function disconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -116,15 +116,15 @@ export function takeRecords(self: bigint): (bigint)[] {
 /** Type alias */
 export type IntersectionObserverEntryHandle = bigint;
 
-/** Handle table for intersectionobserverentry instances */
-const _intersectionObserverEntryhandles = new Map<bigint, intersectionobserverentry>();
+/** Handle table for IntersectionObserverEntry instances */
+const _intersectionObserverEntryhandles = new Map<bigint, IntersectionObserverEntry>();
 let _nextIntersectionObserverEntry = 1n;
 
-/** Get a intersectionobserverentry by handle, throwing if not found. */
-function getIntersectionObserverEntry(handle: bigint): intersectionobserverentry {
+/** Get a IntersectionObserverEntry by handle, throwing if not found. */
+function getIntersectionObserverEntry(handle: bigint): IntersectionObserverEntry {
   const obj = _intersectionObserverEntryhandles.get(handle);
   if (!obj) {
-    throw new Error(`intersectionobserverentry handle ${handle} not found`);
+    throw new Error(`IntersectionObserverEntry handle ${handle} not found`);
   }
   return obj;
 }
@@ -132,7 +132,7 @@ function getIntersectionObserverEntry(handle: bigint): intersectionobserverentry
 /**
  * `get-time()` operation.
  */
-export function getTime(self: boolean): number {
+export function getTime(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -140,7 +140,7 @@ export function getTime(self: boolean): number {
 /**
  * `get-root-bounds()` operation.
  */
-export function getRootBounds(self: bigint): boolean | undefined {
+export function getRootBounds(self: bigint): bigint | undefined {
   const obj = getIntersectionObserverEntry(self);
   return obj.rootBounds ?? undefined;
 }
@@ -172,7 +172,7 @@ export function getIsIntersecting(self: bigint): bigint {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.isVisible;
 }
@@ -180,7 +180,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: number): number {
+export function getIntersectionRatio(self: bigint): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -200,15 +200,15 @@ export function getTarget(self: bigint): bigint {
 /** Type alias */
 export type ResizeObserverHandle = bigint;
 
-/** Handle table for resizeobserver instances */
-const _resizeObserverhandles = new Map<bigint, resizeobserver>();
+/** Handle table for ResizeObserver instances */
+const _resizeObserverhandles = new Map<bigint, ResizeObserver>();
 let _nextResizeObserver = 1n;
 
-/** Get a resizeobserver by handle, throwing if not found. */
-function getResizeObserver(handle: bigint): resizeobserver {
+/** Get a ResizeObserver by handle, throwing if not found. */
+function getResizeObserver(handle: bigint): ResizeObserver {
   const obj = _resizeObserverhandles.get(handle);
   if (!obj) {
-    throw new Error(`resizeobserver handle ${handle} not found`);
+    throw new Error(`ResizeObserver handle ${handle} not found`);
   }
   return obj;
 }
@@ -244,15 +244,15 @@ export function disconnect(self: bigint): void {
 /** Type alias */
 export type ResizeObserverEntryHandle = bigint;
 
-/** Handle table for resizeobserverentry instances */
-const _resizeObserverEntryhandles = new Map<bigint, resizeobserverentry>();
+/** Handle table for ResizeObserverEntry instances */
+const _resizeObserverEntryhandles = new Map<bigint, ResizeObserverEntry>();
 let _nextResizeObserverEntry = 1n;
 
-/** Get a resizeobserverentry by handle, throwing if not found. */
-function getResizeObserverEntry(handle: bigint): resizeobserverentry {
+/** Get a ResizeObserverEntry by handle, throwing if not found. */
+function getResizeObserverEntry(handle: bigint): ResizeObserverEntry {
   const obj = _resizeObserverEntryhandles.get(handle);
   if (!obj) {
-    throw new Error(`resizeobserverentry handle ${handle} not found`);
+    throw new Error(`ResizeObserverEntry handle ${handle} not found`);
   }
   return obj;
 }
@@ -304,15 +304,15 @@ export function getDevicePixelContentBoxSize(self: bigint): bigint {
 /** Type alias */
 export type ResizeObserverSizeHandle = bigint;
 
-/** Handle table for resizeobserversize instances */
-const _resizeObserverSizehandles = new Map<bigint, resizeobserversize>();
+/** Handle table for ResizeObserverSize instances */
+const _resizeObserverSizehandles = new Map<bigint, ResizeObserverSize>();
 let _nextResizeObserverSize = 1n;
 
-/** Get a resizeobserversize by handle, throwing if not found. */
-function getResizeObserverSize(handle: bigint): resizeobserversize {
+/** Get a ResizeObserverSize by handle, throwing if not found. */
+function getResizeObserverSize(handle: bigint): ResizeObserverSize {
   const obj = _resizeObserverSizehandles.get(handle);
   if (!obj) {
-    throw new Error(`resizeobserversize handle ${handle} not found`);
+    throw new Error(`ResizeObserverSize handle ${handle} not found`);
   }
   return obj;
 }
@@ -328,7 +328,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): bigint {
+export function getBlockSize(self: bigint): number {
   const obj = getResizeObserverSize(self);
   return obj.blockSize;
 }

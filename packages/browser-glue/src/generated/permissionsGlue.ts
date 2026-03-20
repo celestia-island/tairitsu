@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PermissionsHandle = bigint;
+export type PermissionsHandle = string;
 
 /** Handle table for Permissions instances */
 const _permissionsHandles = new Map<bigint, Permissions>();
@@ -103,7 +103,7 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: number): bigint {
+export function getState(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.state;
 }
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint | undefined {
+export function getOnchange(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
@@ -127,7 +127,7 @@ export function getOnchange(self: bigint): bigint | undefined {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: bigint): void {
+export function setOnchange(self: number, value: bigint): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

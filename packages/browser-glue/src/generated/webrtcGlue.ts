@@ -470,15 +470,15 @@ export function getStats(self: bigint, selector: bigint | undefined): bigint {
 /** Type alias */
 export type RtcSessionDescriptionHandle = bigint;
 
-/** Handle table for rtcsessiondescription instances */
-const _rtcSessionDescriptionhandles = new Map<bigint, rtcsessiondescription>();
+/** Handle table for RtcSessionDescription instances */
+const _rtcSessionDescriptionhandles = new Map<bigint, RtcSessionDescription>();
 let _nextRtcSessionDescription = 1n;
 
-/** Get a rtcsessiondescription by handle, throwing if not found. */
-function getRtcSessionDescription(handle: bigint): rtcsessiondescription {
+/** Get a RtcSessionDescription by handle, throwing if not found. */
+function getRtcSessionDescription(handle: bigint): RtcSessionDescription {
   const obj = _rtcSessionDescriptionhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcsessiondescription handle ${handle} not found`);
+    throw new Error(`RtcSessionDescription handle ${handle} not found`);
   }
   return obj;
 }
@@ -514,15 +514,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type RtcIceCandidateHandle = bigint;
 
-/** Handle table for rtcicecandidate instances */
-const _rtcIceCandidatehandles = new Map<bigint, rtcicecandidate>();
+/** Handle table for RtcIceCandidate instances */
+const _rtcIceCandidatehandles = new Map<bigint, RtcIceCandidate>();
 let _nextRtcIceCandidate = 1n;
 
-/** Get a rtcicecandidate by handle, throwing if not found. */
-function getRtcIceCandidate(handle: bigint): rtcicecandidate {
+/** Get a RtcIceCandidate by handle, throwing if not found. */
+function getRtcIceCandidate(handle: bigint): RtcIceCandidate {
   const obj = _rtcIceCandidatehandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcicecandidate handle ${handle} not found`);
+    throw new Error(`RtcIceCandidate handle ${handle} not found`);
   }
   return obj;
 }
@@ -670,15 +670,15 @@ export function toJson(self: bigint): bigint {
 /** Type alias */
 export type RtcPeerConnectionIceEventHandle = bigint;
 
-/** Handle table for rtcpeerconnectioniceevent instances */
-const _rtcPeerConnectionIceEventhandles = new Map<bigint, rtcpeerconnectioniceevent>();
+/** Handle table for RtcPeerConnectionIceEvent instances */
+const _rtcPeerConnectionIceEventhandles = new Map<bigint, RtcPeerConnectionIceEvent>();
 let _nextRtcPeerConnectionIceEvent = 1n;
 
-/** Get a rtcpeerconnectioniceevent by handle, throwing if not found. */
-function getRtcPeerConnectionIceEvent(handle: bigint): rtcpeerconnectioniceevent {
+/** Get a RtcPeerConnectionIceEvent by handle, throwing if not found. */
+function getRtcPeerConnectionIceEvent(handle: bigint): RtcPeerConnectionIceEvent {
   const obj = _rtcPeerConnectionIceEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcpeerconnectioniceevent handle ${handle} not found`);
+    throw new Error(`RtcPeerConnectionIceEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -706,15 +706,15 @@ export function getUrl(self: bigint): string | undefined {
 /** Type alias */
 export type RtcPeerConnectionIceErrorEventHandle = bigint;
 
-/** Handle table for rtcpeerconnectioniceerrorevent instances */
-const _rtcPeerConnectionIceErrorEventhandles = new Map<bigint, rtcpeerconnectioniceerrorevent>();
+/** Handle table for RtcPeerConnectionIceErrorEvent instances */
+const _rtcPeerConnectionIceErrorEventhandles = new Map<bigint, RtcPeerConnectionIceErrorEvent>();
 let _nextRtcPeerConnectionIceErrorEvent = 1n;
 
-/** Get a rtcpeerconnectioniceerrorevent by handle, throwing if not found. */
-function getRtcPeerConnectionIceErrorEvent(handle: bigint): rtcpeerconnectioniceerrorevent {
+/** Get a RtcPeerConnectionIceErrorEvent by handle, throwing if not found. */
+function getRtcPeerConnectionIceErrorEvent(handle: bigint): RtcPeerConnectionIceErrorEvent {
   const obj = _rtcPeerConnectionIceErrorEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcpeerconnectioniceerrorevent handle ${handle} not found`);
+    throw new Error(`RtcPeerConnectionIceErrorEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -766,15 +766,15 @@ export function getErrorText(self: bigint): string {
 /** Type alias */
 export type RtcCertificateHandle = bigint;
 
-/** Handle table for rtccertificate instances */
-const _rtcCertificatehandles = new Map<bigint, rtccertificate>();
+/** Handle table for RtcCertificate instances */
+const _rtcCertificatehandles = new Map<bigint, RtcCertificate>();
 let _nextRtcCertificate = 1n;
 
-/** Get a rtccertificate by handle, throwing if not found. */
-function getRtcCertificate(handle: bigint): rtccertificate {
+/** Get a RtcCertificate by handle, throwing if not found. */
+function getRtcCertificate(handle: bigint): RtcCertificate {
   const obj = _rtcCertificatehandles.get(handle);
   if (!obj) {
-    throw new Error(`rtccertificate handle ${handle} not found`);
+    throw new Error(`RtcCertificate handle ${handle} not found`);
   }
   return obj;
 }
@@ -802,15 +802,15 @@ export function getFingerprints(self: bigint): (bigint)[] {
 /** Type alias */
 export type RtcRtpSenderHandle = bigint;
 
-/** Handle table for rtcrtpsender instances */
-const _rtcRtpSenderhandles = new Map<bigint, rtcrtpsender>();
+/** Handle table for RtcRtpSender instances */
+const _rtcRtpSenderhandles = new Map<bigint, RtcRtpSender>();
 let _nextRtcRtpSender = 1n;
 
-/** Get a rtcrtpsender by handle, throwing if not found. */
-function getRtcRtpSender(handle: bigint): rtcrtpsender {
+/** Get a RtcRtpSender by handle, throwing if not found. */
+function getRtcRtpSender(handle: bigint): RtcRtpSender {
   const obj = _rtcRtpSenderhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcrtpsender handle ${handle} not found`);
+    throw new Error(`RtcRtpSender handle ${handle} not found`);
   }
   return obj;
 }
@@ -894,15 +894,15 @@ export function getDtmf(self: bigint): bigint | undefined {
 /** Type alias */
 export type RtcRtpReceiverHandle = bigint;
 
-/** Handle table for rtcrtpreceiver instances */
-const _rtcRtpReceiverhandles = new Map<bigint, rtcrtpreceiver>();
+/** Handle table for RtcRtpReceiver instances */
+const _rtcRtpReceiverhandles = new Map<bigint, RtcRtpReceiver>();
 let _nextRtcRtpReceiver = 1n;
 
-/** Get a rtcrtpreceiver by handle, throwing if not found. */
-function getRtcRtpReceiver(handle: bigint): rtcrtpreceiver {
+/** Get a RtcRtpReceiver by handle, throwing if not found. */
+function getRtcRtpReceiver(handle: bigint): RtcRtpReceiver {
   const obj = _rtcRtpReceiverhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcrtpreceiver handle ${handle} not found`);
+    throw new Error(`RtcRtpReceiver handle ${handle} not found`);
   }
   return obj;
 }
@@ -986,15 +986,15 @@ export function setJitterBufferTarget(self: bigint, value: number | undefined): 
 /** Type alias */
 export type RtcRtpTransceiverHandle = bigint;
 
-/** Handle table for rtcrtptransceiver instances */
-const _rtcRtpTransceiverhandles = new Map<bigint, rtcrtptransceiver>();
+/** Handle table for RtcRtpTransceiver instances */
+const _rtcRtpTransceiverhandles = new Map<bigint, RtcRtpTransceiver>();
 let _nextRtcRtpTransceiver = 1n;
 
-/** Get a rtcrtptransceiver by handle, throwing if not found. */
-function getRtcRtpTransceiver(handle: bigint): rtcrtptransceiver {
+/** Get a RtcRtpTransceiver by handle, throwing if not found. */
+function getRtcRtpTransceiver(handle: bigint): RtcRtpTransceiver {
   const obj = _rtcRtpTransceiverhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcrtptransceiver handle ${handle} not found`);
+    throw new Error(`RtcRtpTransceiver handle ${handle} not found`);
   }
   return obj;
 }
@@ -1070,15 +1070,15 @@ export function setCodecPreferences(self: bigint, codecs: (bigint)[]): void {
 /** Type alias */
 export type RtcDtlsTransportHandle = bigint;
 
-/** Handle table for rtcdtlstransport instances */
-const _rtcDtlsTransporthandles = new Map<bigint, rtcdtlstransport>();
+/** Handle table for RtcDtlsTransport instances */
+const _rtcDtlsTransporthandles = new Map<bigint, RtcDtlsTransport>();
 let _nextRtcDtlsTransport = 1n;
 
-/** Get a rtcdtlstransport by handle, throwing if not found. */
-function getRtcDtlsTransport(handle: bigint): rtcdtlstransport {
+/** Get a RtcDtlsTransport by handle, throwing if not found. */
+function getRtcDtlsTransport(handle: bigint): RtcDtlsTransport {
   const obj = _rtcDtlsTransporthandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcdtlstransport handle ${handle} not found`);
+    throw new Error(`RtcDtlsTransport handle ${handle} not found`);
   }
   return obj;
 }
@@ -1146,15 +1146,15 @@ export function setOnerror(self: bigint, value: bigint): void {
 /** Type alias */
 export type RtcIceTransportHandle = bigint;
 
-/** Handle table for rtcicetransport instances */
-const _rtcIceTransporthandles = new Map<bigint, rtcicetransport>();
+/** Handle table for RtcIceTransport instances */
+const _rtcIceTransporthandles = new Map<bigint, RtcIceTransport>();
 let _nextRtcIceTransport = 1n;
 
-/** Get a rtcicetransport by handle, throwing if not found. */
-function getRtcIceTransport(handle: bigint): rtcicetransport {
+/** Get a RtcIceTransport by handle, throwing if not found. */
+function getRtcIceTransport(handle: bigint): RtcIceTransport {
   const obj = _rtcIceTransporthandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcicetransport handle ${handle} not found`);
+    throw new Error(`RtcIceTransport handle ${handle} not found`);
   }
   return obj;
 }
@@ -1286,15 +1286,15 @@ export function setOnselectedcandidatepairchange(self: bigint, value: bigint): v
 /** Type alias */
 export type RtcIceCandidatePairHandle = bigint;
 
-/** Handle table for rtcicecandidatepair instances */
-const _rtcIceCandidatePairhandles = new Map<bigint, rtcicecandidatepair>();
+/** Handle table for RtcIceCandidatePair instances */
+const _rtcIceCandidatePairhandles = new Map<bigint, RtcIceCandidatePair>();
 let _nextRtcIceCandidatePair = 1n;
 
-/** Get a rtcicecandidatepair by handle, throwing if not found. */
-function getRtcIceCandidatePair(handle: bigint): rtcicecandidatepair {
+/** Get a RtcIceCandidatePair by handle, throwing if not found. */
+function getRtcIceCandidatePair(handle: bigint): RtcIceCandidatePair {
   const obj = _rtcIceCandidatePairhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcicecandidatepair handle ${handle} not found`);
+    throw new Error(`RtcIceCandidatePair handle ${handle} not found`);
   }
   return obj;
 }
@@ -1322,15 +1322,15 @@ export function getRemote(self: bigint): bigint {
 /** Type alias */
 export type RtcTrackEventHandle = bigint;
 
-/** Handle table for rtctrackevent instances */
-const _rtcTrackEventhandles = new Map<bigint, rtctrackevent>();
+/** Handle table for RtcTrackEvent instances */
+const _rtcTrackEventhandles = new Map<bigint, RtcTrackEvent>();
 let _nextRtcTrackEvent = 1n;
 
-/** Get a rtctrackevent by handle, throwing if not found. */
-function getRtcTrackEvent(handle: bigint): rtctrackevent {
+/** Get a RtcTrackEvent by handle, throwing if not found. */
+function getRtcTrackEvent(handle: bigint): RtcTrackEvent {
   const obj = _rtcTrackEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtctrackevent handle ${handle} not found`);
+    throw new Error(`RtcTrackEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1374,15 +1374,15 @@ export function getTransceiver(self: bigint): bigint {
 /** Type alias */
 export type RtcSctpTransportHandle = bigint;
 
-/** Handle table for rtcsctptransport instances */
-const _rtcSctpTransporthandles = new Map<bigint, rtcsctptransport>();
+/** Handle table for RtcSctpTransport instances */
+const _rtcSctpTransporthandles = new Map<bigint, RtcSctpTransport>();
 let _nextRtcSctpTransport = 1n;
 
-/** Get a rtcsctptransport by handle, throwing if not found. */
-function getRtcSctpTransport(handle: bigint): rtcsctptransport {
+/** Get a RtcSctpTransport by handle, throwing if not found. */
+function getRtcSctpTransport(handle: bigint): RtcSctpTransport {
   const obj = _rtcSctpTransporthandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcsctptransport handle ${handle} not found`);
+    throw new Error(`RtcSctpTransport handle ${handle} not found`);
   }
   return obj;
 }
@@ -1442,15 +1442,15 @@ export function setOnstatechange(self: bigint, value: bigint): void {
 /** Type alias */
 export type RtcDataChannelHandle = bigint;
 
-/** Handle table for rtcdatachannel instances */
-const _rtcDataChannelhandles = new Map<bigint, rtcdatachannel>();
+/** Handle table for RtcDataChannel instances */
+const _rtcDataChannelhandles = new Map<bigint, RtcDataChannel>();
 let _nextRtcDataChannel = 1n;
 
-/** Get a rtcdatachannel by handle, throwing if not found. */
-function getRtcDataChannel(handle: bigint): rtcdatachannel {
+/** Get a RtcDataChannel by handle, throwing if not found. */
+function getRtcDataChannel(handle: bigint): RtcDataChannel {
   const obj = _rtcDataChannelhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcdatachannel handle ${handle} not found`);
+    throw new Error(`RtcDataChannel handle ${handle} not found`);
   }
   return obj;
 }
@@ -1708,15 +1708,15 @@ export function send(self: bigint, data: string): void {
 /** Type alias */
 export type RtcDataChannelEventHandle = bigint;
 
-/** Handle table for rtcdatachannelevent instances */
-const _rtcDataChannelEventhandles = new Map<bigint, rtcdatachannelevent>();
+/** Handle table for RtcDataChannelEvent instances */
+const _rtcDataChannelEventhandles = new Map<bigint, RtcDataChannelEvent>();
 let _nextRtcDataChannelEvent = 1n;
 
-/** Get a rtcdatachannelevent by handle, throwing if not found. */
-function getRtcDataChannelEvent(handle: bigint): rtcdatachannelevent {
+/** Get a RtcDataChannelEvent by handle, throwing if not found. */
+function getRtcDataChannelEvent(handle: bigint): RtcDataChannelEvent {
   const obj = _rtcDataChannelEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcdatachannelevent handle ${handle} not found`);
+    throw new Error(`RtcDataChannelEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1736,15 +1736,15 @@ export function getChannel(self: bigint): bigint {
 /** Type alias */
 export type RtcdtmfSenderHandle = bigint;
 
-/** Handle table for rtcdtmfsender instances */
-const _rtcdtmfSenderhandles = new Map<bigint, rtcdtmfsender>();
+/** Handle table for RtcdtmfSender instances */
+const _rtcdtmfSenderhandles = new Map<bigint, RtcdtmfSender>();
 let _nextRtcdtmfSender = 1n;
 
-/** Get a rtcdtmfsender by handle, throwing if not found. */
-function getRtcdtmfSender(handle: bigint): rtcdtmfsender {
+/** Get a RtcdtmfSender by handle, throwing if not found. */
+function getRtcdtmfSender(handle: bigint): RtcdtmfSender {
   const obj = _rtcdtmfSenderhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcdtmfsender handle ${handle} not found`);
+    throw new Error(`RtcdtmfSender handle ${handle} not found`);
   }
   return obj;
 }
@@ -1796,15 +1796,15 @@ export function getToneBuffer(self: bigint): string {
 /** Type alias */
 export type RtcdtmfToneChangeEventHandle = bigint;
 
-/** Handle table for rtcdtmftonechangeevent instances */
-const _rtcdtmfToneChangeEventhandles = new Map<bigint, rtcdtmftonechangeevent>();
+/** Handle table for RtcdtmfToneChangeEvent instances */
+const _rtcdtmfToneChangeEventhandles = new Map<bigint, RtcdtmfToneChangeEvent>();
 let _nextRtcdtmfToneChangeEvent = 1n;
 
-/** Get a rtcdtmftonechangeevent by handle, throwing if not found. */
-function getRtcdtmfToneChangeEvent(handle: bigint): rtcdtmftonechangeevent {
+/** Get a RtcdtmfToneChangeEvent by handle, throwing if not found. */
+function getRtcdtmfToneChangeEvent(handle: bigint): RtcdtmfToneChangeEvent {
   const obj = _rtcdtmfToneChangeEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcdtmftonechangeevent handle ${handle} not found`);
+    throw new Error(`RtcdtmfToneChangeEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -1824,15 +1824,15 @@ export function getTone(self: bigint): string {
 /** Type alias */
 export type RtcErrorHandle = bigint;
 
-/** Handle table for rtcerror instances */
-const _rtcErrorhandles = new Map<bigint, rtcerror>();
+/** Handle table for RtcError instances */
+const _rtcErrorhandles = new Map<bigint, RtcError>();
 let _nextRtcError = 1n;
 
-/** Get a rtcerror by handle, throwing if not found. */
-function getRtcError(handle: bigint): rtcerror {
+/** Get a RtcError by handle, throwing if not found. */
+function getRtcError(handle: bigint): RtcError {
   const obj = _rtcErrorhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcerror handle ${handle} not found`);
+    throw new Error(`RtcError handle ${handle} not found`);
   }
   return obj;
 }
@@ -1884,15 +1884,15 @@ export function getSentAlert(self: bigint): number | undefined {
 /** Type alias */
 export type RtcErrorEventHandle = bigint;
 
-/** Handle table for rtcerrorevent instances */
-const _rtcErrorEventhandles = new Map<bigint, rtcerrorevent>();
+/** Handle table for RtcErrorEvent instances */
+const _rtcErrorEventhandles = new Map<bigint, RtcErrorEvent>();
 let _nextRtcErrorEvent = 1n;
 
-/** Get a rtcerrorevent by handle, throwing if not found. */
-function getRtcErrorEvent(handle: bigint): rtcerrorevent {
+/** Get a RtcErrorEvent by handle, throwing if not found. */
+function getRtcErrorEvent(handle: bigint): RtcErrorEvent {
   const obj = _rtcErrorEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`rtcerrorevent handle ${handle} not found`);
+    throw new Error(`RtcErrorEvent handle ${handle} not found`);
   }
   return obj;
 }

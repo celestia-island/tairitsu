@@ -16,15 +16,15 @@
 /** Type alias */
 export type CredentialHandle = bigint;
 
-/** Handle table for credential instances */
-const _credentialHandles = new Map<bigint, credential>();
+/** Handle table for Credential instances */
+const _credentialHandles = new Map<bigint, Credential>();
 let _nextCredential = 1n;
 
-/** Get a credential by handle, throwing if not found. */
-function getCredential(handle: bigint): credential {
+/** Get a Credential by handle, throwing if not found. */
+function getCredential(handle: bigint): Credential {
   const obj = _credentialHandles.get(handle);
   if (!obj) {
-    throw new Error(`credential handle ${handle} not found`);
+    throw new Error(`Credential handle ${handle} not found`);
   }
   return obj;
 }
@@ -59,15 +59,15 @@ export function isConditionalMediationAvailable(): bigint {
 /** Type alias */
 export type CredentialUserDataHandle = bigint;
 
-/** Handle table for credentialuserdata instances */
-const _credentialUserDatahandles = new Map<bigint, credentialuserdata>();
+/** Handle table for CredentialUserData instances */
+const _credentialUserDatahandles = new Map<bigint, CredentialUserData>();
 let _nextCredentialUserData = 1n;
 
-/** Get a credentialuserdata by handle, throwing if not found. */
-function getCredentialUserData(handle: bigint): credentialuserdata {
+/** Get a CredentialUserData by handle, throwing if not found. */
+function getCredentialUserData(handle: bigint): CredentialUserData {
   const obj = _credentialUserDatahandles.get(handle);
   if (!obj) {
-    throw new Error(`credentialuserdata handle ${handle} not found`);
+    throw new Error(`CredentialUserData handle ${handle} not found`);
   }
   return obj;
 }
@@ -95,22 +95,22 @@ export function getIconUrl(self: bigint): string {
 /** Type alias */
 export type CredentialsContainerHandle = bigint;
 
-/** Handle table for credentialscontainer instances */
-const _credentialsContainerhandles = new Map<bigint, credentialscontainer>();
+/** Handle table for CredentialsContainer instances */
+const _credentialsContainerhandles = new Map<bigint, CredentialsContainer>();
 let _nextCredentialsContainer = 1n;
 
-/** Register a new credentialscontainer and return its handle. */
-function registerCredentialsContainer(obj: credentialscontainer): bigint {
+/** Register a new CredentialsContainer and return its handle. */
+function registerCredentialsContainer(obj: CredentialsContainer): bigint {
   const handle = _nextCredentialsContainer++;
   _credentialsContainerhandles.set(handle, obj);
   return handle;
 }
 
-/** Get a credentialscontainer by handle, throwing if not found. */
-function getCredentialsContainer(handle: bigint): credentialscontainer {
+/** Get a CredentialsContainer by handle, throwing if not found. */
+function getCredentialsContainer(handle: bigint): CredentialsContainer {
   const obj = _credentialsContainerhandles.get(handle);
   if (!obj) {
-    throw new Error(`credentialscontainer handle ${handle} not found`);
+    throw new Error(`CredentialsContainer handle ${handle} not found`);
   }
   return obj;
 }
@@ -154,15 +154,15 @@ export function preventSilentAccess(self: bigint): bigint {
 /** Type alias */
 export type PasswordCredentialHandle = bigint;
 
-/** Handle table for passwordcredential instances */
-const _passwordCredentialhandles = new Map<bigint, passwordcredential>();
+/** Handle table for PasswordCredential instances */
+const _passwordCredentialhandles = new Map<bigint, PasswordCredential>();
 let _nextPasswordCredential = 1n;
 
-/** Get a passwordcredential by handle, throwing if not found. */
-function getPasswordCredential(handle: bigint): passwordcredential {
+/** Get a PasswordCredential by handle, throwing if not found. */
+function getPasswordCredential(handle: bigint): PasswordCredential {
   const obj = _passwordCredentialhandles.get(handle);
   if (!obj) {
-    throw new Error(`passwordcredential handle ${handle} not found`);
+    throw new Error(`PasswordCredential handle ${handle} not found`);
   }
   return obj;
 }
@@ -182,15 +182,15 @@ export function getPassword(self: bigint): string {
 /** Type alias */
 export type FederatedCredentialHandle = bigint;
 
-/** Handle table for federatedcredential instances */
-const _federatedCredentialhandles = new Map<bigint, federatedcredential>();
+/** Handle table for FederatedCredential instances */
+const _federatedCredentialhandles = new Map<bigint, FederatedCredential>();
 let _nextFederatedCredential = 1n;
 
-/** Get a federatedcredential by handle, throwing if not found. */
-function getFederatedCredential(handle: bigint): federatedcredential {
+/** Get a FederatedCredential by handle, throwing if not found. */
+function getFederatedCredential(handle: bigint): FederatedCredential {
   const obj = _federatedCredentialhandles.get(handle);
   if (!obj) {
-    throw new Error(`federatedcredential handle ${handle} not found`);
+    throw new Error(`FederatedCredential handle ${handle} not found`);
   }
   return obj;
 }

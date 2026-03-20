@@ -27,17 +27,17 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type IdbFactoryHandle = bigint;
+export type IdbFactoryHandle = number | undefined;
 
-/** Handle table for idbfactory instances */
-const _idbFactoryhandles = new Map<bigint, idbfactory>();
+/** Handle table for IdbFactory instances */
+const _idbFactoryhandles = new Map<bigint, IdbFactory>();
 let _nextIdbFactory = 1n;
 
-/** Get a idbfactory by handle, throwing if not found. */
-function getIdbFactory(handle: bigint): idbfactory {
+/** Get a IdbFactory by handle, throwing if not found. */
+function getIdbFactory(handle: bigint): IdbFactory {
   const obj = _idbFactoryhandles.get(handle);
   if (!obj) {
-    throw new Error(`idbfactory handle ${handle} not found`);
+    throw new Error(`IdbFactory handle ${handle} not found`);
   }
   return obj;
 }
@@ -73,7 +73,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
 /**
  * `name()` operation.
  */
-export function name(handle: bigint): number {
+export function name(handle: bigint): string {
   const obj = getIdbDb(self);
   return obj.name(handle);
 }
@@ -159,15 +159,15 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
 /** Type alias */
 export type IdbStoreHandle = bigint;
 
-/** Handle table for idbobjectstore instances */
-const _idbStorehandles = new Map<bigint, idbobjectstore>();
+/** Handle table for IdbObjectStore instances */
+const _idbStorehandles = new Map<bigint, IdbObjectStore>();
 let _nextIdbStore = 1n;
 
-/** Get a idbobjectstore by handle, throwing if not found. */
-function getIdbStore(handle: bigint): idbobjectstore {
+/** Get a IdbObjectStore by handle, throwing if not found. */
+function getIdbStore(handle: bigint): IdbObjectStore {
   const obj = _idbStorehandles.get(handle);
   if (!obj) {
-    throw new Error(`idbobjectstore handle ${handle} not found`);
+    throw new Error(`IdbObjectStore handle ${handle} not found`);
   }
   return obj;
 }
@@ -175,7 +175,7 @@ function getIdbStore(handle: bigint): idbobjectstore {
 /**
  * `get-name()` operation.
  */
-export function getName(handle: bigint): Uint8Array {
+export function getName(handle: bigint): bigint {
   const obj = getIdbStore(self);
   return obj.name;
 }
@@ -183,7 +183,7 @@ export function getName(handle: bigint): Uint8Array {
 /**
  * `set-name()` operation.
  */
-export function setName(handle: bigint, value: string): void {
+export function setName(handle: bigint, value: string | undefined): void {
   const obj = getIdbStore(self);
   obj.name = value;
 }
@@ -209,17 +209,17 @@ export function autoIncrement(handle: bigint): boolean {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type IdbIndexHandle = bigint;
+export type IdbIndexHandle = number;
 
-/** Handle table for idbindex instances */
-const _idbIndexhandles = new Map<bigint, idbindex>();
+/** Handle table for IdbIndex instances */
+const _idbIndexhandles = new Map<bigint, IdbIndex>();
 let _nextIdbIndex = 1n;
 
-/** Get a idbindex by handle, throwing if not found. */
-function getIdbIndex(handle: bigint): idbindex {
+/** Get a IdbIndex by handle, throwing if not found. */
+function getIdbIndex(handle: bigint): IdbIndex {
   const obj = _idbIndexhandles.get(handle);
   if (!obj) {
-    throw new Error(`idbindex handle ${handle} not found`);
+    throw new Error(`IdbIndex handle ${handle} not found`);
   }
   return obj;
 }
@@ -227,7 +227,7 @@ function getIdbIndex(handle: bigint): idbindex {
 /**
  * `get-name()` operation.
  */
-export function getName(handle: bigint): bigint {
+export function getName(handle: bigint): string {
   const obj = getIdbIndex(self);
   return obj.name;
 }
@@ -251,7 +251,7 @@ export function keyPath(handle: bigint): bigint {
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): boolean {
+export function multiEntry(handle: bigint): number {
   const obj = getIdbIndex(self);
   return obj.multiEntry(handle);
 }
@@ -259,7 +259,7 @@ export function multiEntry(handle: bigint): boolean {
 /**
  * `unique()` operation.
  */
-export function unique(handle: bigint): number | undefined {
+export function unique(handle: bigint): bigint {
   const obj = getIdbIndex(self);
   return obj.unique(handle);
 }
@@ -271,15 +271,15 @@ export function unique(handle: bigint): number | undefined {
 /** Type alias */
 export type IdbCursorHandle = bigint;
 
-/** Handle table for idbcursor instances */
-const _idbCursorhandles = new Map<bigint, idbcursor>();
+/** Handle table for IdbCursor instances */
+const _idbCursorhandles = new Map<bigint, IdbCursor>();
 let _nextIdbCursor = 1n;
 
-/** Get a idbcursor by handle, throwing if not found. */
-function getIdbCursor(handle: bigint): idbcursor {
+/** Get a IdbCursor by handle, throwing if not found. */
+function getIdbCursor(handle: bigint): IdbCursor {
   const obj = _idbCursorhandles.get(handle);
   if (!obj) {
-    throw new Error(`idbcursor handle ${handle} not found`);
+    throw new Error(`IdbCursor handle ${handle} not found`);
   }
   return obj;
 }
@@ -311,7 +311,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: number): void {
+export function advance(handle: bigint, count: bigint): void {
   const obj = getIdbCursor(self);
   obj.advance(handle, count);
 }
@@ -327,7 +327,7 @@ export function _continue(handle: bigint, key: string): void {
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
+export function continuePrimaryKey(handle: bigint, key: bigint, primaryKey: string): void {
   const obj = getIdbCursor(self);
   obj.continuePrimaryKey(handle, key, primaryKey);
 }
@@ -363,7 +363,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function source(handle: bigint): bigint {
+export function source(handle: bigint): bigint | undefined {
   const obj = getIdbRequest(self);
   return obj.source(handle) ?? undefined;
 }
