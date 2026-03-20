@@ -476,6 +476,21 @@ class WitParser:
             elif self.match('INCLUDE') or self.match('USE') or self.match('IMPORT') or self.match('FROM'):
                 # Skip include/use/import statements in interfaces
                 self._skip_include()
+            elif self.match('ENUM'):
+                # Skip enum definitions inside interfaces
+                self._skip_enum()
+            elif self.match('RECORD'):
+                # Skip record definitions inside interfaces
+                self._skip_record()
+            elif self.match('VARIANT'):
+                # Skip variant definitions inside interfaces
+                self._skip_variant()
+            elif self.match('FLAGS'):
+                # Skip flags definitions inside interfaces
+                self._skip_flags()
+            elif self.match('RESOURCE'):
+                # Skip resource definitions inside interfaces
+                self._skip_resource()
             else:
                 tok = self.current()
                 raise SyntaxError(f"Unexpected token in interface: {tok.kind if tok else 'EOF'}")
@@ -638,6 +653,25 @@ class WitParser:
                 depth += 1
             elif tok.kind == 'RBRACE':
                 depth -= 1
+
+    def _skip_resource(self) -> None:
+        """Skip a resource definition."""
+        self.consume('RESOURCE')
+        self.consume('IDENT')  # resource name
+        # Resource can have optional body with { ... }
+        if self.match('LBRACE'):
+            self.consume()
+            depth = 1
+            while depth > 0:
+                tok = self.consume()
+                if tok is None:
+                    break
+                if tok.kind == 'LBRACE':
+                    depth += 1
+                elif tok.kind == 'RBRACE':
+                    depth -= 1
+        elif self.match('SEMICOLON'):
+            self.consume()
 
     def _skip_type_alias(self) -> None:
         """Skip a top-level type alias."""

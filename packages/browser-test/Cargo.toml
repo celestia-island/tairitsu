@@ -1,0 +1,55 @@
+[package]
+name = "tairitsu-browser-test"
+version = "0.1.0"
+edition = "2021"
+description = "Browser testing infrastructure for Tairitsu browser-glue"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/anthropics/tairitsu"
+
+[[bin]]
+name = "tairitsu-browser-test"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Browser automation
+chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
+futures = "0.3"
+
+# HTTP client for downloads
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+
+# Archive extraction
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Progress reporting
+indicatif = "0.17"
+
+# HTTP server for test files
+axum = "0.8"
+tower-http = { version = "0.6", features = ["fs"] }
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Utilities
+dirs = "5"
+sha2 = "0.10"
+hex = "0.4"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+which = "7"
+semver = "1"
+
+[dev-dependencies]
+tempfile = "3"

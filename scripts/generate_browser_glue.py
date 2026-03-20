@@ -426,7 +426,7 @@ class BrowserGlueGenerator:
 
         return GeneratedDomain(
             name=domain,
-            export_name=domain.replace("-", ""),
+            export_name=kebab_to_camel(domain),
             interfaces=interfaces,
             interface_count=len(interfaces),
         )
@@ -704,7 +704,7 @@ class BrowserGlueGenerator:
         lines.append("// Re-export all generated modules")
 
         for domain in domains:
-            lines.append(f"export * as {domain.export_name} from \"./generated/{domain.export_name}Glue.js\";")
+            lines.append(f"export * as {domain.export_name} from \"./{domain.export_name}Glue\";")
 
         lines.append("")
         lines.append("// Statistics")
@@ -837,7 +837,7 @@ def run_generate(
     # Write index
     if generated_domains:
         index_content = generator.render_index(generated_domains)
-        index_dest = output_dir / "generated-index.ts"
+        index_dest = output_dir / "generated" / "index.ts"
 
         if dry_run:
             log_info(f"dry-run: {index_dest.name} ({len(index_content):,} bytes)")

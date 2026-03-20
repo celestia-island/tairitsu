@@ -1189,7 +1189,7 @@ export function isDefaultNamespace(self: bigint, namespace: string | undefined):
 /**
  * `insert-before()` operation.
  */
-export function insertBefore(self: bigint, node: bigint, child: bigint): bigint {
+export function insertBefore(self: bigint, node: bigint, child: bigint | undefined): bigint {
   const obj = getNode(self);
   return obj.insertBefore(node, child);
 }
@@ -1248,7 +1248,7 @@ function getDomImplementation(handle: bigint): domimplementation {
 /**
  * `create-document-type()` operation.
  */
-export function createDocumentType(self: bigint, name: bigint, publicId: string, systemId: string): bigint {
+export function createDocumentType(self: bigint, name: string, publicId: string, systemId: bigint): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocumentType(name, publicId, systemId);
 }
@@ -1256,7 +1256,7 @@ export function createDocumentType(self: bigint, name: bigint, publicId: string,
 /**
  * `create-document()` operation.
  */
-export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
+export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: bigint, doctype: bigint | undefined): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocument(namespace, qualifiedName, doctype);
 }
@@ -1264,7 +1264,7 @@ export function createDocument(self: bigint, namespace: string | undefined, qual
 /**
  * `create-html-document()` operation.
  */
-export function createHtmlDocument(self: bigint, title: bigint): bigint {
+export function createHtmlDocument(self: bigint, title: bigint | undefined): bigint {
   const obj = getDomImplementation(self);
   return obj.createHtmlDocument(title);
 }
@@ -1316,7 +1316,7 @@ export function getPublicId(self: bigint): string {
 /**
  * `get-system-id()` operation.
  */
-export function getSystemId(self: bigint): bigint {
+export function getSystemId(self: bigint): string {
   const obj = getDocumentType(self);
   return obj.systemId;
 }
@@ -1344,7 +1344,7 @@ function getShadowRoot(handle: bigint): shadowroot {
 /**
  * `get-mode()` operation.
  */
-export function getMode(self: bigint): bigint {
+export function getMode(self: bigint): number {
   const obj = getShadowRoot(self);
   return obj.mode;
 }
@@ -1376,7 +1376,7 @@ export function getClonable(self: bigint): boolean {
 /**
  * `get-serializable()` operation.
  */
-export function getSerializable(self: bigint): boolean {
+export function getSerializable(self: bigint): bigint {
   const obj = getShadowRoot(self);
   return obj.serializable;
 }
@@ -1712,7 +1712,7 @@ function getText(handle: bigint): text {
 /**
  * `split-text()` operation.
  */
-export function splitText(self: string, offset: number): bigint {
+export function splitText(self: bigint, offset: number): bigint {
   const obj = getText(self);
   return obj.splitText(offset);
 }
@@ -1720,7 +1720,7 @@ export function splitText(self: string, offset: number): bigint {
 /**
  * `get-whole-text()` operation.
  */
-export function getWholeText(self: bigint): bigint {
+export function getWholeText(self: bigint): string {
   const obj = getText(self);
   return obj.wholeText;
 }
@@ -1860,7 +1860,7 @@ export function getPointerBeforeReferenceNode(self: bigint): boolean {
 /**
  * `get-what-to-show()` operation.
  */
-export function getWhatToShow(self: bigint): bigint | undefined {
+export function getWhatToShow(self: bigint): number {
   const obj = getNodeIterator(self);
   return obj.whatToShow;
 }
@@ -1868,7 +1868,7 @@ export function getWhatToShow(self: bigint): bigint | undefined {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint | undefined {
+export function getFilter(self: bigint): bigint {
   const obj = getNodeIterator(self);
   return obj.filter ?? undefined;
 }
@@ -1902,7 +1902,7 @@ export function detach(self: bigint): void {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type TreeWalkerHandle = bigint | undefined;
+export type TreeWalkerHandle = bigint;
 
 /** Handle table for treewalker instances */
 const _treeWalkerhandles = new Map<bigint, treewalker>();
@@ -1928,7 +1928,7 @@ export function getRoot(self: bigint): bigint {
 /**
  * `get-what-to-show()` operation.
  */
-export function getWhatToShow(self: bigint): number {
+export function getWhatToShow(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.whatToShow;
 }
@@ -1936,7 +1936,7 @@ export function getWhatToShow(self: bigint): number {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint | undefined {
+export function getFilter(self: bigint): bigint | undefined | undefined {
   const obj = getTreeWalker(self);
   return obj.filter ?? undefined;
 }
@@ -1952,7 +1952,7 @@ export function getCurrentNode(self: bigint): bigint {
 /**
  * `set-current-node()` operation.
  */
-export function setCurrentNode(self: bigint, value: bigint): void {
+export function setCurrentNode(self: bigint | undefined, value: bigint | undefined): void {
   const obj = getTreeWalker(self);
   obj.currentNode = value;
 }
@@ -1960,7 +1960,7 @@ export function setCurrentNode(self: bigint, value: bigint): void {
 /**
  * `parent-node()` operation.
  */
-export function parentNode(self: bigint): bigint {
+export function parentNode(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.parentNode() ?? undefined;
 }
@@ -1968,7 +1968,7 @@ export function parentNode(self: bigint): bigint {
 /**
  * `first-child()` operation.
  */
-export function firstChild(self: bigint): bigint | undefined {
+export function firstChild(self: bigint): number {
   const obj = getTreeWalker(self);
   return obj.firstChild() ?? undefined;
 }

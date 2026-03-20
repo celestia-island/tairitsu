@@ -23,123 +23,11 @@ interface AsyncHandle<T> {
 const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
-// WIT interface: blob
-// ---------------------------------------------------------------------------
-
-/** Type alias */
-export type BlobHandle = bigint;
-
-/** Handle table for blob instances */
-const _blobHandles = new Map<bigint, blob>();
-let _nextBlob = 1n;
-
-/** Get a blob by handle, throwing if not found. */
-function getBlob(handle: bigint): blob {
-  const obj = _blobHandles.get(handle);
-  if (!obj) {
-    throw new Error(`blob handle ${handle} not found`);
-  }
-  return obj;
-}
-
-/**
- * `size()` operation.
- */
-export function size(handle: bigint): bigint {
-  const obj = getBlob(self);
-  return obj.size(handle);
-}
-
-/**
- * `type-val()` operation.
- */
-export function typeVal(handle: bigint): string {
-  const obj = getBlob(self);
-  return obj.typeVal(handle);
-}
-
-/**
- * `slice()` operation.
- */
-export function slice(handle: bigint, start: bigint | undefined, end: bigint | undefined, contentType: bigint | undefined): { ok: true; value: bigint } | { ok: false; error: bigint } {
-  const obj = getBlob(self);
-  return obj.slice(handle, start, end, contentType);
-}
-
-/**
- * `read-all-async()` operation.
- */
-export function readAllAsync(handle: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
-  const obj = getBlob(self);
-  return obj.readAllAsync(handle);
-}
-
-/**
- * `poll-read-all()` operation.
- */
-export function pollReadAll(requestId: string | undefined): { ok: true; value: Uint8Array } | { ok: false; error: string } | undefined {
-  const obj = getBlob(self);
-  return obj.pollReadAll(requestId) ?? undefined;
-}
-
-/**
- * `drop-blob()` operation.
- */
-export function dropBlob(handle: bigint): void {
-  const obj = getBlob(self);
-  obj.dropBlob(handle);
-}
-
-// ---------------------------------------------------------------------------
-// WIT interface: file
-// ---------------------------------------------------------------------------
-
-/** Type alias */
-export type FileHandle = bigint;
-
-/** Handle table for file instances */
-const _fileHandles = new Map<bigint, file>();
-let _nextFile = 1n;
-
-/** Get a file by handle, throwing if not found. */
-function getFile(handle: bigint): file {
-  const obj = _fileHandles.get(handle);
-  if (!obj) {
-    throw new Error(`file handle ${handle} not found`);
-  }
-  return obj;
-}
-
-/**
- * `name()` operation.
- */
-export function name(handle: bigint): string {
-  const obj = getFile(self);
-  return obj.name(handle);
-}
-
-/**
- * `last-modified()` operation.
- */
-export function lastModified(handle: bigint): bigint {
-  const obj = getFile(self);
-  return obj.lastModified(handle);
-}
-
-/**
- * `as-blob()` operation.
- */
-export function asBlob(handle: bigint): bigint {
-  const obj = getFile(self);
-  return obj.asBlob(handle);
-}
-
-// ---------------------------------------------------------------------------
 // WIT interface: file-reader
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type FileReaderHandle = number;
+export type FileReaderHandle = bigint;
 
 /** Handle table for filereader instances */
 const _fileReaderhandles = new Map<bigint, filereader>();
@@ -157,40 +45,8 @@ function getFileReader(handle: bigint): filereader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint | undefined } | { ok: false; error: bigint } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: bigint } {
   return obj.newFileReader();
-}
-
-/**
- * `read-as-array-buffer()` operation.
- */
-export function readAsArrayBuffer(handle: bigint, blob: bigint): { ok: true; value: bigint } | { ok: false; error: bigint } {
-  const obj = getFileReader(self);
-  return obj.readAsArrayBuffer(handle, blob);
-}
-
-/**
- * `read-as-data-url()` operation.
- */
-export function readAsDataUrl(handle: number | undefined, blob: bigint): { ok: true; value: bigint } | { ok: false; error: string } {
-  const obj = getFileReader(self);
-  return obj.readAsDataUrl(handle, blob);
-}
-
-/**
- * `read-as-text()` operation.
- */
-export function readAsText(handle: bigint, blob: bigint, encoding: string | undefined): { ok: true; value: bigint } | { ok: false; error: bigint } {
-  const obj = getFileReader(self);
-  return obj.readAsText(handle, blob, encoding);
-}
-
-/**
- * `poll-result()` operation.
- */
-export function pollResult(requestId: bigint): string {
-  const obj = getFileReader(self);
-  return obj.pollResult(requestId) ?? undefined;
 }
 
 /**
@@ -239,6 +95,14 @@ export function readyState(handle: bigint): number {
   return obj.readyState(handle);
 }
 
+/**
+ * `result-val()` operation.
+ */
+export function resultVal(handle: bigint): string | undefined {
+  const obj = getFileReader(self);
+  return obj.resultVal(handle) ?? undefined;
+}
+
 // ---------------------------------------------------------------------------
 // WIT interface: file-list
 // ---------------------------------------------------------------------------
@@ -262,7 +126,7 @@ function getFileList(handle: bigint): filelist {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): bigint {
   const obj = getFileList(self);
   return obj.length(handle);
 }
@@ -272,22 +136,10 @@ export function length(handle: bigint): number {
 // ---------------------------------------------------------------------------
 
 export default {
-  size,
-  typeVal,
-  slice,
-  readAllAsync,
-  pollReadAll,
-  dropBlob,
-  name,
-  lastModified,
-  asBlob,
   newFileReader,
-  readAsArrayBuffer,
-  readAsDataUrl,
-  readAsText,
-  pollResult,
   abort,
   pollAbort,
   readyState,
+  resultVal,
   length
 };

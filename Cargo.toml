@@ -10,6 +10,7 @@ members = [
     "packages/style",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
+    "packages/browser-test",
     "examples/wit-compile-time",
     "examples/wit-runtime",
     "examples/wit-dynamic-advanced",

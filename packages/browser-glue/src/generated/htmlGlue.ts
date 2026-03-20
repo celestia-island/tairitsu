@@ -32,7 +32,7 @@ function getStorage(handle: bigint): Storage {
 /**
  * `length()` operation.
  */
-export function length(handle: string | undefined): bigint {
+export function length(handle: bigint): number {
   const obj = getStorage(self);
   return obj.length(handle);
 }
@@ -40,7 +40,7 @@ export function length(handle: string | undefined): bigint {
 /**
  * `key()` operation.
  */
-export function key(handle: string | undefined, index: bigint): bigint {
+export function key(handle: bigint, index: number): string | undefined {
   const obj = getStorage(self);
   return obj.key(handle, index) ?? undefined;
 }

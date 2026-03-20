@@ -53,7 +53,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: bigint): void {
+export function _delete(self: bigint, name: string): void {
   const obj = getHeaders(self);
   obj._delete(name);
 }
@@ -61,7 +61,7 @@ export function _delete(self: bigint, name: bigint): void {
 /**
  * `get()` operation.
  */
-export function _get(self: bigint, name: bigint): bigint {
+export function _get(self: bigint, name: string): bigint {
   const obj = getHeaders(self);
   return obj._get(name) ?? undefined;
 }
@@ -69,7 +69,7 @@ export function _get(self: bigint, name: bigint): bigint {
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: number): bigint {
+export function getSetCookie(self: bigint): (string)[] {
   const obj = getHeaders(self);
   return obj.setCookie;
 }
@@ -85,7 +85,7 @@ export function has(self: bigint, name: string): bigint {
 /**
  * `set()` operation.
  */
-export function _set(self: (bigint)[], name: bigint, value: string): void {
+export function _set(self: bigint | undefined, name: bigint, value: bigint | undefined): void {
   const obj = getHeaders(self);
   obj._set(name, value);
 }
@@ -113,7 +113,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined {
+export function getBody(self: bigint): bigint {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -207,7 +207,7 @@ export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok:
  *
  * Async operation: returns request ID, poll with `pollBytes()`
  */
-export function bytes(self: bigint): bigint {
+export function bytes(self: (bigint)[]): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.bytes()
@@ -245,7 +245,7 @@ export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok
  *
  * Async operation: returns request ID, poll with `pollFormData()`
  */
-export function formData(self: (bigint)[]): bigint {
+export function formData(self: string): string | undefined {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.formData()
@@ -270,7 +270,7 @@ export function formData(self: (bigint)[]): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -283,7 +283,7 @@ export function pollFormData(requestId: bigint): { ok: true; value: bigint } | {
  *
  * Async operation: returns request ID, poll with `pollJson()`
  */
-export function json(self: (bigint)[]): string | undefined {
+export function json(self: bigint): string {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.json()
@@ -308,7 +308,7 @@ export function json(self: (bigint)[]): string | undefined {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollJson(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollJson(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -321,7 +321,7 @@ export function pollJson(requestId: bigint): { ok: true; value: string | undefin
  *
  * Async operation: returns request ID, poll with `pollText()`
  */
-export function text(self: bigint): bigint {
+export function text(self: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.text()
@@ -377,7 +377,7 @@ function getRequest(handle: bigint): Request {
 /**
  * `get-method()` operation.
  */
-export function getMethod(self: bigint): number {
+export function getMethod(self: boolean): bigint {
   const obj = getRequest(self);
   return obj.method;
 }
@@ -393,7 +393,7 @@ export function getUrl(self: bigint): string {
 /**
  * `get-headers()` operation.
  */
-export function getHeaders(self: bigint): bigint {
+export function getHeaders(self: string): bigint {
   const obj = getRequest(self);
   return obj.headers;
 }
@@ -401,7 +401,7 @@ export function getHeaders(self: bigint): bigint {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: string | undefined): string {
+export function getDestination(self: string | undefined): bigint {
   const obj = getRequest(self);
   return obj.destination;
 }
@@ -409,7 +409,7 @@ export function getDestination(self: string | undefined): string {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint | undefined): bigint {
+export function getReferrer(self: bigint): string {
   const obj = getRequest(self);
   return obj.referrer;
 }
@@ -417,7 +417,7 @@ export function getReferrer(self: bigint | undefined): bigint {
 /**
  * `get-referrer-policy()` operation.
  */
-export function getReferrerPolicy(self: bigint): bigint {
+export function getReferrerPolicy(self: bigint | undefined): bigint {
   const obj = getRequest(self);
   return obj.referrerPolicy;
 }
@@ -433,7 +433,7 @@ export function getMode(self: bigint): bigint {
 /**
  * `get-credentials()` operation.
  */
-export function getCredentials(self: bigint): bigint | undefined {
+export function getCredentials(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.credentials;
 }
@@ -441,7 +441,7 @@ export function getCredentials(self: bigint): bigint | undefined {
 /**
  * `get-cache()` operation.
  */
-export function getCache(self: bigint): bigint {
+export function getCache(self: bigint): bigint | undefined {
   const obj = getRequest(self);
   return obj.cache;
 }
@@ -457,7 +457,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): string {
+export function getIntegrity(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.integrity;
 }
@@ -473,7 +473,7 @@ export function getKeepalive(self: bigint): boolean {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): bigint {
+export function getIsReloadNavigation(self: bigint): boolean {
   const obj = getRequest(self);
   return obj.isReloadNavigation;
 }
@@ -570,7 +570,7 @@ export function error(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: string): string {
+export function redirect(url: string, status: number | undefined): bigint {
   const obj = getResponse(self);
   return obj.redirect(url, status);
 }
@@ -580,7 +580,7 @@ export function redirect(url: string, status: string): string {
  *
  * Async operation: returns request ID, poll with `pollJson()`
  */
-export function json(data: string, init: bigint): string {
+export function json(data: string, init: string | undefined): string {
   const requestId = _nextAsyncHandle++;
   const obj = getResponse(self);
   const promise = obj.json(data, init)
@@ -616,7 +616,7 @@ export function pollJson(requestId: bigint): { ok: true; value: string } | { ok:
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): bigint {
+export function getType(self: string): string {
   const obj = getResponse(self);
   return obj.type;
 }
@@ -648,7 +648,7 @@ export function getStatus(self: bigint): number {
 /**
  * `get-ok()` operation.
  */
-export function getOk(self: bigint | undefined): boolean {
+export function getOk(self: bigint): boolean {
   const obj = getResponse(self);
   return obj.ok;
 }

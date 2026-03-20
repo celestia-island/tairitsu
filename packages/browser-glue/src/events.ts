@@ -5,7 +5,7 @@
  * back to WASM guest callbacks.
  */
 
-import { getEventTarget, registerNode } from "./handles.js";
+import { getEventTarget, registerNode } from "./handles";
 
 // ---------------------------------------------------------------------------
 // Types matching WIT records

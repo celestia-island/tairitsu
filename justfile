@@ -444,6 +444,40 @@ wit-dry-run:
     python3 scripts/gen_wit_from_webidl.py --dry-run
 
 # ============================================================================
+# Browser testing tasks
+# ============================================================================
+
+# Download and cache Chromium browser
+browser-install:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Installing Chromium for browser testing..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo run --package tairitsu-browser-test -- browser install
+
+# List cached browser versions
+browser-list:
+    @echo "Listing cached browser versions..."
+    cargo run --package tairitsu-browser-test -- browser list
+
+# Clear browser cache
+browser-clear:
+    @echo "Clearing browser cache..."
+    cargo run --package tairitsu-browser-test -- browser clear
+
+# Run browser-glue tests
+test-browser:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Running browser-glue tests..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo run --package tairitsu-browser-test -- test run --headless
+
+# CI: Install browser + run tests
+test-browser-ci: browser-install test-browser
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ Browser tests completed!"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ============================================================================
 # Documentation tasks
 # ============================================================================
 

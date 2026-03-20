@@ -32,41 +32,9 @@ function getGeo(handle: bigint): Geolocation {
 /**
  * `get-current-position()` operation.
  */
-export function getCurrentPosition(handle: bigint, options: string | undefined): bigint {
+export function getCurrentPosition(handle: bigint): void {
   const obj = getGeo(self);
   return obj.currentPosition;
-}
-
-/**
- * `poll-current-position()` operation.
- */
-export function pollCurrentPosition(requestId: bigint | undefined): bigint {
-  const obj = getGeo(self);
-  return obj.pollCurrentPosition(requestId) ?? undefined;
-}
-
-/**
- * `watch-position()` operation.
- */
-export function watchPosition(handle: bigint, options: { ok: true; value: bigint } | { ok: false; error: bigint }): bigint {
-  const obj = getGeo(self);
-  return obj.watchPosition(handle, options);
-}
-
-/**
- * `poll-watch()` operation.
- */
-export function pollWatch(watchId: bigint): bigint | undefined {
-  const obj = getGeo(self);
-  return obj.pollWatch(watchId) ?? undefined;
-}
-
-/**
- * `clear-watch()` operation.
- */
-export function clearWatch(handle: bigint, watchId: string): void {
-  const obj = getGeo(self);
-  obj.clearWatch(handle, watchId);
 }
 
 // ---------------------------------------------------------------------------
@@ -74,9 +42,5 @@ export function clearWatch(handle: bigint, watchId: string): void {
 // ---------------------------------------------------------------------------
 
 export default {
-  getCurrentPosition,
-  pollCurrentPosition,
-  watchPosition,
-  pollWatch,
-  clearWatch
+  getCurrentPosition
 };

@@ -34,14 +34,14 @@
  */
 
 // Hand-written Phase 0 modules
-export * from "./dom.js";
-export * from "./events.js";
-export * from "./http.js";
-export * from "./canvas.js";
-export * from "./handles.js";
+export * from "./dom";
+export * from "./events";
+export * from "./http";
+export * from "./canvas";
+export * from "./handles";
 
 // Auto-generated Phase A modules
-export * from "./generated-index.js";
+export * from "./generated/index";
 
 /**
  * Diagnostic types for external consumers.
@@ -49,14 +49,14 @@ export * from "./generated-index.js";
 export type {
   DiagnosticError,
   EventDispatchInfo,
-} from "./events.js";
+} from "./events";
 
 export type {
   DomDiagnosticError,
-} from "./dom.js";
+} from "./dom";
 
 export type {
   HandleDiagnosticError,
-} from "./handles.js";
+} from "./handles";
 
 
