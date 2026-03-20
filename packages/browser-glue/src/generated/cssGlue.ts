@@ -277,7 +277,7 @@ function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
 /**
  * `get-onanimationstart()` operation.
  */
-export function getOnanimationstart(self: bigint): bigint {
+export function getOnanimationstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onanimationstart;
 }
@@ -285,7 +285,7 @@ export function getOnanimationstart(self: bigint): bigint {
 /**
  * `set-onanimationstart()` operation.
  */
-export function setOnanimationstart(self: bigint, value: bigint): void {
+export function setOnanimationstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onanimationstart = value;
 }
@@ -293,7 +293,7 @@ export function setOnanimationstart(self: bigint, value: bigint): void {
 /**
  * `get-onanimationiteration()` operation.
  */
-export function getOnanimationiteration(self: bigint): bigint {
+export function getOnanimationiteration(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onanimationiteration;
 }
@@ -301,7 +301,7 @@ export function getOnanimationiteration(self: bigint): bigint {
 /**
  * `set-onanimationiteration()` operation.
  */
-export function setOnanimationiteration(self: bigint, value: bigint): void {
+export function setOnanimationiteration(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onanimationiteration = value;
 }
@@ -309,7 +309,7 @@ export function setOnanimationiteration(self: bigint, value: bigint): void {
 /**
  * `get-onanimationend()` operation.
  */
-export function getOnanimationend(self: bigint): bigint {
+export function getOnanimationend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onanimationend;
 }
@@ -317,7 +317,7 @@ export function getOnanimationend(self: bigint): bigint {
 /**
  * `set-onanimationend()` operation.
  */
-export function setOnanimationend(self: bigint, value: bigint): void {
+export function setOnanimationend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onanimationend = value;
 }
@@ -325,7 +325,7 @@ export function setOnanimationend(self: bigint, value: bigint): void {
 /**
  * `get-onanimationcancel()` operation.
  */
-export function getOnanimationcancel(self: bigint): bigint {
+export function getOnanimationcancel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onanimationcancel;
 }
@@ -333,7 +333,7 @@ export function getOnanimationcancel(self: bigint): bigint {
 /**
  * `set-onanimationcancel()` operation.
  */
-export function setOnanimationcancel(self: bigint, value: bigint): void {
+export function setOnanimationcancel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onanimationcancel = value;
 }
@@ -341,7 +341,7 @@ export function setOnanimationcancel(self: bigint, value: bigint): void {
 /**
  * `get-ontransitionrun()` operation.
  */
-export function getOntransitionrun(self: bigint): bigint {
+export function getOntransitionrun(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontransitionrun;
 }
@@ -349,7 +349,7 @@ export function getOntransitionrun(self: bigint): bigint {
 /**
  * `set-ontransitionrun()` operation.
  */
-export function setOntransitionrun(self: bigint, value: bigint): void {
+export function setOntransitionrun(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontransitionrun = value;
 }
@@ -357,7 +357,7 @@ export function setOntransitionrun(self: bigint, value: bigint): void {
 /**
  * `get-ontransitionstart()` operation.
  */
-export function getOntransitionstart(self: bigint): bigint {
+export function getOntransitionstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontransitionstart;
 }
@@ -365,7 +365,7 @@ export function getOntransitionstart(self: bigint): bigint {
 /**
  * `set-ontransitionstart()` operation.
  */
-export function setOntransitionstart(self: bigint, value: bigint): void {
+export function setOntransitionstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontransitionstart = value;
 }
@@ -373,7 +373,7 @@ export function setOntransitionstart(self: bigint, value: bigint): void {
 /**
  * `get-ontransitionend()` operation.
  */
-export function getOntransitionend(self: bigint): bigint {
+export function getOntransitionend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontransitionend;
 }
@@ -381,7 +381,7 @@ export function getOntransitionend(self: bigint): bigint {
 /**
  * `set-ontransitionend()` operation.
  */
-export function setOntransitionend(self: bigint, value: bigint): void {
+export function setOntransitionend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontransitionend = value;
 }
@@ -389,7 +389,7 @@ export function setOntransitionend(self: bigint, value: bigint): void {
 /**
  * `get-ontransitioncancel()` operation.
  */
-export function getOntransitioncancel(self: bigint): bigint {
+export function getOntransitioncancel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontransitioncancel;
 }
@@ -397,7 +397,7 @@ export function getOntransitioncancel(self: bigint): bigint {
 /**
  * `set-ontransitioncancel()` operation.
  */
-export function setOntransitioncancel(self: bigint, value: bigint): void {
+export function setOntransitioncancel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontransitioncancel = value;
 }
@@ -405,7 +405,7 @@ export function setOntransitioncancel(self: bigint, value: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): bigint {
+export function getOnabort(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onabort;
 }
@@ -413,7 +413,7 @@ export function getOnabort(self: bigint): bigint {
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: bigint): void {
+export function setOnabort(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onabort = value;
 }
@@ -421,7 +421,7 @@ export function setOnabort(self: bigint, value: bigint): void {
 /**
  * `get-onauxclick()` operation.
  */
-export function getOnauxclick(self: bigint): bigint {
+export function getOnauxclick(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onauxclick;
 }
@@ -429,7 +429,7 @@ export function getOnauxclick(self: bigint): bigint {
 /**
  * `set-onauxclick()` operation.
  */
-export function setOnauxclick(self: bigint, value: bigint): void {
+export function setOnauxclick(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onauxclick = value;
 }
@@ -437,7 +437,7 @@ export function setOnauxclick(self: bigint, value: bigint): void {
 /**
  * `get-onbeforeinput()` operation.
  */
-export function getOnbeforeinput(self: bigint): bigint {
+export function getOnbeforeinput(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onbeforeinput;
 }
@@ -445,7 +445,7 @@ export function getOnbeforeinput(self: bigint): bigint {
 /**
  * `set-onbeforeinput()` operation.
  */
-export function setOnbeforeinput(self: bigint, value: bigint): void {
+export function setOnbeforeinput(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onbeforeinput = value;
 }
@@ -453,7 +453,7 @@ export function setOnbeforeinput(self: bigint, value: bigint): void {
 /**
  * `get-onbeforematch()` operation.
  */
-export function getOnbeforematch(self: bigint): bigint {
+export function getOnbeforematch(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onbeforematch;
 }
@@ -461,7 +461,7 @@ export function getOnbeforematch(self: bigint): bigint {
 /**
  * `set-onbeforematch()` operation.
  */
-export function setOnbeforematch(self: bigint, value: bigint): void {
+export function setOnbeforematch(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onbeforematch = value;
 }
@@ -469,7 +469,7 @@ export function setOnbeforematch(self: bigint, value: bigint): void {
 /**
  * `get-onbeforetoggle()` operation.
  */
-export function getOnbeforetoggle(self: bigint): bigint {
+export function getOnbeforetoggle(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onbeforetoggle;
 }
@@ -477,7 +477,7 @@ export function getOnbeforetoggle(self: bigint): bigint {
 /**
  * `set-onbeforetoggle()` operation.
  */
-export function setOnbeforetoggle(self: bigint, value: bigint): void {
+export function setOnbeforetoggle(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onbeforetoggle = value;
 }
@@ -485,7 +485,7 @@ export function setOnbeforetoggle(self: bigint, value: bigint): void {
 /**
  * `get-onblur()` operation.
  */
-export function getOnblur(self: bigint): bigint {
+export function getOnblur(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onblur;
 }
@@ -493,7 +493,7 @@ export function getOnblur(self: bigint): bigint {
 /**
  * `set-onblur()` operation.
  */
-export function setOnblur(self: bigint, value: bigint): void {
+export function setOnblur(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onblur = value;
 }
@@ -501,7 +501,7 @@ export function setOnblur(self: bigint, value: bigint): void {
 /**
  * `get-oncancel()` operation.
  */
-export function getOncancel(self: bigint): bigint {
+export function getOncancel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncancel;
 }
@@ -509,7 +509,7 @@ export function getOncancel(self: bigint): bigint {
 /**
  * `set-oncancel()` operation.
  */
-export function setOncancel(self: bigint, value: bigint): void {
+export function setOncancel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncancel = value;
 }
@@ -517,7 +517,7 @@ export function setOncancel(self: bigint, value: bigint): void {
 /**
  * `get-oncanplay()` operation.
  */
-export function getOncanplay(self: bigint): bigint {
+export function getOncanplay(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncanplay;
 }
@@ -525,7 +525,7 @@ export function getOncanplay(self: bigint): bigint {
 /**
  * `set-oncanplay()` operation.
  */
-export function setOncanplay(self: bigint, value: bigint): void {
+export function setOncanplay(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncanplay = value;
 }
@@ -533,7 +533,7 @@ export function setOncanplay(self: bigint, value: bigint): void {
 /**
  * `get-oncanplaythrough()` operation.
  */
-export function getOncanplaythrough(self: bigint): bigint {
+export function getOncanplaythrough(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncanplaythrough;
 }
@@ -541,7 +541,7 @@ export function getOncanplaythrough(self: bigint): bigint {
 /**
  * `set-oncanplaythrough()` operation.
  */
-export function setOncanplaythrough(self: bigint, value: bigint): void {
+export function setOncanplaythrough(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncanplaythrough = value;
 }
@@ -549,7 +549,7 @@ export function setOncanplaythrough(self: bigint, value: bigint): void {
 /**
  * `get-onchange()` operation.
  */
-export function GlobalEventHandlersGetOnchange(self: bigint): bigint {
+export function GlobalEventHandlersGetOnchange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onchange;
 }
@@ -557,7 +557,7 @@ export function GlobalEventHandlersGetOnchange(self: bigint): bigint {
 /**
  * `set-onchange()` operation.
  */
-export function GlobalEventHandlersSetOnchange(self: bigint, value: bigint): void {
+export function GlobalEventHandlersSetOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onchange = value;
 }
@@ -565,7 +565,7 @@ export function GlobalEventHandlersSetOnchange(self: bigint, value: bigint): voi
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: bigint): bigint {
+export function getOnclick(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onclick;
 }
@@ -573,7 +573,7 @@ export function getOnclick(self: bigint): bigint {
 /**
  * `set-onclick()` operation.
  */
-export function setOnclick(self: bigint, value: bigint): void {
+export function setOnclick(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onclick = value;
 }
@@ -581,7 +581,7 @@ export function setOnclick(self: bigint, value: bigint): void {
 /**
  * `get-onclose()` operation.
  */
-export function getOnclose(self: bigint): bigint {
+export function getOnclose(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onclose;
 }
@@ -589,7 +589,7 @@ export function getOnclose(self: bigint): bigint {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: bigint, value: bigint): void {
+export function setOnclose(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onclose = value;
 }
@@ -597,7 +597,7 @@ export function setOnclose(self: bigint, value: bigint): void {
 /**
  * `get-oncommand()` operation.
  */
-export function getOncommand(self: bigint): bigint {
+export function getOncommand(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncommand;
 }
@@ -605,7 +605,7 @@ export function getOncommand(self: bigint): bigint {
 /**
  * `set-oncommand()` operation.
  */
-export function setOncommand(self: bigint, value: bigint): void {
+export function setOncommand(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncommand = value;
 }
@@ -613,7 +613,7 @@ export function setOncommand(self: bigint, value: bigint): void {
 /**
  * `get-oncontextlost()` operation.
  */
-export function getOncontextlost(self: bigint): bigint {
+export function getOncontextlost(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncontextlost;
 }
@@ -621,7 +621,7 @@ export function getOncontextlost(self: bigint): bigint {
 /**
  * `set-oncontextlost()` operation.
  */
-export function setOncontextlost(self: bigint, value: bigint): void {
+export function setOncontextlost(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncontextlost = value;
 }
@@ -629,7 +629,7 @@ export function setOncontextlost(self: bigint, value: bigint): void {
 /**
  * `get-oncontextmenu()` operation.
  */
-export function getOncontextmenu(self: bigint): bigint {
+export function getOncontextmenu(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncontextmenu;
 }
@@ -637,7 +637,7 @@ export function getOncontextmenu(self: bigint): bigint {
 /**
  * `set-oncontextmenu()` operation.
  */
-export function setOncontextmenu(self: bigint, value: bigint): void {
+export function setOncontextmenu(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncontextmenu = value;
 }
@@ -645,7 +645,7 @@ export function setOncontextmenu(self: bigint, value: bigint): void {
 /**
  * `get-oncontextrestored()` operation.
  */
-export function getOncontextrestored(self: bigint): bigint {
+export function getOncontextrestored(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncontextrestored;
 }
@@ -653,7 +653,7 @@ export function getOncontextrestored(self: bigint): bigint {
 /**
  * `set-oncontextrestored()` operation.
  */
-export function setOncontextrestored(self: bigint, value: bigint): void {
+export function setOncontextrestored(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncontextrestored = value;
 }
@@ -661,7 +661,7 @@ export function setOncontextrestored(self: bigint, value: bigint): void {
 /**
  * `get-oncopy()` operation.
  */
-export function getOncopy(self: bigint): bigint {
+export function getOncopy(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncopy;
 }
@@ -669,7 +669,7 @@ export function getOncopy(self: bigint): bigint {
 /**
  * `set-oncopy()` operation.
  */
-export function setOncopy(self: bigint, value: bigint): void {
+export function setOncopy(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncopy = value;
 }
@@ -677,7 +677,7 @@ export function setOncopy(self: bigint, value: bigint): void {
 /**
  * `get-oncuechange()` operation.
  */
-export function getOncuechange(self: bigint): bigint {
+export function getOncuechange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncuechange;
 }
@@ -685,7 +685,7 @@ export function getOncuechange(self: bigint): bigint {
 /**
  * `set-oncuechange()` operation.
  */
-export function setOncuechange(self: bigint, value: bigint): void {
+export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncuechange = value;
 }
@@ -693,7 +693,7 @@ export function setOncuechange(self: bigint, value: bigint): void {
 /**
  * `get-oncut()` operation.
  */
-export function getOncut(self: bigint): bigint {
+export function getOncut(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oncut;
 }
@@ -701,7 +701,7 @@ export function getOncut(self: bigint): bigint {
 /**
  * `set-oncut()` operation.
  */
-export function setOncut(self: bigint, value: bigint): void {
+export function setOncut(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oncut = value;
 }
@@ -709,7 +709,7 @@ export function setOncut(self: bigint, value: bigint): void {
 /**
  * `get-ondblclick()` operation.
  */
-export function getOndblclick(self: bigint): bigint {
+export function getOndblclick(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondblclick;
 }
@@ -717,7 +717,7 @@ export function getOndblclick(self: bigint): bigint {
 /**
  * `set-ondblclick()` operation.
  */
-export function setOndblclick(self: bigint, value: bigint): void {
+export function setOndblclick(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondblclick = value;
 }
@@ -725,7 +725,7 @@ export function setOndblclick(self: bigint, value: bigint): void {
 /**
  * `get-ondrag()` operation.
  */
-export function getOndrag(self: bigint): bigint {
+export function getOndrag(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondrag;
 }
@@ -733,7 +733,7 @@ export function getOndrag(self: bigint): bigint {
 /**
  * `set-ondrag()` operation.
  */
-export function setOndrag(self: bigint, value: bigint): void {
+export function setOndrag(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondrag = value;
 }
@@ -741,7 +741,7 @@ export function setOndrag(self: bigint, value: bigint): void {
 /**
  * `get-ondragend()` operation.
  */
-export function getOndragend(self: bigint): bigint {
+export function getOndragend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondragend;
 }
@@ -749,7 +749,7 @@ export function getOndragend(self: bigint): bigint {
 /**
  * `set-ondragend()` operation.
  */
-export function setOndragend(self: bigint, value: bigint): void {
+export function setOndragend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondragend = value;
 }
@@ -757,7 +757,7 @@ export function setOndragend(self: bigint, value: bigint): void {
 /**
  * `get-ondragenter()` operation.
  */
-export function getOndragenter(self: bigint): bigint {
+export function getOndragenter(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondragenter;
 }
@@ -765,7 +765,7 @@ export function getOndragenter(self: bigint): bigint {
 /**
  * `set-ondragenter()` operation.
  */
-export function setOndragenter(self: bigint, value: bigint): void {
+export function setOndragenter(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondragenter = value;
 }
@@ -773,7 +773,7 @@ export function setOndragenter(self: bigint, value: bigint): void {
 /**
  * `get-ondragleave()` operation.
  */
-export function getOndragleave(self: bigint): bigint {
+export function getOndragleave(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondragleave;
 }
@@ -781,7 +781,7 @@ export function getOndragleave(self: bigint): bigint {
 /**
  * `set-ondragleave()` operation.
  */
-export function setOndragleave(self: bigint, value: bigint): void {
+export function setOndragleave(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondragleave = value;
 }
@@ -789,7 +789,7 @@ export function setOndragleave(self: bigint, value: bigint): void {
 /**
  * `get-ondragover()` operation.
  */
-export function getOndragover(self: bigint): bigint {
+export function getOndragover(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondragover;
 }
@@ -797,7 +797,7 @@ export function getOndragover(self: bigint): bigint {
 /**
  * `set-ondragover()` operation.
  */
-export function setOndragover(self: bigint, value: bigint): void {
+export function setOndragover(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondragover = value;
 }
@@ -805,7 +805,7 @@ export function setOndragover(self: bigint, value: bigint): void {
 /**
  * `get-ondragstart()` operation.
  */
-export function getOndragstart(self: bigint): bigint {
+export function getOndragstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondragstart;
 }
@@ -813,7 +813,7 @@ export function getOndragstart(self: bigint): bigint {
 /**
  * `set-ondragstart()` operation.
  */
-export function setOndragstart(self: bigint, value: bigint): void {
+export function setOndragstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondragstart = value;
 }
@@ -821,7 +821,7 @@ export function setOndragstart(self: bigint, value: bigint): void {
 /**
  * `get-ondrop()` operation.
  */
-export function getOndrop(self: bigint): bigint {
+export function getOndrop(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondrop;
 }
@@ -829,7 +829,7 @@ export function getOndrop(self: bigint): bigint {
 /**
  * `set-ondrop()` operation.
  */
-export function setOndrop(self: bigint, value: bigint): void {
+export function setOndrop(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondrop = value;
 }
@@ -837,7 +837,7 @@ export function setOndrop(self: bigint, value: bigint): void {
 /**
  * `get-ondurationchange()` operation.
  */
-export function getOndurationchange(self: bigint): bigint {
+export function getOndurationchange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ondurationchange;
 }
@@ -845,7 +845,7 @@ export function getOndurationchange(self: bigint): bigint {
 /**
  * `set-ondurationchange()` operation.
  */
-export function setOndurationchange(self: bigint, value: bigint): void {
+export function setOndurationchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ondurationchange = value;
 }
@@ -853,7 +853,7 @@ export function setOndurationchange(self: bigint, value: bigint): void {
 /**
  * `get-onemptied()` operation.
  */
-export function getOnemptied(self: bigint): bigint {
+export function getOnemptied(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onemptied;
 }
@@ -861,7 +861,7 @@ export function getOnemptied(self: bigint): bigint {
 /**
  * `set-onemptied()` operation.
  */
-export function setOnemptied(self: bigint, value: bigint): void {
+export function setOnemptied(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onemptied = value;
 }
@@ -869,7 +869,7 @@ export function setOnemptied(self: bigint, value: bigint): void {
 /**
  * `get-onended()` operation.
  */
-export function getOnended(self: bigint): bigint {
+export function getOnended(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onended;
 }
@@ -877,7 +877,7 @@ export function getOnended(self: bigint): bigint {
 /**
  * `set-onended()` operation.
  */
-export function setOnended(self: bigint, value: bigint): void {
+export function setOnended(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onended = value;
 }
@@ -885,7 +885,7 @@ export function setOnended(self: bigint, value: bigint): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): bigint {
+export function getOnerror(self: bigint): OnErrorEventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onerror;
 }
@@ -893,7 +893,7 @@ export function getOnerror(self: bigint): bigint {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: bigint): void {
+export function setOnerror(self: bigint, value: OnErrorEventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onerror = value;
 }
@@ -901,7 +901,7 @@ export function setOnerror(self: bigint, value: bigint): void {
 /**
  * `get-onfocus()` operation.
  */
-export function getOnfocus(self: bigint): bigint {
+export function getOnfocus(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onfocus;
 }
@@ -909,7 +909,7 @@ export function getOnfocus(self: bigint): bigint {
 /**
  * `set-onfocus()` operation.
  */
-export function setOnfocus(self: bigint, value: bigint): void {
+export function setOnfocus(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onfocus = value;
 }
@@ -917,7 +917,7 @@ export function setOnfocus(self: bigint, value: bigint): void {
 /**
  * `get-onformdata()` operation.
  */
-export function getOnformdata(self: bigint): bigint {
+export function getOnformdata(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onformdata;
 }
@@ -925,7 +925,7 @@ export function getOnformdata(self: bigint): bigint {
 /**
  * `set-onformdata()` operation.
  */
-export function setOnformdata(self: bigint, value: bigint): void {
+export function setOnformdata(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onformdata = value;
 }
@@ -933,7 +933,7 @@ export function setOnformdata(self: bigint, value: bigint): void {
 /**
  * `get-oninput()` operation.
  */
-export function getOninput(self: bigint): bigint {
+export function getOninput(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oninput;
 }
@@ -941,7 +941,7 @@ export function getOninput(self: bigint): bigint {
 /**
  * `set-oninput()` operation.
  */
-export function setOninput(self: bigint, value: bigint): void {
+export function setOninput(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oninput = value;
 }
@@ -949,7 +949,7 @@ export function setOninput(self: bigint, value: bigint): void {
 /**
  * `get-oninvalid()` operation.
  */
-export function getOninvalid(self: bigint): bigint {
+export function getOninvalid(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.oninvalid;
 }
@@ -957,7 +957,7 @@ export function getOninvalid(self: bigint): bigint {
 /**
  * `set-oninvalid()` operation.
  */
-export function setOninvalid(self: bigint, value: bigint): void {
+export function setOninvalid(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.oninvalid = value;
 }
@@ -965,7 +965,7 @@ export function setOninvalid(self: bigint, value: bigint): void {
 /**
  * `get-onkeydown()` operation.
  */
-export function getOnkeydown(self: bigint): bigint {
+export function getOnkeydown(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onkeydown;
 }
@@ -973,7 +973,7 @@ export function getOnkeydown(self: bigint): bigint {
 /**
  * `set-onkeydown()` operation.
  */
-export function setOnkeydown(self: bigint, value: bigint): void {
+export function setOnkeydown(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onkeydown = value;
 }
@@ -981,7 +981,7 @@ export function setOnkeydown(self: bigint, value: bigint): void {
 /**
  * `get-onkeypress()` operation.
  */
-export function getOnkeypress(self: bigint): bigint {
+export function getOnkeypress(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onkeypress;
 }
@@ -989,7 +989,7 @@ export function getOnkeypress(self: bigint): bigint {
 /**
  * `set-onkeypress()` operation.
  */
-export function setOnkeypress(self: bigint, value: bigint): void {
+export function setOnkeypress(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onkeypress = value;
 }
@@ -997,7 +997,7 @@ export function setOnkeypress(self: bigint, value: bigint): void {
 /**
  * `get-onkeyup()` operation.
  */
-export function getOnkeyup(self: bigint): bigint {
+export function getOnkeyup(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onkeyup;
 }
@@ -1005,7 +1005,7 @@ export function getOnkeyup(self: bigint): bigint {
 /**
  * `set-onkeyup()` operation.
  */
-export function setOnkeyup(self: bigint, value: bigint): void {
+export function setOnkeyup(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onkeyup = value;
 }
@@ -1013,7 +1013,7 @@ export function setOnkeyup(self: bigint, value: bigint): void {
 /**
  * `get-onload()` operation.
  */
-export function getOnload(self: bigint): bigint {
+export function getOnload(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onload;
 }
@@ -1021,7 +1021,7 @@ export function getOnload(self: bigint): bigint {
 /**
  * `set-onload()` operation.
  */
-export function setOnload(self: bigint, value: bigint): void {
+export function setOnload(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onload = value;
 }
@@ -1029,7 +1029,7 @@ export function setOnload(self: bigint, value: bigint): void {
 /**
  * `get-onloadeddata()` operation.
  */
-export function getOnloadeddata(self: bigint): bigint {
+export function getOnloadeddata(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onloadeddata;
 }
@@ -1037,7 +1037,7 @@ export function getOnloadeddata(self: bigint): bigint {
 /**
  * `set-onloadeddata()` operation.
  */
-export function setOnloadeddata(self: bigint, value: bigint): void {
+export function setOnloadeddata(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onloadeddata = value;
 }
@@ -1045,7 +1045,7 @@ export function setOnloadeddata(self: bigint, value: bigint): void {
 /**
  * `get-onloadedmetadata()` operation.
  */
-export function getOnloadedmetadata(self: bigint): bigint {
+export function getOnloadedmetadata(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onloadedmetadata;
 }
@@ -1053,7 +1053,7 @@ export function getOnloadedmetadata(self: bigint): bigint {
 /**
  * `set-onloadedmetadata()` operation.
  */
-export function setOnloadedmetadata(self: bigint, value: bigint): void {
+export function setOnloadedmetadata(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onloadedmetadata = value;
 }
@@ -1061,7 +1061,7 @@ export function setOnloadedmetadata(self: bigint, value: bigint): void {
 /**
  * `get-onloadstart()` operation.
  */
-export function getOnloadstart(self: bigint): bigint {
+export function getOnloadstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onloadstart;
 }
@@ -1069,7 +1069,7 @@ export function getOnloadstart(self: bigint): bigint {
 /**
  * `set-onloadstart()` operation.
  */
-export function setOnloadstart(self: bigint, value: bigint): void {
+export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onloadstart = value;
 }
@@ -1077,7 +1077,7 @@ export function setOnloadstart(self: bigint, value: bigint): void {
 /**
  * `get-onmousedown()` operation.
  */
-export function getOnmousedown(self: bigint): bigint {
+export function getOnmousedown(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmousedown;
 }
@@ -1085,7 +1085,7 @@ export function getOnmousedown(self: bigint): bigint {
 /**
  * `set-onmousedown()` operation.
  */
-export function setOnmousedown(self: bigint, value: bigint): void {
+export function setOnmousedown(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmousedown = value;
 }
@@ -1093,7 +1093,7 @@ export function setOnmousedown(self: bigint, value: bigint): void {
 /**
  * `get-onmouseenter()` operation.
  */
-export function getOnmouseenter(self: bigint): bigint {
+export function getOnmouseenter(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmouseenter;
 }
@@ -1101,7 +1101,7 @@ export function getOnmouseenter(self: bigint): bigint {
 /**
  * `set-onmouseenter()` operation.
  */
-export function setOnmouseenter(self: bigint, value: bigint): void {
+export function setOnmouseenter(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmouseenter = value;
 }
@@ -1109,7 +1109,7 @@ export function setOnmouseenter(self: bigint, value: bigint): void {
 /**
  * `get-onmouseleave()` operation.
  */
-export function getOnmouseleave(self: bigint): bigint {
+export function getOnmouseleave(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmouseleave;
 }
@@ -1117,7 +1117,7 @@ export function getOnmouseleave(self: bigint): bigint {
 /**
  * `set-onmouseleave()` operation.
  */
-export function setOnmouseleave(self: bigint, value: bigint): void {
+export function setOnmouseleave(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmouseleave = value;
 }
@@ -1125,7 +1125,7 @@ export function setOnmouseleave(self: bigint, value: bigint): void {
 /**
  * `get-onmousemove()` operation.
  */
-export function getOnmousemove(self: bigint): bigint {
+export function getOnmousemove(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmousemove;
 }
@@ -1133,7 +1133,7 @@ export function getOnmousemove(self: bigint): bigint {
 /**
  * `set-onmousemove()` operation.
  */
-export function setOnmousemove(self: bigint, value: bigint): void {
+export function setOnmousemove(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmousemove = value;
 }
@@ -1141,7 +1141,7 @@ export function setOnmousemove(self: bigint, value: bigint): void {
 /**
  * `get-onmouseout()` operation.
  */
-export function getOnmouseout(self: bigint): bigint {
+export function getOnmouseout(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmouseout;
 }
@@ -1149,7 +1149,7 @@ export function getOnmouseout(self: bigint): bigint {
 /**
  * `set-onmouseout()` operation.
  */
-export function setOnmouseout(self: bigint, value: bigint): void {
+export function setOnmouseout(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmouseout = value;
 }
@@ -1157,7 +1157,7 @@ export function setOnmouseout(self: bigint, value: bigint): void {
 /**
  * `get-onmouseover()` operation.
  */
-export function getOnmouseover(self: bigint): bigint {
+export function getOnmouseover(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmouseover;
 }
@@ -1165,7 +1165,7 @@ export function getOnmouseover(self: bigint): bigint {
 /**
  * `set-onmouseover()` operation.
  */
-export function setOnmouseover(self: bigint, value: bigint): void {
+export function setOnmouseover(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmouseover = value;
 }
@@ -1173,7 +1173,7 @@ export function setOnmouseover(self: bigint, value: bigint): void {
 /**
  * `get-onmouseup()` operation.
  */
-export function getOnmouseup(self: bigint): bigint {
+export function getOnmouseup(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onmouseup;
 }
@@ -1181,7 +1181,7 @@ export function getOnmouseup(self: bigint): bigint {
 /**
  * `set-onmouseup()` operation.
  */
-export function setOnmouseup(self: bigint, value: bigint): void {
+export function setOnmouseup(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onmouseup = value;
 }
@@ -1189,7 +1189,7 @@ export function setOnmouseup(self: bigint, value: bigint): void {
 /**
  * `get-onpaste()` operation.
  */
-export function getOnpaste(self: bigint): bigint {
+export function getOnpaste(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpaste;
 }
@@ -1197,7 +1197,7 @@ export function getOnpaste(self: bigint): bigint {
 /**
  * `set-onpaste()` operation.
  */
-export function setOnpaste(self: bigint, value: bigint): void {
+export function setOnpaste(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpaste = value;
 }
@@ -1205,7 +1205,7 @@ export function setOnpaste(self: bigint, value: bigint): void {
 /**
  * `get-onpause()` operation.
  */
-export function getOnpause(self: bigint): bigint {
+export function getOnpause(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpause;
 }
@@ -1213,7 +1213,7 @@ export function getOnpause(self: bigint): bigint {
 /**
  * `set-onpause()` operation.
  */
-export function setOnpause(self: bigint, value: bigint): void {
+export function setOnpause(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpause = value;
 }
@@ -1221,7 +1221,7 @@ export function setOnpause(self: bigint, value: bigint): void {
 /**
  * `get-onplay()` operation.
  */
-export function getOnplay(self: bigint): bigint {
+export function getOnplay(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onplay;
 }
@@ -1229,7 +1229,7 @@ export function getOnplay(self: bigint): bigint {
 /**
  * `set-onplay()` operation.
  */
-export function setOnplay(self: bigint, value: bigint): void {
+export function setOnplay(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onplay = value;
 }
@@ -1237,7 +1237,7 @@ export function setOnplay(self: bigint, value: bigint): void {
 /**
  * `get-onplaying()` operation.
  */
-export function getOnplaying(self: bigint): bigint {
+export function getOnplaying(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onplaying;
 }
@@ -1245,7 +1245,7 @@ export function getOnplaying(self: bigint): bigint {
 /**
  * `set-onplaying()` operation.
  */
-export function setOnplaying(self: bigint, value: bigint): void {
+export function setOnplaying(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onplaying = value;
 }
@@ -1253,7 +1253,7 @@ export function setOnplaying(self: bigint, value: bigint): void {
 /**
  * `get-onprogress()` operation.
  */
-export function getOnprogress(self: bigint): bigint {
+export function getOnprogress(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onprogress;
 }
@@ -1261,7 +1261,7 @@ export function getOnprogress(self: bigint): bigint {
 /**
  * `set-onprogress()` operation.
  */
-export function setOnprogress(self: bigint, value: bigint): void {
+export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onprogress = value;
 }
@@ -1269,7 +1269,7 @@ export function setOnprogress(self: bigint, value: bigint): void {
 /**
  * `get-onratechange()` operation.
  */
-export function getOnratechange(self: bigint): bigint {
+export function getOnratechange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onratechange;
 }
@@ -1277,7 +1277,7 @@ export function getOnratechange(self: bigint): bigint {
 /**
  * `set-onratechange()` operation.
  */
-export function setOnratechange(self: bigint, value: bigint): void {
+export function setOnratechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onratechange = value;
 }
@@ -1285,7 +1285,7 @@ export function setOnratechange(self: bigint, value: bigint): void {
 /**
  * `get-onreset()` operation.
  */
-export function getOnreset(self: bigint): bigint {
+export function getOnreset(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onreset;
 }
@@ -1293,7 +1293,7 @@ export function getOnreset(self: bigint): bigint {
 /**
  * `set-onreset()` operation.
  */
-export function setOnreset(self: bigint, value: bigint): void {
+export function setOnreset(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onreset = value;
 }
@@ -1301,7 +1301,7 @@ export function setOnreset(self: bigint, value: bigint): void {
 /**
  * `get-onresize()` operation.
  */
-export function GlobalEventHandlersGetOnresize(self: bigint): bigint {
+export function GlobalEventHandlersGetOnresize(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onresize;
 }
@@ -1309,7 +1309,7 @@ export function GlobalEventHandlersGetOnresize(self: bigint): bigint {
 /**
  * `set-onresize()` operation.
  */
-export function GlobalEventHandlersSetOnresize(self: bigint, value: bigint): void {
+export function GlobalEventHandlersSetOnresize(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onresize = value;
 }
@@ -1317,7 +1317,7 @@ export function GlobalEventHandlersSetOnresize(self: bigint, value: bigint): voi
 /**
  * `get-onscroll()` operation.
  */
-export function GlobalEventHandlersGetOnscroll(self: bigint): bigint {
+export function GlobalEventHandlersGetOnscroll(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onscroll;
 }
@@ -1325,7 +1325,7 @@ export function GlobalEventHandlersGetOnscroll(self: bigint): bigint {
 /**
  * `set-onscroll()` operation.
  */
-export function GlobalEventHandlersSetOnscroll(self: bigint, value: bigint): void {
+export function GlobalEventHandlersSetOnscroll(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onscroll = value;
 }
@@ -1333,7 +1333,7 @@ export function GlobalEventHandlersSetOnscroll(self: bigint, value: bigint): voi
 /**
  * `get-onscrollend()` operation.
  */
-export function GlobalEventHandlersGetOnscrollend(self: bigint): bigint {
+export function GlobalEventHandlersGetOnscrollend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onscrollend;
 }
@@ -1341,7 +1341,7 @@ export function GlobalEventHandlersGetOnscrollend(self: bigint): bigint {
 /**
  * `set-onscrollend()` operation.
  */
-export function GlobalEventHandlersSetOnscrollend(self: bigint, value: bigint): void {
+export function GlobalEventHandlersSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onscrollend = value;
 }
@@ -1349,7 +1349,7 @@ export function GlobalEventHandlersSetOnscrollend(self: bigint, value: bigint): 
 /**
  * `get-onsecuritypolicyviolation()` operation.
  */
-export function getOnsecuritypolicyviolation(self: bigint): bigint {
+export function getOnsecuritypolicyviolation(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onsecuritypolicyviolation;
 }
@@ -1357,7 +1357,7 @@ export function getOnsecuritypolicyviolation(self: bigint): bigint {
 /**
  * `set-onsecuritypolicyviolation()` operation.
  */
-export function setOnsecuritypolicyviolation(self: bigint, value: bigint): void {
+export function setOnsecuritypolicyviolation(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onsecuritypolicyviolation = value;
 }
@@ -1365,7 +1365,7 @@ export function setOnsecuritypolicyviolation(self: bigint, value: bigint): void 
 /**
  * `get-onseeked()` operation.
  */
-export function getOnseeked(self: bigint): bigint {
+export function getOnseeked(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onseeked;
 }
@@ -1373,7 +1373,7 @@ export function getOnseeked(self: bigint): bigint {
 /**
  * `set-onseeked()` operation.
  */
-export function setOnseeked(self: bigint, value: bigint): void {
+export function setOnseeked(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onseeked = value;
 }
@@ -1381,7 +1381,7 @@ export function setOnseeked(self: bigint, value: bigint): void {
 /**
  * `get-onseeking()` operation.
  */
-export function getOnseeking(self: bigint): bigint {
+export function getOnseeking(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onseeking;
 }
@@ -1389,7 +1389,7 @@ export function getOnseeking(self: bigint): bigint {
 /**
  * `set-onseeking()` operation.
  */
-export function setOnseeking(self: bigint, value: bigint): void {
+export function setOnseeking(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onseeking = value;
 }
@@ -1397,7 +1397,7 @@ export function setOnseeking(self: bigint, value: bigint): void {
 /**
  * `get-onselect()` operation.
  */
-export function getOnselect(self: bigint): bigint {
+export function getOnselect(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onselect;
 }
@@ -1405,7 +1405,7 @@ export function getOnselect(self: bigint): bigint {
 /**
  * `set-onselect()` operation.
  */
-export function setOnselect(self: bigint, value: bigint): void {
+export function setOnselect(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onselect = value;
 }
@@ -1413,7 +1413,7 @@ export function setOnselect(self: bigint, value: bigint): void {
 /**
  * `get-onslotchange()` operation.
  */
-export function getOnslotchange(self: bigint): bigint {
+export function getOnslotchange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onslotchange;
 }
@@ -1421,7 +1421,7 @@ export function getOnslotchange(self: bigint): bigint {
 /**
  * `set-onslotchange()` operation.
  */
-export function setOnslotchange(self: bigint, value: bigint): void {
+export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onslotchange = value;
 }
@@ -1429,7 +1429,7 @@ export function setOnslotchange(self: bigint, value: bigint): void {
 /**
  * `get-onstalled()` operation.
  */
-export function getOnstalled(self: bigint): bigint {
+export function getOnstalled(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onstalled;
 }
@@ -1437,7 +1437,7 @@ export function getOnstalled(self: bigint): bigint {
 /**
  * `set-onstalled()` operation.
  */
-export function setOnstalled(self: bigint, value: bigint): void {
+export function setOnstalled(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onstalled = value;
 }
@@ -1445,7 +1445,7 @@ export function setOnstalled(self: bigint, value: bigint): void {
 /**
  * `get-onsubmit()` operation.
  */
-export function getOnsubmit(self: bigint): bigint {
+export function getOnsubmit(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onsubmit;
 }
@@ -1453,7 +1453,7 @@ export function getOnsubmit(self: bigint): bigint {
 /**
  * `set-onsubmit()` operation.
  */
-export function setOnsubmit(self: bigint, value: bigint): void {
+export function setOnsubmit(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onsubmit = value;
 }
@@ -1461,7 +1461,7 @@ export function setOnsubmit(self: bigint, value: bigint): void {
 /**
  * `get-onsuspend()` operation.
  */
-export function getOnsuspend(self: bigint): bigint {
+export function getOnsuspend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onsuspend;
 }
@@ -1469,7 +1469,7 @@ export function getOnsuspend(self: bigint): bigint {
 /**
  * `set-onsuspend()` operation.
  */
-export function setOnsuspend(self: bigint, value: bigint): void {
+export function setOnsuspend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onsuspend = value;
 }
@@ -1477,7 +1477,7 @@ export function setOnsuspend(self: bigint, value: bigint): void {
 /**
  * `get-ontimeupdate()` operation.
  */
-export function getOntimeupdate(self: bigint): bigint {
+export function getOntimeupdate(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontimeupdate;
 }
@@ -1485,7 +1485,7 @@ export function getOntimeupdate(self: bigint): bigint {
 /**
  * `set-ontimeupdate()` operation.
  */
-export function setOntimeupdate(self: bigint, value: bigint): void {
+export function setOntimeupdate(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontimeupdate = value;
 }
@@ -1493,7 +1493,7 @@ export function setOntimeupdate(self: bigint, value: bigint): void {
 /**
  * `get-ontoggle()` operation.
  */
-export function getOntoggle(self: bigint): bigint {
+export function getOntoggle(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontoggle;
 }
@@ -1501,7 +1501,7 @@ export function getOntoggle(self: bigint): bigint {
 /**
  * `set-ontoggle()` operation.
  */
-export function setOntoggle(self: bigint, value: bigint): void {
+export function setOntoggle(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontoggle = value;
 }
@@ -1509,7 +1509,7 @@ export function setOntoggle(self: bigint, value: bigint): void {
 /**
  * `get-onvolumechange()` operation.
  */
-export function getOnvolumechange(self: bigint): bigint {
+export function getOnvolumechange(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onvolumechange;
 }
@@ -1517,7 +1517,7 @@ export function getOnvolumechange(self: bigint): bigint {
 /**
  * `set-onvolumechange()` operation.
  */
-export function setOnvolumechange(self: bigint, value: bigint): void {
+export function setOnvolumechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onvolumechange = value;
 }
@@ -1525,7 +1525,7 @@ export function setOnvolumechange(self: bigint, value: bigint): void {
 /**
  * `get-onwaiting()` operation.
  */
-export function getOnwaiting(self: bigint): bigint {
+export function getOnwaiting(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwaiting;
 }
@@ -1533,7 +1533,7 @@ export function getOnwaiting(self: bigint): bigint {
 /**
  * `set-onwaiting()` operation.
  */
-export function setOnwaiting(self: bigint, value: bigint): void {
+export function setOnwaiting(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwaiting = value;
 }
@@ -1541,7 +1541,7 @@ export function setOnwaiting(self: bigint, value: bigint): void {
 /**
  * `get-onwebkitanimationend()` operation.
  */
-export function getOnwebkitanimationend(self: bigint): bigint {
+export function getOnwebkitanimationend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwebkitanimationend;
 }
@@ -1549,7 +1549,7 @@ export function getOnwebkitanimationend(self: bigint): bigint {
 /**
  * `set-onwebkitanimationend()` operation.
  */
-export function setOnwebkitanimationend(self: bigint, value: bigint): void {
+export function setOnwebkitanimationend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwebkitanimationend = value;
 }
@@ -1557,7 +1557,7 @@ export function setOnwebkitanimationend(self: bigint, value: bigint): void {
 /**
  * `get-onwebkitanimationiteration()` operation.
  */
-export function getOnwebkitanimationiteration(self: bigint): bigint {
+export function getOnwebkitanimationiteration(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwebkitanimationiteration;
 }
@@ -1565,7 +1565,7 @@ export function getOnwebkitanimationiteration(self: bigint): bigint {
 /**
  * `set-onwebkitanimationiteration()` operation.
  */
-export function setOnwebkitanimationiteration(self: bigint, value: bigint): void {
+export function setOnwebkitanimationiteration(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwebkitanimationiteration = value;
 }
@@ -1573,7 +1573,7 @@ export function setOnwebkitanimationiteration(self: bigint, value: bigint): void
 /**
  * `get-onwebkitanimationstart()` operation.
  */
-export function getOnwebkitanimationstart(self: bigint): bigint {
+export function getOnwebkitanimationstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwebkitanimationstart;
 }
@@ -1581,7 +1581,7 @@ export function getOnwebkitanimationstart(self: bigint): bigint {
 /**
  * `set-onwebkitanimationstart()` operation.
  */
-export function setOnwebkitanimationstart(self: bigint, value: bigint): void {
+export function setOnwebkitanimationstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwebkitanimationstart = value;
 }
@@ -1589,7 +1589,7 @@ export function setOnwebkitanimationstart(self: bigint, value: bigint): void {
 /**
  * `get-onwebkittransitionend()` operation.
  */
-export function getOnwebkittransitionend(self: bigint): bigint {
+export function getOnwebkittransitionend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwebkittransitionend;
 }
@@ -1597,7 +1597,7 @@ export function getOnwebkittransitionend(self: bigint): bigint {
 /**
  * `set-onwebkittransitionend()` operation.
  */
-export function setOnwebkittransitionend(self: bigint, value: bigint): void {
+export function setOnwebkittransitionend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwebkittransitionend = value;
 }
@@ -1605,7 +1605,7 @@ export function setOnwebkittransitionend(self: bigint, value: bigint): void {
 /**
  * `get-onwheel()` operation.
  */
-export function getOnwheel(self: bigint): bigint {
+export function getOnwheel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onwheel;
 }
@@ -1613,7 +1613,7 @@ export function getOnwheel(self: bigint): bigint {
 /**
  * `set-onwheel()` operation.
  */
-export function setOnwheel(self: bigint, value: bigint): void {
+export function setOnwheel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onwheel = value;
 }
@@ -1621,7 +1621,7 @@ export function setOnwheel(self: bigint, value: bigint): void {
 /**
  * `get-onpointerover()` operation.
  */
-export function getOnpointerover(self: bigint): bigint {
+export function getOnpointerover(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerover;
 }
@@ -1629,7 +1629,7 @@ export function getOnpointerover(self: bigint): bigint {
 /**
  * `set-onpointerover()` operation.
  */
-export function setOnpointerover(self: bigint, value: bigint): void {
+export function setOnpointerover(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerover = value;
 }
@@ -1637,7 +1637,7 @@ export function setOnpointerover(self: bigint, value: bigint): void {
 /**
  * `get-onpointerenter()` operation.
  */
-export function getOnpointerenter(self: bigint): bigint {
+export function getOnpointerenter(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerenter;
 }
@@ -1645,7 +1645,7 @@ export function getOnpointerenter(self: bigint): bigint {
 /**
  * `set-onpointerenter()` operation.
  */
-export function setOnpointerenter(self: bigint, value: bigint): void {
+export function setOnpointerenter(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerenter = value;
 }
@@ -1653,7 +1653,7 @@ export function setOnpointerenter(self: bigint, value: bigint): void {
 /**
  * `get-onpointerdown()` operation.
  */
-export function getOnpointerdown(self: bigint): bigint {
+export function getOnpointerdown(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerdown;
 }
@@ -1661,7 +1661,7 @@ export function getOnpointerdown(self: bigint): bigint {
 /**
  * `set-onpointerdown()` operation.
  */
-export function setOnpointerdown(self: bigint, value: bigint): void {
+export function setOnpointerdown(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerdown = value;
 }
@@ -1669,7 +1669,7 @@ export function setOnpointerdown(self: bigint, value: bigint): void {
 /**
  * `get-onpointermove()` operation.
  */
-export function getOnpointermove(self: bigint): bigint {
+export function getOnpointermove(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointermove;
 }
@@ -1677,7 +1677,7 @@ export function getOnpointermove(self: bigint): bigint {
 /**
  * `set-onpointermove()` operation.
  */
-export function setOnpointermove(self: bigint, value: bigint): void {
+export function setOnpointermove(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointermove = value;
 }
@@ -1685,7 +1685,7 @@ export function setOnpointermove(self: bigint, value: bigint): void {
 /**
  * `get-onpointerrawupdate()` operation.
  */
-export function getOnpointerrawupdate(self: bigint): bigint {
+export function getOnpointerrawupdate(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerrawupdate;
 }
@@ -1693,7 +1693,7 @@ export function getOnpointerrawupdate(self: bigint): bigint {
 /**
  * `set-onpointerrawupdate()` operation.
  */
-export function setOnpointerrawupdate(self: bigint, value: bigint): void {
+export function setOnpointerrawupdate(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerrawupdate = value;
 }
@@ -1701,7 +1701,7 @@ export function setOnpointerrawupdate(self: bigint, value: bigint): void {
 /**
  * `get-onpointerup()` operation.
  */
-export function getOnpointerup(self: bigint): bigint {
+export function getOnpointerup(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerup;
 }
@@ -1709,7 +1709,7 @@ export function getOnpointerup(self: bigint): bigint {
 /**
  * `set-onpointerup()` operation.
  */
-export function setOnpointerup(self: bigint, value: bigint): void {
+export function setOnpointerup(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerup = value;
 }
@@ -1717,7 +1717,7 @@ export function setOnpointerup(self: bigint, value: bigint): void {
 /**
  * `get-onpointercancel()` operation.
  */
-export function getOnpointercancel(self: bigint): bigint {
+export function getOnpointercancel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointercancel;
 }
@@ -1725,7 +1725,7 @@ export function getOnpointercancel(self: bigint): bigint {
 /**
  * `set-onpointercancel()` operation.
  */
-export function setOnpointercancel(self: bigint, value: bigint): void {
+export function setOnpointercancel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointercancel = value;
 }
@@ -1733,7 +1733,7 @@ export function setOnpointercancel(self: bigint, value: bigint): void {
 /**
  * `get-onpointerout()` operation.
  */
-export function getOnpointerout(self: bigint): bigint {
+export function getOnpointerout(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerout;
 }
@@ -1741,7 +1741,7 @@ export function getOnpointerout(self: bigint): bigint {
 /**
  * `set-onpointerout()` operation.
  */
-export function setOnpointerout(self: bigint, value: bigint): void {
+export function setOnpointerout(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerout = value;
 }
@@ -1749,7 +1749,7 @@ export function setOnpointerout(self: bigint, value: bigint): void {
 /**
  * `get-onpointerleave()` operation.
  */
-export function getOnpointerleave(self: bigint): bigint {
+export function getOnpointerleave(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onpointerleave;
 }
@@ -1757,7 +1757,7 @@ export function getOnpointerleave(self: bigint): bigint {
 /**
  * `set-onpointerleave()` operation.
  */
-export function setOnpointerleave(self: bigint, value: bigint): void {
+export function setOnpointerleave(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onpointerleave = value;
 }
@@ -1765,7 +1765,7 @@ export function setOnpointerleave(self: bigint, value: bigint): void {
 /**
  * `get-ongotpointercapture()` operation.
  */
-export function getOngotpointercapture(self: bigint): bigint {
+export function getOngotpointercapture(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ongotpointercapture;
 }
@@ -1773,7 +1773,7 @@ export function getOngotpointercapture(self: bigint): bigint {
 /**
  * `set-ongotpointercapture()` operation.
  */
-export function setOngotpointercapture(self: bigint, value: bigint): void {
+export function setOngotpointercapture(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ongotpointercapture = value;
 }
@@ -1781,7 +1781,7 @@ export function setOngotpointercapture(self: bigint, value: bigint): void {
 /**
  * `get-onlostpointercapture()` operation.
  */
-export function getOnlostpointercapture(self: bigint): bigint {
+export function getOnlostpointercapture(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.onlostpointercapture;
 }
@@ -1789,7 +1789,7 @@ export function getOnlostpointercapture(self: bigint): bigint {
 /**
  * `set-onlostpointercapture()` operation.
  */
-export function setOnlostpointercapture(self: bigint, value: bigint): void {
+export function setOnlostpointercapture(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.onlostpointercapture = value;
 }
@@ -1797,7 +1797,7 @@ export function setOnlostpointercapture(self: bigint, value: bigint): void {
 /**
  * `get-ontouchstart()` operation.
  */
-export function getOntouchstart(self: bigint): bigint {
+export function getOntouchstart(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontouchstart;
 }
@@ -1805,7 +1805,7 @@ export function getOntouchstart(self: bigint): bigint {
 /**
  * `set-ontouchstart()` operation.
  */
-export function setOntouchstart(self: bigint, value: bigint): void {
+export function setOntouchstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontouchstart = value;
 }
@@ -1813,7 +1813,7 @@ export function setOntouchstart(self: bigint, value: bigint): void {
 /**
  * `get-ontouchend()` operation.
  */
-export function getOntouchend(self: bigint): bigint {
+export function getOntouchend(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontouchend;
 }
@@ -1821,7 +1821,7 @@ export function getOntouchend(self: bigint): bigint {
 /**
  * `set-ontouchend()` operation.
  */
-export function setOntouchend(self: bigint, value: bigint): void {
+export function setOntouchend(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontouchend = value;
 }
@@ -1829,7 +1829,7 @@ export function setOntouchend(self: bigint, value: bigint): void {
 /**
  * `get-ontouchmove()` operation.
  */
-export function getOntouchmove(self: bigint): bigint {
+export function getOntouchmove(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontouchmove;
 }
@@ -1837,7 +1837,7 @@ export function getOntouchmove(self: bigint): bigint {
 /**
  * `set-ontouchmove()` operation.
  */
-export function setOntouchmove(self: bigint, value: bigint): void {
+export function setOntouchmove(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontouchmove = value;
 }
@@ -1845,7 +1845,7 @@ export function setOntouchmove(self: bigint, value: bigint): void {
 /**
  * `get-ontouchcancel()` operation.
  */
-export function getOntouchcancel(self: bigint): bigint {
+export function getOntouchcancel(self: bigint): EventHandlerRecord {
   const obj = getGlobalEventrs(self);
   return obj.ontouchcancel;
 }
@@ -1853,7 +1853,7 @@ export function getOntouchcancel(self: bigint): bigint {
 /**
  * `set-ontouchcancel()` operation.
  */
-export function setOntouchcancel(self: bigint, value: bigint): void {
+export function setOntouchcancel(self: bigint, value: EventHandlerRecord): void {
   const obj = getGlobalEventrs(self);
   obj.ontouchcancel = value;
 }
@@ -3037,7 +3037,7 @@ export function removeListener(self: bigint, callback: bigint | undefined): void
 /**
  * `get-onchange()` operation.
  */
-export function MediaQueryListGetOnchange(self: bigint): bigint {
+export function MediaQueryListGetOnchange(self: bigint): EventHandlerRecord {
   const obj = getMediaQueryList(self);
   return obj.onchange;
 }
@@ -3045,7 +3045,7 @@ export function MediaQueryListGetOnchange(self: bigint): bigint {
 /**
  * `set-onchange()` operation.
  */
-export function MediaQueryListSetOnchange(self: bigint, value: bigint): void {
+export function MediaQueryListSetOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getMediaQueryList(self);
   obj.onchange = value;
 }
@@ -3425,28 +3425,28 @@ export function exitFullscreen(): bigint {
 /**
  * `get-onfullscreenchange()` operation.
  */
-export function DocumentGetOnfullscreenchange(): bigint {
+export function DocumentGetOnfullscreenchange(): EventHandlerRecord {
   return document.onfullscreenchange;
 }
 
 /**
  * `set-onfullscreenchange()` operation.
  */
-export function DocumentSetOnfullscreenchange(value: bigint): void {
+export function DocumentSetOnfullscreenchange(value: EventHandlerRecord): void {
   document.onfullscreenchange = value;
 }
 
 /**
  * `get-onfullscreenerror()` operation.
  */
-export function DocumentGetOnfullscreenerror(): bigint {
+export function DocumentGetOnfullscreenerror(): EventHandlerRecord {
   return document.onfullscreenerror;
 }
 
 /**
  * `set-onfullscreenerror()` operation.
  */
-export function DocumentSetOnfullscreenerror(value: bigint): void {
+export function DocumentSetOnfullscreenerror(value: EventHandlerRecord): void {
   document.onfullscreenerror = value;
 }
 
@@ -3800,28 +3800,28 @@ export function getVisibilityState(): bigint {
 /**
  * `get-onreadystatechange()` operation.
  */
-export function getOnreadystatechange(): bigint {
+export function getOnreadystatechange(): EventHandlerRecord {
   return document.onreadystatechange;
 }
 
 /**
  * `set-onreadystatechange()` operation.
  */
-export function setOnreadystatechange(value: bigint): void {
+export function setOnreadystatechange(value: EventHandlerRecord): void {
   document.onreadystatechange = value;
 }
 
 /**
  * `get-onvisibilitychange()` operation.
  */
-export function getOnvisibilitychange(): bigint {
+export function getOnvisibilitychange(): EventHandlerRecord {
   return document.onvisibilitychange;
 }
 
 /**
  * `set-onvisibilitychange()` operation.
  */
-export function setOnvisibilitychange(value: bigint): void {
+export function setOnvisibilitychange(value: EventHandlerRecord): void {
   document.onvisibilitychange = value;
 }
 
@@ -4468,7 +4468,7 @@ export function requestFullscreen(self: bigint, options: bigint | undefined): bi
 /**
  * `get-onfullscreenchange()` operation.
  */
-export function ElementGetOnfullscreenchange(self: bigint): bigint {
+export function ElementGetOnfullscreenchange(self: bigint): EventHandlerRecord {
   const obj = getElement(self);
   return obj.onfullscreenchange;
 }
@@ -4476,7 +4476,7 @@ export function ElementGetOnfullscreenchange(self: bigint): bigint {
 /**
  * `set-onfullscreenchange()` operation.
  */
-export function ElementSetOnfullscreenchange(self: bigint, value: bigint): void {
+export function ElementSetOnfullscreenchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getElement(self);
   obj.onfullscreenchange = value;
 }
@@ -4484,7 +4484,7 @@ export function ElementSetOnfullscreenchange(self: bigint, value: bigint): void 
 /**
  * `get-onfullscreenerror()` operation.
  */
-export function ElementGetOnfullscreenerror(self: bigint): bigint {
+export function ElementGetOnfullscreenerror(self: bigint): EventHandlerRecord {
   const obj = getElement(self);
   return obj.onfullscreenerror;
 }
@@ -4492,7 +4492,7 @@ export function ElementGetOnfullscreenerror(self: bigint): bigint {
 /**
  * `set-onfullscreenerror()` operation.
  */
-export function ElementSetOnfullscreenerror(self: bigint, value: bigint): void {
+export function ElementSetOnfullscreenerror(self: bigint, value: EventHandlerRecord): void {
   const obj = getElement(self);
   obj.onfullscreenerror = value;
 }
@@ -5899,7 +5899,7 @@ export function getScale(self: bigint): number {
 /**
  * `get-onresize()` operation.
  */
-export function VisualViewportGetOnresize(self: bigint): bigint {
+export function VisualViewportGetOnresize(self: bigint): EventHandlerRecord {
   const obj = getVisualViewport(self);
   return obj.onresize;
 }
@@ -5907,7 +5907,7 @@ export function VisualViewportGetOnresize(self: bigint): bigint {
 /**
  * `set-onresize()` operation.
  */
-export function VisualViewportSetOnresize(self: bigint, value: bigint): void {
+export function VisualViewportSetOnresize(self: bigint, value: EventHandlerRecord): void {
   const obj = getVisualViewport(self);
   obj.onresize = value;
 }
@@ -5915,7 +5915,7 @@ export function VisualViewportSetOnresize(self: bigint, value: bigint): void {
 /**
  * `get-onscroll()` operation.
  */
-export function VisualViewportGetOnscroll(self: bigint): bigint {
+export function VisualViewportGetOnscroll(self: bigint): EventHandlerRecord {
   const obj = getVisualViewport(self);
   return obj.onscroll;
 }
@@ -5923,7 +5923,7 @@ export function VisualViewportGetOnscroll(self: bigint): bigint {
 /**
  * `set-onscroll()` operation.
  */
-export function VisualViewportSetOnscroll(self: bigint, value: bigint): void {
+export function VisualViewportSetOnscroll(self: bigint, value: EventHandlerRecord): void {
   const obj = getVisualViewport(self);
   obj.onscroll = value;
 }
@@ -5931,7 +5931,7 @@ export function VisualViewportSetOnscroll(self: bigint, value: bigint): void {
 /**
  * `get-onscrollend()` operation.
  */
-export function VisualViewportGetOnscrollend(self: bigint): bigint {
+export function VisualViewportGetOnscrollend(self: bigint): EventHandlerRecord {
   const obj = getVisualViewport(self);
   return obj.onscrollend;
 }
@@ -5939,7 +5939,7 @@ export function VisualViewportGetOnscrollend(self: bigint): bigint {
 /**
  * `set-onscrollend()` operation.
  */
-export function VisualViewportSetOnscrollend(self: bigint, value: bigint): void {
+export function VisualViewportSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
   const obj = getVisualViewport(self);
   obj.onscrollend = value;
 }

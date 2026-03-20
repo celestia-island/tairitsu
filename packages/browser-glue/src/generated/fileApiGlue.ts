@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): string | undefined {
   return FileReader.newFileReader();
 }
 
@@ -97,7 +97,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): string | undefined {
+export function resultVal(handle: bigint): bigint | undefined | undefined {
   return FileReader.resultVal(handle);
 }
 
@@ -124,7 +124,7 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): bigint {
+export function length(handle: bigint): number {
   return FileList.length(handle);
 }
 

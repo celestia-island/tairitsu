@@ -45,7 +45,7 @@ function getIdbFactory(handle: bigint): IdbFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: number, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): number {
   return IdbFactory.cmp(handle, first, second);
 }
 
@@ -194,7 +194,7 @@ export function IdbObjectStoreKeyPath(handle: bigint): string {
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): bigint {
+export function autoIncrement(handle: bigint): boolean {
   return IdbObjectStore.autoIncrement(handle);
 }
 
@@ -237,14 +237,14 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
 /**
  * `key-path()` operation.
  */
-export function IdbIndexKeyPath(handle: bigint): string {
+export function IdbIndexKeyPath(handle: bigint): number | undefined {
   return IdbIndex.keyPath(handle);
 }
 
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): boolean {
+export function multiEntry(handle: bigint): bigint {
   return IdbIndex.multiEntry(handle);
 }
 
@@ -306,14 +306,14 @@ export function advance(handle: bigint, count: number): void {
 /**
  * `continue()` operation.
  */
-export function _continue(handle: bigint, key: string): void {
+export function _continue(handle: bigint, key: string | undefined): void {
   return IdbCursor._continue(handle, key);
 }
 
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
+export function continuePrimaryKey(handle: bigint, key: string, primaryKey: bigint): void {
   return IdbCursor.continuePrimaryKey(handle, key, primaryKey);
 }
 
@@ -347,7 +347,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string | undefined {
+export function IdbRequestSource(handle: bigint): string {
   return IDBRequest.source(handle);
 }
 

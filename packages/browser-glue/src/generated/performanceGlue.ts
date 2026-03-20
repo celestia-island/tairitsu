@@ -312,7 +312,7 @@ function getPerformanceTimingConfidence(handle: bigint): PerformanceTimingConfid
 /**
  * `get-randomized-trigger-rate()` operation.
  */
-export function getRandomizedTriggerRate(self: bigint): bigint {
+export function getRandomizedTriggerRate(self: bigint): number {
   const obj = getPerformanceTimingConfidence(self);
   return obj.randomizedTriggerRate;
 }
@@ -604,7 +604,7 @@ export function getId(self: bigint): bigint {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): (bigint)[] {
+export function getName(self: bigint): bigint {
   const obj = getPerformanceEntry(self);
   return obj.name;
 }
@@ -672,7 +672,7 @@ function getPerformanceObserver(handle: bigint): PerformanceObserver {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, options: number | undefined | undefined): void {
+export function observe(self: bigint, options: number): void {
   const obj = getPerformanceObserver(self);
   obj.observe(options);
 }
@@ -739,7 +739,7 @@ export function PerformanceObserverEntryListGetEntriesByType(self: bigint, type:
 /**
  * `get-entries-by-name()` operation.
  */
-export function PerformanceObserverEntryListGetEntriesByName(self: bigint, name: string, type: bigint | undefined): bigint | undefined {
+export function PerformanceObserverEntryListGetEntriesByName(self: bigint, name: string, type: string | undefined): bigint | undefined {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entriesByName;
 }
@@ -767,7 +767,7 @@ function getPerformanceResourceTiming(handle: bigint): PerformanceResourceTiming
 /**
  * `get-initiator-type()` operation.
  */
-export function getInitiatorType(self: bigint): string {
+export function getInitiatorType(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.initiatorType;
 }
@@ -783,7 +783,7 @@ export function getDeliveryType(self: bigint): string {
 /**
  * `get-next-hop-protocol()` operation.
  */
-export function getNextHopProtocol(self: bigint): number | undefined {
+export function getNextHopProtocol(self: bigint): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.nextHopProtocol;
 }
@@ -815,7 +815,7 @@ export function PerformanceResourceTimingGetRedirectEnd(self: bigint): number {
 /**
  * `get-fetch-start()` operation.
  */
-export function PerformanceResourceTimingGetFetchStart(self: bigint): number {
+export function PerformanceResourceTimingGetFetchStart(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.fetchStart;
 }
@@ -823,7 +823,7 @@ export function PerformanceResourceTimingGetFetchStart(self: bigint): number {
 /**
  * `get-domain-lookup-start()` operation.
  */
-export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): string {
+export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupStart;
 }
@@ -831,7 +831,7 @@ export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): str
 /**
  * `get-domain-lookup-end()` operation.
  */
-export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): bigint | undefined {
+export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupEnd;
 }
@@ -847,7 +847,7 @@ export function PerformanceResourceTimingGetConnectStart(self: bigint): bigint {
 /**
  * `get-connect-end()` operation.
  */
-export function PerformanceResourceTimingGetConnectEnd(self: bigint): bigint | undefined {
+export function PerformanceResourceTimingGetConnectEnd(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.connectEnd;
 }
@@ -863,7 +863,7 @@ export function PerformanceResourceTimingGetSecureConnectionStart(self: bigint):
 /**
  * `get-request-start()` operation.
  */
-export function PerformanceResourceTimingGetRequestStart(self: bigint): number {
+export function PerformanceResourceTimingGetRequestStart(self: bigint): bigint | undefined {
   const obj = getPerformanceResourceTiming(self);
   return obj.requestStart;
 }
@@ -871,7 +871,7 @@ export function PerformanceResourceTimingGetRequestStart(self: bigint): number {
 /**
  * `get-final-response-headers-start()` operation.
  */
-export function getFinalResponseHeadersStart(self: bigint): bigint {
+export function getFinalResponseHeadersStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.finalResponseHeadersStart;
 }
@@ -879,7 +879,7 @@ export function getFinalResponseHeadersStart(self: bigint): bigint {
 /**
  * `get-first-interim-response-start()` operation.
  */
-export function getFirstInterimResponseStart(self: bigint): number {
+export function getFirstInterimResponseStart(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.firstInterimResponseStart;
 }
@@ -895,7 +895,7 @@ export function PerformanceResourceTimingGetResponseStart(self: bigint): number 
 /**
  * `get-response-end()` operation.
  */
-export function PerformanceResourceTimingGetResponseEnd(self: bigint): number {
+export function PerformanceResourceTimingGetResponseEnd(self: bigint): bigint | undefined {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseEnd;
 }
@@ -903,7 +903,7 @@ export function PerformanceResourceTimingGetResponseEnd(self: bigint): number {
 /**
  * `get-worker-router-evaluation-start()` operation.
  */
-export function getWorkerRouterEvaluationStart(self: bigint): number {
+export function getWorkerRouterEvaluationStart(self: bigint): bigint | undefined {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerRouterEvaluationStart;
 }
@@ -943,7 +943,7 @@ export function getTransferSize(self: bigint): bigint {
 /**
  * `get-encoded-body-size()` operation.
  */
-export function getEncodedBodySize(self: bigint): bigint {
+export function getEncodedBodySize(self: bigint): boolean {
   const obj = getPerformanceResourceTiming(self);
   return obj.encodedBodySize;
 }

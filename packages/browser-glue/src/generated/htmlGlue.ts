@@ -39,7 +39,7 @@ export function length(handle: bigint): number {
 /**
  * `key()` operation.
  */
-export function key(handle: bigint, index: boolean): bigint | undefined {
+export function key(handle: bigint, index: string): string | undefined {
   return Storage.key(handle, index);
 }
 
