@@ -40,7 +40,7 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): string {
+export function getRootMargin(self: bigint): boolean {
   const obj = getIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -48,7 +48,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): string {
+export function getScrollMargin(self: string): string {
   const obj = getIntersectionObserver(self);
   return obj.scrollMargin;
 }
@@ -56,7 +56,7 @@ export function getScrollMargin(self: bigint): string {
 /**
  * `get-thresholds()` operation.
  */
-export function getThresholds(self: bigint): (number)[] {
+export function getThresholds(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.thresholds;
 }
@@ -114,7 +114,7 @@ export function takeRecords(self: bigint): (bigint)[] {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type IntersectionObserverEntryHandle = boolean;
+export type IntersectionObserverEntryHandle = bigint;
 
 /** Handle table for intersectionobserverentry instances */
 const _intersectionObserverEntryhandles = new Map<bigint, intersectionobserverentry>();
@@ -132,7 +132,7 @@ function getIntersectionObserverEntry(handle: bigint): intersectionobserverentry
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): bigint {
+export function getTime(self: bigint): number {
   const obj = getIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -156,7 +156,7 @@ export function getBoundingClientRect(self: bigint): bigint {
 /**
  * `get-intersection-rect()` operation.
  */
-export function getIntersectionRect(self: bigint): boolean {
+export function getIntersectionRect(self: bigint): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRect;
 }
@@ -180,7 +180,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): bigint {
+export function getIntersectionRatio(self: number): bigint {
   const obj = getIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -292,7 +292,7 @@ export function getContentBoxSize(self: bigint): (bigint)[] {
 /**
  * `get-device-pixel-content-box-size()` operation.
  */
-export function getDevicePixelContentBoxSize(self: bigint): (bigint)[] {
+export function getDevicePixelContentBoxSize(self: bigint): bigint {
   const obj = getResizeObserverEntry(self);
   return obj.devicePixelContentBoxSize;
 }
@@ -320,7 +320,7 @@ function getResizeObserverSize(handle: bigint): resizeobserversize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): bigint {
+export function getInlineSize(self: bigint): number {
   const obj = getResizeObserverSize(self);
   return obj.inlineSize;
 }

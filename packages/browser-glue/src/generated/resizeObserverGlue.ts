@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type RoHandle = bigint;
+export type RoHandle = string | undefined;
 
 /** Handle table for resizeobserver instances */
 const _roHandles = new Map<bigint, resizeobserver>();

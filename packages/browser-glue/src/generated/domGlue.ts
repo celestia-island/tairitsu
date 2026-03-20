@@ -1248,7 +1248,7 @@ function getDomImplementation(handle: bigint): domimplementation {
 /**
  * `create-document-type()` operation.
  */
-export function createDocumentType(self: bigint, name: string, publicId: string, systemId: bigint): bigint {
+export function createDocumentType(self: bigint, name: bigint, publicId: string, systemId: string): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocumentType(name, publicId, systemId);
 }
@@ -1256,7 +1256,7 @@ export function createDocumentType(self: bigint, name: string, publicId: string,
 /**
  * `create-document()` operation.
  */
-export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: bigint, doctype: bigint | undefined): bigint {
+export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocument(namespace, qualifiedName, doctype);
 }
@@ -1264,7 +1264,7 @@ export function createDocument(self: bigint, namespace: string | undefined, qual
 /**
  * `create-html-document()` operation.
  */
-export function createHtmlDocument(self: bigint, title: bigint | undefined): bigint {
+export function createHtmlDocument(self: bigint, title: string | undefined): bigint {
   const obj = getDomImplementation(self);
   return obj.createHtmlDocument(title);
 }
@@ -1300,7 +1300,7 @@ function getDocumentType(handle: bigint): documenttype {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): bigint {
+export function getName(self: bigint): string {
   const obj = getDocumentType(self);
   return obj.name;
 }
@@ -1344,7 +1344,7 @@ function getShadowRoot(handle: bigint): shadowroot {
 /**
  * `get-mode()` operation.
  */
-export function getMode(self: bigint): number {
+export function getMode(self: bigint): bigint {
   const obj = getShadowRoot(self);
   return obj.mode;
 }
@@ -1712,7 +1712,7 @@ function getText(handle: bigint): text {
 /**
  * `split-text()` operation.
  */
-export function splitText(self: bigint, offset: number): bigint {
+export function splitText(self: bigint, offset: string): bigint {
   const obj = getText(self);
   return obj.splitText(offset);
 }
@@ -1868,7 +1868,7 @@ export function getWhatToShow(self: bigint): number {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint {
+export function getFilter(self: bigint): bigint | undefined {
   const obj = getNodeIterator(self);
   return obj.filter ?? undefined;
 }
@@ -1884,7 +1884,7 @@ export function nextNode(self: bigint): bigint | undefined {
 /**
  * `previous-node()` operation.
  */
-export function previousNode(self: bigint): bigint | undefined {
+export function previousNode(self: bigint | undefined): bigint | undefined {
   const obj = getNodeIterator(self);
   return obj.previousNode() ?? undefined;
 }
@@ -1928,7 +1928,7 @@ export function getRoot(self: bigint): bigint {
 /**
  * `get-what-to-show()` operation.
  */
-export function getWhatToShow(self: bigint): bigint | undefined {
+export function getWhatToShow(self: bigint): bigint {
   const obj = getTreeWalker(self);
   return obj.whatToShow;
 }
@@ -1936,7 +1936,7 @@ export function getWhatToShow(self: bigint): bigint | undefined {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint | undefined | undefined {
+export function getFilter(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.filter ?? undefined;
 }
@@ -1952,7 +1952,7 @@ export function getCurrentNode(self: bigint): bigint {
 /**
  * `set-current-node()` operation.
  */
-export function setCurrentNode(self: bigint | undefined, value: bigint | undefined): void {
+export function setCurrentNode(self: bigint, value: bigint): void {
   const obj = getTreeWalker(self);
   obj.currentNode = value;
 }
@@ -1960,7 +1960,7 @@ export function setCurrentNode(self: bigint | undefined, value: bigint | undefin
 /**
  * `parent-node()` operation.
  */
-export function parentNode(self: bigint): bigint | undefined {
+export function parentNode(self: bigint): bigint {
   const obj = getTreeWalker(self);
   return obj.parentNode() ?? undefined;
 }
@@ -1968,7 +1968,7 @@ export function parentNode(self: bigint): bigint | undefined {
 /**
  * `first-child()` operation.
  */
-export function firstChild(self: bigint): number {
+export function firstChild(self: number): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.firstChild() ?? undefined;
 }

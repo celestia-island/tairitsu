@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type WsHandle = bigint | undefined;
+export type WsHandle = bigint;
 
 /** Handle table for websocket instances */
 const _wsHandles = new Map<bigint, websocket>();
@@ -45,7 +45,7 @@ function getWs(handle: bigint): websocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: bigint): { ok: true; value: (string)[] } | { ok: false; error: string } {
+export function connect(url: bigint, protocols: bigint): { ok: true; value: number } | { ok: false; error: number } {
   const obj = getWs(self);
   return obj.connect(url, protocols);
 }
@@ -61,7 +61,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.readyState(handle);
 }
@@ -69,7 +69,7 @@ export function readyState(handle: bigint): number {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): number {
+export function bufferedAmount(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.bufferedAmount(handle);
 }
@@ -77,7 +77,7 @@ export function bufferedAmount(handle: bigint): number {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.extensions(handle);
 }
@@ -85,7 +85,7 @@ export function extensions(handle: bigint): string {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint | undefined): bigint {
+export function protocol(handle: string): string {
   const obj = getWs(self);
   return obj.protocol(handle);
 }
@@ -95,7 +95,7 @@ export function protocol(handle: bigint | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: number, reason: bigint): void {
+export function close(handle: bigint, code: bigint, reason: string): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWs(self);
   const promise = obj.close(handle, code, reason)
@@ -131,7 +131,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: string, data: string): void {
+export function send(handle: bigint, data: string): void {
   const obj = getWs(self);
   obj.send(handle, data);
 }

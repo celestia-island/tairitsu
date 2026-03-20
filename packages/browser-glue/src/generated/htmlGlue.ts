@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type StorageHandle = bigint;
+export type StorageHandle = string;
 
 /** Handle table for Storage instances */
 const _storageHandles = new Map<bigint, Storage>();
@@ -32,7 +32,7 @@ function getStorage(handle: bigint): Storage {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): string {
   const obj = getStorage(self);
   return obj.length(handle);
 }
@@ -40,7 +40,7 @@ export function length(handle: bigint): number {
 /**
  * `key()` operation.
  */
-export function key(handle: bigint, index: number): string | undefined {
+export function key(handle: bigint, index: number): bigint {
   const obj = getStorage(self);
   return obj.key(handle, index) ?? undefined;
 }
