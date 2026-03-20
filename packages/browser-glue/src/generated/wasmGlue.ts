@@ -264,21 +264,21 @@ function lookupModule(handle: bigint): WebAssembly.Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: string): (bigint | undefined)[] {
+export function exports(moduleObject: boolean): (number)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (string)[] {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: number, sectionName: string): bigint {
+export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -334,7 +334,7 @@ function lookupMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): bigint {
+export function MemoryGrow(self: bigint, delta: boolean): bigint {
   const obj = lookupMemory(self);
   return BigInt((obj as any).grow(delta));
 }
@@ -342,7 +342,7 @@ export function MemoryGrow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): (string)[] {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -350,7 +350,7 @@ export function toFixedLengthBuffer(self: bigint): (string)[] {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): (string)[] {
+export function toResizableBuffer(self: bigint): bigint {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -431,7 +431,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: string, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: number | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -528,7 +528,7 @@ export function is(self: bigint, exceptionTag: bigint): boolean {
 /**
  * `get-stack()` operation.
  */
-export function getStack(self: bigint): string {
+export function getStack(self: bigint): bigint {
   const obj = lookupException(self);
   return obj.stack;
 }

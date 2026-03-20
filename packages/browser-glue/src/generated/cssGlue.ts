@@ -4119,7 +4119,10 @@ export function getParent(): bigint | undefined {
  * `get-frame-element()` operation.
  */
 export function getFrameElement(): bigint | undefined {
-  return window.frameElement ?? undefined;
+  const result = window.frameElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**

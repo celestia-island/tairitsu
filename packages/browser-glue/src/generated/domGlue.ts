@@ -228,6 +228,14 @@ let _nextElement = 1n;
 const _eventTargetHandles = new Map<bigint, EventTarget>();
 let _nextEventTarget = 1n;
 
+/** Handle table for event-target-list values */
+const _eventTargetListHandles = new Map<bigint, EventTarget[]>();
+let _nextEventTargetList = 1n;
+
+/** Handle table for mutation-record-list values */
+const _mutationRecordListHandles = new Map<bigint, MutationRecord[]>();
+let _nextMutationRecordList = 1n;
+
 /** Handle table for node values */
 const _nodeHandles = new Map<bigint, Node>();
 let _nextNode = 1n;
@@ -348,6 +356,40 @@ function lookupOptionEventTarget(handle: bigint | undefined): EventTarget | unde
     return undefined;
   }
   return _eventTargetHandles.get(handle);
+}
+
+/** Lookup a event-target-list value by handle. */
+function lookupEventTargetList(handle: bigint): EventTarget[] {
+  const obj = _eventTargetListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-target-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional event-target-list value by handle. */
+function lookupOptionEventTargetList(handle: bigint | undefined): EventTarget[] | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _eventTargetListHandles.get(handle);
+}
+
+/** Lookup a mutation-record-list value by handle. */
+function lookupMutationRecordList(handle: bigint): MutationRecord[] {
+  const obj = _mutationRecordListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`mutation-record-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional mutation-record-list value by handle. */
+function lookupOptionMutationRecordList(handle: bigint | undefined): MutationRecord[] | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _mutationRecordListHandles.get(handle);
 }
 
 /** Lookup a node value by handle. */
@@ -481,17 +523,20 @@ export function getCurrentTarget(self: bigint): bigint | undefined {
 /**
  * `composed-path()` operation.
  */
-export function composedPath(self: bigint): (bigint)[] {
+export function composedPath(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.composedPath();
+  const result = obj.composedPath();
+  const handle = _nextEventTargetList++;
+  _eventTargetListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-event-phase()` operation.
  */
-export function getEventPhase(self: bigint): number {
+export function getEventPhase(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.eventPhase;
+  return BigInt(obj.eventPhase);
 }
 
 /**
@@ -593,9 +638,9 @@ export function getIsTrusted(self: bigint): bigint {
 /**
  * `get-time-stamp()` operation.
  */
-export function getTimeStamp(self: bigint): number {
+export function getTimeStamp(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.timeStamp;
+  return BigInt(obj.timeStamp);
 }
 
 /**
@@ -1176,9 +1221,12 @@ export function disconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): bigint {
   const obj = lookupMutationObserver(self);
-  return obj.takeRecords();
+  const result = obj.takeRecords();
+  const handle = _nextMutationRecordList++;
+  _mutationRecordListHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -1696,7 +1744,12 @@ function lookupShadowRoot(handle: bigint): ShadowRoot {
  */
 export function getMode(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
-  return obj.mode;
+  const value = obj.mode;
+  switch (value) {
+    case 'open': return 0n;
+    case 'closed': return 1n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -1736,7 +1789,10 @@ export function getSerializable(self: bigint): boolean {
  */
 export function getHost(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
-  return obj.host;
+  const result = obj.host;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2175,7 +2231,10 @@ function lookupNodeIterator(handle: bigint): NodeIterator {
  */
 export function NodeIteratorGetRoot(self: bigint): bigint {
   const obj = lookupNodeIterator(self);
-  return obj.root;
+  const result = obj.root;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2183,7 +2242,10 @@ export function NodeIteratorGetRoot(self: bigint): bigint {
  */
 export function getReferenceNode(self: bigint): bigint {
   const obj = lookupNodeIterator(self);
-  return obj.referenceNode;
+  const result = obj.referenceNode;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2258,7 +2320,10 @@ function lookupTreeWalker(handle: bigint): TreeWalker {
  */
 export function TreeWalkerGetRoot(self: bigint): bigint {
   const obj = lookupTreeWalker(self);
-  return obj.root;
+  const result = obj.root;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2282,7 +2347,10 @@ export function TreeWalkerGetFilter(self: bigint): bigint | undefined {
  */
 export function getCurrentNode(self: bigint): bigint {
   const obj = lookupTreeWalker(self);
-  return obj.currentNode;
+  const result = obj.currentNode;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2312,7 +2380,7 @@ export function firstChild(self: bigint): bigint | undefined {
 /**
  * `last-child()` operation.
  */
-export function lastChild(self: bigint): bigint {
+export function lastChild(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
   return obj.lastChild() ?? undefined;
 }
@@ -2344,7 +2412,7 @@ export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
 /**
  * `next-node()` operation.
  */
-export function TreeWalkerNextNode(self: bigint): EventHandlerRecord {
+export function TreeWalkerNextNode(self: bigint): bigint {
   const obj = lookupTreeWalker(self);
   return obj.nextNode() ?? undefined;
 }
@@ -2417,7 +2485,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): boolean {
+export function DomTokenListContains(self: bigint, token: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2667,7 +2735,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: string, resolver: bigint | undefined, type: number | undefined, result: string | undefined): string {
   const obj = lookupXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }
@@ -2694,7 +2762,7 @@ function lookupXSLTProcessor(handle: bigint): XSLTProcessor {
 /**
  * `import-stylesheet()` operation.
  */
-export function importStylesheet(self: bigint, style: string): void {
+export function importStylesheet(self: bigint, style: bigint): void {
   const obj = lookupXSLTProcessor(self);
   obj.importStylesheet(style);
 }
@@ -2710,7 +2778,7 @@ export function transformToFragment(self: bigint, source: bigint, output: bigint
 /**
  * `transform-to-document()` operation.
  */
-export function transformToDocument(self: bigint, source: string): bigint {
+export function transformToDocument(self: bigint, source: bigint): bigint {
   const obj = lookupXSLTProcessor(self);
   return obj.transformToDocument(source);
 }

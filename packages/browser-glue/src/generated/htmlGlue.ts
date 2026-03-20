@@ -221,6 +221,10 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 const _anyHandles = new Map<bigint, any>();
 let _nextAny = 1n;
 
+/** Handle table for data-transfer values */
+const _dataTransferHandles = new Map<bigint, DataTransfer>();
+let _nextDataTransfer = 1n;
+
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
 let _nextDocument = 1n;
@@ -312,6 +316,23 @@ function lookupOptionAny(handle: bigint | undefined): any | undefined {
     return undefined;
   }
   return _anyHandles.get(handle);
+}
+
+/** Lookup a data-transfer value by handle. */
+function lookupDataTransfer(handle: bigint): DataTransfer {
+  const obj = _dataTransferHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`data-transfer handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional data-transfer value by handle. */
+function lookupOptionDataTransfer(handle: bigint | undefined): DataTransfer | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _dataTransferHandles.get(handle);
 }
 
 /** Lookup a document value by handle. */
@@ -4063,9 +4084,9 @@ export function getSeeking(self: bigint): boolean {
 /**
  * `get-current-time()` operation.
  */
-export function getCurrentTime(self: bigint): number {
+export function getCurrentTime(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.currentTime;
+  return BigInt(obj.currentTime);
 }
 
 /**
@@ -4087,9 +4108,9 @@ export function fastSeek(self: bigint, time: number): void {
 /**
  * `get-duration()` operation.
  */
-export function HtmlMediaElementGetDuration(self: bigint): number {
+export function HtmlMediaElementGetDuration(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.duration;
+  return BigInt(obj.duration);
 }
 
 /**
@@ -4111,9 +4132,9 @@ export function getPaused(self: bigint): boolean {
 /**
  * `get-default-playback-rate()` operation.
  */
-export function getDefaultPlaybackRate(self: bigint): number {
+export function getDefaultPlaybackRate(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.defaultPlaybackRate;
+  return BigInt(obj.defaultPlaybackRate);
 }
 
 /**
@@ -4127,9 +4148,9 @@ export function setDefaultPlaybackRate(self: bigint, value: number): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(self: bigint): number {
+export function getPlaybackRate(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.playbackRate;
+  return BigInt(obj.playbackRate);
 }
 
 /**
@@ -4283,9 +4304,9 @@ export function setControls(self: bigint, value: boolean): void {
 /**
  * `get-volume()` operation.
  */
-export function getVolume(self: bigint): number {
+export function getVolume(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.volume;
+  return BigInt(obj.volume);
 }
 
 /**
@@ -7340,9 +7361,10 @@ export function HtmlInputElementSelect(self: bigint): void {
 /**
  * `get-selection-start()` operation.
  */
-export function HtmlInputElementGetSelectionStart(self: bigint): number | undefined {
+export function HtmlInputElementGetSelectionStart(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
-  return obj.selectionStart ?? undefined;
+  const value = obj.selectionStart;
+  return value !== undefined ? BigInt(value) : undefined;
 }
 
 /**
@@ -7356,9 +7378,10 @@ export function HtmlInputElementSetSelectionStart(self: bigint, value: number | 
 /**
  * `get-selection-end()` operation.
  */
-export function HtmlInputElementGetSelectionEnd(self: bigint): number | undefined {
+export function HtmlInputElementGetSelectionEnd(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
-  return obj.selectionEnd ?? undefined;
+  const value = obj.selectionEnd;
+  return value !== undefined ? BigInt(value) : undefined;
 }
 
 /**
@@ -8491,9 +8514,9 @@ export function HtmlTextAreaElementSetValue(self: bigint, value: string): void {
 /**
  * `get-text-length()` operation.
  */
-export function getTextLength(self: bigint): number {
+export function getTextLength(self: bigint): bigint {
   const obj = lookupHTMLTextAreaElement(self);
-  return obj.textLength;
+  return BigInt(obj.textLength);
 }
 
 /**
@@ -8566,9 +8589,9 @@ export function HtmlTextAreaElementSelect(self: bigint): void {
 /**
  * `get-selection-start()` operation.
  */
-export function HtmlTextAreaElementGetSelectionStart(self: bigint): number {
+export function HtmlTextAreaElementGetSelectionStart(self: bigint): bigint {
   const obj = lookupHTMLTextAreaElement(self);
-  return obj.selectionStart;
+  return BigInt(obj.selectionStart);
 }
 
 /**
@@ -8582,9 +8605,9 @@ export function HtmlTextAreaElementSetSelectionStart(self: bigint, value: number
 /**
  * `get-selection-end()` operation.
  */
-export function HtmlTextAreaElementGetSelectionEnd(self: bigint): number {
+export function HtmlTextAreaElementGetSelectionEnd(self: bigint): bigint {
   const obj = lookupHTMLTextAreaElement(self);
-  return obj.selectionEnd;
+  return BigInt(obj.selectionEnd);
 }
 
 /**
@@ -8802,9 +8825,9 @@ function lookupHTMLProgressElement(handle: bigint): HTMLProgressElement {
 /**
  * `get-value()` operation.
  */
-export function HtmlProgressElementGetValue(self: bigint): number {
+export function HtmlProgressElementGetValue(self: bigint): bigint {
   const obj = lookupHTMLProgressElement(self);
-  return obj.value;
+  return BigInt(obj.value);
 }
 
 /**
@@ -8818,9 +8841,9 @@ export function HtmlProgressElementSetValue(self: bigint, value: number): void {
 /**
  * `get-max()` operation.
  */
-export function HtmlProgressElementGetMax(self: bigint): number {
+export function HtmlProgressElementGetMax(self: bigint): bigint {
   const obj = lookupHTMLProgressElement(self);
-  return obj.max;
+  return BigInt(obj.max);
 }
 
 /**
@@ -8869,9 +8892,9 @@ function lookupHTMLMeterElement(handle: bigint): HTMLMeterElement {
 /**
  * `get-value()` operation.
  */
-export function HtmlMeterElementGetValue(self: bigint): number {
+export function HtmlMeterElementGetValue(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.value;
+  return BigInt(obj.value);
 }
 
 /**
@@ -8885,9 +8908,9 @@ export function HtmlMeterElementSetValue(self: bigint, value: number): void {
 /**
  * `get-min()` operation.
  */
-export function HtmlMeterElementGetMin(self: bigint): number {
+export function HtmlMeterElementGetMin(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.min;
+  return BigInt(obj.min);
 }
 
 /**
@@ -8901,9 +8924,9 @@ export function HtmlMeterElementSetMin(self: bigint, value: number): void {
 /**
  * `get-max()` operation.
  */
-export function HtmlMeterElementGetMax(self: bigint): number {
+export function HtmlMeterElementGetMax(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.max;
+  return BigInt(obj.max);
 }
 
 /**
@@ -8917,9 +8940,9 @@ export function HtmlMeterElementSetMax(self: bigint, value: number): void {
 /**
  * `get-low()` operation.
  */
-export function getLow(self: bigint): number {
+export function getLow(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.low;
+  return BigInt(obj.low);
 }
 
 /**
@@ -8933,9 +8956,9 @@ export function setLow(self: bigint, value: number): void {
 /**
  * `get-high()` operation.
  */
-export function getHigh(self: bigint): number {
+export function getHigh(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.high;
+  return BigInt(obj.high);
 }
 
 /**
@@ -8949,9 +8972,9 @@ export function setHigh(self: bigint, value: number): void {
 /**
  * `get-optimum()` operation.
  */
-export function getOptimum(self: bigint): number {
+export function getOptimum(self: bigint): bigint {
   const obj = lookupHTMLMeterElement(self);
-  return obj.optimum;
+  return BigInt(obj.optimum);
 }
 
 /**
@@ -11165,9 +11188,9 @@ function lookupTextMetrics(handle: bigint): TextMetrics {
 /**
  * `get-width()` operation.
  */
-export function TextMetricsGetWidth(self: bigint): number {
+export function TextMetricsGetWidth(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.width;
+  return BigInt(obj.width);
 }
 
 /**
@@ -11189,33 +11212,33 @@ export function getActualBoundingBoxRight(self: bigint): number {
 /**
  * `get-font-bounding-box-ascent()` operation.
  */
-export function getFontBoundingBoxAscent(self: bigint): number {
+export function getFontBoundingBoxAscent(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.fontBoundingBoxAscent;
+  return BigInt(obj.fontBoundingBoxAscent);
 }
 
 /**
  * `get-font-bounding-box-descent()` operation.
  */
-export function getFontBoundingBoxDescent(self: bigint): number {
+export function getFontBoundingBoxDescent(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.fontBoundingBoxDescent;
+  return BigInt(obj.fontBoundingBoxDescent);
 }
 
 /**
  * `get-actual-bounding-box-ascent()` operation.
  */
-export function getActualBoundingBoxAscent(self: bigint): number {
+export function getActualBoundingBoxAscent(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.actualBoundingBoxAscent;
+  return BigInt(obj.actualBoundingBoxAscent);
 }
 
 /**
  * `get-actual-bounding-box-descent()` operation.
  */
-export function getActualBoundingBoxDescent(self: bigint): number {
+export function getActualBoundingBoxDescent(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.actualBoundingBoxDescent;
+  return BigInt(obj.actualBoundingBoxDescent);
 }
 
 /**
@@ -11237,9 +11260,9 @@ export function getEmHeightDescent(self: bigint): number {
 /**
  * `get-hanging-baseline()` operation.
  */
-export function getHangingBaseline(self: bigint): number {
+export function getHangingBaseline(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.hangingBaseline;
+  return BigInt(obj.hangingBaseline);
 }
 
 /**
@@ -11253,9 +11276,9 @@ export function getAlphabeticBaseline(self: bigint): number {
 /**
  * `get-ideographic-baseline()` operation.
  */
-export function getIdeographicBaseline(self: bigint): number {
+export function getIdeographicBaseline(self: bigint): bigint {
   const obj = lookupTextMetrics(self);
-  return obj.ideographicBaseline;
+  return BigInt(obj.ideographicBaseline);
 }
 
 // ---------------------------------------------------------------------------
@@ -12001,18 +12024,6 @@ export function CloseWatcherSetOnclose(self: bigint, value: EventHandlerRecord):
 /** Type alias */
 export type DataTransferHandle = bigint;
 
-/** Handle table for DataTransfer instances */
-const _dataTransferhandles = new Map<bigint, DataTransfer>();
-let _nextDataTransfer = 1n;
-
-/** Lookup a DataTransfer by handle, throwing if not found. */
-function lookupDataTransfer(handle: bigint): DataTransfer {
-  const obj = _dataTransferhandles.get(handle);
-  if (!obj) {
-    throw new Error(`DataTransfer handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-drop-effect()` operation.
  */
@@ -12235,7 +12246,10 @@ function lookupDragEvent(handle: bigint): DragEvent {
  */
 export function getDataTransfer(self: bigint): bigint | undefined {
   const obj = lookupDragEvent(self);
-  return obj.dataTransfer ?? undefined;
+  const result = obj.dataTransfer;
+  const handle = _nextDataTransfer++;
+  _dataTransferHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
