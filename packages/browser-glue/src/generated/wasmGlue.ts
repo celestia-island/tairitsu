@@ -32,7 +32,7 @@ function getModule(handle: bigint): module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): bigint {
+export function exports(moduleObject: bigint): string {
   const obj = getModule(self);
   return obj.exports(moduleObject);
 }
@@ -40,7 +40,7 @@ export function exports(moduleObject: bigint): bigint {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): bigint {
+export function imports(moduleObject: bigint): number {
   const obj = getModule(self);
   return obj.imports(moduleObject);
 }
@@ -48,7 +48,7 @@ export function imports(moduleObject: bigint): bigint {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): ((string)[])[] {
+export function customSections(moduleObject: string | undefined, sectionName: string | undefined): bigint {
   const obj = getModule(self);
   return obj.customSections(moduleObject, sectionName);
 }
@@ -58,7 +58,7 @@ export function customSections(moduleObject: bigint, sectionName: string): ((str
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type InstanceHandle = bigint;
+export type InstanceHandle = string | undefined;
 
 /** Handle table for instance instances */
 const _instanceHandles = new Map<bigint, instance>();

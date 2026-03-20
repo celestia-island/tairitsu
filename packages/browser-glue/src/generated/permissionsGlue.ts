@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PermissionsHandle = bigint;
+export type PermissionsHandle = number;
 
 /** Handle table for Permissions instances */
 const _permissionsHandles = new Map<bigint, Permissions>();
@@ -47,7 +47,7 @@ function getPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: bigint): bigint {
+export function query(self: bigint, permissionDesc: bigint): number {
   const requestId = _nextAsyncHandle++;
   const obj = getPermissions(self);
   const promise = obj.query(permissionDesc)
@@ -72,7 +72,7 @@ export function query(self: bigint, permissionDesc: bigint): bigint {
  * Poll an async `query()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollQuery(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -103,7 +103,7 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: number): bigint {
+export function getState(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.state;
 }
@@ -111,7 +111,7 @@ export function getState(self: number): bigint {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): string {
+export function getName(self: number): string {
   const obj = getPermissionStatus(self);
   return obj.name;
 }
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint | undefined {
+export function getOnchange(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
@@ -127,7 +127,7 @@ export function getOnchange(self: bigint): bigint | undefined {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: bigint): void {
+export function setOnchange(self: bigint, value: bigint | undefined): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }
