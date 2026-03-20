@@ -214,37 +214,96 @@ interface AsyncHandle<T> {
 const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 
 // ---------------------------------------------------------------------------
+// Synthetic handle tables for primitive/utility types
+// ---------------------------------------------------------------------------
+
+/** Handle table for abort-signal values */
+const _abortSignalHandles = new Map<bigint, AbortSignal>();
+let _nextAbortSignal = 1n;
+
+/** Handle table for any values */
+const _anyHandles = new Map<bigint, any>();
+let _nextAny = 1n;
+
+/** Handle table for headers values */
+const _headersHandles = new Map<bigint, Headers>();
+let _nextHeaders = 1n;
+
+// ---------------------------------------------------------------------------
+// Helper functions for handle lookups
+// ---------------------------------------------------------------------------
+
+/** Lookup a abort-signal value by handle. */
+function lookupAbortSignal(handle: bigint): AbortSignal {
+  const obj = _abortSignalHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`abort-signal handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional abort-signal value by handle. */
+function lookupOptionAbortSignal(handle: bigint | undefined): AbortSignal | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _abortSignalHandles.get(handle);
+}
+
+/** Lookup a any value by handle. */
+function lookupAny(handle: bigint): any {
+  const obj = _anyHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`any handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional any value by handle. */
+function lookupOptionAny(handle: bigint | undefined): any | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _anyHandles.get(handle);
+}
+
+/** Lookup a headers value by handle. */
+function lookupHeaders(handle: bigint): Headers {
+  const obj = _headersHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`headers handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional headers value by handle. */
+function lookupOptionHeaders(handle: bigint | undefined): Headers | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _headersHandles.get(handle);
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: headers
 // ---------------------------------------------------------------------------
 
 /** Type alias */
 export type HeadersHandle = bigint;
 
-/** Handle table for Headers instances */
-const _headersHandles = new Map<bigint, Headers>();
-let _nextHeaders = 1n;
-
-/** Get a Headers by handle, throwing if not found. */
-function getHeaders(handle: bigint): Headers {
-  const obj = _headersHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Headers handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: string, value: string): void {
-  const obj = getHeaders(self);
+export function HeadersAppend(self: bigint, name: EventHandlerRecord, value: string): void {
+  const obj = lookupHeaders(self);
   obj.append(name, value);
 }
 
 /**
  * `delete()` operation.
  */
-export function HeadersDelete(self: bigint, name: string): void {
-  const obj = getHeaders(self);
+export function HeadersDelete(self: bigint, name: bigint): void {
+  const obj = lookupHeaders(self);
   obj.delete(name);
 }
 
@@ -252,7 +311,7 @@ export function HeadersDelete(self: bigint, name: string): void {
  * `get()` operation.
  */
 export function HeadersGet(self: bigint, name: string): string | undefined {
-  const obj = getHeaders(self);
+  const obj = lookupHeaders(self);
   return obj.get(name) ?? undefined;
 }
 
@@ -260,23 +319,23 @@ export function HeadersGet(self: bigint, name: string): string | undefined {
  * `get-set-cookie()` operation.
  */
 export function getSetCookie(self: bigint): (string)[] {
-  const obj = getHeaders(self);
-  return obj.getSetCookie;
+  const obj = lookupHeaders(self);
+  return obj.getSetCookie();
 }
 
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: string): boolean {
-  const obj = getHeaders(self);
+export function HeadersHas(self: bigint, name: string): EventHandlerRecord {
+  const obj = lookupHeaders(self);
   return obj.has(name);
 }
 
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
-  const obj = getHeaders(self);
+export function HeadersSet(self: bigint, name: string, value: string | undefined): void {
+  const obj = lookupHeaders(self);
   obj.set(name, value);
 }
 
@@ -291,8 +350,8 @@ export type BodyHandle = bigint;
 const _bodyHandles = new Map<bigint, Body>();
 let _nextBody = 1n;
 
-/** Get a Body by handle, throwing if not found. */
-function getBody(handle: bigint): Body {
+/** Lookup a Body by handle, throwing if not found. */
+function lookupBody(handle: bigint): Body {
   const obj = _bodyHandles.get(handle);
   if (!obj) {
     throw new Error(`Body handle ${handle} not found`);
@@ -302,16 +361,16 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function BodyGetBody(self: bigint): bigint | undefined {
-  const obj = getBody(self);
+export function getBody(self: bigint): bigint | undefined {
+  const obj = lookupBody(self);
   return obj.body ?? undefined;
 }
 
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
-  const obj = getBody(self);
+export function getBodyUsed(self: bigint): bigint {
+  const obj = lookupBody(self);
   return obj.bodyUsed;
 }
 
@@ -322,7 +381,7 @@ export function getBodyUsed(self: bigint): boolean {
  */
 export function arrayBuffer(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.arrayBuffer()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -360,7 +419,7 @@ export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } 
  */
 export function blob(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.blob()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -383,12 +442,12 @@ export function blob(self: bigint): bigint {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -398,7 +457,7 @@ export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok:
  */
 export function bytes(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.bytes()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -436,7 +495,7 @@ export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok
  */
 export function formData(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.formData()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -474,7 +533,7 @@ export function pollFormData(requestId: bigint): { ok: true; value: bigint } | {
  */
 export function BodyJson(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.json()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -512,7 +571,7 @@ export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok:
  */
 export function text(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getBody(self);
+  const obj = lookupBody(self);
   const promise = obj.text()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -554,8 +613,8 @@ export type RequestHandle = bigint;
 const _requestHandles = new Map<bigint, Request>();
 let _nextRequest = 1n;
 
-/** Get a Request by handle, throwing if not found. */
-function getRequest(handle: bigint): Request {
+/** Lookup a Request by handle, throwing if not found. */
+function lookupRequest(handle: bigint): Request {
   const obj = _requestHandles.get(handle);
   if (!obj) {
     throw new Error(`Request handle ${handle} not found`);
@@ -566,7 +625,7 @@ function getRequest(handle: bigint): Request {
  * `get-method()` operation.
  */
 export function getMethod(self: bigint): string {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.method;
 }
 
@@ -574,7 +633,7 @@ export function getMethod(self: bigint): string {
  * `get-url()` operation.
  */
 export function RequestGetUrl(self: bigint): string {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.url;
 }
 
@@ -582,7 +641,7 @@ export function RequestGetUrl(self: bigint): string {
  * `get-headers()` operation.
  */
 export function RequestGetHeaders(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.headers;
 }
 
@@ -590,7 +649,7 @@ export function RequestGetHeaders(self: bigint): bigint {
  * `get-destination()` operation.
  */
 export function getDestination(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.destination;
 }
 
@@ -598,7 +657,7 @@ export function getDestination(self: bigint): bigint {
  * `get-referrer()` operation.
  */
 export function getReferrer(self: bigint): string {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.referrer;
 }
 
@@ -606,7 +665,7 @@ export function getReferrer(self: bigint): string {
  * `get-referrer-policy()` operation.
  */
 export function getReferrerPolicy(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.referrerPolicy;
 }
 
@@ -614,7 +673,7 @@ export function getReferrerPolicy(self: bigint): bigint {
  * `get-mode()` operation.
  */
 export function getMode(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.mode;
 }
 
@@ -622,7 +681,7 @@ export function getMode(self: bigint): bigint {
  * `get-credentials()` operation.
  */
 export function getCredentials(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.credentials;
 }
 
@@ -630,7 +689,7 @@ export function getCredentials(self: bigint): bigint {
  * `get-cache()` operation.
  */
 export function getCache(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.cache;
 }
 
@@ -638,7 +697,7 @@ export function getCache(self: bigint): bigint {
  * `get-redirect()` operation.
  */
 export function getRedirect(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.redirect;
 }
 
@@ -646,7 +705,7 @@ export function getRedirect(self: bigint): bigint {
  * `get-integrity()` operation.
  */
 export function getIntegrity(self: bigint): string {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.integrity;
 }
 
@@ -654,7 +713,7 @@ export function getIntegrity(self: bigint): string {
  * `get-keepalive()` operation.
  */
 export function getKeepalive(self: bigint): boolean {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.keepalive;
 }
 
@@ -662,15 +721,15 @@ export function getKeepalive(self: bigint): boolean {
  * `get-is-reload-navigation()` operation.
  */
 export function getIsReloadNavigation(self: bigint): boolean {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
 
 /**
  * `get-is-history-navigation()` operation.
  */
-export function getIsHistoryNavigation(self: bigint): boolean {
-  const obj = getRequest(self);
+export function getIsHistoryNavigation(self: bigint): EventHandlerRecord {
+  const obj = lookupRequest(self);
   return (obj as any).isHistoryNavigation;
 }
 
@@ -678,15 +737,18 @@ export function getIsHistoryNavigation(self: bigint): boolean {
  * `get-signal()` operation.
  */
 export function RequestGetSignal(self: bigint): bigint {
-  const obj = getRequest(self);
-  return obj.signal;
+  const obj = lookupRequest(self);
+  const result = obj.signal;
+  const handle = _nextAbortSignal++;
+  _abortSignalHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-duplex()` operation.
  */
 export function getDuplex(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return (obj as any).duplex;
 }
 
@@ -694,7 +756,7 @@ export function getDuplex(self: bigint): bigint {
  * `clone()` operation.
  */
 export function RequestClone(self: bigint): bigint {
-  const obj = getRequest(self);
+  const obj = lookupRequest(self);
   return obj.clone();
 }
 
@@ -709,8 +771,8 @@ export type ResponseHandle = bigint;
 const _responseHandles = new Map<bigint, Response>();
 let _nextResponse = 1n;
 
-/** Get a Response by handle, throwing if not found. */
-function getResponse(handle: bigint): Response {
+/** Lookup a Response by handle, throwing if not found. */
+function lookupResponse(handle: bigint): Response {
   const obj = _responseHandles.get(handle);
   if (!obj) {
     throw new Error(`Response handle ${handle} not found`);
@@ -720,7 +782,7 @@ function getResponse(handle: bigint): Response {
 /**
  * `error()` operation.
  */
-export function ResponseError(): bigint {
+export function ResponseError(): EventHandlerRecord {
   return Response.error();
 }
 
@@ -734,7 +796,7 @@ export function redirect(url: string, status: number | undefined): bigint {
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: bigint | undefined): bigint {
+export function ResponseJson(data: string, init: string): bigint {
   return Response.json(data, init);
 }
 
@@ -742,7 +804,7 @@ export function ResponseJson(data: string, init: bigint | undefined): bigint {
  * `get-type()` operation.
  */
 export function getType(self: bigint): bigint {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.type;
 }
 
@@ -750,7 +812,7 @@ export function getType(self: bigint): bigint {
  * `get-url()` operation.
  */
 export function ResponseGetUrl(self: bigint): string {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.url;
 }
 
@@ -758,7 +820,7 @@ export function ResponseGetUrl(self: bigint): string {
  * `get-redirected()` operation.
  */
 export function getRedirected(self: bigint): boolean {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.redirected;
 }
 
@@ -766,7 +828,7 @@ export function getRedirected(self: bigint): boolean {
  * `get-status()` operation.
  */
 export function ResponseGetStatus(self: bigint): number {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.status;
 }
 
@@ -774,7 +836,7 @@ export function ResponseGetStatus(self: bigint): number {
  * `get-ok()` operation.
  */
 export function getOk(self: bigint): boolean {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.ok;
 }
 
@@ -782,7 +844,7 @@ export function getOk(self: bigint): boolean {
  * `get-status-text()` operation.
  */
 export function ResponseGetStatusText(self: bigint): string {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.statusText;
 }
 
@@ -790,15 +852,18 @@ export function ResponseGetStatusText(self: bigint): string {
  * `get-headers()` operation.
  */
 export function ResponseGetHeaders(self: bigint): bigint {
-  const obj = getResponse(self);
-  return obj.headers;
+  const obj = lookupResponse(self);
+  const result = obj.headers;
+  const handle = _nextHeaders++;
+  _headersHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `clone()` operation.
  */
 export function ResponseClone(self: bigint): bigint {
-  const obj = getResponse(self);
+  const obj = lookupResponse(self);
   return obj.clone();
 }
 
@@ -819,8 +884,8 @@ function registerWindowOrWorkerGlobalScope(obj: WindowOrWorkerGlobalScope): bigi
   _windowOrWorkerGlobalScopehandles.set(handle, obj);
   return handle;
 }
-/** Get a WindowOrWorkerGlobalScope by handle, throwing if not found. */
-function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
+/** Lookup a WindowOrWorkerGlobalScope by handle, throwing if not found. */
+function lookupWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
   const obj = _windowOrWorkerGlobalScopehandles.get(handle);
   if (!obj) {
     throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
@@ -834,7 +899,7 @@ function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope
  */
 export function fetch(self: bigint, input: bigint, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   const promise = obj.fetch(input, init)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -869,7 +934,7 @@ export function pollFetch(requestId: bigint): { ok: true; value: bigint } | { ok
  * `get-performance()` operation.
  */
 export function getPerformance(self: bigint): bigint {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.performance;
 }
 
@@ -877,7 +942,7 @@ export function getPerformance(self: bigint): bigint {
  * `get-origin()` operation.
  */
 export function getOrigin(self: bigint): string {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.origin;
 }
 
@@ -885,7 +950,7 @@ export function getOrigin(self: bigint): string {
  * `get-is-secure-context()` operation.
  */
 export function getIsSecureContext(self: bigint): boolean {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.isSecureContext;
 }
 
@@ -893,7 +958,7 @@ export function getIsSecureContext(self: bigint): boolean {
  * `get-cross-origin-isolated()` operation.
  */
 export function getCrossOriginIsolated(self: bigint): boolean {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.crossOriginIsolated;
 }
 
@@ -901,7 +966,7 @@ export function getCrossOriginIsolated(self: bigint): boolean {
  * `report-error()` operation.
  */
 export function reportError(self: bigint, e: string): void {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.reportError(e);
 }
 
@@ -909,7 +974,7 @@ export function reportError(self: bigint, e: string): void {
  * `btoa()` operation.
  */
 export function btoa(self: bigint, data: string): string {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.btoa(data);
 }
 
@@ -917,39 +982,39 @@ export function btoa(self: bigint, data: string): string {
  * `atob()` operation.
  */
 export function atob(self: bigint, data: string): string {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.atob(data);
 }
 
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint, _arguments: bigint): number {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   (obj as any).timeout = _arguments;
 }
 
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: number | undefined): void {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function clearTimeout(self: bigint, id: bigint | undefined): void {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }
 
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function setInterval(self: bigint, handler: bigint, timeout: bigint, _arguments: (bigint | undefined)[]): bigint | undefined {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   (obj as any).interval = _arguments;
 }
 
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: number | undefined): void {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function clearInterval(self: bigint, id: bigint): void {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
 
@@ -957,7 +1022,7 @@ export function clearInterval(self: bigint, id: number | undefined): void {
  * `queue-microtask()` operation.
  */
 export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback);
 }
 
@@ -966,9 +1031,9 @@ export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void
  *
  * Async operation: returns request ID, poll with `pollCreateImageBitmap()`
  */
-export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined): bigint {
+export function createImageBitmap(self: bigint, image: bigint, options: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   const promise = obj.createImageBitmap(image, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1002,8 +1067,8 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function structuredClone(self: bigint, value: bigint, options: bigint | undefined | undefined): bigint | undefined {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value, options);
 }
 
@@ -1011,15 +1076,15 @@ export function structuredClone(self: bigint, value: string, options: bigint | u
  * `get-caches()` operation.
  */
 export function getCaches(self: bigint): bigint {
-  const obj = getWindowOrWorkerGlobalScope(self);
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.caches;
 }
 
 /**
  * `get-crypto()` operation.
  */
-export function getCrypto(self: bigint): bigint {
-  const obj = getWindowOrWorkerGlobalScope(self);
+export function getCrypto(self: bigint): bigint | undefined {
+  const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.crypto;
 }
 
@@ -1034,8 +1099,8 @@ export type FetchLaterResultHandle = bigint;
 const _fetchLaterResulthandles = new Map<bigint, FetchLaterResult>();
 let _nextFetchLaterResult = 1n;
 
-/** Get a FetchLaterResult by handle, throwing if not found. */
-function getFetchLaterResult(handle: bigint): FetchLaterResult {
+/** Lookup a FetchLaterResult by handle, throwing if not found. */
+function lookupFetchLaterResult(handle: bigint): FetchLaterResult {
   const obj = _fetchLaterResulthandles.get(handle);
   if (!obj) {
     throw new Error(`FetchLaterResult handle ${handle} not found`);
@@ -1046,7 +1111,7 @@ function getFetchLaterResult(handle: bigint): FetchLaterResult {
  * `get-activated()` operation.
  */
 export function getActivated(self: bigint): boolean {
-  const obj = getFetchLaterResult(self);
+  const obj = lookupFetchLaterResult(self);
   return obj.activated;
 }
 
@@ -1061,8 +1126,8 @@ export type ReadableStreamHandle = bigint;
 const _readableStreamhandles = new Map<bigint, ReadableStream>();
 let _nextReadableStream = 1n;
 
-/** Get a ReadableStream by handle, throwing if not found. */
-function getReadableStream(handle: bigint): ReadableStream {
+/** Lookup a ReadableStream by handle, throwing if not found. */
+function lookupReadableStream(handle: bigint): ReadableStream {
   const obj = _readableStreamhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStream handle ${handle} not found`);
@@ -1072,7 +1137,7 @@ function getReadableStream(handle: bigint): ReadableStream {
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: string): bigint {
+export function from(asyncIterable: string): Uint8Array {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 
@@ -1080,7 +1145,7 @@ export function from(asyncIterable: string): bigint {
  * `get-locked()` operation.
  */
 export function ReadableStreamGetLocked(self: bigint): boolean {
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   return obj.locked;
 }
 
@@ -1091,7 +1156,7 @@ export function ReadableStreamGetLocked(self: bigint): boolean {
  */
 export function ReadableStreamCancel(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   const promise = obj.cancel(reason)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1126,7 +1191,7 @@ export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: 
  * `get-reader()` operation.
  */
 export function getReader(self: bigint, options: bigint | undefined): bigint {
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   return (obj as any).reader;
 }
 
@@ -1134,7 +1199,7 @@ export function getReader(self: bigint, options: bigint | undefined): bigint {
  * `pipe-through()` operation.
  */
 export function pipeThrough(self: bigint, transform: bigint, options: bigint | undefined): bigint {
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   return obj.pipeThrough(transform, options);
 }
 
@@ -1145,7 +1210,7 @@ export function pipeThrough(self: bigint, transform: bigint, options: bigint | u
  */
 export function pipeTo(self: bigint, destination: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   const promise = obj.pipeTo(destination, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1180,7 +1245,7 @@ export function pollPipeTo(requestId: bigint): { ok: true; value: bigint } | { o
  * `tee()` operation.
  */
 export function tee(self: bigint): (bigint)[] {
-  const obj = getReadableStream(self);
+  const obj = lookupReadableStream(self);
   return obj.tee();
 }
 
@@ -1195,8 +1260,8 @@ export type ReadableStreamGenericReaderHandle = bigint;
 const _readableStreamGenericReaderhandles = new Map<bigint, ReadableStreamGenericReader>();
 let _nextReadableStreamGenericReader = 1n;
 
-/** Get a ReadableStreamGenericReader by handle, throwing if not found. */
-function getReadableStreamGenericReader(handle: bigint): ReadableStreamGenericReader {
+/** Lookup a ReadableStreamGenericReader by handle, throwing if not found. */
+function lookupReadableStreamGenericReader(handle: bigint): ReadableStreamGenericReader {
   const obj = _readableStreamGenericReaderhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStreamGenericReader handle ${handle} not found`);
@@ -1210,7 +1275,7 @@ function getReadableStreamGenericReader(handle: bigint): ReadableStreamGenericRe
  */
 export function ReadableStreamGenericReaderGetClosed(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStreamGenericReader(self);
+  const obj = lookupReadableStreamGenericReader(self);
   const promise = obj.getClosed()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1248,7 +1313,7 @@ export function ReadableStreamGenericReaderPollGetClosed(requestId: bigint): { o
  */
 export function ReadableStreamGenericReaderCancel(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStreamGenericReader(self);
+  const obj = lookupReadableStreamGenericReader(self);
   const promise = obj.cancel(reason)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1290,8 +1355,8 @@ export type ReadableStreamDefaultReaderHandle = bigint;
 const _readableStreamDefaultReaderhandles = new Map<bigint, ReadableStreamDefaultReader>();
 let _nextReadableStreamDefaultReader = 1n;
 
-/** Get a ReadableStreamDefaultReader by handle, throwing if not found. */
-function getReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultReader {
+/** Lookup a ReadableStreamDefaultReader by handle, throwing if not found. */
+function lookupReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultReader {
   const obj = _readableStreamDefaultReaderhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStreamDefaultReader handle ${handle} not found`);
@@ -1305,7 +1370,7 @@ function getReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultRe
  */
 export function ReadableStreamDefaultReaderRead(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStreamDefaultReader(self);
+  const obj = lookupReadableStreamDefaultReader(self);
   const promise = obj.read()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1340,7 +1405,7 @@ export function ReadableStreamDefaultReaderPollRead(requestId: bigint): { ok: tr
  * `release-lock()` operation.
  */
 export function ReadableStreamDefaultReaderReleaseLock(self: bigint): void {
-  const obj = getReadableStreamDefaultReader(self);
+  const obj = lookupReadableStreamDefaultReader(self);
   obj.releaseLock();
 }
 
@@ -1355,8 +1420,8 @@ export type ReadableStreamByobReaderHandle = bigint;
 const _readableStreamByobReaderhandles = new Map<bigint, ReadableStreamBYOBReader>();
 let _nextReadableStreamBYOBReader = 1n;
 
-/** Get a ReadableStreamBYOBReader by handle, throwing if not found. */
-function getReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReader {
+/** Lookup a ReadableStreamBYOBReader by handle, throwing if not found. */
+function lookupReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReader {
   const obj = _readableStreamByobReaderhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStreamBYOBReader handle ${handle} not found`);
@@ -1370,7 +1435,7 @@ function getReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReader {
  */
 export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getReadableStreamBYOBReader(self);
+  const obj = lookupReadableStreamBYOBReader(self);
   const promise = obj.read(view, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1405,7 +1470,7 @@ export function ReadableStreamByobReaderPollRead(requestId: bigint): { ok: true;
  * `release-lock()` operation.
  */
 export function ReadableStreamByobReaderReleaseLock(self: bigint): void {
-  const obj = getReadableStreamBYOBReader(self);
+  const obj = lookupReadableStreamBYOBReader(self);
   obj.releaseLock();
 }
 
@@ -1420,8 +1485,8 @@ export type ReadableStreamDefaultControllerHandle = bigint;
 const _readableStreamDefaultControllerhandles = new Map<bigint, ReadableStreamDefaultController>();
 let _nextReadableStreamDefaultController = 1n;
 
-/** Get a ReadableStreamDefaultController by handle, throwing if not found. */
-function getReadableStreamDefaultController(handle: bigint): ReadableStreamDefaultController {
+/** Lookup a ReadableStreamDefaultController by handle, throwing if not found. */
+function lookupReadableStreamDefaultController(handle: bigint): ReadableStreamDefaultController {
   const obj = _readableStreamDefaultControllerhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStreamDefaultController handle ${handle} not found`);
@@ -1432,7 +1497,7 @@ function getReadableStreamDefaultController(handle: bigint): ReadableStreamDefau
  * `get-desired-size()` operation.
  */
 export function ReadableStreamDefaultControllerGetDesiredSize(self: bigint): number | undefined {
-  const obj = getReadableStreamDefaultController(self);
+  const obj = lookupReadableStreamDefaultController(self);
   return obj.desiredSize ?? undefined;
 }
 
@@ -1440,7 +1505,7 @@ export function ReadableStreamDefaultControllerGetDesiredSize(self: bigint): num
  * `close()` operation.
  */
 export function ReadableStreamDefaultControllerClose(self: bigint): void {
-  const obj = getReadableStreamDefaultController(self);
+  const obj = lookupReadableStreamDefaultController(self);
   obj.close();
 }
 
@@ -1448,7 +1513,7 @@ export function ReadableStreamDefaultControllerClose(self: bigint): void {
  * `enqueue()` operation.
  */
 export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: string | undefined): void {
-  const obj = getReadableStreamDefaultController(self);
+  const obj = lookupReadableStreamDefaultController(self);
   obj.enqueue(chunk);
 }
 
@@ -1456,7 +1521,7 @@ export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: stri
  * `error()` operation.
  */
 export function ReadableStreamDefaultControllerError(self: bigint, e: string | undefined): void {
-  const obj = getReadableStreamDefaultController(self);
+  const obj = lookupReadableStreamDefaultController(self);
   obj.error(e);
 }
 
@@ -1471,8 +1536,8 @@ export type ReadableByteStreamControllerHandle = bigint;
 const _readableByteStreamControllerhandles = new Map<bigint, ReadableByteStreamController>();
 let _nextReadableByteStreamController = 1n;
 
-/** Get a ReadableByteStreamController by handle, throwing if not found. */
-function getReadableByteStreamController(handle: bigint): ReadableByteStreamController {
+/** Lookup a ReadableByteStreamController by handle, throwing if not found. */
+function lookupReadableByteStreamController(handle: bigint): ReadableByteStreamController {
   const obj = _readableByteStreamControllerhandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableByteStreamController handle ${handle} not found`);
@@ -1483,7 +1548,7 @@ function getReadableByteStreamController(handle: bigint): ReadableByteStreamCont
  * `get-byob-request()` operation.
  */
 export function getByobRequest(self: bigint): bigint | undefined {
-  const obj = getReadableByteStreamController(self);
+  const obj = lookupReadableByteStreamController(self);
   return obj.byobRequest ?? undefined;
 }
 
@@ -1491,7 +1556,7 @@ export function getByobRequest(self: bigint): bigint | undefined {
  * `get-desired-size()` operation.
  */
 export function ReadableByteStreamControllerGetDesiredSize(self: bigint): number | undefined {
-  const obj = getReadableByteStreamController(self);
+  const obj = lookupReadableByteStreamController(self);
   return obj.desiredSize ?? undefined;
 }
 
@@ -1499,7 +1564,7 @@ export function ReadableByteStreamControllerGetDesiredSize(self: bigint): number
  * `close()` operation.
  */
 export function ReadableByteStreamControllerClose(self: bigint): void {
-  const obj = getReadableByteStreamController(self);
+  const obj = lookupReadableByteStreamController(self);
   obj.close();
 }
 
@@ -1507,7 +1572,7 @@ export function ReadableByteStreamControllerClose(self: bigint): void {
  * `enqueue()` operation.
  */
 export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: Uint8Array): void {
-  const obj = getReadableByteStreamController(self);
+  const obj = lookupReadableByteStreamController(self);
   obj.enqueue(chunk);
 }
 
@@ -1515,7 +1580,7 @@ export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: Uint8Ar
  * `error()` operation.
  */
 export function ReadableByteStreamControllerError(self: bigint, e: string | undefined): void {
-  const obj = getReadableByteStreamController(self);
+  const obj = lookupReadableByteStreamController(self);
   obj.error(e);
 }
 
@@ -1530,8 +1595,8 @@ export type ReadableStreamByobRequestHandle = bigint;
 const _readableStreamByobRequesthandles = new Map<bigint, ReadableStreamBYOBRequest>();
 let _nextReadableStreamBYOBRequest = 1n;
 
-/** Get a ReadableStreamBYOBRequest by handle, throwing if not found. */
-function getReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequest {
+/** Lookup a ReadableStreamBYOBRequest by handle, throwing if not found. */
+function lookupReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequest {
   const obj = _readableStreamByobRequesthandles.get(handle);
   if (!obj) {
     throw new Error(`ReadableStreamBYOBRequest handle ${handle} not found`);
@@ -1542,7 +1607,7 @@ function getReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequest
  * `get-view()` operation.
  */
 export function getView(self: bigint): Uint8Array | undefined {
-  const obj = getReadableStreamBYOBRequest(self);
+  const obj = lookupReadableStreamBYOBRequest(self);
   return obj.view ?? undefined;
 }
 
@@ -1550,7 +1615,7 @@ export function getView(self: bigint): Uint8Array | undefined {
  * `respond()` operation.
  */
 export function respond(self: bigint, bytesWritten: bigint): void {
-  const obj = getReadableStreamBYOBRequest(self);
+  const obj = lookupReadableStreamBYOBRequest(self);
   obj.respond(bytesWritten);
 }
 
@@ -1558,7 +1623,7 @@ export function respond(self: bigint, bytesWritten: bigint): void {
  * `respond-with-new-view()` operation.
  */
 export function respondWithNewView(self: bigint, view: Uint8Array): void {
-  const obj = getReadableStreamBYOBRequest(self);
+  const obj = lookupReadableStreamBYOBRequest(self);
   obj.respondWithNewView(view);
 }
 
@@ -1573,8 +1638,8 @@ export type WritableStreamHandle = bigint;
 const _writableStreamhandles = new Map<bigint, WritableStream>();
 let _nextWritableStream = 1n;
 
-/** Get a WritableStream by handle, throwing if not found. */
-function getWritableStream(handle: bigint): WritableStream {
+/** Lookup a WritableStream by handle, throwing if not found. */
+function lookupWritableStream(handle: bigint): WritableStream {
   const obj = _writableStreamhandles.get(handle);
   if (!obj) {
     throw new Error(`WritableStream handle ${handle} not found`);
@@ -1585,7 +1650,7 @@ function getWritableStream(handle: bigint): WritableStream {
  * `get-locked()` operation.
  */
 export function WritableStreamGetLocked(self: bigint): boolean {
-  const obj = getWritableStream(self);
+  const obj = lookupWritableStream(self);
   return obj.locked;
 }
 
@@ -1596,7 +1661,7 @@ export function WritableStreamGetLocked(self: bigint): boolean {
  */
 export function WritableStreamAbort(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStream(self);
+  const obj = lookupWritableStream(self);
   const promise = obj.abort(reason)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1634,7 +1699,7 @@ export function WritableStreamPollAbort(requestId: bigint): { ok: true; value: b
  */
 export function WritableStreamClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStream(self);
+  const obj = lookupWritableStream(self);
   const promise = obj.close()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1669,7 +1734,7 @@ export function WritableStreamPollClose(requestId: bigint): { ok: true; value: b
  * `get-writer()` operation.
  */
 export function getWriter(self: bigint): bigint {
-  const obj = getWritableStream(self);
+  const obj = lookupWritableStream(self);
   return (obj as any).writer;
 }
 
@@ -1684,8 +1749,8 @@ export type WritableStreamDefaultWriterHandle = bigint;
 const _writableStreamDefaultWriterhandles = new Map<bigint, WritableStreamDefaultWriter>();
 let _nextWritableStreamDefaultWriter = 1n;
 
-/** Get a WritableStreamDefaultWriter by handle, throwing if not found. */
-function getWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWriter {
+/** Lookup a WritableStreamDefaultWriter by handle, throwing if not found. */
+function lookupWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWriter {
   const obj = _writableStreamDefaultWriterhandles.get(handle);
   if (!obj) {
     throw new Error(`WritableStreamDefaultWriter handle ${handle} not found`);
@@ -1699,7 +1764,7 @@ function getWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWr
  */
 export function WritableStreamDefaultWriterGetClosed(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   const promise = obj.getClosed()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1734,7 +1799,7 @@ export function WritableStreamDefaultWriterPollGetClosed(requestId: bigint): { o
  * `get-desired-size()` operation.
  */
 export function WritableStreamDefaultWriterGetDesiredSize(self: bigint): number | undefined {
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   return obj.desiredSize ?? undefined;
 }
 
@@ -1742,8 +1807,8 @@ export function WritableStreamDefaultWriterGetDesiredSize(self: bigint): number 
  * `get-ready()` operation.
  */
 export function getReady(self: bigint): bigint {
-  const obj = getWritableStreamDefaultWriter(self);
-  return obj.ready;
+  const obj = lookupWritableStreamDefaultWriter(self);
+  return obj.ready();
 }
 
 /**
@@ -1753,7 +1818,7 @@ export function getReady(self: bigint): bigint {
  */
 export function WritableStreamDefaultWriterAbort(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   const promise = obj.abort(reason)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1791,7 +1856,7 @@ export function WritableStreamDefaultWriterPollAbort(requestId: bigint): { ok: t
  */
 export function WritableStreamDefaultWriterClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   const promise = obj.close()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1826,7 +1891,7 @@ export function WritableStreamDefaultWriterPollClose(requestId: bigint): { ok: t
  * `release-lock()` operation.
  */
 export function WritableStreamDefaultWriterReleaseLock(self: bigint): void {
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   obj.releaseLock();
 }
 
@@ -1837,7 +1902,7 @@ export function WritableStreamDefaultWriterReleaseLock(self: bigint): void {
  */
 export function write(self: bigint, chunk: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getWritableStreamDefaultWriter(self);
+  const obj = lookupWritableStreamDefaultWriter(self);
   const promise = obj.write(chunk)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -1879,8 +1944,8 @@ export type WritableStreamDefaultControllerHandle = bigint;
 const _writableStreamDefaultControllerhandles = new Map<bigint, WritableStreamDefaultController>();
 let _nextWritableStreamDefaultController = 1n;
 
-/** Get a WritableStreamDefaultController by handle, throwing if not found. */
-function getWritableStreamDefaultController(handle: bigint): WritableStreamDefaultController {
+/** Lookup a WritableStreamDefaultController by handle, throwing if not found. */
+function lookupWritableStreamDefaultController(handle: bigint): WritableStreamDefaultController {
   const obj = _writableStreamDefaultControllerhandles.get(handle);
   if (!obj) {
     throw new Error(`WritableStreamDefaultController handle ${handle} not found`);
@@ -1891,7 +1956,7 @@ function getWritableStreamDefaultController(handle: bigint): WritableStreamDefau
  * `get-signal()` operation.
  */
 export function WritableStreamDefaultControllerGetSignal(self: bigint): bigint {
-  const obj = getWritableStreamDefaultController(self);
+  const obj = lookupWritableStreamDefaultController(self);
   return obj.signal;
 }
 
@@ -1899,7 +1964,7 @@ export function WritableStreamDefaultControllerGetSignal(self: bigint): bigint {
  * `error()` operation.
  */
 export function WritableStreamDefaultControllerError(self: bigint, e: string | undefined): void {
-  const obj = getWritableStreamDefaultController(self);
+  const obj = lookupWritableStreamDefaultController(self);
   obj.error(e);
 }
 
@@ -1914,8 +1979,8 @@ export type TransformStreamHandle = bigint;
 const _transformStreamhandles = new Map<bigint, TransformStream>();
 let _nextTransformStream = 1n;
 
-/** Get a TransformStream by handle, throwing if not found. */
-function getTransformStream(handle: bigint): TransformStream {
+/** Lookup a TransformStream by handle, throwing if not found. */
+function lookupTransformStream(handle: bigint): TransformStream {
   const obj = _transformStreamhandles.get(handle);
   if (!obj) {
     throw new Error(`TransformStream handle ${handle} not found`);
@@ -1926,7 +1991,7 @@ function getTransformStream(handle: bigint): TransformStream {
  * `get-readable()` operation.
  */
 export function TransformStreamGetReadable(self: bigint): bigint {
-  const obj = getTransformStream(self);
+  const obj = lookupTransformStream(self);
   return obj.readable;
 }
 
@@ -1934,7 +1999,7 @@ export function TransformStreamGetReadable(self: bigint): bigint {
  * `get-writable()` operation.
  */
 export function TransformStreamGetWritable(self: bigint): bigint {
-  const obj = getTransformStream(self);
+  const obj = lookupTransformStream(self);
   return obj.writable;
 }
 
@@ -1949,8 +2014,8 @@ export type TransformStreamDefaultControllerHandle = bigint;
 const _transformStreamDefaultControllerhandles = new Map<bigint, TransformStreamDefaultController>();
 let _nextTransformStreamDefaultController = 1n;
 
-/** Get a TransformStreamDefaultController by handle, throwing if not found. */
-function getTransformStreamDefaultController(handle: bigint): TransformStreamDefaultController {
+/** Lookup a TransformStreamDefaultController by handle, throwing if not found. */
+function lookupTransformStreamDefaultController(handle: bigint): TransformStreamDefaultController {
   const obj = _transformStreamDefaultControllerhandles.get(handle);
   if (!obj) {
     throw new Error(`TransformStreamDefaultController handle ${handle} not found`);
@@ -1961,7 +2026,7 @@ function getTransformStreamDefaultController(handle: bigint): TransformStreamDef
  * `get-desired-size()` operation.
  */
 export function TransformStreamDefaultControllerGetDesiredSize(self: bigint): number | undefined {
-  const obj = getTransformStreamDefaultController(self);
+  const obj = lookupTransformStreamDefaultController(self);
   return obj.desiredSize ?? undefined;
 }
 
@@ -1969,7 +2034,7 @@ export function TransformStreamDefaultControllerGetDesiredSize(self: bigint): nu
  * `enqueue()` operation.
  */
 export function TransformStreamDefaultControllerEnqueue(self: bigint, chunk: string | undefined): void {
-  const obj = getTransformStreamDefaultController(self);
+  const obj = lookupTransformStreamDefaultController(self);
   obj.enqueue(chunk);
 }
 
@@ -1977,7 +2042,7 @@ export function TransformStreamDefaultControllerEnqueue(self: bigint, chunk: str
  * `error()` operation.
  */
 export function TransformStreamDefaultControllerError(self: bigint, reason: string | undefined): void {
-  const obj = getTransformStreamDefaultController(self);
+  const obj = lookupTransformStreamDefaultController(self);
   obj.error(reason);
 }
 
@@ -1985,7 +2050,7 @@ export function TransformStreamDefaultControllerError(self: bigint, reason: stri
  * `terminate()` operation.
  */
 export function terminate(self: bigint): void {
-  const obj = getTransformStreamDefaultController(self);
+  const obj = lookupTransformStreamDefaultController(self);
   obj.terminate();
 }
 
@@ -2000,8 +2065,8 @@ export type ByteLengthQueuingStrategyHandle = bigint;
 const _byteLengthQueuingStrategyhandles = new Map<bigint, ByteLengthQueuingStrategy>();
 let _nextByteLengthQueuingStrategy = 1n;
 
-/** Get a ByteLengthQueuingStrategy by handle, throwing if not found. */
-function getByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy {
+/** Lookup a ByteLengthQueuingStrategy by handle, throwing if not found. */
+function lookupByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy {
   const obj = _byteLengthQueuingStrategyhandles.get(handle);
   if (!obj) {
     throw new Error(`ByteLengthQueuingStrategy handle ${handle} not found`);
@@ -2012,7 +2077,7 @@ function getByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy
  * `get-high-water-mark()` operation.
  */
 export function ByteLengthQueuingStrategyGetHighWaterMark(self: bigint): number {
-  const obj = getByteLengthQueuingStrategy(self);
+  const obj = lookupByteLengthQueuingStrategy(self);
   return obj.highWaterMark;
 }
 
@@ -2020,7 +2085,7 @@ export function ByteLengthQueuingStrategyGetHighWaterMark(self: bigint): number 
  * `get-size()` operation.
  */
 export function ByteLengthQueuingStrategyGetSize(self: bigint): bigint {
-  const obj = getByteLengthQueuingStrategy(self);
+  const obj = lookupByteLengthQueuingStrategy(self);
   return obj.size;
 }
 
@@ -2035,8 +2100,8 @@ export type CountQueuingStrategyHandle = bigint;
 const _countQueuingStrategyhandles = new Map<bigint, CountQueuingStrategy>();
 let _nextCountQueuingStrategy = 1n;
 
-/** Get a CountQueuingStrategy by handle, throwing if not found. */
-function getCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
+/** Lookup a CountQueuingStrategy by handle, throwing if not found. */
+function lookupCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
   const obj = _countQueuingStrategyhandles.get(handle);
   if (!obj) {
     throw new Error(`CountQueuingStrategy handle ${handle} not found`);
@@ -2047,7 +2112,7 @@ function getCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
  * `get-high-water-mark()` operation.
  */
 export function CountQueuingStrategyGetHighWaterMark(self: bigint): number {
-  const obj = getCountQueuingStrategy(self);
+  const obj = lookupCountQueuingStrategy(self);
   return obj.highWaterMark;
 }
 
@@ -2055,7 +2120,7 @@ export function CountQueuingStrategyGetHighWaterMark(self: bigint): number {
  * `get-size()` operation.
  */
 export function CountQueuingStrategyGetSize(self: bigint): bigint {
-  const obj = getCountQueuingStrategy(self);
+  const obj = lookupCountQueuingStrategy(self);
   return obj.size;
 }
 
@@ -2070,8 +2135,8 @@ export type GenericTransformStreamHandle = bigint;
 const _genericTransformStreamhandles = new Map<bigint, GenericTransformStream>();
 let _nextGenericTransformStream = 1n;
 
-/** Get a GenericTransformStream by handle, throwing if not found. */
-function getGenericTransformStream(handle: bigint): GenericTransformStream {
+/** Lookup a GenericTransformStream by handle, throwing if not found. */
+function lookupGenericTransformStream(handle: bigint): GenericTransformStream {
   const obj = _genericTransformStreamhandles.get(handle);
   if (!obj) {
     throw new Error(`GenericTransformStream handle ${handle} not found`);
@@ -2082,7 +2147,7 @@ function getGenericTransformStream(handle: bigint): GenericTransformStream {
  * `get-readable()` operation.
  */
 export function GenericTransformStreamGetReadable(self: bigint): bigint {
-  const obj = getGenericTransformStream(self);
+  const obj = lookupGenericTransformStream(self);
   return obj.readable;
 }
 
@@ -2090,7 +2155,7 @@ export function GenericTransformStreamGetReadable(self: bigint): bigint {
  * `get-writable()` operation.
  */
 export function GenericTransformStreamGetWritable(self: bigint): bigint {
-  const obj = getGenericTransformStream(self);
+  const obj = lookupGenericTransformStream(self);
   return obj.writable;
 }
 
@@ -2105,8 +2170,8 @@ export type XmlHttpRequestEventTargetHandle = bigint;
 const _xmlHttpRequestEventTargethandles = new Map<bigint, XMLHttpRequestEventTarget>();
 let _nextXMLHttpRequestEventTarget = 1n;
 
-/** Get a XMLHttpRequestEventTarget by handle, throwing if not found. */
-function getXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTarget {
+/** Lookup a XMLHttpRequestEventTarget by handle, throwing if not found. */
+function lookupXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTarget {
   const obj = _xmlHttpRequestEventTargethandles.get(handle);
   if (!obj) {
     throw new Error(`XMLHttpRequestEventTarget handle ${handle} not found`);
@@ -2117,7 +2182,7 @@ function getXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTarget
  * `get-onloadstart()` operation.
  */
 export function getOnloadstart(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onloadstart;
 }
 
@@ -2125,7 +2190,7 @@ export function getOnloadstart(self: bigint): EventHandlerRecord {
  * `set-onloadstart()` operation.
  */
 export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onloadstart = value;
 }
 
@@ -2133,7 +2198,7 @@ export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
  * `get-onprogress()` operation.
  */
 export function getOnprogress(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onprogress;
 }
 
@@ -2141,7 +2206,7 @@ export function getOnprogress(self: bigint): EventHandlerRecord {
  * `set-onprogress()` operation.
  */
 export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onprogress = value;
 }
 
@@ -2149,7 +2214,7 @@ export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
  * `get-onabort()` operation.
  */
 export function getOnabort(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onabort;
 }
 
@@ -2157,7 +2222,7 @@ export function getOnabort(self: bigint): EventHandlerRecord {
  * `set-onabort()` operation.
  */
 export function setOnabort(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onabort = value;
 }
 
@@ -2165,7 +2230,7 @@ export function setOnabort(self: bigint, value: EventHandlerRecord): void {
  * `get-onerror()` operation.
  */
 export function getOnerror(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onerror;
 }
 
@@ -2173,7 +2238,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
  * `set-onerror()` operation.
  */
 export function setOnerror(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onerror = value;
 }
 
@@ -2181,7 +2246,7 @@ export function setOnerror(self: bigint, value: EventHandlerRecord): void {
  * `get-onload()` operation.
  */
 export function getOnload(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onload;
 }
 
@@ -2189,7 +2254,7 @@ export function getOnload(self: bigint): EventHandlerRecord {
  * `set-onload()` operation.
  */
 export function setOnload(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onload = value;
 }
 
@@ -2197,7 +2262,7 @@ export function setOnload(self: bigint, value: EventHandlerRecord): void {
  * `get-ontimeout()` operation.
  */
 export function getOntimeout(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.ontimeout;
 }
 
@@ -2205,7 +2270,7 @@ export function getOntimeout(self: bigint): EventHandlerRecord {
  * `set-ontimeout()` operation.
  */
 export function setOntimeout(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.ontimeout = value;
 }
 
@@ -2213,7 +2278,7 @@ export function setOntimeout(self: bigint, value: EventHandlerRecord): void {
  * `get-onloadend()` operation.
  */
 export function getOnloadend(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   return obj.onloadend;
 }
 
@@ -2221,7 +2286,7 @@ export function getOnloadend(self: bigint): EventHandlerRecord {
  * `set-onloadend()` operation.
  */
 export function setOnloadend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequestEventTarget(self);
+  const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onloadend = value;
 }
 
@@ -2236,8 +2301,8 @@ export type XmlHttpRequestHandle = bigint;
 const _xmlHttpRequesthandles = new Map<bigint, XMLHttpRequest>();
 let _nextXMLHttpRequest = 1n;
 
-/** Get a XMLHttpRequest by handle, throwing if not found. */
-function getXMLHttpRequest(handle: bigint): XMLHttpRequest {
+/** Lookup a XMLHttpRequest by handle, throwing if not found. */
+function lookupXMLHttpRequest(handle: bigint): XMLHttpRequest {
   const obj = _xmlHttpRequesthandles.get(handle);
   if (!obj) {
     throw new Error(`XMLHttpRequest handle ${handle} not found`);
@@ -2248,7 +2313,7 @@ function getXMLHttpRequest(handle: bigint): XMLHttpRequest {
  * `get-onreadystatechange()` operation.
  */
 export function getOnreadystatechange(self: bigint): EventHandlerRecord {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.onreadystatechange;
 }
 
@@ -2256,7 +2321,7 @@ export function getOnreadystatechange(self: bigint): EventHandlerRecord {
  * `set-onreadystatechange()` operation.
  */
 export function setOnreadystatechange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.onreadystatechange = value;
 }
 
@@ -2264,7 +2329,7 @@ export function setOnreadystatechange(self: bigint, value: EventHandlerRecord): 
  * `get-ready-state()` operation.
  */
 export function getReadyState(self: bigint): number {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.readyState;
 }
 
@@ -2272,7 +2337,7 @@ export function getReadyState(self: bigint): number {
  * `open()` operation.
  */
 export function open(self: bigint, method: string, url: string): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.open(method, url);
 }
 
@@ -2280,7 +2345,7 @@ export function open(self: bigint, method: string, url: string): void {
  * `set-request-header()` operation.
  */
 export function setRequestHeader(self: bigint, name: string, value: string): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.setRequestHeader = value;
 }
 
@@ -2288,7 +2353,7 @@ export function setRequestHeader(self: bigint, name: string, value: string): voi
  * `get-timeout()` operation.
  */
 export function getTimeout(self: bigint): number {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.timeout;
 }
 
@@ -2296,7 +2361,7 @@ export function getTimeout(self: bigint): number {
  * `set-timeout()` operation.
  */
 export function XmlHttpRequestSetTimeout(self: bigint, value: number): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.timeout = value;
 }
 
@@ -2304,7 +2369,7 @@ export function XmlHttpRequestSetTimeout(self: bigint, value: number): void {
  * `get-with-credentials()` operation.
  */
 export function getWithCredentials(self: bigint): boolean {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.withCredentials;
 }
 
@@ -2312,7 +2377,7 @@ export function getWithCredentials(self: bigint): boolean {
  * `set-with-credentials()` operation.
  */
 export function setWithCredentials(self: bigint, value: boolean): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.withCredentials = value;
 }
 
@@ -2320,7 +2385,7 @@ export function setWithCredentials(self: bigint, value: boolean): void {
  * `get-upload()` operation.
  */
 export function getUpload(self: bigint): bigint {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.upload;
 }
 
@@ -2328,7 +2393,7 @@ export function getUpload(self: bigint): bigint {
  * `send()` operation.
  */
 export function send(self: bigint, body: bigint | undefined): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.send(body);
 }
 
@@ -2336,7 +2401,7 @@ export function send(self: bigint, body: bigint | undefined): void {
  * `abort()` operation.
  */
 export function XmlHttpRequestAbort(self: bigint): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.abort();
 }
 
@@ -2344,7 +2409,7 @@ export function XmlHttpRequestAbort(self: bigint): void {
  * `get-response-url()` operation.
  */
 export function getResponseUrl(self: bigint): string {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.responseURL;
 }
 
@@ -2352,7 +2417,7 @@ export function getResponseUrl(self: bigint): string {
  * `get-status()` operation.
  */
 export function XmlHttpRequestGetStatus(self: bigint): number {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.status;
 }
 
@@ -2360,7 +2425,7 @@ export function XmlHttpRequestGetStatus(self: bigint): number {
  * `get-status-text()` operation.
  */
 export function XmlHttpRequestGetStatusText(self: bigint): string {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.statusText;
 }
 
@@ -2368,7 +2433,7 @@ export function XmlHttpRequestGetStatusText(self: bigint): string {
  * `get-response-header()` operation.
  */
 export function getResponseHeader(self: bigint, name: string): string | undefined {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.getResponseHeader(name) ?? undefined;
 }
 
@@ -2376,7 +2441,7 @@ export function getResponseHeader(self: bigint, name: string): string | undefine
  * `get-all-response-headers()` operation.
  */
 export function getAllResponseHeaders(self: bigint): string {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.getAllResponseHeaders();
 }
 
@@ -2384,7 +2449,7 @@ export function getAllResponseHeaders(self: bigint): string {
  * `override-mime-type()` operation.
  */
 export function overrideMimeType(self: bigint, mime: string): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.overrideMimeType(mime);
 }
 
@@ -2392,7 +2457,7 @@ export function overrideMimeType(self: bigint, mime: string): void {
  * `get-response-type()` operation.
  */
 export function getResponseType(self: bigint): bigint {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.responseType;
 }
 
@@ -2400,15 +2465,15 @@ export function getResponseType(self: bigint): bigint {
  * `set-response-type()` operation.
  */
 export function setResponseType(self: bigint, value: bigint): void {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   obj.responseType = value;
 }
 
 /**
  * `get-response()` operation.
  */
-export function XmlHttpRequestGetResponse(self: bigint): string {
-  const obj = getXMLHttpRequest(self);
+export function getResponse(self: bigint): string {
+  const obj = lookupXMLHttpRequest(self);
   return obj.response;
 }
 
@@ -2416,7 +2481,7 @@ export function XmlHttpRequestGetResponse(self: bigint): string {
  * `get-response-text()` operation.
  */
 export function getResponseText(self: bigint): string {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.responseText;
 }
 
@@ -2424,7 +2489,7 @@ export function getResponseText(self: bigint): string {
  * `get-response-xml()` operation.
  */
 export function getResponseXml(self: bigint): bigint | undefined {
-  const obj = getXMLHttpRequest(self);
+  const obj = lookupXMLHttpRequest(self);
   return obj.responseXML ?? undefined;
 }
 
@@ -2439,8 +2504,8 @@ export type FormDataHandle = bigint;
 const _formDatahandles = new Map<bigint, FormData>();
 let _nextFormData = 1n;
 
-/** Get a FormData by handle, throwing if not found. */
-function getFormData(handle: bigint): FormData {
+/** Lookup a FormData by handle, throwing if not found. */
+function lookupFormData(handle: bigint): FormData {
   const obj = _formDatahandles.get(handle);
   if (!obj) {
     throw new Error(`FormData handle ${handle} not found`);
@@ -2451,7 +2516,7 @@ function getFormData(handle: bigint): FormData {
  * `append()` operation.
  */
 export function FormDataAppend(self: bigint, name: string, value: string): void {
-  const obj = getFormData(self);
+  const obj = lookupFormData(self);
   obj.append(name, value);
 }
 
@@ -2459,7 +2524,7 @@ export function FormDataAppend(self: bigint, name: string, value: string): void 
  * `delete()` operation.
  */
 export function FormDataDelete(self: bigint, name: string): void {
-  const obj = getFormData(self);
+  const obj = lookupFormData(self);
   obj.delete(name);
 }
 
@@ -2467,15 +2532,18 @@ export function FormDataDelete(self: bigint, name: string): void {
  * `get()` operation.
  */
 export function FormDataGet(self: bigint, name: string): bigint | undefined {
-  const obj = getFormData(self);
-  return obj.get(name) ?? undefined;
+  const obj = lookupFormData(self);
+  const result = obj.get(name);
+  const handle = _nextAny++;
+  _anyHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-all()` operation.
  */
 export function getAll(self: bigint, name: string): (bigint)[] {
-  const obj = getFormData(self);
+  const obj = lookupFormData(self);
   return (obj as any).all;
 }
 
@@ -2483,7 +2551,7 @@ export function getAll(self: bigint, name: string): (bigint)[] {
  * `has()` operation.
  */
 export function FormDataHas(self: bigint, name: string): boolean {
-  const obj = getFormData(self);
+  const obj = lookupFormData(self);
   return obj.has(name);
 }
 
@@ -2491,7 +2559,7 @@ export function FormDataHas(self: bigint, name: string): boolean {
  * `set()` operation.
  */
 export function FormDataSet(self: bigint, name: string, value: string): void {
-  const obj = getFormData(self);
+  const obj = lookupFormData(self);
   obj.set(name, value);
 }
 
@@ -2506,8 +2574,8 @@ export type ProgressEventHandle = bigint;
 const _progressEventhandles = new Map<bigint, ProgressEvent>();
 let _nextProgressEvent = 1n;
 
-/** Get a ProgressEvent by handle, throwing if not found. */
-function getProgressEvent(handle: bigint): ProgressEvent {
+/** Lookup a ProgressEvent by handle, throwing if not found. */
+function lookupProgressEvent(handle: bigint): ProgressEvent {
   const obj = _progressEventhandles.get(handle);
   if (!obj) {
     throw new Error(`ProgressEvent handle ${handle} not found`);
@@ -2518,7 +2586,7 @@ function getProgressEvent(handle: bigint): ProgressEvent {
  * `get-length-computable()` operation.
  */
 export function getLengthComputable(self: bigint): boolean {
-  const obj = getProgressEvent(self);
+  const obj = lookupProgressEvent(self);
   return obj.lengthComputable;
 }
 
@@ -2526,7 +2594,7 @@ export function getLengthComputable(self: bigint): boolean {
  * `get-loaded()` operation.
  */
 export function getLoaded(self: bigint): number {
-  const obj = getProgressEvent(self);
+  const obj = lookupProgressEvent(self);
   return obj.loaded;
 }
 
@@ -2534,7 +2602,7 @@ export function getLoaded(self: bigint): number {
  * `get-total()` operation.
  */
 export function getTotal(self: bigint): number {
-  const obj = getProgressEvent(self);
+  const obj = lookupProgressEvent(self);
   return obj.total;
 }
 
@@ -2549,7 +2617,7 @@ export default {
   getSetCookie,
   HeadersHas,
   HeadersSet,
-  BodyGetBody,
+  getBody,
   getBodyUsed,
   arrayBuffer,
   pollArrayBuffer,
@@ -2707,7 +2775,7 @@ export default {
   overrideMimeType,
   getResponseType,
   setResponseType,
-  XmlHttpRequestGetResponse,
+  getResponse,
   getResponseText,
   getResponseXml,
   FormDataAppend,

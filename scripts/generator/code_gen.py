@@ -10,7 +10,7 @@ from wit_parser import kebab_to_camel, kebab_to_pascal
 from .config import (
     GLOBAL_SINGLETONS,
     CUSTOM_TYPE_DEFINITIONS,
-    PARAMETER_BIGINT_TO_NUMBER,
+    PARAMETER_BIGINT_TO_NUMBER as PARAMETER_BIGINT_TO_NUMBER_ALIAS,
     PARAMETER_HANDLE_MAPPING,
     HANDLE_RETURNING_FUNCTIONS,
     STATIC_METHOD_NEEDS_TYPE_ASSERTION,
@@ -76,7 +76,7 @@ class CodeGenerator:
         helper_function_names = set()
         for iface in domain.interfaces:
             if iface.handle_type and iface.wit_name not in GLOBAL_SINGLETONS:
-                helper_name = f"get{iface.handle_pascal}"
+                helper_name = f"lookup{iface.handle_pascal}"
                 helper_function_names.add(helper_name)
             for func in iface.functions:
                 all_function_names.append(func.ts_name)
@@ -130,6 +130,8 @@ class CodeGenerator:
                     if target_type in SYNTHETIC_HANDLE_TYPES:
                         needed_synthetic_types.add(target_type)
 
+        generated_helpers = set()
+        
         if needed_synthetic_types:
             lines.append("// ---------------------------------------------------------------------------")
             lines.append("// Synthetic handle tables for primitive/utility types")
@@ -150,8 +152,9 @@ class CodeGenerator:
             for wit_type in sorted(needed_synthetic_types):
                 if wit_type in SYNTHETIC_HANDLE_TYPES:
                     ts_type, handle_var, handle_pascal = SYNTHETIC_HANDLE_TYPES[wit_type]
-                    lines.append(f"/** Get a {wit_type} value by handle. */")
-                    lines.append(f"function get{handle_pascal}(handle: bigint): {ts_type} {{")
+                    generated_helpers.add(handle_pascal)
+                    lines.append(f"/** Lookup a {wit_type} value by handle. */")
+                    lines.append(f"function lookup{handle_pascal}(handle: bigint): {ts_type} {{")
                     lines.append(f"  const obj = _{handle_var}.get(handle);")
                     lines.append("  if (obj === undefined) {")
                     lines.append(f"    throw new Error(`{wit_type} handle ${{handle}} not found`);")
@@ -159,8 +162,8 @@ class CodeGenerator:
                     lines.append("  return obj;")
                     lines.append("}")
                     lines.append("")
-                    lines.append(f"/** Get an optional {wit_type} value by handle. */")
-                    lines.append(f"function getOption{handle_pascal}(handle: bigint | undefined): {ts_type} | undefined {{")
+                    lines.append(f"/** Lookup an optional {wit_type} value by handle. */")
+                    lines.append(f"function lookupOption{handle_pascal}(handle: bigint | undefined): {ts_type} | undefined {{")
                     lines.append("  if (handle === undefined || handle === 0n) {")
                     lines.append("    return undefined;")
                     lines.append("  }")
@@ -190,32 +193,34 @@ class CodeGenerator:
                     lines.append(f"const _{iface.handle_pascal}_HANDLE = 0n;")
                     lines.append("")
                     lines.append(f"/** Get the global {iface.browser_class} object. */")
-                    lines.append(f"function get{iface.handle_pascal}(): {iface.browser_class} {{")
+                    lines.append(f"function getGlobal{iface.handle_pascal}(): {iface.browser_class} {{")
                     lines.append(f"  return {global_ref};")
                     lines.append("}")
                     lines.append("")
                 else:
-                    lines.append(f"/** Handle table for {iface.browser_class} instances */")
-                    lines.append(f"const _{iface.handle_var} = new Map<bigint, {js_type}>();")
-                    lines.append(f"let _next{iface.handle_pascal} = 1n;")
-                    lines.append("")
+                    if iface.handle_pascal not in generated_helpers:
+                        lines.append(f"/** Handle table for {iface.browser_class} instances */")
+                        lines.append(f"const _{iface.handle_var} = new Map<bigint, {js_type}>();")
+                        lines.append(f"let _next{iface.handle_pascal} = 1n;")
+                        lines.append("")
 
-                    if iface.create_function:
-                        lines.append(f"/** Register a new {iface.browser_class} and return its handle. */")
-                        lines.append(f"function register{iface.handle_pascal}(obj: {js_type}): bigint {{")
-                        lines.append(f"  const handle = _next{iface.handle_pascal}++;")
-                        lines.append(f"  _{iface.handle_var}.set(handle, obj);")
-                        lines.append("  return handle;")
+                        if iface.create_function:
+                            lines.append(f"/** Register a new {iface.browser_class} and return its handle. */")
+                            lines.append(f"function register{iface.handle_pascal}(obj: {js_type}): bigint {{")
+                            lines.append(f"  const handle = _next{iface.handle_pascal}++;")
+                            lines.append(f"  _{iface.handle_var}.set(handle, obj);")
+                            lines.append("  return handle;")
+                            lines.append("}")
+
+                        lines.append(f"/** Lookup a {iface.browser_class} by handle, throwing if not found. */")
+                        lines.append(f"function lookup{iface.handle_pascal}(handle: bigint): {js_type} {{")
+                        lines.append(f"  const obj = _{iface.handle_var}.get(handle);")
+                        lines.append("  if (!obj) {")
+                        lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
+                        lines.append("  }")
+                        lines.append("  return obj;")
                         lines.append("}")
-
-                    lines.append(f"/** Get a {iface.browser_class} by handle, throwing if not found. */")
-                    lines.append(f"function get{iface.handle_pascal}(handle: bigint): {js_type} {{")
-                    lines.append(f"  const obj = _{iface.handle_var}.get(handle);")
-                    lines.append("  if (!obj) {")
-                    lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
-                    lines.append("  }")
-                    lines.append("  return obj;")
-                    lines.append("}")
+                        generated_helpers.add(iface.handle_pascal)
 
             for func in iface.functions:
                 self._render_function(lines, func, iface, has_async, function_namespace)
@@ -303,7 +308,7 @@ class CodeGenerator:
             else:
                 lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         elif iface.handle_type and func.params:
-            lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
+            lines.append(f"  const obj = lookup{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
             args = self._get_converted_browser_args(func, iface, skip_self=True)
             needs_type_assertion = (iface.wit_name, func.browser_method) in PROPERTIES_NEEDING_TYPE_ASSERTION
@@ -346,7 +351,7 @@ class CodeGenerator:
         elif func.is_static:
             obj_ref = func.browser_class
         elif iface.handle_type and func.params:
-            lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
+            lines.append(f"  const obj = lookup{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
         else:
             obj_ref = "obj"
@@ -416,7 +421,7 @@ class CodeGenerator:
         if func.is_global_singleton:
             obj_ref = func.browser_class
         elif iface.handle_type and func.params:
-            lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
+            lines.append(f"  const obj = lookup{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
         else:
             obj_ref = "obj"
@@ -442,7 +447,7 @@ class CodeGenerator:
                 lines.append(f"  else {{ enumValue = '{list(enum_values.keys())[0]}'; }}")
                 value_expr = "enumValue"
             elif func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
-                value_expr = f"get{func.params[-1].target_handle_pascal}({value_param})"
+                value_expr = f"lookup{func.params[-1].target_handle_pascal}({value_param})"
             lines.append(f"  {obj_ref_with_assertion}.{func.browser_attr} = {value_expr};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
@@ -465,7 +470,7 @@ class CodeGenerator:
         if func.is_global_singleton:
             obj_ref = func.browser_class
         elif iface.handle_type and func.params:
-            lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
+            lines.append(f"  const obj = lookup{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
         else:
             obj_ref = "" if func.is_global_singleton else "obj"
@@ -478,6 +483,10 @@ class CodeGenerator:
 
         if func.return_is_void:
             lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
+        elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
+            lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
+        elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
+            lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         elif func.return_is_handle:
             key = (iface.wit_name, kebab_to_camel(func.wit_name))
             if key in HANDLE_RETURNING_FUNCTIONS:
@@ -491,10 +500,6 @@ class CodeGenerator:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
         elif func.return_is_optional:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ?? undefined;")
-        elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
-            lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
-        elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
-            lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         else:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
 
@@ -593,25 +598,25 @@ class CodeGenerator:
                 continue
             
             if param.needs_handle_lookup and param.target_handle_pascal:
-                converted_args.append(f"get{param.target_handle_pascal}({param.name})")
+                converted_args.append(f"lookup{param.target_handle_pascal}({param.name})")
             else:
-                key = (iface.wit_name, func.wit_name, param.name)
-                if key in PARAMETER_BIGINT_TO_NUMBER:
-                    conversion_type = PARAMETER_BIGINT_TO_NUMBER[key]
+                key = (iface.wit_name, func.wit_name, param.wit_name)
+                if key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
+                    conversion_type = PARAMETER_BIGINT_TO_NUMBER_ALIAS[key]
                     if conversion_type == "handle" or (isinstance(conversion_type, str) and conversion_type.startswith("handle:")):
                         if isinstance(conversion_type, str) and conversion_type.startswith("handle:"):
                             target_wit_type = conversion_type[7:]
                         else:
                             target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
                         _, target_pascal = self._get_handle_info(target_wit_type)
-                        converted_args.append(f"get{target_pascal}({param.name})")
+                        converted_args.append(f"lookup{target_pascal}({param.name})")
                     elif conversion_type == "optional-handle" or (isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:")):
                         if isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:"):
                             target_wit_type = conversion_type[16:]
                         else:
                             target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
                         _, target_pascal = self._get_handle_info(target_wit_type)
-                        converted_args.append(f"getOption{target_pascal}({param.name})")
+                        converted_args.append(f"lookupOption{target_pascal}({param.name})")
                     elif conversion_type == "array":
                         converted_args.append(f"Array.from({param.name}).map(Number)")
                     elif conversion_type == "boolean":

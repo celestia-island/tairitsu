@@ -301,6 +301,10 @@ let _nextElementList = 1n;
 const _eventHandles = new Map<bigint, Event>();
 let _nextEvent = 1n;
 
+/** Handle table for external values */
+const _externalHandles = new Map<bigint, External>();
+let _nextExternal = 1n;
+
 /** Handle table for history values */
 const _historyHandles = new Map<bigint, History>();
 let _nextHistory = 1n;
@@ -349,6 +353,10 @@ let _nextNumber = 1n;
 const _processingInstructionHandles = new Map<bigint, ProcessingInstruction>();
 let _nextProcessingInstruction = 1n;
 
+/** Handle table for promise-void values */
+const _promiseVoidHandles = new Map<bigint, Promise<void>>();
+let _nextPromiseVoid = 1n;
+
 /** Handle table for screen values */
 const _screenHandles = new Map<bigint, Screen>();
 let _nextScreen = 1n;
@@ -360,6 +368,10 @@ let _nextScreenOrientation = 1n;
 /** Handle table for shadow-root values */
 const _shadowRootHandles = new Map<bigint, ShadowRoot>();
 let _nextShadowRoot = 1n;
+
+/** Handle table for speech-synthesis values */
+const _speechSynthesisHandles = new Map<bigint, SpeechSynthesis>();
+let _nextSpeechSynthesis = 1n;
 
 /** Handle table for string values */
 const _stringHandles = new Map<bigint, string>();
@@ -397,8 +409,8 @@ let _nextWindow = 1n;
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
 
-/** Get a attr value by handle. */
-function getAttr(handle: bigint): Attr {
+/** Lookup a attr value by handle. */
+function lookupAttr(handle: bigint): Attr {
   const obj = _attrHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`attr handle ${handle} not found`);
@@ -406,16 +418,16 @@ function getAttr(handle: bigint): Attr {
   return obj;
 }
 
-/** Get an optional attr value by handle. */
-function getOptionAttr(handle: bigint | undefined): Attr | undefined {
+/** Lookup an optional attr value by handle. */
+function lookupOptionAttr(handle: bigint | undefined): Attr | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _attrHandles.get(handle);
 }
 
-/** Get a bar-prop value by handle. */
-function getBarProp(handle: bigint): BarProp {
+/** Lookup a bar-prop value by handle. */
+function lookupBarProp(handle: bigint): BarProp {
   const obj = _barPropHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`bar-prop handle ${handle} not found`);
@@ -423,16 +435,16 @@ function getBarProp(handle: bigint): BarProp {
   return obj;
 }
 
-/** Get an optional bar-prop value by handle. */
-function getOptionBarProp(handle: bigint | undefined): BarProp | undefined {
+/** Lookup an optional bar-prop value by handle. */
+function lookupOptionBarProp(handle: bigint | undefined): BarProp | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _barPropHandles.get(handle);
 }
 
-/** Get a boolean value by handle. */
-function getBoolean(handle: bigint): boolean {
+/** Lookup a boolean value by handle. */
+function lookupBoolean(handle: bigint): boolean {
   const obj = _booleanHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`boolean handle ${handle} not found`);
@@ -440,16 +452,16 @@ function getBoolean(handle: bigint): boolean {
   return obj;
 }
 
-/** Get an optional boolean value by handle. */
-function getOptionBoolean(handle: bigint | undefined): boolean | undefined {
+/** Lookup an optional boolean value by handle. */
+function lookupOptionBoolean(handle: bigint | undefined): boolean | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _booleanHandles.get(handle);
 }
 
-/** Get a comment value by handle. */
-function getComment(handle: bigint): Comment {
+/** Lookup a comment value by handle. */
+function lookupComment(handle: bigint): Comment {
   const obj = _commentHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`comment handle ${handle} not found`);
@@ -457,16 +469,16 @@ function getComment(handle: bigint): Comment {
   return obj;
 }
 
-/** Get an optional comment value by handle. */
-function getOptionComment(handle: bigint | undefined): Comment | undefined {
+/** Lookup an optional comment value by handle. */
+function lookupOptionComment(handle: bigint | undefined): Comment | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _commentHandles.get(handle);
 }
 
-/** Get a css-keyframe-rule value by handle. */
-function getCssKeyframeRule(handle: bigint): CSSKeyframeRule {
+/** Lookup a css-keyframe-rule value by handle. */
+function lookupCssKeyframeRule(handle: bigint): CSSKeyframeRule {
   const obj = _cssKeyframeRuleHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-keyframe-rule handle ${handle} not found`);
@@ -474,16 +486,16 @@ function getCssKeyframeRule(handle: bigint): CSSKeyframeRule {
   return obj;
 }
 
-/** Get an optional css-keyframe-rule value by handle. */
-function getOptionCssKeyframeRule(handle: bigint | undefined): CSSKeyframeRule | undefined {
+/** Lookup an optional css-keyframe-rule value by handle. */
+function lookupOptionCssKeyframeRule(handle: bigint | undefined): CSSKeyframeRule | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssKeyframeRuleHandles.get(handle);
 }
 
-/** Get a css-rule value by handle. */
-function getCssRule(handle: bigint): CSSRule {
+/** Lookup a css-rule value by handle. */
+function lookupCssRule(handle: bigint): CSSRule {
   const obj = _cssRuleHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-rule handle ${handle} not found`);
@@ -491,16 +503,16 @@ function getCssRule(handle: bigint): CSSRule {
   return obj;
 }
 
-/** Get an optional css-rule value by handle. */
-function getOptionCssRule(handle: bigint | undefined): CSSRule | undefined {
+/** Lookup an optional css-rule value by handle. */
+function lookupOptionCssRule(handle: bigint | undefined): CSSRule | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssRuleHandles.get(handle);
 }
 
-/** Get a css-rule-list value by handle. */
-function getCssRuleList(handle: bigint): CSSRuleList {
+/** Lookup a css-rule-list value by handle. */
+function lookupCssRuleList(handle: bigint): CSSRuleList {
   const obj = _cssRuleListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-rule-list handle ${handle} not found`);
@@ -508,16 +520,16 @@ function getCssRuleList(handle: bigint): CSSRuleList {
   return obj;
 }
 
-/** Get an optional css-rule-list value by handle. */
-function getOptionCssRuleList(handle: bigint | undefined): CSSRuleList | undefined {
+/** Lookup an optional css-rule-list value by handle. */
+function lookupOptionCssRuleList(handle: bigint | undefined): CSSRuleList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssRuleListHandles.get(handle);
 }
 
-/** Get a css-style-declaration value by handle. */
-function getCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
+/** Lookup a css-style-declaration value by handle. */
+function lookupCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   const obj = _cssStyleDeclarationHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-style-declaration handle ${handle} not found`);
@@ -525,16 +537,16 @@ function getCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   return obj;
 }
 
-/** Get an optional css-style-declaration value by handle. */
-function getOptionCssStyleDeclaration(handle: bigint | undefined): CSSStyleDeclaration | undefined {
+/** Lookup an optional css-style-declaration value by handle. */
+function lookupOptionCssStyleDeclaration(handle: bigint | undefined): CSSStyleDeclaration | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssStyleDeclarationHandles.get(handle);
 }
 
-/** Get a css-style-sheet value by handle. */
-function getCssStyleSheet(handle: bigint): CSSStyleSheet {
+/** Lookup a css-style-sheet value by handle. */
+function lookupCssStyleSheet(handle: bigint): CSSStyleSheet {
   const obj = _cssStyleSheetHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-style-sheet handle ${handle} not found`);
@@ -542,16 +554,16 @@ function getCssStyleSheet(handle: bigint): CSSStyleSheet {
   return obj;
 }
 
-/** Get an optional css-style-sheet value by handle. */
-function getOptionCssStyleSheet(handle: bigint | undefined): CSSStyleSheet | undefined {
+/** Lookup an optional css-style-sheet value by handle. */
+function lookupOptionCssStyleSheet(handle: bigint | undefined): CSSStyleSheet | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssStyleSheetHandles.get(handle);
 }
 
-/** Get a css-style-sheet-list value by handle. */
-function getCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
+/** Lookup a css-style-sheet-list value by handle. */
+function lookupCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
   const obj = _cssStyleSheetListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`css-style-sheet-list handle ${handle} not found`);
@@ -559,16 +571,16 @@ function getCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
   return obj;
 }
 
-/** Get an optional css-style-sheet-list value by handle. */
-function getOptionCssStyleSheetList(handle: bigint | undefined): CSSStyleSheet[] | undefined {
+/** Lookup an optional css-style-sheet-list value by handle. */
+function lookupOptionCssStyleSheetList(handle: bigint | undefined): CSSStyleSheet[] | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _cssStyleSheetListHandles.get(handle);
 }
 
-/** Get a custom-element-registry value by handle. */
-function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
+/** Lookup a custom-element-registry value by handle. */
+function lookupCustomElementRegistry(handle: bigint): CustomElementRegistry {
   const obj = _customElementRegistryHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`custom-element-registry handle ${handle} not found`);
@@ -576,16 +588,16 @@ function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
   return obj;
 }
 
-/** Get an optional custom-element-registry value by handle. */
-function getOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | undefined {
+/** Lookup an optional custom-element-registry value by handle. */
+function lookupOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _customElementRegistryHandles.get(handle);
 }
 
-/** Get a document value by handle. */
-function getDocument(handle: bigint): Document {
+/** Lookup a document value by handle. */
+function lookupDocument(handle: bigint): Document {
   const obj = _documentHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`document handle ${handle} not found`);
@@ -593,16 +605,16 @@ function getDocument(handle: bigint): Document {
   return obj;
 }
 
-/** Get an optional document value by handle. */
-function getOptionDocument(handle: bigint | undefined): Document | undefined {
+/** Lookup an optional document value by handle. */
+function lookupOptionDocument(handle: bigint | undefined): Document | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _documentHandles.get(handle);
 }
 
-/** Get a document-fragment value by handle. */
-function getDocumentFragment(handle: bigint): DocumentFragment {
+/** Lookup a document-fragment value by handle. */
+function lookupDocumentFragment(handle: bigint): DocumentFragment {
   const obj = _documentFragmentHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`document-fragment handle ${handle} not found`);
@@ -610,16 +622,16 @@ function getDocumentFragment(handle: bigint): DocumentFragment {
   return obj;
 }
 
-/** Get an optional document-fragment value by handle. */
-function getOptionDocumentFragment(handle: bigint | undefined): DocumentFragment | undefined {
+/** Lookup an optional document-fragment value by handle. */
+function lookupOptionDocumentFragment(handle: bigint | undefined): DocumentFragment | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _documentFragmentHandles.get(handle);
 }
 
-/** Get a document-type value by handle. */
-function getDocumentType(handle: bigint): DocumentType {
+/** Lookup a document-type value by handle. */
+function lookupDocumentType(handle: bigint): DocumentType {
   const obj = _documentTypeHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`document-type handle ${handle} not found`);
@@ -627,16 +639,16 @@ function getDocumentType(handle: bigint): DocumentType {
   return obj;
 }
 
-/** Get an optional document-type value by handle. */
-function getOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+/** Lookup an optional document-type value by handle. */
+function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _documentTypeHandles.get(handle);
 }
 
-/** Get a dom-implementation value by handle. */
-function getDomImplementation(handle: bigint): DOMImplementation {
+/** Lookup a dom-implementation value by handle. */
+function lookupDomImplementation(handle: bigint): DOMImplementation {
   const obj = _domImplementationHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`dom-implementation handle ${handle} not found`);
@@ -644,16 +656,16 @@ function getDomImplementation(handle: bigint): DOMImplementation {
   return obj;
 }
 
-/** Get an optional dom-implementation value by handle. */
-function getOptionDomImplementation(handle: bigint | undefined): DOMImplementation | undefined {
+/** Lookup an optional dom-implementation value by handle. */
+function lookupOptionDomImplementation(handle: bigint | undefined): DOMImplementation | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _domImplementationHandles.get(handle);
 }
 
-/** Get a dom-rect value by handle. */
-function getDomRect(handle: bigint): DOMRect {
+/** Lookup a dom-rect value by handle. */
+function lookupDomRect(handle: bigint): DOMRect {
   const obj = _domRectHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`dom-rect handle ${handle} not found`);
@@ -661,16 +673,16 @@ function getDomRect(handle: bigint): DOMRect {
   return obj;
 }
 
-/** Get an optional dom-rect value by handle. */
-function getOptionDomRect(handle: bigint | undefined): DOMRect | undefined {
+/** Lookup an optional dom-rect value by handle. */
+function lookupOptionDomRect(handle: bigint | undefined): DOMRect | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _domRectHandles.get(handle);
 }
 
-/** Get a dom-rect-list value by handle. */
-function getDomRectList(handle: bigint): DOMRectList {
+/** Lookup a dom-rect-list value by handle. */
+function lookupDomRectList(handle: bigint): DOMRectList {
   const obj = _domRectListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`dom-rect-list handle ${handle} not found`);
@@ -678,16 +690,16 @@ function getDomRectList(handle: bigint): DOMRectList {
   return obj;
 }
 
-/** Get an optional dom-rect-list value by handle. */
-function getOptionDomRectList(handle: bigint | undefined): DOMRectList | undefined {
+/** Lookup an optional dom-rect-list value by handle. */
+function lookupOptionDomRectList(handle: bigint | undefined): DOMRectList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _domRectListHandles.get(handle);
 }
 
-/** Get a dom-token-list value by handle. */
-function getDomTokenList(handle: bigint): DOMTokenList {
+/** Lookup a dom-token-list value by handle. */
+function lookupDomTokenList(handle: bigint): DOMTokenList {
   const obj = _domTokenListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`dom-token-list handle ${handle} not found`);
@@ -695,16 +707,16 @@ function getDomTokenList(handle: bigint): DOMTokenList {
   return obj;
 }
 
-/** Get an optional dom-token-list value by handle. */
-function getOptionDomTokenList(handle: bigint | undefined): DOMTokenList | undefined {
+/** Lookup an optional dom-token-list value by handle. */
+function lookupOptionDomTokenList(handle: bigint | undefined): DOMTokenList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _domTokenListHandles.get(handle);
 }
 
-/** Get a element value by handle. */
-function getElement(handle: bigint): Element {
+/** Lookup a element value by handle. */
+function lookupElement(handle: bigint): Element {
   const obj = _elementHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`element handle ${handle} not found`);
@@ -712,16 +724,16 @@ function getElement(handle: bigint): Element {
   return obj;
 }
 
-/** Get an optional element value by handle. */
-function getOptionElement(handle: bigint | undefined): Element | undefined {
+/** Lookup an optional element value by handle. */
+function lookupOptionElement(handle: bigint | undefined): Element | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _elementHandles.get(handle);
 }
 
-/** Get a element-list value by handle. */
-function getElementList(handle: bigint): Element[] {
+/** Lookup a element-list value by handle. */
+function lookupElementList(handle: bigint): Element[] {
   const obj = _elementListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`element-list handle ${handle} not found`);
@@ -729,16 +741,16 @@ function getElementList(handle: bigint): Element[] {
   return obj;
 }
 
-/** Get an optional element-list value by handle. */
-function getOptionElementList(handle: bigint | undefined): Element[] | undefined {
+/** Lookup an optional element-list value by handle. */
+function lookupOptionElementList(handle: bigint | undefined): Element[] | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _elementListHandles.get(handle);
 }
 
-/** Get a event value by handle. */
-function getEvent(handle: bigint): Event {
+/** Lookup a event value by handle. */
+function lookupEvent(handle: bigint): Event {
   const obj = _eventHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`event handle ${handle} not found`);
@@ -746,16 +758,33 @@ function getEvent(handle: bigint): Event {
   return obj;
 }
 
-/** Get an optional event value by handle. */
-function getOptionEvent(handle: bigint | undefined): Event | undefined {
+/** Lookup an optional event value by handle. */
+function lookupOptionEvent(handle: bigint | undefined): Event | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _eventHandles.get(handle);
 }
 
-/** Get a history value by handle. */
-function getHistory(handle: bigint): History {
+/** Lookup a external value by handle. */
+function lookupExternal(handle: bigint): External {
+  const obj = _externalHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`external handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional external value by handle. */
+function lookupOptionExternal(handle: bigint | undefined): External | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _externalHandles.get(handle);
+}
+
+/** Lookup a history value by handle. */
+function lookupHistory(handle: bigint): History {
   const obj = _historyHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`history handle ${handle} not found`);
@@ -763,16 +792,16 @@ function getHistory(handle: bigint): History {
   return obj;
 }
 
-/** Get an optional history value by handle. */
-function getOptionHistory(handle: bigint | undefined): History | undefined {
+/** Lookup an optional history value by handle. */
+function lookupOptionHistory(handle: bigint | undefined): History | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _historyHandles.get(handle);
 }
 
-/** Get a html-collection value by handle. */
-function getHtmlCollection(handle: bigint): HTMLCollection {
+/** Lookup a html-collection value by handle. */
+function lookupHtmlCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`html-collection handle ${handle} not found`);
@@ -780,16 +809,16 @@ function getHtmlCollection(handle: bigint): HTMLCollection {
   return obj;
 }
 
-/** Get an optional html-collection value by handle. */
-function getOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | undefined {
+/** Lookup an optional html-collection value by handle. */
+function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _htmlCollectionHandles.get(handle);
 }
 
-/** Get a html-element value by handle. */
-function getHtmlElement(handle: bigint): HTMLElement {
+/** Lookup a html-element value by handle. */
+function lookupHtmlElement(handle: bigint): HTMLElement {
   const obj = _htmlElementHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`html-element handle ${handle} not found`);
@@ -797,16 +826,16 @@ function getHtmlElement(handle: bigint): HTMLElement {
   return obj;
 }
 
-/** Get an optional html-element value by handle. */
-function getOptionHtmlElement(handle: bigint | undefined): HTMLElement | undefined {
+/** Lookup an optional html-element value by handle. */
+function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _htmlElementHandles.get(handle);
 }
 
-/** Get a location value by handle. */
-function getLocation(handle: bigint): Location {
+/** Lookup a location value by handle. */
+function lookupLocation(handle: bigint): Location {
   const obj = _locationHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`location handle ${handle} not found`);
@@ -814,16 +843,16 @@ function getLocation(handle: bigint): Location {
   return obj;
 }
 
-/** Get an optional location value by handle. */
-function getOptionLocation(handle: bigint | undefined): Location | undefined {
+/** Lookup an optional location value by handle. */
+function lookupOptionLocation(handle: bigint | undefined): Location | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _locationHandles.get(handle);
 }
 
-/** Get a media-list value by handle. */
-function getMediaList(handle: bigint): MediaList {
+/** Lookup a media-list value by handle. */
+function lookupMediaList(handle: bigint): MediaList {
   const obj = _mediaListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`media-list handle ${handle} not found`);
@@ -831,16 +860,16 @@ function getMediaList(handle: bigint): MediaList {
   return obj;
 }
 
-/** Get an optional media-list value by handle. */
-function getOptionMediaList(handle: bigint | undefined): MediaList | undefined {
+/** Lookup an optional media-list value by handle. */
+function lookupOptionMediaList(handle: bigint | undefined): MediaList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _mediaListHandles.get(handle);
 }
 
-/** Get a named-node-map value by handle. */
-function getNamedNodeMap(handle: bigint): NamedNodeMap {
+/** Lookup a named-node-map value by handle. */
+function lookupNamedNodeMap(handle: bigint): NamedNodeMap {
   const obj = _namedNodeMapHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`named-node-map handle ${handle} not found`);
@@ -848,16 +877,16 @@ function getNamedNodeMap(handle: bigint): NamedNodeMap {
   return obj;
 }
 
-/** Get an optional named-node-map value by handle. */
-function getOptionNamedNodeMap(handle: bigint | undefined): NamedNodeMap | undefined {
+/** Lookup an optional named-node-map value by handle. */
+function lookupOptionNamedNodeMap(handle: bigint | undefined): NamedNodeMap | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _namedNodeMapHandles.get(handle);
 }
 
-/** Get a navigator value by handle. */
-function getNavigator(handle: bigint): Navigator {
+/** Lookup a navigator value by handle. */
+function lookupNavigator(handle: bigint): Navigator {
   const obj = _navigatorHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`navigator handle ${handle} not found`);
@@ -865,16 +894,16 @@ function getNavigator(handle: bigint): Navigator {
   return obj;
 }
 
-/** Get an optional navigator value by handle. */
-function getOptionNavigator(handle: bigint | undefined): Navigator | undefined {
+/** Lookup an optional navigator value by handle. */
+function lookupOptionNavigator(handle: bigint | undefined): Navigator | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _navigatorHandles.get(handle);
 }
 
-/** Get a node value by handle. */
-function getNode(handle: bigint): Node {
+/** Lookup a node value by handle. */
+function lookupNode(handle: bigint): Node {
   const obj = _nodeHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`node handle ${handle} not found`);
@@ -882,16 +911,16 @@ function getNode(handle: bigint): Node {
   return obj;
 }
 
-/** Get an optional node value by handle. */
-function getOptionNode(handle: bigint | undefined): Node | undefined {
+/** Lookup an optional node value by handle. */
+function lookupOptionNode(handle: bigint | undefined): Node | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _nodeHandles.get(handle);
 }
 
-/** Get a node-iterator value by handle. */
-function getNodeIterator(handle: bigint): NodeIterator {
+/** Lookup a node-iterator value by handle. */
+function lookupNodeIterator(handle: bigint): NodeIterator {
   const obj = _nodeIteratorHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`node-iterator handle ${handle} not found`);
@@ -899,16 +928,16 @@ function getNodeIterator(handle: bigint): NodeIterator {
   return obj;
 }
 
-/** Get an optional node-iterator value by handle. */
-function getOptionNodeIterator(handle: bigint | undefined): NodeIterator | undefined {
+/** Lookup an optional node-iterator value by handle. */
+function lookupOptionNodeIterator(handle: bigint | undefined): NodeIterator | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _nodeIteratorHandles.get(handle);
 }
 
-/** Get a node-list value by handle. */
-function getNodeList(handle: bigint): NodeList {
+/** Lookup a node-list value by handle. */
+function lookupNodeList(handle: bigint): NodeList {
   const obj = _nodeListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`node-list handle ${handle} not found`);
@@ -916,16 +945,16 @@ function getNodeList(handle: bigint): NodeList {
   return obj;
 }
 
-/** Get an optional node-list value by handle. */
-function getOptionNodeList(handle: bigint | undefined): NodeList | undefined {
+/** Lookup an optional node-list value by handle. */
+function lookupOptionNodeList(handle: bigint | undefined): NodeList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _nodeListHandles.get(handle);
 }
 
-/** Get a number value by handle. */
-function getNumber(handle: bigint): number {
+/** Lookup a number value by handle. */
+function lookupNumber(handle: bigint): number {
   const obj = _numberHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`number handle ${handle} not found`);
@@ -933,16 +962,16 @@ function getNumber(handle: bigint): number {
   return obj;
 }
 
-/** Get an optional number value by handle. */
-function getOptionNumber(handle: bigint | undefined): number | undefined {
+/** Lookup an optional number value by handle. */
+function lookupOptionNumber(handle: bigint | undefined): number | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _numberHandles.get(handle);
 }
 
-/** Get a processing-instruction value by handle. */
-function getProcessingInstruction(handle: bigint): ProcessingInstruction {
+/** Lookup a processing-instruction value by handle. */
+function lookupProcessingInstruction(handle: bigint): ProcessingInstruction {
   const obj = _processingInstructionHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`processing-instruction handle ${handle} not found`);
@@ -950,16 +979,33 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
   return obj;
 }
 
-/** Get an optional processing-instruction value by handle. */
-function getOptionProcessingInstruction(handle: bigint | undefined): ProcessingInstruction | undefined {
+/** Lookup an optional processing-instruction value by handle. */
+function lookupOptionProcessingInstruction(handle: bigint | undefined): ProcessingInstruction | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _processingInstructionHandles.get(handle);
 }
 
-/** Get a screen value by handle. */
-function getScreen(handle: bigint): Screen {
+/** Lookup a promise-void value by handle. */
+function lookupPromiseVoid(handle: bigint): Promise<void> {
+  const obj = _promiseVoidHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`promise-void handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional promise-void value by handle. */
+function lookupOptionPromiseVoid(handle: bigint | undefined): Promise<void> | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _promiseVoidHandles.get(handle);
+}
+
+/** Lookup a screen value by handle. */
+function lookupScreen(handle: bigint): Screen {
   const obj = _screenHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`screen handle ${handle} not found`);
@@ -967,16 +1013,16 @@ function getScreen(handle: bigint): Screen {
   return obj;
 }
 
-/** Get an optional screen value by handle. */
-function getOptionScreen(handle: bigint | undefined): Screen | undefined {
+/** Lookup an optional screen value by handle. */
+function lookupOptionScreen(handle: bigint | undefined): Screen | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _screenHandles.get(handle);
 }
 
-/** Get a screen-orientation value by handle. */
-function getScreenOrientation(handle: bigint): ScreenOrientation {
+/** Lookup a screen-orientation value by handle. */
+function lookupScreenOrientation(handle: bigint): ScreenOrientation {
   const obj = _screenOrientationHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`screen-orientation handle ${handle} not found`);
@@ -984,16 +1030,16 @@ function getScreenOrientation(handle: bigint): ScreenOrientation {
   return obj;
 }
 
-/** Get an optional screen-orientation value by handle. */
-function getOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | undefined {
+/** Lookup an optional screen-orientation value by handle. */
+function lookupOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _screenOrientationHandles.get(handle);
 }
 
-/** Get a shadow-root value by handle. */
-function getShadowRoot(handle: bigint): ShadowRoot {
+/** Lookup a shadow-root value by handle. */
+function lookupShadowRoot(handle: bigint): ShadowRoot {
   const obj = _shadowRootHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`shadow-root handle ${handle} not found`);
@@ -1001,16 +1047,33 @@ function getShadowRoot(handle: bigint): ShadowRoot {
   return obj;
 }
 
-/** Get an optional shadow-root value by handle. */
-function getOptionShadowRoot(handle: bigint | undefined): ShadowRoot | undefined {
+/** Lookup an optional shadow-root value by handle. */
+function lookupOptionShadowRoot(handle: bigint | undefined): ShadowRoot | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _shadowRootHandles.get(handle);
 }
 
-/** Get a string value by handle. */
-function getString(handle: bigint): string {
+/** Lookup a speech-synthesis value by handle. */
+function lookupSpeechSynthesis(handle: bigint): SpeechSynthesis {
+  const obj = _speechSynthesisHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`speech-synthesis handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional speech-synthesis value by handle. */
+function lookupOptionSpeechSynthesis(handle: bigint | undefined): SpeechSynthesis | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _speechSynthesisHandles.get(handle);
+}
+
+/** Lookup a string value by handle. */
+function lookupString(handle: bigint): string {
   const obj = _stringHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`string handle ${handle} not found`);
@@ -1018,16 +1081,16 @@ function getString(handle: bigint): string {
   return obj;
 }
 
-/** Get an optional string value by handle. */
-function getOptionString(handle: bigint | undefined): string | undefined {
+/** Lookup an optional string value by handle. */
+function lookupOptionString(handle: bigint | undefined): string | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _stringHandles.get(handle);
 }
 
-/** Get a string-list value by handle. */
-function getStringList(handle: bigint): string[] {
+/** Lookup a string-list value by handle. */
+function lookupStringList(handle: bigint): string[] {
   const obj = _stringListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`string-list handle ${handle} not found`);
@@ -1035,16 +1098,16 @@ function getStringList(handle: bigint): string[] {
   return obj;
 }
 
-/** Get an optional string-list value by handle. */
-function getOptionStringList(handle: bigint | undefined): string[] | undefined {
+/** Lookup an optional string-list value by handle. */
+function lookupOptionStringList(handle: bigint | undefined): string[] | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _stringListHandles.get(handle);
 }
 
-/** Get a style-sheet-list value by handle. */
-function getStyleSheetList(handle: bigint): StyleSheetList {
+/** Lookup a style-sheet-list value by handle. */
+function lookupStyleSheetList(handle: bigint): StyleSheetList {
   const obj = _styleSheetListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`style-sheet-list handle ${handle} not found`);
@@ -1052,16 +1115,16 @@ function getStyleSheetList(handle: bigint): StyleSheetList {
   return obj;
 }
 
-/** Get an optional style-sheet-list value by handle. */
-function getOptionStyleSheetList(handle: bigint | undefined): StyleSheetList | undefined {
+/** Lookup an optional style-sheet-list value by handle. */
+function lookupOptionStyleSheetList(handle: bigint | undefined): StyleSheetList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _styleSheetListHandles.get(handle);
 }
 
-/** Get a text value by handle. */
-function getText(handle: bigint): Text {
+/** Lookup a text value by handle. */
+function lookupText(handle: bigint): Text {
   const obj = _textHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`text handle ${handle} not found`);
@@ -1069,16 +1132,16 @@ function getText(handle: bigint): Text {
   return obj;
 }
 
-/** Get an optional text value by handle. */
-function getOptionText(handle: bigint | undefined): Text | undefined {
+/** Lookup an optional text value by handle. */
+function lookupOptionText(handle: bigint | undefined): Text | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _textHandles.get(handle);
 }
 
-/** Get a tree-walker value by handle. */
-function getTreeWalker(handle: bigint): TreeWalker {
+/** Lookup a tree-walker value by handle. */
+function lookupTreeWalker(handle: bigint): TreeWalker {
   const obj = _treeWalkerHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`tree-walker handle ${handle} not found`);
@@ -1086,16 +1149,16 @@ function getTreeWalker(handle: bigint): TreeWalker {
   return obj;
 }
 
-/** Get an optional tree-walker value by handle. */
-function getOptionTreeWalker(handle: bigint | undefined): TreeWalker | undefined {
+/** Lookup an optional tree-walker value by handle. */
+function lookupOptionTreeWalker(handle: bigint | undefined): TreeWalker | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _treeWalkerHandles.get(handle);
 }
 
-/** Get a visual-viewport value by handle. */
-function getVisualViewport(handle: bigint): VisualViewport {
+/** Lookup a visual-viewport value by handle. */
+function lookupVisualViewport(handle: bigint): VisualViewport {
   const obj = _visualViewportHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`visual-viewport handle ${handle} not found`);
@@ -1103,16 +1166,16 @@ function getVisualViewport(handle: bigint): VisualViewport {
   return obj;
 }
 
-/** Get an optional visual-viewport value by handle. */
-function getOptionVisualViewport(handle: bigint | undefined): VisualViewport | undefined {
+/** Lookup an optional visual-viewport value by handle. */
+function lookupOptionVisualViewport(handle: bigint | undefined): VisualViewport | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _visualViewportHandles.get(handle);
 }
 
-/** Get a void value by handle. */
-function getVoid(handle: bigint): void {
+/** Lookup a void value by handle. */
+function lookupVoid(handle: bigint): void {
   const obj = _voidHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`void handle ${handle} not found`);
@@ -1120,16 +1183,16 @@ function getVoid(handle: bigint): void {
   return obj;
 }
 
-/** Get an optional void value by handle. */
-function getOptionVoid(handle: bigint | undefined): void | undefined {
+/** Lookup an optional void value by handle. */
+function lookupOptionVoid(handle: bigint | undefined): void | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _voidHandles.get(handle);
 }
 
-/** Get a window value by handle. */
-function getWindow(handle: bigint): Window {
+/** Lookup a window value by handle. */
+function lookupWindow(handle: bigint): Window {
   const obj = _windowHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`window handle ${handle} not found`);
@@ -1137,8 +1200,8 @@ function getWindow(handle: bigint): Window {
   return obj;
 }
 
-/** Get an optional window value by handle. */
-function getOptionWindow(handle: bigint | undefined): Window | undefined {
+/** Lookup an optional window value by handle. */
+function lookupOptionWindow(handle: bigint | undefined): Window | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
@@ -1156,8 +1219,8 @@ export type AnimationEventHandle = bigint;
 const _animationEventhandles = new Map<bigint, AnimationEvent>();
 let _nextAnimationEvent = 1n;
 
-/** Get a AnimationEvent by handle, throwing if not found. */
-function getAnimationEvent(handle: bigint): AnimationEvent {
+/** Lookup a AnimationEvent by handle, throwing if not found. */
+function lookupAnimationEvent(handle: bigint): AnimationEvent {
   const obj = _animationEventhandles.get(handle);
   if (!obj) {
     throw new Error(`AnimationEvent handle ${handle} not found`);
@@ -1168,7 +1231,7 @@ function getAnimationEvent(handle: bigint): AnimationEvent {
  * `get-animation-name()` operation.
  */
 export function getAnimationName(self: bigint): string {
-  const obj = getAnimationEvent(self);
+  const obj = lookupAnimationEvent(self);
   return obj.animationName;
 }
 
@@ -1176,7 +1239,7 @@ export function getAnimationName(self: bigint): string {
  * `get-elapsed-time()` operation.
  */
 export function AnimationEventGetElapsedTime(self: bigint): number {
-  const obj = getAnimationEvent(self);
+  const obj = lookupAnimationEvent(self);
   return obj.elapsedTime;
 }
 
@@ -1184,7 +1247,7 @@ export function AnimationEventGetElapsedTime(self: bigint): number {
  * `get-pseudo-element()` operation.
  */
 export function AnimationEventGetPseudoElement(self: bigint): string {
-  const obj = getAnimationEvent(self);
+  const obj = lookupAnimationEvent(self);
   return obj.pseudoElement;
 }
 
@@ -1199,8 +1262,8 @@ export type CssRuleHandle = bigint;
 const _cssRulehandles = new Map<bigint, CSSRule>();
 let _nextCSSRule = 1n;
 
-/** Get a CSSRule by handle, throwing if not found. */
-function getCSSRule(handle: bigint): CSSRule {
+/** Lookup a CSSRule by handle, throwing if not found. */
+function lookupCSSRule(handle: bigint): CSSRule {
   const obj = _cssRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSRule handle ${handle} not found`);
@@ -1211,7 +1274,7 @@ function getCSSRule(handle: bigint): CSSRule {
  * `get-css-text()` operation.
  */
 export function CssRuleGetCssText(self: bigint): string {
-  const obj = getCSSRule(self);
+  const obj = lookupCSSRule(self);
   return obj.cssText;
 }
 
@@ -1219,7 +1282,7 @@ export function CssRuleGetCssText(self: bigint): string {
  * `set-css-text()` operation.
  */
 export function CssRuleSetCssText(self: bigint, value: string): void {
-  const obj = getCSSRule(self);
+  const obj = lookupCSSRule(self);
   obj.cssText = value;
 }
 
@@ -1227,7 +1290,7 @@ export function CssRuleSetCssText(self: bigint, value: string): void {
  * `get-parent-rule()` operation.
  */
 export function CssRuleGetParentRule(self: bigint): bigint | undefined {
-  const obj = getCSSRule(self);
+  const obj = lookupCSSRule(self);
   const result = obj.parentRule;
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, result);
@@ -1238,7 +1301,7 @@ export function CssRuleGetParentRule(self: bigint): bigint | undefined {
  * `get-parent-style-sheet()` operation.
  */
 export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
-  const obj = getCSSRule(self);
+  const obj = lookupCSSRule(self);
   const result = obj.parentStyleSheet;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, result);
@@ -1249,7 +1312,7 @@ export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
  * `get-type()` operation.
  */
 export function CssRuleGetType(self: bigint): number {
-  const obj = getCSSRule(self);
+  const obj = lookupCSSRule(self);
   return obj.type;
 }
 
@@ -1264,8 +1327,8 @@ export type CssKeyframeRuleHandle = bigint;
 const _cssKeyframeRulehandles = new Map<bigint, CSSKeyframeRule>();
 let _nextCSSKeyframeRule = 1n;
 
-/** Get a CSSKeyframeRule by handle, throwing if not found. */
-function getCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
+/** Lookup a CSSKeyframeRule by handle, throwing if not found. */
+function lookupCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
   const obj = _cssKeyframeRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSKeyframeRule handle ${handle} not found`);
@@ -1276,7 +1339,7 @@ function getCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
  * `get-key-text()` operation.
  */
 export function getKeyText(self: bigint): string {
-  const obj = getCSSKeyframeRule(self);
+  const obj = lookupCSSKeyframeRule(self);
   return obj.keyText;
 }
 
@@ -1284,7 +1347,7 @@ export function getKeyText(self: bigint): string {
  * `set-key-text()` operation.
  */
 export function setKeyText(self: bigint, value: string): void {
-  const obj = getCSSKeyframeRule(self);
+  const obj = lookupCSSKeyframeRule(self);
   obj.keyText = value;
 }
 
@@ -1292,7 +1355,7 @@ export function setKeyText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssKeyframeRuleGetStyle(self: bigint): bigint {
-  const obj = getCSSKeyframeRule(self);
+  const obj = lookupCSSKeyframeRule(self);
   const result = obj.style;
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
@@ -1310,8 +1373,8 @@ export type CssKeyframesRuleHandle = bigint;
 const _cssKeyframesRulehandles = new Map<bigint, CSSKeyframesRule>();
 let _nextCSSKeyframesRule = 1n;
 
-/** Get a CSSKeyframesRule by handle, throwing if not found. */
-function getCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
+/** Lookup a CSSKeyframesRule by handle, throwing if not found. */
+function lookupCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
   const obj = _cssKeyframesRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSKeyframesRule handle ${handle} not found`);
@@ -1322,7 +1385,7 @@ function getCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
  * `get-name()` operation.
  */
 export function CssKeyframesRuleGetName(self: bigint): string {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   return obj.name;
 }
 
@@ -1330,7 +1393,7 @@ export function CssKeyframesRuleGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function CssKeyframesRuleSetName(self: bigint, value: string): void {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   obj.name = value;
 }
 
@@ -1338,15 +1401,18 @@ export function CssKeyframesRuleSetName(self: bigint, value: string): void {
  * `get-css-rules()` operation.
  */
 export function CssKeyframesRuleGetCssRules(self: bigint): bigint {
-  const obj = getCSSKeyframesRule(self);
-  return obj.cssRules;
+  const obj = lookupCSSKeyframesRule(self);
+  const result = obj.cssRules;
+  const handle = _nextCssRuleList++;
+  _cssRuleListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-length()` operation.
  */
 export function CssKeyframesRuleGetLength(self: bigint): number {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   return obj.length;
 }
 
@@ -1354,7 +1420,7 @@ export function CssKeyframesRuleGetLength(self: bigint): number {
  * `css-keyframe-rule()` operation.
  */
 export function cssKeyframeRule(self: bigint, index: number): void {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   obj.KEYFRAME_RULE(index);
 }
 
@@ -1362,7 +1428,7 @@ export function cssKeyframeRule(self: bigint, index: number): void {
  * `append-rule()` operation.
  */
 export function appendRule(self: bigint, rule: string): void {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   obj.appendRule(rule);
 }
 
@@ -1370,7 +1436,7 @@ export function appendRule(self: bigint, rule: string): void {
  * `delete-rule()` operation.
  */
 export function CssKeyframesRuleDeleteRule(self: bigint, select: string): void {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   obj.deleteRule(select);
 }
 
@@ -1378,7 +1444,7 @@ export function CssKeyframesRuleDeleteRule(self: bigint, select: string): void {
  * `find-rule()` operation.
  */
 export function findRule(self: bigint, select: string): bigint | undefined {
-  const obj = getCSSKeyframesRule(self);
+  const obj = lookupCSSKeyframesRule(self);
   const result = obj.findRule(select);
   const handle = _nextCssKeyframeRule++;
   _cssKeyframeRuleHandles.set(handle, result);
@@ -1396,8 +1462,8 @@ export type GlobalEventHandlersHandle = bigint;
 const _globalEventhandlesrshandles = new Map<bigint, GlobalEventHandlers>();
 let _nextGlobalEventrs = 1n;
 
-/** Get a GlobalEventHandlers by handle, throwing if not found. */
-function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
+/** Lookup a GlobalEventHandlers by handle, throwing if not found. */
+function lookupGlobalEventrs(handle: bigint): GlobalEventHandlers {
   const obj = _globalEventhandlesrshandles.get(handle);
   if (!obj) {
     throw new Error(`GlobalEventHandlers handle ${handle} not found`);
@@ -1408,7 +1474,7 @@ function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
  * `get-onanimationstart()` operation.
  */
 export function getOnanimationstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onanimationstart;
 }
 
@@ -1416,7 +1482,7 @@ export function getOnanimationstart(self: bigint): EventHandlerRecord {
  * `set-onanimationstart()` operation.
  */
 export function setOnanimationstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onanimationstart = value;
 }
 
@@ -1424,7 +1490,7 @@ export function setOnanimationstart(self: bigint, value: EventHandlerRecord): vo
  * `get-onanimationiteration()` operation.
  */
 export function getOnanimationiteration(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onanimationiteration;
 }
 
@@ -1432,7 +1498,7 @@ export function getOnanimationiteration(self: bigint): EventHandlerRecord {
  * `set-onanimationiteration()` operation.
  */
 export function setOnanimationiteration(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onanimationiteration = value;
 }
 
@@ -1440,7 +1506,7 @@ export function setOnanimationiteration(self: bigint, value: EventHandlerRecord)
  * `get-onanimationend()` operation.
  */
 export function getOnanimationend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onanimationend;
 }
 
@@ -1448,7 +1514,7 @@ export function getOnanimationend(self: bigint): EventHandlerRecord {
  * `set-onanimationend()` operation.
  */
 export function setOnanimationend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onanimationend = value;
 }
 
@@ -1456,7 +1522,7 @@ export function setOnanimationend(self: bigint, value: EventHandlerRecord): void
  * `get-onanimationcancel()` operation.
  */
 export function getOnanimationcancel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onanimationcancel;
 }
 
@@ -1464,7 +1530,7 @@ export function getOnanimationcancel(self: bigint): EventHandlerRecord {
  * `set-onanimationcancel()` operation.
  */
 export function setOnanimationcancel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onanimationcancel = value;
 }
 
@@ -1472,7 +1538,7 @@ export function setOnanimationcancel(self: bigint, value: EventHandlerRecord): v
  * `get-ontransitionrun()` operation.
  */
 export function getOntransitionrun(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontransitionrun;
 }
 
@@ -1480,7 +1546,7 @@ export function getOntransitionrun(self: bigint): EventHandlerRecord {
  * `set-ontransitionrun()` operation.
  */
 export function setOntransitionrun(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontransitionrun = value;
 }
 
@@ -1488,7 +1554,7 @@ export function setOntransitionrun(self: bigint, value: EventHandlerRecord): voi
  * `get-ontransitionstart()` operation.
  */
 export function getOntransitionstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontransitionstart;
 }
 
@@ -1496,7 +1562,7 @@ export function getOntransitionstart(self: bigint): EventHandlerRecord {
  * `set-ontransitionstart()` operation.
  */
 export function setOntransitionstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontransitionstart = value;
 }
 
@@ -1504,7 +1570,7 @@ export function setOntransitionstart(self: bigint, value: EventHandlerRecord): v
  * `get-ontransitionend()` operation.
  */
 export function getOntransitionend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontransitionend;
 }
 
@@ -1512,7 +1578,7 @@ export function getOntransitionend(self: bigint): EventHandlerRecord {
  * `set-ontransitionend()` operation.
  */
 export function setOntransitionend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontransitionend = value;
 }
 
@@ -1520,7 +1586,7 @@ export function setOntransitionend(self: bigint, value: EventHandlerRecord): voi
  * `get-ontransitioncancel()` operation.
  */
 export function getOntransitioncancel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontransitioncancel;
 }
 
@@ -1528,7 +1594,7 @@ export function getOntransitioncancel(self: bigint): EventHandlerRecord {
  * `set-ontransitioncancel()` operation.
  */
 export function setOntransitioncancel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontransitioncancel = value;
 }
 
@@ -1536,7 +1602,7 @@ export function setOntransitioncancel(self: bigint, value: EventHandlerRecord): 
  * `get-onabort()` operation.
  */
 export function getOnabort(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onabort;
 }
 
@@ -1544,7 +1610,7 @@ export function getOnabort(self: bigint): EventHandlerRecord {
  * `set-onabort()` operation.
  */
 export function setOnabort(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onabort = value;
 }
 
@@ -1552,7 +1618,7 @@ export function setOnabort(self: bigint, value: EventHandlerRecord): void {
  * `get-onauxclick()` operation.
  */
 export function getOnauxclick(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onauxclick;
 }
 
@@ -1560,7 +1626,7 @@ export function getOnauxclick(self: bigint): EventHandlerRecord {
  * `set-onauxclick()` operation.
  */
 export function setOnauxclick(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onauxclick = value;
 }
 
@@ -1568,7 +1634,7 @@ export function setOnauxclick(self: bigint, value: EventHandlerRecord): void {
  * `get-onbeforeinput()` operation.
  */
 export function getOnbeforeinput(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onbeforeinput;
 }
 
@@ -1576,7 +1642,7 @@ export function getOnbeforeinput(self: bigint): EventHandlerRecord {
  * `set-onbeforeinput()` operation.
  */
 export function setOnbeforeinput(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onbeforeinput = value;
 }
 
@@ -1584,7 +1650,7 @@ export function setOnbeforeinput(self: bigint, value: EventHandlerRecord): void 
  * `get-onbeforematch()` operation.
  */
 export function getOnbeforematch(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onbeforematch;
 }
 
@@ -1592,7 +1658,7 @@ export function getOnbeforematch(self: bigint): EventHandlerRecord {
  * `set-onbeforematch()` operation.
  */
 export function setOnbeforematch(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onbeforematch = value;
 }
 
@@ -1600,7 +1666,7 @@ export function setOnbeforematch(self: bigint, value: EventHandlerRecord): void 
  * `get-onbeforetoggle()` operation.
  */
 export function getOnbeforetoggle(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onbeforetoggle;
 }
 
@@ -1608,7 +1674,7 @@ export function getOnbeforetoggle(self: bigint): EventHandlerRecord {
  * `set-onbeforetoggle()` operation.
  */
 export function setOnbeforetoggle(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onbeforetoggle = value;
 }
 
@@ -1616,7 +1682,7 @@ export function setOnbeforetoggle(self: bigint, value: EventHandlerRecord): void
  * `get-onblur()` operation.
  */
 export function getOnblur(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onblur;
 }
 
@@ -1624,7 +1690,7 @@ export function getOnblur(self: bigint): EventHandlerRecord {
  * `set-onblur()` operation.
  */
 export function setOnblur(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onblur = value;
 }
 
@@ -1632,7 +1698,7 @@ export function setOnblur(self: bigint, value: EventHandlerRecord): void {
  * `get-oncancel()` operation.
  */
 export function getOncancel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncancel;
 }
 
@@ -1640,7 +1706,7 @@ export function getOncancel(self: bigint): EventHandlerRecord {
  * `set-oncancel()` operation.
  */
 export function setOncancel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncancel = value;
 }
 
@@ -1648,7 +1714,7 @@ export function setOncancel(self: bigint, value: EventHandlerRecord): void {
  * `get-oncanplay()` operation.
  */
 export function getOncanplay(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncanplay;
 }
 
@@ -1656,7 +1722,7 @@ export function getOncanplay(self: bigint): EventHandlerRecord {
  * `set-oncanplay()` operation.
  */
 export function setOncanplay(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncanplay = value;
 }
 
@@ -1664,7 +1730,7 @@ export function setOncanplay(self: bigint, value: EventHandlerRecord): void {
  * `get-oncanplaythrough()` operation.
  */
 export function getOncanplaythrough(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncanplaythrough;
 }
 
@@ -1672,7 +1738,7 @@ export function getOncanplaythrough(self: bigint): EventHandlerRecord {
  * `set-oncanplaythrough()` operation.
  */
 export function setOncanplaythrough(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncanplaythrough = value;
 }
 
@@ -1680,7 +1746,7 @@ export function setOncanplaythrough(self: bigint, value: EventHandlerRecord): vo
  * `get-onchange()` operation.
  */
 export function GlobalEventHandlersGetOnchange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onchange;
 }
 
@@ -1688,7 +1754,7 @@ export function GlobalEventHandlersGetOnchange(self: bigint): EventHandlerRecord
  * `set-onchange()` operation.
  */
 export function GlobalEventHandlersSetOnchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onchange = value;
 }
 
@@ -1696,7 +1762,7 @@ export function GlobalEventHandlersSetOnchange(self: bigint, value: EventHandler
  * `get-onclick()` operation.
  */
 export function getOnclick(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onclick;
 }
 
@@ -1704,7 +1770,7 @@ export function getOnclick(self: bigint): EventHandlerRecord {
  * `set-onclick()` operation.
  */
 export function setOnclick(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onclick = value;
 }
 
@@ -1712,7 +1778,7 @@ export function setOnclick(self: bigint, value: EventHandlerRecord): void {
  * `get-onclose()` operation.
  */
 export function getOnclose(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onclose;
 }
 
@@ -1720,7 +1786,7 @@ export function getOnclose(self: bigint): EventHandlerRecord {
  * `set-onclose()` operation.
  */
 export function setOnclose(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onclose = value;
 }
 
@@ -1728,7 +1794,7 @@ export function setOnclose(self: bigint, value: EventHandlerRecord): void {
  * `get-oncommand()` operation.
  */
 export function getOncommand(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return (obj as any).oncommand;
 }
 
@@ -1736,7 +1802,7 @@ export function getOncommand(self: bigint): EventHandlerRecord {
  * `set-oncommand()` operation.
  */
 export function setOncommand(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   (obj as any).oncommand = value;
 }
 
@@ -1744,7 +1810,7 @@ export function setOncommand(self: bigint, value: EventHandlerRecord): void {
  * `get-oncontextlost()` operation.
  */
 export function getOncontextlost(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncontextlost;
 }
 
@@ -1752,7 +1818,7 @@ export function getOncontextlost(self: bigint): EventHandlerRecord {
  * `set-oncontextlost()` operation.
  */
 export function setOncontextlost(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncontextlost = value;
 }
 
@@ -1760,7 +1826,7 @@ export function setOncontextlost(self: bigint, value: EventHandlerRecord): void 
  * `get-oncontextmenu()` operation.
  */
 export function getOncontextmenu(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncontextmenu;
 }
 
@@ -1768,7 +1834,7 @@ export function getOncontextmenu(self: bigint): EventHandlerRecord {
  * `set-oncontextmenu()` operation.
  */
 export function setOncontextmenu(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncontextmenu = value;
 }
 
@@ -1776,7 +1842,7 @@ export function setOncontextmenu(self: bigint, value: EventHandlerRecord): void 
  * `get-oncontextrestored()` operation.
  */
 export function getOncontextrestored(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncontextrestored;
 }
 
@@ -1784,7 +1850,7 @@ export function getOncontextrestored(self: bigint): EventHandlerRecord {
  * `set-oncontextrestored()` operation.
  */
 export function setOncontextrestored(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncontextrestored = value;
 }
 
@@ -1792,7 +1858,7 @@ export function setOncontextrestored(self: bigint, value: EventHandlerRecord): v
  * `get-oncopy()` operation.
  */
 export function getOncopy(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncopy;
 }
 
@@ -1800,7 +1866,7 @@ export function getOncopy(self: bigint): EventHandlerRecord {
  * `set-oncopy()` operation.
  */
 export function setOncopy(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncopy = value;
 }
 
@@ -1808,7 +1874,7 @@ export function setOncopy(self: bigint, value: EventHandlerRecord): void {
  * `get-oncuechange()` operation.
  */
 export function getOncuechange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncuechange;
 }
 
@@ -1816,7 +1882,7 @@ export function getOncuechange(self: bigint): EventHandlerRecord {
  * `set-oncuechange()` operation.
  */
 export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncuechange = value;
 }
 
@@ -1824,7 +1890,7 @@ export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
  * `get-oncut()` operation.
  */
 export function getOncut(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oncut;
 }
 
@@ -1832,7 +1898,7 @@ export function getOncut(self: bigint): EventHandlerRecord {
  * `set-oncut()` operation.
  */
 export function setOncut(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oncut = value;
 }
 
@@ -1840,7 +1906,7 @@ export function setOncut(self: bigint, value: EventHandlerRecord): void {
  * `get-ondblclick()` operation.
  */
 export function getOndblclick(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondblclick;
 }
 
@@ -1848,7 +1914,7 @@ export function getOndblclick(self: bigint): EventHandlerRecord {
  * `set-ondblclick()` operation.
  */
 export function setOndblclick(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondblclick = value;
 }
 
@@ -1856,7 +1922,7 @@ export function setOndblclick(self: bigint, value: EventHandlerRecord): void {
  * `get-ondrag()` operation.
  */
 export function getOndrag(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondrag;
 }
 
@@ -1864,7 +1930,7 @@ export function getOndrag(self: bigint): EventHandlerRecord {
  * `set-ondrag()` operation.
  */
 export function setOndrag(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondrag = value;
 }
 
@@ -1872,7 +1938,7 @@ export function setOndrag(self: bigint, value: EventHandlerRecord): void {
  * `get-ondragend()` operation.
  */
 export function getOndragend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondragend;
 }
 
@@ -1880,7 +1946,7 @@ export function getOndragend(self: bigint): EventHandlerRecord {
  * `set-ondragend()` operation.
  */
 export function setOndragend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondragend = value;
 }
 
@@ -1888,7 +1954,7 @@ export function setOndragend(self: bigint, value: EventHandlerRecord): void {
  * `get-ondragenter()` operation.
  */
 export function getOndragenter(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondragenter;
 }
 
@@ -1896,7 +1962,7 @@ export function getOndragenter(self: bigint): EventHandlerRecord {
  * `set-ondragenter()` operation.
  */
 export function setOndragenter(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondragenter = value;
 }
 
@@ -1904,7 +1970,7 @@ export function setOndragenter(self: bigint, value: EventHandlerRecord): void {
  * `get-ondragleave()` operation.
  */
 export function getOndragleave(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondragleave;
 }
 
@@ -1912,7 +1978,7 @@ export function getOndragleave(self: bigint): EventHandlerRecord {
  * `set-ondragleave()` operation.
  */
 export function setOndragleave(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondragleave = value;
 }
 
@@ -1920,7 +1986,7 @@ export function setOndragleave(self: bigint, value: EventHandlerRecord): void {
  * `get-ondragover()` operation.
  */
 export function getOndragover(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondragover;
 }
 
@@ -1928,7 +1994,7 @@ export function getOndragover(self: bigint): EventHandlerRecord {
  * `set-ondragover()` operation.
  */
 export function setOndragover(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondragover = value;
 }
 
@@ -1936,7 +2002,7 @@ export function setOndragover(self: bigint, value: EventHandlerRecord): void {
  * `get-ondragstart()` operation.
  */
 export function getOndragstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondragstart;
 }
 
@@ -1944,7 +2010,7 @@ export function getOndragstart(self: bigint): EventHandlerRecord {
  * `set-ondragstart()` operation.
  */
 export function setOndragstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondragstart = value;
 }
 
@@ -1952,7 +2018,7 @@ export function setOndragstart(self: bigint, value: EventHandlerRecord): void {
  * `get-ondrop()` operation.
  */
 export function getOndrop(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondrop;
 }
 
@@ -1960,7 +2026,7 @@ export function getOndrop(self: bigint): EventHandlerRecord {
  * `set-ondrop()` operation.
  */
 export function setOndrop(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondrop = value;
 }
 
@@ -1968,7 +2034,7 @@ export function setOndrop(self: bigint, value: EventHandlerRecord): void {
  * `get-ondurationchange()` operation.
  */
 export function getOndurationchange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ondurationchange;
 }
 
@@ -1976,7 +2042,7 @@ export function getOndurationchange(self: bigint): EventHandlerRecord {
  * `set-ondurationchange()` operation.
  */
 export function setOndurationchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ondurationchange = value;
 }
 
@@ -1984,7 +2050,7 @@ export function setOndurationchange(self: bigint, value: EventHandlerRecord): vo
  * `get-onemptied()` operation.
  */
 export function getOnemptied(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onemptied;
 }
 
@@ -1992,7 +2058,7 @@ export function getOnemptied(self: bigint): EventHandlerRecord {
  * `set-onemptied()` operation.
  */
 export function setOnemptied(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onemptied = value;
 }
 
@@ -2000,7 +2066,7 @@ export function setOnemptied(self: bigint, value: EventHandlerRecord): void {
  * `get-onended()` operation.
  */
 export function getOnended(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onended;
 }
 
@@ -2008,7 +2074,7 @@ export function getOnended(self: bigint): EventHandlerRecord {
  * `set-onended()` operation.
  */
 export function setOnended(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onended = value;
 }
 
@@ -2016,7 +2082,7 @@ export function setOnended(self: bigint, value: EventHandlerRecord): void {
  * `get-onerror()` operation.
  */
 export function getOnerror(self: bigint): OnErrorEventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onerror;
 }
 
@@ -2024,7 +2090,7 @@ export function getOnerror(self: bigint): OnErrorEventHandlerRecord {
  * `set-onerror()` operation.
  */
 export function setOnerror(self: bigint, value: OnErrorEventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onerror = value;
 }
 
@@ -2032,7 +2098,7 @@ export function setOnerror(self: bigint, value: OnErrorEventHandlerRecord): void
  * `get-onfocus()` operation.
  */
 export function getOnfocus(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onfocus;
 }
 
@@ -2040,7 +2106,7 @@ export function getOnfocus(self: bigint): EventHandlerRecord {
  * `set-onfocus()` operation.
  */
 export function setOnfocus(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onfocus = value;
 }
 
@@ -2048,7 +2114,7 @@ export function setOnfocus(self: bigint, value: EventHandlerRecord): void {
  * `get-onformdata()` operation.
  */
 export function getOnformdata(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onformdata;
 }
 
@@ -2056,7 +2122,7 @@ export function getOnformdata(self: bigint): EventHandlerRecord {
  * `set-onformdata()` operation.
  */
 export function setOnformdata(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onformdata = value;
 }
 
@@ -2064,7 +2130,7 @@ export function setOnformdata(self: bigint, value: EventHandlerRecord): void {
  * `get-oninput()` operation.
  */
 export function getOninput(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oninput;
 }
 
@@ -2072,7 +2138,7 @@ export function getOninput(self: bigint): EventHandlerRecord {
  * `set-oninput()` operation.
  */
 export function setOninput(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oninput = value;
 }
 
@@ -2080,7 +2146,7 @@ export function setOninput(self: bigint, value: EventHandlerRecord): void {
  * `get-oninvalid()` operation.
  */
 export function getOninvalid(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.oninvalid;
 }
 
@@ -2088,7 +2154,7 @@ export function getOninvalid(self: bigint): EventHandlerRecord {
  * `set-oninvalid()` operation.
  */
 export function setOninvalid(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.oninvalid = value;
 }
 
@@ -2096,7 +2162,7 @@ export function setOninvalid(self: bigint, value: EventHandlerRecord): void {
  * `get-onkeydown()` operation.
  */
 export function getOnkeydown(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onkeydown;
 }
 
@@ -2104,7 +2170,7 @@ export function getOnkeydown(self: bigint): EventHandlerRecord {
  * `set-onkeydown()` operation.
  */
 export function setOnkeydown(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onkeydown = value;
 }
 
@@ -2112,7 +2178,7 @@ export function setOnkeydown(self: bigint, value: EventHandlerRecord): void {
  * `get-onkeypress()` operation.
  */
 export function getOnkeypress(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onkeypress;
 }
 
@@ -2120,7 +2186,7 @@ export function getOnkeypress(self: bigint): EventHandlerRecord {
  * `set-onkeypress()` operation.
  */
 export function setOnkeypress(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onkeypress = value;
 }
 
@@ -2128,7 +2194,7 @@ export function setOnkeypress(self: bigint, value: EventHandlerRecord): void {
  * `get-onkeyup()` operation.
  */
 export function getOnkeyup(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onkeyup;
 }
 
@@ -2136,7 +2202,7 @@ export function getOnkeyup(self: bigint): EventHandlerRecord {
  * `set-onkeyup()` operation.
  */
 export function setOnkeyup(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onkeyup = value;
 }
 
@@ -2144,7 +2210,7 @@ export function setOnkeyup(self: bigint, value: EventHandlerRecord): void {
  * `get-onload()` operation.
  */
 export function getOnload(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onload;
 }
 
@@ -2152,7 +2218,7 @@ export function getOnload(self: bigint): EventHandlerRecord {
  * `set-onload()` operation.
  */
 export function setOnload(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onload = value;
 }
 
@@ -2160,7 +2226,7 @@ export function setOnload(self: bigint, value: EventHandlerRecord): void {
  * `get-onloadeddata()` operation.
  */
 export function getOnloadeddata(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onloadeddata;
 }
 
@@ -2168,7 +2234,7 @@ export function getOnloadeddata(self: bigint): EventHandlerRecord {
  * `set-onloadeddata()` operation.
  */
 export function setOnloadeddata(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onloadeddata = value;
 }
 
@@ -2176,7 +2242,7 @@ export function setOnloadeddata(self: bigint, value: EventHandlerRecord): void {
  * `get-onloadedmetadata()` operation.
  */
 export function getOnloadedmetadata(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onloadedmetadata;
 }
 
@@ -2184,7 +2250,7 @@ export function getOnloadedmetadata(self: bigint): EventHandlerRecord {
  * `set-onloadedmetadata()` operation.
  */
 export function setOnloadedmetadata(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onloadedmetadata = value;
 }
 
@@ -2192,7 +2258,7 @@ export function setOnloadedmetadata(self: bigint, value: EventHandlerRecord): vo
  * `get-onloadstart()` operation.
  */
 export function getOnloadstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onloadstart;
 }
 
@@ -2200,7 +2266,7 @@ export function getOnloadstart(self: bigint): EventHandlerRecord {
  * `set-onloadstart()` operation.
  */
 export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onloadstart = value;
 }
 
@@ -2208,7 +2274,7 @@ export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
  * `get-onmousedown()` operation.
  */
 export function getOnmousedown(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmousedown;
 }
 
@@ -2216,7 +2282,7 @@ export function getOnmousedown(self: bigint): EventHandlerRecord {
  * `set-onmousedown()` operation.
  */
 export function setOnmousedown(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmousedown = value;
 }
 
@@ -2224,7 +2290,7 @@ export function setOnmousedown(self: bigint, value: EventHandlerRecord): void {
  * `get-onmouseenter()` operation.
  */
 export function getOnmouseenter(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmouseenter;
 }
 
@@ -2232,7 +2298,7 @@ export function getOnmouseenter(self: bigint): EventHandlerRecord {
  * `set-onmouseenter()` operation.
  */
 export function setOnmouseenter(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmouseenter = value;
 }
 
@@ -2240,7 +2306,7 @@ export function setOnmouseenter(self: bigint, value: EventHandlerRecord): void {
  * `get-onmouseleave()` operation.
  */
 export function getOnmouseleave(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmouseleave;
 }
 
@@ -2248,7 +2314,7 @@ export function getOnmouseleave(self: bigint): EventHandlerRecord {
  * `set-onmouseleave()` operation.
  */
 export function setOnmouseleave(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmouseleave = value;
 }
 
@@ -2256,7 +2322,7 @@ export function setOnmouseleave(self: bigint, value: EventHandlerRecord): void {
  * `get-onmousemove()` operation.
  */
 export function getOnmousemove(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmousemove;
 }
 
@@ -2264,7 +2330,7 @@ export function getOnmousemove(self: bigint): EventHandlerRecord {
  * `set-onmousemove()` operation.
  */
 export function setOnmousemove(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmousemove = value;
 }
 
@@ -2272,7 +2338,7 @@ export function setOnmousemove(self: bigint, value: EventHandlerRecord): void {
  * `get-onmouseout()` operation.
  */
 export function getOnmouseout(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmouseout;
 }
 
@@ -2280,7 +2346,7 @@ export function getOnmouseout(self: bigint): EventHandlerRecord {
  * `set-onmouseout()` operation.
  */
 export function setOnmouseout(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmouseout = value;
 }
 
@@ -2288,7 +2354,7 @@ export function setOnmouseout(self: bigint, value: EventHandlerRecord): void {
  * `get-onmouseover()` operation.
  */
 export function getOnmouseover(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmouseover;
 }
 
@@ -2296,7 +2362,7 @@ export function getOnmouseover(self: bigint): EventHandlerRecord {
  * `set-onmouseover()` operation.
  */
 export function setOnmouseover(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmouseover = value;
 }
 
@@ -2304,7 +2370,7 @@ export function setOnmouseover(self: bigint, value: EventHandlerRecord): void {
  * `get-onmouseup()` operation.
  */
 export function getOnmouseup(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onmouseup;
 }
 
@@ -2312,7 +2378,7 @@ export function getOnmouseup(self: bigint): EventHandlerRecord {
  * `set-onmouseup()` operation.
  */
 export function setOnmouseup(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onmouseup = value;
 }
 
@@ -2320,7 +2386,7 @@ export function setOnmouseup(self: bigint, value: EventHandlerRecord): void {
  * `get-onpaste()` operation.
  */
 export function getOnpaste(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpaste;
 }
 
@@ -2328,7 +2394,7 @@ export function getOnpaste(self: bigint): EventHandlerRecord {
  * `set-onpaste()` operation.
  */
 export function setOnpaste(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpaste = value;
 }
 
@@ -2336,7 +2402,7 @@ export function setOnpaste(self: bigint, value: EventHandlerRecord): void {
  * `get-onpause()` operation.
  */
 export function getOnpause(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpause;
 }
 
@@ -2344,7 +2410,7 @@ export function getOnpause(self: bigint): EventHandlerRecord {
  * `set-onpause()` operation.
  */
 export function setOnpause(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpause = value;
 }
 
@@ -2352,7 +2418,7 @@ export function setOnpause(self: bigint, value: EventHandlerRecord): void {
  * `get-onplay()` operation.
  */
 export function getOnplay(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onplay;
 }
 
@@ -2360,7 +2426,7 @@ export function getOnplay(self: bigint): EventHandlerRecord {
  * `set-onplay()` operation.
  */
 export function setOnplay(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onplay = value;
 }
 
@@ -2368,7 +2434,7 @@ export function setOnplay(self: bigint, value: EventHandlerRecord): void {
  * `get-onplaying()` operation.
  */
 export function getOnplaying(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onplaying;
 }
 
@@ -2376,7 +2442,7 @@ export function getOnplaying(self: bigint): EventHandlerRecord {
  * `set-onplaying()` operation.
  */
 export function setOnplaying(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onplaying = value;
 }
 
@@ -2384,7 +2450,7 @@ export function setOnplaying(self: bigint, value: EventHandlerRecord): void {
  * `get-onprogress()` operation.
  */
 export function getOnprogress(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onprogress;
 }
 
@@ -2392,7 +2458,7 @@ export function getOnprogress(self: bigint): EventHandlerRecord {
  * `set-onprogress()` operation.
  */
 export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onprogress = value;
 }
 
@@ -2400,7 +2466,7 @@ export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
  * `get-onratechange()` operation.
  */
 export function getOnratechange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onratechange;
 }
 
@@ -2408,7 +2474,7 @@ export function getOnratechange(self: bigint): EventHandlerRecord {
  * `set-onratechange()` operation.
  */
 export function setOnratechange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onratechange = value;
 }
 
@@ -2416,7 +2482,7 @@ export function setOnratechange(self: bigint, value: EventHandlerRecord): void {
  * `get-onreset()` operation.
  */
 export function getOnreset(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onreset;
 }
 
@@ -2424,7 +2490,7 @@ export function getOnreset(self: bigint): EventHandlerRecord {
  * `set-onreset()` operation.
  */
 export function setOnreset(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onreset = value;
 }
 
@@ -2432,7 +2498,7 @@ export function setOnreset(self: bigint, value: EventHandlerRecord): void {
  * `get-onresize()` operation.
  */
 export function GlobalEventHandlersGetOnresize(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onresize;
 }
 
@@ -2440,7 +2506,7 @@ export function GlobalEventHandlersGetOnresize(self: bigint): EventHandlerRecord
  * `set-onresize()` operation.
  */
 export function GlobalEventHandlersSetOnresize(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onresize = value;
 }
 
@@ -2448,7 +2514,7 @@ export function GlobalEventHandlersSetOnresize(self: bigint, value: EventHandler
  * `get-onscroll()` operation.
  */
 export function GlobalEventHandlersGetOnscroll(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onscroll;
 }
 
@@ -2456,7 +2522,7 @@ export function GlobalEventHandlersGetOnscroll(self: bigint): EventHandlerRecord
  * `set-onscroll()` operation.
  */
 export function GlobalEventHandlersSetOnscroll(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onscroll = value;
 }
 
@@ -2464,7 +2530,7 @@ export function GlobalEventHandlersSetOnscroll(self: bigint, value: EventHandler
  * `get-onscrollend()` operation.
  */
 export function GlobalEventHandlersGetOnscrollend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onscrollend;
 }
 
@@ -2472,7 +2538,7 @@ export function GlobalEventHandlersGetOnscrollend(self: bigint): EventHandlerRec
  * `set-onscrollend()` operation.
  */
 export function GlobalEventHandlersSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onscrollend = value;
 }
 
@@ -2480,7 +2546,7 @@ export function GlobalEventHandlersSetOnscrollend(self: bigint, value: EventHand
  * `get-onsecuritypolicyviolation()` operation.
  */
 export function getOnsecuritypolicyviolation(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onsecuritypolicyviolation;
 }
 
@@ -2488,7 +2554,7 @@ export function getOnsecuritypolicyviolation(self: bigint): EventHandlerRecord {
  * `set-onsecuritypolicyviolation()` operation.
  */
 export function setOnsecuritypolicyviolation(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onsecuritypolicyviolation = value;
 }
 
@@ -2496,7 +2562,7 @@ export function setOnsecuritypolicyviolation(self: bigint, value: EventHandlerRe
  * `get-onseeked()` operation.
  */
 export function getOnseeked(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onseeked;
 }
 
@@ -2504,7 +2570,7 @@ export function getOnseeked(self: bigint): EventHandlerRecord {
  * `set-onseeked()` operation.
  */
 export function setOnseeked(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onseeked = value;
 }
 
@@ -2512,7 +2578,7 @@ export function setOnseeked(self: bigint, value: EventHandlerRecord): void {
  * `get-onseeking()` operation.
  */
 export function getOnseeking(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onseeking;
 }
 
@@ -2520,7 +2586,7 @@ export function getOnseeking(self: bigint): EventHandlerRecord {
  * `set-onseeking()` operation.
  */
 export function setOnseeking(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onseeking = value;
 }
 
@@ -2528,7 +2594,7 @@ export function setOnseeking(self: bigint, value: EventHandlerRecord): void {
  * `get-onselect()` operation.
  */
 export function getOnselect(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onselect;
 }
 
@@ -2536,7 +2602,7 @@ export function getOnselect(self: bigint): EventHandlerRecord {
  * `set-onselect()` operation.
  */
 export function setOnselect(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onselect = value;
 }
 
@@ -2544,7 +2610,7 @@ export function setOnselect(self: bigint, value: EventHandlerRecord): void {
  * `get-onslotchange()` operation.
  */
 export function getOnslotchange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onslotchange;
 }
 
@@ -2552,7 +2618,7 @@ export function getOnslotchange(self: bigint): EventHandlerRecord {
  * `set-onslotchange()` operation.
  */
 export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onslotchange = value;
 }
 
@@ -2560,7 +2626,7 @@ export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
  * `get-onstalled()` operation.
  */
 export function getOnstalled(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onstalled;
 }
 
@@ -2568,7 +2634,7 @@ export function getOnstalled(self: bigint): EventHandlerRecord {
  * `set-onstalled()` operation.
  */
 export function setOnstalled(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onstalled = value;
 }
 
@@ -2576,7 +2642,7 @@ export function setOnstalled(self: bigint, value: EventHandlerRecord): void {
  * `get-onsubmit()` operation.
  */
 export function getOnsubmit(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onsubmit;
 }
 
@@ -2584,7 +2650,7 @@ export function getOnsubmit(self: bigint): EventHandlerRecord {
  * `set-onsubmit()` operation.
  */
 export function setOnsubmit(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onsubmit = value;
 }
 
@@ -2592,7 +2658,7 @@ export function setOnsubmit(self: bigint, value: EventHandlerRecord): void {
  * `get-onsuspend()` operation.
  */
 export function getOnsuspend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onsuspend;
 }
 
@@ -2600,7 +2666,7 @@ export function getOnsuspend(self: bigint): EventHandlerRecord {
  * `set-onsuspend()` operation.
  */
 export function setOnsuspend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onsuspend = value;
 }
 
@@ -2608,7 +2674,7 @@ export function setOnsuspend(self: bigint, value: EventHandlerRecord): void {
  * `get-ontimeupdate()` operation.
  */
 export function getOntimeupdate(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontimeupdate;
 }
 
@@ -2616,7 +2682,7 @@ export function getOntimeupdate(self: bigint): EventHandlerRecord {
  * `set-ontimeupdate()` operation.
  */
 export function setOntimeupdate(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontimeupdate = value;
 }
 
@@ -2624,7 +2690,7 @@ export function setOntimeupdate(self: bigint, value: EventHandlerRecord): void {
  * `get-ontoggle()` operation.
  */
 export function getOntoggle(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontoggle;
 }
 
@@ -2632,7 +2698,7 @@ export function getOntoggle(self: bigint): EventHandlerRecord {
  * `set-ontoggle()` operation.
  */
 export function setOntoggle(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontoggle = value;
 }
 
@@ -2640,7 +2706,7 @@ export function setOntoggle(self: bigint, value: EventHandlerRecord): void {
  * `get-onvolumechange()` operation.
  */
 export function getOnvolumechange(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onvolumechange;
 }
 
@@ -2648,7 +2714,7 @@ export function getOnvolumechange(self: bigint): EventHandlerRecord {
  * `set-onvolumechange()` operation.
  */
 export function setOnvolumechange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onvolumechange = value;
 }
 
@@ -2656,7 +2722,7 @@ export function setOnvolumechange(self: bigint, value: EventHandlerRecord): void
  * `get-onwaiting()` operation.
  */
 export function getOnwaiting(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwaiting;
 }
 
@@ -2664,7 +2730,7 @@ export function getOnwaiting(self: bigint): EventHandlerRecord {
  * `set-onwaiting()` operation.
  */
 export function setOnwaiting(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwaiting = value;
 }
 
@@ -2672,7 +2738,7 @@ export function setOnwaiting(self: bigint, value: EventHandlerRecord): void {
  * `get-onwebkitanimationend()` operation.
  */
 export function getOnwebkitanimationend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwebkitanimationend;
 }
 
@@ -2680,7 +2746,7 @@ export function getOnwebkitanimationend(self: bigint): EventHandlerRecord {
  * `set-onwebkitanimationend()` operation.
  */
 export function setOnwebkitanimationend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwebkitanimationend = value;
 }
 
@@ -2688,7 +2754,7 @@ export function setOnwebkitanimationend(self: bigint, value: EventHandlerRecord)
  * `get-onwebkitanimationiteration()` operation.
  */
 export function getOnwebkitanimationiteration(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwebkitanimationiteration;
 }
 
@@ -2696,7 +2762,7 @@ export function getOnwebkitanimationiteration(self: bigint): EventHandlerRecord 
  * `set-onwebkitanimationiteration()` operation.
  */
 export function setOnwebkitanimationiteration(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwebkitanimationiteration = value;
 }
 
@@ -2704,7 +2770,7 @@ export function setOnwebkitanimationiteration(self: bigint, value: EventHandlerR
  * `get-onwebkitanimationstart()` operation.
  */
 export function getOnwebkitanimationstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwebkitanimationstart;
 }
 
@@ -2712,7 +2778,7 @@ export function getOnwebkitanimationstart(self: bigint): EventHandlerRecord {
  * `set-onwebkitanimationstart()` operation.
  */
 export function setOnwebkitanimationstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwebkitanimationstart = value;
 }
 
@@ -2720,7 +2786,7 @@ export function setOnwebkitanimationstart(self: bigint, value: EventHandlerRecor
  * `get-onwebkittransitionend()` operation.
  */
 export function getOnwebkittransitionend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwebkittransitionend;
 }
 
@@ -2728,7 +2794,7 @@ export function getOnwebkittransitionend(self: bigint): EventHandlerRecord {
  * `set-onwebkittransitionend()` operation.
  */
 export function setOnwebkittransitionend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwebkittransitionend = value;
 }
 
@@ -2736,7 +2802,7 @@ export function setOnwebkittransitionend(self: bigint, value: EventHandlerRecord
  * `get-onwheel()` operation.
  */
 export function getOnwheel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onwheel;
 }
 
@@ -2744,7 +2810,7 @@ export function getOnwheel(self: bigint): EventHandlerRecord {
  * `set-onwheel()` operation.
  */
 export function setOnwheel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onwheel = value;
 }
 
@@ -2752,7 +2818,7 @@ export function setOnwheel(self: bigint, value: EventHandlerRecord): void {
  * `get-onpointerover()` operation.
  */
 export function getOnpointerover(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerover;
 }
 
@@ -2760,7 +2826,7 @@ export function getOnpointerover(self: bigint): EventHandlerRecord {
  * `set-onpointerover()` operation.
  */
 export function setOnpointerover(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerover = value;
 }
 
@@ -2768,7 +2834,7 @@ export function setOnpointerover(self: bigint, value: EventHandlerRecord): void 
  * `get-onpointerenter()` operation.
  */
 export function getOnpointerenter(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerenter;
 }
 
@@ -2776,7 +2842,7 @@ export function getOnpointerenter(self: bigint): EventHandlerRecord {
  * `set-onpointerenter()` operation.
  */
 export function setOnpointerenter(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerenter = value;
 }
 
@@ -2784,7 +2850,7 @@ export function setOnpointerenter(self: bigint, value: EventHandlerRecord): void
  * `get-onpointerdown()` operation.
  */
 export function getOnpointerdown(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerdown;
 }
 
@@ -2792,7 +2858,7 @@ export function getOnpointerdown(self: bigint): EventHandlerRecord {
  * `set-onpointerdown()` operation.
  */
 export function setOnpointerdown(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerdown = value;
 }
 
@@ -2800,7 +2866,7 @@ export function setOnpointerdown(self: bigint, value: EventHandlerRecord): void 
  * `get-onpointermove()` operation.
  */
 export function getOnpointermove(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointermove;
 }
 
@@ -2808,7 +2874,7 @@ export function getOnpointermove(self: bigint): EventHandlerRecord {
  * `set-onpointermove()` operation.
  */
 export function setOnpointermove(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointermove = value;
 }
 
@@ -2816,7 +2882,7 @@ export function setOnpointermove(self: bigint, value: EventHandlerRecord): void 
  * `get-onpointerrawupdate()` operation.
  */
 export function getOnpointerrawupdate(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerrawupdate;
 }
 
@@ -2824,7 +2890,7 @@ export function getOnpointerrawupdate(self: bigint): EventHandlerRecord {
  * `set-onpointerrawupdate()` operation.
  */
 export function setOnpointerrawupdate(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerrawupdate = value;
 }
 
@@ -2832,7 +2898,7 @@ export function setOnpointerrawupdate(self: bigint, value: EventHandlerRecord): 
  * `get-onpointerup()` operation.
  */
 export function getOnpointerup(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerup;
 }
 
@@ -2840,7 +2906,7 @@ export function getOnpointerup(self: bigint): EventHandlerRecord {
  * `set-onpointerup()` operation.
  */
 export function setOnpointerup(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerup = value;
 }
 
@@ -2848,7 +2914,7 @@ export function setOnpointerup(self: bigint, value: EventHandlerRecord): void {
  * `get-onpointercancel()` operation.
  */
 export function getOnpointercancel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointercancel;
 }
 
@@ -2856,7 +2922,7 @@ export function getOnpointercancel(self: bigint): EventHandlerRecord {
  * `set-onpointercancel()` operation.
  */
 export function setOnpointercancel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointercancel = value;
 }
 
@@ -2864,7 +2930,7 @@ export function setOnpointercancel(self: bigint, value: EventHandlerRecord): voi
  * `get-onpointerout()` operation.
  */
 export function getOnpointerout(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerout;
 }
 
@@ -2872,7 +2938,7 @@ export function getOnpointerout(self: bigint): EventHandlerRecord {
  * `set-onpointerout()` operation.
  */
 export function setOnpointerout(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerout = value;
 }
 
@@ -2880,7 +2946,7 @@ export function setOnpointerout(self: bigint, value: EventHandlerRecord): void {
  * `get-onpointerleave()` operation.
  */
 export function getOnpointerleave(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onpointerleave;
 }
 
@@ -2888,7 +2954,7 @@ export function getOnpointerleave(self: bigint): EventHandlerRecord {
  * `set-onpointerleave()` operation.
  */
 export function setOnpointerleave(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onpointerleave = value;
 }
 
@@ -2896,7 +2962,7 @@ export function setOnpointerleave(self: bigint, value: EventHandlerRecord): void
  * `get-ongotpointercapture()` operation.
  */
 export function getOngotpointercapture(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ongotpointercapture;
 }
 
@@ -2904,7 +2970,7 @@ export function getOngotpointercapture(self: bigint): EventHandlerRecord {
  * `set-ongotpointercapture()` operation.
  */
 export function setOngotpointercapture(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ongotpointercapture = value;
 }
 
@@ -2912,7 +2978,7 @@ export function setOngotpointercapture(self: bigint, value: EventHandlerRecord):
  * `get-onlostpointercapture()` operation.
  */
 export function getOnlostpointercapture(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.onlostpointercapture;
 }
 
@@ -2920,7 +2986,7 @@ export function getOnlostpointercapture(self: bigint): EventHandlerRecord {
  * `set-onlostpointercapture()` operation.
  */
 export function setOnlostpointercapture(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.onlostpointercapture = value;
 }
 
@@ -2928,7 +2994,7 @@ export function setOnlostpointercapture(self: bigint, value: EventHandlerRecord)
  * `get-ontouchstart()` operation.
  */
 export function getOntouchstart(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontouchstart;
 }
 
@@ -2936,7 +3002,7 @@ export function getOntouchstart(self: bigint): EventHandlerRecord {
  * `set-ontouchstart()` operation.
  */
 export function setOntouchstart(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontouchstart = value;
 }
 
@@ -2944,7 +3010,7 @@ export function setOntouchstart(self: bigint, value: EventHandlerRecord): void {
  * `get-ontouchend()` operation.
  */
 export function getOntouchend(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontouchend;
 }
 
@@ -2952,7 +3018,7 @@ export function getOntouchend(self: bigint): EventHandlerRecord {
  * `set-ontouchend()` operation.
  */
 export function setOntouchend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontouchend = value;
 }
 
@@ -2960,7 +3026,7 @@ export function setOntouchend(self: bigint, value: EventHandlerRecord): void {
  * `get-ontouchmove()` operation.
  */
 export function getOntouchmove(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontouchmove;
 }
 
@@ -2968,7 +3034,7 @@ export function getOntouchmove(self: bigint): EventHandlerRecord {
  * `set-ontouchmove()` operation.
  */
 export function setOntouchmove(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontouchmove = value;
 }
 
@@ -2976,7 +3042,7 @@ export function setOntouchmove(self: bigint, value: EventHandlerRecord): void {
  * `get-ontouchcancel()` operation.
  */
 export function getOntouchcancel(self: bigint): EventHandlerRecord {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   return obj.ontouchcancel;
 }
 
@@ -2984,7 +3050,7 @@ export function getOntouchcancel(self: bigint): EventHandlerRecord {
  * `set-ontouchcancel()` operation.
  */
 export function setOntouchcancel(self: bigint, value: EventHandlerRecord): void {
-  const obj = getGlobalEventrs(self);
+  const obj = lookupGlobalEventrs(self);
   obj.ontouchcancel = value;
 }
 
@@ -2999,8 +3065,8 @@ export type CssConditionRuleHandle = bigint;
 const _cssConditionRulehandles = new Map<bigint, CSSConditionRule>();
 let _nextCSSConditionRule = 1n;
 
-/** Get a CSSConditionRule by handle, throwing if not found. */
-function getCSSConditionRule(handle: bigint): CSSConditionRule {
+/** Lookup a CSSConditionRule by handle, throwing if not found. */
+function lookupCSSConditionRule(handle: bigint): CSSConditionRule {
   const obj = _cssConditionRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSConditionRule handle ${handle} not found`);
@@ -3011,7 +3077,7 @@ function getCSSConditionRule(handle: bigint): CSSConditionRule {
  * `get-condition-text()` operation.
  */
 export function getConditionText(self: bigint): string {
-  const obj = getCSSConditionRule(self);
+  const obj = lookupCSSConditionRule(self);
   return obj.conditionText;
 }
 
@@ -3026,8 +3092,8 @@ export type CssMediaRuleHandle = bigint;
 const _cssMediaRulehandles = new Map<bigint, CSSMediaRule>();
 let _nextCSSMediaRule = 1n;
 
-/** Get a CSSMediaRule by handle, throwing if not found. */
-function getCSSMediaRule(handle: bigint): CSSMediaRule {
+/** Lookup a CSSMediaRule by handle, throwing if not found. */
+function lookupCSSMediaRule(handle: bigint): CSSMediaRule {
   const obj = _cssMediaRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSMediaRule handle ${handle} not found`);
@@ -3038,7 +3104,7 @@ function getCSSMediaRule(handle: bigint): CSSMediaRule {
  * `get-media()` operation.
  */
 export function CssMediaRuleGetMedia(self: bigint): bigint {
-  const obj = getCSSMediaRule(self);
+  const obj = lookupCSSMediaRule(self);
   const result = obj.media;
   const handle = _nextMediaList++;
   _mediaListHandles.set(handle, result);
@@ -3049,7 +3115,7 @@ export function CssMediaRuleGetMedia(self: bigint): bigint {
  * `get-matches()` operation.
  */
 export function CssMediaRuleGetMatches(self: bigint): boolean {
-  const obj = getCSSMediaRule(self);
+  const obj = lookupCSSMediaRule(self);
   return (obj as any).matches;
 }
 
@@ -3064,8 +3130,8 @@ export type CssSupportsRuleHandle = bigint;
 const _cssSupportsRulehandles = new Map<bigint, CSSSupportsRule>();
 let _nextCSSSupportsRule = 1n;
 
-/** Get a CSSSupportsRule by handle, throwing if not found. */
-function getCSSSupportsRule(handle: bigint): CSSSupportsRule {
+/** Lookup a CSSSupportsRule by handle, throwing if not found. */
+function lookupCSSSupportsRule(handle: bigint): CSSSupportsRule {
   const obj = _cssSupportsRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSSupportsRule handle ${handle} not found`);
@@ -3076,7 +3142,7 @@ function getCSSSupportsRule(handle: bigint): CSSSupportsRule {
  * `get-matches()` operation.
  */
 export function CssSupportsRuleGetMatches(self: bigint): boolean {
-  const obj = getCSSSupportsRule(self);
+  const obj = lookupCSSSupportsRule(self);
   return (obj as any).matches;
 }
 
@@ -3091,8 +3157,8 @@ export type CssFontFaceDescriptorsHandle = bigint;
 const _cssFontFaceDescriptorshandles = new Map<bigint, CSSFontFaceDescriptors>();
 let _nextCSSFontFaceDescriptors = 1n;
 
-/** Get a CSSFontFaceDescriptors by handle, throwing if not found. */
-function getCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
+/** Lookup a CSSFontFaceDescriptors by handle, throwing if not found. */
+function lookupCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
   const obj = _cssFontFaceDescriptorshandles.get(handle);
   if (!obj) {
     throw new Error(`CSSFontFaceDescriptors handle ${handle} not found`);
@@ -3103,7 +3169,7 @@ function getCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
  * `get-src()` operation.
  */
 export function CssFontFaceDescriptorsGetSrc(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.src;
 }
 
@@ -3111,7 +3177,7 @@ export function CssFontFaceDescriptorsGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function CssFontFaceDescriptorsSetSrc(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.src = value;
 }
 
@@ -3119,7 +3185,7 @@ export function CssFontFaceDescriptorsSetSrc(self: bigint, value: string): void 
  * `get-font-family()` operation.
  */
 export function CssFontFaceDescriptorsGetFontFamily(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontFamily;
 }
 
@@ -3127,7 +3193,7 @@ export function CssFontFaceDescriptorsGetFontFamily(self: bigint): string {
  * `set-font-family()` operation.
  */
 export function CssFontFaceDescriptorsSetFontFamily(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontFamily = value;
 }
 
@@ -3135,7 +3201,7 @@ export function CssFontFaceDescriptorsSetFontFamily(self: bigint, value: string)
  * `get-font-style()` operation.
  */
 export function getFontStyle(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontStyle;
 }
 
@@ -3143,7 +3209,7 @@ export function getFontStyle(self: bigint): string {
  * `set-font-style()` operation.
  */
 export function setFontStyle(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontStyle = value;
 }
 
@@ -3151,7 +3217,7 @@ export function setFontStyle(self: bigint, value: string): void {
  * `get-font-weight()` operation.
  */
 export function getFontWeight(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontWeight;
 }
 
@@ -3159,7 +3225,7 @@ export function getFontWeight(self: bigint): string {
  * `set-font-weight()` operation.
  */
 export function setFontWeight(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontWeight = value;
 }
 
@@ -3167,7 +3233,7 @@ export function setFontWeight(self: bigint, value: string): void {
  * `get-font-stretch()` operation.
  */
 export function getFontStretch(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontStretch;
 }
 
@@ -3175,7 +3241,7 @@ export function getFontStretch(self: bigint): string {
  * `set-font-stretch()` operation.
  */
 export function setFontStretch(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontStretch = value;
 }
 
@@ -3183,7 +3249,7 @@ export function setFontStretch(self: bigint, value: string): void {
  * `get-font-width()` operation.
  */
 export function getFontWidth(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontWidth;
 }
 
@@ -3191,7 +3257,7 @@ export function getFontWidth(self: bigint): string {
  * `set-font-width()` operation.
  */
 export function setFontWidth(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontWidth = value;
 }
 
@@ -3199,7 +3265,7 @@ export function setFontWidth(self: bigint, value: string): void {
  * `get-unicode-range()` operation.
  */
 export function getUnicodeRange(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.unicodeRange;
 }
 
@@ -3207,7 +3273,7 @@ export function getUnicodeRange(self: bigint): string {
  * `set-unicode-range()` operation.
  */
 export function setUnicodeRange(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.unicodeRange = value;
 }
 
@@ -3215,7 +3281,7 @@ export function setUnicodeRange(self: bigint, value: string): void {
  * `get-font-feature-settings()` operation.
  */
 export function getFontFeatureSettings(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontFeatureSettings;
 }
 
@@ -3223,7 +3289,7 @@ export function getFontFeatureSettings(self: bigint): string {
  * `set-font-feature-settings()` operation.
  */
 export function setFontFeatureSettings(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontFeatureSettings = value;
 }
 
@@ -3231,7 +3297,7 @@ export function setFontFeatureSettings(self: bigint, value: string): void {
  * `get-font-variation-settings()` operation.
  */
 export function getFontVariationSettings(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontVariationSettings;
 }
 
@@ -3239,7 +3305,7 @@ export function getFontVariationSettings(self: bigint): string {
  * `set-font-variation-settings()` operation.
  */
 export function setFontVariationSettings(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontVariationSettings = value;
 }
 
@@ -3247,7 +3313,7 @@ export function setFontVariationSettings(self: bigint, value: string): void {
  * `get-font-named-instance()` operation.
  */
 export function getFontNamedInstance(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontNamedInstance;
 }
 
@@ -3255,7 +3321,7 @@ export function getFontNamedInstance(self: bigint): string {
  * `set-font-named-instance()` operation.
  */
 export function setFontNamedInstance(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontNamedInstance = value;
 }
 
@@ -3263,7 +3329,7 @@ export function setFontNamedInstance(self: bigint, value: string): void {
  * `get-font-display()` operation.
  */
 export function getFontDisplay(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontDisplay;
 }
 
@@ -3271,7 +3337,7 @@ export function getFontDisplay(self: bigint): string {
  * `set-font-display()` operation.
  */
 export function setFontDisplay(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontDisplay = value;
 }
 
@@ -3279,7 +3345,7 @@ export function setFontDisplay(self: bigint, value: string): void {
  * `get-font-language-override()` operation.
  */
 export function getFontLanguageOverride(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.fontLanguageOverride;
 }
 
@@ -3287,7 +3353,7 @@ export function getFontLanguageOverride(self: bigint): string {
  * `set-font-language-override()` operation.
  */
 export function setFontLanguageOverride(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.fontLanguageOverride = value;
 }
 
@@ -3295,7 +3361,7 @@ export function setFontLanguageOverride(self: bigint, value: string): void {
  * `get-ascent-override()` operation.
  */
 export function getAscentOverride(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.ascentOverride;
 }
 
@@ -3303,7 +3369,7 @@ export function getAscentOverride(self: bigint): string {
  * `set-ascent-override()` operation.
  */
 export function setAscentOverride(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.ascentOverride = value;
 }
 
@@ -3311,7 +3377,7 @@ export function setAscentOverride(self: bigint, value: string): void {
  * `get-descent-override()` operation.
  */
 export function getDescentOverride(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.descentOverride;
 }
 
@@ -3319,7 +3385,7 @@ export function getDescentOverride(self: bigint): string {
  * `set-descent-override()` operation.
  */
 export function setDescentOverride(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.descentOverride = value;
 }
 
@@ -3327,7 +3393,7 @@ export function setDescentOverride(self: bigint, value: string): void {
  * `get-line-gap-override()` operation.
  */
 export function getLineGapOverride(self: bigint): string {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   return obj.lineGapOverride;
 }
 
@@ -3335,7 +3401,7 @@ export function getLineGapOverride(self: bigint): string {
  * `set-line-gap-override()` operation.
  */
 export function setLineGapOverride(self: bigint, value: string): void {
-  const obj = getCSSFontFaceDescriptors(self);
+  const obj = lookupCSSFontFaceDescriptors(self);
   obj.lineGapOverride = value;
 }
 
@@ -3350,8 +3416,8 @@ export type CssFontFaceRuleHandle = bigint;
 const _cssFontFaceRulehandles = new Map<bigint, CSSFontFaceRule>();
 let _nextCSSFontFaceRule = 1n;
 
-/** Get a CSSFontFaceRule by handle, throwing if not found. */
-function getCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
+/** Lookup a CSSFontFaceRule by handle, throwing if not found. */
+function lookupCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
   const obj = _cssFontFaceRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSFontFaceRule handle ${handle} not found`);
@@ -3362,7 +3428,7 @@ function getCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
  * `get-style()` operation.
  */
 export function CssFontFaceRuleGetStyle(self: bigint): bigint {
-  const obj = getCSSFontFaceRule(self);
+  const obj = lookupCSSFontFaceRule(self);
   const result = obj.style;
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
@@ -3380,8 +3446,8 @@ export type CssFontFeatureValuesRuleHandle = bigint;
 const _cssFontFeatureValuesRulehandles = new Map<bigint, CSSFontFeatureValuesRule>();
 let _nextCSSFontFeatureValuesRule = 1n;
 
-/** Get a CSSFontFeatureValuesRule by handle, throwing if not found. */
-function getCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRule {
+/** Lookup a CSSFontFeatureValuesRule by handle, throwing if not found. */
+function lookupCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRule {
   const obj = _cssFontFeatureValuesRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSFontFeatureValuesRule handle ${handle} not found`);
@@ -3392,7 +3458,7 @@ function getCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRule {
  * `get-font-family()` operation.
  */
 export function CssFontFeatureValuesRuleGetFontFamily(self: bigint): string {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return obj.fontFamily;
 }
 
@@ -3400,7 +3466,7 @@ export function CssFontFeatureValuesRuleGetFontFamily(self: bigint): string {
  * `set-font-family()` operation.
  */
 export function CssFontFeatureValuesRuleSetFontFamily(self: bigint, value: string): void {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   obj.fontFamily = value;
 }
 
@@ -3408,7 +3474,7 @@ export function CssFontFeatureValuesRuleSetFontFamily(self: bigint, value: strin
  * `get-annotation()` operation.
  */
 export function getAnnotation(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).annotation;
 }
 
@@ -3416,7 +3482,7 @@ export function getAnnotation(self: bigint): bigint {
  * `get-ornaments()` operation.
  */
 export function getOrnaments(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).ornaments;
 }
 
@@ -3424,7 +3490,7 @@ export function getOrnaments(self: bigint): bigint {
  * `get-stylistic()` operation.
  */
 export function getStylistic(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).stylistic;
 }
 
@@ -3432,7 +3498,7 @@ export function getStylistic(self: bigint): bigint {
  * `get-swash()` operation.
  */
 export function getSwash(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).swash;
 }
 
@@ -3440,7 +3506,7 @@ export function getSwash(self: bigint): bigint {
  * `get-character-variant()` operation.
  */
 export function getCharacterVariant(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).characterVariant;
 }
 
@@ -3448,7 +3514,7 @@ export function getCharacterVariant(self: bigint): bigint {
  * `get-styleset()` operation.
  */
 export function getStyleset(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).styleset;
 }
 
@@ -3456,7 +3522,7 @@ export function getStyleset(self: bigint): bigint {
  * `get-historical-forms()` operation.
  */
 export function getHistoricalForms(self: bigint): bigint {
-  const obj = getCSSFontFeatureValuesRule(self);
+  const obj = lookupCSSFontFeatureValuesRule(self);
   return (obj as any).historicalForms;
 }
 
@@ -3471,8 +3537,8 @@ export type CssFontFeatureValuesMapHandle = bigint;
 const _cssFontFeatureValuesMaphandles = new Map<bigint, CSSFontFeatureValuesMap>();
 let _nextCSSFontFeatureValuesMap = 1n;
 
-/** Get a CSSFontFeatureValuesMap by handle, throwing if not found. */
-function getCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap {
+/** Lookup a CSSFontFeatureValuesMap by handle, throwing if not found. */
+function lookupCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap {
   const obj = _cssFontFeatureValuesMaphandles.get(handle);
   if (!obj) {
     throw new Error(`CSSFontFeatureValuesMap handle ${handle} not found`);
@@ -3483,7 +3549,7 @@ function getCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap {
  * `set()` operation.
  */
 export function _set(self: bigint, featureValueName: string, values: number): void {
-  const obj = getCSSFontFeatureValuesMap(self);
+  const obj = lookupCSSFontFeatureValuesMap(self);
   obj.set(featureValueName, values);
 }
 
@@ -3498,8 +3564,8 @@ export type CssFontPaletteValuesRuleHandle = bigint;
 const _cssFontPaletteValuesRulehandles = new Map<bigint, CSSFontPaletteValuesRule>();
 let _nextCSSFontPaletteValuesRule = 1n;
 
-/** Get a CSSFontPaletteValuesRule by handle, throwing if not found. */
-function getCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRule {
+/** Lookup a CSSFontPaletteValuesRule by handle, throwing if not found. */
+function lookupCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRule {
   const obj = _cssFontPaletteValuesRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSFontPaletteValuesRule handle ${handle} not found`);
@@ -3510,7 +3576,7 @@ function getCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRule {
  * `get-name()` operation.
  */
 export function CssFontPaletteValuesRuleGetName(self: bigint): string {
-  const obj = getCSSFontPaletteValuesRule(self);
+  const obj = lookupCSSFontPaletteValuesRule(self);
   return obj.name;
 }
 
@@ -3518,7 +3584,7 @@ export function CssFontPaletteValuesRuleGetName(self: bigint): string {
  * `get-font-family()` operation.
  */
 export function CssFontPaletteValuesRuleGetFontFamily(self: bigint): string {
-  const obj = getCSSFontPaletteValuesRule(self);
+  const obj = lookupCSSFontPaletteValuesRule(self);
   return obj.fontFamily;
 }
 
@@ -3526,7 +3592,7 @@ export function CssFontPaletteValuesRuleGetFontFamily(self: bigint): string {
  * `get-base-palette()` operation.
  */
 export function getBasePalette(self: bigint): string {
-  const obj = getCSSFontPaletteValuesRule(self);
+  const obj = lookupCSSFontPaletteValuesRule(self);
   return obj.basePalette;
 }
 
@@ -3534,7 +3600,7 @@ export function getBasePalette(self: bigint): string {
  * `get-override-colors()` operation.
  */
 export function getOverrideColors(self: bigint): string {
-  const obj = getCSSFontPaletteValuesRule(self);
+  const obj = lookupCSSFontPaletteValuesRule(self);
   return obj.overrideColors;
 }
 
@@ -3549,8 +3615,8 @@ export type TransitionEventHandle = bigint;
 const _transitionEventhandles = new Map<bigint, TransitionEvent>();
 let _nextTransitionEvent = 1n;
 
-/** Get a TransitionEvent by handle, throwing if not found. */
-function getTransitionEvent(handle: bigint): TransitionEvent {
+/** Lookup a TransitionEvent by handle, throwing if not found. */
+function lookupTransitionEvent(handle: bigint): TransitionEvent {
   const obj = _transitionEventhandles.get(handle);
   if (!obj) {
     throw new Error(`TransitionEvent handle ${handle} not found`);
@@ -3561,7 +3627,7 @@ function getTransitionEvent(handle: bigint): TransitionEvent {
  * `get-property-name()` operation.
  */
 export function getPropertyName(self: bigint): string {
-  const obj = getTransitionEvent(self);
+  const obj = lookupTransitionEvent(self);
   return obj.propertyName;
 }
 
@@ -3569,7 +3635,7 @@ export function getPropertyName(self: bigint): string {
  * `get-elapsed-time()` operation.
  */
 export function TransitionEventGetElapsedTime(self: bigint): number {
-  const obj = getTransitionEvent(self);
+  const obj = lookupTransitionEvent(self);
   return obj.elapsedTime;
 }
 
@@ -3577,7 +3643,7 @@ export function TransitionEventGetElapsedTime(self: bigint): number {
  * `get-pseudo-element()` operation.
  */
 export function TransitionEventGetPseudoElement(self: bigint): string {
-  const obj = getTransitionEvent(self);
+  const obj = lookupTransitionEvent(self);
   return obj.pseudoElement;
 }
 
@@ -3592,7 +3658,7 @@ export type WindowHandle = bigint;
 const _Window_HANDLE = 0n;
 
 /** Get the global Window object. */
-function getWindow(): Window {
+function getGlobalWindow(): Window {
   return window;
 }
 
@@ -3609,7 +3675,7 @@ export function matchMedia(query: string): bigint {
 /**
  * `get-screen()` operation.
  */
-export function WindowGetScreen(): bigint {
+export function getScreen(): bigint {
   const result = window.screen;
   const handle = _nextScreen++;
   _screenHandles.set(handle, result);
@@ -3619,7 +3685,7 @@ export function WindowGetScreen(): bigint {
 /**
  * `get-visual-viewport()` operation.
  */
-export function WindowGetVisualViewport(): bigint | undefined {
+export function getVisualViewport(): bigint | undefined {
   const result = window.visualViewport;
   const handle = _nextVisualViewport++;
   _visualViewportHandles.set(handle, result);
@@ -3779,7 +3845,7 @@ export function getDevicePixelRatio(): number {
  * `get-computed-style()` operation.
  */
 export function getComputedStyle(elt: bigint, pseudoElt: string | undefined): bigint {
-  const result = window.getComputedStyle;
+  const result = window.getComputedStyle(pseudoElt);
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
   return handle;
@@ -3789,7 +3855,10 @@ export function getComputedStyle(elt: bigint, pseudoElt: string | undefined): bi
  * `get-event()` operation.
  */
 export function getEvent(): bigint {
-  return window.event;
+  const result = window.event;
+  const handle = _nextEvent++;
+  _eventHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4084,7 +4153,10 @@ export function getNavigator(): bigint {
  * `get-client-information()` operation.
  */
 export function getClientInformation(): bigint {
-  return window.clientInformation;
+  const result = window.clientInformation;
+  const handle = _nextNavigator++;
+  _navigatorHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4153,14 +4225,20 @@ export function WindowReleaseEvents(): void {
  * `get-external()` operation.
  */
 export function getExternal(): bigint {
-  return window.external;
+  const result = window.external;
+  const handle = _nextExternal++;
+  _externalHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-speech-synthesis()` operation.
  */
 export function getSpeechSynthesis(): bigint {
-  return window.speechSynthesis;
+  const result = window.speechSynthesis;
+  const handle = _nextSpeechSynthesis++;
+  _speechSynthesisHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -4174,8 +4252,8 @@ export type MediaQueryListHandle = bigint;
 const _mediaQueryListhandles = new Map<bigint, MediaQueryList>();
 let _nextMediaQueryList = 1n;
 
-/** Get a MediaQueryList by handle, throwing if not found. */
-function getMediaQueryList(handle: bigint): MediaQueryList {
+/** Lookup a MediaQueryList by handle, throwing if not found. */
+function lookupMediaQueryList(handle: bigint): MediaQueryList {
   const obj = _mediaQueryListhandles.get(handle);
   if (!obj) {
     throw new Error(`MediaQueryList handle ${handle} not found`);
@@ -4186,7 +4264,7 @@ function getMediaQueryList(handle: bigint): MediaQueryList {
  * `get-media()` operation.
  */
 export function MediaQueryListGetMedia(self: bigint): string {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   return obj.media;
 }
 
@@ -4194,7 +4272,7 @@ export function MediaQueryListGetMedia(self: bigint): string {
  * `get-matches()` operation.
  */
 export function MediaQueryListGetMatches(self: bigint): boolean {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   return obj.matches;
 }
 
@@ -4202,7 +4280,7 @@ export function MediaQueryListGetMatches(self: bigint): boolean {
  * `add-listener()` operation.
  */
 export function addListener(self: bigint, callback: bigint | undefined): void {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   obj.addListener(callback);
 }
 
@@ -4210,7 +4288,7 @@ export function addListener(self: bigint, callback: bigint | undefined): void {
  * `remove-listener()` operation.
  */
 export function removeListener(self: bigint, callback: bigint | undefined): void {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   obj.removeListener(callback);
 }
 
@@ -4218,7 +4296,7 @@ export function removeListener(self: bigint, callback: bigint | undefined): void
  * `get-onchange()` operation.
  */
 export function MediaQueryListGetOnchange(self: bigint): EventHandlerRecord {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   return obj.onchange;
 }
 
@@ -4226,7 +4304,7 @@ export function MediaQueryListGetOnchange(self: bigint): EventHandlerRecord {
  * `set-onchange()` operation.
  */
 export function MediaQueryListSetOnchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getMediaQueryList(self);
+  const obj = lookupMediaQueryList(self);
   obj.onchange = value;
 }
 
@@ -4241,8 +4319,8 @@ export type MediaQueryListEventHandle = bigint;
 const _mediaQueryListEventhandles = new Map<bigint, MediaQueryListEvent>();
 let _nextMediaQueryListEvent = 1n;
 
-/** Get a MediaQueryListEvent by handle, throwing if not found. */
-function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
+/** Lookup a MediaQueryListEvent by handle, throwing if not found. */
+function lookupMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
   const obj = _mediaQueryListEventhandles.get(handle);
   if (!obj) {
     throw new Error(`MediaQueryListEvent handle ${handle} not found`);
@@ -4253,7 +4331,7 @@ function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
  * `get-media()` operation.
  */
 export function MediaQueryListEventGetMedia(self: bigint): string {
-  const obj = getMediaQueryListEvent(self);
+  const obj = lookupMediaQueryListEvent(self);
   return obj.media;
 }
 
@@ -4261,7 +4339,7 @@ export function MediaQueryListEventGetMedia(self: bigint): string {
  * `get-matches()` operation.
  */
 export function MediaQueryListEventGetMatches(self: bigint): boolean {
-  const obj = getMediaQueryListEvent(self);
+  const obj = lookupMediaQueryListEvent(self);
   return obj.matches;
 }
 
@@ -4272,23 +4350,11 @@ export function MediaQueryListEventGetMatches(self: bigint): boolean {
 /** Type alias */
 export type ScreenHandle = bigint;
 
-/** Handle table for Screen instances */
-const _screenHandles = new Map<bigint, Screen>();
-let _nextScreen = 1n;
-
-/** Get a Screen by handle, throwing if not found. */
-function getScreen(handle: bigint): Screen {
-  const obj = _screenHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Screen handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-avail-width()` operation.
  */
 export function getAvailWidth(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.availWidth;
 }
 
@@ -4296,7 +4362,7 @@ export function getAvailWidth(self: bigint): number {
  * `get-avail-height()` operation.
  */
 export function getAvailHeight(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.availHeight;
 }
 
@@ -4304,7 +4370,7 @@ export function getAvailHeight(self: bigint): number {
  * `get-width()` operation.
  */
 export function ScreenGetWidth(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.width;
 }
 
@@ -4312,7 +4378,7 @@ export function ScreenGetWidth(self: bigint): number {
  * `get-height()` operation.
  */
 export function ScreenGetHeight(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.height;
 }
 
@@ -4320,7 +4386,7 @@ export function ScreenGetHeight(self: bigint): number {
  * `get-color-depth()` operation.
  */
 export function getColorDepth(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.colorDepth;
 }
 
@@ -4328,7 +4394,7 @@ export function getColorDepth(self: bigint): number {
  * `get-pixel-depth()` operation.
  */
 export function getPixelDepth(self: bigint): number {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   return obj.pixelDepth;
 }
 
@@ -4336,7 +4402,7 @@ export function getPixelDepth(self: bigint): number {
  * `get-orientation()` operation.
  */
 export function getOrientation(self: bigint): bigint {
-  const obj = getScreen(self);
+  const obj = lookupScreen(self);
   const result = obj.orientation;
   const handle = _nextScreenOrientation++;
   _screenOrientationHandles.set(handle, result);
@@ -4354,7 +4420,7 @@ export type DocumentHandle = bigint;
 const _Document_HANDLE = 0n;
 
 /** Get the global Document object. */
-function getDocument(): Document {
+function getGlobalDocument(): Document {
   return document;
 }
 
@@ -4481,7 +4547,7 @@ export function getDocumentElement(): bigint | undefined {
  * `get-elements-by-tag-name()` operation.
  */
 export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
-  const result = document.getElementsByTagName;
+  const result = document.getElementsByTagName();
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -4491,14 +4557,14 @@ export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  return document.getElementsByTagNameNS;
+  return document.getElementsByTagNameNS(localName);
 }
 
 /**
  * `get-elements-by-class-name()` operation.
  */
 export function DocumentGetElementsByClassName(classNames: string): bigint {
-  const result = document.getElementsByClassName;
+  const result = document.getElementsByClassName();
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -4937,7 +5003,7 @@ export function getScripts(): bigint {
  * `get-elements-by-name()` operation.
  */
 export function getElementsByName(elementName: string): bigint {
-  const result = document.getElementsByName;
+  const result = document.getElementsByName();
   const handle = _nextNodeList++;
   _nodeListHandles.set(handle, result);
   return handle;
@@ -5246,8 +5312,8 @@ export type CaretPositionHandle = bigint;
 const _caretPositionhandles = new Map<bigint, CaretPosition>();
 let _nextCaretPosition = 1n;
 
-/** Get a CaretPosition by handle, throwing if not found. */
-function getCaretPosition(handle: bigint): CaretPosition {
+/** Lookup a CaretPosition by handle, throwing if not found. */
+function lookupCaretPosition(handle: bigint): CaretPosition {
   const obj = _caretPositionhandles.get(handle);
   if (!obj) {
     throw new Error(`CaretPosition handle ${handle} not found`);
@@ -5258,7 +5324,7 @@ function getCaretPosition(handle: bigint): CaretPosition {
  * `get-offset-node()` operation.
  */
 export function getOffsetNode(self: bigint): bigint {
-  const obj = getCaretPosition(self);
+  const obj = lookupCaretPosition(self);
   return obj.offsetNode;
 }
 
@@ -5266,7 +5332,7 @@ export function getOffsetNode(self: bigint): bigint {
  * `get-offset()` operation.
  */
 export function getOffset(self: bigint): number {
-  const obj = getCaretPosition(self);
+  const obj = lookupCaretPosition(self);
   return obj.offset;
 }
 
@@ -5274,8 +5340,8 @@ export function getOffset(self: bigint): number {
  * `get-client-rect()` operation.
  */
 export function getClientRect(self: bigint): bigint | undefined {
-  const obj = getCaretPosition(self);
-  return obj.getClientRect ?? undefined;
+  const obj = lookupCaretPosition(self);
+  return obj.getClientRect() ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -5285,24 +5351,12 @@ export function getClientRect(self: bigint): bigint | undefined {
 /** Type alias */
 export type ElementHandle = bigint;
 
-/** Handle table for Element instances */
-const _elementHandles = new Map<bigint, Element>();
-let _nextElement = 1n;
-
-/** Get a Element by handle, throwing if not found. */
-function getElement(handle: bigint): Element {
-  const obj = _elementHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Element handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-client-rects()` operation.
  */
 export function ElementGetClientRects(self: bigint): bigint {
-  const obj = getElement(self);
-  const result = obj.getClientRects;
+  const obj = lookupElement(self);
+  const result = obj.getClientRects();
   const handle = _nextDomRectList++;
   _domRectListHandles.set(handle, result);
   return handle;
@@ -5312,7 +5366,7 @@ export function ElementGetClientRects(self: bigint): bigint {
  * `get-bounding-client-rect()` operation.
  */
 export function ElementGetBoundingClientRect(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.getBoundingClientRect();
   const handle = _nextDomRect++;
   _domRectHandles.set(handle, result);
@@ -5323,7 +5377,7 @@ export function ElementGetBoundingClientRect(self: bigint): bigint {
  * `check-visibility()` operation.
  */
 export function checkVisibility(self: bigint, options: CheckVisibilityOptions | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.checkVisibility(options);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5334,7 +5388,7 @@ export function checkVisibility(self: bigint, options: CheckVisibilityOptions | 
  * `scroll-into-view()` operation.
  */
 export function scrollIntoView(self: bigint, arg: boolean | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.scrollIntoView(arg);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
@@ -5345,7 +5399,7 @@ export function scrollIntoView(self: bigint, arg: boolean | undefined): bigint {
  * `scroll()` operation.
  */
 export function ElementScroll(self: bigint, options: ScrollToOptions | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.scroll(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
@@ -5356,7 +5410,7 @@ export function ElementScroll(self: bigint, options: ScrollToOptions | undefined
  * `scroll-to()` operation.
  */
 export function ElementScrollTo(self: bigint, options: ScrollToOptions | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.scrollTo(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
@@ -5367,7 +5421,7 @@ export function ElementScrollTo(self: bigint, options: ScrollToOptions | undefin
  * `scroll-by()` operation.
  */
 export function ElementScrollBy(self: bigint, options: ScrollToOptions | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.scrollBy(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
@@ -5378,7 +5432,7 @@ export function ElementScrollBy(self: bigint, options: ScrollToOptions | undefin
  * `get-scroll-top()` operation.
  */
 export function getScrollTop(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.scrollTop;
 }
 
@@ -5386,7 +5440,7 @@ export function getScrollTop(self: bigint): number {
  * `set-scroll-top()` operation.
  */
 export function setScrollTop(self: bigint, value: number): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.scrollTop = value;
 }
 
@@ -5394,7 +5448,7 @@ export function setScrollTop(self: bigint, value: number): void {
  * `get-scroll-left()` operation.
  */
 export function getScrollLeft(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.scrollLeft;
 }
 
@@ -5402,7 +5456,7 @@ export function getScrollLeft(self: bigint): number {
  * `set-scroll-left()` operation.
  */
 export function setScrollLeft(self: bigint, value: number): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.scrollLeft = value;
 }
 
@@ -5410,7 +5464,7 @@ export function setScrollLeft(self: bigint, value: number): void {
  * `get-scroll-width()` operation.
  */
 export function getScrollWidth(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.scrollWidth;
 }
 
@@ -5418,7 +5472,7 @@ export function getScrollWidth(self: bigint): number {
  * `get-scroll-height()` operation.
  */
 export function getScrollHeight(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.scrollHeight;
 }
 
@@ -5426,7 +5480,7 @@ export function getScrollHeight(self: bigint): number {
  * `get-client-top()` operation.
  */
 export function getClientTop(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.clientTop;
 }
 
@@ -5434,7 +5488,7 @@ export function getClientTop(self: bigint): number {
  * `get-client-left()` operation.
  */
 export function getClientLeft(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.clientLeft;
 }
 
@@ -5442,7 +5496,7 @@ export function getClientLeft(self: bigint): number {
  * `get-client-width()` operation.
  */
 export function getClientWidth(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.clientWidth;
 }
 
@@ -5450,7 +5504,7 @@ export function getClientWidth(self: bigint): number {
  * `get-client-height()` operation.
  */
 export function getClientHeight(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.clientHeight;
 }
 
@@ -5458,7 +5512,7 @@ export function getClientHeight(self: bigint): number {
  * `get-current-css-zoom()` operation.
  */
 export function getCurrentCssZoom(self: bigint): number {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.currentCSSZoom;
 }
 
@@ -5466,7 +5520,7 @@ export function getCurrentCssZoom(self: bigint): number {
  * `get-namespace-uri()` operation.
  */
 export function ElementGetNamespaceUri(self: bigint): string | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.namespaceURI ?? undefined;
 }
 
@@ -5474,7 +5528,7 @@ export function ElementGetNamespaceUri(self: bigint): string | undefined {
  * `get-prefix()` operation.
  */
 export function ElementGetPrefix(self: bigint): string | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.prefix ?? undefined;
 }
 
@@ -5482,7 +5536,7 @@ export function ElementGetPrefix(self: bigint): string | undefined {
  * `get-local-name()` operation.
  */
 export function getLocalName(self: bigint): string {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.localName;
 }
 
@@ -5490,7 +5544,7 @@ export function getLocalName(self: bigint): string {
  * `get-tag-name()` operation.
  */
 export function getTagName(self: bigint): string {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.tagName;
 }
 
@@ -5498,7 +5552,7 @@ export function getTagName(self: bigint): string {
  * `get-id()` operation.
  */
 export function getId(self: bigint): string {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.id;
 }
 
@@ -5506,7 +5560,7 @@ export function getId(self: bigint): string {
  * `set-id()` operation.
  */
 export function setId(self: bigint, value: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.id = value;
 }
 
@@ -5514,7 +5568,7 @@ export function setId(self: bigint, value: string): void {
  * `get-class-name()` operation.
  */
 export function getClassName(self: bigint): string {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.className;
 }
 
@@ -5522,7 +5576,7 @@ export function getClassName(self: bigint): string {
  * `set-class-name()` operation.
  */
 export function setClassName(self: bigint, value: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.className = value;
 }
 
@@ -5530,7 +5584,7 @@ export function setClassName(self: bigint, value: string): void {
  * `get-class-list()` operation.
  */
 export function getClassList(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.classList;
   const handle = _nextDomTokenList++;
   _domTokenListHandles.set(handle, result);
@@ -5541,7 +5595,7 @@ export function getClassList(self: bigint): bigint {
  * `get-slot()` operation.
  */
 export function getSlot(self: bigint): string {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.slot;
 }
 
@@ -5549,7 +5603,7 @@ export function getSlot(self: bigint): string {
  * `set-slot()` operation.
  */
 export function setSlot(self: bigint, value: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.slot = value;
 }
 
@@ -5557,7 +5611,7 @@ export function setSlot(self: bigint, value: string): void {
  * `has-attributes()` operation.
  */
 export function hasAttributes(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.hasAttributes();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5568,7 +5622,7 @@ export function hasAttributes(self: bigint): bigint {
  * `get-attributes()` operation.
  */
 export function getAttributes(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.attributes;
   const handle = _nextNamedNodeMap++;
   _namedNodeMapHandles.set(handle, result);
@@ -5579,7 +5633,7 @@ export function getAttributes(self: bigint): bigint {
  * `get-attribute-names()` operation.
  */
 export function getAttributeNames(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.getAttributeNames;
   const handle = _nextStringList++;
   _stringListHandles.set(handle, result);
@@ -5590,8 +5644,9 @@ export function getAttributeNames(self: bigint): bigint {
  * `get-attribute()` operation.
  */
 export function getAttribute(self: bigint, qualifiedName: string): bigint | undefined {
-  const obj = getElement(self);
-  const result = obj.getAttribute;
+  const obj = lookupElement(self);
+  const result = obj.getAttribute(qualifiedName);
+  if (result === null) return undefined;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
   return handle;
@@ -5601,15 +5656,15 @@ export function getAttribute(self: bigint, qualifiedName: string): bigint | unde
  * `get-attribute-ns()` operation.
  */
 export function getAttributeNs(self: bigint, namespace: string | undefined, localName: string): string | undefined {
-  const obj = getElement(self);
-  return obj.getAttributeNS ?? undefined;
+  const obj = lookupElement(self);
+  return obj.getAttributeNS(namespace, localName) ?? undefined;
 }
 
 /**
  * `set-attribute()` operation.
  */
 export function setAttribute(self: bigint, qualifiedName: string, value: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.getAttribute = value;
 }
 
@@ -5617,7 +5672,7 @@ export function setAttribute(self: bigint, qualifiedName: string, value: bigint)
  * `set-attribute-ns()` operation.
  */
 export function setAttributeNs(self: bigint, namespace: string | undefined, qualifiedName: string, value: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.getAttributeNS = value;
 }
 
@@ -5625,7 +5680,7 @@ export function setAttributeNs(self: bigint, namespace: string | undefined, qual
  * `remove-attribute()` operation.
  */
 export function removeAttribute(self: bigint, qualifiedName: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.removeAttribute(qualifiedName);
 }
 
@@ -5633,7 +5688,7 @@ export function removeAttribute(self: bigint, qualifiedName: string): void {
  * `remove-attribute-ns()` operation.
  */
 export function removeAttributeNs(self: bigint, namespace: string | undefined, localName: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.removeAttributeNS(namespace, localName);
 }
 
@@ -5641,7 +5696,7 @@ export function removeAttributeNs(self: bigint, namespace: string | undefined, l
  * `toggle-attribute()` operation.
  */
 export function toggleAttribute(self: bigint, qualifiedName: string, force: boolean | undefined): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.toggleAttribute(qualifiedName, force);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5652,7 +5707,7 @@ export function toggleAttribute(self: bigint, qualifiedName: string, force: bool
  * `has-attribute()` operation.
  */
 export function hasAttribute(self: bigint, qualifiedName: string): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.hasAttribute(qualifiedName);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5663,7 +5718,7 @@ export function hasAttribute(self: bigint, qualifiedName: string): bigint {
  * `has-attribute-ns()` operation.
  */
 export function hasAttributeNs(self: bigint, namespace: string | undefined, localName: string): boolean {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.hasAttributeNS(namespace, localName);
 }
 
@@ -5671,8 +5726,9 @@ export function hasAttributeNs(self: bigint, namespace: string | undefined, loca
  * `get-attribute-node()` operation.
  */
 export function getAttributeNode(self: bigint, qualifiedName: string): bigint | undefined {
-  const obj = getElement(self);
-  const result = obj.getAttributeNode;
+  const obj = lookupElement(self);
+  const result = obj.getAttributeNode(qualifiedName);
+  if (result === null) return undefined;
   const handle = _nextAttr++;
   _attrHandles.set(handle, result);
   return handle;
@@ -5682,15 +5738,15 @@ export function getAttributeNode(self: bigint, qualifiedName: string): bigint | 
  * `get-attribute-node-ns()` operation.
  */
 export function getAttributeNodeNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
-  const obj = getElement(self);
-  return obj.getAttributeNodeNS ?? undefined;
+  const obj = lookupElement(self);
+  return obj.getAttributeNodeNS(namespace, localName) ?? undefined;
 }
 
 /**
  * `set-attribute-node()` operation.
  */
 export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.getAttributeNode = attr;
 }
 
@@ -5698,7 +5754,7 @@ export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined
  * `set-attribute-node-ns()` operation.
  */
 export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.getAttributeNodeNS = attr;
 }
 
@@ -5706,7 +5762,7 @@ export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefin
  * `remove-attribute-node()` operation.
  */
 export function removeAttributeNode(self: bigint, attr: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.removeAttributeNode(attr);
   const handle = _nextAttr++;
   _attrHandles.set(handle, result);
@@ -5717,7 +5773,7 @@ export function removeAttributeNode(self: bigint, attr: bigint): bigint {
  * `attach-shadow()` operation.
  */
 export function attachShadow(self: bigint, init: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.attachShadow(init);
   const handle = _nextShadowRoot++;
   _shadowRootHandles.set(handle, result);
@@ -5728,7 +5784,7 @@ export function attachShadow(self: bigint, init: bigint): bigint {
  * `get-shadow-root()` operation.
  */
 export function getShadowRoot(self: bigint): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.shadowRoot;
   const handle = _nextShadowRoot++;
   _shadowRootHandles.set(handle, result);
@@ -5739,7 +5795,7 @@ export function getShadowRoot(self: bigint): bigint | undefined {
  * `get-custom-element-registry()` operation.
  */
 export function ElementGetCustomElementRegistry(self: bigint): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return (obj as any).customElementRegistry ?? undefined;
 }
 
@@ -5747,7 +5803,7 @@ export function ElementGetCustomElementRegistry(self: bigint): bigint | undefine
  * `closest()` operation.
  */
 export function closest(self: bigint, selectors: string): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.closest(selectors);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -5758,7 +5814,7 @@ export function closest(self: bigint, selectors: string): bigint | undefined {
  * `matches()` operation.
  */
 export function matches(self: bigint, selectors: string): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.matches(selectors);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5769,7 +5825,7 @@ export function matches(self: bigint, selectors: string): bigint {
  * `webkit-matches-selector()` operation.
  */
 export function webkitMatchesSelector(self: bigint, selectors: string): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.webkitMatchesSelector(selectors);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -5780,8 +5836,8 @@ export function webkitMatchesSelector(self: bigint, selectors: string): bigint {
  * `get-elements-by-tag-name()` operation.
  */
 export function ElementGetElementsByTagName(self: bigint, qualifiedName: string): bigint {
-  const obj = getElement(self);
-  const result = obj.getElementsByTagName;
+  const obj = lookupElement(self);
+  const result = obj.getElementsByTagName(qualifiedName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -5791,16 +5847,16 @@ export function ElementGetElementsByTagName(self: bigint, qualifiedName: string)
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
-  const obj = getElement(self);
-  return obj.getElementsByTagNameNS;
+  const obj = lookupElement(self);
+  return obj.getElementsByTagNameNS(namespace, localName);
 }
 
 /**
  * `get-elements-by-class-name()` operation.
  */
 export function ElementGetElementsByClassName(self: bigint, classNames: string): bigint {
-  const obj = getElement(self);
-  const result = obj.getElementsByClassName;
+  const obj = lookupElement(self);
+  const result = obj.getElementsByClassName(classNames);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -5810,7 +5866,7 @@ export function ElementGetElementsByClassName(self: bigint, classNames: string):
  * `insert-adjacent-element()` operation.
  */
 export function insertAdjacentElement(self: bigint, where: string, element: bigint): bigint | undefined {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const result = obj.insertAdjacentElement(where, element);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -5821,7 +5877,7 @@ export function insertAdjacentElement(self: bigint, where: string, element: bigi
  * `insert-adjacent-text()` operation.
  */
 export function insertAdjacentText(self: bigint, where: string, data: string): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.insertAdjacentText(where, data);
 }
 
@@ -5832,7 +5888,7 @@ export function insertAdjacentText(self: bigint, where: string, data: string): v
  */
 export function requestFullscreen(self: bigint, options: FullscreenOptions | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   const promise = obj.requestFullscreen(options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -5867,7 +5923,7 @@ export function pollRequestFullscreen(requestId: bigint): { ok: true } | { ok: f
  * `get-onfullscreenchange()` operation.
  */
 export function ElementGetOnfullscreenchange(self: bigint): EventHandlerRecord {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.onfullscreenchange;
 }
 
@@ -5875,7 +5931,7 @@ export function ElementGetOnfullscreenchange(self: bigint): EventHandlerRecord {
  * `set-onfullscreenchange()` operation.
  */
 export function ElementSetOnfullscreenchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.onfullscreenchange = value;
 }
 
@@ -5883,7 +5939,7 @@ export function ElementSetOnfullscreenchange(self: bigint, value: EventHandlerRe
  * `get-onfullscreenerror()` operation.
  */
 export function ElementGetOnfullscreenerror(self: bigint): EventHandlerRecord {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.onfullscreenerror;
 }
 
@@ -5891,7 +5947,7 @@ export function ElementGetOnfullscreenerror(self: bigint): EventHandlerRecord {
  * `set-onfullscreenerror()` operation.
  */
 export function ElementSetOnfullscreenerror(self: bigint, value: EventHandlerRecord): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.onfullscreenerror = value;
 }
 
@@ -5899,7 +5955,7 @@ export function ElementSetOnfullscreenerror(self: bigint, value: EventHandlerRec
  * `set-html-unsafe()` operation.
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.setHTMLUnsafe = html;
 }
 
@@ -5907,15 +5963,15 @@ export function setHtmlUnsafe(self: bigint, html: bigint): void {
  * `get-html()` operation.
  */
 export function getHtml(self: bigint, options: bigint | undefined): string {
-  const obj = getElement(self);
-  return (obj as any).html;
+  const obj = lookupElement(self);
+  return (obj as any).html(options);
 }
 
 /**
  * `get-inner-html()` operation.
  */
 export function getInnerHtml(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.innerHTML;
 }
 
@@ -5923,7 +5979,7 @@ export function getInnerHtml(self: bigint): bigint {
  * `set-inner-html()` operation.
  */
 export function setInnerHtml(self: bigint, value: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.innerHTML = value;
 }
 
@@ -5931,7 +5987,7 @@ export function setInnerHtml(self: bigint, value: bigint): void {
  * `get-outer-html()` operation.
  */
 export function getOuterHtml(self: bigint): bigint {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.outerHTML;
 }
 
@@ -5939,7 +5995,7 @@ export function getOuterHtml(self: bigint): bigint {
  * `set-outer-html()` operation.
  */
 export function setOuterHtml(self: bigint, value: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.outerHTML = value;
 }
 
@@ -5947,7 +6003,7 @@ export function setOuterHtml(self: bigint, value: bigint): void {
  * `insert-adjacent-html()` operation.
  */
 export function insertAdjacentHtml(self: bigint, position: string, string: bigint): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.insertAdjacentHTML(position, string);
 }
 
@@ -5955,7 +6011,7 @@ export function insertAdjacentHtml(self: bigint, position: string, string: bigin
  * `set-pointer-capture()` operation.
  */
 export function setPointerCapture(self: bigint, pointerId: number): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.hasPointerCapture = pointerId;
 }
 
@@ -5963,7 +6019,7 @@ export function setPointerCapture(self: bigint, pointerId: number): void {
  * `release-pointer-capture()` operation.
  */
 export function releasePointerCapture(self: bigint, pointerId: number): void {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   obj.releasePointerCapture(pointerId);
 }
 
@@ -5971,7 +6027,7 @@ export function releasePointerCapture(self: bigint, pointerId: number): void {
  * `has-pointer-capture()` operation.
  */
 export function hasPointerCapture(self: bigint, pointerId: number): boolean {
-  const obj = getElement(self);
+  const obj = lookupElement(self);
   return obj.hasPointerCapture(pointerId);
 }
 
@@ -5986,8 +6042,8 @@ export type HtmlElementHandle = bigint;
 const _htmlElementhandles = new Map<bigint, HTMLElement>();
 let _nextHTMLElement = 1n;
 
-/** Get a HTMLElement by handle, throwing if not found. */
-function getHTMLElement(handle: bigint): HTMLElement {
+/** Lookup a HTMLElement by handle, throwing if not found. */
+function lookupHTMLElement(handle: bigint): HTMLElement {
   const obj = _htmlElementhandles.get(handle);
   if (!obj) {
     throw new Error(`HTMLElement handle ${handle} not found`);
@@ -5998,7 +6054,7 @@ function getHTMLElement(handle: bigint): HTMLElement {
  * `get-scroll-parent()` operation.
  */
 export function getScrollParent(self: bigint): bigint | undefined {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return (obj as any).scrollParent ?? undefined;
 }
 
@@ -6006,7 +6062,7 @@ export function getScrollParent(self: bigint): bigint | undefined {
  * `get-offset-parent()` operation.
  */
 export function getOffsetParent(self: bigint): bigint | undefined {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   const result = obj.offsetParent;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -6017,7 +6073,7 @@ export function getOffsetParent(self: bigint): bigint | undefined {
  * `get-offset-top()` operation.
  */
 export function HtmlElementGetOffsetTop(self: bigint): number {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.offsetTop;
 }
 
@@ -6025,7 +6081,7 @@ export function HtmlElementGetOffsetTop(self: bigint): number {
  * `get-offset-left()` operation.
  */
 export function HtmlElementGetOffsetLeft(self: bigint): number {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.offsetLeft;
 }
 
@@ -6033,7 +6089,7 @@ export function HtmlElementGetOffsetLeft(self: bigint): number {
  * `get-offset-width()` operation.
  */
 export function getOffsetWidth(self: bigint): number {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.offsetWidth;
 }
 
@@ -6041,7 +6097,7 @@ export function getOffsetWidth(self: bigint): number {
  * `get-offset-height()` operation.
  */
 export function getOffsetHeight(self: bigint): number {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.offsetHeight;
 }
 
@@ -6049,7 +6105,7 @@ export function getOffsetHeight(self: bigint): number {
  * `get-title()` operation.
  */
 export function HtmlElementGetTitle(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.title;
 }
 
@@ -6057,7 +6113,7 @@ export function HtmlElementGetTitle(self: bigint): string {
  * `set-title()` operation.
  */
 export function HtmlElementSetTitle(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.title = value;
 }
 
@@ -6065,7 +6121,7 @@ export function HtmlElementSetTitle(self: bigint, value: string): void {
  * `get-lang()` operation.
  */
 export function getLang(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.lang;
 }
 
@@ -6073,7 +6129,7 @@ export function getLang(self: bigint): string {
  * `set-lang()` operation.
  */
 export function setLang(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.lang = value;
 }
 
@@ -6081,7 +6137,7 @@ export function setLang(self: bigint, value: string): void {
  * `get-translate()` operation.
  */
 export function getTranslate(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.translate;
 }
 
@@ -6089,7 +6145,7 @@ export function getTranslate(self: bigint): boolean {
  * `set-translate()` operation.
  */
 export function setTranslate(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.translate = value;
 }
 
@@ -6097,7 +6153,7 @@ export function setTranslate(self: bigint, value: boolean): void {
  * `get-dir()` operation.
  */
 export function HtmlElementGetDir(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.dir;
 }
 
@@ -6105,7 +6161,7 @@ export function HtmlElementGetDir(self: bigint): string {
  * `set-dir()` operation.
  */
 export function HtmlElementSetDir(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.dir = value;
 }
 
@@ -6113,7 +6169,7 @@ export function HtmlElementSetDir(self: bigint, value: string): void {
  * `get-hidden()` operation.
  */
 export function HtmlElementGetHidden(self: bigint): boolean | undefined {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.hidden ?? undefined;
 }
 
@@ -6121,7 +6177,7 @@ export function HtmlElementGetHidden(self: bigint): boolean | undefined {
  * `set-hidden()` operation.
  */
 export function setHidden(self: bigint, value: boolean | undefined): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.hidden = value;
 }
 
@@ -6129,7 +6185,7 @@ export function setHidden(self: bigint, value: boolean | undefined): void {
  * `get-inert()` operation.
  */
 export function getInert(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.inert;
 }
 
@@ -6137,7 +6193,7 @@ export function getInert(self: bigint): boolean {
  * `set-inert()` operation.
  */
 export function setInert(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.inert = value;
 }
 
@@ -6145,7 +6201,7 @@ export function setInert(self: bigint, value: boolean): void {
  * `click()` operation.
  */
 export function click(self: bigint): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.click();
 }
 
@@ -6153,7 +6209,7 @@ export function click(self: bigint): void {
  * `get-access-key()` operation.
  */
 export function getAccessKey(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.accessKey;
 }
 
@@ -6161,7 +6217,7 @@ export function getAccessKey(self: bigint): string {
  * `set-access-key()` operation.
  */
 export function setAccessKey(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.accessKey = value;
 }
 
@@ -6169,7 +6225,7 @@ export function setAccessKey(self: bigint, value: string): void {
  * `get-access-key-label()` operation.
  */
 export function getAccessKeyLabel(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.accessKeyLabel;
 }
 
@@ -6177,7 +6233,7 @@ export function getAccessKeyLabel(self: bigint): string {
  * `get-draggable()` operation.
  */
 export function getDraggable(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.draggable;
 }
 
@@ -6185,7 +6241,7 @@ export function getDraggable(self: bigint): boolean {
  * `set-draggable()` operation.
  */
 export function setDraggable(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.draggable = value;
 }
 
@@ -6193,7 +6249,7 @@ export function setDraggable(self: bigint, value: boolean): void {
  * `get-spellcheck()` operation.
  */
 export function getSpellcheck(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.spellcheck;
 }
 
@@ -6201,7 +6257,7 @@ export function getSpellcheck(self: bigint): boolean {
  * `set-spellcheck()` operation.
  */
 export function setSpellcheck(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.spellcheck = value;
 }
 
@@ -6209,7 +6265,7 @@ export function setSpellcheck(self: bigint, value: boolean): void {
  * `get-writing-suggestions()` operation.
  */
 export function getWritingSuggestions(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.writingSuggestions;
 }
 
@@ -6217,7 +6273,7 @@ export function getWritingSuggestions(self: bigint): string {
  * `set-writing-suggestions()` operation.
  */
 export function setWritingSuggestions(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.writingSuggestions = value;
 }
 
@@ -6225,7 +6281,7 @@ export function setWritingSuggestions(self: bigint, value: string): void {
  * `get-autocapitalize()` operation.
  */
 export function getAutocapitalize(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.autocapitalize;
 }
 
@@ -6233,7 +6289,7 @@ export function getAutocapitalize(self: bigint): string {
  * `set-autocapitalize()` operation.
  */
 export function setAutocapitalize(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.autocapitalize = value;
 }
 
@@ -6241,7 +6297,7 @@ export function setAutocapitalize(self: bigint, value: string): void {
  * `get-autocorrect()` operation.
  */
 export function getAutocorrect(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.autocorrect;
 }
 
@@ -6249,7 +6305,7 @@ export function getAutocorrect(self: bigint): boolean {
  * `set-autocorrect()` operation.
  */
 export function setAutocorrect(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.autocorrect = value;
 }
 
@@ -6257,7 +6313,7 @@ export function setAutocorrect(self: bigint, value: boolean): void {
  * `get-inner-text()` operation.
  */
 export function getInnerText(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.innerText;
 }
 
@@ -6265,7 +6321,7 @@ export function getInnerText(self: bigint): string {
  * `set-inner-text()` operation.
  */
 export function setInnerText(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.innerText = value;
 }
 
@@ -6273,7 +6329,7 @@ export function setInnerText(self: bigint, value: string): void {
  * `get-outer-text()` operation.
  */
 export function getOuterText(self: bigint): string {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.outerText;
 }
 
@@ -6281,7 +6337,7 @@ export function getOuterText(self: bigint): string {
  * `set-outer-text()` operation.
  */
 export function setOuterText(self: bigint, value: string): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.outerText = value;
 }
 
@@ -6289,7 +6345,7 @@ export function setOuterText(self: bigint, value: string): void {
  * `attach-internals()` operation.
  */
 export function attachInternals(self: bigint): bigint {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.attachInternals();
 }
 
@@ -6297,7 +6353,7 @@ export function attachInternals(self: bigint): bigint {
  * `show-popover()` operation.
  */
 export function showPopover(self: bigint, options: bigint | undefined): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.showPopover(options);
 }
 
@@ -6305,7 +6361,7 @@ export function showPopover(self: bigint, options: bigint | undefined): void {
  * `hide-popover()` operation.
  */
 export function hidePopover(self: bigint): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.hidePopover();
 }
 
@@ -6313,7 +6369,7 @@ export function hidePopover(self: bigint): void {
  * `toggle-popover()` operation.
  */
 export function togglePopover(self: bigint, options: bigint | undefined): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.togglePopover(options);
 }
 
@@ -6321,7 +6377,7 @@ export function togglePopover(self: bigint, options: bigint | undefined): boolea
  * `get-popover()` operation.
  */
 export function getPopover(self: bigint): string | undefined {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return obj.popover ?? undefined;
 }
 
@@ -6329,7 +6385,7 @@ export function getPopover(self: bigint): string | undefined {
  * `set-popover()` operation.
  */
 export function setPopover(self: bigint, value: string | undefined): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   obj.popover = value;
 }
 
@@ -6337,7 +6393,7 @@ export function setPopover(self: bigint, value: string | undefined): void {
  * `get-heading-offset()` operation.
  */
 export function getHeadingOffset(self: bigint): number {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return (obj as any).headingOffset;
 }
 
@@ -6345,7 +6401,7 @@ export function getHeadingOffset(self: bigint): number {
  * `set-heading-offset()` operation.
  */
 export function setHeadingOffset(self: bigint, value: number): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   (obj as any).headingOffset = value;
 }
 
@@ -6353,7 +6409,7 @@ export function setHeadingOffset(self: bigint, value: number): void {
  * `get-heading-reset()` operation.
  */
 export function getHeadingReset(self: bigint): boolean {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   return (obj as any).headingReset;
 }
 
@@ -6361,7 +6417,7 @@ export function getHeadingReset(self: bigint): boolean {
  * `set-heading-reset()` operation.
  */
 export function setHeadingReset(self: bigint, value: boolean): void {
-  const obj = getHTMLElement(self);
+  const obj = lookupHTMLElement(self);
   (obj as any).headingReset = value;
 }
 
@@ -6376,8 +6432,8 @@ export type HtmlImageElementHandle = bigint;
 const _htmlImageElementhandles = new Map<bigint, HTMLImageElement>();
 let _nextHTMLImageElement = 1n;
 
-/** Get a HTMLImageElement by handle, throwing if not found. */
-function getHTMLImageElement(handle: bigint): HTMLImageElement {
+/** Lookup a HTMLImageElement by handle, throwing if not found. */
+function lookupHTMLImageElement(handle: bigint): HTMLImageElement {
   const obj = _htmlImageElementhandles.get(handle);
   if (!obj) {
     throw new Error(`HTMLImageElement handle ${handle} not found`);
@@ -6388,7 +6444,7 @@ function getHTMLImageElement(handle: bigint): HTMLImageElement {
  * `get-x()` operation.
  */
 export function HtmlImageElementGetX(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.x;
 }
 
@@ -6396,7 +6452,7 @@ export function HtmlImageElementGetX(self: bigint): number {
  * `get-y()` operation.
  */
 export function HtmlImageElementGetY(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.y;
 }
 
@@ -6404,7 +6460,7 @@ export function HtmlImageElementGetY(self: bigint): number {
  * `get-alt()` operation.
  */
 export function getAlt(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.alt;
 }
 
@@ -6412,7 +6468,7 @@ export function getAlt(self: bigint): string {
  * `set-alt()` operation.
  */
 export function setAlt(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.alt = value;
 }
 
@@ -6420,7 +6476,7 @@ export function setAlt(self: bigint, value: string): void {
  * `get-src()` operation.
  */
 export function HtmlImageElementGetSrc(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.src;
 }
 
@@ -6428,7 +6484,7 @@ export function HtmlImageElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlImageElementSetSrc(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.src = value;
 }
 
@@ -6436,7 +6492,7 @@ export function HtmlImageElementSetSrc(self: bigint, value: string): void {
  * `get-srcset()` operation.
  */
 export function getSrcset(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.srcset;
 }
 
@@ -6444,7 +6500,7 @@ export function getSrcset(self: bigint): string {
  * `set-srcset()` operation.
  */
 export function setSrcset(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.srcset = value;
 }
 
@@ -6452,7 +6508,7 @@ export function setSrcset(self: bigint, value: string): void {
  * `get-sizes()` operation.
  */
 export function getSizes(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.sizes;
 }
 
@@ -6460,7 +6516,7 @@ export function getSizes(self: bigint): string {
  * `set-sizes()` operation.
  */
 export function setSizes(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.sizes = value;
 }
 
@@ -6468,7 +6524,7 @@ export function setSizes(self: bigint, value: string): void {
  * `get-cross-origin()` operation.
  */
 export function getCrossOrigin(self: bigint): string | undefined {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.crossOrigin ?? undefined;
 }
 
@@ -6476,7 +6532,7 @@ export function getCrossOrigin(self: bigint): string | undefined {
  * `set-cross-origin()` operation.
  */
 export function setCrossOrigin(self: bigint, value: string | undefined): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.crossOrigin = value;
 }
 
@@ -6484,7 +6540,7 @@ export function setCrossOrigin(self: bigint, value: string | undefined): void {
  * `get-use-map()` operation.
  */
 export function getUseMap(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.useMap;
 }
 
@@ -6492,7 +6548,7 @@ export function getUseMap(self: bigint): string {
  * `set-use-map()` operation.
  */
 export function setUseMap(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.useMap = value;
 }
 
@@ -6500,7 +6556,7 @@ export function setUseMap(self: bigint, value: string): void {
  * `get-is-map()` operation.
  */
 export function getIsMap(self: bigint): boolean {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.isMap;
 }
 
@@ -6508,7 +6564,7 @@ export function getIsMap(self: bigint): boolean {
  * `set-is-map()` operation.
  */
 export function setIsMap(self: bigint, value: boolean): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.isMap = value;
 }
 
@@ -6516,7 +6572,7 @@ export function setIsMap(self: bigint, value: boolean): void {
  * `get-width()` operation.
  */
 export function HtmlImageElementGetWidth(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.width;
 }
 
@@ -6524,7 +6580,7 @@ export function HtmlImageElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function setWidth(self: bigint, value: number): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.width = value;
 }
 
@@ -6532,7 +6588,7 @@ export function setWidth(self: bigint, value: number): void {
  * `get-height()` operation.
  */
 export function HtmlImageElementGetHeight(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.height;
 }
 
@@ -6540,7 +6596,7 @@ export function HtmlImageElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function setHeight(self: bigint, value: number): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.height = value;
 }
 
@@ -6548,7 +6604,7 @@ export function setHeight(self: bigint, value: number): void {
  * `get-natural-width()` operation.
  */
 export function getNaturalWidth(self: bigint): bigint {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   const result = obj.naturalWidth;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -6559,7 +6615,7 @@ export function getNaturalWidth(self: bigint): bigint {
  * `get-natural-height()` operation.
  */
 export function getNaturalHeight(self: bigint): bigint {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   const result = obj.naturalHeight;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -6570,7 +6626,7 @@ export function getNaturalHeight(self: bigint): bigint {
  * `get-complete()` operation.
  */
 export function getComplete(self: bigint): bigint {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   const result = obj.complete;
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -6581,7 +6637,7 @@ export function getComplete(self: bigint): bigint {
  * `get-current-src()` operation.
  */
 export function getCurrentSrc(self: bigint): bigint {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   const result = obj.currentSrc;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -6592,7 +6648,7 @@ export function getCurrentSrc(self: bigint): bigint {
  * `get-referrer-policy()` operation.
  */
 export function getReferrerPolicy(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.referrerPolicy;
 }
 
@@ -6600,7 +6656,7 @@ export function getReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function setReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -6608,7 +6664,7 @@ export function setReferrerPolicy(self: bigint, value: string): void {
  * `get-decoding()` operation.
  */
 export function getDecoding(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.decoding;
 }
 
@@ -6616,7 +6672,7 @@ export function getDecoding(self: bigint): string {
  * `set-decoding()` operation.
  */
 export function setDecoding(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.decoding = value;
 }
 
@@ -6624,7 +6680,7 @@ export function setDecoding(self: bigint, value: string): void {
  * `get-loading()` operation.
  */
 export function getLoading(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.loading;
 }
 
@@ -6632,7 +6688,7 @@ export function getLoading(self: bigint): string {
  * `set-loading()` operation.
  */
 export function setLoading(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.loading = value;
 }
 
@@ -6640,7 +6696,7 @@ export function setLoading(self: bigint, value: string): void {
  * `get-fetch-priority()` operation.
  */
 export function getFetchPriority(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.fetchPriority;
 }
 
@@ -6648,7 +6704,7 @@ export function getFetchPriority(self: bigint): string {
  * `set-fetch-priority()` operation.
  */
 export function setFetchPriority(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.fetchPriority = value;
 }
 
@@ -6659,7 +6715,7 @@ export function setFetchPriority(self: bigint, value: string): void {
  */
 export function decode(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   const promise = obj.decode()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -6694,7 +6750,7 @@ export function pollDecode(requestId: bigint): { ok: true; value: bigint } | { o
  * `get-name()` operation.
  */
 export function HtmlImageElementGetName(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.name;
 }
 
@@ -6702,7 +6758,7 @@ export function HtmlImageElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlImageElementSetName(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.name = value;
 }
 
@@ -6710,7 +6766,7 @@ export function HtmlImageElementSetName(self: bigint, value: string): void {
  * `get-lowsrc()` operation.
  */
 export function getLowsrc(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.lowsrc;
 }
 
@@ -6718,7 +6774,7 @@ export function getLowsrc(self: bigint): string {
  * `set-lowsrc()` operation.
  */
 export function setLowsrc(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.lowsrc = value;
 }
 
@@ -6726,7 +6782,7 @@ export function setLowsrc(self: bigint, value: string): void {
  * `get-align()` operation.
  */
 export function getAlign(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.align;
 }
 
@@ -6734,7 +6790,7 @@ export function getAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function setAlign(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.align = value;
 }
 
@@ -6742,7 +6798,7 @@ export function setAlign(self: bigint, value: string): void {
  * `get-hspace()` operation.
  */
 export function getHspace(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.hspace;
 }
 
@@ -6750,7 +6806,7 @@ export function getHspace(self: bigint): number {
  * `set-hspace()` operation.
  */
 export function setHspace(self: bigint, value: number): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.hspace = value;
 }
 
@@ -6758,7 +6814,7 @@ export function setHspace(self: bigint, value: number): void {
  * `get-vspace()` operation.
  */
 export function getVspace(self: bigint): number {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.vspace;
 }
 
@@ -6766,7 +6822,7 @@ export function getVspace(self: bigint): number {
  * `set-vspace()` operation.
  */
 export function setVspace(self: bigint, value: number): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.vspace = value;
 }
 
@@ -6774,7 +6830,7 @@ export function setVspace(self: bigint, value: number): void {
  * `get-long-desc()` operation.
  */
 export function getLongDesc(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.longDesc;
 }
 
@@ -6782,7 +6838,7 @@ export function getLongDesc(self: bigint): string {
  * `set-long-desc()` operation.
  */
 export function setLongDesc(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.longDesc = value;
 }
 
@@ -6790,7 +6846,7 @@ export function setLongDesc(self: bigint, value: string): void {
  * `get-border()` operation.
  */
 export function getBorder(self: bigint): string {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   return obj.border;
 }
 
@@ -6798,7 +6854,7 @@ export function getBorder(self: bigint): string {
  * `set-border()` operation.
  */
 export function setBorder(self: bigint, value: string): void {
-  const obj = getHTMLImageElement(self);
+  const obj = lookupHTMLImageElement(self);
   obj.border = value;
 }
 
@@ -6819,8 +6875,8 @@ function registerRange(obj: Range): bigint {
   _rangeHandles.set(handle, obj);
   return handle;
 }
-/** Get a Range by handle, throwing if not found. */
-function getRange(handle: bigint): Range {
+/** Lookup a Range by handle, throwing if not found. */
+function lookupRange(handle: bigint): Range {
   const obj = _rangeHandles.get(handle);
   if (!obj) {
     throw new Error(`Range handle ${handle} not found`);
@@ -6831,8 +6887,8 @@ function getRange(handle: bigint): Range {
  * `get-client-rects()` operation.
  */
 export function RangeGetClientRects(self: bigint): bigint {
-  const obj = getRange(self);
-  const result = obj.getClientRects;
+  const obj = lookupRange(self);
+  const result = obj.getClientRects();
   const handle = _nextDomRectList++;
   _domRectListHandles.set(handle, result);
   return handle;
@@ -6842,7 +6898,7 @@ export function RangeGetClientRects(self: bigint): bigint {
  * `get-bounding-client-rect()` operation.
  */
 export function RangeGetBoundingClientRect(self: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   const result = obj.getBoundingClientRect();
   const handle = _nextDomRect++;
   _domRectHandles.set(handle, result);
@@ -6853,7 +6909,7 @@ export function RangeGetBoundingClientRect(self: bigint): bigint {
  * `get-common-ancestor-container()` operation.
  */
 export function getCommonAncestorContainer(self: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   const result = obj.commonAncestorContainer;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -6864,7 +6920,7 @@ export function getCommonAncestorContainer(self: bigint): bigint {
  * `set-start()` operation.
  */
 export function setStart(self: bigint, node: bigint, offset: number): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   (obj as any).start = offset;
 }
 
@@ -6872,7 +6928,7 @@ export function setStart(self: bigint, node: bigint, offset: number): void {
  * `set-end()` operation.
  */
 export function setEnd(self: bigint, node: bigint, offset: number): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   (obj as any).end = offset;
 }
 
@@ -6880,7 +6936,7 @@ export function setEnd(self: bigint, node: bigint, offset: number): void {
  * `set-start-before()` operation.
  */
 export function setStartBefore(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.setStartBefore = node;
 }
 
@@ -6888,7 +6944,7 @@ export function setStartBefore(self: bigint, node: bigint): void {
  * `set-start-after()` operation.
  */
 export function setStartAfter(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.setStartAfter = node;
 }
 
@@ -6896,7 +6952,7 @@ export function setStartAfter(self: bigint, node: bigint): void {
  * `set-end-before()` operation.
  */
 export function setEndBefore(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.setEndBefore = node;
 }
 
@@ -6904,7 +6960,7 @@ export function setEndBefore(self: bigint, node: bigint): void {
  * `set-end-after()` operation.
  */
 export function setEndAfter(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   (obj as any).endAfter = node;
 }
 
@@ -6912,7 +6968,7 @@ export function setEndAfter(self: bigint, node: bigint): void {
  * `collapse()` operation.
  */
 export function collapse(self: bigint, toStart: boolean | undefined): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.collapse(toStart);
 }
 
@@ -6920,7 +6976,7 @@ export function collapse(self: bigint, toStart: boolean | undefined): void {
  * `select-node()` operation.
  */
 export function selectNode(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.selectNode(node);
 }
 
@@ -6928,7 +6984,7 @@ export function selectNode(self: bigint, node: bigint): void {
  * `select-node-contents()` operation.
  */
 export function selectNodeContents(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.selectNodeContents(node);
 }
 
@@ -6936,7 +6992,7 @@ export function selectNodeContents(self: bigint, node: bigint): void {
  * `compare-boundary-points()` operation.
  */
 export function compareBoundaryPoints(self: bigint, how: number, sourceRange: bigint): number {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.compareBoundaryPoints(how, sourceRange);
 }
 
@@ -6944,7 +7000,7 @@ export function compareBoundaryPoints(self: bigint, how: number, sourceRange: bi
  * `delete-contents()` operation.
  */
 export function deleteContents(self: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.deleteContents();
 }
 
@@ -6952,7 +7008,7 @@ export function deleteContents(self: bigint): void {
  * `extract-contents()` operation.
  */
 export function extractContents(self: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.extractContents();
 }
 
@@ -6960,7 +7016,7 @@ export function extractContents(self: bigint): bigint {
  * `clone-contents()` operation.
  */
 export function cloneContents(self: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   const result = obj.cloneContents();
   const handle = _nextDocumentFragment++;
   _documentFragmentHandles.set(handle, result);
@@ -6971,7 +7027,7 @@ export function cloneContents(self: bigint): bigint {
  * `insert-node()` operation.
  */
 export function insertNode(self: bigint, node: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.insertNode(node);
 }
 
@@ -6979,7 +7035,7 @@ export function insertNode(self: bigint, node: bigint): void {
  * `surround-contents()` operation.
  */
 export function surroundContents(self: bigint, newParent: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.surroundContents(newParent);
 }
 
@@ -6987,7 +7043,7 @@ export function surroundContents(self: bigint, newParent: bigint): void {
  * `clone-range()` operation.
  */
 export function cloneRange(self: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.cloneRange();
 }
 
@@ -6995,7 +7051,7 @@ export function cloneRange(self: bigint): bigint {
  * `detach()` operation.
  */
 export function detach(self: bigint): void {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   obj.detach();
 }
 
@@ -7003,7 +7059,7 @@ export function detach(self: bigint): void {
  * `is-point-in-range()` operation.
  */
 export function isPointInRange(self: bigint, node: bigint, offset: number): boolean {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.isPointInRange(node, offset);
 }
 
@@ -7011,7 +7067,7 @@ export function isPointInRange(self: bigint, node: bigint, offset: number): bool
  * `compare-point()` operation.
  */
 export function comparePoint(self: bigint, node: bigint, offset: number): number {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.comparePoint(node, offset);
 }
 
@@ -7019,7 +7075,7 @@ export function comparePoint(self: bigint, node: bigint, offset: number): number
  * `intersects-node()` operation.
  */
 export function intersectsNode(self: bigint, node: bigint): boolean {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   return obj.intersectsNode(node);
 }
 
@@ -7027,7 +7083,7 @@ export function intersectsNode(self: bigint, node: bigint): boolean {
  * `create-contextual-fragment()` operation.
  */
 export function createContextualFragment(self: bigint, string: bigint): bigint {
-  const obj = getRange(self);
+  const obj = lookupRange(self);
   const result = obj.createContextualFragment(string);
   const handle = _nextDocumentFragment++;
   _documentFragmentHandles.set(handle, result);
@@ -7045,8 +7101,8 @@ export type MouseEventHandle = bigint;
 const _mouseEventhandles = new Map<bigint, MouseEvent>();
 let _nextMouseEvent = 1n;
 
-/** Get a MouseEvent by handle, throwing if not found. */
-function getMouseEvent(handle: bigint): MouseEvent {
+/** Lookup a MouseEvent by handle, throwing if not found. */
+function lookupMouseEvent(handle: bigint): MouseEvent {
   const obj = _mouseEventhandles.get(handle);
   if (!obj) {
     throw new Error(`MouseEvent handle ${handle} not found`);
@@ -7057,7 +7113,7 @@ function getMouseEvent(handle: bigint): MouseEvent {
  * `get-screen-x()` operation.
  */
 export function MouseEventGetScreenX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.screenX;
 }
 
@@ -7065,7 +7121,7 @@ export function MouseEventGetScreenX(self: bigint): number {
  * `get-screen-y()` operation.
  */
 export function MouseEventGetScreenY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.screenY;
 }
 
@@ -7073,7 +7129,7 @@ export function MouseEventGetScreenY(self: bigint): number {
  * `get-page-x()` operation.
  */
 export function getPageX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.pageX;
 }
 
@@ -7081,7 +7137,7 @@ export function getPageX(self: bigint): number {
  * `get-page-y()` operation.
  */
 export function getPageY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.pageY;
 }
 
@@ -7089,7 +7145,7 @@ export function getPageY(self: bigint): number {
  * `get-client-x()` operation.
  */
 export function getClientX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.clientX;
 }
 
@@ -7097,7 +7153,7 @@ export function getClientX(self: bigint): number {
  * `get-client-y()` operation.
  */
 export function getClientY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.clientY;
 }
 
@@ -7105,7 +7161,7 @@ export function getClientY(self: bigint): number {
  * `get-x()` operation.
  */
 export function MouseEventGetX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.x;
 }
 
@@ -7113,7 +7169,7 @@ export function MouseEventGetX(self: bigint): number {
  * `get-y()` operation.
  */
 export function MouseEventGetY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.y;
 }
 
@@ -7121,7 +7177,7 @@ export function MouseEventGetY(self: bigint): number {
  * `get-offset-x()` operation.
  */
 export function getOffsetX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.offsetX;
 }
 
@@ -7129,7 +7185,7 @@ export function getOffsetX(self: bigint): number {
  * `get-offset-y()` operation.
  */
 export function getOffsetY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.offsetY;
 }
 
@@ -7137,7 +7193,7 @@ export function getOffsetY(self: bigint): number {
  * `get-layer-x()` operation.
  */
 export function getLayerX(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.layerX;
 }
 
@@ -7145,7 +7201,7 @@ export function getLayerX(self: bigint): number {
  * `get-layer-y()` operation.
  */
 export function getLayerY(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.layerY;
 }
 
@@ -7153,7 +7209,7 @@ export function getLayerY(self: bigint): number {
  * `get-ctrl-key()` operation.
  */
 export function getCtrlKey(self: bigint): boolean {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.ctrlKey;
 }
 
@@ -7161,7 +7217,7 @@ export function getCtrlKey(self: bigint): boolean {
  * `get-shift-key()` operation.
  */
 export function getShiftKey(self: bigint): boolean {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.shiftKey;
 }
 
@@ -7169,7 +7225,7 @@ export function getShiftKey(self: bigint): boolean {
  * `get-alt-key()` operation.
  */
 export function getAltKey(self: bigint): boolean {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.altKey;
 }
 
@@ -7177,7 +7233,7 @@ export function getAltKey(self: bigint): boolean {
  * `get-meta-key()` operation.
  */
 export function getMetaKey(self: bigint): boolean {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.metaKey;
 }
 
@@ -7185,7 +7241,7 @@ export function getMetaKey(self: bigint): boolean {
  * `get-button()` operation.
  */
 export function getButton(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.button;
 }
 
@@ -7193,7 +7249,7 @@ export function getButton(self: bigint): number {
  * `get-buttons()` operation.
  */
 export function getButtons(self: bigint): number {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.buttons;
 }
 
@@ -7201,7 +7257,7 @@ export function getButtons(self: bigint): number {
  * `get-related-target()` operation.
  */
 export function getRelatedTarget(self: bigint): bigint | undefined {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.relatedTarget ?? undefined;
 }
 
@@ -7209,7 +7265,7 @@ export function getRelatedTarget(self: bigint): bigint | undefined {
  * `get-modifier-state()` operation.
  */
 export function getModifierState(self: bigint, keyArg: string): boolean {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   return obj.getModifierState;
 }
 
@@ -7217,7 +7273,7 @@ export function getModifierState(self: bigint, keyArg: string): boolean {
  * `init-mouse-event()` operation.
  */
 export function initMouseEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, detailArg: number | undefined, screenXArg: number | undefined, screenYArg: number | undefined, clientXArg: number | undefined, clientYArg: number | undefined, ctrlKeyArg: boolean | undefined, altKeyArg: boolean | undefined, shiftKeyArg: boolean | undefined, metaKeyArg: boolean | undefined, buttonArg: number | undefined, relatedTargetArg: bigint | undefined): void {
-  const obj = getMouseEvent(self);
+  const obj = lookupMouseEvent(self);
   obj.initMouseEvent(typeArg, bubblesArg, cancelableArg, viewArg, detailArg, screenXArg, screenYArg, clientXArg, clientYArg, ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg, buttonArg, relatedTargetArg);
 }
 
@@ -7232,8 +7288,8 @@ export type GeometryUtilsHandle = bigint;
 const _geometryUtilshandles = new Map<bigint, GeometryUtils>();
 let _nextGeometryUtils = 1n;
 
-/** Get a GeometryUtils by handle, throwing if not found. */
-function getGeometryUtils(handle: bigint): GeometryUtils {
+/** Lookup a GeometryUtils by handle, throwing if not found. */
+function lookupGeometryUtils(handle: bigint): GeometryUtils {
   const obj = _geometryUtilshandles.get(handle);
   if (!obj) {
     throw new Error(`GeometryUtils handle ${handle} not found`);
@@ -7244,7 +7300,7 @@ function getGeometryUtils(handle: bigint): GeometryUtils {
  * `get-box-quads()` operation.
  */
 export function getBoxQuads(self: bigint, options: bigint | undefined): (bigint)[] {
-  const obj = getGeometryUtils(self);
+  const obj = lookupGeometryUtils(self);
   return obj.boxQuads;
 }
 
@@ -7252,7 +7308,7 @@ export function getBoxQuads(self: bigint, options: bigint | undefined): (bigint)
  * `convert-quad-from-node()` operation.
  */
 export function convertQuadFromNode(self: bigint, quad: bigint, from: bigint, options: bigint | undefined): bigint {
-  const obj = getGeometryUtils(self);
+  const obj = lookupGeometryUtils(self);
   return obj.convertQuadFromNode(quad, from, options);
 }
 
@@ -7260,7 +7316,7 @@ export function convertQuadFromNode(self: bigint, quad: bigint, from: bigint, op
  * `convert-rect-from-node()` operation.
  */
 export function convertRectFromNode(self: bigint, rect: bigint, from: bigint, options: bigint | undefined): bigint {
-  const obj = getGeometryUtils(self);
+  const obj = lookupGeometryUtils(self);
   return obj.convertRectFromNode(rect, from, options);
 }
 
@@ -7268,7 +7324,7 @@ export function convertRectFromNode(self: bigint, rect: bigint, from: bigint, op
  * `convert-point-from-node()` operation.
  */
 export function convertPointFromNode(self: bigint, point: bigint, from: bigint, options: bigint | undefined): bigint {
-  const obj = getGeometryUtils(self);
+  const obj = lookupGeometryUtils(self);
   return obj.convertPointFromNode(point, from, options);
 }
 
@@ -7279,23 +7335,11 @@ export function convertPointFromNode(self: bigint, point: bigint, from: bigint, 
 /** Type alias */
 export type VisualViewportHandle = bigint;
 
-/** Handle table for VisualViewport instances */
-const _visualViewporthandles = new Map<bigint, VisualViewport>();
-let _nextVisualViewport = 1n;
-
-/** Get a VisualViewport by handle, throwing if not found. */
-function getVisualViewport(handle: bigint): VisualViewport {
-  const obj = _visualViewporthandles.get(handle);
-  if (!obj) {
-    throw new Error(`VisualViewport handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-offset-left()` operation.
  */
 export function VisualViewportGetOffsetLeft(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.offsetLeft;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7306,7 +7350,7 @@ export function VisualViewportGetOffsetLeft(self: bigint): bigint {
  * `get-offset-top()` operation.
  */
 export function VisualViewportGetOffsetTop(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.offsetTop;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7317,7 +7361,7 @@ export function VisualViewportGetOffsetTop(self: bigint): bigint {
  * `get-page-left()` operation.
  */
 export function getPageLeft(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.pageLeft;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7328,7 +7372,7 @@ export function getPageLeft(self: bigint): bigint {
  * `get-page-top()` operation.
  */
 export function getPageTop(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.pageTop;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7339,7 +7383,7 @@ export function getPageTop(self: bigint): bigint {
  * `get-width()` operation.
  */
 export function VisualViewportGetWidth(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.width;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7350,7 +7394,7 @@ export function VisualViewportGetWidth(self: bigint): bigint {
  * `get-height()` operation.
  */
 export function VisualViewportGetHeight(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.height;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7361,7 +7405,7 @@ export function VisualViewportGetHeight(self: bigint): bigint {
  * `get-scale()` operation.
  */
 export function getScale(self: bigint): bigint {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   const result = obj.scale;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7372,7 +7416,7 @@ export function getScale(self: bigint): bigint {
  * `get-onresize()` operation.
  */
 export function VisualViewportGetOnresize(self: bigint): EventHandlerRecord {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   return obj.onresize;
 }
 
@@ -7380,7 +7424,7 @@ export function VisualViewportGetOnresize(self: bigint): EventHandlerRecord {
  * `set-onresize()` operation.
  */
 export function VisualViewportSetOnresize(self: bigint, value: EventHandlerRecord): void {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   obj.onresize = value;
 }
 
@@ -7388,7 +7432,7 @@ export function VisualViewportSetOnresize(self: bigint, value: EventHandlerRecor
  * `get-onscroll()` operation.
  */
 export function VisualViewportGetOnscroll(self: bigint): EventHandlerRecord {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   return obj.onscroll;
 }
 
@@ -7396,7 +7440,7 @@ export function VisualViewportGetOnscroll(self: bigint): EventHandlerRecord {
  * `set-onscroll()` operation.
  */
 export function VisualViewportSetOnscroll(self: bigint, value: EventHandlerRecord): void {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   obj.onscroll = value;
 }
 
@@ -7404,7 +7448,7 @@ export function VisualViewportSetOnscroll(self: bigint, value: EventHandlerRecor
  * `get-onscrollend()` operation.
  */
 export function VisualViewportGetOnscrollend(self: bigint): EventHandlerRecord {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   return obj.onscrollend;
 }
 
@@ -7412,7 +7456,7 @@ export function VisualViewportGetOnscrollend(self: bigint): EventHandlerRecord {
  * `set-onscrollend()` operation.
  */
 export function VisualViewportSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
-  const obj = getVisualViewport(self);
+  const obj = lookupVisualViewport(self);
   obj.onscrollend = value;
 }
 
@@ -7423,23 +7467,11 @@ export function VisualViewportSetOnscrollend(self: bigint, value: EventHandlerRe
 /** Type alias */
 export type MediaListHandle = bigint;
 
-/** Handle table for MediaList instances */
-const _mediaListhandles = new Map<bigint, MediaList>();
-let _nextMediaList = 1n;
-
-/** Get a MediaList by handle, throwing if not found. */
-function getMediaList(handle: bigint): MediaList {
-  const obj = _mediaListhandles.get(handle);
-  if (!obj) {
-    throw new Error(`MediaList handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-media-text()` operation.
  */
 export function getMediaText(self: bigint): bigint {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   const result = obj.mediaText;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -7450,7 +7482,7 @@ export function getMediaText(self: bigint): bigint {
  * `set-media-text()` operation.
  */
 export function setMediaText(self: bigint, value: bigint): void {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   obj.mediaText = value;
 }
 
@@ -7458,7 +7490,7 @@ export function setMediaText(self: bigint, value: bigint): void {
  * `get-length()` operation.
  */
 export function MediaListGetLength(self: bigint): bigint {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   const result = obj.length;
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7469,7 +7501,7 @@ export function MediaListGetLength(self: bigint): bigint {
  * `item()` operation.
  */
 export function MediaListItem(self: bigint, index: number): bigint | undefined {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   const result = obj.item(index);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -7480,7 +7512,7 @@ export function MediaListItem(self: bigint, index: number): bigint | undefined {
  * `append-medium()` operation.
  */
 export function appendMedium(self: bigint, medium: string): void {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   obj.appendMedium(medium);
 }
 
@@ -7488,7 +7520,7 @@ export function appendMedium(self: bigint, medium: string): void {
  * `delete-medium()` operation.
  */
 export function deleteMedium(self: bigint, medium: string): void {
-  const obj = getMediaList(self);
+  const obj = lookupMediaList(self);
   obj.deleteMedium(medium);
 }
 
@@ -7503,8 +7535,8 @@ export type StyleSheetHandle = bigint;
 const _styleSheethandles = new Map<bigint, StyleSheet>();
 let _nextStyleSheet = 1n;
 
-/** Get a StyleSheet by handle, throwing if not found. */
-function getStyleSheet(handle: bigint): StyleSheet {
+/** Lookup a StyleSheet by handle, throwing if not found. */
+function lookupStyleSheet(handle: bigint): StyleSheet {
   const obj = _styleSheethandles.get(handle);
   if (!obj) {
     throw new Error(`StyleSheet handle ${handle} not found`);
@@ -7515,7 +7547,7 @@ function getStyleSheet(handle: bigint): StyleSheet {
  * `get-type()` operation.
  */
 export function StyleSheetGetType(self: bigint): string {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   return obj.type;
 }
 
@@ -7523,7 +7555,7 @@ export function StyleSheetGetType(self: bigint): string {
  * `get-href()` operation.
  */
 export function StyleSheetGetHref(self: bigint): string | undefined {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   return obj.href ?? undefined;
 }
 
@@ -7531,7 +7563,7 @@ export function StyleSheetGetHref(self: bigint): string | undefined {
  * `get-owner-node()` operation.
  */
 export function getOwnerNode(self: bigint): bigint | undefined {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   const result = obj.ownerNode;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -7542,7 +7574,7 @@ export function getOwnerNode(self: bigint): bigint | undefined {
  * `get-parent-style-sheet()` operation.
  */
 export function StyleSheetGetParentStyleSheet(self: bigint): bigint | undefined {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   const result = obj.parentStyleSheet;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, result);
@@ -7553,7 +7585,7 @@ export function StyleSheetGetParentStyleSheet(self: bigint): bigint | undefined 
  * `get-title()` operation.
  */
 export function StyleSheetGetTitle(self: bigint): string | undefined {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   return obj.title ?? undefined;
 }
 
@@ -7561,7 +7593,7 @@ export function StyleSheetGetTitle(self: bigint): string | undefined {
  * `get-media()` operation.
  */
 export function StyleSheetGetMedia(self: bigint): bigint {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   return obj.media;
 }
 
@@ -7569,7 +7601,7 @@ export function StyleSheetGetMedia(self: bigint): bigint {
  * `get-disabled()` operation.
  */
 export function getDisabled(self: bigint): boolean {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   return obj.disabled;
 }
 
@@ -7577,7 +7609,7 @@ export function getDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function setDisabled(self: bigint, value: boolean): void {
-  const obj = getStyleSheet(self);
+  const obj = lookupStyleSheet(self);
   obj.disabled = value;
 }
 
@@ -7592,8 +7624,8 @@ export type CssStyleSheetHandle = bigint;
 const _cssStyleSheethandles = new Map<bigint, CSSStyleSheet>();
 let _nextCSSStyleSheet = 1n;
 
-/** Get a CSSStyleSheet by handle, throwing if not found. */
-function getCSSStyleSheet(handle: bigint): CSSStyleSheet {
+/** Lookup a CSSStyleSheet by handle, throwing if not found. */
+function lookupCSSStyleSheet(handle: bigint): CSSStyleSheet {
   const obj = _cssStyleSheethandles.get(handle);
   if (!obj) {
     throw new Error(`CSSStyleSheet handle ${handle} not found`);
@@ -7604,7 +7636,7 @@ function getCSSStyleSheet(handle: bigint): CSSStyleSheet {
  * `get-owner-rule()` operation.
  */
 export function getOwnerRule(self: bigint): bigint | undefined {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   const result = obj.ownerRule;
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, result);
@@ -7615,7 +7647,7 @@ export function getOwnerRule(self: bigint): bigint | undefined {
  * `get-css-rules()` operation.
  */
 export function CssStyleSheetGetCssRules(self: bigint): bigint {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   const result = obj.cssRules;
   const handle = _nextCssRuleList++;
   _cssRuleListHandles.set(handle, result);
@@ -7626,7 +7658,7 @@ export function CssStyleSheetGetCssRules(self: bigint): bigint {
  * `insert-rule()` operation.
  */
 export function CssStyleSheetInsertRule(self: bigint, rule: string, index: number | undefined): bigint {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   const result = obj.insertRule(rule, index);
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7637,7 +7669,7 @@ export function CssStyleSheetInsertRule(self: bigint, rule: string, index: numbe
  * `delete-rule()` operation.
  */
 export function CssStyleSheetDeleteRule(self: bigint, index: number): void {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   obj.deleteRule(index);
 }
 
@@ -7648,7 +7680,7 @@ export function CssStyleSheetDeleteRule(self: bigint, index: number): void {
  */
 export function replace(self: bigint, text: string): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   const promise = obj.replace(text)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
@@ -7683,7 +7715,7 @@ export function pollReplace(requestId: bigint): { ok: true } | { ok: false; erro
  * `replace-sync()` operation.
  */
 export function replaceSync(self: bigint, text: string): void {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   obj.replaceSync(text);
 }
 
@@ -7691,7 +7723,7 @@ export function replaceSync(self: bigint, text: string): void {
  * `get-rules()` operation.
  */
 export function getRules(self: bigint): bigint {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   return obj.rules;
 }
 
@@ -7699,7 +7731,7 @@ export function getRules(self: bigint): bigint {
  * `add-rule()` operation.
  */
 export function addRule(self: bigint, selector: string | undefined, style: string | undefined, index: number | undefined): bigint {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   const result = obj.addRule(selector, style, index);
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -7710,7 +7742,7 @@ export function addRule(self: bigint, selector: string | undefined, style: strin
  * `remove-rule()` operation.
  */
 export function removeRule(self: bigint, index: number | undefined): void {
-  const obj = getCSSStyleSheet(self);
+  const obj = lookupCSSStyleSheet(self);
   obj.removeRule(index);
 }
 
@@ -7721,23 +7753,11 @@ export function removeRule(self: bigint, index: number | undefined): void {
 /** Type alias */
 export type StyleSheetListHandle = bigint;
 
-/** Handle table for StyleSheetList instances */
-const _styleSheetListhandles = new Map<bigint, StyleSheetList>();
-let _nextStyleSheetList = 1n;
-
-/** Get a StyleSheetList by handle, throwing if not found. */
-function getStyleSheetList(handle: bigint): StyleSheetList {
-  const obj = _styleSheetListhandles.get(handle);
-  if (!obj) {
-    throw new Error(`StyleSheetList handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `item()` operation.
  */
 export function StyleSheetListItem(self: bigint, index: number): bigint | undefined {
-  const obj = getStyleSheetList(self);
+  const obj = lookupStyleSheetList(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -7745,7 +7765,7 @@ export function StyleSheetListItem(self: bigint, index: number): bigint | undefi
  * `get-length()` operation.
  */
 export function StyleSheetListGetLength(self: bigint): number {
-  const obj = getStyleSheetList(self);
+  const obj = lookupStyleSheetList(self);
   return obj.length;
 }
 
@@ -7760,8 +7780,8 @@ export type DocumentOrShadowRootHandle = bigint;
 const _documentOrShadowRoothandles = new Map<bigint, DocumentOrShadowRoot>();
 let _nextDocumentOrShadowRoot = 1n;
 
-/** Get a DocumentOrShadowRoot by handle, throwing if not found. */
-function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
+/** Lookup a DocumentOrShadowRoot by handle, throwing if not found. */
+function lookupDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
   const obj = _documentOrShadowRoothandles.get(handle);
   if (!obj) {
     throw new Error(`DocumentOrShadowRoot handle ${handle} not found`);
@@ -7772,7 +7792,7 @@ function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
  * `get-style-sheets()` operation.
  */
 export function getStyleSheets(self: bigint): bigint {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   const result = obj.styleSheets;
   const handle = _nextStyleSheetList++;
   _styleSheetListHandles.set(handle, result);
@@ -7783,7 +7803,7 @@ export function getStyleSheets(self: bigint): bigint {
  * `get-adopted-style-sheets()` operation.
  */
 export function getAdoptedStyleSheets(self: bigint): bigint {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   const result = obj.adoptedStyleSheets;
   const handle = _nextCssStyleSheetList++;
   _cssStyleSheetListHandles.set(handle, result);
@@ -7794,7 +7814,7 @@ export function getAdoptedStyleSheets(self: bigint): bigint {
  * `set-adopted-style-sheets()` operation.
  */
 export function setAdoptedStyleSheets(self: bigint, value: (bigint)[]): void {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   obj.adoptedStyleSheets = value;
 }
 
@@ -7802,7 +7822,7 @@ export function setAdoptedStyleSheets(self: bigint, value: (bigint)[]): void {
  * `get-custom-element-registry()` operation.
  */
 export function DocumentOrShadowRootGetCustomElementRegistry(self: bigint): bigint | undefined {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   return (obj as any).customElementRegistry ?? undefined;
 }
 
@@ -7810,7 +7830,7 @@ export function DocumentOrShadowRootGetCustomElementRegistry(self: bigint): bigi
  * `get-fullscreen-element()` operation.
  */
 export function getFullscreenElement(self: bigint): bigint | undefined {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   return obj.fullscreenElement ?? undefined;
 }
 
@@ -7818,7 +7838,7 @@ export function getFullscreenElement(self: bigint): bigint | undefined {
  * `get-active-element()` operation.
  */
 export function getActiveElement(self: bigint): bigint | undefined {
-  const obj = getDocumentOrShadowRoot(self);
+  const obj = lookupDocumentOrShadowRoot(self);
   const result = obj.activeElement;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -7836,8 +7856,8 @@ export type LinkStyleHandle = bigint;
 const _linkStylehandles = new Map<bigint, LinkStyle>();
 let _nextLinkStyle = 1n;
 
-/** Get a LinkStyle by handle, throwing if not found. */
-function getLinkStyle(handle: bigint): LinkStyle {
+/** Lookup a LinkStyle by handle, throwing if not found. */
+function lookupLinkStyle(handle: bigint): LinkStyle {
   const obj = _linkStylehandles.get(handle);
   if (!obj) {
     throw new Error(`LinkStyle handle ${handle} not found`);
@@ -7848,7 +7868,7 @@ function getLinkStyle(handle: bigint): LinkStyle {
  * `get-sheet()` operation.
  */
 export function getSheet(self: bigint): bigint | undefined {
-  const obj = getLinkStyle(self);
+  const obj = lookupLinkStyle(self);
   const result = obj.sheet;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, result);
@@ -7866,8 +7886,8 @@ export type CssRuleListHandle = bigint;
 const _cssRuleListhandles = new Map<bigint, CSSRuleList>();
 let _nextCSSRuleList = 1n;
 
-/** Get a CSSRuleList by handle, throwing if not found. */
-function getCSSRuleList(handle: bigint): CSSRuleList {
+/** Lookup a CSSRuleList by handle, throwing if not found. */
+function lookupCSSRuleList(handle: bigint): CSSRuleList {
   const obj = _cssRuleListhandles.get(handle);
   if (!obj) {
     throw new Error(`CSSRuleList handle ${handle} not found`);
@@ -7878,7 +7898,7 @@ function getCSSRuleList(handle: bigint): CSSRuleList {
  * `item()` operation.
  */
 export function CssRuleListItem(self: bigint, index: number): bigint | undefined {
-  const obj = getCSSRuleList(self);
+  const obj = lookupCSSRuleList(self);
   const result = obj.item(index);
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, result);
@@ -7889,7 +7909,7 @@ export function CssRuleListItem(self: bigint, index: number): bigint | undefined
  * `get-length()` operation.
  */
 export function CssRuleListGetLength(self: bigint): number {
-  const obj = getCSSRuleList(self);
+  const obj = lookupCSSRuleList(self);
   return obj.length;
 }
 
@@ -7904,8 +7924,8 @@ export type CssStyleRuleHandle = bigint;
 const _cssStyleRulehandles = new Map<bigint, CSSStyleRule>();
 let _nextCSSStyleRule = 1n;
 
-/** Get a CSSStyleRule by handle, throwing if not found. */
-function getCSSStyleRule(handle: bigint): CSSStyleRule {
+/** Lookup a CSSStyleRule by handle, throwing if not found. */
+function lookupCSSStyleRule(handle: bigint): CSSStyleRule {
   const obj = _cssStyleRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSStyleRule handle ${handle} not found`);
@@ -7916,7 +7936,7 @@ function getCSSStyleRule(handle: bigint): CSSStyleRule {
  * `get-selector-text()` operation.
  */
 export function CssStyleRuleGetSelectorText(self: bigint): string {
-  const obj = getCSSStyleRule(self);
+  const obj = lookupCSSStyleRule(self);
   return obj.selectorText;
 }
 
@@ -7924,7 +7944,7 @@ export function CssStyleRuleGetSelectorText(self: bigint): string {
  * `set-selector-text()` operation.
  */
 export function CssStyleRuleSetSelectorText(self: bigint, value: string): void {
-  const obj = getCSSStyleRule(self);
+  const obj = lookupCSSStyleRule(self);
   obj.selectorText = value;
 }
 
@@ -7932,7 +7952,7 @@ export function CssStyleRuleSetSelectorText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssStyleRuleGetStyle(self: bigint): bigint {
-  const obj = getCSSStyleRule(self);
+  const obj = lookupCSSStyleRule(self);
   const result = obj.style;
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
@@ -7950,8 +7970,8 @@ export type CssImportRuleHandle = bigint;
 const _cssImportRulehandles = new Map<bigint, CSSImportRule>();
 let _nextCSSImportRule = 1n;
 
-/** Get a CSSImportRule by handle, throwing if not found. */
-function getCSSImportRule(handle: bigint): CSSImportRule {
+/** Lookup a CSSImportRule by handle, throwing if not found. */
+function lookupCSSImportRule(handle: bigint): CSSImportRule {
   const obj = _cssImportRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSImportRule handle ${handle} not found`);
@@ -7962,7 +7982,7 @@ function getCSSImportRule(handle: bigint): CSSImportRule {
  * `get-href()` operation.
  */
 export function CssImportRuleGetHref(self: bigint): string {
-  const obj = getCSSImportRule(self);
+  const obj = lookupCSSImportRule(self);
   return obj.href;
 }
 
@@ -7970,7 +7990,7 @@ export function CssImportRuleGetHref(self: bigint): string {
  * `get-media()` operation.
  */
 export function CssImportRuleGetMedia(self: bigint): bigint {
-  const obj = getCSSImportRule(self);
+  const obj = lookupCSSImportRule(self);
   const result = obj.media;
   const handle = _nextMediaList++;
   _mediaListHandles.set(handle, result);
@@ -7980,8 +8000,8 @@ export function CssImportRuleGetMedia(self: bigint): bigint {
 /**
  * `get-style-sheet()` operation.
  */
-export function CssImportRuleGetStyleSheet(self: bigint): bigint | undefined {
-  const obj = getCSSImportRule(self);
+export function getStyleSheet(self: bigint): bigint | undefined {
+  const obj = lookupCSSImportRule(self);
   const result = obj.styleSheet;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, result);
@@ -7992,7 +8012,7 @@ export function CssImportRuleGetStyleSheet(self: bigint): bigint | undefined {
  * `get-layer-name()` operation.
  */
 export function getLayerName(self: bigint): string | undefined {
-  const obj = getCSSImportRule(self);
+  const obj = lookupCSSImportRule(self);
   return obj.layerName ?? undefined;
 }
 
@@ -8000,7 +8020,7 @@ export function getLayerName(self: bigint): string | undefined {
  * `get-supports-text()` operation.
  */
 export function getSupportsText(self: bigint): string | undefined {
-  const obj = getCSSImportRule(self);
+  const obj = lookupCSSImportRule(self);
   return obj.supportsText ?? undefined;
 }
 
@@ -8015,8 +8035,8 @@ export type CssGroupingRuleHandle = bigint;
 const _cssGroupingRulehandles = new Map<bigint, CSSGroupingRule>();
 let _nextCSSGroupingRule = 1n;
 
-/** Get a CSSGroupingRule by handle, throwing if not found. */
-function getCSSGroupingRule(handle: bigint): CSSGroupingRule {
+/** Lookup a CSSGroupingRule by handle, throwing if not found. */
+function lookupCSSGroupingRule(handle: bigint): CSSGroupingRule {
   const obj = _cssGroupingRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSGroupingRule handle ${handle} not found`);
@@ -8027,7 +8047,7 @@ function getCSSGroupingRule(handle: bigint): CSSGroupingRule {
  * `get-css-rules()` operation.
  */
 export function CssGroupingRuleGetCssRules(self: bigint): bigint {
-  const obj = getCSSGroupingRule(self);
+  const obj = lookupCSSGroupingRule(self);
   const result = obj.cssRules;
   const handle = _nextCssRuleList++;
   _cssRuleListHandles.set(handle, result);
@@ -8038,7 +8058,7 @@ export function CssGroupingRuleGetCssRules(self: bigint): bigint {
  * `insert-rule()` operation.
  */
 export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: number | undefined): bigint {
-  const obj = getCSSGroupingRule(self);
+  const obj = lookupCSSGroupingRule(self);
   const result = obj.insertRule(rule, index);
   const handle = _nextNumber++;
   _numberHandles.set(handle, result);
@@ -8049,7 +8069,7 @@ export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: num
  * `delete-rule()` operation.
  */
 export function CssGroupingRuleDeleteRule(self: bigint, index: number): void {
-  const obj = getCSSGroupingRule(self);
+  const obj = lookupCSSGroupingRule(self);
   obj.deleteRule(index);
 }
 
@@ -8064,8 +8084,8 @@ export type CssPageDescriptorsHandle = bigint;
 const _cssPageDescriptorshandles = new Map<bigint, CSSPageDescriptors>();
 let _nextCSSPageDescriptors = 1n;
 
-/** Get a CSSPageDescriptors by handle, throwing if not found. */
-function getCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
+/** Lookup a CSSPageDescriptors by handle, throwing if not found. */
+function lookupCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
   const obj = _cssPageDescriptorshandles.get(handle);
   if (!obj) {
     throw new Error(`CSSPageDescriptors handle ${handle} not found`);
@@ -8076,7 +8096,7 @@ function getCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
  * `get-margin()` operation.
  */
 export function getMargin(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.margin;
 }
 
@@ -8084,7 +8104,7 @@ export function getMargin(self: bigint): string {
  * `set-margin()` operation.
  */
 export function setMargin(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.margin = value;
 }
 
@@ -8092,7 +8112,7 @@ export function setMargin(self: bigint, value: string): void {
  * `get-margin-top()` operation.
  */
 export function getMarginTop(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.marginTop;
 }
 
@@ -8100,7 +8120,7 @@ export function getMarginTop(self: bigint): string {
  * `set-margin-top()` operation.
  */
 export function setMarginTop(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.marginTop = value;
 }
 
@@ -8108,7 +8128,7 @@ export function setMarginTop(self: bigint, value: string): void {
  * `get-margin-right()` operation.
  */
 export function getMarginRight(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.marginRight;
 }
 
@@ -8116,7 +8136,7 @@ export function getMarginRight(self: bigint): string {
  * `set-margin-right()` operation.
  */
 export function setMarginRight(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.marginRight = value;
 }
 
@@ -8124,7 +8144,7 @@ export function setMarginRight(self: bigint, value: string): void {
  * `get-margin-bottom()` operation.
  */
 export function getMarginBottom(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.marginBottom;
 }
 
@@ -8132,7 +8152,7 @@ export function getMarginBottom(self: bigint): string {
  * `set-margin-bottom()` operation.
  */
 export function setMarginBottom(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.marginBottom = value;
 }
 
@@ -8140,7 +8160,7 @@ export function setMarginBottom(self: bigint, value: string): void {
  * `get-margin-left()` operation.
  */
 export function getMarginLeft(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.marginLeft;
 }
 
@@ -8148,7 +8168,7 @@ export function getMarginLeft(self: bigint): string {
  * `set-margin-left()` operation.
  */
 export function setMarginLeft(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.marginLeft = value;
 }
 
@@ -8156,7 +8176,7 @@ export function setMarginLeft(self: bigint, value: string): void {
  * `get-size()` operation.
  */
 export function getSize(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.size;
 }
 
@@ -8164,7 +8184,7 @@ export function getSize(self: bigint): string {
  * `set-size()` operation.
  */
 export function setSize(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.size = value;
 }
 
@@ -8172,7 +8192,7 @@ export function setSize(self: bigint, value: string): void {
  * `get-page-orientation()` operation.
  */
 export function getPageOrientation(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.pageOrientation;
 }
 
@@ -8180,7 +8200,7 @@ export function getPageOrientation(self: bigint): string {
  * `set-page-orientation()` operation.
  */
 export function setPageOrientation(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.pageOrientation = value;
 }
 
@@ -8188,7 +8208,7 @@ export function setPageOrientation(self: bigint, value: string): void {
  * `get-marks()` operation.
  */
 export function getMarks(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.marks;
 }
 
@@ -8196,7 +8216,7 @@ export function getMarks(self: bigint): string {
  * `set-marks()` operation.
  */
 export function setMarks(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.marks = value;
 }
 
@@ -8204,7 +8224,7 @@ export function setMarks(self: bigint, value: string): void {
  * `get-bleed()` operation.
  */
 export function getBleed(self: bigint): string {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   return obj.bleed;
 }
 
@@ -8212,7 +8232,7 @@ export function getBleed(self: bigint): string {
  * `set-bleed()` operation.
  */
 export function setBleed(self: bigint, value: string): void {
-  const obj = getCSSPageDescriptors(self);
+  const obj = lookupCSSPageDescriptors(self);
   obj.bleed = value;
 }
 
@@ -8227,8 +8247,8 @@ export type CssPageRuleHandle = bigint;
 const _cssPageRulehandles = new Map<bigint, CSSPageRule>();
 let _nextCSSPageRule = 1n;
 
-/** Get a CSSPageRule by handle, throwing if not found. */
-function getCSSPageRule(handle: bigint): CSSPageRule {
+/** Lookup a CSSPageRule by handle, throwing if not found. */
+function lookupCSSPageRule(handle: bigint): CSSPageRule {
   const obj = _cssPageRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSPageRule handle ${handle} not found`);
@@ -8239,7 +8259,7 @@ function getCSSPageRule(handle: bigint): CSSPageRule {
  * `get-selector-text()` operation.
  */
 export function CssPageRuleGetSelectorText(self: bigint): string {
-  const obj = getCSSPageRule(self);
+  const obj = lookupCSSPageRule(self);
   return obj.selectorText;
 }
 
@@ -8247,7 +8267,7 @@ export function CssPageRuleGetSelectorText(self: bigint): string {
  * `set-selector-text()` operation.
  */
 export function CssPageRuleSetSelectorText(self: bigint, value: string): void {
-  const obj = getCSSPageRule(self);
+  const obj = lookupCSSPageRule(self);
   obj.selectorText = value;
 }
 
@@ -8255,7 +8275,7 @@ export function CssPageRuleSetSelectorText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssPageRuleGetStyle(self: bigint): bigint {
-  const obj = getCSSPageRule(self);
+  const obj = lookupCSSPageRule(self);
   const result = obj.style;
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
@@ -8273,8 +8293,8 @@ export type CssMarginRuleHandle = bigint;
 const _cssMarginRulehandles = new Map<bigint, CSSMarginRule>();
 let _nextCSSMarginRule = 1n;
 
-/** Get a CSSMarginRule by handle, throwing if not found. */
-function getCSSMarginRule(handle: bigint): CSSMarginRule {
+/** Lookup a CSSMarginRule by handle, throwing if not found. */
+function lookupCSSMarginRule(handle: bigint): CSSMarginRule {
   const obj = _cssMarginRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSMarginRule handle ${handle} not found`);
@@ -8285,7 +8305,7 @@ function getCSSMarginRule(handle: bigint): CSSMarginRule {
  * `get-name()` operation.
  */
 export function CssMarginRuleGetName(self: bigint): string {
-  const obj = getCSSMarginRule(self);
+  const obj = lookupCSSMarginRule(self);
   return (obj as any).name;
 }
 
@@ -8293,7 +8313,7 @@ export function CssMarginRuleGetName(self: bigint): string {
  * `get-style()` operation.
  */
 export function CssMarginRuleGetStyle(self: bigint): bigint {
-  const obj = getCSSMarginRule(self);
+  const obj = lookupCSSMarginRule(self);
   const result = (obj as any).style;
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
@@ -8311,8 +8331,8 @@ export type CssNamespaceRuleHandle = bigint;
 const _cssNamespaceRulehandles = new Map<bigint, CSSNamespaceRule>();
 let _nextCSSNamespaceRule = 1n;
 
-/** Get a CSSNamespaceRule by handle, throwing if not found. */
-function getCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
+/** Lookup a CSSNamespaceRule by handle, throwing if not found. */
+function lookupCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
   const obj = _cssNamespaceRulehandles.get(handle);
   if (!obj) {
     throw new Error(`CSSNamespaceRule handle ${handle} not found`);
@@ -8323,7 +8343,7 @@ function getCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
  * `get-namespace-uri()` operation.
  */
 export function CssNamespaceRuleGetNamespaceUri(self: bigint): string {
-  const obj = getCSSNamespaceRule(self);
+  const obj = lookupCSSNamespaceRule(self);
   return obj.namespaceURI;
 }
 
@@ -8331,7 +8351,7 @@ export function CssNamespaceRuleGetNamespaceUri(self: bigint): string {
  * `get-prefix()` operation.
  */
 export function CssNamespaceRuleGetPrefix(self: bigint): string {
-  const obj = getCSSNamespaceRule(self);
+  const obj = lookupCSSNamespaceRule(self);
   return obj.prefix;
 }
 
@@ -8346,8 +8366,8 @@ export type CssStyleDeclarationHandle = bigint;
 const _cssStyleDeclarationhandles = new Map<bigint, CSSStyleDeclaration>();
 let _nextCSSStyleDeclaration = 1n;
 
-/** Get a CSSStyleDeclaration by handle, throwing if not found. */
-function getCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
+/** Lookup a CSSStyleDeclaration by handle, throwing if not found. */
+function lookupCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   const obj = _cssStyleDeclarationhandles.get(handle);
   if (!obj) {
     throw new Error(`CSSStyleDeclaration handle ${handle} not found`);
@@ -8358,7 +8378,7 @@ function getCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
  * `get-css-text()` operation.
  */
 export function CssStyleDeclarationGetCssText(self: bigint): string {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   return obj.cssText;
 }
 
@@ -8366,7 +8386,7 @@ export function CssStyleDeclarationGetCssText(self: bigint): string {
  * `set-css-text()` operation.
  */
 export function CssStyleDeclarationSetCssText(self: bigint, value: string): void {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   obj.cssText = value;
 }
 
@@ -8374,7 +8394,7 @@ export function CssStyleDeclarationSetCssText(self: bigint, value: string): void
  * `get-length()` operation.
  */
 export function CssStyleDeclarationGetLength(self: bigint): number {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   return obj.length;
 }
 
@@ -8382,7 +8402,7 @@ export function CssStyleDeclarationGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function CssStyleDeclarationItem(self: bigint, index: number): bigint {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   const result = obj.item(index);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -8393,7 +8413,7 @@ export function CssStyleDeclarationItem(self: bigint, index: number): bigint {
  * `get-property-value()` operation.
  */
 export function getPropertyValue(self: bigint, property: string): bigint {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   const result = obj.getPropertyValue(property);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -8404,7 +8424,7 @@ export function getPropertyValue(self: bigint, property: string): bigint {
  * `get-property-priority()` operation.
  */
 export function getPropertyPriority(self: bigint, property: string): bigint {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   const result = obj.getPropertyPriority(property);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -8415,7 +8435,7 @@ export function getPropertyPriority(self: bigint, property: string): bigint {
  * `set-property()` operation.
  */
 export function setProperty(self: bigint, property: string, value: string, priority: string | undefined): void {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   (obj as any).property = priority;
 }
 
@@ -8423,7 +8443,7 @@ export function setProperty(self: bigint, property: string, value: string, prior
  * `remove-property()` operation.
  */
 export function removeProperty(self: bigint, property: string): bigint {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   const result = obj.removeProperty(property);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -8434,7 +8454,7 @@ export function removeProperty(self: bigint, property: string): bigint {
  * `get-parent-rule()` operation.
  */
 export function CssStyleDeclarationGetParentRule(self: bigint): bigint | undefined {
-  const obj = getCSSStyleDeclaration(self);
+  const obj = lookupCSSStyleDeclaration(self);
   return obj.parentRule ?? undefined;
 }
 
@@ -8449,8 +8469,8 @@ export type CssStylePropertiesHandle = bigint;
 const _cssStylePropertieshandles = new Map<bigint, CSSStyleProperties>();
 let _nextCSSStyleProperties = 1n;
 
-/** Get a CSSStyleProperties by handle, throwing if not found. */
-function getCSSStyleProperties(handle: bigint): CSSStyleProperties {
+/** Lookup a CSSStyleProperties by handle, throwing if not found. */
+function lookupCSSStyleProperties(handle: bigint): CSSStyleProperties {
   const obj = _cssStylePropertieshandles.get(handle);
   if (!obj) {
     throw new Error(`CSSStyleProperties handle ${handle} not found`);
@@ -8461,7 +8481,7 @@ function getCSSStyleProperties(handle: bigint): CSSStyleProperties {
  * `get-css-float()` operation.
  */
 export function getCssFloat(self: bigint): string {
-  const obj = getCSSStyleProperties(self);
+  const obj = lookupCSSStyleProperties(self);
   return obj.cssFloat;
 }
 
@@ -8469,7 +8489,7 @@ export function getCssFloat(self: bigint): string {
  * `set-css-float()` operation.
  */
 export function setCssFloat(self: bigint, value: string): void {
-  const obj = getCSSStyleProperties(self);
+  const obj = lookupCSSStyleProperties(self);
   obj.cssFloat = value;
 }
 
@@ -8484,8 +8504,8 @@ export type ElementCssInlineStyleHandle = bigint;
 const _elementCssInlineStylehandles = new Map<bigint, ElementCSSInlineStyle>();
 let _nextElementCSSInlineStyle = 1n;
 
-/** Get a ElementCSSInlineStyle by handle, throwing if not found. */
-function getElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
+/** Lookup a ElementCSSInlineStyle by handle, throwing if not found. */
+function lookupElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
   const obj = _elementCssInlineStylehandles.get(handle);
   if (!obj) {
     throw new Error(`ElementCSSInlineStyle handle ${handle} not found`);
@@ -8496,7 +8516,7 @@ function getElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
  * `get-style()` operation.
  */
 export function ElementCssInlineStyleGetStyle(self: bigint): bigint {
-  const obj = getElementCSSInlineStyle(self);
+  const obj = lookupElementCSSInlineStyle(self);
   return obj.style;
 }
 
@@ -8775,8 +8795,8 @@ export default {
   TransitionEventGetElapsedTime,
   TransitionEventGetPseudoElement,
   matchMedia,
-  WindowGetScreen,
-  WindowGetVisualViewport,
+  getScreen,
+  getVisualViewport,
   moveTo,
   moveBy,
   resizeTo,
@@ -9231,7 +9251,7 @@ export default {
   CssStyleRuleGetStyle,
   CssImportRuleGetHref,
   CssImportRuleGetMedia,
-  CssImportRuleGetStyleSheet,
+  getStyleSheet,
   getLayerName,
   getSupportsText,
   CssGroupingRuleGetCssRules,

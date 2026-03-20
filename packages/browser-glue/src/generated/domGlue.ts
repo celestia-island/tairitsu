@@ -204,6 +204,14 @@ export type Exception = any;
 // Synthetic handle tables for primitive/utility types
 // ---------------------------------------------------------------------------
 
+/** Handle table for abort-signal values */
+const _abortSignalHandles = new Map<bigint, AbortSignal>();
+let _nextAbortSignal = 1n;
+
+/** Handle table for attr values */
+const _attrHandles = new Map<bigint, Attr>();
+let _nextAttr = 1n;
+
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
 let _nextDocument = 1n;
@@ -228,6 +236,10 @@ let _nextNode = 1n;
 const _nodeListHandles = new Map<bigint, NodeList>();
 let _nextNodeList = 1n;
 
+/** Handle table for number values */
+const _numberHandles = new Map<bigint, number>();
+let _nextNumber = 1n;
+
 /** Handle table for string values */
 const _stringHandles = new Map<bigint, string>();
 let _nextString = 1n;
@@ -236,8 +248,42 @@ let _nextString = 1n;
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
 
-/** Get a document value by handle. */
-function getDocument(handle: bigint): Document {
+/** Lookup a abort-signal value by handle. */
+function lookupAbortSignal(handle: bigint): AbortSignal {
+  const obj = _abortSignalHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`abort-signal handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional abort-signal value by handle. */
+function lookupOptionAbortSignal(handle: bigint | undefined): AbortSignal | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _abortSignalHandles.get(handle);
+}
+
+/** Lookup a attr value by handle. */
+function lookupAttr(handle: bigint): Attr {
+  const obj = _attrHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`attr handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional attr value by handle. */
+function lookupOptionAttr(handle: bigint | undefined): Attr | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _attrHandles.get(handle);
+}
+
+/** Lookup a document value by handle. */
+function lookupDocument(handle: bigint): Document {
   const obj = _documentHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`document handle ${handle} not found`);
@@ -245,16 +291,16 @@ function getDocument(handle: bigint): Document {
   return obj;
 }
 
-/** Get an optional document value by handle. */
-function getOptionDocument(handle: bigint | undefined): Document | undefined {
+/** Lookup an optional document value by handle. */
+function lookupOptionDocument(handle: bigint | undefined): Document | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _documentHandles.get(handle);
 }
 
-/** Get a document-type value by handle. */
-function getDocumentType(handle: bigint): DocumentType {
+/** Lookup a document-type value by handle. */
+function lookupDocumentType(handle: bigint): DocumentType {
   const obj = _documentTypeHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`document-type handle ${handle} not found`);
@@ -262,16 +308,16 @@ function getDocumentType(handle: bigint): DocumentType {
   return obj;
 }
 
-/** Get an optional document-type value by handle. */
-function getOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+/** Lookup an optional document-type value by handle. */
+function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _documentTypeHandles.get(handle);
 }
 
-/** Get a element value by handle. */
-function getElement(handle: bigint): Element {
+/** Lookup a element value by handle. */
+function lookupElement(handle: bigint): Element {
   const obj = _elementHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`element handle ${handle} not found`);
@@ -279,16 +325,16 @@ function getElement(handle: bigint): Element {
   return obj;
 }
 
-/** Get an optional element value by handle. */
-function getOptionElement(handle: bigint | undefined): Element | undefined {
+/** Lookup an optional element value by handle. */
+function lookupOptionElement(handle: bigint | undefined): Element | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _elementHandles.get(handle);
 }
 
-/** Get a event-target value by handle. */
-function getEventTarget(handle: bigint): EventTarget {
+/** Lookup a event-target value by handle. */
+function lookupEventTarget(handle: bigint): EventTarget {
   const obj = _eventTargetHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`event-target handle ${handle} not found`);
@@ -296,16 +342,16 @@ function getEventTarget(handle: bigint): EventTarget {
   return obj;
 }
 
-/** Get an optional event-target value by handle. */
-function getOptionEventTarget(handle: bigint | undefined): EventTarget | undefined {
+/** Lookup an optional event-target value by handle. */
+function lookupOptionEventTarget(handle: bigint | undefined): EventTarget | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _eventTargetHandles.get(handle);
 }
 
-/** Get a node value by handle. */
-function getNode(handle: bigint): Node {
+/** Lookup a node value by handle. */
+function lookupNode(handle: bigint): Node {
   const obj = _nodeHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`node handle ${handle} not found`);
@@ -313,16 +359,16 @@ function getNode(handle: bigint): Node {
   return obj;
 }
 
-/** Get an optional node value by handle. */
-function getOptionNode(handle: bigint | undefined): Node | undefined {
+/** Lookup an optional node value by handle. */
+function lookupOptionNode(handle: bigint | undefined): Node | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _nodeHandles.get(handle);
 }
 
-/** Get a node-list value by handle. */
-function getNodeList(handle: bigint): NodeList {
+/** Lookup a node-list value by handle. */
+function lookupNodeList(handle: bigint): NodeList {
   const obj = _nodeListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`node-list handle ${handle} not found`);
@@ -330,16 +376,33 @@ function getNodeList(handle: bigint): NodeList {
   return obj;
 }
 
-/** Get an optional node-list value by handle. */
-function getOptionNodeList(handle: bigint | undefined): NodeList | undefined {
+/** Lookup an optional node-list value by handle. */
+function lookupOptionNodeList(handle: bigint | undefined): NodeList | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
   return _nodeListHandles.get(handle);
 }
 
-/** Get a string value by handle. */
-function getString(handle: bigint): string {
+/** Lookup a number value by handle. */
+function lookupNumber(handle: bigint): number {
+  const obj = _numberHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`number handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Lookup an optional number value by handle. */
+function lookupOptionNumber(handle: bigint | undefined): number | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _numberHandles.get(handle);
+}
+
+/** Lookup a string value by handle. */
+function lookupString(handle: bigint): string {
   const obj = _stringHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`string handle ${handle} not found`);
@@ -347,8 +410,8 @@ function getString(handle: bigint): string {
   return obj;
 }
 
-/** Get an optional string value by handle. */
-function getOptionString(handle: bigint | undefined): string | undefined {
+/** Lookup an optional string value by handle. */
+function lookupOptionString(handle: bigint | undefined): string | undefined {
   if (handle === undefined || handle === 0n) {
     return undefined;
   }
@@ -366,8 +429,8 @@ export type EventHandle = bigint;
 const _eventHandles = new Map<bigint, Event>();
 let _nextEvent = 1n;
 
-/** Get a Event by handle, throwing if not found. */
-function getEvent(handle: bigint): Event {
+/** Lookup a Event by handle, throwing if not found. */
+function lookupEvent(handle: bigint): Event {
   const obj = _eventHandles.get(handle);
   if (!obj) {
     throw new Error(`Event handle ${handle} not found`);
@@ -378,7 +441,7 @@ function getEvent(handle: bigint): Event {
  * `get-type()` operation.
  */
 export function EventGetType(self: bigint): string {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.type;
 }
 
@@ -386,7 +449,7 @@ export function EventGetType(self: bigint): string {
  * `get-target()` operation.
  */
 export function EventGetTarget(self: bigint): bigint | undefined {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   const result = obj.target;
   const handle = _nextEventTarget++;
   _eventTargetHandles.set(handle, result);
@@ -397,7 +460,7 @@ export function EventGetTarget(self: bigint): bigint | undefined {
  * `get-src-element()` operation.
  */
 export function getSrcElement(self: bigint): bigint | undefined {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   const result = obj.srcElement;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -408,7 +471,7 @@ export function getSrcElement(self: bigint): bigint | undefined {
  * `get-current-target()` operation.
  */
 export function getCurrentTarget(self: bigint): bigint | undefined {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   const result = obj.currentTarget;
   const handle = _nextEventTarget++;
   _eventTargetHandles.set(handle, result);
@@ -419,7 +482,7 @@ export function getCurrentTarget(self: bigint): bigint | undefined {
  * `composed-path()` operation.
  */
 export function composedPath(self: bigint): (bigint)[] {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.composedPath();
 }
 
@@ -427,7 +490,7 @@ export function composedPath(self: bigint): (bigint)[] {
  * `get-event-phase()` operation.
  */
 export function getEventPhase(self: bigint): number {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.eventPhase;
 }
 
@@ -435,7 +498,7 @@ export function getEventPhase(self: bigint): number {
  * `stop-propagation()` operation.
  */
 export function stopPropagation(self: bigint): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.stopPropagation();
 }
 
@@ -443,7 +506,7 @@ export function stopPropagation(self: bigint): void {
  * `get-cancel-bubble()` operation.
  */
 export function getCancelBubble(self: bigint): bigint {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.cancelBubble ? 1n : 0n;
 }
 
@@ -451,7 +514,7 @@ export function getCancelBubble(self: bigint): bigint {
  * `set-cancel-bubble()` operation.
  */
 export function setCancelBubble(self: bigint, value: boolean): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.cancelBubble = value;
 }
 
@@ -459,7 +522,7 @@ export function setCancelBubble(self: bigint, value: boolean): void {
  * `stop-immediate-propagation()` operation.
  */
 export function stopImmediatePropagation(self: bigint): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.stopImmediatePropagation();
 }
 
@@ -467,7 +530,7 @@ export function stopImmediatePropagation(self: bigint): void {
  * `get-bubbles()` operation.
  */
 export function getBubbles(self: bigint): bigint {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.bubbles ? 1n : 0n;
 }
 
@@ -475,7 +538,7 @@ export function getBubbles(self: bigint): bigint {
  * `get-cancelable()` operation.
  */
 export function getCancelable(self: bigint): boolean {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.cancelable;
 }
 
@@ -483,7 +546,7 @@ export function getCancelable(self: bigint): boolean {
  * `get-return-value()` operation.
  */
 export function getReturnValue(self: bigint): bigint {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.returnValue ? 1n : 0n;
 }
 
@@ -491,7 +554,7 @@ export function getReturnValue(self: bigint): bigint {
  * `set-return-value()` operation.
  */
 export function setReturnValue(self: bigint, value: boolean): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.returnValue = value;
 }
 
@@ -499,7 +562,7 @@ export function setReturnValue(self: bigint, value: boolean): void {
  * `prevent-default()` operation.
  */
 export function preventDefault(self: bigint): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.preventDefault();
 }
 
@@ -507,7 +570,7 @@ export function preventDefault(self: bigint): void {
  * `get-default-prevented()` operation.
  */
 export function getDefaultPrevented(self: bigint): boolean {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.defaultPrevented;
 }
 
@@ -515,7 +578,7 @@ export function getDefaultPrevented(self: bigint): boolean {
  * `get-composed()` operation.
  */
 export function getComposed(self: bigint): bigint {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.composed ? 1n : 0n;
 }
 
@@ -523,7 +586,7 @@ export function getComposed(self: bigint): bigint {
  * `get-is-trusted()` operation.
  */
 export function getIsTrusted(self: bigint): bigint {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.isTrusted ? 1n : 0n;
 }
 
@@ -531,7 +594,7 @@ export function getIsTrusted(self: bigint): bigint {
  * `get-time-stamp()` operation.
  */
 export function getTimeStamp(self: bigint): number {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   return obj.timeStamp;
 }
 
@@ -539,7 +602,7 @@ export function getTimeStamp(self: bigint): number {
  * `init-event()` operation.
  */
 export function initEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined): void {
-  const obj = getEvent(self);
+  const obj = lookupEvent(self);
   obj.initEvent(type, bubbles, cancelable);
 }
 
@@ -554,8 +617,8 @@ export type CustomEventHandle = bigint;
 const _customEventhandles = new Map<bigint, CustomEvent>();
 let _nextCustomEvent = 1n;
 
-/** Get a CustomEvent by handle, throwing if not found. */
-function getCustomEvent(handle: bigint): CustomEvent {
+/** Lookup a CustomEvent by handle, throwing if not found. */
+function lookupCustomEvent(handle: bigint): CustomEvent {
   const obj = _customEventhandles.get(handle);
   if (!obj) {
     throw new Error(`CustomEvent handle ${handle} not found`);
@@ -566,7 +629,7 @@ function getCustomEvent(handle: bigint): CustomEvent {
  * `get-detail()` operation.
  */
 export function getDetail(self: bigint): string {
-  const obj = getCustomEvent(self);
+  const obj = lookupCustomEvent(self);
   return obj.detail;
 }
 
@@ -574,7 +637,7 @@ export function getDetail(self: bigint): string {
  * `init-custom-event()` operation.
  */
 export function initCustomEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, detail: string | undefined): void {
-  const obj = getCustomEvent(self);
+  const obj = lookupCustomEvent(self);
   obj.initCustomEvent(type, bubbles, cancelable, detail);
 }
 
@@ -585,23 +648,11 @@ export function initCustomEvent(self: bigint, type: string, bubbles: boolean | u
 /** Type alias */
 export type EventTargetHandle = bigint;
 
-/** Handle table for EventTarget instances */
-const _eventTargethandles = new Map<bigint, EventTarget>();
-let _nextEventTarget = 1n;
-
-/** Get a EventTarget by handle, throwing if not found. */
-function getEventTarget(handle: bigint): EventTarget {
-  const obj = _eventTargethandles.get(handle);
-  if (!obj) {
-    throw new Error(`EventTarget handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `add-event-listener()` operation.
  */
 export function addEventListener(self: bigint, type: string, callback: bigint | undefined, options: bigint | undefined): void {
-  const obj = getEventTarget(self);
+  const obj = lookupEventTarget(self);
   obj.addEventListener(type, callback, options);
 }
 
@@ -609,7 +660,7 @@ export function addEventListener(self: bigint, type: string, callback: bigint | 
  * `remove-event-listener()` operation.
  */
 export function removeEventListener(self: bigint, type: string, callback: bigint | undefined, options: bigint | undefined): void {
-  const obj = getEventTarget(self);
+  const obj = lookupEventTarget(self);
   obj.removeEventListener(type, callback, options);
 }
 
@@ -617,7 +668,7 @@ export function removeEventListener(self: bigint, type: string, callback: bigint
  * `dispatch-event()` operation.
  */
 export function dispatchEvent(self: bigint, event: bigint): boolean {
-  const obj = getEventTarget(self);
+  const obj = lookupEventTarget(self);
   return obj.dispatchEvent(event);
 }
 
@@ -632,8 +683,8 @@ export type EventListenerHandle = bigint;
 const _eventListenerhandles = new Map<bigint, EventListener>();
 let _nextEventListener = 1n;
 
-/** Get a EventListener by handle, throwing if not found. */
-function getEventListener(handle: bigint): EventListener {
+/** Lookup a EventListener by handle, throwing if not found. */
+function lookupEventListener(handle: bigint): EventListener {
   const obj = _eventListenerhandles.get(handle);
   if (!obj) {
     throw new Error(`EventListener handle ${handle} not found`);
@@ -644,7 +695,7 @@ function getEventListener(handle: bigint): EventListener {
  * `handle-event()` operation.
  */
 export function handleEvent(self: bigint, event: bigint): void {
-  const obj = getEventListener(self);
+  const obj = lookupEventListener(self);
   (obj as any).handleEvent(event);
 }
 
@@ -659,8 +710,8 @@ export type AbortControllerHandle = bigint;
 const _abortControllerhandles = new Map<bigint, AbortController>();
 let _nextAbortController = 1n;
 
-/** Get a AbortController by handle, throwing if not found. */
-function getAbortController(handle: bigint): AbortController {
+/** Lookup a AbortController by handle, throwing if not found. */
+function lookupAbortController(handle: bigint): AbortController {
   const obj = _abortControllerhandles.get(handle);
   if (!obj) {
     throw new Error(`AbortController handle ${handle} not found`);
@@ -671,15 +722,18 @@ function getAbortController(handle: bigint): AbortController {
  * `get-signal()` operation.
  */
 export function getSignal(self: bigint): bigint {
-  const obj = getAbortController(self);
-  return obj.signal;
+  const obj = lookupAbortController(self);
+  const result = obj.signal;
+  const handle = _nextAbortSignal++;
+  _abortSignalHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `abort()` operation.
  */
 export function AbortControllerAbort(self: bigint, reason: string | undefined): void {
-  const obj = getAbortController(self);
+  const obj = lookupAbortController(self);
   obj.abort(reason);
 }
 
@@ -690,18 +744,6 @@ export function AbortControllerAbort(self: bigint, reason: string | undefined): 
 /** Type alias */
 export type AbortSignalHandle = bigint;
 
-/** Handle table for AbortSignal instances */
-const _abortSignalhandles = new Map<bigint, AbortSignal>();
-let _nextAbortSignal = 1n;
-
-/** Get a AbortSignal by handle, throwing if not found. */
-function getAbortSignal(handle: bigint): AbortSignal {
-  const obj = _abortSignalhandles.get(handle);
-  if (!obj) {
-    throw new Error(`AbortSignal handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `abort()` operation.
  */
@@ -727,15 +769,15 @@ export function any(signals: (bigint)[]): bigint {
  * `get-aborted()` operation.
  */
 export function getAborted(self: bigint): bigint {
-  const obj = getAbortSignal(self);
+  const obj = lookupAbortSignal(self);
   return obj.aborted ? 1n : 0n;
 }
 
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): bigint | undefined {
-  const obj = getAbortSignal(self);
+export function getReason(self: bigint): string {
+  const obj = lookupAbortSignal(self);
   return obj.reason;
 }
 
@@ -743,23 +785,23 @@ export function getReason(self: bigint): bigint | undefined {
  * `throw-if-aborted()` operation.
  */
 export function throwIfAborted(self: bigint): void {
-  const obj = getAbortSignal(self);
+  const obj = lookupAbortSignal(self);
   obj.throwIfAborted();
 }
 
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): bigint {
-  const obj = getAbortSignal(self);
+export function getOnabort(self: bigint): EventHandlerRecord {
+  const obj = lookupAbortSignal(self);
   return obj.onabort;
 }
 
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: bigint): void {
-  const obj = getAbortSignal(self);
+export function setOnabort(self: bigint, value: EventHandlerRecord): void {
+  const obj = lookupAbortSignal(self);
   obj.onabort = value;
 }
 
@@ -774,8 +816,8 @@ export type NonElementParentNodeHandle = bigint;
 const _nonElementParentNodehandles = new Map<bigint, NonElementParentNode>();
 let _nextNonElementParentNode = 1n;
 
-/** Get a NonElementParentNode by handle, throwing if not found. */
-function getNonElementParentNode(handle: bigint): NonElementParentNode {
+/** Lookup a NonElementParentNode by handle, throwing if not found. */
+function lookupNonElementParentNode(handle: bigint): NonElementParentNode {
   const obj = _nonElementParentNodehandles.get(handle);
   if (!obj) {
     throw new Error(`NonElementParentNode handle ${handle} not found`);
@@ -785,9 +827,10 @@ function getNonElementParentNode(handle: bigint): NonElementParentNode {
 /**
  * `get-element-by-id()` operation.
  */
-export function getElementById(self: bigint, elementId: bigint): bigint | undefined {
-  const obj = getNonElementParentNode(self);
-  const result = obj.getElementById;
+export function getElementById(self: bigint, elementId: string): bigint | undefined {
+  const obj = lookupNonElementParentNode(self);
+  const result = obj.getElementById(elementId);
+  if (result === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
   return handle;
@@ -804,8 +847,8 @@ export type ParentNodeHandle = bigint;
 const _parentNodehandles = new Map<bigint, ParentNode>();
 let _nextParentNode = 1n;
 
-/** Get a ParentNode by handle, throwing if not found. */
-function getParentNode(handle: bigint): ParentNode {
+/** Lookup a ParentNode by handle, throwing if not found. */
+function lookupParentNode(handle: bigint): ParentNode {
   const obj = _parentNodehandles.get(handle);
   if (!obj) {
     throw new Error(`ParentNode handle ${handle} not found`);
@@ -816,7 +859,7 @@ function getParentNode(handle: bigint): ParentNode {
  * `get-children()` operation.
  */
 export function getChildren(self: bigint): bigint {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   return obj.children;
 }
 
@@ -824,7 +867,7 @@ export function getChildren(self: bigint): bigint {
  * `get-first-element-child()` operation.
  */
 export function getFirstElementChild(self: bigint): bigint | undefined {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   return obj.firstElementChild ?? undefined;
 }
 
@@ -832,39 +875,42 @@ export function getFirstElementChild(self: bigint): bigint | undefined {
  * `get-last-element-child()` operation.
  */
 export function getLastElementChild(self: bigint): bigint | undefined {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   return obj.lastElementChild ?? undefined;
 }
 
 /**
  * `get-child-element-count()` operation.
  */
-export function getChildElementCount(self: bigint): bigint | undefined {
-  const obj = getParentNode(self);
-  return obj.childElementCount;
+export function getChildElementCount(self: bigint): bigint {
+  const obj = lookupParentNode(self);
+  const result = obj.childElementCount;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `prepend()` operation.
  */
 export function prepend(self: bigint, nodes: (bigint)[]): void {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   obj.prepend(nodes);
 }
 
 /**
  * `append()` operation.
  */
-export function append(self: bigint, nodes: bigint | undefined): void {
-  const obj = getParentNode(self);
+export function append(self: bigint, nodes: (bigint)[]): void {
+  const obj = lookupParentNode(self);
   obj.append(nodes);
 }
 
 /**
  * `replace-children()` operation.
  */
-export function replaceChildren(self: bigint, nodes: bigint): void {
-  const obj = getParentNode(self);
+export function replaceChildren(self: bigint, nodes: (bigint)[]): void {
+  const obj = lookupParentNode(self);
   obj.replaceChildren(nodes);
 }
 
@@ -872,15 +918,15 @@ export function replaceChildren(self: bigint, nodes: bigint): void {
  * `move-before()` operation.
  */
 export function moveBefore(self: bigint, node: bigint, child: bigint | undefined): void {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   (obj as any).moveBefore(node, child);
 }
 
 /**
  * `query-selector()` operation.
  */
-export function querySelector(self: bigint, selectors: bigint): bigint | undefined {
-  const obj = getParentNode(self);
+export function querySelector(self: bigint, selectors: string): bigint | undefined {
+  const obj = lookupParentNode(self);
   const result = obj.querySelector(selectors);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -891,7 +937,7 @@ export function querySelector(self: bigint, selectors: bigint): bigint | undefin
  * `query-selector-all()` operation.
  */
 export function querySelectorAll(self: bigint, selectors: string): bigint {
-  const obj = getParentNode(self);
+  const obj = lookupParentNode(self);
   const result = obj.querySelectorAll(selectors);
   const handle = _nextNodeList++;
   _nodeListHandles.set(handle, result);
@@ -909,8 +955,8 @@ export type NonDocumentTypeChildNodeHandle = bigint;
 const _nonDocumentTypeChildNodehandles = new Map<bigint, NonDocumentTypeChildNode>();
 let _nextNonDocumentTypeChildNode = 1n;
 
-/** Get a NonDocumentTypeChildNode by handle, throwing if not found. */
-function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
+/** Lookup a NonDocumentTypeChildNode by handle, throwing if not found. */
+function lookupNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
   const obj = _nonDocumentTypeChildNodehandles.get(handle);
   if (!obj) {
     throw new Error(`NonDocumentTypeChildNode handle ${handle} not found`);
@@ -921,16 +967,22 @@ function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
  * `get-previous-element-sibling()` operation.
  */
 export function getPreviousElementSibling(self: bigint): bigint | undefined {
-  const obj = getNonDocumentTypeChildNode(self);
-  return obj.previousElementSibling ?? undefined;
+  const obj = lookupNonDocumentTypeChildNode(self);
+  const result = obj.previousElementSibling;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-next-element-sibling()` operation.
  */
 export function getNextElementSibling(self: bigint): bigint | undefined {
-  const obj = getNonDocumentTypeChildNode(self);
-  return obj.nextElementSibling ?? undefined;
+  const obj = lookupNonDocumentTypeChildNode(self);
+  const result = obj.nextElementSibling;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -944,8 +996,8 @@ export type ChildNodeHandle = bigint;
 const _childNodehandles = new Map<bigint, ChildNode>();
 let _nextChildNode = 1n;
 
-/** Get a ChildNode by handle, throwing if not found. */
-function getChildNode(handle: bigint): ChildNode {
+/** Lookup a ChildNode by handle, throwing if not found. */
+function lookupChildNode(handle: bigint): ChildNode {
   const obj = _childNodehandles.get(handle);
   if (!obj) {
     throw new Error(`ChildNode handle ${handle} not found`);
@@ -956,7 +1008,7 @@ function getChildNode(handle: bigint): ChildNode {
  * `before()` operation.
  */
 export function before(self: bigint, nodes: (bigint)[]): void {
-  const obj = getChildNode(self);
+  const obj = lookupChildNode(self);
   obj.before(nodes);
 }
 
@@ -964,7 +1016,7 @@ export function before(self: bigint, nodes: (bigint)[]): void {
  * `after()` operation.
  */
 export function after(self: bigint, nodes: (bigint)[]): void {
-  const obj = getChildNode(self);
+  const obj = lookupChildNode(self);
   obj.after(nodes);
 }
 
@@ -972,7 +1024,7 @@ export function after(self: bigint, nodes: (bigint)[]): void {
  * `replace-with()` operation.
  */
 export function replaceWith(self: bigint, nodes: (bigint)[]): void {
-  const obj = getChildNode(self);
+  const obj = lookupChildNode(self);
   obj.replaceWith(nodes);
 }
 
@@ -980,7 +1032,7 @@ export function replaceWith(self: bigint, nodes: (bigint)[]): void {
  * `remove()` operation.
  */
 export function ChildNodeRemove(self: bigint): void {
-  const obj = getChildNode(self);
+  const obj = lookupChildNode(self);
   obj.remove();
 }
 
@@ -995,8 +1047,8 @@ export type SlottableHandle = bigint;
 const _slottableHandles = new Map<bigint, Slottable>();
 let _nextSlottable = 1n;
 
-/** Get a Slottable by handle, throwing if not found. */
-function getSlottable(handle: bigint): Slottable {
+/** Lookup a Slottable by handle, throwing if not found. */
+function lookupSlottable(handle: bigint): Slottable {
   const obj = _slottableHandles.get(handle);
   if (!obj) {
     throw new Error(`Slottable handle ${handle} not found`);
@@ -1007,7 +1059,7 @@ function getSlottable(handle: bigint): Slottable {
  * `get-assigned-slot()` operation.
  */
 export function getAssignedSlot(self: bigint): bigint | undefined {
-  const obj = getSlottable(self);
+  const obj = lookupSlottable(self);
   return obj.assignedSlot ?? undefined;
 }
 
@@ -1018,31 +1070,22 @@ export function getAssignedSlot(self: bigint): bigint | undefined {
 /** Type alias */
 export type NodeListHandle = bigint;
 
-/** Handle table for NodeList instances */
-const _nodeListhandles = new Map<bigint, NodeList>();
-let _nextNodeList = 1n;
-
-/** Get a NodeList by handle, throwing if not found. */
-function getNodeList(handle: bigint): NodeList {
-  const obj = _nodeListhandles.get(handle);
-  if (!obj) {
-    throw new Error(`NodeList handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `item()` operation.
  */
 export function NodeListItem(self: bigint, index: number): bigint | undefined {
-  const obj = getNodeList(self);
-  return obj.item(index) ?? undefined;
+  const obj = lookupNodeList(self);
+  const result = obj.item(index);
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-length()` operation.
  */
 export function NodeListGetLength(self: bigint): number {
-  const obj = getNodeList(self);
+  const obj = lookupNodeList(self);
   return obj.length;
 }
 
@@ -1057,8 +1100,8 @@ export type HtmlCollectionHandle = bigint;
 const _htmlCollectionhandles = new Map<bigint, HTMLCollection>();
 let _nextHTMLCollection = 1n;
 
-/** Get a HTMLCollection by handle, throwing if not found. */
-function getHTMLCollection(handle: bigint): HTMLCollection {
+/** Lookup a HTMLCollection by handle, throwing if not found. */
+function lookupHTMLCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionhandles.get(handle);
   if (!obj) {
     throw new Error(`HTMLCollection handle ${handle} not found`);
@@ -1069,7 +1112,7 @@ function getHTMLCollection(handle: bigint): HTMLCollection {
  * `get-length()` operation.
  */
 export function HtmlCollectionGetLength(self: bigint): number {
-  const obj = getHTMLCollection(self);
+  const obj = lookupHTMLCollection(self);
   return obj.length;
 }
 
@@ -1077,16 +1120,22 @@ export function HtmlCollectionGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function HtmlCollectionItem(self: bigint, index: number): bigint | undefined {
-  const obj = getHTMLCollection(self);
-  return obj.item(index) ?? undefined;
+  const obj = lookupHTMLCollection(self);
+  const result = obj.item(index);
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `named-item()` operation.
  */
 export function namedItem(self: bigint, name: string): bigint | undefined {
-  const obj = getHTMLCollection(self);
-  return obj.namedItem(name) ?? undefined;
+  const obj = lookupHTMLCollection(self);
+  const result = obj.namedItem(name);
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -1100,8 +1149,8 @@ export type MutationObserverHandle = bigint;
 const _mutationObserverhandles = new Map<bigint, MutationObserver>();
 let _nextMutationObserver = 1n;
 
-/** Get a MutationObserver by handle, throwing if not found. */
-function getMutationObserver(handle: bigint): MutationObserver {
+/** Lookup a MutationObserver by handle, throwing if not found. */
+function lookupMutationObserver(handle: bigint): MutationObserver {
   const obj = _mutationObserverhandles.get(handle);
   if (!obj) {
     throw new Error(`MutationObserver handle ${handle} not found`);
@@ -1112,7 +1161,7 @@ function getMutationObserver(handle: bigint): MutationObserver {
  * `observe()` operation.
  */
 export function observe(self: bigint, target: bigint, options: bigint | undefined): void {
-  const obj = getMutationObserver(self);
+  const obj = lookupMutationObserver(self);
   obj.observe(target, options);
 }
 
@@ -1120,7 +1169,7 @@ export function observe(self: bigint, target: bigint, options: bigint | undefine
  * `disconnect()` operation.
  */
 export function disconnect(self: bigint): void {
-  const obj = getMutationObserver(self);
+  const obj = lookupMutationObserver(self);
   obj.disconnect();
 }
 
@@ -1128,7 +1177,7 @@ export function disconnect(self: bigint): void {
  * `take-records()` operation.
  */
 export function takeRecords(self: bigint): (bigint)[] {
-  const obj = getMutationObserver(self);
+  const obj = lookupMutationObserver(self);
   return obj.takeRecords();
 }
 
@@ -1143,8 +1192,8 @@ export type MutationRecordHandle = bigint;
 const _mutationRecordhandles = new Map<bigint, MutationRecord>();
 let _nextMutationRecord = 1n;
 
-/** Get a MutationRecord by handle, throwing if not found. */
-function getMutationRecord(handle: bigint): MutationRecord {
+/** Lookup a MutationRecord by handle, throwing if not found. */
+function lookupMutationRecord(handle: bigint): MutationRecord {
   const obj = _mutationRecordhandles.get(handle);
   if (!obj) {
     throw new Error(`MutationRecord handle ${handle} not found`);
@@ -1155,7 +1204,7 @@ function getMutationRecord(handle: bigint): MutationRecord {
  * `get-type()` operation.
  */
 export function MutationRecordGetType(self: bigint): string {
-  const obj = getMutationRecord(self);
+  const obj = lookupMutationRecord(self);
   return obj.type;
 }
 
@@ -1163,47 +1212,62 @@ export function MutationRecordGetType(self: bigint): string {
  * `get-target()` operation.
  */
 export function MutationRecordGetTarget(self: bigint): bigint {
-  const obj = getMutationRecord(self);
-  return obj.target;
+  const obj = lookupMutationRecord(self);
+  const result = obj.target;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-added-nodes()` operation.
  */
 export function getAddedNodes(self: bigint): bigint {
-  const obj = getMutationRecord(self);
-  return obj.addedNodes;
+  const obj = lookupMutationRecord(self);
+  const result = obj.addedNodes;
+  const handle = _nextNodeList++;
+  _nodeListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-removed-nodes()` operation.
  */
 export function getRemovedNodes(self: bigint): bigint {
-  const obj = getMutationRecord(self);
-  return obj.removedNodes;
+  const obj = lookupMutationRecord(self);
+  const result = obj.removedNodes;
+  const handle = _nextNodeList++;
+  _nodeListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-previous-sibling()` operation.
  */
 export function MutationRecordGetPreviousSibling(self: bigint): bigint | undefined {
-  const obj = getMutationRecord(self);
-  return obj.previousSibling ?? undefined;
+  const obj = lookupMutationRecord(self);
+  const result = obj.previousSibling;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-next-sibling()` operation.
  */
 export function MutationRecordGetNextSibling(self: bigint): bigint | undefined {
-  const obj = getMutationRecord(self);
-  return obj.nextSibling ?? undefined;
+  const obj = lookupMutationRecord(self);
+  const result = obj.nextSibling;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-attribute-name()` operation.
  */
 export function getAttributeName(self: bigint): string | undefined {
-  const obj = getMutationRecord(self);
+  const obj = lookupMutationRecord(self);
   return obj.attributeName ?? undefined;
 }
 
@@ -1211,7 +1275,7 @@ export function getAttributeName(self: bigint): string | undefined {
  * `get-attribute-namespace()` operation.
  */
 export function getAttributeNamespace(self: bigint): string | undefined {
-  const obj = getMutationRecord(self);
+  const obj = lookupMutationRecord(self);
   return obj.attributeNamespace ?? undefined;
 }
 
@@ -1219,7 +1283,7 @@ export function getAttributeNamespace(self: bigint): string | undefined {
  * `get-old-value()` operation.
  */
 export function getOldValue(self: bigint): string | undefined {
-  const obj = getMutationRecord(self);
+  const obj = lookupMutationRecord(self);
   return obj.oldValue ?? undefined;
 }
 
@@ -1230,23 +1294,11 @@ export function getOldValue(self: bigint): string | undefined {
 /** Type alias */
 export type NodeHandle = bigint;
 
-/** Handle table for Node instances */
-const _nodeHandles = new Map<bigint, Node>();
-let _nextNode = 1n;
-
-/** Get a Node by handle, throwing if not found. */
-function getNode(handle: bigint): Node {
-  const obj = _nodeHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Node handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-node-type()` operation.
  */
 export function getNodeType(self: bigint): number {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.nodeType;
 }
 
@@ -1254,7 +1306,7 @@ export function getNodeType(self: bigint): number {
  * `get-node-name()` operation.
  */
 export function getNodeName(self: bigint): string {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.nodeName;
 }
 
@@ -1262,7 +1314,7 @@ export function getNodeName(self: bigint): string {
  * `get-base-uri()` operation.
  */
 export function getBaseUri(self: bigint): string {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.baseURI;
 }
 
@@ -1270,7 +1322,7 @@ export function getBaseUri(self: bigint): string {
  * `get-is-connected()` operation.
  */
 export function getIsConnected(self: bigint): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.isConnected;
 }
 
@@ -1278,7 +1330,7 @@ export function getIsConnected(self: bigint): boolean {
  * `get-owner-document()` operation.
  */
 export function getOwnerDocument(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.ownerDocument;
   const handle = _nextDocument++;
   _documentHandles.set(handle, result);
@@ -1289,8 +1341,8 @@ export function getOwnerDocument(self: bigint): bigint | undefined {
  * `get-root-node()` operation.
  */
 export function getRootNode(self: bigint, options: bigint | undefined): bigint {
-  const obj = getNode(self);
-  const result = (obj as any).rootNode;
+  const obj = lookupNode(self);
+  const result = (obj as any).rootNode(options);
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
   return handle;
@@ -1299,8 +1351,8 @@ export function getRootNode(self: bigint, options: bigint | undefined): bigint {
 /**
  * `get-parent-node()` operation.
  */
-export function NodeGetParentNode(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+export function getParentNode(self: bigint): bigint | undefined {
+  const obj = lookupNode(self);
   const result = obj.parentNode;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -1311,7 +1363,7 @@ export function NodeGetParentNode(self: bigint): bigint | undefined {
  * `get-parent-element()` operation.
  */
 export function getParentElement(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.parentElement;
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
@@ -1322,7 +1374,7 @@ export function getParentElement(self: bigint): bigint | undefined {
  * `has-child-nodes()` operation.
  */
 export function hasChildNodes(self: bigint): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.hasChildNodes();
 }
 
@@ -1330,15 +1382,18 @@ export function hasChildNodes(self: bigint): boolean {
  * `get-child-nodes()` operation.
  */
 export function getChildNodes(self: bigint): bigint {
-  const obj = getNode(self);
-  return obj.childNodes;
+  const obj = lookupNode(self);
+  const result = obj.childNodes;
+  const handle = _nextNodeList++;
+  _nodeListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-first-child()` operation.
  */
 export function getFirstChild(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.firstChild;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -1349,7 +1404,7 @@ export function getFirstChild(self: bigint): bigint | undefined {
  * `get-last-child()` operation.
  */
 export function getLastChild(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.lastChild;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -1360,7 +1415,7 @@ export function getLastChild(self: bigint): bigint | undefined {
  * `get-previous-sibling()` operation.
  */
 export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.previousSibling;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -1371,7 +1426,7 @@ export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
  * `get-next-sibling()` operation.
  */
 export function NodeGetNextSibling(self: bigint): bigint | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   const result = obj.nextSibling;
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
@@ -1382,7 +1437,7 @@ export function NodeGetNextSibling(self: bigint): bigint | undefined {
  * `get-node-value()` operation.
  */
 export function getNodeValue(self: bigint): string | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.nodeValue ?? undefined;
 }
 
@@ -1390,7 +1445,7 @@ export function getNodeValue(self: bigint): string | undefined {
  * `set-node-value()` operation.
  */
 export function setNodeValue(self: bigint, value: string | undefined): void {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   obj.nodeValue = value;
 }
 
@@ -1398,7 +1453,7 @@ export function setNodeValue(self: bigint, value: string | undefined): void {
  * `get-text-content()` operation.
  */
 export function getTextContent(self: bigint): string | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.textContent ?? undefined;
 }
 
@@ -1406,7 +1461,7 @@ export function getTextContent(self: bigint): string | undefined {
  * `set-text-content()` operation.
  */
 export function setTextContent(self: bigint, value: string | undefined): void {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   obj.textContent = value;
 }
 
@@ -1414,7 +1469,7 @@ export function setTextContent(self: bigint, value: string | undefined): void {
  * `normalize()` operation.
  */
 export function normalize(self: bigint): void {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   obj.normalize();
 }
 
@@ -1422,7 +1477,7 @@ export function normalize(self: bigint): void {
  * `clone-node()` operation.
  */
 export function cloneNode(self: bigint, subtree: boolean | undefined): bigint {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.cloneNode(subtree);
 }
 
@@ -1430,7 +1485,7 @@ export function cloneNode(self: bigint, subtree: boolean | undefined): bigint {
  * `is-equal-node()` operation.
  */
 export function isEqualNode(self: bigint, otherNode: bigint | undefined): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.isEqualNode(otherNode);
 }
 
@@ -1438,7 +1493,7 @@ export function isEqualNode(self: bigint, otherNode: bigint | undefined): boolea
  * `is-same-node()` operation.
  */
 export function isSameNode(self: bigint, otherNode: bigint | undefined): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.isSameNode(otherNode);
 }
 
@@ -1446,7 +1501,7 @@ export function isSameNode(self: bigint, otherNode: bigint | undefined): boolean
  * `compare-document-position()` operation.
  */
 export function compareDocumentPosition(self: bigint, other: bigint): number {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.compareDocumentPosition(other);
 }
 
@@ -1454,7 +1509,7 @@ export function compareDocumentPosition(self: bigint, other: bigint): number {
  * `contains()` operation.
  */
 export function NodeContains(self: bigint, other: bigint | undefined): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.contains(other);
 }
 
@@ -1462,7 +1517,7 @@ export function NodeContains(self: bigint, other: bigint | undefined): boolean {
  * `lookup-prefix()` operation.
  */
 export function lookupPrefix(self: bigint, namespace: string | undefined): string | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.lookupPrefix(namespace) ?? undefined;
 }
 
@@ -1470,7 +1525,7 @@ export function lookupPrefix(self: bigint, namespace: string | undefined): strin
  * `lookup-namespace-uri()` operation.
  */
 export function NodeLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.lookupNamespaceURI(prefix) ?? undefined;
 }
 
@@ -1478,7 +1533,7 @@ export function NodeLookupNamespaceUri(self: bigint, prefix: string | undefined)
  * `is-default-namespace()` operation.
  */
 export function isDefaultNamespace(self: bigint, namespace: string | undefined): boolean {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.isDefaultNamespace(namespace);
 }
 
@@ -1486,7 +1541,7 @@ export function isDefaultNamespace(self: bigint, namespace: string | undefined):
  * `insert-before()` operation.
  */
 export function insertBefore(self: bigint, node: bigint, child: bigint | undefined): bigint {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.insertBefore(node, child);
 }
 
@@ -1494,7 +1549,7 @@ export function insertBefore(self: bigint, node: bigint, child: bigint | undefin
  * `append-child()` operation.
  */
 export function appendChild(self: bigint, node: bigint): bigint {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.appendChild(node);
 }
 
@@ -1502,7 +1557,7 @@ export function appendChild(self: bigint, node: bigint): bigint {
  * `replace-child()` operation.
  */
 export function replaceChild(self: bigint, node: bigint, child: bigint): bigint {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.replaceChild(node, child);
 }
 
@@ -1510,7 +1565,7 @@ export function replaceChild(self: bigint, node: bigint, child: bigint): bigint 
  * `remove-child()` operation.
  */
 export function removeChild(self: bigint, child: bigint): bigint {
-  const obj = getNode(self);
+  const obj = lookupNode(self);
   return obj.removeChild(child);
 }
 
@@ -1531,8 +1586,8 @@ function registerDOMImplementation(obj: DOMImplementation): bigint {
   _domImplementationhandles.set(handle, obj);
   return handle;
 }
-/** Get a DOMImplementation by handle, throwing if not found. */
-function getDOMImplementation(handle: bigint): DOMImplementation {
+/** Lookup a DOMImplementation by handle, throwing if not found. */
+function lookupDOMImplementation(handle: bigint): DOMImplementation {
   const obj = _domImplementationhandles.get(handle);
   if (!obj) {
     throw new Error(`DOMImplementation handle ${handle} not found`);
@@ -1543,7 +1598,7 @@ function getDOMImplementation(handle: bigint): DOMImplementation {
  * `create-document-type()` operation.
  */
 export function createDocumentType(self: bigint, name: string, publicId: string, systemId: string): bigint {
-  const obj = getDOMImplementation(self);
+  const obj = lookupDOMImplementation(self);
   const result = obj.createDocumentType(name, publicId, systemId);
   const handle = _nextDocumentType++;
   _documentTypeHandles.set(handle, result);
@@ -1554,7 +1609,7 @@ export function createDocumentType(self: bigint, name: string, publicId: string,
  * `create-document()` operation.
  */
 export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
-  const obj = getDOMImplementation(self);
+  const obj = lookupDOMImplementation(self);
   const result = obj.createDocument(namespace, qualifiedName, doctype);
   const handle = _nextDocument++;
   _documentHandles.set(handle, result);
@@ -1565,7 +1620,7 @@ export function createDocument(self: bigint, namespace: string | undefined, qual
  * `create-html-document()` operation.
  */
 export function createHtmlDocument(self: bigint, title: string | undefined): bigint {
-  const obj = getDOMImplementation(self);
+  const obj = lookupDOMImplementation(self);
   return obj.createHTMLDocument(title);
 }
 
@@ -1573,7 +1628,7 @@ export function createHtmlDocument(self: bigint, title: string | undefined): big
  * `has-feature()` operation.
  */
 export function hasFeature(self: bigint): boolean {
-  const obj = getDOMImplementation(self);
+  const obj = lookupDOMImplementation(self);
   return obj.hasFeature();
 }
 
@@ -1584,23 +1639,11 @@ export function hasFeature(self: bigint): boolean {
 /** Type alias */
 export type DocumentTypeHandle = bigint;
 
-/** Handle table for DocumentType instances */
-const _documentTypehandles = new Map<bigint, DocumentType>();
-let _nextDocumentType = 1n;
-
-/** Get a DocumentType by handle, throwing if not found. */
-function getDocumentType(handle: bigint): DocumentType {
-  const obj = _documentTypehandles.get(handle);
-  if (!obj) {
-    throw new Error(`DocumentType handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-name()` operation.
  */
 export function DocumentTypeGetName(self: bigint): bigint {
-  const obj = getDocumentType(self);
+  const obj = lookupDocumentType(self);
   const result = obj.name;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -1611,7 +1654,7 @@ export function DocumentTypeGetName(self: bigint): bigint {
  * `get-public-id()` operation.
  */
 export function getPublicId(self: bigint): bigint {
-  const obj = getDocumentType(self);
+  const obj = lookupDocumentType(self);
   const result = obj.publicId;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -1622,7 +1665,7 @@ export function getPublicId(self: bigint): bigint {
  * `get-system-id()` operation.
  */
 export function getSystemId(self: bigint): bigint {
-  const obj = getDocumentType(self);
+  const obj = lookupDocumentType(self);
   const result = obj.systemId;
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -1640,8 +1683,8 @@ export type ShadowRootHandle = bigint;
 const _shadowRoothandles = new Map<bigint, ShadowRoot>();
 let _nextShadowRoot = 1n;
 
-/** Get a ShadowRoot by handle, throwing if not found. */
-function getShadowRoot(handle: bigint): ShadowRoot {
+/** Lookup a ShadowRoot by handle, throwing if not found. */
+function lookupShadowRoot(handle: bigint): ShadowRoot {
   const obj = _shadowRoothandles.get(handle);
   if (!obj) {
     throw new Error(`ShadowRoot handle ${handle} not found`);
@@ -1652,7 +1695,7 @@ function getShadowRoot(handle: bigint): ShadowRoot {
  * `get-mode()` operation.
  */
 export function getMode(self: bigint): bigint {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.mode;
 }
 
@@ -1660,7 +1703,7 @@ export function getMode(self: bigint): bigint {
  * `get-delegates-focus()` operation.
  */
 export function getDelegatesFocus(self: bigint): boolean {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.delegatesFocus;
 }
 
@@ -1668,7 +1711,7 @@ export function getDelegatesFocus(self: bigint): boolean {
  * `get-slot-assignment()` operation.
  */
 export function getSlotAssignment(self: bigint): bigint {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.slotAssignment;
 }
 
@@ -1676,7 +1719,7 @@ export function getSlotAssignment(self: bigint): bigint {
  * `get-clonable()` operation.
  */
 export function getClonable(self: bigint): boolean {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.clonable;
 }
 
@@ -1684,7 +1727,7 @@ export function getClonable(self: bigint): boolean {
  * `get-serializable()` operation.
  */
 export function getSerializable(self: bigint): boolean {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.serializable;
 }
 
@@ -1692,7 +1735,7 @@ export function getSerializable(self: bigint): boolean {
  * `get-host()` operation.
  */
 export function getHost(self: bigint): bigint {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.host;
 }
 
@@ -1700,7 +1743,7 @@ export function getHost(self: bigint): bigint {
  * `get-onslotchange()` operation.
  */
 export function getOnslotchange(self: bigint): EventHandlerRecord {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.onslotchange;
 }
 
@@ -1708,7 +1751,7 @@ export function getOnslotchange(self: bigint): EventHandlerRecord {
  * `set-onslotchange()` operation.
  */
 export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   obj.onslotchange = value;
 }
 
@@ -1716,7 +1759,7 @@ export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
  * `set-html-unsafe()` operation.
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   obj.setHTMLUnsafe = html;
 }
 
@@ -1724,15 +1767,15 @@ export function setHtmlUnsafe(self: bigint, html: bigint): void {
  * `get-html()` operation.
  */
 export function getHtml(self: bigint, options: bigint | undefined): string {
-  const obj = getShadowRoot(self);
-  return (obj as any).html;
+  const obj = lookupShadowRoot(self);
+  return (obj as any).html(options);
 }
 
 /**
  * `get-inner-html()` operation.
  */
 export function getInnerHtml(self: bigint): bigint {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   return obj.innerHTML;
 }
 
@@ -1740,7 +1783,7 @@ export function getInnerHtml(self: bigint): bigint {
  * `set-inner-html()` operation.
  */
 export function setInnerHtml(self: bigint, value: bigint): void {
-  const obj = getShadowRoot(self);
+  const obj = lookupShadowRoot(self);
   obj.innerHTML = value;
 }
 
@@ -1755,8 +1798,8 @@ export type NamedNodeMapHandle = bigint;
 const _namedNodeMaphandles = new Map<bigint, NamedNodeMap>();
 let _nextNamedNodeMap = 1n;
 
-/** Get a NamedNodeMap by handle, throwing if not found. */
-function getNamedNodeMap(handle: bigint): NamedNodeMap {
+/** Lookup a NamedNodeMap by handle, throwing if not found. */
+function lookupNamedNodeMap(handle: bigint): NamedNodeMap {
   const obj = _namedNodeMaphandles.get(handle);
   if (!obj) {
     throw new Error(`NamedNodeMap handle ${handle} not found`);
@@ -1767,7 +1810,7 @@ function getNamedNodeMap(handle: bigint): NamedNodeMap {
  * `get-length()` operation.
  */
 export function NamedNodeMapGetLength(self: bigint): number {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   return obj.length;
 }
 
@@ -1775,15 +1818,18 @@ export function NamedNodeMapGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function NamedNodeMapItem(self: bigint, index: number): bigint | undefined {
-  const obj = getNamedNodeMap(self);
-  return obj.item(index) ?? undefined;
+  const obj = lookupNamedNodeMap(self);
+  const result = obj.item(index);
+  const handle = _nextAttr++;
+  _attrHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-named-item()` operation.
  */
 export function getNamedItem(self: bigint, qualifiedName: string): bigint | undefined {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   return obj.namedItem(qualifiedName) ?? undefined;
 }
 
@@ -1791,15 +1837,15 @@ export function getNamedItem(self: bigint, qualifiedName: string): bigint | unde
  * `get-named-item-ns()` operation.
  */
 export function getNamedItemNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
-  const obj = getNamedNodeMap(self);
-  return obj.getNamedItemNS ?? undefined;
+  const obj = lookupNamedNodeMap(self);
+  return obj.getNamedItemNS(namespace, localName) ?? undefined;
 }
 
 /**
  * `set-named-item()` operation.
  */
 export function setNamedItem(self: bigint, attr: bigint): bigint | undefined {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   obj.namedItem = attr;
 }
 
@@ -1807,7 +1853,7 @@ export function setNamedItem(self: bigint, attr: bigint): bigint | undefined {
  * `set-named-item-ns()` operation.
  */
 export function setNamedItemNs(self: bigint, attr: bigint): bigint | undefined {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   obj.getNamedItemNS = attr;
 }
 
@@ -1815,7 +1861,7 @@ export function setNamedItemNs(self: bigint, attr: bigint): bigint | undefined {
  * `remove-named-item()` operation.
  */
 export function removeNamedItem(self: bigint, qualifiedName: string): bigint {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   return obj.removeNamedItem(qualifiedName);
 }
 
@@ -1823,7 +1869,7 @@ export function removeNamedItem(self: bigint, qualifiedName: string): bigint {
  * `remove-named-item-ns()` operation.
  */
 export function removeNamedItemNs(self: bigint, namespace: string | undefined, localName: string): bigint {
-  const obj = getNamedNodeMap(self);
+  const obj = lookupNamedNodeMap(self);
   return obj.removeNamedItemNS(namespace, localName);
 }
 
@@ -1834,23 +1880,11 @@ export function removeNamedItemNs(self: bigint, namespace: string | undefined, l
 /** Type alias */
 export type AttrHandle = bigint;
 
-/** Handle table for Attr instances */
-const _attrHandles = new Map<bigint, Attr>();
-let _nextAttr = 1n;
-
-/** Get a Attr by handle, throwing if not found. */
-function getAttr(handle: bigint): Attr {
-  const obj = _attrHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Attr handle ${handle} not found`);
-  }
-  return obj;
-}
 /**
  * `get-namespace-uri()` operation.
  */
 export function getNamespaceUri(self: bigint): string | undefined {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.namespaceURI ?? undefined;
 }
 
@@ -1858,7 +1892,7 @@ export function getNamespaceUri(self: bigint): string | undefined {
  * `get-prefix()` operation.
  */
 export function getPrefix(self: bigint): string | undefined {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.prefix ?? undefined;
 }
 
@@ -1866,7 +1900,7 @@ export function getPrefix(self: bigint): string | undefined {
  * `get-local-name()` operation.
  */
 export function getLocalName(self: bigint): string {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.localName;
 }
 
@@ -1874,7 +1908,7 @@ export function getLocalName(self: bigint): string {
  * `get-name()` operation.
  */
 export function AttrGetName(self: bigint): string {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.name;
 }
 
@@ -1882,7 +1916,7 @@ export function AttrGetName(self: bigint): string {
  * `get-value()` operation.
  */
 export function AttrGetValue(self: bigint): string {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.value;
 }
 
@@ -1890,7 +1924,7 @@ export function AttrGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function AttrSetValue(self: bigint, value: string): void {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   obj.value = value;
 }
 
@@ -1898,15 +1932,18 @@ export function AttrSetValue(self: bigint, value: string): void {
  * `get-owner-element()` operation.
  */
 export function getOwnerElement(self: bigint): bigint | undefined {
-  const obj = getAttr(self);
-  return obj.ownerElement ?? undefined;
+  const obj = lookupAttr(self);
+  const result = obj.ownerElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-specified()` operation.
  */
 export function getSpecified(self: bigint): boolean {
-  const obj = getAttr(self);
+  const obj = lookupAttr(self);
   return obj.specified;
 }
 
@@ -1921,8 +1958,8 @@ export type CharacterDataHandle = bigint;
 const _characterDatahandles = new Map<bigint, CharacterData>();
 let _nextCharacterData = 1n;
 
-/** Get a CharacterData by handle, throwing if not found. */
-function getCharacterData(handle: bigint): CharacterData {
+/** Lookup a CharacterData by handle, throwing if not found. */
+function lookupCharacterData(handle: bigint): CharacterData {
   const obj = _characterDatahandles.get(handle);
   if (!obj) {
     throw new Error(`CharacterData handle ${handle} not found`);
@@ -1933,7 +1970,7 @@ function getCharacterData(handle: bigint): CharacterData {
  * `get-data()` operation.
  */
 export function getData(self: bigint): string {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   return obj.data;
 }
 
@@ -1941,7 +1978,7 @@ export function getData(self: bigint): string {
  * `set-data()` operation.
  */
 export function setData(self: bigint, value: string): void {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   obj.data = value;
 }
 
@@ -1949,7 +1986,7 @@ export function setData(self: bigint, value: string): void {
  * `get-length()` operation.
  */
 export function CharacterDataGetLength(self: bigint): number {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   return obj.length;
 }
 
@@ -1957,7 +1994,7 @@ export function CharacterDataGetLength(self: bigint): number {
  * `substring-data()` operation.
  */
 export function substringData(self: bigint, offset: number, count: number): string {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   return obj.substringData(offset, count);
 }
 
@@ -1965,7 +2002,7 @@ export function substringData(self: bigint, offset: number, count: number): stri
  * `append-data()` operation.
  */
 export function appendData(self: bigint, data: string): void {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   obj.appendData(data);
 }
 
@@ -1973,7 +2010,7 @@ export function appendData(self: bigint, data: string): void {
  * `insert-data()` operation.
  */
 export function insertData(self: bigint, offset: number, data: string): void {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   obj.insertData(offset, data);
 }
 
@@ -1981,7 +2018,7 @@ export function insertData(self: bigint, offset: number, data: string): void {
  * `delete-data()` operation.
  */
 export function deleteData(self: bigint, offset: number, count: number): void {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   obj.deleteData(offset, count);
 }
 
@@ -1989,7 +2026,7 @@ export function deleteData(self: bigint, offset: number, count: number): void {
  * `replace-data()` operation.
  */
 export function replaceData(self: bigint, offset: number, count: number, data: string): void {
-  const obj = getCharacterData(self);
+  const obj = lookupCharacterData(self);
   obj.replaceData(offset, count, data);
 }
 
@@ -2004,8 +2041,8 @@ export type TextHandle = bigint;
 const _textHandles = new Map<bigint, Text>();
 let _nextText = 1n;
 
-/** Get a Text by handle, throwing if not found. */
-function getText(handle: bigint): Text {
+/** Lookup a Text by handle, throwing if not found. */
+function lookupText(handle: bigint): Text {
   const obj = _textHandles.get(handle);
   if (!obj) {
     throw new Error(`Text handle ${handle} not found`);
@@ -2016,7 +2053,7 @@ function getText(handle: bigint): Text {
  * `split-text()` operation.
  */
 export function splitText(self: bigint, offset: number): bigint {
-  const obj = getText(self);
+  const obj = lookupText(self);
   return obj.splitText(offset);
 }
 
@@ -2024,7 +2061,7 @@ export function splitText(self: bigint, offset: number): bigint {
  * `get-whole-text()` operation.
  */
 export function getWholeText(self: bigint): string {
-  const obj = getText(self);
+  const obj = lookupText(self);
   return obj.wholeText;
 }
 
@@ -2039,8 +2076,8 @@ export type ProcessingInstructionHandle = bigint;
 const _processingInstructionhandles = new Map<bigint, ProcessingInstruction>();
 let _nextProcessingInstruction = 1n;
 
-/** Get a ProcessingInstruction by handle, throwing if not found. */
-function getProcessingInstruction(handle: bigint): ProcessingInstruction {
+/** Lookup a ProcessingInstruction by handle, throwing if not found. */
+function lookupProcessingInstruction(handle: bigint): ProcessingInstruction {
   const obj = _processingInstructionhandles.get(handle);
   if (!obj) {
     throw new Error(`ProcessingInstruction handle ${handle} not found`);
@@ -2051,7 +2088,7 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
  * `get-target()` operation.
  */
 export function ProcessingInstructionGetTarget(self: bigint): string {
-  const obj = getProcessingInstruction(self);
+  const obj = lookupProcessingInstruction(self);
   return obj.target;
 }
 
@@ -2066,8 +2103,8 @@ export type AbstractRangeHandle = bigint;
 const _abstractRangehandles = new Map<bigint, AbstractRange>();
 let _nextAbstractRange = 1n;
 
-/** Get a AbstractRange by handle, throwing if not found. */
-function getAbstractRange(handle: bigint): AbstractRange {
+/** Lookup a AbstractRange by handle, throwing if not found. */
+function lookupAbstractRange(handle: bigint): AbstractRange {
   const obj = _abstractRangehandles.get(handle);
   if (!obj) {
     throw new Error(`AbstractRange handle ${handle} not found`);
@@ -2078,7 +2115,7 @@ function getAbstractRange(handle: bigint): AbstractRange {
  * `get-start-container()` operation.
  */
 export function getStartContainer(self: bigint): bigint {
-  const obj = getAbstractRange(self);
+  const obj = lookupAbstractRange(self);
   return obj.startContainer;
 }
 
@@ -2086,7 +2123,7 @@ export function getStartContainer(self: bigint): bigint {
  * `get-start-offset()` operation.
  */
 export function getStartOffset(self: bigint): number {
-  const obj = getAbstractRange(self);
+  const obj = lookupAbstractRange(self);
   return obj.startOffset;
 }
 
@@ -2094,7 +2131,7 @@ export function getStartOffset(self: bigint): number {
  * `get-end-container()` operation.
  */
 export function getEndContainer(self: bigint): bigint {
-  const obj = getAbstractRange(self);
+  const obj = lookupAbstractRange(self);
   return obj.endContainer;
 }
 
@@ -2102,7 +2139,7 @@ export function getEndContainer(self: bigint): bigint {
  * `get-end-offset()` operation.
  */
 export function getEndOffset(self: bigint): number {
-  const obj = getAbstractRange(self);
+  const obj = lookupAbstractRange(self);
   return obj.endOffset;
 }
 
@@ -2110,7 +2147,7 @@ export function getEndOffset(self: bigint): number {
  * `get-collapsed()` operation.
  */
 export function getCollapsed(self: bigint): boolean {
-  const obj = getAbstractRange(self);
+  const obj = lookupAbstractRange(self);
   return obj.collapsed;
 }
 
@@ -2125,8 +2162,8 @@ export type NodeIteratorHandle = bigint;
 const _nodeIteratorhandles = new Map<bigint, NodeIterator>();
 let _nextNodeIterator = 1n;
 
-/** Get a NodeIterator by handle, throwing if not found. */
-function getNodeIterator(handle: bigint): NodeIterator {
+/** Lookup a NodeIterator by handle, throwing if not found. */
+function lookupNodeIterator(handle: bigint): NodeIterator {
   const obj = _nodeIteratorhandles.get(handle);
   if (!obj) {
     throw new Error(`NodeIterator handle ${handle} not found`);
@@ -2137,7 +2174,7 @@ function getNodeIterator(handle: bigint): NodeIterator {
  * `get-root()` operation.
  */
 export function NodeIteratorGetRoot(self: bigint): bigint {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.root;
 }
 
@@ -2145,7 +2182,7 @@ export function NodeIteratorGetRoot(self: bigint): bigint {
  * `get-reference-node()` operation.
  */
 export function getReferenceNode(self: bigint): bigint {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.referenceNode;
 }
 
@@ -2153,7 +2190,7 @@ export function getReferenceNode(self: bigint): bigint {
  * `get-pointer-before-reference-node()` operation.
  */
 export function getPointerBeforeReferenceNode(self: bigint): boolean {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.pointerBeforeReferenceNode;
 }
 
@@ -2161,7 +2198,7 @@ export function getPointerBeforeReferenceNode(self: bigint): boolean {
  * `get-what-to-show()` operation.
  */
 export function NodeIteratorGetWhatToShow(self: bigint): number {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.whatToShow;
 }
 
@@ -2169,7 +2206,7 @@ export function NodeIteratorGetWhatToShow(self: bigint): number {
  * `get-filter()` operation.
  */
 export function NodeIteratorGetFilter(self: bigint): bigint | undefined {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.filter ?? undefined;
 }
 
@@ -2177,7 +2214,7 @@ export function NodeIteratorGetFilter(self: bigint): bigint | undefined {
  * `next-node()` operation.
  */
 export function NodeIteratorNextNode(self: bigint): bigint | undefined {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.nextNode() ?? undefined;
 }
 
@@ -2185,7 +2222,7 @@ export function NodeIteratorNextNode(self: bigint): bigint | undefined {
  * `previous-node()` operation.
  */
 export function NodeIteratorPreviousNode(self: bigint): bigint | undefined {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   return obj.previousNode() ?? undefined;
 }
 
@@ -2193,7 +2230,7 @@ export function NodeIteratorPreviousNode(self: bigint): bigint | undefined {
  * `detach()` operation.
  */
 export function detach(self: bigint): void {
-  const obj = getNodeIterator(self);
+  const obj = lookupNodeIterator(self);
   obj.detach();
 }
 
@@ -2208,8 +2245,8 @@ export type TreeWalkerHandle = bigint;
 const _treeWalkerhandles = new Map<bigint, TreeWalker>();
 let _nextTreeWalker = 1n;
 
-/** Get a TreeWalker by handle, throwing if not found. */
-function getTreeWalker(handle: bigint): TreeWalker {
+/** Lookup a TreeWalker by handle, throwing if not found. */
+function lookupTreeWalker(handle: bigint): TreeWalker {
   const obj = _treeWalkerhandles.get(handle);
   if (!obj) {
     throw new Error(`TreeWalker handle ${handle} not found`);
@@ -2220,7 +2257,7 @@ function getTreeWalker(handle: bigint): TreeWalker {
  * `get-root()` operation.
  */
 export function TreeWalkerGetRoot(self: bigint): bigint {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.root;
 }
 
@@ -2228,7 +2265,7 @@ export function TreeWalkerGetRoot(self: bigint): bigint {
  * `get-what-to-show()` operation.
  */
 export function TreeWalkerGetWhatToShow(self: bigint): number {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.whatToShow;
 }
 
@@ -2236,7 +2273,7 @@ export function TreeWalkerGetWhatToShow(self: bigint): number {
  * `get-filter()` operation.
  */
 export function TreeWalkerGetFilter(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.filter ?? undefined;
 }
 
@@ -2244,7 +2281,7 @@ export function TreeWalkerGetFilter(self: bigint): bigint | undefined {
  * `get-current-node()` operation.
  */
 export function getCurrentNode(self: bigint): bigint {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.currentNode;
 }
 
@@ -2252,7 +2289,7 @@ export function getCurrentNode(self: bigint): bigint {
  * `set-current-node()` operation.
  */
 export function setCurrentNode(self: bigint, value: bigint): void {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   obj.currentNode = value;
 }
 
@@ -2260,7 +2297,7 @@ export function setCurrentNode(self: bigint, value: bigint): void {
  * `parent-node()` operation.
  */
 export function parentNode(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.parentNode() ?? undefined;
 }
 
@@ -2268,15 +2305,15 @@ export function parentNode(self: bigint): bigint | undefined {
  * `first-child()` operation.
  */
 export function firstChild(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.firstChild() ?? undefined;
 }
 
 /**
  * `last-child()` operation.
  */
-export function lastChild(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+export function lastChild(self: bigint): bigint {
+  const obj = lookupTreeWalker(self);
   return obj.lastChild() ?? undefined;
 }
 
@@ -2284,7 +2321,7 @@ export function lastChild(self: bigint): bigint | undefined {
  * `previous-sibling()` operation.
  */
 export function previousSibling(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.previousSibling() ?? undefined;
 }
 
@@ -2292,7 +2329,7 @@ export function previousSibling(self: bigint): bigint | undefined {
  * `next-sibling()` operation.
  */
 export function nextSibling(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.nextSibling() ?? undefined;
 }
 
@@ -2300,15 +2337,15 @@ export function nextSibling(self: bigint): bigint | undefined {
  * `previous-node()` operation.
  */
 export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+  const obj = lookupTreeWalker(self);
   return obj.previousNode() ?? undefined;
 }
 
 /**
  * `next-node()` operation.
  */
-export function TreeWalkerNextNode(self: bigint): bigint | undefined {
-  const obj = getTreeWalker(self);
+export function TreeWalkerNextNode(self: bigint): EventHandlerRecord {
+  const obj = lookupTreeWalker(self);
   return obj.nextNode() ?? undefined;
 }
 
@@ -2323,8 +2360,8 @@ export type NodeFilterHandle = bigint;
 const _nodeFilterhandles = new Map<bigint, NodeFilter>();
 let _nextNodeFilter = 1n;
 
-/** Get a NodeFilter by handle, throwing if not found. */
-function getNodeFilter(handle: bigint): NodeFilter {
+/** Lookup a NodeFilter by handle, throwing if not found. */
+function lookupNodeFilter(handle: bigint): NodeFilter {
   const obj = _nodeFilterhandles.get(handle);
   if (!obj) {
     throw new Error(`NodeFilter handle ${handle} not found`);
@@ -2335,7 +2372,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
  * `accept-node()` operation.
  */
 export function acceptNode(self: bigint, node: bigint): number {
-  const obj = getNodeFilter(self);
+  const obj = lookupNodeFilter(self);
   return (obj as any).acceptNode(node);
 }
 
@@ -2350,8 +2387,8 @@ export type DomTokenListHandle = bigint;
 const _domTokenListhandles = new Map<bigint, DOMTokenList>();
 let _nextDOMTokenList = 1n;
 
-/** Get a DOMTokenList by handle, throwing if not found. */
-function getDOMTokenList(handle: bigint): DOMTokenList {
+/** Lookup a DOMTokenList by handle, throwing if not found. */
+function lookupDOMTokenList(handle: bigint): DOMTokenList {
   const obj = _domTokenListhandles.get(handle);
   if (!obj) {
     throw new Error(`DOMTokenList handle ${handle} not found`);
@@ -2362,23 +2399,26 @@ function getDOMTokenList(handle: bigint): DOMTokenList {
  * `get-length()` operation.
  */
 export function DomTokenListGetLength(self: bigint): number {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.length;
 }
 
 /**
  * `item()` operation.
  */
-export function DomTokenListItem(self: bigint, index: number): string | undefined {
-  const obj = getDOMTokenList(self);
-  return obj.item(index) ?? undefined;
+export function DomTokenListItem(self: bigint, index: number): bigint | undefined {
+  const obj = lookupDOMTokenList(self);
+  const result = obj.item(index);
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `contains()` operation.
  */
 export function DomTokenListContains(self: bigint, token: string): boolean {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
 
@@ -2386,7 +2426,7 @@ export function DomTokenListContains(self: bigint, token: string): boolean {
  * `add()` operation.
  */
 export function add(self: bigint, tokens: (string)[]): void {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   obj.add(tokens);
 }
 
@@ -2394,7 +2434,7 @@ export function add(self: bigint, tokens: (string)[]): void {
  * `remove()` operation.
  */
 export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   obj.remove(tokens);
 }
 
@@ -2402,7 +2442,7 @@ export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
  * `toggle()` operation.
  */
 export function toggle(self: bigint, token: string, force: boolean | undefined): boolean {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.toggle(token, force);
 }
 
@@ -2410,7 +2450,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
  * `replace()` operation.
  */
 export function replace(self: bigint, token: string, newToken: string): boolean {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.replace(token, newToken);
 }
 
@@ -2418,7 +2458,7 @@ export function replace(self: bigint, token: string, newToken: string): boolean 
  * `supports()` operation.
  */
 export function supports(self: bigint, token: string): boolean {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.supports(token);
 }
 
@@ -2426,7 +2466,7 @@ export function supports(self: bigint, token: string): boolean {
  * `get-value()` operation.
  */
 export function DomTokenListGetValue(self: bigint): bigint {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   return obj.value;
 }
 
@@ -2434,7 +2474,7 @@ export function DomTokenListGetValue(self: bigint): bigint {
  * `set-value()` operation.
  */
 export function DomTokenListSetValue(self: bigint, value: bigint): void {
-  const obj = getDOMTokenList(self);
+  const obj = lookupDOMTokenList(self);
   obj.value = value;
 }
 
@@ -2449,8 +2489,8 @@ export type XPathResultHandle = bigint;
 const _xPathResulthandles = new Map<bigint, XPathResult>();
 let _nextXPathResult = 1n;
 
-/** Get a XPathResult by handle, throwing if not found. */
-function getXPathResult(handle: bigint): XPathResult {
+/** Lookup a XPathResult by handle, throwing if not found. */
+function lookupXPathResult(handle: bigint): XPathResult {
   const obj = _xPathResulthandles.get(handle);
   if (!obj) {
     throw new Error(`XPathResult handle ${handle} not found`);
@@ -2461,7 +2501,7 @@ function getXPathResult(handle: bigint): XPathResult {
  * `get-result-type()` operation.
  */
 export function getResultType(self: bigint): number {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.resultType;
 }
 
@@ -2469,7 +2509,7 @@ export function getResultType(self: bigint): number {
  * `get-number-value()` operation.
  */
 export function getNumberValue(self: bigint): number {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.numberValue;
 }
 
@@ -2477,7 +2517,7 @@ export function getNumberValue(self: bigint): number {
  * `get-string-value()` operation.
  */
 export function getStringValue(self: bigint): string {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.stringValue;
 }
 
@@ -2485,7 +2525,7 @@ export function getStringValue(self: bigint): string {
  * `get-boolean-value()` operation.
  */
 export function getBooleanValue(self: bigint): boolean {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.booleanValue;
 }
 
@@ -2493,7 +2533,7 @@ export function getBooleanValue(self: bigint): boolean {
  * `get-single-node-value()` operation.
  */
 export function getSingleNodeValue(self: bigint): bigint | undefined {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.singleNodeValue ?? undefined;
 }
 
@@ -2501,7 +2541,7 @@ export function getSingleNodeValue(self: bigint): bigint | undefined {
  * `get-invalid-iterator-state()` operation.
  */
 export function getInvalidIteratorState(self: bigint): boolean {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.invalidIteratorState;
 }
 
@@ -2509,7 +2549,7 @@ export function getInvalidIteratorState(self: bigint): boolean {
  * `get-snapshot-length()` operation.
  */
 export function getSnapshotLength(self: bigint): number {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.snapshotLength;
 }
 
@@ -2517,7 +2557,7 @@ export function getSnapshotLength(self: bigint): number {
  * `iterate-next()` operation.
  */
 export function iterateNext(self: bigint): bigint | undefined {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
 
@@ -2525,7 +2565,7 @@ export function iterateNext(self: bigint): bigint | undefined {
  * `snapshot-item()` operation.
  */
 export function snapshotItem(self: bigint, index: number): bigint | undefined {
-  const obj = getXPathResult(self);
+  const obj = lookupXPathResult(self);
   return obj.snapshotItem(index) ?? undefined;
 }
 
@@ -2540,8 +2580,8 @@ export type XPathExpressionHandle = bigint;
 const _xPathExpressionhandles = new Map<bigint, XPathExpression>();
 let _nextXPathExpression = 1n;
 
-/** Get a XPathExpression by handle, throwing if not found. */
-function getXPathExpression(handle: bigint): XPathExpression {
+/** Lookup a XPathExpression by handle, throwing if not found. */
+function lookupXPathExpression(handle: bigint): XPathExpression {
   const obj = _xPathExpressionhandles.get(handle);
   if (!obj) {
     throw new Error(`XPathExpression handle ${handle} not found`);
@@ -2552,7 +2592,7 @@ function getXPathExpression(handle: bigint): XPathExpression {
  * `evaluate()` operation.
  */
 export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
-  const obj = getXPathExpression(self);
+  const obj = lookupXPathExpression(self);
   return obj.evaluate(contextNode, type, result);
 }
 
@@ -2567,8 +2607,8 @@ export type XPathNsResolverHandle = bigint;
 const _xPathNsResolverhandles = new Map<bigint, XPathNSResolver>();
 let _nextXPathNSResolver = 1n;
 
-/** Get a XPathNSResolver by handle, throwing if not found. */
-function getXPathNSResolver(handle: bigint): XPathNSResolver {
+/** Lookup a XPathNSResolver by handle, throwing if not found. */
+function lookupXPathNSResolver(handle: bigint): XPathNSResolver {
   const obj = _xPathNsResolverhandles.get(handle);
   if (!obj) {
     throw new Error(`XPathNSResolver handle ${handle} not found`);
@@ -2579,7 +2619,7 @@ function getXPathNSResolver(handle: bigint): XPathNSResolver {
  * `lookup-namespace-uri()` operation.
  */
 export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
-  const obj = getXPathNSResolver(self);
+  const obj = lookupXPathNSResolver(self);
   return (obj as any).lookupNamespaceURI(prefix) ?? undefined;
 }
 
@@ -2600,8 +2640,8 @@ function registerXPathEvaluatorBase(obj: XPathEvaluatorBase): bigint {
   _xPathEvaluatorBasehandles.set(handle, obj);
   return handle;
 }
-/** Get a XPathEvaluatorBase by handle, throwing if not found. */
-function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
+/** Lookup a XPathEvaluatorBase by handle, throwing if not found. */
+function lookupXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
   const obj = _xPathEvaluatorBasehandles.get(handle);
   if (!obj) {
     throw new Error(`XPathEvaluatorBase handle ${handle} not found`);
@@ -2612,7 +2652,7 @@ function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
  * `create-expression()` operation.
  */
 export function createExpression(self: bigint, expression: string, resolver: bigint | undefined): bigint {
-  const obj = getXPathEvaluatorBase(self);
+  const obj = lookupXPathEvaluatorBase(self);
   return obj.createExpression(expression, resolver);
 }
 
@@ -2620,15 +2660,15 @@ export function createExpression(self: bigint, expression: string, resolver: big
  * `create-ns-resolver()` operation.
  */
 export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
-  const obj = getXPathEvaluatorBase(self);
+  const obj = lookupXPathEvaluatorBase(self);
   return obj.createNSResolver(nodeResolver);
 }
 
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
-  const obj = getXPathEvaluatorBase(self);
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint, type: number | undefined, result: bigint | undefined): bigint {
+  const obj = lookupXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }
 
@@ -2643,8 +2683,8 @@ export type XsltProcessorHandle = bigint;
 const _xsltProcessorhandles = new Map<bigint, XSLTProcessor>();
 let _nextXSLTProcessor = 1n;
 
-/** Get a XSLTProcessor by handle, throwing if not found. */
-function getXSLTProcessor(handle: bigint): XSLTProcessor {
+/** Lookup a XSLTProcessor by handle, throwing if not found. */
+function lookupXSLTProcessor(handle: bigint): XSLTProcessor {
   const obj = _xsltProcessorhandles.get(handle);
   if (!obj) {
     throw new Error(`XSLTProcessor handle ${handle} not found`);
@@ -2654,8 +2694,8 @@ function getXSLTProcessor(handle: bigint): XSLTProcessor {
 /**
  * `import-stylesheet()` operation.
  */
-export function importStylesheet(self: bigint, style: bigint): void {
-  const obj = getXSLTProcessor(self);
+export function importStylesheet(self: bigint, style: string): void {
+  const obj = lookupXSLTProcessor(self);
   obj.importStylesheet(style);
 }
 
@@ -2663,15 +2703,15 @@ export function importStylesheet(self: bigint, style: bigint): void {
  * `transform-to-fragment()` operation.
  */
 export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   return obj.transformToFragment(source, output);
 }
 
 /**
  * `transform-to-document()` operation.
  */
-export function transformToDocument(self: bigint, source: bigint): bigint {
-  const obj = getXSLTProcessor(self);
+export function transformToDocument(self: bigint, source: string): bigint {
+  const obj = lookupXSLTProcessor(self);
   return obj.transformToDocument(source);
 }
 
@@ -2679,7 +2719,7 @@ export function transformToDocument(self: bigint, source: bigint): bigint {
  * `set-parameter()` operation.
  */
 export function setParameter(self: bigint, namespaceUri: string, localName: string, value: string): void {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   obj.getParameter = value;
 }
 
@@ -2687,7 +2727,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
  * `get-parameter()` operation.
  */
 export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   return obj.getParameter(namespaceUri, localName);
 }
 
@@ -2695,7 +2735,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: stri
  * `remove-parameter()` operation.
  */
 export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }
 
@@ -2703,7 +2743,7 @@ export function removeParameter(self: bigint, namespaceUri: string, localName: s
  * `clear-parameters()` operation.
  */
 export function clearParameters(self: bigint): void {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   obj.clearParameters();
 }
 
@@ -2711,7 +2751,7 @@ export function clearParameters(self: bigint): void {
  * `reset()` operation.
  */
 export function reset(self: bigint): void {
-  const obj = getXSLTProcessor(self);
+  const obj = lookupXSLTProcessor(self);
   obj.reset();
 }
 
@@ -2797,7 +2837,7 @@ export default {
   getIsConnected,
   getOwnerDocument,
   getRootNode,
-  NodeGetParentNode,
+  getParentNode,
   getParentElement,
   hasChildNodes,
   getChildNodes,

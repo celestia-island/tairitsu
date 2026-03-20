@@ -211,8 +211,8 @@ export type WsHandle = bigint;
 const _wsHandles = new Map<bigint, WebSocket>();
 let _nextWs = 1n;
 
-/** Get a WebSocket by handle, throwing if not found. */
-function getWs(handle: bigint): WebSocket {
+/** Lookup a WebSocket by handle, throwing if not found. */
+function lookupWs(handle: bigint): WebSocket {
   const obj = _wsHandles.get(handle);
   if (!obj) {
     throw new Error(`WebSocket handle ${handle} not found`);
@@ -222,7 +222,7 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): { ok: true; value: number } | { ok: false; error: boolean } {
+export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
@@ -230,23 +230,23 @@ export function connect(url: string, protocols: string): { ok: true; value: numb
  * `url()` operation.
  */
 export function url(handle: bigint): string {
-  const obj = getWs(handle);
+  const obj = lookupWs(handle);
   return obj.url();
 }
 
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint {
-  const obj = getWs(handle);
+export function readyState(handle: bigint): number {
+  const obj = lookupWs(handle);
   return obj.readyState();
 }
 
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): (string)[] {
-  const obj = getWs(handle);
+export function bufferedAmount(handle: bigint): bigint {
+  const obj = lookupWs(handle);
   return obj.bufferedAmount();
 }
 
@@ -254,7 +254,7 @@ export function bufferedAmount(handle: bigint): (string)[] {
  * `extensions()` operation.
  */
 export function extensions(handle: bigint): string {
-  const obj = getWs(handle);
+  const obj = lookupWs(handle);
   return obj.extensions();
 }
 
@@ -262,7 +262,7 @@ export function extensions(handle: bigint): string {
  * `protocol()` operation.
  */
 export function protocol(handle: bigint): string {
-  const obj = getWs(handle);
+  const obj = lookupWs(handle);
   return obj.protocol();
 }
 
@@ -270,7 +270,7 @@ export function protocol(handle: bigint): string {
  * `close()` operation.
  */
 export function close(handle: bigint, code: number, reason: string): void {
-  const obj = getWs(handle);
+  const obj = lookupWs(handle);
   obj.close(code, reason);
 }
 
@@ -278,7 +278,7 @@ export function close(handle: bigint, code: number, reason: string): void {
  * `send()` operation.
  */
 export function send(handle: bigint, data: string): void {
-  const obj = getWs(handle);
+  const obj = lookupWs(handle);
   obj.send(data);
 }
 

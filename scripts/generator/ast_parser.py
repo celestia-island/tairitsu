@@ -108,7 +108,7 @@ class WitParser:
             if is_first_handle_param:
                 skip_first_param = True
             
-            params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal))
+            params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal, p.name))
 
             if i == 0:
                 self_param = param_name

@@ -211,8 +211,8 @@ export type FileReaderHandle = bigint;
 const _fileReaderhandles = new Map<bigint, FileReader>();
 let _nextFileReader = 1n;
 
-/** Get a FileReader by handle, throwing if not found. */
-function getFileReader(handle: bigint): FileReader {
+/** Lookup a FileReader by handle, throwing if not found. */
+function lookupFileReader(handle: bigint): FileReader {
   const obj = _fileReaderhandles.get(handle);
   if (!obj) {
     throw new Error(`FileReader handle ${handle} not found`);
@@ -222,7 +222,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: bigint } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -230,7 +230,7 @@ export function newFileReader(): { ok: true; value: bigint } | { ok: false; erro
  * `abort()` operation.
  */
 export function abort(handle: bigint): void {
-  const obj = getFileReader(handle);
+  const obj = lookupFileReader(handle);
   obj.abort();
 }
 
@@ -238,7 +238,7 @@ export function abort(handle: bigint): void {
  * `ready-state()` operation.
  */
 export function readyState(handle: bigint): number {
-  const obj = getFileReader(handle);
+  const obj = lookupFileReader(handle);
   return obj.readyState();
 }
 
@@ -246,7 +246,7 @@ export function readyState(handle: bigint): number {
  * `result-val()` operation.
  */
 export function resultVal(handle: bigint): string | undefined {
-  const obj = getFileReader(handle);
+  const obj = lookupFileReader(handle);
   return obj.result() ?? undefined;
 }
 
@@ -261,8 +261,8 @@ export type FileListHandle = bigint;
 const _fileListhandles = new Map<bigint, FileList>();
 let _nextFileList = 1n;
 
-/** Get a FileList by handle, throwing if not found. */
-function getFileList(handle: bigint): FileList {
+/** Lookup a FileList by handle, throwing if not found. */
+function lookupFileList(handle: bigint): FileList {
   const obj = _fileListhandles.get(handle);
   if (!obj) {
     throw new Error(`FileList handle ${handle} not found`);
@@ -272,8 +272,8 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): boolean {
-  const obj = getFileList(handle);
+export function length(handle: bigint): number {
+  const obj = lookupFileList(handle);
   return obj.length();
 }
 
