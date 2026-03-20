@@ -235,11 +235,11 @@ function lookupPromisePermissionStatus(handle: bigint): Promise<PermissionStatus
 }
 
 /** Lookup an optional promise-permission-status value by handle. */
-function lookupOptionPromisePermissionStatus(handle: bigint | undefined): Promise<PermissionStatus> | undefined {
+function lookupOptionPromisePermissionStatus(handle: bigint | undefined): Promise<PermissionStatus> | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _promisePermissionStatusHandles.get(handle);
+  return _promisePermissionStatusHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -321,7 +321,7 @@ function lookupPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): bigint {
+export function getState(self: bigint): number {
   const obj = lookupPermissionStatus(self);
   return obj.state;
 }
@@ -337,7 +337,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint {
+export function getOnchange(self: bigint): string {
   const obj = lookupPermissionStatus(self);
   return obj.onchange;
 }

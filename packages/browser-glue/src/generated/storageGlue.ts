@@ -365,12 +365,12 @@ export function estimate(self: bigint): bigint {
  * Poll an async `estimate()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollEstimate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollEstimate(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------

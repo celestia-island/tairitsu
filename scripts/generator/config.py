@@ -365,7 +365,7 @@ BROWSER_API_NAME_MAPPINGS = {
     "shader-parameter": "getShaderParameter",
     "shader-precision-format": "getShaderPrecisionFormat",
     "shader-info-log": "getShaderInfoLog",
-    "shader-source": "getShaderSource",
+    "shader-source": "shaderSource",
     "tex-parameter": "getTexParameter",
     "uniform": "getUniform",
     "uniform-location": "getUniformLocation",
@@ -415,9 +415,13 @@ BROWSER_API_NAME_MAPPINGS = {
     "start-before": "setStartBefore",
     "start-after": "setStartAfter",
     "end-before": "setEndBefore",
-    "transform": "setTransform",
-    "types": "type",
+    "types": "types",
     "get-buffer-sub-data": "getBufferSubData",
+    "get-completed": "completed",
+    "get-closed": "closed",
+    "get-promise": "promise",
+    "set-html-unsafe": "setHTMLUnsafe",
+    "set-attribute-node-ns": "setAttributeNodeNS",
 }
 
 # Static method return type overrides (method name -> actual return type)
@@ -529,6 +533,10 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("canvas-rendering-context", "getTransform"): "dom-matrix",
     ("canvas-rendering-context", "getBoundingClientRect"): "dom-rect",
     ("canvas-rendering-context", "getClientRects"): "dom-rect-list",
+    # CanvasImageData
+    ("canvas-image-data", "getImageData"): "image-data",
+    # CanvasTransform
+    ("canvas-transform", "getTransform"): "dom-matrix",
     # ImageDecoder
     ("image-decoder", "tracks"): "image-track-list",
     ("image-track-list", "imageTrack"): "image-track",
@@ -1595,12 +1603,12 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl-rendering-context-base", "get-shader-info-log", "shader"): "handle:web-gl-object",
     ("web-gl-rendering-context-base", "get-program-info-log", "program"): "handle:web-gl-object",
     ("web-gl-rendering-context-base", "get-shader-source", "shader"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-buffer", "buffer"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-framebuffer", "framebuffer"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-program", "program"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-renderbuffer", "renderbuffer"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-shader", "shader"): "handle:web-gl-object",
-    ("web-gl-rendering-context-base", "is-texture", "texture"): "handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-buffer", "buffer"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-framebuffer", "framebuffer"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-program", "program"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-renderbuffer", "renderbuffer"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-shader", "shader"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "is-texture", "texture"): "optional-handle:web-gl-object",
     ("web-gl-rendering-context-base", "uniform1i", "location"): "optional-handle:web-gl-uniform-location",
     ("web-gl-rendering-context-base", "uniform1i", "x"): True,
     ("web-gl-rendering-context-base", "uniform2i", "location"): "optional-handle:web-gl-uniform-location",
@@ -1681,31 +1689,37 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl2-rendering-context-base", "get-vertex-attrib", "index"): True,
     ("web-gl2-rendering-context-base", "vertex-attrib-pointer", "index"): True,
     ("web-gl2-rendering-context-base", "create-query", "target"): True,
-    ("web-gl2-rendering-context-base", "delete-query", "query"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "is-query", "query"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "delete-query", "query"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "is-query", "query"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "begin-query", "target"): True,
     ("web-gl2-rendering-context-base", "begin-query", "query"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "end-query", "target"): True,
     ("web-gl2-rendering-context-base", "get-query", "target"): True,
     ("web-gl2-rendering-context-base", "get-query", "pname"): True,
-    ("web-gl2-rendering-context-base", "get-query-parameter", "query"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "get-query-parameter", "query"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "create-sampler", "sampler"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "delete-sampler", "sampler"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "is-sampler", "sampler"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "delete-sampler", "sampler"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "is-sampler", "sampler"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "bind-sampler", "unit"): True,
     ("web-gl2-rendering-context-base", "bind-sampler", "sampler"): "optional-handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "sampler-parameter-i", "sampler"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "sampler-parameter-f", "sampler"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "sampler-parameteri", "sampler"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "sampler-parameteri", "pname"): True,
+    ("web-gl2-rendering-context-base", "sampler-parameteri", "param"): True,
+    ("web-gl2-rendering-context-base", "sampler-parameterf", "sampler"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "sampler-parameterf", "pname"): True,
+    ("web-gl2-rendering-context-base", "sampler-parameterf", "param"): True,
     ("web-gl2-rendering-context-base", "get-sampler-parameter", "sampler"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "get-sampler-parameter", "pname"): True,
     ("web-gl2-rendering-context-base", "fence-sync", "condition"): True,
-    ("web-gl2-rendering-context-base", "delete-sync", "sync"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "is-sync", "sync"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "fence-sync", "flags"): True,
+    ("web-gl2-rendering-context-base", "delete-sync", "sync"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "is-sync", "sync"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "client-wait-sync", "sync"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "wait-sync", "sync"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "get-sync-parameter", "sync"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "create-transform-feedback", "tf"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "delete-transform-feedback", "tf"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "is-transform-feedback", "tf"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "delete-transform-feedback", "tf"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "is-transform-feedback", "tf"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "bind-transform-feedback", "target"): True,
     ("web-gl2-rendering-context-base", "bind-transform-feedback", "id"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "begin-transform-feedback", "primitiveMode"): True,
@@ -1724,8 +1738,8 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl2-rendering-context-base", "get-active-uniform-block-parameter", "program"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "get-active-uniform-block-name", "program"): "handle:web-gl-object",
     ("web-gl2-rendering-context-base", "uniform-block-binding", "program"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "delete-vertex-array", "vertexArray"): "handle:web-gl-object",
-    ("web-gl2-rendering-context-base", "is-vertex-array", "vertexArray"): "handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "delete-vertex-array", "vertexArray"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "is-vertex-array", "vertexArray"): "optional-handle:web-gl-object",
     ("web-gl2-rendering-context-base", "draw-arrays-instanced", "mode"): True,
     ("web-gl2-rendering-context-base", "draw-elements-instanced", "mode"): True,
     ("web-gl2-rendering-context-base", "draw-range-elements", "mode"): True,
@@ -2014,6 +2028,188 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl2-rendering-context-base", "get-buffer-sub-data", "src-byte-offset"): True,
     ("web-gl2-rendering-context-base", "get-buffer-sub-data", "dst-offset"): True,
     ("web-gl2-rendering-context-base", "get-buffer-sub-data", "length"): True,
+    # WebGL missing conversions
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "target"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "level"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "internalformat"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "x"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "y"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "width"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "height"): True,
+    ("web-gl-rendering-context-base", "copy-tex-image2-d", "border"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "target"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "level"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "xoffset"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "yoffset"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "x"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "y"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "width"): True,
+    ("web-gl-rendering-context-base", "copy-tex-sub-image2-d", "height"): True,
+    ("web-gl-rendering-context-base", "framebuffer-texture2-d", "target"): True,
+    ("web-gl-rendering-context-base", "framebuffer-texture2-d", "attachment"): True,
+    ("web-gl-rendering-context-base", "framebuffer-texture2-d", "textarget"): True,
+    ("web-gl-rendering-context-base", "framebuffer-texture2-d", "texture"): "optional-handle:web-gl-object",
+    ("web-gl-rendering-context-base", "framebuffer-texture2-d", "level"): True,
+    ("web-gl-rendering-context-base", "is-enabled", "cap"): True,
+    ("web-gl-rendering-context-base", "line-width", "width"): True,
+    ("web-gl-rendering-context-base", "pixel-storei", "pname"): True,
+    ("web-gl-rendering-context-base", "pixel-storei", "param"): True,
+    ("web-gl-rendering-context-base", "polygon-offset", "factor"): True,
+    ("web-gl-rendering-context-base", "polygon-offset", "units"): True,
+    ("web-gl-rendering-context-base", "get-query-parameter", "pname"): True,
+    # WebGL2 missing conversions
+    ("web-gl2-rendering-context-base", "copy-buffer-sub-data", "read-target"): True,
+    ("web-gl2-rendering-context-base", "copy-buffer-sub-data", "write-target"): True,
+    ("web-gl2-rendering-context-base", "copy-buffer-sub-data", "read-offset"): True,
+    ("web-gl2-rendering-context-base", "copy-buffer-sub-data", "write-offset"): True,
+    ("web-gl2-rendering-context-base", "copy-buffer-sub-data", "size"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "src-x0"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "src-y0"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "src-x1"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "src-y1"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "dst-x0"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "dst-y0"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "dst-x1"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "dst-y1"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "mask"): True,
+    ("web-gl2-rendering-context-base", "blit-framebuffer", "filter"): True,
+    ("web-gl2-rendering-context-base", "framebuffer-texture-layer", "level"): True,
+    ("web-gl2-rendering-context-base", "framebuffer-texture-layer", "layer"): True,
+    ("web-gl2-rendering-context-base", "bind-transform-feedback", "target"): True,
+    ("web-gl2-rendering-context-base", "begin-transform-feedback", "primitive-mode"): True,
+    ("web-gl2-rendering-context-base", "bind-vertex-array", "array"): "optional-handle:web-gl-object",
+    # WebGL missing conversions for methods still using bigint
+    ("web-gl-rendering-context-base", "get-shader-precision-format", "shadertype"): True,
+    ("web-gl-rendering-context-base", "get-shader-precision-format", "precisiontype"): True,
+    ("web-gl-rendering-context-base", "renderbuffer-storage", "internalformat"): True,
+    ("web-gl-rendering-context-base", "renderbuffer-storage", "width"): True,
+    ("web-gl-rendering-context-base", "renderbuffer-storage", "height"): True,
+    ("web-gl-rendering-context-base", "sample-coverage", "value"): True,
+    ("web-gl-rendering-context-base", "sample-coverage", "invert"): "boolean",
+    ("web-gl-rendering-context-base", "scissor", "x"): True,
+    ("web-gl-rendering-context-base", "scissor", "y"): True,
+    ("web-gl-rendering-context-base", "scissor", "width"): True,
+    ("web-gl-rendering-context-base", "scissor", "height"): True,
+    ("web-gl-rendering-context-base", "stencil-func", "ref"): True,
+    ("web-gl-rendering-context-base", "stencil-func", "mask"): True,
+    ("web-gl-rendering-context-base", "stencil-func-separate", "face"): True,
+    ("web-gl-rendering-context-base", "stencil-func-separate", "func"): True,
+    ("web-gl-rendering-context-base", "stencil-func-separate", "ref"): True,
+    ("web-gl-rendering-context-base", "stencil-func-separate", "mask"): True,
+    ("web-gl-rendering-context-base", "validate-program", "program"): "handle:web-gl-object",
+    ("web-gl-rendering-context-base", "vertex-attrib1f", "index"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib1f", "x"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib2f", "index"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib2f", "x"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib2f", "y"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib3f", "index"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib3f", "x"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib3f", "y"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib3f", "z"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib4f", "index"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib4f", "x"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib4f", "y"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib4f", "z"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib4f", "w"): True,
+    ("web-gl-rendering-context-base", "stencil-mask-separate", "face"): True,
+    ("web-gl-rendering-context-base", "stencil-mask-separate", "mask"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "index"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "size"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "type"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "normalized"): "boolean",
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "stride"): True,
+    ("web-gl-rendering-context-base", "vertex-attrib-pointer", "offset"): True,
+    ("web-gl-rendering-context-base", "viewport", "x"): True,
+    ("web-gl-rendering-context-base", "viewport", "y"): True,
+    ("web-gl-rendering-context-base", "viewport", "width"): True,
+    ("web-gl-rendering-context-base", "viewport", "height"): True,
+    ("web-gl-rendering-context-base", "tex-parameterf", "target"): True,
+    ("web-gl-rendering-context-base", "tex-parameterf", "pname"): True,
+    ("web-gl-rendering-context-base", "tex-parameterf", "param"): True,
+    ("web-gl-rendering-context-base", "tex-parameteri", "target"): True,
+    ("web-gl-rendering-context-base", "tex-parameteri", "pname"): True,
+    ("web-gl-rendering-context-base", "tex-parameteri", "param"): True,
+    # WebGL2 missing Number() conversions
+    ("web-gl2-rendering-context-base", "get-internalformat-parameter", "target"): True,
+    ("web-gl2-rendering-context-base", "get-internalformat-parameter", "internalformat"): True,
+    ("web-gl2-rendering-context-base", "get-internalformat-parameter", "pname"): True,
+    ("web-gl2-rendering-context-base", "uniform-1ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform-2ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform-3ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform-4ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "delete-transform-feedback", "tf"): "optional-handle:web-gl-object",
+    # More WebGL2 Number() conversions
+    ("web-gl2-rendering-context-base", "get-query-parameter", "pname"): True,
+    ("web-gl2-rendering-context-base", "get-sync-parameter", "pname"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-base", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "offset"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "size"): True,
+    ("web-gl2-rendering-context-base", "get-indexed-parameter", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-vertex-array", "array"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "delete-vertex-array", "vertex-array"): "optional-handle:web-gl-object",
+    ("web-gl2-rendering-context-base", "begin-query", "target"): True,
+    ("web-gl2-rendering-context-base", "end-query", "target"): True,
+    ("web-gl2-rendering-context-base", "get-query", "target"): True,
+    ("web-gl2-rendering-context-base", "get-query", "pname"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-divisor", "index"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-divisor", "divisor"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "index"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "size"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "type"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "stride"): True,
+    ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "offset"): True,
+    # More WebGL2 Number() conversions for sync and uniform block operations
+    ("web-gl2-rendering-context-base", "client-wait-sync", "flags"): True,
+    ("web-gl2-rendering-context-base", "client-wait-sync", "timeout"): True,
+    ("web-gl2-rendering-context-base", "wait-sync", "flags"): True,
+    ("web-gl2-rendering-context-base", "wait-sync", "timeout"): True,
+    ("web-gl2-rendering-context-base", "get-active-uniform-block-parameter", "uniform-block-index"): True,
+    ("web-gl2-rendering-context-base", "get-active-uniform-block-parameter", "pname"): True,
+    ("web-gl2-rendering-context-base", "get-active-uniform-block-name", "uniform-block-index"): True,
+    ("web-gl2-rendering-context-base", "uniform-block-binding", "uniform-block-index"): True,
+    ("web-gl2-rendering-context-base", "uniform-block-binding", "uniform-block-binding"): True,
+    ("web-gl2-rendering-context-base", "draw-range-elements", "start"): True,
+    ("web-gl2-rendering-context-base", "draw-range-elements", "end"): True,
+    ("web-gl2-rendering-context-base", "draw-range-elements", "count"): True,
+    ("web-gl2-rendering-context-base", "draw-range-elements", "type"): True,
+    ("web-gl2-rendering-context-base", "draw-range-elements", "offset"): True,
+    ("web-gl2-rendering-context-base", "draw-arrays-instanced", "first"): True,
+    ("web-gl2-rendering-context-base", "draw-arrays-instanced", "count"): True,
+    ("web-gl2-rendering-context-base", "draw-arrays-instanced", "instance-count"): True,
+    ("web-gl2-rendering-context-base", "draw-elements-instanced", "count"): True,
+    ("web-gl2-rendering-context-base", "draw-elements-instanced", "type"): True,
+    ("web-gl2-rendering-context-base", "draw-elements-instanced", "offset"): True,
+    ("web-gl2-rendering-context-base", "draw-elements-instanced", "instance-count"): True,
+    ("web-gl2-rendering-context-base", "clear-bufferfi", "buffer"): True,
+    ("web-gl2-rendering-context-base", "clear-bufferfi", "drawbuffer"): True,
+    ("web-gl2-rendering-context-base", "clear-bufferfi", "depth"): True,
+    ("web-gl2-rendering-context-base", "clear-bufferfi", "stencil"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "x"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "y"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "width"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "height"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "format"): True,
+    ("web-gl2-rendering-context-base", "read-pixels", "type"): True,
+    # WebGL2 methods still missing Number() conversions
+    ("web-gl2-rendering-context-base", "get-transform-feedback-varying", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-base", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "index"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "offset"): True,
+    ("web-gl2-rendering-context-base", "bind-buffer-range", "size"): True,
+    ("web-gl2-rendering-context-base", "begin-transform-feedback", "primitive-mode"): True,
+    ("web-gl2-rendering-context-base", "draw-buffers", "buffers"): "array",
+    # WebGL2RenderingContextOverloads - buffer sub data needs Number()
+    ("web-gl2-rendering-context-overloads", "buffer-sub-data", "target"): True,
+    ("web-gl2-rendering-context-overloads", "buffer-sub-data", "dst-byte-offset"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "target"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "level"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "internalformat"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "width"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "height"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "border"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "format"): True,
+    ("web-gl2-rendering-context-overloads", "tex-image2-d", "type"): True,
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -2037,6 +2233,59 @@ ENUM_PROPERTIES = {
     ("gamepad", "mapping"): "GamepadMappingType",
     # ShadowRoot mode
     ("shadow-root", "mode"): "ShadowRootMode",
+    # Document visibility
+    ("document", "visibilityState"): "VisibilityState",
+    # ShadowRoot slot assignment
+    ("shadow-root", "slotAssignment"): "SlotAssignmentMode",
+    # DOMTokenList value
+    ("dom-token-list", "value"): "DOMTokenListValue",
+    # ClipboardItem presentation style
+    ("clipboard-item", "presentationStyle"): "PresentationStyle",
+    # Request enums
+    ("request", "credentials"): "RequestCredentials",
+    ("request", "cache"): "RequestCache",
+    ("request", "redirect"): "RequestRedirect",
+    ("request", "duplex"): "RequestDuplex",
+    # Response type
+    ("response", "type"): "ResponseType",
+    # XMLHttpRequest response type
+    ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
+    # HTMLIFrameElement srcdoc
+    ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
+    # Canvas enums
+    ("canvas-image-smoothing", "imageSmoothingQuality"): "ImageSmoothingQuality",
+    ("canvas-path-drawing-styles", "lineCap"): "CanvasLineCap",
+    ("canvas-path-drawing-styles", "lineJoin"): "CanvasLineJoin",
+    ("canvas-text-drawing-styles", "textAlign"): "CanvasTextAlign",
+    ("canvas-text-drawing-styles", "textBaseline"): "CanvasTextBaseline",
+    ("canvas-text-drawing-styles", "direction"): "CanvasDirection",
+    ("canvas-text-drawing-styles", "fontKerning"): "CanvasFontKerning",
+    ("canvas-text-drawing-styles", "fontStretch"): "CanvasFontStretch",
+    ("canvas-text-drawing-styles", "fontVariantCaps"): "CanvasFontVariantCaps",
+    ("canvas-text-drawing-styles", "textRendering"): "CanvasTextRendering",
+    # ImageData color space
+    ("image-data", "colorSpace"): "PredefinedColorSpace",
+    # Navigation activation type
+    ("navigation-activation", "navigationType"): "NavigationType",
+    # Location href
+    ("location", "href"): "LocationHref",
+    # URL href (for setter)
+    ("url", "href"): "URLHref",
+    # HTMLHyperlinkElementUtils href
+    ("html-hyperlink-element-utils", "href"): "HTMLHyperlinkHref",
+    # MediaStreamTrack ready state
+    ("media-stream-track", "readyState"): "MediaStreamTrackState",
+    # MediaDeviceInfo kind
+    ("media-device-info", "kind"): "MediaDeviceKind",
+    # History scroll restoration
+    ("history", "scrollRestoration"): "ScrollRestoration",
+    # TextTrack mode
+    ("text-track", "mode"): "TextTrackMode",
+    # Element innerHTML/outerHTML
+    ("element", "innerHTML"): "HTMLString",
+    ("element", "outerHTML"): "HTMLString",
+    # MediaList mediaText
+    ("media-list", "mediaText"): "MediaText",
 }
 
 # Enum value mappings (string → bigint)
@@ -2101,6 +2350,153 @@ ENUM_VALUE_MAPPINGS = {
         "open": 0,
         "closed": 1,
     },
+    "VisibilityState": {
+        "visible": 0,
+        "hidden": 1,
+    },
+    "SlotAssignmentMode": {
+        "manual": 0,
+        "named": 1,
+    },
+    "DOMTokenListValue": {
+        "": 0,
+    },
+    "PresentationStyle": {
+        "unspecified": 0,
+        "inline": 1,
+        "attachment": 2,
+    },
+    "RequestCredentials": {
+        "omit": 0,
+        "same-origin": 1,
+        "include": 2,
+    },
+    "RequestCache": {
+        "default": 0,
+        "no-store": 1,
+        "reload": 2,
+        "no-cache": 3,
+        "force-cache": 4,
+        "only-if-cached": 5,
+    },
+    "RequestRedirect": {
+        "follow": 0,
+        "error": 1,
+        "manual": 2,
+    },
+    "RequestDuplex": {
+        "half": 0,
+    },
+    "ResponseType": {
+        "basic": 0,
+        "cors": 1,
+        "default": 2,
+        "error": 3,
+        "opaque": 4,
+        "opaqueredirect": 5,
+    },
+    "XMLHttpRequestResponseType": {
+        "": 0,
+        "arraybuffer": 1,
+        "blob": 2,
+        "document": 3,
+        "json": 4,
+        "text": 5,
+    },
+    "HTMLSrcdoc": {
+        "": 0,
+    },
+    "ImageSmoothingQuality": {
+        "low": 0,
+        "medium": 1,
+        "high": 2,
+    },
+    "CanvasLineCap": {
+        "butt": 0,
+        "round": 1,
+        "square": 2,
+    },
+    "CanvasLineJoin": {
+        "round": 0,
+        "bevel": 1,
+        "miter": 2,
+    },
+    "CanvasTextAlign": {
+        "left": 0,
+        "right": 1,
+        "center": 2,
+        "start": 3,
+        "end": 4,
+    },
+    "CanvasTextBaseline": {
+        "top": 0,
+        "hanging": 1,
+        "middle": 2,
+        "alphabetic": 3,
+        "ideographic": 4,
+        "bottom": 5,
+    },
+    "CanvasDirection": {
+        "ltr": 0,
+        "rtl": 1,
+        "inherit": 2,
+    },
+    "CanvasFontKerning": {
+        "auto": 0,
+        "normal": 1,
+        "none": 2,
+    },
+    "CanvasFontStretch": {
+        "": 0,
+    },
+    "CanvasFontVariantCaps": {
+        "": 0,
+    },
+    "CanvasTextRendering": {
+        "auto": 0,
+        "optimizeSpeed": 1,
+        "optimizeLegibility": 2,
+        "geometricPrecision": 3,
+    },
+    "NavigationType": {
+        "push": 0,
+        "replace": 1,
+        "traverse": 2,
+        "reload": 3,
+    },
+    "LocationHref": {
+        "": 0,
+    },
+    "URLHref": {
+        "": 0,
+    },
+    "HTMLHyperlinkHref": {
+        "": 0,
+    },
+    "MediaStreamTrackState": {
+        "live": 0,
+        "ended": 1,
+    },
+    "MediaDeviceKind": {
+        "audioinput": 0,
+        "audiooutput": 1,
+        "videoinput": 2,
+    },
+    "ScrollRestoration": {
+        "auto": 0,
+        "manual": 1,
+    },
+    "TextTrackMode": {
+        "disabled": 0,
+        "hidden": 1,
+        "showing": 2,
+    },
+    "HTMLString": {
+        "": 0,
+    },
+    "MediaText": {
+        "": 0,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -2110,6 +2506,40 @@ ENUM_SETTER_PROPERTIES = {
     # WebGL color space setters
     ("web-gl-rendering-context-base", "drawingBufferColorSpace"): "PredefinedColorSpace",
     ("web-gl-rendering-context-base", "unpackColorSpace"): "PredefinedColorSpace",
+    # Canvas setters
+    ("canvas-image-smoothing", "imageSmoothingQuality"): "ImageSmoothingQuality",
+    ("canvas-path-drawing-styles", "lineCap"): "CanvasLineCap",
+    ("canvas-path-drawing-styles", "lineJoin"): "CanvasLineJoin",
+    ("canvas-text-drawing-styles", "textAlign"): "CanvasTextAlign",
+    ("canvas-text-drawing-styles", "textBaseline"): "CanvasTextBaseline",
+    ("canvas-text-drawing-styles", "direction"): "CanvasDirection",
+    ("canvas-text-drawing-styles", "fontKerning"): "CanvasFontKerning",
+    ("canvas-text-drawing-styles", "fontStretch"): "CanvasFontStretch",
+    ("canvas-text-drawing-styles", "fontVariantCaps"): "CanvasFontVariantCaps",
+    ("canvas-text-drawing-styles", "textRendering"): "CanvasTextRendering",
+    # History setter
+    ("history", "scrollRestoration"): "ScrollRestoration",
+    # TextTrack setter
+    ("text-track", "mode"): "TextTrackMode",
+    # XMLHttpRequest setter
+    ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
+    # Location setter
+    ("location", "href"): "LocationHref",
+    # URL setter
+    ("url", "href"): "URLHref",
+    # HTMLHyperlinkElementUtils setter
+    ("html-hyperlink-element-utils", "href"): "HTMLHyperlinkHref",
+    # Element setters
+    ("element", "innerHTML"): "HTMLString",
+    ("element", "outerHTML"): "HTMLString",
+    # ShadowRoot setter
+    ("shadow-root", "innerHTML"): "HTMLString",
+    # MediaList setter
+    ("media-list", "mediaText"): "MediaText",
+    # DOMTokenList setter
+    ("dom-token-list", "value"): "DOMTokenListValue",
+    # HTMLIFrameElement setter
+    ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
 }
 
 # Methods that return boolean but need to be converted to bigint
@@ -2162,6 +2592,8 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("gamepad-button", "get-pressed"): True,
     # XMLHttpRequest
     ("xml-http-request", "get-with-credentials"): True,
+    # Request
+    ("request", "get-is-history-navigation"): True,
 }
 
 # Properties that return number but need to be converted to bigint
@@ -2191,12 +2623,12 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("web-gl-rendering-context-base", "drawingBufferWidth"): True,
     ("web-gl-rendering-context-base", "drawingBufferHeight"): True,
     # WebGL methods that return number but WIT expects bigint
-    ("web-gl-rendering-context-base", "checkFramebufferStatus"): True,
-    ("web-gl-rendering-context-base", "getAttribLocation"): True,
-    ("web-gl-rendering-context-base", "getVertexAttribOffset"): True,
-    ("web-gl2-rendering-context-base", "getFragDataLocation"): True,
-    ("web-gl2-rendering-context-base", "getUniformBlockIndex"): True,
-    ("web-gl2-rendering-context-base", "clientWaitSync"): True,
+    ("web-gl-rendering-context-base", "check-framebuffer-status"): True,
+    ("web-gl-rendering-context-base", "get-attrib-location"): True,
+    ("web-gl-rendering-context-base", "get-vertex-attrib-offset"): True,
+    ("web-gl2-rendering-context-base", "get-frag-data-location"): True,
+    ("web-gl2-rendering-context-base", "get-uniform-block-index"): True,
+    ("web-gl2-rendering-context-base", "client-wait-sync"): True,
     # Gamepad
     ("gamepad", "timestamp"): True,
     ("gamepad", "index"): True,
@@ -2293,6 +2725,101 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # WASM
     ("memory", "grow"): True,
     ("table", "grow"): True,
+    # Touch
+    ("touch", "radiusX"): True,
+    ("touch", "radiusY"): True,
+    ("touch", "rotationAngle"): True,
+    ("touch", "force"): True,
+    # OffscreenCanvas
+    ("offscreen-canvas", "width"): True,
+    ("offscreen-canvas", "height"): True,
+    # Navigator
+    ("navigator-concurrent-hardware", "hardwareConcurrency"): True,
+    # Navigation
+    ("navigation-history-entry", "index"): True,
+    # PerformanceTiming
+    ("performance-timing", "navigationStart"): True,
+    ("performance-timing", "unloadEventStart"): True,
+    ("performance-timing", "unloadEventEnd"): True,
+    ("performance-timing", "redirectStart"): True,
+    ("performance-timing", "redirectEnd"): True,
+    ("performance-timing", "fetchStart"): True,
+    ("performance-timing", "domainLookupStart"): True,
+    ("performance-timing", "domainLookupEnd"): True,
+    ("performance-timing", "connectStart"): True,
+    ("performance-timing", "connectEnd"): True,
+    ("performance-timing", "secureConnectionStart"): True,
+    ("performance-timing", "requestStart"): True,
+    ("performance-timing", "responseStart"): True,
+    ("performance-timing", "responseEnd"): True,
+    ("performance-timing", "domLoading"): True,
+    ("performance-timing", "domInteractive"): True,
+    ("performance-timing", "domContentLoadedEventStart"): True,
+    ("performance-timing", "domContentLoadedEventEnd"): True,
+    ("performance-timing", "domComplete"): True,
+    ("performance-timing", "loadEventStart"): True,
+    ("performance-timing", "loadEventEnd"): True,
+    # PerformanceEntry
+    ("performance-entry", "startTime"): True,
+    ("performance-entry", "duration"): True,
+    # PerformanceResourceTiming
+    ("performance-resource-timing", "transferSize"): True,
+    ("performance-resource-timing", "encodedBodySize"): True,
+    ("performance-resource-timing", "decodedBodySize"): True,
+    # PointerEvent
+    ("pointer-event", "pointerId"): True,
+    ("pointer-event", "width"): True,
+    ("pointer-event", "height"): True,
+    ("pointer-event", "pressure"): True,
+    ("pointer-event", "tangentialPressure"): True,
+    ("pointer-event", "tiltX"): True,
+    ("pointer-event", "tiltY"): True,
+    ("pointer-event", "twist"): True,
+    ("pointer-event", "altitudeAngle"): True,
+    ("pointer-event", "azimuthAngle"): True,
+    # TouchEvent
+    ("touch-event", "touchPointId"): True,
+    # WebSocket
+    ("ws", "readyState"): True,
+    ("ws", "bufferedAmount"): True,
+    # RTC
+    ("rtc-data-channel", "maxMessageSize"): True,
+    # Gamepad
+    ("gamepad", "timestamp"): True,
+    ("gamepad", "index"): True,
+    # Navigator
+    ("navigator", "maxTouchPoints"): True,
+    # Touch
+    ("touch", "pageX"): True,
+    ("touch", "pageY"): True,
+    ("touch", "clientX"): True,
+    ("touch", "clientY"): True,
+    ("touch", "screenX"): True,
+    ("touch", "screenY"): True,
+    # BlobEvent
+    ("blob-event", "timecode"): True,
+    # WebAssembly Table
+    ("table", "length"): True,
+}
+
+# Interface-specific browser attribute name overrides
+# Maps (interface_name, wit_attr_name) -> browser_attr_name
+# This is used when the same WIT attribute name maps to different browser names on different interfaces
+INTERFACE_ATTR_OVERRIDES = {
+    # Document.url should be URL (uppercase), but other interfaces use url (lowercase)
+    ("document", "url"): "URL",
+    # IntersectionObserverEntry.boundingClientRect is a property, not a method
+    ("intersection-observer-entry", "bounding-client-rect"): "boundingClientRect",
+    # Window.navigation should be navigator
+    ("window", "navigation"): "navigator",
+    # NamedNodeMap.namedItem should be getNamedItem
+    ("named-node-map", "named-item"): "getNamedItem",
+    # ClipboardChangeEvent.types should be type (singular) - the property is clipboardData.types
+    ("clipboard-change-event", "types"): "type",
+    # ClipboardItem.type should be types (plural) 
+    ("clipboard-item", "type"): "types",
+    # WebGLRenderingContextBase.shader-source getter should call getShaderSource
+    ("web-gl-rendering-context-base", "shader-source"): "getShaderSource",
 }
 
 # Functions that are defined as getters in WIT but are actually methods in DOM API
@@ -2331,6 +2858,8 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "receivers", "transceivers", "senders", "stats",
     "header-value", "set-cookie", "resource-timing-buffer-size",
     "ready", "controller", "metadata", "voices", "voices-and-voice",
+    # Canvas methods that are getters in WIT but methods in DOM
+    "image-data", "transform",
 }
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
@@ -2345,6 +2874,8 @@ SETTER_BUT_ACTUALLY_METHOD = {
     "resource-timing-buffer-size", "codec-preferences",
     "form-value", "drag-image",
     "popover-target-element",
+    # Canvas methods
+    "set-transform",
 }
 
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces
@@ -2849,6 +3380,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("css-font-feature-values-rule", "historicalForms"),
     # Window
     ("window", "fetchLater"),
+    ("window", "object"),
     # Document
     ("document", "parseHtmlUnsafe"),
     ("document", "object"),
@@ -2876,6 +3408,12 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     # Navigator
     ("navigator", "battery"),
     ("navigator", "gamepads"),
+    # NavigatorContentUtils
+    ("navigator-content-utils", "unregisterProtocolHandler"),
+    # VisualViewport
+    ("visual-viewport", "onscrollend"),
+    # MessagePort
+    ("message-port", "onclose"),
     # Gamepad
     ("gamepad", "touches"),
     # GamepadHapticActuator

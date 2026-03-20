@@ -230,11 +230,11 @@ function lookupDomRectReadOnly(handle: bigint): DOMRectReadOnly {
 }
 
 /** Lookup an optional dom-rect-read-only value by handle. */
-function lookupOptionDomRectReadOnly(handle: bigint | undefined): DOMRectReadOnly | undefined {
+function lookupOptionDomRectReadOnly(handle: bigint | undefined): DOMRectReadOnly | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _domRectReadOnlyHandles.get(handle);
+  return _domRectReadOnlyHandles.get(handle) ?? null;
 }
 
 /** Lookup a element value by handle. */
@@ -247,11 +247,11 @@ function lookupElement(handle: bigint): Element {
 }
 
 /** Lookup an optional element value by handle. */
-function lookupOptionElement(handle: bigint | undefined): Element | undefined {
+function lookupOptionElement(handle: bigint | undefined): Element | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementHandles.get(handle);
+  return _elementHandles.get(handle) ?? null;
 }
 
 /** Lookup a number-list value by handle. */
@@ -264,11 +264,11 @@ function lookupNumberList(handle: bigint): number[] {
 }
 
 /** Lookup an optional number-list value by handle. */
-function lookupOptionNumberList(handle: bigint | undefined): number[] | undefined {
+function lookupOptionNumberList(handle: bigint | undefined): number[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _numberListHandles.get(handle);
+  return _numberListHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -312,7 +312,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): string {
+export function getScrollMargin(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).scrollMargin;
 }
@@ -339,7 +339,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): (bigint)[] {
+export function getTrackVisibility(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -355,7 +355,7 @@ export function IntersectionObserverObserve(self: bigint, target: string): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: boolean): void {
+export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(target);
 }
@@ -419,7 +419,7 @@ export function getRootBounds(self: bigint): bigint | undefined {
  */
 export function getBoundingClientRect(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
-  const result = obj.getBoundingClientRect();
+  const result = obj.boundingClientRect();
   const handle = _nextDomRectReadOnly++;
   _domRectReadOnlyHandles.set(handle, result);
   return handle;
@@ -490,7 +490,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: EventHandlerRecord | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   obj.observe(target, options);
 }
@@ -498,7 +498,7 @@ export function ResizeObserverObserve(self: bigint, target: bigint, options: Eve
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: boolean): void {
+export function ResizeObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -560,7 +560,7 @@ export function getBorderBoxSize(self: bigint): (bigint)[] {
 /**
  * `get-content-box-size()` operation.
  */
-export function getContentBoxSize(self: bigint): (number)[] {
+export function getContentBoxSize(self: bigint): (bigint)[] {
   const obj = lookupResizeObserverEntry(self);
   return obj.contentBoxSize;
 }

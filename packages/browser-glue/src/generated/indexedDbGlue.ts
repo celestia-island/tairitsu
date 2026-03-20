@@ -394,7 +394,7 @@ export function IdbIndexKeyPath(handle: bigint): string {
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): boolean {
+export function multiEntry(handle: bigint): string {
   const obj = lookupIDBIndex(handle);
   return obj.multiEntry();
 }

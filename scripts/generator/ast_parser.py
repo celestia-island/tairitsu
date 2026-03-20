@@ -30,6 +30,7 @@ from .config import (
     ENUM_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
     BOOLEAN_TO_BIGINT_PROPERTIES,
+    INTERFACE_ATTR_OVERRIDES,
 )
 from .models import (
     GeneratedParam, GeneratedFunction, GeneratedTypeAlias,
@@ -103,7 +104,6 @@ class WitParser:
             is_first_handle_param = (i == 0 and (isinstance(p.type_, WitHandle) or wit_type_str.endswith("-handle")))
             
             if is_global_singleton and i == 0 and p.name == "self":
-                skip_first_param = True
                 continue
             
             if is_first_handle_param:
@@ -185,7 +185,12 @@ class WitParser:
 
         if is_getter:
             attr_name = wit_name[4:]
-            browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
+            # Check interface-specific override first, then global mapping, then default
+            interface_key = (interface.name, attr_name)
+            if interface_key in INTERFACE_ATTR_OVERRIDES:
+                browser_attr = INTERFACE_ATTR_OVERRIDES[interface_key]
+            else:
+                browser_attr = BROWSER_API_NAME_MAPPINGS.get(wit_name, BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name)))
             
             # Check for NUMBER_TO_BIGINT_PROPERTIES - need to use property name
             prop_name = browser_attr
@@ -206,7 +211,12 @@ class WitParser:
                 ts_return_inner = ""
         elif is_setter:
             attr_name = wit_name[4:]
-            browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
+            # Check interface-specific override first, then global mapping, then default
+            interface_key = (interface.name, attr_name)
+            if interface_key in INTERFACE_ATTR_OVERRIDES:
+                browser_attr = INTERFACE_ATTR_OVERRIDES[interface_key]
+            else:
+                browser_attr = BROWSER_API_NAME_MAPPINGS.get(wit_name, BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name)))
             if params:
                 value_param = params[-1].name
 
