@@ -37,24 +37,24 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type HtmlAllCollectionHandle = bigint;
 
-/** Handle table for HtmlAllCollection instances */
-const _htmlAllCollectionhandles = new Map<bigint, HtmlAllCollection>();
-let _nextHtmlAllCollection = 1n;
+/** Handle table for HTMLAllCollection instances */
+const _htmlAllCollectionhandles = new Map<bigint, HTMLAllCollection>();
+let _nextHTMLAllCollection = 1n;
 
-/** Get a HtmlAllCollection by handle, throwing if not found. */
-function getHtmlAllCollection(handle: bigint): HtmlAllCollection {
+/** Get a HTMLAllCollection by handle, throwing if not found. */
+function getHTMLAllCollection(handle: bigint): HTMLAllCollection {
   const obj = _htmlAllCollectionhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlAllCollection handle ${handle} not found`);
+    throw new Error(`HTMLAllCollection handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
 export function HtmlAllCollectionGetLength(self: bigint): number {
-  const obj = getHtmlAllCollection(self);
+  const obj = getHTMLAllCollection(self);
   return obj.length;
 }
 
@@ -62,7 +62,7 @@ export function HtmlAllCollectionGetLength(self: bigint): number {
  * `element()` operation.
  */
 export function HtmlAllCollectionElement(self: bigint, index: number): void {
-  const obj = getHtmlAllCollection(self);
+  const obj = getHTMLAllCollection(self);
   obj.element(index);
 }
 
@@ -84,7 +84,7 @@ function getRadioNodeList(handle: bigint): RadioNodeList {
     throw new Error(`RadioNodeList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value()` operation.
@@ -109,24 +109,24 @@ export function RadioNodeListSetValue(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlOptionsCollectionHandle = bigint;
 
-/** Handle table for HtmlOptionsCollection instances */
-const _htmlOptionsCollectionhandles = new Map<bigint, HtmlOptionsCollection>();
-let _nextHtmlOptionsCollection = 1n;
+/** Handle table for HTMLOptionsCollection instances */
+const _htmlOptionsCollectionhandles = new Map<bigint, HTMLOptionsCollection>();
+let _nextHTMLOptionsCollection = 1n;
 
-/** Get a HtmlOptionsCollection by handle, throwing if not found. */
-function getHtmlOptionsCollection(handle: bigint): HtmlOptionsCollection {
+/** Get a HTMLOptionsCollection by handle, throwing if not found. */
+function getHTMLOptionsCollection(handle: bigint): HTMLOptionsCollection {
   const obj = _htmlOptionsCollectionhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlOptionsCollection handle ${handle} not found`);
+    throw new Error(`HTMLOptionsCollection handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
 export function HtmlOptionsCollectionGetLength(self: bigint): number {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   return obj.length;
 }
 
@@ -134,7 +134,7 @@ export function HtmlOptionsCollectionGetLength(self: bigint): number {
  * `set-length()` operation.
  */
 export function HtmlOptionsCollectionSetLength(self: bigint, value: number): void {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   obj.length = value;
 }
 
@@ -142,7 +142,7 @@ export function HtmlOptionsCollectionSetLength(self: bigint, value: number): voi
  * `undefined()` operation.
  */
 export function HtmlOptionsCollectionUndefined(self: bigint, index: number, option: bigint | undefined): void {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   obj.undefined(index, option);
 }
 
@@ -150,7 +150,7 @@ export function HtmlOptionsCollectionUndefined(self: bigint, index: number, opti
  * `add()` operation.
  */
 export function HtmlOptionsCollectionAdd(self: bigint, element: bigint, before: bigint | undefined): void {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   obj.add(element, before);
 }
 
@@ -158,7 +158,7 @@ export function HtmlOptionsCollectionAdd(self: bigint, element: bigint, before: 
  * `remove()` operation.
  */
 export function HtmlOptionsCollectionRemove(self: bigint, index: number): void {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   obj.remove(index);
 }
 
@@ -166,7 +166,7 @@ export function HtmlOptionsCollectionRemove(self: bigint, index: number): void {
  * `get-selected-index()` operation.
  */
 export function HtmlOptionsCollectionGetSelectedIndex(self: bigint): number {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   return obj.selectedIndex;
 }
 
@@ -174,7 +174,7 @@ export function HtmlOptionsCollectionGetSelectedIndex(self: bigint): number {
  * `set-selected-index()` operation.
  */
 export function HtmlOptionsCollectionSetSelectedIndex(self: bigint, value: number): void {
-  const obj = getHtmlOptionsCollection(self);
+  const obj = getHTMLOptionsCollection(self);
   obj.selectedIndex = value;
 }
 
@@ -185,24 +185,24 @@ export function HtmlOptionsCollectionSetSelectedIndex(self: bigint, value: numbe
 /** Type alias */
 export type DomStringListHandle = bigint;
 
-/** Handle table for DomStringList instances */
-const _domStringListhandles = new Map<bigint, DomStringList>();
-let _nextDomStringList = 1n;
+/** Handle table for DOMStringList instances */
+const _domStringListhandles = new Map<bigint, DOMStringList>();
+let _nextDOMStringList = 1n;
 
-/** Get a DomStringList by handle, throwing if not found. */
-function getDomStringList(handle: bigint): DomStringList {
+/** Get a DOMStringList by handle, throwing if not found. */
+function getDOMStringList(handle: bigint): DOMStringList {
   const obj = _domStringListhandles.get(handle);
   if (!obj) {
-    throw new Error(`DomStringList handle ${handle} not found`);
+    throw new Error(`DOMStringList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
 export function DomStringListGetLength(self: bigint): number {
-  const obj = getDomStringList(self);
+  const obj = getDOMStringList(self);
   return obj.length;
 }
 
@@ -210,7 +210,7 @@ export function DomStringListGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function DomStringListItem(self: bigint, index: number): string | undefined {
-  const obj = getDomStringList(self);
+  const obj = getDOMStringList(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -218,7 +218,7 @@ export function DomStringListItem(self: bigint, index: number): string | undefin
  * `contains()` operation.
  */
 export function contains(self: bigint, string: string): boolean {
-  const obj = getDomStringList(self);
+  const obj = getDOMStringList(self);
   return obj.contains(string);
 }
 
@@ -229,24 +229,24 @@ export function contains(self: bigint, string: string): boolean {
 /** Type alias */
 export type HtmlOrSvgElementHandle = bigint;
 
-/** Handle table for HtmlOrSvgElement instances */
-const _htmlOrSvgElementhandles = new Map<bigint, HtmlOrSvgElement>();
-let _nextHtmlOrSvgElement = 1n;
+/** Handle table for HTMLOrSVGElement instances */
+const _htmlOrSvgElementhandles = new Map<bigint, HTMLOrSVGElement>();
+let _nextHTMLOrSVGElement = 1n;
 
-/** Get a HtmlOrSvgElement by handle, throwing if not found. */
-function getHtmlOrSvgElement(handle: bigint): HtmlOrSvgElement {
+/** Get a HTMLOrSVGElement by handle, throwing if not found. */
+function getHTMLOrSVGElement(handle: bigint): HTMLOrSVGElement {
   const obj = _htmlOrSvgElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlOrSvgElement handle ${handle} not found`);
+    throw new Error(`HTMLOrSVGElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-dataset()` operation.
  */
 export function getDataset(self: bigint): bigint {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   return obj.dataset;
 }
 
@@ -254,7 +254,7 @@ export function getDataset(self: bigint): bigint {
  * `get-nonce()` operation.
  */
 export function getNonce(self: bigint): string {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   return obj.nonce;
 }
 
@@ -262,7 +262,7 @@ export function getNonce(self: bigint): string {
  * `set-nonce()` operation.
  */
 export function setNonce(self: bigint, value: string): void {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   obj.nonce = value;
 }
 
@@ -270,7 +270,7 @@ export function setNonce(self: bigint, value: string): void {
  * `get-autofocus()` operation.
  */
 export function getAutofocus(self: bigint): boolean {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   return obj.autofocus;
 }
 
@@ -278,7 +278,7 @@ export function getAutofocus(self: bigint): boolean {
  * `set-autofocus()` operation.
  */
 export function setAutofocus(self: bigint, value: boolean): void {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   obj.autofocus = value;
 }
 
@@ -286,7 +286,7 @@ export function setAutofocus(self: bigint, value: boolean): void {
  * `get-tab-index()` operation.
  */
 export function getTabIndex(self: bigint): number {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   return obj.tabIndex;
 }
 
@@ -294,7 +294,7 @@ export function getTabIndex(self: bigint): number {
  * `set-tab-index()` operation.
  */
 export function setTabIndex(self: bigint, value: number): void {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   obj.tabIndex = value;
 }
 
@@ -302,7 +302,7 @@ export function setTabIndex(self: bigint, value: number): void {
  * `focus()` operation.
  */
 export function focus(self: bigint, options: bigint | undefined): void {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   obj.focus(options);
 }
 
@@ -310,7 +310,7 @@ export function focus(self: bigint, options: bigint | undefined): void {
  * `blur()` operation.
  */
 export function blur(self: bigint): void {
-  const obj = getHtmlOrSvgElement(self);
+  const obj = getHTMLOrSVGElement(self);
   obj.blur();
 }
 
@@ -321,24 +321,24 @@ export function blur(self: bigint): void {
 /** Type alias */
 export type DomStringMapHandle = bigint;
 
-/** Handle table for DomStringMap instances */
-const _domStringMaphandles = new Map<bigint, DomStringMap>();
-let _nextDomStringMap = 1n;
+/** Handle table for DOMStringMap instances */
+const _domStringMaphandles = new Map<bigint, DOMStringMap>();
+let _nextDOMStringMap = 1n;
 
-/** Get a DomStringMap by handle, throwing if not found. */
-function getDomStringMap(handle: bigint): DomStringMap {
+/** Get a DOMStringMap by handle, throwing if not found. */
+function getDOMStringMap(handle: bigint): DOMStringMap {
   const obj = _domStringMaphandles.get(handle);
   if (!obj) {
-    throw new Error(`DomStringMap handle ${handle} not found`);
+    throw new Error(`DOMStringMap handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `dom-string()` operation.
  */
 export function domString(self: bigint, name: string): void {
-  const obj = getDomStringMap(self);
+  const obj = getDOMStringMap(self);
   obj.domString(name);
 }
 
@@ -346,7 +346,7 @@ export function domString(self: bigint, name: string): void {
  * `undefined()` operation.
  */
 export function DomStringMapUndefined(self: bigint, name: string, value: string): void {
-  const obj = getDomStringMap(self);
+  const obj = getDOMStringMap(self);
   obj.undefined(name, value);
 }
 
@@ -357,24 +357,24 @@ export function DomStringMapUndefined(self: bigint, name: string, value: string)
 /** Type alias */
 export type HtmlHtmlElementHandle = bigint;
 
-/** Handle table for HtmlHtmlElement instances */
-const _htmlHtmlElementhandles = new Map<bigint, HtmlHtmlElement>();
-let _nextHtmlHtmlElement = 1n;
+/** Handle table for HTMLHtmlElement instances */
+const _htmlHtmlElementhandles = new Map<bigint, HTMLHtmlElement>();
+let _nextHTMLHtmlElement = 1n;
 
-/** Get a HtmlHtmlElement by handle, throwing if not found. */
-function getHtmlHtmlElement(handle: bigint): HtmlHtmlElement {
+/** Get a HTMLHtmlElement by handle, throwing if not found. */
+function getHTMLHtmlElement(handle: bigint): HTMLHtmlElement {
   const obj = _htmlHtmlElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlHtmlElement handle ${handle} not found`);
+    throw new Error(`HTMLHtmlElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-version()` operation.
  */
 export function getVersion(self: bigint): string {
-  const obj = getHtmlHtmlElement(self);
+  const obj = getHTMLHtmlElement(self);
   return obj.version;
 }
 
@@ -382,7 +382,7 @@ export function getVersion(self: bigint): string {
  * `set-version()` operation.
  */
 export function setVersion(self: bigint, value: string): void {
-  const obj = getHtmlHtmlElement(self);
+  const obj = getHTMLHtmlElement(self);
   obj.version = value;
 }
 
@@ -393,24 +393,24 @@ export function setVersion(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlTitleElementHandle = bigint;
 
-/** Handle table for HtmlTitleElement instances */
-const _htmlTitleElementhandles = new Map<bigint, HtmlTitleElement>();
-let _nextHtmlTitleElement = 1n;
+/** Handle table for HTMLTitleElement instances */
+const _htmlTitleElementhandles = new Map<bigint, HTMLTitleElement>();
+let _nextHTMLTitleElement = 1n;
 
-/** Get a HtmlTitleElement by handle, throwing if not found. */
-function getHtmlTitleElement(handle: bigint): HtmlTitleElement {
+/** Get a HTMLTitleElement by handle, throwing if not found. */
+function getHTMLTitleElement(handle: bigint): HTMLTitleElement {
   const obj = _htmlTitleElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTitleElement handle ${handle} not found`);
+    throw new Error(`HTMLTitleElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-text()` operation.
  */
 export function HtmlTitleElementGetText(self: bigint): string {
-  const obj = getHtmlTitleElement(self);
+  const obj = getHTMLTitleElement(self);
   return obj.text;
 }
 
@@ -418,7 +418,7 @@ export function HtmlTitleElementGetText(self: bigint): string {
  * `set-text()` operation.
  */
 export function HtmlTitleElementSetText(self: bigint, value: string): void {
-  const obj = getHtmlTitleElement(self);
+  const obj = getHTMLTitleElement(self);
   obj.text = value;
 }
 
@@ -429,24 +429,24 @@ export function HtmlTitleElementSetText(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlBaseElementHandle = bigint;
 
-/** Handle table for HtmlBaseElement instances */
-const _htmlBaseElementhandles = new Map<bigint, HtmlBaseElement>();
-let _nextHtmlBaseElement = 1n;
+/** Handle table for HTMLBaseElement instances */
+const _htmlBaseElementhandles = new Map<bigint, HTMLBaseElement>();
+let _nextHTMLBaseElement = 1n;
 
-/** Get a HtmlBaseElement by handle, throwing if not found. */
-function getHtmlBaseElement(handle: bigint): HtmlBaseElement {
+/** Get a HTMLBaseElement by handle, throwing if not found. */
+function getHTMLBaseElement(handle: bigint): HTMLBaseElement {
   const obj = _htmlBaseElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlBaseElement handle ${handle} not found`);
+    throw new Error(`HTMLBaseElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
  */
 export function HtmlBaseElementGetHref(self: bigint): string {
-  const obj = getHtmlBaseElement(self);
+  const obj = getHTMLBaseElement(self);
   return obj.href;
 }
 
@@ -454,7 +454,7 @@ export function HtmlBaseElementGetHref(self: bigint): string {
  * `set-href()` operation.
  */
 export function HtmlBaseElementSetHref(self: bigint, value: string): void {
-  const obj = getHtmlBaseElement(self);
+  const obj = getHTMLBaseElement(self);
   obj.href = value;
 }
 
@@ -462,7 +462,7 @@ export function HtmlBaseElementSetHref(self: bigint, value: string): void {
  * `get-target()` operation.
  */
 export function HtmlBaseElementGetTarget(self: bigint): string {
-  const obj = getHtmlBaseElement(self);
+  const obj = getHTMLBaseElement(self);
   return obj.target;
 }
 
@@ -470,7 +470,7 @@ export function HtmlBaseElementGetTarget(self: bigint): string {
  * `set-target()` operation.
  */
 export function HtmlBaseElementSetTarget(self: bigint, value: string): void {
-  const obj = getHtmlBaseElement(self);
+  const obj = getHTMLBaseElement(self);
   obj.target = value;
 }
 
@@ -481,24 +481,24 @@ export function HtmlBaseElementSetTarget(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlLinkElementHandle = bigint;
 
-/** Handle table for HtmlLinkElement instances */
-const _htmlLinkElementhandles = new Map<bigint, HtmlLinkElement>();
-let _nextHtmlLinkElement = 1n;
+/** Handle table for HTMLLinkElement instances */
+const _htmlLinkElementhandles = new Map<bigint, HTMLLinkElement>();
+let _nextHTMLLinkElement = 1n;
 
-/** Get a HtmlLinkElement by handle, throwing if not found. */
-function getHtmlLinkElement(handle: bigint): HtmlLinkElement {
+/** Get a HTMLLinkElement by handle, throwing if not found. */
+function getHTMLLinkElement(handle: bigint): HTMLLinkElement {
   const obj = _htmlLinkElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlLinkElement handle ${handle} not found`);
+    throw new Error(`HTMLLinkElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
  */
 export function HtmlLinkElementGetHref(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.href;
 }
 
@@ -506,7 +506,7 @@ export function HtmlLinkElementGetHref(self: bigint): string {
  * `set-href()` operation.
  */
 export function HtmlLinkElementSetHref(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.href = value;
 }
 
@@ -514,7 +514,7 @@ export function HtmlLinkElementSetHref(self: bigint, value: string): void {
  * `get-cross-origin()` operation.
  */
 export function HtmlLinkElementGetCrossOrigin(self: bigint): string | undefined {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.crossOrigin ?? undefined;
 }
 
@@ -522,7 +522,7 @@ export function HtmlLinkElementGetCrossOrigin(self: bigint): string | undefined 
  * `set-cross-origin()` operation.
  */
 export function HtmlLinkElementSetCrossOrigin(self: bigint, value: string | undefined): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.crossOrigin = value;
 }
 
@@ -530,7 +530,7 @@ export function HtmlLinkElementSetCrossOrigin(self: bigint, value: string | unde
  * `get-rel()` operation.
  */
 export function HtmlLinkElementGetRel(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.rel;
 }
 
@@ -538,7 +538,7 @@ export function HtmlLinkElementGetRel(self: bigint): string {
  * `set-rel()` operation.
  */
 export function HtmlLinkElementSetRel(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.rel = value;
 }
 
@@ -546,7 +546,7 @@ export function HtmlLinkElementSetRel(self: bigint, value: string): void {
  * `get-as()` operation.
  */
 export function getAs(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.as;
 }
 
@@ -554,7 +554,7 @@ export function getAs(self: bigint): string {
  * `set-as()` operation.
  */
 export function setAs(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.as = value;
 }
 
@@ -562,7 +562,7 @@ export function setAs(self: bigint, value: string): void {
  * `get-rel-list()` operation.
  */
 export function HtmlLinkElementGetRelList(self: bigint): bigint {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.relList;
 }
 
@@ -570,7 +570,7 @@ export function HtmlLinkElementGetRelList(self: bigint): bigint {
  * `get-media()` operation.
  */
 export function HtmlLinkElementGetMedia(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.media;
 }
 
@@ -578,7 +578,7 @@ export function HtmlLinkElementGetMedia(self: bigint): string {
  * `set-media()` operation.
  */
 export function HtmlLinkElementSetMedia(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.media = value;
 }
 
@@ -586,7 +586,7 @@ export function HtmlLinkElementSetMedia(self: bigint, value: string): void {
  * `get-integrity()` operation.
  */
 export function HtmlLinkElementGetIntegrity(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.integrity;
 }
 
@@ -594,7 +594,7 @@ export function HtmlLinkElementGetIntegrity(self: bigint): string {
  * `set-integrity()` operation.
  */
 export function HtmlLinkElementSetIntegrity(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.integrity = value;
 }
 
@@ -602,7 +602,7 @@ export function HtmlLinkElementSetIntegrity(self: bigint, value: string): void {
  * `get-hreflang()` operation.
  */
 export function HtmlLinkElementGetHreflang(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.hreflang;
 }
 
@@ -610,7 +610,7 @@ export function HtmlLinkElementGetHreflang(self: bigint): string {
  * `set-hreflang()` operation.
  */
 export function HtmlLinkElementSetHreflang(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.hreflang = value;
 }
 
@@ -618,7 +618,7 @@ export function HtmlLinkElementSetHreflang(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlLinkElementGetType(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.type;
 }
 
@@ -626,7 +626,7 @@ export function HtmlLinkElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlLinkElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.type = value;
 }
 
@@ -634,7 +634,7 @@ export function HtmlLinkElementSetType(self: bigint, value: string): void {
  * `get-sizes()` operation.
  */
 export function HtmlLinkElementGetSizes(self: bigint): bigint {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.sizes;
 }
 
@@ -642,7 +642,7 @@ export function HtmlLinkElementGetSizes(self: bigint): bigint {
  * `get-image-srcset()` operation.
  */
 export function getImageSrcset(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.imageSrcset;
 }
 
@@ -650,7 +650,7 @@ export function getImageSrcset(self: bigint): string {
  * `set-image-srcset()` operation.
  */
 export function setImageSrcset(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.imageSrcset = value;
 }
 
@@ -658,7 +658,7 @@ export function setImageSrcset(self: bigint, value: string): void {
  * `get-image-sizes()` operation.
  */
 export function getImageSizes(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.imageSizes;
 }
 
@@ -666,7 +666,7 @@ export function getImageSizes(self: bigint): string {
  * `set-image-sizes()` operation.
  */
 export function setImageSizes(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.imageSizes = value;
 }
 
@@ -674,7 +674,7 @@ export function setImageSizes(self: bigint, value: string): void {
  * `get-referrer-policy()` operation.
  */
 export function HtmlLinkElementGetReferrerPolicy(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.referrerPolicy;
 }
 
@@ -682,7 +682,7 @@ export function HtmlLinkElementGetReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function HtmlLinkElementSetReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -690,7 +690,7 @@ export function HtmlLinkElementSetReferrerPolicy(self: bigint, value: string): v
  * `get-blocking()` operation.
  */
 export function HtmlLinkElementGetBlocking(self: bigint): bigint {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.blocking;
 }
 
@@ -698,7 +698,7 @@ export function HtmlLinkElementGetBlocking(self: bigint): bigint {
  * `get-disabled()` operation.
  */
 export function HtmlLinkElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.disabled;
 }
 
@@ -706,7 +706,7 @@ export function HtmlLinkElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlLinkElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.disabled = value;
 }
 
@@ -714,7 +714,7 @@ export function HtmlLinkElementSetDisabled(self: bigint, value: boolean): void {
  * `get-fetch-priority()` operation.
  */
 export function HtmlLinkElementGetFetchPriority(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.fetchPriority;
 }
 
@@ -722,7 +722,7 @@ export function HtmlLinkElementGetFetchPriority(self: bigint): string {
  * `set-fetch-priority()` operation.
  */
 export function HtmlLinkElementSetFetchPriority(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.fetchPriority = value;
 }
 
@@ -730,7 +730,7 @@ export function HtmlLinkElementSetFetchPriority(self: bigint, value: string): vo
  * `get-charset()` operation.
  */
 export function HtmlLinkElementGetCharset(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.charset;
 }
 
@@ -738,7 +738,7 @@ export function HtmlLinkElementGetCharset(self: bigint): string {
  * `set-charset()` operation.
  */
 export function HtmlLinkElementSetCharset(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.charset = value;
 }
 
@@ -746,7 +746,7 @@ export function HtmlLinkElementSetCharset(self: bigint, value: string): void {
  * `get-rev()` operation.
  */
 export function HtmlLinkElementGetRev(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.rev;
 }
 
@@ -754,7 +754,7 @@ export function HtmlLinkElementGetRev(self: bigint): string {
  * `set-rev()` operation.
  */
 export function HtmlLinkElementSetRev(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.rev = value;
 }
 
@@ -762,7 +762,7 @@ export function HtmlLinkElementSetRev(self: bigint, value: string): void {
  * `get-target()` operation.
  */
 export function HtmlLinkElementGetTarget(self: bigint): string {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   return obj.target;
 }
 
@@ -770,7 +770,7 @@ export function HtmlLinkElementGetTarget(self: bigint): string {
  * `set-target()` operation.
  */
 export function HtmlLinkElementSetTarget(self: bigint, value: string): void {
-  const obj = getHtmlLinkElement(self);
+  const obj = getHTMLLinkElement(self);
   obj.target = value;
 }
 
@@ -781,24 +781,24 @@ export function HtmlLinkElementSetTarget(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlMetaElementHandle = bigint;
 
-/** Handle table for HtmlMetaElement instances */
-const _htmlMetaElementhandles = new Map<bigint, HtmlMetaElement>();
-let _nextHtmlMetaElement = 1n;
+/** Handle table for HTMLMetaElement instances */
+const _htmlMetaElementhandles = new Map<bigint, HTMLMetaElement>();
+let _nextHTMLMetaElement = 1n;
 
-/** Get a HtmlMetaElement by handle, throwing if not found. */
-function getHtmlMetaElement(handle: bigint): HtmlMetaElement {
+/** Get a HTMLMetaElement by handle, throwing if not found. */
+function getHTMLMetaElement(handle: bigint): HTMLMetaElement {
   const obj = _htmlMetaElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMetaElement handle ${handle} not found`);
+    throw new Error(`HTMLMetaElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlMetaElementGetName(self: bigint): string {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   return obj.name;
 }
 
@@ -806,7 +806,7 @@ export function HtmlMetaElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlMetaElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   obj.name = value;
 }
 
@@ -814,7 +814,7 @@ export function HtmlMetaElementSetName(self: bigint, value: string): void {
  * `get-http-equiv()` operation.
  */
 export function getHttpEquiv(self: bigint): string {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   return obj.httpEquiv;
 }
 
@@ -822,7 +822,7 @@ export function getHttpEquiv(self: bigint): string {
  * `set-http-equiv()` operation.
  */
 export function setHttpEquiv(self: bigint, value: string): void {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   obj.httpEquiv = value;
 }
 
@@ -830,7 +830,7 @@ export function setHttpEquiv(self: bigint, value: string): void {
  * `get-content()` operation.
  */
 export function HtmlMetaElementGetContent(self: bigint): string {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   return obj.content;
 }
 
@@ -838,7 +838,7 @@ export function HtmlMetaElementGetContent(self: bigint): string {
  * `set-content()` operation.
  */
 export function setContent(self: bigint, value: string): void {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   obj.content = value;
 }
 
@@ -846,7 +846,7 @@ export function setContent(self: bigint, value: string): void {
  * `get-media()` operation.
  */
 export function HtmlMetaElementGetMedia(self: bigint): string {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   return obj.media;
 }
 
@@ -854,7 +854,7 @@ export function HtmlMetaElementGetMedia(self: bigint): string {
  * `set-media()` operation.
  */
 export function HtmlMetaElementSetMedia(self: bigint, value: string): void {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   obj.media = value;
 }
 
@@ -862,7 +862,7 @@ export function HtmlMetaElementSetMedia(self: bigint, value: string): void {
  * `get-scheme()` operation.
  */
 export function getScheme(self: bigint): string {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   return obj.scheme;
 }
 
@@ -870,7 +870,7 @@ export function getScheme(self: bigint): string {
  * `set-scheme()` operation.
  */
 export function setScheme(self: bigint, value: string): void {
-  const obj = getHtmlMetaElement(self);
+  const obj = getHTMLMetaElement(self);
   obj.scheme = value;
 }
 
@@ -881,24 +881,24 @@ export function setScheme(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlStyleElementHandle = bigint;
 
-/** Handle table for HtmlStyleElement instances */
-const _htmlStyleElementhandles = new Map<bigint, HtmlStyleElement>();
-let _nextHtmlStyleElement = 1n;
+/** Handle table for HTMLStyleElement instances */
+const _htmlStyleElementhandles = new Map<bigint, HTMLStyleElement>();
+let _nextHTMLStyleElement = 1n;
 
-/** Get a HtmlStyleElement by handle, throwing if not found. */
-function getHtmlStyleElement(handle: bigint): HtmlStyleElement {
+/** Get a HTMLStyleElement by handle, throwing if not found. */
+function getHTMLStyleElement(handle: bigint): HTMLStyleElement {
   const obj = _htmlStyleElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlStyleElement handle ${handle} not found`);
+    throw new Error(`HTMLStyleElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-disabled()` operation.
  */
 export function HtmlStyleElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   return obj.disabled;
 }
 
@@ -906,7 +906,7 @@ export function HtmlStyleElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlStyleElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   obj.disabled = value;
 }
 
@@ -914,7 +914,7 @@ export function HtmlStyleElementSetDisabled(self: bigint, value: boolean): void 
  * `get-media()` operation.
  */
 export function HtmlStyleElementGetMedia(self: bigint): string {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   return obj.media;
 }
 
@@ -922,7 +922,7 @@ export function HtmlStyleElementGetMedia(self: bigint): string {
  * `set-media()` operation.
  */
 export function HtmlStyleElementSetMedia(self: bigint, value: string): void {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   obj.media = value;
 }
 
@@ -930,7 +930,7 @@ export function HtmlStyleElementSetMedia(self: bigint, value: string): void {
  * `get-blocking()` operation.
  */
 export function HtmlStyleElementGetBlocking(self: bigint): bigint {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   return obj.blocking;
 }
 
@@ -938,7 +938,7 @@ export function HtmlStyleElementGetBlocking(self: bigint): bigint {
  * `get-type()` operation.
  */
 export function HtmlStyleElementGetType(self: bigint): string {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   return obj.type;
 }
 
@@ -946,7 +946,7 @@ export function HtmlStyleElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlStyleElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlStyleElement(self);
+  const obj = getHTMLStyleElement(self);
   obj.type = value;
 }
 
@@ -957,24 +957,24 @@ export function HtmlStyleElementSetType(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlBodyElementHandle = bigint;
 
-/** Handle table for HtmlBodyElement instances */
-const _htmlBodyElementhandles = new Map<bigint, HtmlBodyElement>();
-let _nextHtmlBodyElement = 1n;
+/** Handle table for HTMLBodyElement instances */
+const _htmlBodyElementhandles = new Map<bigint, HTMLBodyElement>();
+let _nextHTMLBodyElement = 1n;
 
-/** Get a HtmlBodyElement by handle, throwing if not found. */
-function getHtmlBodyElement(handle: bigint): HtmlBodyElement {
+/** Get a HTMLBodyElement by handle, throwing if not found. */
+function getHTMLBodyElement(handle: bigint): HTMLBodyElement {
   const obj = _htmlBodyElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlBodyElement handle ${handle} not found`);
+    throw new Error(`HTMLBodyElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-text()` operation.
  */
 export function HtmlBodyElementGetText(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.text;
 }
 
@@ -982,7 +982,7 @@ export function HtmlBodyElementGetText(self: bigint): string {
  * `set-text()` operation.
  */
 export function HtmlBodyElementSetText(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.text = value;
 }
 
@@ -990,7 +990,7 @@ export function HtmlBodyElementSetText(self: bigint, value: string): void {
  * `get-link()` operation.
  */
 export function getLink(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.link;
 }
 
@@ -998,7 +998,7 @@ export function getLink(self: bigint): string {
  * `set-link()` operation.
  */
 export function setLink(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.link = value;
 }
 
@@ -1006,7 +1006,7 @@ export function setLink(self: bigint, value: string): void {
  * `get-v-link()` operation.
  */
 export function getVLink(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.vLink;
 }
 
@@ -1014,7 +1014,7 @@ export function getVLink(self: bigint): string {
  * `set-v-link()` operation.
  */
 export function setVLink(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.vLink = value;
 }
 
@@ -1022,7 +1022,7 @@ export function setVLink(self: bigint, value: string): void {
  * `get-a-link()` operation.
  */
 export function getALink(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.aLink;
 }
 
@@ -1030,7 +1030,7 @@ export function getALink(self: bigint): string {
  * `set-a-link()` operation.
  */
 export function setALink(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.aLink = value;
 }
 
@@ -1038,7 +1038,7 @@ export function setALink(self: bigint, value: string): void {
  * `get-bg-color()` operation.
  */
 export function HtmlBodyElementGetBgColor(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.bgColor;
 }
 
@@ -1046,7 +1046,7 @@ export function HtmlBodyElementGetBgColor(self: bigint): string {
  * `set-bg-color()` operation.
  */
 export function HtmlBodyElementSetBgColor(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.bgColor = value;
 }
 
@@ -1054,7 +1054,7 @@ export function HtmlBodyElementSetBgColor(self: bigint, value: string): void {
  * `get-background()` operation.
  */
 export function getBackground(self: bigint): string {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   return obj.background;
 }
 
@@ -1062,7 +1062,7 @@ export function getBackground(self: bigint): string {
  * `set-background()` operation.
  */
 export function setBackground(self: bigint, value: string): void {
-  const obj = getHtmlBodyElement(self);
+  const obj = getHTMLBodyElement(self);
   obj.background = value;
 }
 
@@ -1073,24 +1073,24 @@ export function setBackground(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlHeadingElementHandle = bigint;
 
-/** Handle table for HtmlHeadingElement instances */
-const _htmlHeadingElementhandles = new Map<bigint, HtmlHeadingElement>();
-let _nextHtmlHeadingElement = 1n;
+/** Handle table for HTMLHeadingElement instances */
+const _htmlHeadingElementhandles = new Map<bigint, HTMLHeadingElement>();
+let _nextHTMLHeadingElement = 1n;
 
-/** Get a HtmlHeadingElement by handle, throwing if not found. */
-function getHtmlHeadingElement(handle: bigint): HtmlHeadingElement {
+/** Get a HTMLHeadingElement by handle, throwing if not found. */
+function getHTMLHeadingElement(handle: bigint): HTMLHeadingElement {
   const obj = _htmlHeadingElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlHeadingElement handle ${handle} not found`);
+    throw new Error(`HTMLHeadingElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-align()` operation.
  */
 export function HtmlHeadingElementGetAlign(self: bigint): string {
-  const obj = getHtmlHeadingElement(self);
+  const obj = getHTMLHeadingElement(self);
   return obj.align;
 }
 
@@ -1098,7 +1098,7 @@ export function HtmlHeadingElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlHeadingElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlHeadingElement(self);
+  const obj = getHTMLHeadingElement(self);
   obj.align = value;
 }
 
@@ -1109,24 +1109,24 @@ export function HtmlHeadingElementSetAlign(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlParagraphElementHandle = bigint;
 
-/** Handle table for HtmlParagraphElement instances */
-const _htmlParagraphElementhandles = new Map<bigint, HtmlParagraphElement>();
-let _nextHtmlParagraphElement = 1n;
+/** Handle table for HTMLParagraphElement instances */
+const _htmlParagraphElementhandles = new Map<bigint, HTMLParagraphElement>();
+let _nextHTMLParagraphElement = 1n;
 
-/** Get a HtmlParagraphElement by handle, throwing if not found. */
-function getHtmlParagraphElement(handle: bigint): HtmlParagraphElement {
+/** Get a HTMLParagraphElement by handle, throwing if not found. */
+function getHTMLParagraphElement(handle: bigint): HTMLParagraphElement {
   const obj = _htmlParagraphElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlParagraphElement handle ${handle} not found`);
+    throw new Error(`HTMLParagraphElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-align()` operation.
  */
 export function HtmlParagraphElementGetAlign(self: bigint): string {
-  const obj = getHtmlParagraphElement(self);
+  const obj = getHTMLParagraphElement(self);
   return obj.align;
 }
 
@@ -1134,7 +1134,7 @@ export function HtmlParagraphElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlParagraphElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlParagraphElement(self);
+  const obj = getHTMLParagraphElement(self);
   obj.align = value;
 }
 
@@ -1156,7 +1156,7 @@ function getHtmlhrElement(handle: bigint): HtmlhrElement {
     throw new Error(`HtmlhrElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-align()` operation.
@@ -1245,24 +1245,24 @@ export function HtmlhrElementSetWidth(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlPreElementHandle = bigint;
 
-/** Handle table for HtmlPreElement instances */
-const _htmlPreElementhandles = new Map<bigint, HtmlPreElement>();
-let _nextHtmlPreElement = 1n;
+/** Handle table for HTMLPreElement instances */
+const _htmlPreElementhandles = new Map<bigint, HTMLPreElement>();
+let _nextHTMLPreElement = 1n;
 
-/** Get a HtmlPreElement by handle, throwing if not found. */
-function getHtmlPreElement(handle: bigint): HtmlPreElement {
+/** Get a HTMLPreElement by handle, throwing if not found. */
+function getHTMLPreElement(handle: bigint): HTMLPreElement {
   const obj = _htmlPreElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlPreElement handle ${handle} not found`);
+    throw new Error(`HTMLPreElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
  */
 export function HtmlPreElementGetWidth(self: bigint): number {
-  const obj = getHtmlPreElement(self);
+  const obj = getHTMLPreElement(self);
   return obj.width;
 }
 
@@ -1270,7 +1270,7 @@ export function HtmlPreElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function HtmlPreElementSetWidth(self: bigint, value: number): void {
-  const obj = getHtmlPreElement(self);
+  const obj = getHTMLPreElement(self);
   obj.width = value;
 }
 
@@ -1281,24 +1281,24 @@ export function HtmlPreElementSetWidth(self: bigint, value: number): void {
 /** Type alias */
 export type HtmlQuoteElementHandle = bigint;
 
-/** Handle table for HtmlQuoteElement instances */
-const _htmlQuoteElementhandles = new Map<bigint, HtmlQuoteElement>();
-let _nextHtmlQuoteElement = 1n;
+/** Handle table for HTMLQuoteElement instances */
+const _htmlQuoteElementhandles = new Map<bigint, HTMLQuoteElement>();
+let _nextHTMLQuoteElement = 1n;
 
-/** Get a HtmlQuoteElement by handle, throwing if not found. */
-function getHtmlQuoteElement(handle: bigint): HtmlQuoteElement {
+/** Get a HTMLQuoteElement by handle, throwing if not found. */
+function getHTMLQuoteElement(handle: bigint): HTMLQuoteElement {
   const obj = _htmlQuoteElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlQuoteElement handle ${handle} not found`);
+    throw new Error(`HTMLQuoteElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-cite()` operation.
  */
 export function HtmlQuoteElementGetCite(self: bigint): string {
-  const obj = getHtmlQuoteElement(self);
+  const obj = getHTMLQuoteElement(self);
   return obj.cite;
 }
 
@@ -1306,7 +1306,7 @@ export function HtmlQuoteElementGetCite(self: bigint): string {
  * `set-cite()` operation.
  */
 export function HtmlQuoteElementSetCite(self: bigint, value: string): void {
-  const obj = getHtmlQuoteElement(self);
+  const obj = getHTMLQuoteElement(self);
   obj.cite = value;
 }
 
@@ -1328,7 +1328,7 @@ function getHtmloListElement(handle: bigint): HtmloListElement {
     throw new Error(`HtmloListElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-reversed()` operation.
@@ -1412,7 +1412,7 @@ function getHtmluListElement(handle: bigint): HtmluListElement {
     throw new Error(`HtmluListElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-compact()` operation.
@@ -1453,24 +1453,24 @@ export function HtmluListElementSetType(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlMenuElementHandle = bigint;
 
-/** Handle table for HtmlMenuElement instances */
-const _htmlMenuElementhandles = new Map<bigint, HtmlMenuElement>();
-let _nextHtmlMenuElement = 1n;
+/** Handle table for HTMLMenuElement instances */
+const _htmlMenuElementhandles = new Map<bigint, HTMLMenuElement>();
+let _nextHTMLMenuElement = 1n;
 
-/** Get a HtmlMenuElement by handle, throwing if not found. */
-function getHtmlMenuElement(handle: bigint): HtmlMenuElement {
+/** Get a HTMLMenuElement by handle, throwing if not found. */
+function getHTMLMenuElement(handle: bigint): HTMLMenuElement {
   const obj = _htmlMenuElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMenuElement handle ${handle} not found`);
+    throw new Error(`HTMLMenuElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-compact()` operation.
  */
 export function HtmlMenuElementGetCompact(self: bigint): boolean {
-  const obj = getHtmlMenuElement(self);
+  const obj = getHTMLMenuElement(self);
   return obj.compact;
 }
 
@@ -1478,7 +1478,7 @@ export function HtmlMenuElementGetCompact(self: bigint): boolean {
  * `set-compact()` operation.
  */
 export function HtmlMenuElementSetCompact(self: bigint, value: boolean): void {
-  const obj = getHtmlMenuElement(self);
+  const obj = getHTMLMenuElement(self);
   obj.compact = value;
 }
 
@@ -1500,7 +1500,7 @@ function getHtmlliElement(handle: bigint): HtmlliElement {
     throw new Error(`HtmlliElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value()` operation.
@@ -1552,7 +1552,7 @@ function getHtmldListElement(handle: bigint): HtmldListElement {
     throw new Error(`HtmldListElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-compact()` operation.
@@ -1577,24 +1577,24 @@ export function HtmldListElementSetCompact(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlDivElementHandle = bigint;
 
-/** Handle table for HtmlDivElement instances */
-const _htmlDivElementhandles = new Map<bigint, HtmlDivElement>();
-let _nextHtmlDivElement = 1n;
+/** Handle table for HTMLDivElement instances */
+const _htmlDivElementhandles = new Map<bigint, HTMLDivElement>();
+let _nextHTMLDivElement = 1n;
 
-/** Get a HtmlDivElement by handle, throwing if not found. */
-function getHtmlDivElement(handle: bigint): HtmlDivElement {
+/** Get a HTMLDivElement by handle, throwing if not found. */
+function getHTMLDivElement(handle: bigint): HTMLDivElement {
   const obj = _htmlDivElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDivElement handle ${handle} not found`);
+    throw new Error(`HTMLDivElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-align()` operation.
  */
 export function HtmlDivElementGetAlign(self: bigint): string {
-  const obj = getHtmlDivElement(self);
+  const obj = getHTMLDivElement(self);
   return obj.align;
 }
 
@@ -1602,7 +1602,7 @@ export function HtmlDivElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlDivElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlDivElement(self);
+  const obj = getHTMLDivElement(self);
   obj.align = value;
 }
 
@@ -1613,24 +1613,24 @@ export function HtmlDivElementSetAlign(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlAnchorElementHandle = bigint;
 
-/** Handle table for HtmlAnchorElement instances */
-const _htmlAnchorElementhandles = new Map<bigint, HtmlAnchorElement>();
-let _nextHtmlAnchorElement = 1n;
+/** Handle table for HTMLAnchorElement instances */
+const _htmlAnchorElementhandles = new Map<bigint, HTMLAnchorElement>();
+let _nextHTMLAnchorElement = 1n;
 
-/** Get a HtmlAnchorElement by handle, throwing if not found. */
-function getHtmlAnchorElement(handle: bigint): HtmlAnchorElement {
+/** Get a HTMLAnchorElement by handle, throwing if not found. */
+function getHTMLAnchorElement(handle: bigint): HTMLAnchorElement {
   const obj = _htmlAnchorElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlAnchorElement handle ${handle} not found`);
+    throw new Error(`HTMLAnchorElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-target()` operation.
  */
 export function HtmlAnchorElementGetTarget(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.target;
 }
 
@@ -1638,7 +1638,7 @@ export function HtmlAnchorElementGetTarget(self: bigint): string {
  * `set-target()` operation.
  */
 export function HtmlAnchorElementSetTarget(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.target = value;
 }
 
@@ -1646,7 +1646,7 @@ export function HtmlAnchorElementSetTarget(self: bigint, value: string): void {
  * `get-download()` operation.
  */
 export function HtmlAnchorElementGetDownload(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.download;
 }
 
@@ -1654,7 +1654,7 @@ export function HtmlAnchorElementGetDownload(self: bigint): string {
  * `set-download()` operation.
  */
 export function HtmlAnchorElementSetDownload(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.download = value;
 }
 
@@ -1662,7 +1662,7 @@ export function HtmlAnchorElementSetDownload(self: bigint, value: string): void 
  * `get-ping()` operation.
  */
 export function HtmlAnchorElementGetPing(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.ping;
 }
 
@@ -1670,7 +1670,7 @@ export function HtmlAnchorElementGetPing(self: bigint): string {
  * `set-ping()` operation.
  */
 export function HtmlAnchorElementSetPing(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.ping = value;
 }
 
@@ -1678,7 +1678,7 @@ export function HtmlAnchorElementSetPing(self: bigint, value: string): void {
  * `get-rel()` operation.
  */
 export function HtmlAnchorElementGetRel(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.rel;
 }
 
@@ -1686,7 +1686,7 @@ export function HtmlAnchorElementGetRel(self: bigint): string {
  * `set-rel()` operation.
  */
 export function HtmlAnchorElementSetRel(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.rel = value;
 }
 
@@ -1694,7 +1694,7 @@ export function HtmlAnchorElementSetRel(self: bigint, value: string): void {
  * `get-rel-list()` operation.
  */
 export function HtmlAnchorElementGetRelList(self: bigint): bigint {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.relList;
 }
 
@@ -1702,7 +1702,7 @@ export function HtmlAnchorElementGetRelList(self: bigint): bigint {
  * `get-hreflang()` operation.
  */
 export function HtmlAnchorElementGetHreflang(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.hreflang;
 }
 
@@ -1710,7 +1710,7 @@ export function HtmlAnchorElementGetHreflang(self: bigint): string {
  * `set-hreflang()` operation.
  */
 export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.hreflang = value;
 }
 
@@ -1718,7 +1718,7 @@ export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void 
  * `get-type()` operation.
  */
 export function HtmlAnchorElementGetType(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.type;
 }
 
@@ -1726,7 +1726,7 @@ export function HtmlAnchorElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlAnchorElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.type = value;
 }
 
@@ -1734,7 +1734,7 @@ export function HtmlAnchorElementSetType(self: bigint, value: string): void {
  * `get-text()` operation.
  */
 export function HtmlAnchorElementGetText(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.text;
 }
 
@@ -1742,7 +1742,7 @@ export function HtmlAnchorElementGetText(self: bigint): string {
  * `set-text()` operation.
  */
 export function HtmlAnchorElementSetText(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.text = value;
 }
 
@@ -1750,7 +1750,7 @@ export function HtmlAnchorElementSetText(self: bigint, value: string): void {
  * `get-referrer-policy()` operation.
  */
 export function HtmlAnchorElementGetReferrerPolicy(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.referrerPolicy;
 }
 
@@ -1758,7 +1758,7 @@ export function HtmlAnchorElementGetReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function HtmlAnchorElementSetReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -1766,7 +1766,7 @@ export function HtmlAnchorElementSetReferrerPolicy(self: bigint, value: string):
  * `get-coords()` operation.
  */
 export function HtmlAnchorElementGetCoords(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.coords;
 }
 
@@ -1774,7 +1774,7 @@ export function HtmlAnchorElementGetCoords(self: bigint): string {
  * `set-coords()` operation.
  */
 export function HtmlAnchorElementSetCoords(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.coords = value;
 }
 
@@ -1782,7 +1782,7 @@ export function HtmlAnchorElementSetCoords(self: bigint, value: string): void {
  * `get-charset()` operation.
  */
 export function HtmlAnchorElementGetCharset(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.charset;
 }
 
@@ -1790,7 +1790,7 @@ export function HtmlAnchorElementGetCharset(self: bigint): string {
  * `set-charset()` operation.
  */
 export function HtmlAnchorElementSetCharset(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.charset = value;
 }
 
@@ -1798,7 +1798,7 @@ export function HtmlAnchorElementSetCharset(self: bigint, value: string): void {
  * `get-name()` operation.
  */
 export function HtmlAnchorElementGetName(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.name;
 }
 
@@ -1806,7 +1806,7 @@ export function HtmlAnchorElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlAnchorElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.name = value;
 }
 
@@ -1814,7 +1814,7 @@ export function HtmlAnchorElementSetName(self: bigint, value: string): void {
  * `get-rev()` operation.
  */
 export function HtmlAnchorElementGetRev(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.rev;
 }
 
@@ -1822,7 +1822,7 @@ export function HtmlAnchorElementGetRev(self: bigint): string {
  * `set-rev()` operation.
  */
 export function HtmlAnchorElementSetRev(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.rev = value;
 }
 
@@ -1830,7 +1830,7 @@ export function HtmlAnchorElementSetRev(self: bigint, value: string): void {
  * `get-shape()` operation.
  */
 export function HtmlAnchorElementGetShape(self: bigint): string {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   return obj.shape;
 }
 
@@ -1838,7 +1838,7 @@ export function HtmlAnchorElementGetShape(self: bigint): string {
  * `set-shape()` operation.
  */
 export function HtmlAnchorElementSetShape(self: bigint, value: string): void {
-  const obj = getHtmlAnchorElement(self);
+  const obj = getHTMLAnchorElement(self);
   obj.shape = value;
 }
 
@@ -1849,24 +1849,24 @@ export function HtmlAnchorElementSetShape(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlDataElementHandle = bigint;
 
-/** Handle table for HtmlDataElement instances */
-const _htmlDataElementhandles = new Map<bigint, HtmlDataElement>();
-let _nextHtmlDataElement = 1n;
+/** Handle table for HTMLDataElement instances */
+const _htmlDataElementhandles = new Map<bigint, HTMLDataElement>();
+let _nextHTMLDataElement = 1n;
 
-/** Get a HtmlDataElement by handle, throwing if not found. */
-function getHtmlDataElement(handle: bigint): HtmlDataElement {
+/** Get a HTMLDataElement by handle, throwing if not found. */
+function getHTMLDataElement(handle: bigint): HTMLDataElement {
   const obj = _htmlDataElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDataElement handle ${handle} not found`);
+    throw new Error(`HTMLDataElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value()` operation.
  */
 export function HtmlDataElementGetValue(self: bigint): string {
-  const obj = getHtmlDataElement(self);
+  const obj = getHTMLDataElement(self);
   return obj.value;
 }
 
@@ -1874,7 +1874,7 @@ export function HtmlDataElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlDataElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlDataElement(self);
+  const obj = getHTMLDataElement(self);
   obj.value = value;
 }
 
@@ -1885,24 +1885,24 @@ export function HtmlDataElementSetValue(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlTimeElementHandle = bigint;
 
-/** Handle table for HtmlTimeElement instances */
-const _htmlTimeElementhandles = new Map<bigint, HtmlTimeElement>();
-let _nextHtmlTimeElement = 1n;
+/** Handle table for HTMLTimeElement instances */
+const _htmlTimeElementhandles = new Map<bigint, HTMLTimeElement>();
+let _nextHTMLTimeElement = 1n;
 
-/** Get a HtmlTimeElement by handle, throwing if not found. */
-function getHtmlTimeElement(handle: bigint): HtmlTimeElement {
+/** Get a HTMLTimeElement by handle, throwing if not found. */
+function getHTMLTimeElement(handle: bigint): HTMLTimeElement {
   const obj = _htmlTimeElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTimeElement handle ${handle} not found`);
+    throw new Error(`HTMLTimeElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-date-time()` operation.
  */
 export function HtmlTimeElementGetDateTime(self: bigint): string {
-  const obj = getHtmlTimeElement(self);
+  const obj = getHTMLTimeElement(self);
   return obj.dateTime;
 }
 
@@ -1910,7 +1910,7 @@ export function HtmlTimeElementGetDateTime(self: bigint): string {
  * `set-date-time()` operation.
  */
 export function HtmlTimeElementSetDateTime(self: bigint, value: string): void {
-  const obj = getHtmlTimeElement(self);
+  const obj = getHTMLTimeElement(self);
   obj.dateTime = value;
 }
 
@@ -1932,7 +1932,7 @@ function getHtmlbrElement(handle: bigint): HtmlbrElement {
     throw new Error(`HtmlbrElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-clear()` operation.
@@ -1968,7 +1968,7 @@ function getHyperlinkElementUtils(handle: bigint): HyperlinkElementUtils {
     throw new Error(`HyperlinkElementUtils handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-origin()` operation.
@@ -2129,24 +2129,24 @@ export function HyperlinkElementUtilsSetHash(self: bigint, value: string): void 
 /** Type alias */
 export type HtmlHyperlinkElementUtilsHandle = bigint;
 
-/** Handle table for HtmlHyperlinkElementUtils instances */
-const _htmlHyperlinkElementUtilshandles = new Map<bigint, HtmlHyperlinkElementUtils>();
-let _nextHtmlHyperlinkElementUtils = 1n;
+/** Handle table for HTMLHyperlinkElementUtils instances */
+const _htmlHyperlinkElementUtilshandles = new Map<bigint, HTMLHyperlinkElementUtils>();
+let _nextHTMLHyperlinkElementUtils = 1n;
 
-/** Get a HtmlHyperlinkElementUtils by handle, throwing if not found. */
-function getHtmlHyperlinkElementUtils(handle: bigint): HtmlHyperlinkElementUtils {
+/** Get a HTMLHyperlinkElementUtils by handle, throwing if not found. */
+function getHTMLHyperlinkElementUtils(handle: bigint): HTMLHyperlinkElementUtils {
   const obj = _htmlHyperlinkElementUtilshandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlHyperlinkElementUtils handle ${handle} not found`);
+    throw new Error(`HTMLHyperlinkElementUtils handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
  */
 export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
-  const obj = getHtmlHyperlinkElementUtils(self);
+  const obj = getHTMLHyperlinkElementUtils(self);
   return obj.href;
 }
 
@@ -2154,7 +2154,7 @@ export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
  * `set-href()` operation.
  */
 export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): void {
-  const obj = getHtmlHyperlinkElementUtils(self);
+  const obj = getHTMLHyperlinkElementUtils(self);
   obj.href = value;
 }
 
@@ -2165,24 +2165,24 @@ export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): v
 /** Type alias */
 export type HtmlModElementHandle = bigint;
 
-/** Handle table for HtmlModElement instances */
-const _htmlModElementhandles = new Map<bigint, HtmlModElement>();
-let _nextHtmlModElement = 1n;
+/** Handle table for HTMLModElement instances */
+const _htmlModElementhandles = new Map<bigint, HTMLModElement>();
+let _nextHTMLModElement = 1n;
 
-/** Get a HtmlModElement by handle, throwing if not found. */
-function getHtmlModElement(handle: bigint): HtmlModElement {
+/** Get a HTMLModElement by handle, throwing if not found. */
+function getHTMLModElement(handle: bigint): HTMLModElement {
   const obj = _htmlModElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlModElement handle ${handle} not found`);
+    throw new Error(`HTMLModElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-cite()` operation.
  */
 export function HtmlModElementGetCite(self: bigint): string {
-  const obj = getHtmlModElement(self);
+  const obj = getHTMLModElement(self);
   return obj.cite;
 }
 
@@ -2190,7 +2190,7 @@ export function HtmlModElementGetCite(self: bigint): string {
  * `set-cite()` operation.
  */
 export function HtmlModElementSetCite(self: bigint, value: string): void {
-  const obj = getHtmlModElement(self);
+  const obj = getHTMLModElement(self);
   obj.cite = value;
 }
 
@@ -2198,7 +2198,7 @@ export function HtmlModElementSetCite(self: bigint, value: string): void {
  * `get-date-time()` operation.
  */
 export function HtmlModElementGetDateTime(self: bigint): string {
-  const obj = getHtmlModElement(self);
+  const obj = getHTMLModElement(self);
   return obj.dateTime;
 }
 
@@ -2206,7 +2206,7 @@ export function HtmlModElementGetDateTime(self: bigint): string {
  * `set-date-time()` operation.
  */
 export function HtmlModElementSetDateTime(self: bigint, value: string): void {
-  const obj = getHtmlModElement(self);
+  const obj = getHTMLModElement(self);
   obj.dateTime = value;
 }
 
@@ -2217,24 +2217,24 @@ export function HtmlModElementSetDateTime(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlSourceElementHandle = bigint;
 
-/** Handle table for HtmlSourceElement instances */
-const _htmlSourceElementhandles = new Map<bigint, HtmlSourceElement>();
-let _nextHtmlSourceElement = 1n;
+/** Handle table for HTMLSourceElement instances */
+const _htmlSourceElementhandles = new Map<bigint, HTMLSourceElement>();
+let _nextHTMLSourceElement = 1n;
 
-/** Get a HtmlSourceElement by handle, throwing if not found. */
-function getHtmlSourceElement(handle: bigint): HtmlSourceElement {
+/** Get a HTMLSourceElement by handle, throwing if not found. */
+function getHTMLSourceElement(handle: bigint): HTMLSourceElement {
   const obj = _htmlSourceElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlSourceElement handle ${handle} not found`);
+    throw new Error(`HTMLSourceElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
  */
 export function HtmlSourceElementGetSrc(self: bigint): string {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.src;
 }
 
@@ -2242,7 +2242,7 @@ export function HtmlSourceElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.src = value;
 }
 
@@ -2250,7 +2250,7 @@ export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlSourceElementGetType(self: bigint): string {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.type;
 }
 
@@ -2258,7 +2258,7 @@ export function HtmlSourceElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlSourceElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.type = value;
 }
 
@@ -2266,7 +2266,7 @@ export function HtmlSourceElementSetType(self: bigint, value: string): void {
  * `get-srcset()` operation.
  */
 export function getSrcset(self: bigint): string {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.srcset;
 }
 
@@ -2274,7 +2274,7 @@ export function getSrcset(self: bigint): string {
  * `set-srcset()` operation.
  */
 export function setSrcset(self: bigint, value: string): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.srcset = value;
 }
 
@@ -2282,7 +2282,7 @@ export function setSrcset(self: bigint, value: string): void {
  * `get-sizes()` operation.
  */
 export function HtmlSourceElementGetSizes(self: bigint): string {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.sizes;
 }
 
@@ -2290,7 +2290,7 @@ export function HtmlSourceElementGetSizes(self: bigint): string {
  * `set-sizes()` operation.
  */
 export function setSizes(self: bigint, value: string): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.sizes = value;
 }
 
@@ -2298,7 +2298,7 @@ export function setSizes(self: bigint, value: string): void {
  * `get-media()` operation.
  */
 export function HtmlSourceElementGetMedia(self: bigint): string {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.media;
 }
 
@@ -2306,7 +2306,7 @@ export function HtmlSourceElementGetMedia(self: bigint): string {
  * `set-media()` operation.
  */
 export function HtmlSourceElementSetMedia(self: bigint, value: string): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.media = value;
 }
 
@@ -2314,7 +2314,7 @@ export function HtmlSourceElementSetMedia(self: bigint, value: string): void {
  * `get-width()` operation.
  */
 export function HtmlSourceElementGetWidth(self: bigint): number {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.width;
 }
 
@@ -2322,7 +2322,7 @@ export function HtmlSourceElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function HtmlSourceElementSetWidth(self: bigint, value: number): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.width = value;
 }
 
@@ -2330,7 +2330,7 @@ export function HtmlSourceElementSetWidth(self: bigint, value: number): void {
  * `get-height()` operation.
  */
 export function HtmlSourceElementGetHeight(self: bigint): number {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   return obj.height;
 }
 
@@ -2338,7 +2338,7 @@ export function HtmlSourceElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function HtmlSourceElementSetHeight(self: bigint, value: number): void {
-  const obj = getHtmlSourceElement(self);
+  const obj = getHTMLSourceElement(self);
   obj.height = value;
 }
 
@@ -2360,7 +2360,7 @@ function getHtmliFrameElement(handle: bigint): HtmliFrameElement {
     throw new Error(`HtmliFrameElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
@@ -2641,24 +2641,24 @@ export function HtmliFrameElementSetMarginWidth(self: bigint, value: string): vo
 /** Type alias */
 export type HtmlEmbedElementHandle = bigint;
 
-/** Handle table for HtmlEmbedElement instances */
-const _htmlEmbedElementhandles = new Map<bigint, HtmlEmbedElement>();
-let _nextHtmlEmbedElement = 1n;
+/** Handle table for HTMLEmbedElement instances */
+const _htmlEmbedElementhandles = new Map<bigint, HTMLEmbedElement>();
+let _nextHTMLEmbedElement = 1n;
 
-/** Get a HtmlEmbedElement by handle, throwing if not found. */
-function getHtmlEmbedElement(handle: bigint): HtmlEmbedElement {
+/** Get a HTMLEmbedElement by handle, throwing if not found. */
+function getHTMLEmbedElement(handle: bigint): HTMLEmbedElement {
   const obj = _htmlEmbedElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlEmbedElement handle ${handle} not found`);
+    throw new Error(`HTMLEmbedElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
  */
 export function HtmlEmbedElementGetSrc(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.src;
 }
 
@@ -2666,7 +2666,7 @@ export function HtmlEmbedElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.src = value;
 }
 
@@ -2674,7 +2674,7 @@ export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlEmbedElementGetType(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.type;
 }
 
@@ -2682,7 +2682,7 @@ export function HtmlEmbedElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlEmbedElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.type = value;
 }
 
@@ -2690,7 +2690,7 @@ export function HtmlEmbedElementSetType(self: bigint, value: string): void {
  * `get-width()` operation.
  */
 export function HtmlEmbedElementGetWidth(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.width;
 }
 
@@ -2698,7 +2698,7 @@ export function HtmlEmbedElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlEmbedElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.width = value;
 }
 
@@ -2706,7 +2706,7 @@ export function HtmlEmbedElementSetWidth(self: bigint, value: string): void {
  * `get-height()` operation.
  */
 export function HtmlEmbedElementGetHeight(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.height;
 }
 
@@ -2714,7 +2714,7 @@ export function HtmlEmbedElementGetHeight(self: bigint): string {
  * `set-height()` operation.
  */
 export function HtmlEmbedElementSetHeight(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.height = value;
 }
 
@@ -2722,7 +2722,7 @@ export function HtmlEmbedElementSetHeight(self: bigint, value: string): void {
  * `get-svg-document()` operation.
  */
 export function HtmlEmbedElementGetSvgDocument(self: bigint): bigint | undefined {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.svgDocument ?? undefined;
 }
 
@@ -2730,7 +2730,7 @@ export function HtmlEmbedElementGetSvgDocument(self: bigint): bigint | undefined
  * `get-align()` operation.
  */
 export function HtmlEmbedElementGetAlign(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.align;
 }
 
@@ -2738,7 +2738,7 @@ export function HtmlEmbedElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlEmbedElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.align = value;
 }
 
@@ -2746,7 +2746,7 @@ export function HtmlEmbedElementSetAlign(self: bigint, value: string): void {
  * `get-name()` operation.
  */
 export function HtmlEmbedElementGetName(self: bigint): string {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   return obj.name;
 }
 
@@ -2754,7 +2754,7 @@ export function HtmlEmbedElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlEmbedElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlEmbedElement(self);
+  const obj = getHTMLEmbedElement(self);
   obj.name = value;
 }
 
@@ -2765,24 +2765,24 @@ export function HtmlEmbedElementSetName(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlObjectElementHandle = bigint;
 
-/** Handle table for HtmlObjectElement instances */
-const _htmlObjectElementhandles = new Map<bigint, HtmlObjectElement>();
-let _nextHtmlObjectElement = 1n;
+/** Handle table for HTMLObjectElement instances */
+const _htmlObjectElementhandles = new Map<bigint, HTMLObjectElement>();
+let _nextHTMLObjectElement = 1n;
 
-/** Get a HtmlObjectElement by handle, throwing if not found. */
-function getHtmlObjectElement(handle: bigint): HtmlObjectElement {
+/** Get a HTMLObjectElement by handle, throwing if not found. */
+function getHTMLObjectElement(handle: bigint): HTMLObjectElement {
   const obj = _htmlObjectElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlObjectElement handle ${handle} not found`);
+    throw new Error(`HTMLObjectElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data()` operation.
  */
 export function HtmlObjectElementGetData(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.data;
 }
 
@@ -2790,7 +2790,7 @@ export function HtmlObjectElementGetData(self: bigint): string {
  * `set-data()` operation.
  */
 export function HtmlObjectElementSetData(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.data = value;
 }
 
@@ -2798,7 +2798,7 @@ export function HtmlObjectElementSetData(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlObjectElementGetType(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.type;
 }
 
@@ -2806,7 +2806,7 @@ export function HtmlObjectElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlObjectElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.type = value;
 }
 
@@ -2814,7 +2814,7 @@ export function HtmlObjectElementSetType(self: bigint, value: string): void {
  * `get-name()` operation.
  */
 export function HtmlObjectElementGetName(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.name;
 }
 
@@ -2822,7 +2822,7 @@ export function HtmlObjectElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlObjectElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.name = value;
 }
 
@@ -2830,7 +2830,7 @@ export function HtmlObjectElementSetName(self: bigint, value: string): void {
  * `get-form()` operation.
  */
 export function HtmlObjectElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.form ?? undefined;
 }
 
@@ -2838,7 +2838,7 @@ export function HtmlObjectElementGetForm(self: bigint): bigint | undefined {
  * `get-width()` operation.
  */
 export function HtmlObjectElementGetWidth(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.width;
 }
 
@@ -2846,7 +2846,7 @@ export function HtmlObjectElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlObjectElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.width = value;
 }
 
@@ -2854,7 +2854,7 @@ export function HtmlObjectElementSetWidth(self: bigint, value: string): void {
  * `get-height()` operation.
  */
 export function HtmlObjectElementGetHeight(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.height;
 }
 
@@ -2862,7 +2862,7 @@ export function HtmlObjectElementGetHeight(self: bigint): string {
  * `set-height()` operation.
  */
 export function HtmlObjectElementSetHeight(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.height = value;
 }
 
@@ -2870,7 +2870,7 @@ export function HtmlObjectElementSetHeight(self: bigint, value: string): void {
  * `get-content-document()` operation.
  */
 export function HtmlObjectElementGetContentDocument(self: bigint): bigint | undefined {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.contentDocument ?? undefined;
 }
 
@@ -2878,7 +2878,7 @@ export function HtmlObjectElementGetContentDocument(self: bigint): bigint | unde
  * `get-content-window()` operation.
  */
 export function HtmlObjectElementGetContentWindow(self: bigint): bigint | undefined {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.contentWindow ?? undefined;
 }
 
@@ -2886,7 +2886,7 @@ export function HtmlObjectElementGetContentWindow(self: bigint): bigint | undefi
  * `get-svg-document()` operation.
  */
 export function HtmlObjectElementGetSvgDocument(self: bigint): bigint | undefined {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.svgDocument ?? undefined;
 }
 
@@ -2894,7 +2894,7 @@ export function HtmlObjectElementGetSvgDocument(self: bigint): bigint | undefine
  * `get-will-validate()` operation.
  */
 export function HtmlObjectElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.willValidate;
 }
 
@@ -2902,7 +2902,7 @@ export function HtmlObjectElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlObjectElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.validity;
 }
 
@@ -2910,7 +2910,7 @@ export function HtmlObjectElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlObjectElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.validationMessage;
 }
 
@@ -2918,7 +2918,7 @@ export function HtmlObjectElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlObjectElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.checkValidity();
 }
 
@@ -2926,7 +2926,7 @@ export function HtmlObjectElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlObjectElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.reportValidity();
 }
 
@@ -2934,7 +2934,7 @@ export function HtmlObjectElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlObjectElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.customValidity = error;
 }
 
@@ -2942,7 +2942,7 @@ export function HtmlObjectElementSetCustomValidity(self: bigint, error: string):
  * `get-align()` operation.
  */
 export function HtmlObjectElementGetAlign(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.align;
 }
 
@@ -2950,7 +2950,7 @@ export function HtmlObjectElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlObjectElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.align = value;
 }
 
@@ -2958,7 +2958,7 @@ export function HtmlObjectElementSetAlign(self: bigint, value: string): void {
  * `get-archive()` operation.
  */
 export function getArchive(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.archive;
 }
 
@@ -2966,7 +2966,7 @@ export function getArchive(self: bigint): string {
  * `set-archive()` operation.
  */
 export function setArchive(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.archive = value;
 }
 
@@ -2974,7 +2974,7 @@ export function setArchive(self: bigint, value: string): void {
  * `get-code()` operation.
  */
 export function HtmlObjectElementGetCode(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.code;
 }
 
@@ -2982,7 +2982,7 @@ export function HtmlObjectElementGetCode(self: bigint): string {
  * `set-code()` operation.
  */
 export function setCode(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.code = value;
 }
 
@@ -2990,7 +2990,7 @@ export function setCode(self: bigint, value: string): void {
  * `get-declare()` operation.
  */
 export function getDeclare(self: bigint): boolean {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.declare;
 }
 
@@ -2998,7 +2998,7 @@ export function getDeclare(self: bigint): boolean {
  * `set-declare()` operation.
  */
 export function setDeclare(self: bigint, value: boolean): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.declare = value;
 }
 
@@ -3006,7 +3006,7 @@ export function setDeclare(self: bigint, value: boolean): void {
  * `get-hspace()` operation.
  */
 export function HtmlObjectElementGetHspace(self: bigint): number {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.hspace;
 }
 
@@ -3014,7 +3014,7 @@ export function HtmlObjectElementGetHspace(self: bigint): number {
  * `set-hspace()` operation.
  */
 export function HtmlObjectElementSetHspace(self: bigint, value: number): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.hspace = value;
 }
 
@@ -3022,7 +3022,7 @@ export function HtmlObjectElementSetHspace(self: bigint, value: number): void {
  * `get-standby()` operation.
  */
 export function getStandby(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.standby;
 }
 
@@ -3030,7 +3030,7 @@ export function getStandby(self: bigint): string {
  * `set-standby()` operation.
  */
 export function setStandby(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.standby = value;
 }
 
@@ -3038,7 +3038,7 @@ export function setStandby(self: bigint, value: string): void {
  * `get-vspace()` operation.
  */
 export function HtmlObjectElementGetVspace(self: bigint): number {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.vspace;
 }
 
@@ -3046,7 +3046,7 @@ export function HtmlObjectElementGetVspace(self: bigint): number {
  * `set-vspace()` operation.
  */
 export function HtmlObjectElementSetVspace(self: bigint, value: number): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.vspace = value;
 }
 
@@ -3054,7 +3054,7 @@ export function HtmlObjectElementSetVspace(self: bigint, value: number): void {
  * `get-code-base()` operation.
  */
 export function getCodeBase(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.codeBase;
 }
 
@@ -3062,7 +3062,7 @@ export function getCodeBase(self: bigint): string {
  * `set-code-base()` operation.
  */
 export function setCodeBase(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.codeBase = value;
 }
 
@@ -3070,7 +3070,7 @@ export function setCodeBase(self: bigint, value: string): void {
  * `get-code-type()` operation.
  */
 export function getCodeType(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.codeType;
 }
 
@@ -3078,7 +3078,7 @@ export function getCodeType(self: bigint): string {
  * `set-code-type()` operation.
  */
 export function setCodeType(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.codeType = value;
 }
 
@@ -3086,7 +3086,7 @@ export function setCodeType(self: bigint, value: string): void {
  * `get-use-map()` operation.
  */
 export function HtmlObjectElementGetUseMap(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.useMap;
 }
 
@@ -3094,7 +3094,7 @@ export function HtmlObjectElementGetUseMap(self: bigint): string {
  * `set-use-map()` operation.
  */
 export function HtmlObjectElementSetUseMap(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.useMap = value;
 }
 
@@ -3102,7 +3102,7 @@ export function HtmlObjectElementSetUseMap(self: bigint, value: string): void {
  * `get-border()` operation.
  */
 export function HtmlObjectElementGetBorder(self: bigint): string {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   return obj.border;
 }
 
@@ -3110,7 +3110,7 @@ export function HtmlObjectElementGetBorder(self: bigint): string {
  * `set-border()` operation.
  */
 export function HtmlObjectElementSetBorder(self: bigint, value: string): void {
-  const obj = getHtmlObjectElement(self);
+  const obj = getHTMLObjectElement(self);
   obj.border = value;
 }
 
@@ -3121,24 +3121,24 @@ export function HtmlObjectElementSetBorder(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlVideoElementHandle = bigint;
 
-/** Handle table for HtmlVideoElement instances */
-const _htmlVideoElementhandles = new Map<bigint, HtmlVideoElement>();
-let _nextHtmlVideoElement = 1n;
+/** Handle table for HTMLVideoElement instances */
+const _htmlVideoElementhandles = new Map<bigint, HTMLVideoElement>();
+let _nextHTMLVideoElement = 1n;
 
-/** Get a HtmlVideoElement by handle, throwing if not found. */
-function getHtmlVideoElement(handle: bigint): HtmlVideoElement {
+/** Get a HTMLVideoElement by handle, throwing if not found. */
+function getHTMLVideoElement(handle: bigint): HTMLVideoElement {
   const obj = _htmlVideoElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlVideoElement handle ${handle} not found`);
+    throw new Error(`HTMLVideoElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
  */
 export function HtmlVideoElementGetWidth(self: bigint): number {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.width;
 }
 
@@ -3146,7 +3146,7 @@ export function HtmlVideoElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function HtmlVideoElementSetWidth(self: bigint, value: number): void {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   obj.width = value;
 }
 
@@ -3154,7 +3154,7 @@ export function HtmlVideoElementSetWidth(self: bigint, value: number): void {
  * `get-height()` operation.
  */
 export function HtmlVideoElementGetHeight(self: bigint): number {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.height;
 }
 
@@ -3162,7 +3162,7 @@ export function HtmlVideoElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function HtmlVideoElementSetHeight(self: bigint, value: number): void {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   obj.height = value;
 }
 
@@ -3170,7 +3170,7 @@ export function HtmlVideoElementSetHeight(self: bigint, value: number): void {
  * `get-video-width()` operation.
  */
 export function getVideoWidth(self: bigint): number {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.videoWidth;
 }
 
@@ -3178,7 +3178,7 @@ export function getVideoWidth(self: bigint): number {
  * `get-video-height()` operation.
  */
 export function getVideoHeight(self: bigint): number {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.videoHeight;
 }
 
@@ -3186,7 +3186,7 @@ export function getVideoHeight(self: bigint): number {
  * `get-poster()` operation.
  */
 export function getPoster(self: bigint): string {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.poster;
 }
 
@@ -3194,7 +3194,7 @@ export function getPoster(self: bigint): string {
  * `set-poster()` operation.
  */
 export function setPoster(self: bigint, value: string): void {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   obj.poster = value;
 }
 
@@ -3202,7 +3202,7 @@ export function setPoster(self: bigint, value: string): void {
  * `get-plays-inline()` operation.
  */
 export function getPlaysInline(self: bigint): boolean {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   return obj.playsInline;
 }
 
@@ -3210,7 +3210,7 @@ export function getPlaysInline(self: bigint): boolean {
  * `set-plays-inline()` operation.
  */
 export function setPlaysInline(self: bigint, value: boolean): void {
-  const obj = getHtmlVideoElement(self);
+  const obj = getHTMLVideoElement(self);
   obj.playsInline = value;
 }
 
@@ -3221,24 +3221,24 @@ export function setPlaysInline(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlTrackElementHandle = bigint;
 
-/** Handle table for HtmlTrackElement instances */
-const _htmlTrackElementhandles = new Map<bigint, HtmlTrackElement>();
-let _nextHtmlTrackElement = 1n;
+/** Handle table for HTMLTrackElement instances */
+const _htmlTrackElementhandles = new Map<bigint, HTMLTrackElement>();
+let _nextHTMLTrackElement = 1n;
 
-/** Get a HtmlTrackElement by handle, throwing if not found. */
-function getHtmlTrackElement(handle: bigint): HtmlTrackElement {
+/** Get a HTMLTrackElement by handle, throwing if not found. */
+function getHTMLTrackElement(handle: bigint): HTMLTrackElement {
   const obj = _htmlTrackElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTrackElement handle ${handle} not found`);
+    throw new Error(`HTMLTrackElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-kind()` operation.
  */
 export function HtmlTrackElementGetKind(self: bigint): string {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.kind;
 }
 
@@ -3246,7 +3246,7 @@ export function HtmlTrackElementGetKind(self: bigint): string {
  * `set-kind()` operation.
  */
 export function setKind(self: bigint, value: string): void {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   obj.kind = value;
 }
 
@@ -3254,7 +3254,7 @@ export function setKind(self: bigint, value: string): void {
  * `get-src()` operation.
  */
 export function HtmlTrackElementGetSrc(self: bigint): string {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.src;
 }
 
@@ -3262,7 +3262,7 @@ export function HtmlTrackElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlTrackElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   obj.src = value;
 }
 
@@ -3270,7 +3270,7 @@ export function HtmlTrackElementSetSrc(self: bigint, value: string): void {
  * `get-srclang()` operation.
  */
 export function getSrclang(self: bigint): string {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.srclang;
 }
 
@@ -3278,7 +3278,7 @@ export function getSrclang(self: bigint): string {
  * `set-srclang()` operation.
  */
 export function setSrclang(self: bigint, value: string): void {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   obj.srclang = value;
 }
 
@@ -3286,7 +3286,7 @@ export function setSrclang(self: bigint, value: string): void {
  * `get-label()` operation.
  */
 export function HtmlTrackElementGetLabel(self: bigint): string {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.label;
 }
 
@@ -3294,7 +3294,7 @@ export function HtmlTrackElementGetLabel(self: bigint): string {
  * `set-label()` operation.
  */
 export function HtmlTrackElementSetLabel(self: bigint, value: string): void {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   obj.label = value;
 }
 
@@ -3302,7 +3302,7 @@ export function HtmlTrackElementSetLabel(self: bigint, value: string): void {
  * `get-default()` operation.
  */
 export function getDefault(self: bigint): boolean {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.default;
 }
 
@@ -3310,7 +3310,7 @@ export function getDefault(self: bigint): boolean {
  * `set-default()` operation.
  */
 export function setDefault(self: bigint, value: boolean): void {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   obj.default = value;
 }
 
@@ -3318,7 +3318,7 @@ export function setDefault(self: bigint, value: boolean): void {
  * `get-ready-state()` operation.
  */
 export function HtmlTrackElementGetReadyState(self: bigint): number {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.readyState;
 }
 
@@ -3326,7 +3326,7 @@ export function HtmlTrackElementGetReadyState(self: bigint): number {
  * `get-track()` operation.
  */
 export function HtmlTrackElementGetTrack(self: bigint): bigint {
-  const obj = getHtmlTrackElement(self);
+  const obj = getHTMLTrackElement(self);
   return obj.track;
 }
 
@@ -3337,24 +3337,24 @@ export function HtmlTrackElementGetTrack(self: bigint): bigint {
 /** Type alias */
 export type HtmlMediaElementHandle = bigint;
 
-/** Handle table for HtmlMediaElement instances */
-const _htmlMediaElementhandles = new Map<bigint, HtmlMediaElement>();
-let _nextHtmlMediaElement = 1n;
+/** Handle table for HTMLMediaElement instances */
+const _htmlMediaElementhandles = new Map<bigint, HTMLMediaElement>();
+let _nextHTMLMediaElement = 1n;
 
-/** Get a HtmlMediaElement by handle, throwing if not found. */
-function getHtmlMediaElement(handle: bigint): HtmlMediaElement {
+/** Get a HTMLMediaElement by handle, throwing if not found. */
+function getHTMLMediaElement(handle: bigint): HTMLMediaElement {
   const obj = _htmlMediaElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMediaElement handle ${handle} not found`);
+    throw new Error(`HTMLMediaElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-error()` operation.
  */
 export function HtmlMediaElementGetError(self: bigint): bigint | undefined {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.error ?? undefined;
 }
 
@@ -3362,7 +3362,7 @@ export function HtmlMediaElementGetError(self: bigint): bigint | undefined {
  * `get-src()` operation.
  */
 export function HtmlMediaElementGetSrc(self: bigint): string {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.src;
 }
 
@@ -3370,7 +3370,7 @@ export function HtmlMediaElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlMediaElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.src = value;
 }
 
@@ -3378,7 +3378,7 @@ export function HtmlMediaElementSetSrc(self: bigint, value: string): void {
  * `get-src-object()` operation.
  */
 export function getSrcObject(self: bigint): bigint | undefined {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.srcObject ?? undefined;
 }
 
@@ -3386,7 +3386,7 @@ export function getSrcObject(self: bigint): bigint | undefined {
  * `set-src-object()` operation.
  */
 export function setSrcObject(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.srcObject = value;
 }
 
@@ -3394,7 +3394,7 @@ export function setSrcObject(self: bigint, value: bigint | undefined): void {
  * `get-current-src()` operation.
  */
 export function getCurrentSrc(self: bigint): string {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.currentSrc;
 }
 
@@ -3402,7 +3402,7 @@ export function getCurrentSrc(self: bigint): string {
  * `get-cross-origin()` operation.
  */
 export function HtmlMediaElementGetCrossOrigin(self: bigint): string | undefined {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.crossOrigin ?? undefined;
 }
 
@@ -3410,7 +3410,7 @@ export function HtmlMediaElementGetCrossOrigin(self: bigint): string | undefined
  * `set-cross-origin()` operation.
  */
 export function HtmlMediaElementSetCrossOrigin(self: bigint, value: string | undefined): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.crossOrigin = value;
 }
 
@@ -3418,7 +3418,7 @@ export function HtmlMediaElementSetCrossOrigin(self: bigint, value: string | und
  * `get-network-state()` operation.
  */
 export function getNetworkState(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.networkState;
 }
 
@@ -3426,7 +3426,7 @@ export function getNetworkState(self: bigint): number {
  * `get-preload()` operation.
  */
 export function getPreload(self: bigint): string {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.preload;
 }
 
@@ -3434,7 +3434,7 @@ export function getPreload(self: bigint): string {
  * `set-preload()` operation.
  */
 export function setPreload(self: bigint, value: string): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.preload = value;
 }
 
@@ -3442,7 +3442,7 @@ export function setPreload(self: bigint, value: string): void {
  * `get-buffered()` operation.
  */
 export function getBuffered(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.buffered;
 }
 
@@ -3450,7 +3450,7 @@ export function getBuffered(self: bigint): bigint {
  * `load()` operation.
  */
 export function load(self: bigint): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.load();
 }
 
@@ -3458,7 +3458,7 @@ export function load(self: bigint): void {
  * `can-play-type()` operation.
  */
 export function canPlayType(self: bigint, type: string): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.canPlayType(type);
 }
 
@@ -3466,7 +3466,7 @@ export function canPlayType(self: bigint, type: string): bigint {
  * `get-ready-state()` operation.
  */
 export function HtmlMediaElementGetReadyState(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.readyState;
 }
 
@@ -3474,7 +3474,7 @@ export function HtmlMediaElementGetReadyState(self: bigint): number {
  * `get-seeking()` operation.
  */
 export function getSeeking(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.seeking;
 }
 
@@ -3482,7 +3482,7 @@ export function getSeeking(self: bigint): boolean {
  * `get-current-time()` operation.
  */
 export function getCurrentTime(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.currentTime;
 }
 
@@ -3490,7 +3490,7 @@ export function getCurrentTime(self: bigint): number {
  * `set-current-time()` operation.
  */
 export function setCurrentTime(self: bigint, value: number): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.currentTime = value;
 }
 
@@ -3498,7 +3498,7 @@ export function setCurrentTime(self: bigint, value: number): void {
  * `fast-seek()` operation.
  */
 export function fastSeek(self: bigint, time: number): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.fastSeek(time);
 }
 
@@ -3506,7 +3506,7 @@ export function fastSeek(self: bigint, time: number): void {
  * `get-duration()` operation.
  */
 export function HtmlMediaElementGetDuration(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.duration;
 }
 
@@ -3514,7 +3514,7 @@ export function HtmlMediaElementGetDuration(self: bigint): number {
  * `get-start-date()` operation.
  */
 export function getStartDate(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.startDate;
 }
 
@@ -3522,7 +3522,7 @@ export function getStartDate(self: bigint): bigint {
  * `get-paused()` operation.
  */
 export function getPaused(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.paused;
 }
 
@@ -3530,7 +3530,7 @@ export function getPaused(self: bigint): boolean {
  * `get-default-playback-rate()` operation.
  */
 export function getDefaultPlaybackRate(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.defaultPlaybackRate;
 }
 
@@ -3538,7 +3538,7 @@ export function getDefaultPlaybackRate(self: bigint): number {
  * `set-default-playback-rate()` operation.
  */
 export function setDefaultPlaybackRate(self: bigint, value: number): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.defaultPlaybackRate = value;
 }
 
@@ -3546,7 +3546,7 @@ export function setDefaultPlaybackRate(self: bigint, value: number): void {
  * `get-playback-rate()` operation.
  */
 export function getPlaybackRate(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.playbackRate;
 }
 
@@ -3554,7 +3554,7 @@ export function getPlaybackRate(self: bigint): number {
  * `set-playback-rate()` operation.
  */
 export function setPlaybackRate(self: bigint, value: number): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.playbackRate = value;
 }
 
@@ -3562,7 +3562,7 @@ export function setPlaybackRate(self: bigint, value: number): void {
  * `get-preserves-pitch()` operation.
  */
 export function getPreservesPitch(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.preservesPitch;
 }
 
@@ -3570,7 +3570,7 @@ export function getPreservesPitch(self: bigint): boolean {
  * `set-preserves-pitch()` operation.
  */
 export function setPreservesPitch(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.preservesPitch = value;
 }
 
@@ -3578,7 +3578,7 @@ export function setPreservesPitch(self: bigint, value: boolean): void {
  * `get-played()` operation.
  */
 export function getPlayed(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.played;
 }
 
@@ -3586,7 +3586,7 @@ export function getPlayed(self: bigint): bigint {
  * `get-seekable()` operation.
  */
 export function getSeekable(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.seekable;
 }
 
@@ -3594,7 +3594,7 @@ export function getSeekable(self: bigint): bigint {
  * `get-ended()` operation.
  */
 export function getEnded(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.ended;
 }
 
@@ -3602,7 +3602,7 @@ export function getEnded(self: bigint): boolean {
  * `get-autoplay()` operation.
  */
 export function getAutoplay(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.autoplay;
 }
 
@@ -3610,7 +3610,7 @@ export function getAutoplay(self: bigint): boolean {
  * `set-autoplay()` operation.
  */
 export function setAutoplay(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.autoplay = value;
 }
 
@@ -3618,7 +3618,7 @@ export function setAutoplay(self: bigint, value: boolean): void {
  * `get-loop()` operation.
  */
 export function HtmlMediaElementGetLoop(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.loop;
 }
 
@@ -3626,7 +3626,7 @@ export function HtmlMediaElementGetLoop(self: bigint): boolean {
  * `set-loop()` operation.
  */
 export function HtmlMediaElementSetLoop(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.loop = value;
 }
 
@@ -3634,7 +3634,7 @@ export function HtmlMediaElementSetLoop(self: bigint, value: boolean): void {
  * `play()` operation.
  */
 export function play(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.play();
 }
 
@@ -3642,7 +3642,7 @@ export function play(self: bigint): bigint {
  * `pause()` operation.
  */
 export function pause(self: bigint): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.pause();
 }
 
@@ -3650,7 +3650,7 @@ export function pause(self: bigint): void {
  * `get-controls()` operation.
  */
 export function getControls(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.controls;
 }
 
@@ -3658,7 +3658,7 @@ export function getControls(self: bigint): boolean {
  * `set-controls()` operation.
  */
 export function setControls(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.controls = value;
 }
 
@@ -3666,7 +3666,7 @@ export function setControls(self: bigint, value: boolean): void {
  * `get-volume()` operation.
  */
 export function getVolume(self: bigint): number {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.volume;
 }
 
@@ -3674,7 +3674,7 @@ export function getVolume(self: bigint): number {
  * `set-volume()` operation.
  */
 export function setVolume(self: bigint, value: number): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.volume = value;
 }
 
@@ -3682,7 +3682,7 @@ export function setVolume(self: bigint, value: number): void {
  * `get-muted()` operation.
  */
 export function getMuted(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.muted;
 }
 
@@ -3690,7 +3690,7 @@ export function getMuted(self: bigint): boolean {
  * `set-muted()` operation.
  */
 export function setMuted(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.muted = value;
 }
 
@@ -3698,7 +3698,7 @@ export function setMuted(self: bigint, value: boolean): void {
  * `get-default-muted()` operation.
  */
 export function getDefaultMuted(self: bigint): boolean {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.defaultMuted;
 }
 
@@ -3706,7 +3706,7 @@ export function getDefaultMuted(self: bigint): boolean {
  * `set-default-muted()` operation.
  */
 export function setDefaultMuted(self: bigint, value: boolean): void {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   obj.defaultMuted = value;
 }
 
@@ -3714,7 +3714,7 @@ export function setDefaultMuted(self: bigint, value: boolean): void {
  * `get-audio-tracks()` operation.
  */
 export function getAudioTracks(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.audioTracks;
 }
 
@@ -3722,7 +3722,7 @@ export function getAudioTracks(self: bigint): bigint {
  * `get-video-tracks()` operation.
  */
 export function getVideoTracks(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.videoTracks;
 }
 
@@ -3730,7 +3730,7 @@ export function getVideoTracks(self: bigint): bigint {
  * `get-text-tracks()` operation.
  */
 export function getTextTracks(self: bigint): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.textTracks;
 }
 
@@ -3738,7 +3738,7 @@ export function getTextTracks(self: bigint): bigint {
  * `add-text-track()` operation.
  */
 export function addTextTrack(self: bigint, kind: bigint, label: string | undefined, language: string | undefined): bigint {
-  const obj = getHtmlMediaElement(self);
+  const obj = getHTMLMediaElement(self);
   return obj.addTextTrack(kind, label, language);
 }
 
@@ -3760,7 +3760,7 @@ function getMediaError(handle: bigint): MediaError {
     throw new Error(`MediaError handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-code()` operation.
@@ -3796,7 +3796,7 @@ function getAudioTrackList(handle: bigint): AudioTrackList {
     throw new Error(`AudioTrackList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -3888,7 +3888,7 @@ function getAudioTrack(handle: bigint): AudioTrack {
     throw new Error(`AudioTrack handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-id()` operation.
@@ -3956,7 +3956,7 @@ function getVideoTrackList(handle: bigint): VideoTrackList {
     throw new Error(`VideoTrackList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -4056,7 +4056,7 @@ function getVideoTrack(handle: bigint): VideoTrack {
     throw new Error(`VideoTrack handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-id()` operation.
@@ -4124,7 +4124,7 @@ function getTextTrackList(handle: bigint): TextTrackList {
     throw new Error(`TextTrackList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -4216,7 +4216,7 @@ function getTextTrack(handle: bigint): TextTrack {
     throw new Error(`TextTrack handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-kind()` operation.
@@ -4340,7 +4340,7 @@ function getTextTrackCueList(handle: bigint): TextTrackCueList {
     throw new Error(`TextTrackCueList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -4384,7 +4384,7 @@ function getTextTrackCue(handle: bigint): TextTrackCue {
     throw new Error(`TextTrackCue handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-track()` operation.
@@ -4508,7 +4508,7 @@ function getTimeRanges(handle: bigint): TimeRanges {
     throw new Error(`TimeRanges handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -4552,7 +4552,7 @@ function getTrackEvent(handle: bigint): TrackEvent {
     throw new Error(`TrackEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-track()` operation.
@@ -4569,24 +4569,24 @@ export function TrackEventGetTrack(self: bigint): bigint | undefined {
 /** Type alias */
 export type HtmlMapElementHandle = bigint;
 
-/** Handle table for HtmlMapElement instances */
-const _htmlMapElementhandles = new Map<bigint, HtmlMapElement>();
-let _nextHtmlMapElement = 1n;
+/** Handle table for HTMLMapElement instances */
+const _htmlMapElementhandles = new Map<bigint, HTMLMapElement>();
+let _nextHTMLMapElement = 1n;
 
-/** Get a HtmlMapElement by handle, throwing if not found. */
-function getHtmlMapElement(handle: bigint): HtmlMapElement {
+/** Get a HTMLMapElement by handle, throwing if not found. */
+function getHTMLMapElement(handle: bigint): HTMLMapElement {
   const obj = _htmlMapElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMapElement handle ${handle} not found`);
+    throw new Error(`HTMLMapElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlMapElementGetName(self: bigint): string {
-  const obj = getHtmlMapElement(self);
+  const obj = getHTMLMapElement(self);
   return obj.name;
 }
 
@@ -4594,7 +4594,7 @@ export function HtmlMapElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlMapElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlMapElement(self);
+  const obj = getHTMLMapElement(self);
   obj.name = value;
 }
 
@@ -4602,7 +4602,7 @@ export function HtmlMapElementSetName(self: bigint, value: string): void {
  * `get-areas()` operation.
  */
 export function getAreas(self: bigint): bigint {
-  const obj = getHtmlMapElement(self);
+  const obj = getHTMLMapElement(self);
   return obj.areas;
 }
 
@@ -4613,24 +4613,24 @@ export function getAreas(self: bigint): bigint {
 /** Type alias */
 export type HtmlAreaElementHandle = bigint;
 
-/** Handle table for HtmlAreaElement instances */
-const _htmlAreaElementhandles = new Map<bigint, HtmlAreaElement>();
-let _nextHtmlAreaElement = 1n;
+/** Handle table for HTMLAreaElement instances */
+const _htmlAreaElementhandles = new Map<bigint, HTMLAreaElement>();
+let _nextHTMLAreaElement = 1n;
 
-/** Get a HtmlAreaElement by handle, throwing if not found. */
-function getHtmlAreaElement(handle: bigint): HtmlAreaElement {
+/** Get a HTMLAreaElement by handle, throwing if not found. */
+function getHTMLAreaElement(handle: bigint): HTMLAreaElement {
   const obj = _htmlAreaElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlAreaElement handle ${handle} not found`);
+    throw new Error(`HTMLAreaElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-alt()` operation.
  */
 export function HtmlAreaElementGetAlt(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.alt;
 }
 
@@ -4638,7 +4638,7 @@ export function HtmlAreaElementGetAlt(self: bigint): string {
  * `set-alt()` operation.
  */
 export function HtmlAreaElementSetAlt(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.alt = value;
 }
 
@@ -4646,7 +4646,7 @@ export function HtmlAreaElementSetAlt(self: bigint, value: string): void {
  * `get-coords()` operation.
  */
 export function HtmlAreaElementGetCoords(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.coords;
 }
 
@@ -4654,7 +4654,7 @@ export function HtmlAreaElementGetCoords(self: bigint): string {
  * `set-coords()` operation.
  */
 export function HtmlAreaElementSetCoords(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.coords = value;
 }
 
@@ -4662,7 +4662,7 @@ export function HtmlAreaElementSetCoords(self: bigint, value: string): void {
  * `get-shape()` operation.
  */
 export function HtmlAreaElementGetShape(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.shape;
 }
 
@@ -4670,7 +4670,7 @@ export function HtmlAreaElementGetShape(self: bigint): string {
  * `set-shape()` operation.
  */
 export function HtmlAreaElementSetShape(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.shape = value;
 }
 
@@ -4678,7 +4678,7 @@ export function HtmlAreaElementSetShape(self: bigint, value: string): void {
  * `get-target()` operation.
  */
 export function HtmlAreaElementGetTarget(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.target;
 }
 
@@ -4686,7 +4686,7 @@ export function HtmlAreaElementGetTarget(self: bigint): string {
  * `set-target()` operation.
  */
 export function HtmlAreaElementSetTarget(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.target = value;
 }
 
@@ -4694,7 +4694,7 @@ export function HtmlAreaElementSetTarget(self: bigint, value: string): void {
  * `get-download()` operation.
  */
 export function HtmlAreaElementGetDownload(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.download;
 }
 
@@ -4702,7 +4702,7 @@ export function HtmlAreaElementGetDownload(self: bigint): string {
  * `set-download()` operation.
  */
 export function HtmlAreaElementSetDownload(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.download = value;
 }
 
@@ -4710,7 +4710,7 @@ export function HtmlAreaElementSetDownload(self: bigint, value: string): void {
  * `get-ping()` operation.
  */
 export function HtmlAreaElementGetPing(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.ping;
 }
 
@@ -4718,7 +4718,7 @@ export function HtmlAreaElementGetPing(self: bigint): string {
  * `set-ping()` operation.
  */
 export function HtmlAreaElementSetPing(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.ping = value;
 }
 
@@ -4726,7 +4726,7 @@ export function HtmlAreaElementSetPing(self: bigint, value: string): void {
  * `get-rel()` operation.
  */
 export function HtmlAreaElementGetRel(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.rel;
 }
 
@@ -4734,7 +4734,7 @@ export function HtmlAreaElementGetRel(self: bigint): string {
  * `set-rel()` operation.
  */
 export function HtmlAreaElementSetRel(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.rel = value;
 }
 
@@ -4742,7 +4742,7 @@ export function HtmlAreaElementSetRel(self: bigint, value: string): void {
  * `get-rel-list()` operation.
  */
 export function HtmlAreaElementGetRelList(self: bigint): bigint {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.relList;
 }
 
@@ -4750,7 +4750,7 @@ export function HtmlAreaElementGetRelList(self: bigint): bigint {
  * `get-referrer-policy()` operation.
  */
 export function HtmlAreaElementGetReferrerPolicy(self: bigint): string {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.referrerPolicy;
 }
 
@@ -4758,7 +4758,7 @@ export function HtmlAreaElementGetReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function HtmlAreaElementSetReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -4766,7 +4766,7 @@ export function HtmlAreaElementSetReferrerPolicy(self: bigint, value: string): v
  * `get-no-href()` operation.
  */
 export function getNoHref(self: bigint): boolean {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   return obj.noHref;
 }
 
@@ -4774,7 +4774,7 @@ export function getNoHref(self: bigint): boolean {
  * `set-no-href()` operation.
  */
 export function setNoHref(self: bigint, value: boolean): void {
-  const obj = getHtmlAreaElement(self);
+  const obj = getHTMLAreaElement(self);
   obj.noHref = value;
 }
 
@@ -4785,31 +4785,31 @@ export function setNoHref(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlTableElementHandle = bigint;
 
-/** Handle table for HtmlTableElement instances */
-const _htmlTableElementhandles = new Map<bigint, HtmlTableElement>();
-let _nextHtmlTableElement = 1n;
+/** Handle table for HTMLTableElement instances */
+const _htmlTableElementhandles = new Map<bigint, HTMLTableElement>();
+let _nextHTMLTableElement = 1n;
 
-/** Register a new HtmlTableElement and return its handle. */
-function registerHtmlTableElement(obj: HtmlTableElement): bigint {
-  const handle = _nextHtmlTableElement++;
+/** Register a new HTMLTableElement and return its handle. */
+function registerHTMLTableElement(obj: HTMLTableElement): bigint {
+  const handle = _nextHTMLTableElement++;
   _htmlTableElementhandles.set(handle, obj);
   return handle;
+}
 
-
-/** Get a HtmlTableElement by handle, throwing if not found. */
-function getHtmlTableElement(handle: bigint): HtmlTableElement {
+/** Get a HTMLTableElement by handle, throwing if not found. */
+function getHTMLTableElement(handle: bigint): HTMLTableElement {
   const obj = _htmlTableElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableElement handle ${handle} not found`);
+    throw new Error(`HTMLTableElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-caption()` operation.
  */
 export function getCaption(self: bigint): bigint | undefined {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.caption ?? undefined;
 }
 
@@ -4817,7 +4817,7 @@ export function getCaption(self: bigint): bigint | undefined {
  * `set-caption()` operation.
  */
 export function setCaption(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.caption = value;
 }
 
@@ -4825,7 +4825,7 @@ export function setCaption(self: bigint, value: bigint | undefined): void {
  * `create-caption()` operation.
  */
 export function createCaption(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.createCaption();
 }
 
@@ -4833,7 +4833,7 @@ export function createCaption(self: bigint): bigint {
  * `delete-caption()` operation.
  */
 export function deleteCaption(self: bigint): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.deleteCaption();
 }
 
@@ -4841,7 +4841,7 @@ export function deleteCaption(self: bigint): void {
  * `get-t-head()` operation.
  */
 export function getTHead(self: bigint): bigint | undefined {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.tHead ?? undefined;
 }
 
@@ -4849,7 +4849,7 @@ export function getTHead(self: bigint): bigint | undefined {
  * `set-t-head()` operation.
  */
 export function setTHead(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.tHead = value;
 }
 
@@ -4857,7 +4857,7 @@ export function setTHead(self: bigint, value: bigint | undefined): void {
  * `create-t-head()` operation.
  */
 export function createTHead(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.createTHead();
 }
 
@@ -4865,7 +4865,7 @@ export function createTHead(self: bigint): bigint {
  * `delete-t-head()` operation.
  */
 export function deleteTHead(self: bigint): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.deleteTHead();
 }
 
@@ -4873,7 +4873,7 @@ export function deleteTHead(self: bigint): void {
  * `get-t-foot()` operation.
  */
 export function getTFoot(self: bigint): bigint | undefined {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.tFoot ?? undefined;
 }
 
@@ -4881,7 +4881,7 @@ export function getTFoot(self: bigint): bigint | undefined {
  * `set-t-foot()` operation.
  */
 export function setTFoot(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.tFoot = value;
 }
 
@@ -4889,7 +4889,7 @@ export function setTFoot(self: bigint, value: bigint | undefined): void {
  * `create-t-foot()` operation.
  */
 export function createTFoot(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.createTFoot();
 }
 
@@ -4897,7 +4897,7 @@ export function createTFoot(self: bigint): bigint {
  * `delete-t-foot()` operation.
  */
 export function deleteTFoot(self: bigint): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.deleteTFoot();
 }
 
@@ -4905,7 +4905,7 @@ export function deleteTFoot(self: bigint): void {
  * `get-t-bodies()` operation.
  */
 export function getTBodies(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.tBodies;
 }
 
@@ -4913,7 +4913,7 @@ export function getTBodies(self: bigint): bigint {
  * `create-t-body()` operation.
  */
 export function createTBody(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.createTBody();
 }
 
@@ -4921,7 +4921,7 @@ export function createTBody(self: bigint): bigint {
  * `get-rows()` operation.
  */
 export function HtmlTableElementGetRows(self: bigint): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.rows;
 }
 
@@ -4929,7 +4929,7 @@ export function HtmlTableElementGetRows(self: bigint): bigint {
  * `insert-row()` operation.
  */
 export function HtmlTableElementInsertRow(self: bigint, index: number | undefined): bigint {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.insertRow(index);
 }
 
@@ -4937,7 +4937,7 @@ export function HtmlTableElementInsertRow(self: bigint, index: number | undefine
  * `delete-row()` operation.
  */
 export function HtmlTableElementDeleteRow(self: bigint, index: number): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.deleteRow(index);
 }
 
@@ -4945,7 +4945,7 @@ export function HtmlTableElementDeleteRow(self: bigint, index: number): void {
  * `get-align()` operation.
  */
 export function HtmlTableElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.align;
 }
 
@@ -4953,7 +4953,7 @@ export function HtmlTableElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.align = value;
 }
 
@@ -4961,7 +4961,7 @@ export function HtmlTableElementSetAlign(self: bigint, value: string): void {
  * `get-border()` operation.
  */
 export function HtmlTableElementGetBorder(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.border;
 }
 
@@ -4969,7 +4969,7 @@ export function HtmlTableElementGetBorder(self: bigint): string {
  * `set-border()` operation.
  */
 export function HtmlTableElementSetBorder(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.border = value;
 }
 
@@ -4977,7 +4977,7 @@ export function HtmlTableElementSetBorder(self: bigint, value: string): void {
  * `get-frame()` operation.
  */
 export function getFrame(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.frame;
 }
 
@@ -4985,7 +4985,7 @@ export function getFrame(self: bigint): string {
  * `set-frame()` operation.
  */
 export function setFrame(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.frame = value;
 }
 
@@ -4993,7 +4993,7 @@ export function setFrame(self: bigint, value: string): void {
  * `get-rules()` operation.
  */
 export function getRules(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.rules;
 }
 
@@ -5001,7 +5001,7 @@ export function getRules(self: bigint): string {
  * `set-rules()` operation.
  */
 export function setRules(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.rules = value;
 }
 
@@ -5009,7 +5009,7 @@ export function setRules(self: bigint, value: string): void {
  * `get-summary()` operation.
  */
 export function getSummary(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.summary;
 }
 
@@ -5017,7 +5017,7 @@ export function getSummary(self: bigint): string {
  * `set-summary()` operation.
  */
 export function setSummary(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.summary = value;
 }
 
@@ -5025,7 +5025,7 @@ export function setSummary(self: bigint, value: string): void {
  * `get-width()` operation.
  */
 export function HtmlTableElementGetWidth(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.width;
 }
 
@@ -5033,7 +5033,7 @@ export function HtmlTableElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlTableElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.width = value;
 }
 
@@ -5041,7 +5041,7 @@ export function HtmlTableElementSetWidth(self: bigint, value: string): void {
  * `get-bg-color()` operation.
  */
 export function HtmlTableElementGetBgColor(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.bgColor;
 }
 
@@ -5049,7 +5049,7 @@ export function HtmlTableElementGetBgColor(self: bigint): string {
  * `set-bg-color()` operation.
  */
 export function HtmlTableElementSetBgColor(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.bgColor = value;
 }
 
@@ -5057,7 +5057,7 @@ export function HtmlTableElementSetBgColor(self: bigint, value: string): void {
  * `get-cell-padding()` operation.
  */
 export function getCellPadding(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.cellPadding;
 }
 
@@ -5065,7 +5065,7 @@ export function getCellPadding(self: bigint): string {
  * `set-cell-padding()` operation.
  */
 export function setCellPadding(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.cellPadding = value;
 }
 
@@ -5073,7 +5073,7 @@ export function setCellPadding(self: bigint, value: string): void {
  * `get-cell-spacing()` operation.
  */
 export function getCellSpacing(self: bigint): string {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   return obj.cellSpacing;
 }
 
@@ -5081,7 +5081,7 @@ export function getCellSpacing(self: bigint): string {
  * `set-cell-spacing()` operation.
  */
 export function setCellSpacing(self: bigint, value: string): void {
-  const obj = getHtmlTableElement(self);
+  const obj = getHTMLTableElement(self);
   obj.cellSpacing = value;
 }
 
@@ -5092,24 +5092,24 @@ export function setCellSpacing(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlTableCaptionElementHandle = bigint;
 
-/** Handle table for HtmlTableCaptionElement instances */
-const _htmlTableCaptionElementhandles = new Map<bigint, HtmlTableCaptionElement>();
-let _nextHtmlTableCaptionElement = 1n;
+/** Handle table for HTMLTableCaptionElement instances */
+const _htmlTableCaptionElementhandles = new Map<bigint, HTMLTableCaptionElement>();
+let _nextHTMLTableCaptionElement = 1n;
 
-/** Get a HtmlTableCaptionElement by handle, throwing if not found. */
-function getHtmlTableCaptionElement(handle: bigint): HtmlTableCaptionElement {
+/** Get a HTMLTableCaptionElement by handle, throwing if not found. */
+function getHTMLTableCaptionElement(handle: bigint): HTMLTableCaptionElement {
   const obj = _htmlTableCaptionElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableCaptionElement handle ${handle} not found`);
+    throw new Error(`HTMLTableCaptionElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-align()` operation.
  */
 export function HtmlTableCaptionElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableCaptionElement(self);
+  const obj = getHTMLTableCaptionElement(self);
   return obj.align;
 }
 
@@ -5117,7 +5117,7 @@ export function HtmlTableCaptionElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableCaptionElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableCaptionElement(self);
+  const obj = getHTMLTableCaptionElement(self);
   obj.align = value;
 }
 
@@ -5128,24 +5128,24 @@ export function HtmlTableCaptionElementSetAlign(self: bigint, value: string): vo
 /** Type alias */
 export type HtmlTableColElementHandle = bigint;
 
-/** Handle table for HtmlTableColElement instances */
-const _htmlTableColElementhandles = new Map<bigint, HtmlTableColElement>();
-let _nextHtmlTableColElement = 1n;
+/** Handle table for HTMLTableColElement instances */
+const _htmlTableColElementhandles = new Map<bigint, HTMLTableColElement>();
+let _nextHTMLTableColElement = 1n;
 
-/** Get a HtmlTableColElement by handle, throwing if not found. */
-function getHtmlTableColElement(handle: bigint): HtmlTableColElement {
+/** Get a HTMLTableColElement by handle, throwing if not found. */
+function getHTMLTableColElement(handle: bigint): HTMLTableColElement {
   const obj = _htmlTableColElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableColElement handle ${handle} not found`);
+    throw new Error(`HTMLTableColElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-span()` operation.
  */
 export function getSpan(self: bigint): number {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.span;
 }
 
@@ -5153,7 +5153,7 @@ export function getSpan(self: bigint): number {
  * `set-span()` operation.
  */
 export function setSpan(self: bigint, value: number): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.span = value;
 }
 
@@ -5161,7 +5161,7 @@ export function setSpan(self: bigint, value: number): void {
  * `get-align()` operation.
  */
 export function HtmlTableColElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.align;
 }
 
@@ -5169,7 +5169,7 @@ export function HtmlTableColElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableColElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.align = value;
 }
 
@@ -5177,7 +5177,7 @@ export function HtmlTableColElementSetAlign(self: bigint, value: string): void {
  * `get-ch()` operation.
  */
 export function HtmlTableColElementGetCh(self: bigint): string {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.ch;
 }
 
@@ -5185,7 +5185,7 @@ export function HtmlTableColElementGetCh(self: bigint): string {
  * `set-ch()` operation.
  */
 export function HtmlTableColElementSetCh(self: bigint, value: string): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.ch = value;
 }
 
@@ -5193,7 +5193,7 @@ export function HtmlTableColElementSetCh(self: bigint, value: string): void {
  * `get-ch-off()` operation.
  */
 export function HtmlTableColElementGetChOff(self: bigint): string {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.chOff;
 }
 
@@ -5201,7 +5201,7 @@ export function HtmlTableColElementGetChOff(self: bigint): string {
  * `set-ch-off()` operation.
  */
 export function HtmlTableColElementSetChOff(self: bigint, value: string): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.chOff = value;
 }
 
@@ -5209,7 +5209,7 @@ export function HtmlTableColElementSetChOff(self: bigint, value: string): void {
  * `get-v-align()` operation.
  */
 export function HtmlTableColElementGetVAlign(self: bigint): string {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.vAlign;
 }
 
@@ -5217,7 +5217,7 @@ export function HtmlTableColElementGetVAlign(self: bigint): string {
  * `set-v-align()` operation.
  */
 export function HtmlTableColElementSetVAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.vAlign = value;
 }
 
@@ -5225,7 +5225,7 @@ export function HtmlTableColElementSetVAlign(self: bigint, value: string): void 
  * `get-width()` operation.
  */
 export function HtmlTableColElementGetWidth(self: bigint): string {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   return obj.width;
 }
 
@@ -5233,7 +5233,7 @@ export function HtmlTableColElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlTableColElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlTableColElement(self);
+  const obj = getHTMLTableColElement(self);
   obj.width = value;
 }
 
@@ -5244,24 +5244,24 @@ export function HtmlTableColElementSetWidth(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlTableSectionElementHandle = bigint;
 
-/** Handle table for HtmlTableSectionElement instances */
-const _htmlTableSectionElementhandles = new Map<bigint, HtmlTableSectionElement>();
-let _nextHtmlTableSectionElement = 1n;
+/** Handle table for HTMLTableSectionElement instances */
+const _htmlTableSectionElementhandles = new Map<bigint, HTMLTableSectionElement>();
+let _nextHTMLTableSectionElement = 1n;
 
-/** Get a HtmlTableSectionElement by handle, throwing if not found. */
-function getHtmlTableSectionElement(handle: bigint): HtmlTableSectionElement {
+/** Get a HTMLTableSectionElement by handle, throwing if not found. */
+function getHTMLTableSectionElement(handle: bigint): HTMLTableSectionElement {
   const obj = _htmlTableSectionElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableSectionElement handle ${handle} not found`);
+    throw new Error(`HTMLTableSectionElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-rows()` operation.
  */
 export function HtmlTableSectionElementGetRows(self: bigint): bigint {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.rows;
 }
 
@@ -5269,7 +5269,7 @@ export function HtmlTableSectionElementGetRows(self: bigint): bigint {
  * `insert-row()` operation.
  */
 export function HtmlTableSectionElementInsertRow(self: bigint, index: number | undefined): bigint {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.insertRow(index);
 }
 
@@ -5277,7 +5277,7 @@ export function HtmlTableSectionElementInsertRow(self: bigint, index: number | u
  * `delete-row()` operation.
  */
 export function HtmlTableSectionElementDeleteRow(self: bigint, index: number): void {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   obj.deleteRow(index);
 }
 
@@ -5285,7 +5285,7 @@ export function HtmlTableSectionElementDeleteRow(self: bigint, index: number): v
  * `get-align()` operation.
  */
 export function HtmlTableSectionElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.align;
 }
 
@@ -5293,7 +5293,7 @@ export function HtmlTableSectionElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableSectionElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   obj.align = value;
 }
 
@@ -5301,7 +5301,7 @@ export function HtmlTableSectionElementSetAlign(self: bigint, value: string): vo
  * `get-ch()` operation.
  */
 export function HtmlTableSectionElementGetCh(self: bigint): string {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.ch;
 }
 
@@ -5309,7 +5309,7 @@ export function HtmlTableSectionElementGetCh(self: bigint): string {
  * `set-ch()` operation.
  */
 export function HtmlTableSectionElementSetCh(self: bigint, value: string): void {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   obj.ch = value;
 }
 
@@ -5317,7 +5317,7 @@ export function HtmlTableSectionElementSetCh(self: bigint, value: string): void 
  * `get-ch-off()` operation.
  */
 export function HtmlTableSectionElementGetChOff(self: bigint): string {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.chOff;
 }
 
@@ -5325,7 +5325,7 @@ export function HtmlTableSectionElementGetChOff(self: bigint): string {
  * `set-ch-off()` operation.
  */
 export function HtmlTableSectionElementSetChOff(self: bigint, value: string): void {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   obj.chOff = value;
 }
 
@@ -5333,7 +5333,7 @@ export function HtmlTableSectionElementSetChOff(self: bigint, value: string): vo
  * `get-v-align()` operation.
  */
 export function HtmlTableSectionElementGetVAlign(self: bigint): string {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   return obj.vAlign;
 }
 
@@ -5341,7 +5341,7 @@ export function HtmlTableSectionElementGetVAlign(self: bigint): string {
  * `set-v-align()` operation.
  */
 export function HtmlTableSectionElementSetVAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableSectionElement(self);
+  const obj = getHTMLTableSectionElement(self);
   obj.vAlign = value;
 }
 
@@ -5352,24 +5352,24 @@ export function HtmlTableSectionElementSetVAlign(self: bigint, value: string): v
 /** Type alias */
 export type HtmlTableRowElementHandle = bigint;
 
-/** Handle table for HtmlTableRowElement instances */
-const _htmlTableRowElementhandles = new Map<bigint, HtmlTableRowElement>();
-let _nextHtmlTableRowElement = 1n;
+/** Handle table for HTMLTableRowElement instances */
+const _htmlTableRowElementhandles = new Map<bigint, HTMLTableRowElement>();
+let _nextHTMLTableRowElement = 1n;
 
-/** Get a HtmlTableRowElement by handle, throwing if not found. */
-function getHtmlTableRowElement(handle: bigint): HtmlTableRowElement {
+/** Get a HTMLTableRowElement by handle, throwing if not found. */
+function getHTMLTableRowElement(handle: bigint): HTMLTableRowElement {
   const obj = _htmlTableRowElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableRowElement handle ${handle} not found`);
+    throw new Error(`HTMLTableRowElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-row-index()` operation.
  */
 export function getRowIndex(self: bigint): number {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.rowIndex;
 }
 
@@ -5377,7 +5377,7 @@ export function getRowIndex(self: bigint): number {
  * `get-section-row-index()` operation.
  */
 export function getSectionRowIndex(self: bigint): number {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.sectionRowIndex;
 }
 
@@ -5385,7 +5385,7 @@ export function getSectionRowIndex(self: bigint): number {
  * `get-cells()` operation.
  */
 export function getCells(self: bigint): bigint {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.cells;
 }
 
@@ -5393,7 +5393,7 @@ export function getCells(self: bigint): bigint {
  * `insert-cell()` operation.
  */
 export function insertCell(self: bigint, index: number | undefined): bigint {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.insertCell(index);
 }
 
@@ -5401,7 +5401,7 @@ export function insertCell(self: bigint, index: number | undefined): bigint {
  * `delete-cell()` operation.
  */
 export function deleteCell(self: bigint, index: number): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.deleteCell(index);
 }
 
@@ -5409,7 +5409,7 @@ export function deleteCell(self: bigint, index: number): void {
  * `get-align()` operation.
  */
 export function HtmlTableRowElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.align;
 }
 
@@ -5417,7 +5417,7 @@ export function HtmlTableRowElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableRowElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.align = value;
 }
 
@@ -5425,7 +5425,7 @@ export function HtmlTableRowElementSetAlign(self: bigint, value: string): void {
  * `get-ch()` operation.
  */
 export function HtmlTableRowElementGetCh(self: bigint): string {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.ch;
 }
 
@@ -5433,7 +5433,7 @@ export function HtmlTableRowElementGetCh(self: bigint): string {
  * `set-ch()` operation.
  */
 export function HtmlTableRowElementSetCh(self: bigint, value: string): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.ch = value;
 }
 
@@ -5441,7 +5441,7 @@ export function HtmlTableRowElementSetCh(self: bigint, value: string): void {
  * `get-ch-off()` operation.
  */
 export function HtmlTableRowElementGetChOff(self: bigint): string {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.chOff;
 }
 
@@ -5449,7 +5449,7 @@ export function HtmlTableRowElementGetChOff(self: bigint): string {
  * `set-ch-off()` operation.
  */
 export function HtmlTableRowElementSetChOff(self: bigint, value: string): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.chOff = value;
 }
 
@@ -5457,7 +5457,7 @@ export function HtmlTableRowElementSetChOff(self: bigint, value: string): void {
  * `get-v-align()` operation.
  */
 export function HtmlTableRowElementGetVAlign(self: bigint): string {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.vAlign;
 }
 
@@ -5465,7 +5465,7 @@ export function HtmlTableRowElementGetVAlign(self: bigint): string {
  * `set-v-align()` operation.
  */
 export function HtmlTableRowElementSetVAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.vAlign = value;
 }
 
@@ -5473,7 +5473,7 @@ export function HtmlTableRowElementSetVAlign(self: bigint, value: string): void 
  * `get-bg-color()` operation.
  */
 export function HtmlTableRowElementGetBgColor(self: bigint): string {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   return obj.bgColor;
 }
 
@@ -5481,7 +5481,7 @@ export function HtmlTableRowElementGetBgColor(self: bigint): string {
  * `set-bg-color()` operation.
  */
 export function HtmlTableRowElementSetBgColor(self: bigint, value: string): void {
-  const obj = getHtmlTableRowElement(self);
+  const obj = getHTMLTableRowElement(self);
   obj.bgColor = value;
 }
 
@@ -5492,24 +5492,24 @@ export function HtmlTableRowElementSetBgColor(self: bigint, value: string): void
 /** Type alias */
 export type HtmlTableCellElementHandle = bigint;
 
-/** Handle table for HtmlTableCellElement instances */
-const _htmlTableCellElementhandles = new Map<bigint, HtmlTableCellElement>();
-let _nextHtmlTableCellElement = 1n;
+/** Handle table for HTMLTableCellElement instances */
+const _htmlTableCellElementhandles = new Map<bigint, HTMLTableCellElement>();
+let _nextHTMLTableCellElement = 1n;
 
-/** Get a HtmlTableCellElement by handle, throwing if not found. */
-function getHtmlTableCellElement(handle: bigint): HtmlTableCellElement {
+/** Get a HTMLTableCellElement by handle, throwing if not found. */
+function getHTMLTableCellElement(handle: bigint): HTMLTableCellElement {
   const obj = _htmlTableCellElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTableCellElement handle ${handle} not found`);
+    throw new Error(`HTMLTableCellElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-col-span()` operation.
  */
 export function getColSpan(self: bigint): number {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.colSpan;
 }
 
@@ -5517,7 +5517,7 @@ export function getColSpan(self: bigint): number {
  * `set-col-span()` operation.
  */
 export function setColSpan(self: bigint, value: number): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.colSpan = value;
 }
 
@@ -5525,7 +5525,7 @@ export function setColSpan(self: bigint, value: number): void {
  * `get-row-span()` operation.
  */
 export function getRowSpan(self: bigint): number {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.rowSpan;
 }
 
@@ -5533,7 +5533,7 @@ export function getRowSpan(self: bigint): number {
  * `set-row-span()` operation.
  */
 export function setRowSpan(self: bigint, value: number): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.rowSpan = value;
 }
 
@@ -5541,7 +5541,7 @@ export function setRowSpan(self: bigint, value: number): void {
  * `get-headers()` operation.
  */
 export function getHeaders(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.headers;
 }
 
@@ -5549,7 +5549,7 @@ export function getHeaders(self: bigint): string {
  * `set-headers()` operation.
  */
 export function setHeaders(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.headers = value;
 }
 
@@ -5557,7 +5557,7 @@ export function setHeaders(self: bigint, value: string): void {
  * `get-cell-index()` operation.
  */
 export function getCellIndex(self: bigint): number {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.cellIndex;
 }
 
@@ -5565,7 +5565,7 @@ export function getCellIndex(self: bigint): number {
  * `get-scope()` operation.
  */
 export function getScope(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.scope;
 }
 
@@ -5573,7 +5573,7 @@ export function getScope(self: bigint): string {
  * `set-scope()` operation.
  */
 export function setScope(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.scope = value;
 }
 
@@ -5581,7 +5581,7 @@ export function setScope(self: bigint, value: string): void {
  * `get-abbr()` operation.
  */
 export function getAbbr(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.abbr;
 }
 
@@ -5589,7 +5589,7 @@ export function getAbbr(self: bigint): string {
  * `set-abbr()` operation.
  */
 export function setAbbr(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.abbr = value;
 }
 
@@ -5597,7 +5597,7 @@ export function setAbbr(self: bigint, value: string): void {
  * `get-align()` operation.
  */
 export function HtmlTableCellElementGetAlign(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.align;
 }
 
@@ -5605,7 +5605,7 @@ export function HtmlTableCellElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlTableCellElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.align = value;
 }
 
@@ -5613,7 +5613,7 @@ export function HtmlTableCellElementSetAlign(self: bigint, value: string): void 
  * `get-axis()` operation.
  */
 export function getAxis(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.axis;
 }
 
@@ -5621,7 +5621,7 @@ export function getAxis(self: bigint): string {
  * `set-axis()` operation.
  */
 export function setAxis(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.axis = value;
 }
 
@@ -5629,7 +5629,7 @@ export function setAxis(self: bigint, value: string): void {
  * `get-height()` operation.
  */
 export function HtmlTableCellElementGetHeight(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.height;
 }
 
@@ -5637,7 +5637,7 @@ export function HtmlTableCellElementGetHeight(self: bigint): string {
  * `set-height()` operation.
  */
 export function HtmlTableCellElementSetHeight(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.height = value;
 }
 
@@ -5645,7 +5645,7 @@ export function HtmlTableCellElementSetHeight(self: bigint, value: string): void
  * `get-width()` operation.
  */
 export function HtmlTableCellElementGetWidth(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.width;
 }
 
@@ -5653,7 +5653,7 @@ export function HtmlTableCellElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlTableCellElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.width = value;
 }
 
@@ -5661,7 +5661,7 @@ export function HtmlTableCellElementSetWidth(self: bigint, value: string): void 
  * `get-ch()` operation.
  */
 export function HtmlTableCellElementGetCh(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.ch;
 }
 
@@ -5669,7 +5669,7 @@ export function HtmlTableCellElementGetCh(self: bigint): string {
  * `set-ch()` operation.
  */
 export function HtmlTableCellElementSetCh(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.ch = value;
 }
 
@@ -5677,7 +5677,7 @@ export function HtmlTableCellElementSetCh(self: bigint, value: string): void {
  * `get-ch-off()` operation.
  */
 export function HtmlTableCellElementGetChOff(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.chOff;
 }
 
@@ -5685,7 +5685,7 @@ export function HtmlTableCellElementGetChOff(self: bigint): string {
  * `set-ch-off()` operation.
  */
 export function HtmlTableCellElementSetChOff(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.chOff = value;
 }
 
@@ -5693,7 +5693,7 @@ export function HtmlTableCellElementSetChOff(self: bigint, value: string): void 
  * `get-no-wrap()` operation.
  */
 export function getNoWrap(self: bigint): boolean {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.noWrap;
 }
 
@@ -5701,7 +5701,7 @@ export function getNoWrap(self: bigint): boolean {
  * `set-no-wrap()` operation.
  */
 export function setNoWrap(self: bigint, value: boolean): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.noWrap = value;
 }
 
@@ -5709,7 +5709,7 @@ export function setNoWrap(self: bigint, value: boolean): void {
  * `get-v-align()` operation.
  */
 export function HtmlTableCellElementGetVAlign(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.vAlign;
 }
 
@@ -5717,7 +5717,7 @@ export function HtmlTableCellElementGetVAlign(self: bigint): string {
  * `set-v-align()` operation.
  */
 export function HtmlTableCellElementSetVAlign(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.vAlign = value;
 }
 
@@ -5725,7 +5725,7 @@ export function HtmlTableCellElementSetVAlign(self: bigint, value: string): void
  * `get-bg-color()` operation.
  */
 export function HtmlTableCellElementGetBgColor(self: bigint): string {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   return obj.bgColor;
 }
 
@@ -5733,7 +5733,7 @@ export function HtmlTableCellElementGetBgColor(self: bigint): string {
  * `set-bg-color()` operation.
  */
 export function HtmlTableCellElementSetBgColor(self: bigint, value: string): void {
-  const obj = getHtmlTableCellElement(self);
+  const obj = getHTMLTableCellElement(self);
   obj.bgColor = value;
 }
 
@@ -5744,24 +5744,24 @@ export function HtmlTableCellElementSetBgColor(self: bigint, value: string): voi
 /** Type alias */
 export type HtmlFormElementHandle = bigint;
 
-/** Handle table for HtmlFormElement instances */
-const _htmlFormElementhandles = new Map<bigint, HtmlFormElement>();
-let _nextHtmlFormElement = 1n;
+/** Handle table for HTMLFormElement instances */
+const _htmlFormElementhandles = new Map<bigint, HTMLFormElement>();
+let _nextHTMLFormElement = 1n;
 
-/** Get a HtmlFormElement by handle, throwing if not found. */
-function getHtmlFormElement(handle: bigint): HtmlFormElement {
+/** Get a HTMLFormElement by handle, throwing if not found. */
+function getHTMLFormElement(handle: bigint): HTMLFormElement {
   const obj = _htmlFormElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlFormElement handle ${handle} not found`);
+    throw new Error(`HTMLFormElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-accept-charset()` operation.
  */
 export function getAcceptCharset(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.acceptCharset;
 }
 
@@ -5769,7 +5769,7 @@ export function getAcceptCharset(self: bigint): string {
  * `set-accept-charset()` operation.
  */
 export function setAcceptCharset(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.acceptCharset = value;
 }
 
@@ -5777,7 +5777,7 @@ export function setAcceptCharset(self: bigint, value: string): void {
  * `get-action()` operation.
  */
 export function getAction(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.action;
 }
 
@@ -5785,7 +5785,7 @@ export function getAction(self: bigint): string {
  * `set-action()` operation.
  */
 export function setAction(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.action = value;
 }
 
@@ -5793,7 +5793,7 @@ export function setAction(self: bigint, value: string): void {
  * `get-autocomplete()` operation.
  */
 export function HtmlFormElementGetAutocomplete(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.autocomplete;
 }
 
@@ -5801,7 +5801,7 @@ export function HtmlFormElementGetAutocomplete(self: bigint): string {
  * `set-autocomplete()` operation.
  */
 export function HtmlFormElementSetAutocomplete(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.autocomplete = value;
 }
 
@@ -5809,7 +5809,7 @@ export function HtmlFormElementSetAutocomplete(self: bigint, value: string): voi
  * `get-enctype()` operation.
  */
 export function getEnctype(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.enctype;
 }
 
@@ -5817,7 +5817,7 @@ export function getEnctype(self: bigint): string {
  * `set-enctype()` operation.
  */
 export function setEnctype(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.enctype = value;
 }
 
@@ -5825,7 +5825,7 @@ export function setEnctype(self: bigint, value: string): void {
  * `get-encoding()` operation.
  */
 export function getEncoding(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.encoding;
 }
 
@@ -5833,7 +5833,7 @@ export function getEncoding(self: bigint): string {
  * `set-encoding()` operation.
  */
 export function setEncoding(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.encoding = value;
 }
 
@@ -5841,7 +5841,7 @@ export function setEncoding(self: bigint, value: string): void {
  * `get-method()` operation.
  */
 export function getMethod(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.method;
 }
 
@@ -5849,7 +5849,7 @@ export function getMethod(self: bigint): string {
  * `set-method()` operation.
  */
 export function setMethod(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.method = value;
 }
 
@@ -5857,7 +5857,7 @@ export function setMethod(self: bigint, value: string): void {
  * `get-name()` operation.
  */
 export function HtmlFormElementGetName(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.name;
 }
 
@@ -5865,7 +5865,7 @@ export function HtmlFormElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlFormElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.name = value;
 }
 
@@ -5873,7 +5873,7 @@ export function HtmlFormElementSetName(self: bigint, value: string): void {
  * `get-no-validate()` operation.
  */
 export function getNoValidate(self: bigint): boolean {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.noValidate;
 }
 
@@ -5881,7 +5881,7 @@ export function getNoValidate(self: bigint): boolean {
  * `set-no-validate()` operation.
  */
 export function setNoValidate(self: bigint, value: boolean): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.noValidate = value;
 }
 
@@ -5889,7 +5889,7 @@ export function setNoValidate(self: bigint, value: boolean): void {
  * `get-target()` operation.
  */
 export function HtmlFormElementGetTarget(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.target;
 }
 
@@ -5897,7 +5897,7 @@ export function HtmlFormElementGetTarget(self: bigint): string {
  * `set-target()` operation.
  */
 export function HtmlFormElementSetTarget(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.target = value;
 }
 
@@ -5905,7 +5905,7 @@ export function HtmlFormElementSetTarget(self: bigint, value: string): void {
  * `get-rel()` operation.
  */
 export function HtmlFormElementGetRel(self: bigint): string {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.rel;
 }
 
@@ -5913,7 +5913,7 @@ export function HtmlFormElementGetRel(self: bigint): string {
  * `set-rel()` operation.
  */
 export function HtmlFormElementSetRel(self: bigint, value: string): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.rel = value;
 }
 
@@ -5921,7 +5921,7 @@ export function HtmlFormElementSetRel(self: bigint, value: string): void {
  * `get-rel-list()` operation.
  */
 export function HtmlFormElementGetRelList(self: bigint): bigint {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.relList;
 }
 
@@ -5929,7 +5929,7 @@ export function HtmlFormElementGetRelList(self: bigint): bigint {
  * `get-elements()` operation.
  */
 export function HtmlFormElementGetElements(self: bigint): bigint {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.elements;
 }
 
@@ -5937,7 +5937,7 @@ export function HtmlFormElementGetElements(self: bigint): bigint {
  * `get-length()` operation.
  */
 export function HtmlFormElementGetLength(self: bigint): number {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.length;
 }
 
@@ -5945,7 +5945,7 @@ export function HtmlFormElementGetLength(self: bigint): number {
  * `element()` operation.
  */
 export function HtmlFormElementElement(self: bigint, index: number): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.element(index);
 }
 
@@ -5953,7 +5953,7 @@ export function HtmlFormElementElement(self: bigint, index: number): void {
  * `submit()` operation.
  */
 export function submit(self: bigint): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.submit();
 }
 
@@ -5961,7 +5961,7 @@ export function submit(self: bigint): void {
  * `request-submit()` operation.
  */
 export function requestSubmit(self: bigint, submitter: bigint | undefined): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.requestSubmit(submitter);
 }
 
@@ -5969,7 +5969,7 @@ export function requestSubmit(self: bigint, submitter: bigint | undefined): void
  * `reset()` operation.
  */
 export function HtmlFormElementReset(self: bigint): void {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   obj.reset();
 }
 
@@ -5977,7 +5977,7 @@ export function HtmlFormElementReset(self: bigint): void {
  * `check-validity()` operation.
  */
 export function HtmlFormElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.checkValidity();
 }
 
@@ -5985,7 +5985,7 @@ export function HtmlFormElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlFormElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlFormElement(self);
+  const obj = getHTMLFormElement(self);
   return obj.reportValidity();
 }
 
@@ -5996,24 +5996,24 @@ export function HtmlFormElementReportValidity(self: bigint): boolean {
 /** Type alias */
 export type HtmlLabelElementHandle = bigint;
 
-/** Handle table for HtmlLabelElement instances */
-const _htmlLabelElementhandles = new Map<bigint, HtmlLabelElement>();
-let _nextHtmlLabelElement = 1n;
+/** Handle table for HTMLLabelElement instances */
+const _htmlLabelElementhandles = new Map<bigint, HTMLLabelElement>();
+let _nextHTMLLabelElement = 1n;
 
-/** Get a HtmlLabelElement by handle, throwing if not found. */
-function getHtmlLabelElement(handle: bigint): HtmlLabelElement {
+/** Get a HTMLLabelElement by handle, throwing if not found. */
+function getHTMLLabelElement(handle: bigint): HTMLLabelElement {
   const obj = _htmlLabelElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlLabelElement handle ${handle} not found`);
+    throw new Error(`HTMLLabelElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-form()` operation.
  */
 export function HtmlLabelElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlLabelElement(self);
+  const obj = getHTMLLabelElement(self);
   return obj.form ?? undefined;
 }
 
@@ -6021,7 +6021,7 @@ export function HtmlLabelElementGetForm(self: bigint): bigint | undefined {
  * `get-html-for()` operation.
  */
 export function HtmlLabelElementGetHtmlFor(self: bigint): string {
-  const obj = getHtmlLabelElement(self);
+  const obj = getHTMLLabelElement(self);
   return obj.htmlFor;
 }
 
@@ -6029,7 +6029,7 @@ export function HtmlLabelElementGetHtmlFor(self: bigint): string {
  * `set-html-for()` operation.
  */
 export function HtmlLabelElementSetHtmlFor(self: bigint, value: string): void {
-  const obj = getHtmlLabelElement(self);
+  const obj = getHTMLLabelElement(self);
   obj.htmlFor = value;
 }
 
@@ -6037,7 +6037,7 @@ export function HtmlLabelElementSetHtmlFor(self: bigint, value: string): void {
  * `get-control()` operation.
  */
 export function getControl(self: bigint): bigint | undefined {
-  const obj = getHtmlLabelElement(self);
+  const obj = getHTMLLabelElement(self);
   return obj.control ?? undefined;
 }
 
@@ -6048,24 +6048,24 @@ export function getControl(self: bigint): bigint | undefined {
 /** Type alias */
 export type HtmlInputElementHandle = bigint;
 
-/** Handle table for HtmlInputElement instances */
-const _htmlInputElementhandles = new Map<bigint, HtmlInputElement>();
-let _nextHtmlInputElement = 1n;
+/** Handle table for HTMLInputElement instances */
+const _htmlInputElementhandles = new Map<bigint, HTMLInputElement>();
+let _nextHTMLInputElement = 1n;
 
-/** Get a HtmlInputElement by handle, throwing if not found. */
-function getHtmlInputElement(handle: bigint): HtmlInputElement {
+/** Get a HTMLInputElement by handle, throwing if not found. */
+function getHTMLInputElement(handle: bigint): HTMLInputElement {
   const obj = _htmlInputElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlInputElement handle ${handle} not found`);
+    throw new Error(`HTMLInputElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-accept()` operation.
  */
 export function getAccept(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.accept;
 }
 
@@ -6073,7 +6073,7 @@ export function getAccept(self: bigint): string {
  * `set-accept()` operation.
  */
 export function setAccept(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.accept = value;
 }
 
@@ -6081,7 +6081,7 @@ export function setAccept(self: bigint, value: string): void {
  * `get-alpha()` operation.
  */
 export function getAlpha(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.alpha;
 }
 
@@ -6089,7 +6089,7 @@ export function getAlpha(self: bigint): boolean {
  * `set-alpha()` operation.
  */
 export function setAlpha(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.alpha = value;
 }
 
@@ -6097,7 +6097,7 @@ export function setAlpha(self: bigint, value: boolean): void {
  * `get-alt()` operation.
  */
 export function HtmlInputElementGetAlt(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.alt;
 }
 
@@ -6105,7 +6105,7 @@ export function HtmlInputElementGetAlt(self: bigint): string {
  * `set-alt()` operation.
  */
 export function HtmlInputElementSetAlt(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.alt = value;
 }
 
@@ -6113,7 +6113,7 @@ export function HtmlInputElementSetAlt(self: bigint, value: string): void {
  * `get-autocomplete()` operation.
  */
 export function HtmlInputElementGetAutocomplete(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.autocomplete;
 }
 
@@ -6121,7 +6121,7 @@ export function HtmlInputElementGetAutocomplete(self: bigint): string {
  * `set-autocomplete()` operation.
  */
 export function HtmlInputElementSetAutocomplete(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.autocomplete = value;
 }
 
@@ -6129,7 +6129,7 @@ export function HtmlInputElementSetAutocomplete(self: bigint, value: string): vo
  * `get-default-checked()` operation.
  */
 export function getDefaultChecked(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.defaultChecked;
 }
 
@@ -6137,7 +6137,7 @@ export function getDefaultChecked(self: bigint): boolean {
  * `set-default-checked()` operation.
  */
 export function setDefaultChecked(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.defaultChecked = value;
 }
 
@@ -6145,7 +6145,7 @@ export function setDefaultChecked(self: bigint, value: boolean): void {
  * `get-checked()` operation.
  */
 export function getChecked(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.checked;
 }
 
@@ -6153,7 +6153,7 @@ export function getChecked(self: bigint): boolean {
  * `set-checked()` operation.
  */
 export function setChecked(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.checked = value;
 }
 
@@ -6161,7 +6161,7 @@ export function setChecked(self: bigint, value: boolean): void {
  * `get-color-space()` operation.
  */
 export function HtmlInputElementGetColorSpace(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.colorSpace;
 }
 
@@ -6169,7 +6169,7 @@ export function HtmlInputElementGetColorSpace(self: bigint): string {
  * `set-color-space()` operation.
  */
 export function setColorSpace(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.colorSpace = value;
 }
 
@@ -6177,7 +6177,7 @@ export function setColorSpace(self: bigint, value: string): void {
  * `get-dir-name()` operation.
  */
 export function HtmlInputElementGetDirName(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.dirName;
 }
 
@@ -6185,7 +6185,7 @@ export function HtmlInputElementGetDirName(self: bigint): string {
  * `set-dir-name()` operation.
  */
 export function HtmlInputElementSetDirName(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.dirName = value;
 }
 
@@ -6193,7 +6193,7 @@ export function HtmlInputElementSetDirName(self: bigint, value: string): void {
  * `get-disabled()` operation.
  */
 export function HtmlInputElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.disabled;
 }
 
@@ -6201,7 +6201,7 @@ export function HtmlInputElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlInputElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.disabled = value;
 }
 
@@ -6209,7 +6209,7 @@ export function HtmlInputElementSetDisabled(self: bigint, value: boolean): void 
  * `get-form()` operation.
  */
 export function HtmlInputElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.form ?? undefined;
 }
 
@@ -6217,7 +6217,7 @@ export function HtmlInputElementGetForm(self: bigint): bigint | undefined {
  * `get-files()` operation.
  */
 export function HtmlInputElementGetFiles(self: bigint): bigint | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.files ?? undefined;
 }
 
@@ -6225,7 +6225,7 @@ export function HtmlInputElementGetFiles(self: bigint): bigint | undefined {
  * `set-files()` operation.
  */
 export function setFiles(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.files = value;
 }
 
@@ -6233,7 +6233,7 @@ export function setFiles(self: bigint, value: bigint | undefined): void {
  * `get-form-action()` operation.
  */
 export function HtmlInputElementGetFormAction(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.formAction;
 }
 
@@ -6241,7 +6241,7 @@ export function HtmlInputElementGetFormAction(self: bigint): string {
  * `set-form-action()` operation.
  */
 export function HtmlInputElementSetFormAction(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.formAction = value;
 }
 
@@ -6249,7 +6249,7 @@ export function HtmlInputElementSetFormAction(self: bigint, value: string): void
  * `get-form-enctype()` operation.
  */
 export function HtmlInputElementGetFormEnctype(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.formEnctype;
 }
 
@@ -6257,7 +6257,7 @@ export function HtmlInputElementGetFormEnctype(self: bigint): string {
  * `set-form-enctype()` operation.
  */
 export function HtmlInputElementSetFormEnctype(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.formEnctype = value;
 }
 
@@ -6265,7 +6265,7 @@ export function HtmlInputElementSetFormEnctype(self: bigint, value: string): voi
  * `get-form-method()` operation.
  */
 export function HtmlInputElementGetFormMethod(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.formMethod;
 }
 
@@ -6273,7 +6273,7 @@ export function HtmlInputElementGetFormMethod(self: bigint): string {
  * `set-form-method()` operation.
  */
 export function HtmlInputElementSetFormMethod(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.formMethod = value;
 }
 
@@ -6281,7 +6281,7 @@ export function HtmlInputElementSetFormMethod(self: bigint, value: string): void
  * `get-form-no-validate()` operation.
  */
 export function HtmlInputElementGetFormNoValidate(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.formNoValidate;
 }
 
@@ -6289,7 +6289,7 @@ export function HtmlInputElementGetFormNoValidate(self: bigint): boolean {
  * `set-form-no-validate()` operation.
  */
 export function HtmlInputElementSetFormNoValidate(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.formNoValidate = value;
 }
 
@@ -6297,7 +6297,7 @@ export function HtmlInputElementSetFormNoValidate(self: bigint, value: boolean):
  * `get-form-target()` operation.
  */
 export function HtmlInputElementGetFormTarget(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.formTarget;
 }
 
@@ -6305,7 +6305,7 @@ export function HtmlInputElementGetFormTarget(self: bigint): string {
  * `set-form-target()` operation.
  */
 export function HtmlInputElementSetFormTarget(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.formTarget = value;
 }
 
@@ -6313,7 +6313,7 @@ export function HtmlInputElementSetFormTarget(self: bigint, value: string): void
  * `get-height()` operation.
  */
 export function HtmlInputElementGetHeight(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.height;
 }
 
@@ -6321,7 +6321,7 @@ export function HtmlInputElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function HtmlInputElementSetHeight(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.height = value;
 }
 
@@ -6329,7 +6329,7 @@ export function HtmlInputElementSetHeight(self: bigint, value: number): void {
  * `get-indeterminate()` operation.
  */
 export function getIndeterminate(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.indeterminate;
 }
 
@@ -6337,7 +6337,7 @@ export function getIndeterminate(self: bigint): boolean {
  * `set-indeterminate()` operation.
  */
 export function setIndeterminate(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.indeterminate = value;
 }
 
@@ -6345,7 +6345,7 @@ export function setIndeterminate(self: bigint, value: boolean): void {
  * `get-list()` operation.
  */
 export function getList(self: bigint): bigint | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.list ?? undefined;
 }
 
@@ -6353,7 +6353,7 @@ export function getList(self: bigint): bigint | undefined {
  * `get-max()` operation.
  */
 export function HtmlInputElementGetMax(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.max;
 }
 
@@ -6361,7 +6361,7 @@ export function HtmlInputElementGetMax(self: bigint): string {
  * `set-max()` operation.
  */
 export function HtmlInputElementSetMax(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.max = value;
 }
 
@@ -6369,7 +6369,7 @@ export function HtmlInputElementSetMax(self: bigint, value: string): void {
  * `get-max-length()` operation.
  */
 export function HtmlInputElementGetMaxLength(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.maxLength;
 }
 
@@ -6377,7 +6377,7 @@ export function HtmlInputElementGetMaxLength(self: bigint): number {
  * `set-max-length()` operation.
  */
 export function HtmlInputElementSetMaxLength(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.maxLength = value;
 }
 
@@ -6385,7 +6385,7 @@ export function HtmlInputElementSetMaxLength(self: bigint, value: number): void 
  * `get-min()` operation.
  */
 export function HtmlInputElementGetMin(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.min;
 }
 
@@ -6393,7 +6393,7 @@ export function HtmlInputElementGetMin(self: bigint): string {
  * `set-min()` operation.
  */
 export function HtmlInputElementSetMin(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.min = value;
 }
 
@@ -6401,7 +6401,7 @@ export function HtmlInputElementSetMin(self: bigint, value: string): void {
  * `get-min-length()` operation.
  */
 export function HtmlInputElementGetMinLength(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.minLength;
 }
 
@@ -6409,7 +6409,7 @@ export function HtmlInputElementGetMinLength(self: bigint): number {
  * `set-min-length()` operation.
  */
 export function HtmlInputElementSetMinLength(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.minLength = value;
 }
 
@@ -6417,7 +6417,7 @@ export function HtmlInputElementSetMinLength(self: bigint, value: number): void 
  * `get-multiple()` operation.
  */
 export function HtmlInputElementGetMultiple(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.multiple;
 }
 
@@ -6425,7 +6425,7 @@ export function HtmlInputElementGetMultiple(self: bigint): boolean {
  * `set-multiple()` operation.
  */
 export function HtmlInputElementSetMultiple(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.multiple = value;
 }
 
@@ -6433,7 +6433,7 @@ export function HtmlInputElementSetMultiple(self: bigint, value: boolean): void 
  * `get-name()` operation.
  */
 export function HtmlInputElementGetName(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.name;
 }
 
@@ -6441,7 +6441,7 @@ export function HtmlInputElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlInputElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.name = value;
 }
 
@@ -6449,7 +6449,7 @@ export function HtmlInputElementSetName(self: bigint, value: string): void {
  * `get-pattern()` operation.
  */
 export function getPattern(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.pattern;
 }
 
@@ -6457,7 +6457,7 @@ export function getPattern(self: bigint): string {
  * `set-pattern()` operation.
  */
 export function setPattern(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.pattern = value;
 }
 
@@ -6465,7 +6465,7 @@ export function setPattern(self: bigint, value: string): void {
  * `get-placeholder()` operation.
  */
 export function HtmlInputElementGetPlaceholder(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.placeholder;
 }
 
@@ -6473,7 +6473,7 @@ export function HtmlInputElementGetPlaceholder(self: bigint): string {
  * `set-placeholder()` operation.
  */
 export function HtmlInputElementSetPlaceholder(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.placeholder = value;
 }
 
@@ -6481,7 +6481,7 @@ export function HtmlInputElementSetPlaceholder(self: bigint, value: string): voi
  * `get-read-only()` operation.
  */
 export function HtmlInputElementGetReadOnly(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.readOnly;
 }
 
@@ -6489,7 +6489,7 @@ export function HtmlInputElementGetReadOnly(self: bigint): boolean {
  * `set-read-only()` operation.
  */
 export function HtmlInputElementSetReadOnly(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.readOnly = value;
 }
 
@@ -6497,7 +6497,7 @@ export function HtmlInputElementSetReadOnly(self: bigint, value: boolean): void 
  * `get-required()` operation.
  */
 export function HtmlInputElementGetRequired(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.required;
 }
 
@@ -6505,7 +6505,7 @@ export function HtmlInputElementGetRequired(self: bigint): boolean {
  * `set-required()` operation.
  */
 export function HtmlInputElementSetRequired(self: bigint, value: boolean): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.required = value;
 }
 
@@ -6513,7 +6513,7 @@ export function HtmlInputElementSetRequired(self: bigint, value: boolean): void 
  * `get-size()` operation.
  */
 export function HtmlInputElementGetSize(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.size;
 }
 
@@ -6521,7 +6521,7 @@ export function HtmlInputElementGetSize(self: bigint): number {
  * `set-size()` operation.
  */
 export function HtmlInputElementSetSize(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.size = value;
 }
 
@@ -6529,7 +6529,7 @@ export function HtmlInputElementSetSize(self: bigint, value: number): void {
  * `get-src()` operation.
  */
 export function HtmlInputElementGetSrc(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.src;
 }
 
@@ -6537,7 +6537,7 @@ export function HtmlInputElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlInputElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.src = value;
 }
 
@@ -6545,7 +6545,7 @@ export function HtmlInputElementSetSrc(self: bigint, value: string): void {
  * `get-step()` operation.
  */
 export function getStep(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.step;
 }
 
@@ -6553,7 +6553,7 @@ export function getStep(self: bigint): string {
  * `set-step()` operation.
  */
 export function setStep(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.step = value;
 }
 
@@ -6561,7 +6561,7 @@ export function setStep(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlInputElementGetType(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.type;
 }
 
@@ -6569,7 +6569,7 @@ export function HtmlInputElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlInputElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.type = value;
 }
 
@@ -6577,7 +6577,7 @@ export function HtmlInputElementSetType(self: bigint, value: string): void {
  * `get-default-value()` operation.
  */
 export function HtmlInputElementGetDefaultValue(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.defaultValue;
 }
 
@@ -6585,7 +6585,7 @@ export function HtmlInputElementGetDefaultValue(self: bigint): string {
  * `set-default-value()` operation.
  */
 export function HtmlInputElementSetDefaultValue(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.defaultValue = value;
 }
 
@@ -6593,7 +6593,7 @@ export function HtmlInputElementSetDefaultValue(self: bigint, value: string): vo
  * `get-value()` operation.
  */
 export function HtmlInputElementGetValue(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.value;
 }
 
@@ -6601,7 +6601,7 @@ export function HtmlInputElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlInputElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.value = value;
 }
 
@@ -6609,7 +6609,7 @@ export function HtmlInputElementSetValue(self: bigint, value: string): void {
  * `get-value-as-date()` operation.
  */
 export function getValueAsDate(self: bigint): bigint | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.valueAsDate ?? undefined;
 }
 
@@ -6617,7 +6617,7 @@ export function getValueAsDate(self: bigint): bigint | undefined {
  * `set-value-as-date()` operation.
  */
 export function setValueAsDate(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.valueAsDate = value;
 }
 
@@ -6625,7 +6625,7 @@ export function setValueAsDate(self: bigint, value: bigint | undefined): void {
  * `get-value-as-number()` operation.
  */
 export function getValueAsNumber(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.valueAsNumber;
 }
 
@@ -6633,7 +6633,7 @@ export function getValueAsNumber(self: bigint): number {
  * `set-value-as-number()` operation.
  */
 export function setValueAsNumber(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.valueAsNumber = value;
 }
 
@@ -6641,7 +6641,7 @@ export function setValueAsNumber(self: bigint, value: number): void {
  * `get-width()` operation.
  */
 export function HtmlInputElementGetWidth(self: bigint): number {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.width;
 }
 
@@ -6649,7 +6649,7 @@ export function HtmlInputElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function HtmlInputElementSetWidth(self: bigint, value: number): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.width = value;
 }
 
@@ -6657,7 +6657,7 @@ export function HtmlInputElementSetWidth(self: bigint, value: number): void {
  * `step-up()` operation.
  */
 export function stepUp(self: bigint, n: number | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.stepUp(n);
 }
 
@@ -6665,7 +6665,7 @@ export function stepUp(self: bigint, n: number | undefined): void {
  * `step-down()` operation.
  */
 export function stepDown(self: bigint, n: number | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.stepDown(n);
 }
 
@@ -6673,7 +6673,7 @@ export function stepDown(self: bigint, n: number | undefined): void {
  * `get-will-validate()` operation.
  */
 export function HtmlInputElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.willValidate;
 }
 
@@ -6681,7 +6681,7 @@ export function HtmlInputElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlInputElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.validity;
 }
 
@@ -6689,7 +6689,7 @@ export function HtmlInputElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlInputElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.validationMessage;
 }
 
@@ -6697,7 +6697,7 @@ export function HtmlInputElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlInputElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.checkValidity();
 }
 
@@ -6705,7 +6705,7 @@ export function HtmlInputElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlInputElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.reportValidity();
 }
 
@@ -6713,7 +6713,7 @@ export function HtmlInputElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlInputElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.customValidity = error;
 }
 
@@ -6721,7 +6721,7 @@ export function HtmlInputElementSetCustomValidity(self: bigint, error: string): 
  * `get-labels()` operation.
  */
 export function HtmlInputElementGetLabels(self: bigint): bigint | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.labels ?? undefined;
 }
 
@@ -6729,7 +6729,7 @@ export function HtmlInputElementGetLabels(self: bigint): bigint | undefined {
  * `select()` operation.
  */
 export function HtmlInputElementSelect(self: bigint): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.select();
 }
 
@@ -6737,7 +6737,7 @@ export function HtmlInputElementSelect(self: bigint): void {
  * `get-selection-start()` operation.
  */
 export function HtmlInputElementGetSelectionStart(self: bigint): number | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.selectionStart ?? undefined;
 }
 
@@ -6745,7 +6745,7 @@ export function HtmlInputElementGetSelectionStart(self: bigint): number | undefi
  * `set-selection-start()` operation.
  */
 export function HtmlInputElementSetSelectionStart(self: bigint, value: number | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.selectionStart = value;
 }
 
@@ -6753,7 +6753,7 @@ export function HtmlInputElementSetSelectionStart(self: bigint, value: number | 
  * `get-selection-end()` operation.
  */
 export function HtmlInputElementGetSelectionEnd(self: bigint): number | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.selectionEnd ?? undefined;
 }
 
@@ -6761,7 +6761,7 @@ export function HtmlInputElementGetSelectionEnd(self: bigint): number | undefine
  * `set-selection-end()` operation.
  */
 export function HtmlInputElementSetSelectionEnd(self: bigint, value: number | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.selectionEnd = value;
 }
 
@@ -6769,7 +6769,7 @@ export function HtmlInputElementSetSelectionEnd(self: bigint, value: number | un
  * `get-selection-direction()` operation.
  */
 export function HtmlInputElementGetSelectionDirection(self: bigint): string | undefined {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.selectionDirection ?? undefined;
 }
 
@@ -6777,7 +6777,7 @@ export function HtmlInputElementGetSelectionDirection(self: bigint): string | un
  * `set-selection-direction()` operation.
  */
 export function HtmlInputElementSetSelectionDirection(self: bigint, value: string | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.selectionDirection = value;
 }
 
@@ -6785,7 +6785,7 @@ export function HtmlInputElementSetSelectionDirection(self: bigint, value: strin
  * `set-range-text()` operation.
  */
 export function HtmlInputElementSetRangeText(self: bigint, replacement: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.rangeText = replacement;
 }
 
@@ -6793,7 +6793,7 @@ export function HtmlInputElementSetRangeText(self: bigint, replacement: string):
  * `set-selection-range()` operation.
  */
 export function HtmlInputElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.selectionRange = direction;
 }
 
@@ -6801,7 +6801,7 @@ export function HtmlInputElementSetSelectionRange(self: bigint, start: number, e
  * `show-picker()` operation.
  */
 export function HtmlInputElementShowPicker(self: bigint): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.showPicker();
 }
 
@@ -6809,7 +6809,7 @@ export function HtmlInputElementShowPicker(self: bigint): void {
  * `get-align()` operation.
  */
 export function HtmlInputElementGetAlign(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.align;
 }
 
@@ -6817,7 +6817,7 @@ export function HtmlInputElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlInputElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.align = value;
 }
 
@@ -6825,7 +6825,7 @@ export function HtmlInputElementSetAlign(self: bigint, value: string): void {
  * `get-use-map()` operation.
  */
 export function HtmlInputElementGetUseMap(self: bigint): string {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   return obj.useMap;
 }
 
@@ -6833,7 +6833,7 @@ export function HtmlInputElementGetUseMap(self: bigint): string {
  * `set-use-map()` operation.
  */
 export function HtmlInputElementSetUseMap(self: bigint, value: string): void {
-  const obj = getHtmlInputElement(self);
+  const obj = getHTMLInputElement(self);
   obj.useMap = value;
 }
 
@@ -6844,24 +6844,24 @@ export function HtmlInputElementSetUseMap(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlButtonElementHandle = bigint;
 
-/** Handle table for HtmlButtonElement instances */
-const _htmlButtonElementhandles = new Map<bigint, HtmlButtonElement>();
-let _nextHtmlButtonElement = 1n;
+/** Handle table for HTMLButtonElement instances */
+const _htmlButtonElementhandles = new Map<bigint, HTMLButtonElement>();
+let _nextHTMLButtonElement = 1n;
 
-/** Get a HtmlButtonElement by handle, throwing if not found. */
-function getHtmlButtonElement(handle: bigint): HtmlButtonElement {
+/** Get a HTMLButtonElement by handle, throwing if not found. */
+function getHTMLButtonElement(handle: bigint): HTMLButtonElement {
   const obj = _htmlButtonElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlButtonElement handle ${handle} not found`);
+    throw new Error(`HTMLButtonElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-command()` operation.
  */
 export function HtmlButtonElementGetCommand(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.command;
 }
 
@@ -6869,7 +6869,7 @@ export function HtmlButtonElementGetCommand(self: bigint): string {
  * `set-command()` operation.
  */
 export function setCommand(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.command = value;
 }
 
@@ -6877,7 +6877,7 @@ export function setCommand(self: bigint, value: string): void {
  * `get-command-for-element()` operation.
  */
 export function getCommandForElement(self: bigint): bigint | undefined {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.commandForElement ?? undefined;
 }
 
@@ -6885,7 +6885,7 @@ export function getCommandForElement(self: bigint): bigint | undefined {
  * `set-command-for-element()` operation.
  */
 export function setCommandForElement(self: bigint, value: bigint | undefined): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.commandForElement = value;
 }
 
@@ -6893,7 +6893,7 @@ export function setCommandForElement(self: bigint, value: bigint | undefined): v
  * `get-disabled()` operation.
  */
 export function HtmlButtonElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.disabled;
 }
 
@@ -6901,7 +6901,7 @@ export function HtmlButtonElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlButtonElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.disabled = value;
 }
 
@@ -6909,7 +6909,7 @@ export function HtmlButtonElementSetDisabled(self: bigint, value: boolean): void
  * `get-form()` operation.
  */
 export function HtmlButtonElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.form ?? undefined;
 }
 
@@ -6917,7 +6917,7 @@ export function HtmlButtonElementGetForm(self: bigint): bigint | undefined {
  * `get-form-action()` operation.
  */
 export function HtmlButtonElementGetFormAction(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.formAction;
 }
 
@@ -6925,7 +6925,7 @@ export function HtmlButtonElementGetFormAction(self: bigint): string {
  * `set-form-action()` operation.
  */
 export function HtmlButtonElementSetFormAction(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.formAction = value;
 }
 
@@ -6933,7 +6933,7 @@ export function HtmlButtonElementSetFormAction(self: bigint, value: string): voi
  * `get-form-enctype()` operation.
  */
 export function HtmlButtonElementGetFormEnctype(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.formEnctype;
 }
 
@@ -6941,7 +6941,7 @@ export function HtmlButtonElementGetFormEnctype(self: bigint): string {
  * `set-form-enctype()` operation.
  */
 export function HtmlButtonElementSetFormEnctype(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.formEnctype = value;
 }
 
@@ -6949,7 +6949,7 @@ export function HtmlButtonElementSetFormEnctype(self: bigint, value: string): vo
  * `get-form-method()` operation.
  */
 export function HtmlButtonElementGetFormMethod(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.formMethod;
 }
 
@@ -6957,7 +6957,7 @@ export function HtmlButtonElementGetFormMethod(self: bigint): string {
  * `set-form-method()` operation.
  */
 export function HtmlButtonElementSetFormMethod(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.formMethod = value;
 }
 
@@ -6965,7 +6965,7 @@ export function HtmlButtonElementSetFormMethod(self: bigint, value: string): voi
  * `get-form-no-validate()` operation.
  */
 export function HtmlButtonElementGetFormNoValidate(self: bigint): boolean {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.formNoValidate;
 }
 
@@ -6973,7 +6973,7 @@ export function HtmlButtonElementGetFormNoValidate(self: bigint): boolean {
  * `set-form-no-validate()` operation.
  */
 export function HtmlButtonElementSetFormNoValidate(self: bigint, value: boolean): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.formNoValidate = value;
 }
 
@@ -6981,7 +6981,7 @@ export function HtmlButtonElementSetFormNoValidate(self: bigint, value: boolean)
  * `get-form-target()` operation.
  */
 export function HtmlButtonElementGetFormTarget(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.formTarget;
 }
 
@@ -6989,7 +6989,7 @@ export function HtmlButtonElementGetFormTarget(self: bigint): string {
  * `set-form-target()` operation.
  */
 export function HtmlButtonElementSetFormTarget(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.formTarget = value;
 }
 
@@ -6997,7 +6997,7 @@ export function HtmlButtonElementSetFormTarget(self: bigint, value: string): voi
  * `get-name()` operation.
  */
 export function HtmlButtonElementGetName(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.name;
 }
 
@@ -7005,7 +7005,7 @@ export function HtmlButtonElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlButtonElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.name = value;
 }
 
@@ -7013,7 +7013,7 @@ export function HtmlButtonElementSetName(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlButtonElementGetType(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.type;
 }
 
@@ -7021,7 +7021,7 @@ export function HtmlButtonElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlButtonElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.type = value;
 }
 
@@ -7029,7 +7029,7 @@ export function HtmlButtonElementSetType(self: bigint, value: string): void {
  * `get-value()` operation.
  */
 export function HtmlButtonElementGetValue(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.value;
 }
 
@@ -7037,7 +7037,7 @@ export function HtmlButtonElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlButtonElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.value = value;
 }
 
@@ -7045,7 +7045,7 @@ export function HtmlButtonElementSetValue(self: bigint, value: string): void {
  * `get-will-validate()` operation.
  */
 export function HtmlButtonElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.willValidate;
 }
 
@@ -7053,7 +7053,7 @@ export function HtmlButtonElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlButtonElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.validity;
 }
 
@@ -7061,7 +7061,7 @@ export function HtmlButtonElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlButtonElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.validationMessage;
 }
 
@@ -7069,7 +7069,7 @@ export function HtmlButtonElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlButtonElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.checkValidity();
 }
 
@@ -7077,7 +7077,7 @@ export function HtmlButtonElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlButtonElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.reportValidity();
 }
 
@@ -7085,7 +7085,7 @@ export function HtmlButtonElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlButtonElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   obj.customValidity = error;
 }
 
@@ -7093,7 +7093,7 @@ export function HtmlButtonElementSetCustomValidity(self: bigint, error: string):
  * `get-labels()` operation.
  */
 export function HtmlButtonElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlButtonElement(self);
+  const obj = getHTMLButtonElement(self);
   return obj.labels;
 }
 
@@ -7104,24 +7104,24 @@ export function HtmlButtonElementGetLabels(self: bigint): bigint {
 /** Type alias */
 export type HtmlSelectElementHandle = bigint;
 
-/** Handle table for HtmlSelectElement instances */
-const _htmlSelectElementhandles = new Map<bigint, HtmlSelectElement>();
-let _nextHtmlSelectElement = 1n;
+/** Handle table for HTMLSelectElement instances */
+const _htmlSelectElementhandles = new Map<bigint, HTMLSelectElement>();
+let _nextHTMLSelectElement = 1n;
 
-/** Get a HtmlSelectElement by handle, throwing if not found. */
-function getHtmlSelectElement(handle: bigint): HtmlSelectElement {
+/** Get a HTMLSelectElement by handle, throwing if not found. */
+function getHTMLSelectElement(handle: bigint): HTMLSelectElement {
   const obj = _htmlSelectElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlSelectElement handle ${handle} not found`);
+    throw new Error(`HTMLSelectElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-autocomplete()` operation.
  */
 export function HtmlSelectElementGetAutocomplete(self: bigint): string {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.autocomplete;
 }
 
@@ -7129,7 +7129,7 @@ export function HtmlSelectElementGetAutocomplete(self: bigint): string {
  * `set-autocomplete()` operation.
  */
 export function HtmlSelectElementSetAutocomplete(self: bigint, value: string): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.autocomplete = value;
 }
 
@@ -7137,7 +7137,7 @@ export function HtmlSelectElementSetAutocomplete(self: bigint, value: string): v
  * `get-disabled()` operation.
  */
 export function HtmlSelectElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.disabled;
 }
 
@@ -7145,7 +7145,7 @@ export function HtmlSelectElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlSelectElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.disabled = value;
 }
 
@@ -7153,7 +7153,7 @@ export function HtmlSelectElementSetDisabled(self: bigint, value: boolean): void
  * `get-form()` operation.
  */
 export function HtmlSelectElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.form ?? undefined;
 }
 
@@ -7161,7 +7161,7 @@ export function HtmlSelectElementGetForm(self: bigint): bigint | undefined {
  * `get-multiple()` operation.
  */
 export function HtmlSelectElementGetMultiple(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.multiple;
 }
 
@@ -7169,7 +7169,7 @@ export function HtmlSelectElementGetMultiple(self: bigint): boolean {
  * `set-multiple()` operation.
  */
 export function HtmlSelectElementSetMultiple(self: bigint, value: boolean): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.multiple = value;
 }
 
@@ -7177,7 +7177,7 @@ export function HtmlSelectElementSetMultiple(self: bigint, value: boolean): void
  * `get-name()` operation.
  */
 export function HtmlSelectElementGetName(self: bigint): string {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.name;
 }
 
@@ -7185,7 +7185,7 @@ export function HtmlSelectElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlSelectElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.name = value;
 }
 
@@ -7193,7 +7193,7 @@ export function HtmlSelectElementSetName(self: bigint, value: string): void {
  * `get-required()` operation.
  */
 export function HtmlSelectElementGetRequired(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.required;
 }
 
@@ -7201,7 +7201,7 @@ export function HtmlSelectElementGetRequired(self: bigint): boolean {
  * `set-required()` operation.
  */
 export function HtmlSelectElementSetRequired(self: bigint, value: boolean): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.required = value;
 }
 
@@ -7209,7 +7209,7 @@ export function HtmlSelectElementSetRequired(self: bigint, value: boolean): void
  * `get-size()` operation.
  */
 export function HtmlSelectElementGetSize(self: bigint): number {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.size;
 }
 
@@ -7217,7 +7217,7 @@ export function HtmlSelectElementGetSize(self: bigint): number {
  * `set-size()` operation.
  */
 export function HtmlSelectElementSetSize(self: bigint, value: number): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.size = value;
 }
 
@@ -7225,7 +7225,7 @@ export function HtmlSelectElementSetSize(self: bigint, value: number): void {
  * `get-type()` operation.
  */
 export function HtmlSelectElementGetType(self: bigint): string {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.type;
 }
 
@@ -7233,7 +7233,7 @@ export function HtmlSelectElementGetType(self: bigint): string {
  * `get-options()` operation.
  */
 export function HtmlSelectElementGetOptions(self: bigint): bigint {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.options;
 }
 
@@ -7241,7 +7241,7 @@ export function HtmlSelectElementGetOptions(self: bigint): bigint {
  * `get-length()` operation.
  */
 export function HtmlSelectElementGetLength(self: bigint): number {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.length;
 }
 
@@ -7249,7 +7249,7 @@ export function HtmlSelectElementGetLength(self: bigint): number {
  * `set-length()` operation.
  */
 export function HtmlSelectElementSetLength(self: bigint, value: number): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.length = value;
 }
 
@@ -7257,7 +7257,7 @@ export function HtmlSelectElementSetLength(self: bigint, value: number): void {
  * `item()` operation.
  */
 export function HtmlSelectElementItem(self: bigint, index: number): bigint | undefined {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -7265,15 +7265,15 @@ export function HtmlSelectElementItem(self: bigint, index: number): bigint | und
  * `named-item()` operation.
  */
 export function HtmlSelectElementNamedItem(self: bigint, name: string): bigint | undefined {
-  const obj = getHtmlSelectElement(self);
-  return obj.namedItem(name) ?? undefined;
+  const obj = getHTMLSelectElement(self);
+  return obj.getNamedItem(name) ?? undefined;
 }
 
 /**
  * `add()` operation.
  */
 export function HtmlSelectElementAdd(self: bigint, element: bigint, before: bigint | undefined): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.add(element, before);
 }
 
@@ -7281,7 +7281,7 @@ export function HtmlSelectElementAdd(self: bigint, element: bigint, before: bigi
  * `remove()` operation.
  */
 export function HtmlSelectElementRemove(self: bigint): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.remove();
 }
 
@@ -7289,7 +7289,7 @@ export function HtmlSelectElementRemove(self: bigint): void {
  * `undefined()` operation.
  */
 export function HtmlSelectElementUndefined(self: bigint, index: number, option: bigint | undefined): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.undefined(index, option);
 }
 
@@ -7297,7 +7297,7 @@ export function HtmlSelectElementUndefined(self: bigint, index: number, option: 
  * `get-selected-options()` operation.
  */
 export function getSelectedOptions(self: bigint): bigint {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.selectedOptions;
 }
 
@@ -7305,7 +7305,7 @@ export function getSelectedOptions(self: bigint): bigint {
  * `get-selected-index()` operation.
  */
 export function HtmlSelectElementGetSelectedIndex(self: bigint): number {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.selectedIndex;
 }
 
@@ -7313,7 +7313,7 @@ export function HtmlSelectElementGetSelectedIndex(self: bigint): number {
  * `set-selected-index()` operation.
  */
 export function HtmlSelectElementSetSelectedIndex(self: bigint, value: number): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.selectedIndex = value;
 }
 
@@ -7321,7 +7321,7 @@ export function HtmlSelectElementSetSelectedIndex(self: bigint, value: number): 
  * `get-value()` operation.
  */
 export function HtmlSelectElementGetValue(self: bigint): string {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.value;
 }
 
@@ -7329,7 +7329,7 @@ export function HtmlSelectElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlSelectElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.value = value;
 }
 
@@ -7337,7 +7337,7 @@ export function HtmlSelectElementSetValue(self: bigint, value: string): void {
  * `get-will-validate()` operation.
  */
 export function HtmlSelectElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.willValidate;
 }
 
@@ -7345,7 +7345,7 @@ export function HtmlSelectElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlSelectElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.validity;
 }
 
@@ -7353,7 +7353,7 @@ export function HtmlSelectElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlSelectElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.validationMessage;
 }
 
@@ -7361,7 +7361,7 @@ export function HtmlSelectElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlSelectElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.checkValidity();
 }
 
@@ -7369,7 +7369,7 @@ export function HtmlSelectElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlSelectElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.reportValidity();
 }
 
@@ -7377,7 +7377,7 @@ export function HtmlSelectElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlSelectElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.customValidity = error;
 }
 
@@ -7385,7 +7385,7 @@ export function HtmlSelectElementSetCustomValidity(self: bigint, error: string):
  * `show-picker()` operation.
  */
 export function HtmlSelectElementShowPicker(self: bigint): void {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   obj.showPicker();
 }
 
@@ -7393,7 +7393,7 @@ export function HtmlSelectElementShowPicker(self: bigint): void {
  * `get-labels()` operation.
  */
 export function HtmlSelectElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlSelectElement(self);
+  const obj = getHTMLSelectElement(self);
   return obj.labels;
 }
 
@@ -7404,24 +7404,24 @@ export function HtmlSelectElementGetLabels(self: bigint): bigint {
 /** Type alias */
 export type HtmlDataListElementHandle = bigint;
 
-/** Handle table for HtmlDataListElement instances */
-const _htmlDataListElementhandles = new Map<bigint, HtmlDataListElement>();
-let _nextHtmlDataListElement = 1n;
+/** Handle table for HTMLDataListElement instances */
+const _htmlDataListElementhandles = new Map<bigint, HTMLDataListElement>();
+let _nextHTMLDataListElement = 1n;
 
-/** Get a HtmlDataListElement by handle, throwing if not found. */
-function getHtmlDataListElement(handle: bigint): HtmlDataListElement {
+/** Get a HTMLDataListElement by handle, throwing if not found. */
+function getHTMLDataListElement(handle: bigint): HTMLDataListElement {
   const obj = _htmlDataListElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDataListElement handle ${handle} not found`);
+    throw new Error(`HTMLDataListElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-options()` operation.
  */
 export function HtmlDataListElementGetOptions(self: bigint): bigint {
-  const obj = getHtmlDataListElement(self);
+  const obj = getHTMLDataListElement(self);
   return obj.options;
 }
 
@@ -7432,24 +7432,24 @@ export function HtmlDataListElementGetOptions(self: bigint): bigint {
 /** Type alias */
 export type HtmlOptGroupElementHandle = bigint;
 
-/** Handle table for HtmlOptGroupElement instances */
-const _htmlOptGroupElementhandles = new Map<bigint, HtmlOptGroupElement>();
-let _nextHtmlOptGroupElement = 1n;
+/** Handle table for HTMLOptGroupElement instances */
+const _htmlOptGroupElementhandles = new Map<bigint, HTMLOptGroupElement>();
+let _nextHTMLOptGroupElement = 1n;
 
-/** Get a HtmlOptGroupElement by handle, throwing if not found. */
-function getHtmlOptGroupElement(handle: bigint): HtmlOptGroupElement {
+/** Get a HTMLOptGroupElement by handle, throwing if not found. */
+function getHTMLOptGroupElement(handle: bigint): HTMLOptGroupElement {
   const obj = _htmlOptGroupElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlOptGroupElement handle ${handle} not found`);
+    throw new Error(`HTMLOptGroupElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-disabled()` operation.
  */
 export function HtmlOptGroupElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlOptGroupElement(self);
+  const obj = getHTMLOptGroupElement(self);
   return obj.disabled;
 }
 
@@ -7457,7 +7457,7 @@ export function HtmlOptGroupElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlOptGroupElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlOptGroupElement(self);
+  const obj = getHTMLOptGroupElement(self);
   obj.disabled = value;
 }
 
@@ -7465,7 +7465,7 @@ export function HtmlOptGroupElementSetDisabled(self: bigint, value: boolean): vo
  * `get-label()` operation.
  */
 export function HtmlOptGroupElementGetLabel(self: bigint): string {
-  const obj = getHtmlOptGroupElement(self);
+  const obj = getHTMLOptGroupElement(self);
   return obj.label;
 }
 
@@ -7473,7 +7473,7 @@ export function HtmlOptGroupElementGetLabel(self: bigint): string {
  * `set-label()` operation.
  */
 export function HtmlOptGroupElementSetLabel(self: bigint, value: string): void {
-  const obj = getHtmlOptGroupElement(self);
+  const obj = getHTMLOptGroupElement(self);
   obj.label = value;
 }
 
@@ -7484,24 +7484,24 @@ export function HtmlOptGroupElementSetLabel(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlOptionElementHandle = bigint;
 
-/** Handle table for HtmlOptionElement instances */
-const _htmlOptionElementhandles = new Map<bigint, HtmlOptionElement>();
-let _nextHtmlOptionElement = 1n;
+/** Handle table for HTMLOptionElement instances */
+const _htmlOptionElementhandles = new Map<bigint, HTMLOptionElement>();
+let _nextHTMLOptionElement = 1n;
 
-/** Get a HtmlOptionElement by handle, throwing if not found. */
-function getHtmlOptionElement(handle: bigint): HtmlOptionElement {
+/** Get a HTMLOptionElement by handle, throwing if not found. */
+function getHTMLOptionElement(handle: bigint): HTMLOptionElement {
   const obj = _htmlOptionElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlOptionElement handle ${handle} not found`);
+    throw new Error(`HTMLOptionElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-disabled()` operation.
  */
 export function HtmlOptionElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.disabled;
 }
 
@@ -7509,7 +7509,7 @@ export function HtmlOptionElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlOptionElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.disabled = value;
 }
 
@@ -7517,7 +7517,7 @@ export function HtmlOptionElementSetDisabled(self: bigint, value: boolean): void
  * `get-form()` operation.
  */
 export function HtmlOptionElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.form ?? undefined;
 }
 
@@ -7525,7 +7525,7 @@ export function HtmlOptionElementGetForm(self: bigint): bigint | undefined {
  * `get-label()` operation.
  */
 export function HtmlOptionElementGetLabel(self: bigint): string {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.label;
 }
 
@@ -7533,7 +7533,7 @@ export function HtmlOptionElementGetLabel(self: bigint): string {
  * `set-label()` operation.
  */
 export function HtmlOptionElementSetLabel(self: bigint, value: string): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.label = value;
 }
 
@@ -7541,7 +7541,7 @@ export function HtmlOptionElementSetLabel(self: bigint, value: string): void {
  * `get-default-selected()` operation.
  */
 export function getDefaultSelected(self: bigint): boolean {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.defaultSelected;
 }
 
@@ -7549,7 +7549,7 @@ export function getDefaultSelected(self: bigint): boolean {
  * `set-default-selected()` operation.
  */
 export function setDefaultSelected(self: bigint, value: boolean): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.defaultSelected = value;
 }
 
@@ -7557,7 +7557,7 @@ export function setDefaultSelected(self: bigint, value: boolean): void {
  * `get-selected()` operation.
  */
 export function HtmlOptionElementGetSelected(self: bigint): boolean {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.selected;
 }
 
@@ -7565,7 +7565,7 @@ export function HtmlOptionElementGetSelected(self: bigint): boolean {
  * `set-selected()` operation.
  */
 export function HtmlOptionElementSetSelected(self: bigint, value: boolean): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.selected = value;
 }
 
@@ -7573,7 +7573,7 @@ export function HtmlOptionElementSetSelected(self: bigint, value: boolean): void
  * `get-value()` operation.
  */
 export function HtmlOptionElementGetValue(self: bigint): string {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.value;
 }
 
@@ -7581,7 +7581,7 @@ export function HtmlOptionElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlOptionElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.value = value;
 }
 
@@ -7589,7 +7589,7 @@ export function HtmlOptionElementSetValue(self: bigint, value: string): void {
  * `get-text()` operation.
  */
 export function HtmlOptionElementGetText(self: bigint): string {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.text;
 }
 
@@ -7597,7 +7597,7 @@ export function HtmlOptionElementGetText(self: bigint): string {
  * `set-text()` operation.
  */
 export function HtmlOptionElementSetText(self: bigint, value: string): void {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   obj.text = value;
 }
 
@@ -7605,7 +7605,7 @@ export function HtmlOptionElementSetText(self: bigint, value: string): void {
  * `get-index()` operation.
  */
 export function HtmlOptionElementGetIndex(self: bigint): number {
-  const obj = getHtmlOptionElement(self);
+  const obj = getHTMLOptionElement(self);
   return obj.index;
 }
 
@@ -7616,24 +7616,24 @@ export function HtmlOptionElementGetIndex(self: bigint): number {
 /** Type alias */
 export type HtmlTextAreaElementHandle = bigint;
 
-/** Handle table for HtmlTextAreaElement instances */
-const _htmlTextAreaElementhandles = new Map<bigint, HtmlTextAreaElement>();
-let _nextHtmlTextAreaElement = 1n;
+/** Handle table for HTMLTextAreaElement instances */
+const _htmlTextAreaElementhandles = new Map<bigint, HTMLTextAreaElement>();
+let _nextHTMLTextAreaElement = 1n;
 
-/** Get a HtmlTextAreaElement by handle, throwing if not found. */
-function getHtmlTextAreaElement(handle: bigint): HtmlTextAreaElement {
+/** Get a HTMLTextAreaElement by handle, throwing if not found. */
+function getHTMLTextAreaElement(handle: bigint): HTMLTextAreaElement {
   const obj = _htmlTextAreaElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTextAreaElement handle ${handle} not found`);
+    throw new Error(`HTMLTextAreaElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-autocomplete()` operation.
  */
 export function HtmlTextAreaElementGetAutocomplete(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.autocomplete;
 }
 
@@ -7641,7 +7641,7 @@ export function HtmlTextAreaElementGetAutocomplete(self: bigint): string {
  * `set-autocomplete()` operation.
  */
 export function HtmlTextAreaElementSetAutocomplete(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.autocomplete = value;
 }
 
@@ -7649,7 +7649,7 @@ export function HtmlTextAreaElementSetAutocomplete(self: bigint, value: string):
  * `get-cols()` operation.
  */
 export function HtmlTextAreaElementGetCols(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.cols;
 }
 
@@ -7657,7 +7657,7 @@ export function HtmlTextAreaElementGetCols(self: bigint): number {
  * `set-cols()` operation.
  */
 export function HtmlTextAreaElementSetCols(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.cols = value;
 }
 
@@ -7665,7 +7665,7 @@ export function HtmlTextAreaElementSetCols(self: bigint, value: number): void {
  * `get-dir-name()` operation.
  */
 export function HtmlTextAreaElementGetDirName(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.dirName;
 }
 
@@ -7673,7 +7673,7 @@ export function HtmlTextAreaElementGetDirName(self: bigint): string {
  * `set-dir-name()` operation.
  */
 export function HtmlTextAreaElementSetDirName(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.dirName = value;
 }
 
@@ -7681,7 +7681,7 @@ export function HtmlTextAreaElementSetDirName(self: bigint, value: string): void
  * `get-disabled()` operation.
  */
 export function HtmlTextAreaElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.disabled;
 }
 
@@ -7689,7 +7689,7 @@ export function HtmlTextAreaElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlTextAreaElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.disabled = value;
 }
 
@@ -7697,7 +7697,7 @@ export function HtmlTextAreaElementSetDisabled(self: bigint, value: boolean): vo
  * `get-form()` operation.
  */
 export function HtmlTextAreaElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.form ?? undefined;
 }
 
@@ -7705,7 +7705,7 @@ export function HtmlTextAreaElementGetForm(self: bigint): bigint | undefined {
  * `get-max-length()` operation.
  */
 export function HtmlTextAreaElementGetMaxLength(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.maxLength;
 }
 
@@ -7713,7 +7713,7 @@ export function HtmlTextAreaElementGetMaxLength(self: bigint): number {
  * `set-max-length()` operation.
  */
 export function HtmlTextAreaElementSetMaxLength(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.maxLength = value;
 }
 
@@ -7721,7 +7721,7 @@ export function HtmlTextAreaElementSetMaxLength(self: bigint, value: number): vo
  * `get-min-length()` operation.
  */
 export function HtmlTextAreaElementGetMinLength(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.minLength;
 }
 
@@ -7729,7 +7729,7 @@ export function HtmlTextAreaElementGetMinLength(self: bigint): number {
  * `set-min-length()` operation.
  */
 export function HtmlTextAreaElementSetMinLength(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.minLength = value;
 }
 
@@ -7737,7 +7737,7 @@ export function HtmlTextAreaElementSetMinLength(self: bigint, value: number): vo
  * `get-name()` operation.
  */
 export function HtmlTextAreaElementGetName(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.name;
 }
 
@@ -7745,7 +7745,7 @@ export function HtmlTextAreaElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlTextAreaElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.name = value;
 }
 
@@ -7753,7 +7753,7 @@ export function HtmlTextAreaElementSetName(self: bigint, value: string): void {
  * `get-placeholder()` operation.
  */
 export function HtmlTextAreaElementGetPlaceholder(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.placeholder;
 }
 
@@ -7761,7 +7761,7 @@ export function HtmlTextAreaElementGetPlaceholder(self: bigint): string {
  * `set-placeholder()` operation.
  */
 export function HtmlTextAreaElementSetPlaceholder(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.placeholder = value;
 }
 
@@ -7769,7 +7769,7 @@ export function HtmlTextAreaElementSetPlaceholder(self: bigint, value: string): 
  * `get-read-only()` operation.
  */
 export function HtmlTextAreaElementGetReadOnly(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.readOnly;
 }
 
@@ -7777,7 +7777,7 @@ export function HtmlTextAreaElementGetReadOnly(self: bigint): boolean {
  * `set-read-only()` operation.
  */
 export function HtmlTextAreaElementSetReadOnly(self: bigint, value: boolean): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.readOnly = value;
 }
 
@@ -7785,7 +7785,7 @@ export function HtmlTextAreaElementSetReadOnly(self: bigint, value: boolean): vo
  * `get-required()` operation.
  */
 export function HtmlTextAreaElementGetRequired(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.required;
 }
 
@@ -7793,7 +7793,7 @@ export function HtmlTextAreaElementGetRequired(self: bigint): boolean {
  * `set-required()` operation.
  */
 export function HtmlTextAreaElementSetRequired(self: bigint, value: boolean): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.required = value;
 }
 
@@ -7801,7 +7801,7 @@ export function HtmlTextAreaElementSetRequired(self: bigint, value: boolean): vo
  * `get-rows()` operation.
  */
 export function HtmlTextAreaElementGetRows(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.rows;
 }
 
@@ -7809,7 +7809,7 @@ export function HtmlTextAreaElementGetRows(self: bigint): number {
  * `set-rows()` operation.
  */
 export function HtmlTextAreaElementSetRows(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.rows = value;
 }
 
@@ -7817,7 +7817,7 @@ export function HtmlTextAreaElementSetRows(self: bigint, value: number): void {
  * `get-wrap()` operation.
  */
 export function getWrap(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.wrap;
 }
 
@@ -7825,7 +7825,7 @@ export function getWrap(self: bigint): string {
  * `set-wrap()` operation.
  */
 export function setWrap(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.wrap = value;
 }
 
@@ -7833,7 +7833,7 @@ export function setWrap(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlTextAreaElementGetType(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.type;
 }
 
@@ -7841,7 +7841,7 @@ export function HtmlTextAreaElementGetType(self: bigint): string {
  * `get-default-value()` operation.
  */
 export function HtmlTextAreaElementGetDefaultValue(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.defaultValue;
 }
 
@@ -7849,7 +7849,7 @@ export function HtmlTextAreaElementGetDefaultValue(self: bigint): string {
  * `set-default-value()` operation.
  */
 export function HtmlTextAreaElementSetDefaultValue(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.defaultValue = value;
 }
 
@@ -7857,7 +7857,7 @@ export function HtmlTextAreaElementSetDefaultValue(self: bigint, value: string):
  * `get-value()` operation.
  */
 export function HtmlTextAreaElementGetValue(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.value;
 }
 
@@ -7865,7 +7865,7 @@ export function HtmlTextAreaElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlTextAreaElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.value = value;
 }
 
@@ -7873,7 +7873,7 @@ export function HtmlTextAreaElementSetValue(self: bigint, value: string): void {
  * `get-text-length()` operation.
  */
 export function getTextLength(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.textLength;
 }
 
@@ -7881,7 +7881,7 @@ export function getTextLength(self: bigint): number {
  * `get-will-validate()` operation.
  */
 export function HtmlTextAreaElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.willValidate;
 }
 
@@ -7889,7 +7889,7 @@ export function HtmlTextAreaElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlTextAreaElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.validity;
 }
 
@@ -7897,7 +7897,7 @@ export function HtmlTextAreaElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlTextAreaElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.validationMessage;
 }
 
@@ -7905,7 +7905,7 @@ export function HtmlTextAreaElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlTextAreaElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.checkValidity();
 }
 
@@ -7913,7 +7913,7 @@ export function HtmlTextAreaElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlTextAreaElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.reportValidity();
 }
 
@@ -7921,7 +7921,7 @@ export function HtmlTextAreaElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlTextAreaElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.customValidity = error;
 }
 
@@ -7929,7 +7929,7 @@ export function HtmlTextAreaElementSetCustomValidity(self: bigint, error: string
  * `get-labels()` operation.
  */
 export function HtmlTextAreaElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.labels;
 }
 
@@ -7937,7 +7937,7 @@ export function HtmlTextAreaElementGetLabels(self: bigint): bigint {
  * `select()` operation.
  */
 export function HtmlTextAreaElementSelect(self: bigint): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.select();
 }
 
@@ -7945,7 +7945,7 @@ export function HtmlTextAreaElementSelect(self: bigint): void {
  * `get-selection-start()` operation.
  */
 export function HtmlTextAreaElementGetSelectionStart(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.selectionStart;
 }
 
@@ -7953,7 +7953,7 @@ export function HtmlTextAreaElementGetSelectionStart(self: bigint): number {
  * `set-selection-start()` operation.
  */
 export function HtmlTextAreaElementSetSelectionStart(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.selectionStart = value;
 }
 
@@ -7961,7 +7961,7 @@ export function HtmlTextAreaElementSetSelectionStart(self: bigint, value: number
  * `get-selection-end()` operation.
  */
 export function HtmlTextAreaElementGetSelectionEnd(self: bigint): number {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.selectionEnd;
 }
 
@@ -7969,7 +7969,7 @@ export function HtmlTextAreaElementGetSelectionEnd(self: bigint): number {
  * `set-selection-end()` operation.
  */
 export function HtmlTextAreaElementSetSelectionEnd(self: bigint, value: number): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.selectionEnd = value;
 }
 
@@ -7977,7 +7977,7 @@ export function HtmlTextAreaElementSetSelectionEnd(self: bigint, value: number):
  * `get-selection-direction()` operation.
  */
 export function HtmlTextAreaElementGetSelectionDirection(self: bigint): string {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   return obj.selectionDirection;
 }
 
@@ -7985,7 +7985,7 @@ export function HtmlTextAreaElementGetSelectionDirection(self: bigint): string {
  * `set-selection-direction()` operation.
  */
 export function HtmlTextAreaElementSetSelectionDirection(self: bigint, value: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.selectionDirection = value;
 }
 
@@ -7993,7 +7993,7 @@ export function HtmlTextAreaElementSetSelectionDirection(self: bigint, value: st
  * `set-range-text()` operation.
  */
 export function HtmlTextAreaElementSetRangeText(self: bigint, replacement: string): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.rangeText = replacement;
 }
 
@@ -8001,7 +8001,7 @@ export function HtmlTextAreaElementSetRangeText(self: bigint, replacement: strin
  * `set-selection-range()` operation.
  */
 export function HtmlTextAreaElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
-  const obj = getHtmlTextAreaElement(self);
+  const obj = getHTMLTextAreaElement(self);
   obj.selectionRange = direction;
 }
 
@@ -8012,24 +8012,24 @@ export function HtmlTextAreaElementSetSelectionRange(self: bigint, start: number
 /** Type alias */
 export type HtmlOutputElementHandle = bigint;
 
-/** Handle table for HtmlOutputElement instances */
-const _htmlOutputElementhandles = new Map<bigint, HtmlOutputElement>();
-let _nextHtmlOutputElement = 1n;
+/** Handle table for HTMLOutputElement instances */
+const _htmlOutputElementhandles = new Map<bigint, HTMLOutputElement>();
+let _nextHTMLOutputElement = 1n;
 
-/** Get a HtmlOutputElement by handle, throwing if not found. */
-function getHtmlOutputElement(handle: bigint): HtmlOutputElement {
+/** Get a HTMLOutputElement by handle, throwing if not found. */
+function getHTMLOutputElement(handle: bigint): HTMLOutputElement {
   const obj = _htmlOutputElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlOutputElement handle ${handle} not found`);
+    throw new Error(`HTMLOutputElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-html-for()` operation.
  */
 export function HtmlOutputElementGetHtmlFor(self: bigint): bigint {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.htmlFor;
 }
 
@@ -8037,7 +8037,7 @@ export function HtmlOutputElementGetHtmlFor(self: bigint): bigint {
  * `get-form()` operation.
  */
 export function HtmlOutputElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.form ?? undefined;
 }
 
@@ -8045,7 +8045,7 @@ export function HtmlOutputElementGetForm(self: bigint): bigint | undefined {
  * `get-name()` operation.
  */
 export function HtmlOutputElementGetName(self: bigint): string {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.name;
 }
 
@@ -8053,7 +8053,7 @@ export function HtmlOutputElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlOutputElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   obj.name = value;
 }
 
@@ -8061,7 +8061,7 @@ export function HtmlOutputElementSetName(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlOutputElementGetType(self: bigint): string {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.type;
 }
 
@@ -8069,7 +8069,7 @@ export function HtmlOutputElementGetType(self: bigint): string {
  * `get-default-value()` operation.
  */
 export function HtmlOutputElementGetDefaultValue(self: bigint): string {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.defaultValue;
 }
 
@@ -8077,7 +8077,7 @@ export function HtmlOutputElementGetDefaultValue(self: bigint): string {
  * `set-default-value()` operation.
  */
 export function HtmlOutputElementSetDefaultValue(self: bigint, value: string): void {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   obj.defaultValue = value;
 }
 
@@ -8085,7 +8085,7 @@ export function HtmlOutputElementSetDefaultValue(self: bigint, value: string): v
  * `get-value()` operation.
  */
 export function HtmlOutputElementGetValue(self: bigint): string {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.value;
 }
 
@@ -8093,7 +8093,7 @@ export function HtmlOutputElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlOutputElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   obj.value = value;
 }
 
@@ -8101,7 +8101,7 @@ export function HtmlOutputElementSetValue(self: bigint, value: string): void {
  * `get-will-validate()` operation.
  */
 export function HtmlOutputElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.willValidate;
 }
 
@@ -8109,7 +8109,7 @@ export function HtmlOutputElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlOutputElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.validity;
 }
 
@@ -8117,7 +8117,7 @@ export function HtmlOutputElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlOutputElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.validationMessage;
 }
 
@@ -8125,7 +8125,7 @@ export function HtmlOutputElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlOutputElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.checkValidity();
 }
 
@@ -8133,7 +8133,7 @@ export function HtmlOutputElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlOutputElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.reportValidity();
 }
 
@@ -8141,7 +8141,7 @@ export function HtmlOutputElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlOutputElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   obj.customValidity = error;
 }
 
@@ -8149,7 +8149,7 @@ export function HtmlOutputElementSetCustomValidity(self: bigint, error: string):
  * `get-labels()` operation.
  */
 export function HtmlOutputElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlOutputElement(self);
+  const obj = getHTMLOutputElement(self);
   return obj.labels;
 }
 
@@ -8160,24 +8160,24 @@ export function HtmlOutputElementGetLabels(self: bigint): bigint {
 /** Type alias */
 export type HtmlProgressElementHandle = bigint;
 
-/** Handle table for HtmlProgressElement instances */
-const _htmlProgressElementhandles = new Map<bigint, HtmlProgressElement>();
-let _nextHtmlProgressElement = 1n;
+/** Handle table for HTMLProgressElement instances */
+const _htmlProgressElementhandles = new Map<bigint, HTMLProgressElement>();
+let _nextHTMLProgressElement = 1n;
 
-/** Get a HtmlProgressElement by handle, throwing if not found. */
-function getHtmlProgressElement(handle: bigint): HtmlProgressElement {
+/** Get a HTMLProgressElement by handle, throwing if not found. */
+function getHTMLProgressElement(handle: bigint): HTMLProgressElement {
   const obj = _htmlProgressElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlProgressElement handle ${handle} not found`);
+    throw new Error(`HTMLProgressElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value()` operation.
  */
 export function HtmlProgressElementGetValue(self: bigint): number {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   return obj.value;
 }
 
@@ -8185,7 +8185,7 @@ export function HtmlProgressElementGetValue(self: bigint): number {
  * `set-value()` operation.
  */
 export function HtmlProgressElementSetValue(self: bigint, value: number): void {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   obj.value = value;
 }
 
@@ -8193,7 +8193,7 @@ export function HtmlProgressElementSetValue(self: bigint, value: number): void {
  * `get-max()` operation.
  */
 export function HtmlProgressElementGetMax(self: bigint): number {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   return obj.max;
 }
 
@@ -8201,7 +8201,7 @@ export function HtmlProgressElementGetMax(self: bigint): number {
  * `set-max()` operation.
  */
 export function HtmlProgressElementSetMax(self: bigint, value: number): void {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   obj.max = value;
 }
 
@@ -8209,7 +8209,7 @@ export function HtmlProgressElementSetMax(self: bigint, value: number): void {
  * `get-position()` operation.
  */
 export function getPosition(self: bigint): number {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   return obj.position;
 }
 
@@ -8217,7 +8217,7 @@ export function getPosition(self: bigint): number {
  * `get-labels()` operation.
  */
 export function HtmlProgressElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlProgressElement(self);
+  const obj = getHTMLProgressElement(self);
   return obj.labels;
 }
 
@@ -8228,24 +8228,24 @@ export function HtmlProgressElementGetLabels(self: bigint): bigint {
 /** Type alias */
 export type HtmlMeterElementHandle = bigint;
 
-/** Handle table for HtmlMeterElement instances */
-const _htmlMeterElementhandles = new Map<bigint, HtmlMeterElement>();
-let _nextHtmlMeterElement = 1n;
+/** Handle table for HTMLMeterElement instances */
+const _htmlMeterElementhandles = new Map<bigint, HTMLMeterElement>();
+let _nextHTMLMeterElement = 1n;
 
-/** Get a HtmlMeterElement by handle, throwing if not found. */
-function getHtmlMeterElement(handle: bigint): HtmlMeterElement {
+/** Get a HTMLMeterElement by handle, throwing if not found. */
+function getHTMLMeterElement(handle: bigint): HTMLMeterElement {
   const obj = _htmlMeterElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMeterElement handle ${handle} not found`);
+    throw new Error(`HTMLMeterElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value()` operation.
  */
 export function HtmlMeterElementGetValue(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.value;
 }
 
@@ -8253,7 +8253,7 @@ export function HtmlMeterElementGetValue(self: bigint): number {
  * `set-value()` operation.
  */
 export function HtmlMeterElementSetValue(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.value = value;
 }
 
@@ -8261,7 +8261,7 @@ export function HtmlMeterElementSetValue(self: bigint, value: number): void {
  * `get-min()` operation.
  */
 export function HtmlMeterElementGetMin(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.min;
 }
 
@@ -8269,7 +8269,7 @@ export function HtmlMeterElementGetMin(self: bigint): number {
  * `set-min()` operation.
  */
 export function HtmlMeterElementSetMin(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.min = value;
 }
 
@@ -8277,7 +8277,7 @@ export function HtmlMeterElementSetMin(self: bigint, value: number): void {
  * `get-max()` operation.
  */
 export function HtmlMeterElementGetMax(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.max;
 }
 
@@ -8285,7 +8285,7 @@ export function HtmlMeterElementGetMax(self: bigint): number {
  * `set-max()` operation.
  */
 export function HtmlMeterElementSetMax(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.max = value;
 }
 
@@ -8293,7 +8293,7 @@ export function HtmlMeterElementSetMax(self: bigint, value: number): void {
  * `get-low()` operation.
  */
 export function getLow(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.low;
 }
 
@@ -8301,7 +8301,7 @@ export function getLow(self: bigint): number {
  * `set-low()` operation.
  */
 export function setLow(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.low = value;
 }
 
@@ -8309,7 +8309,7 @@ export function setLow(self: bigint, value: number): void {
  * `get-high()` operation.
  */
 export function getHigh(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.high;
 }
 
@@ -8317,7 +8317,7 @@ export function getHigh(self: bigint): number {
  * `set-high()` operation.
  */
 export function setHigh(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.high = value;
 }
 
@@ -8325,7 +8325,7 @@ export function setHigh(self: bigint, value: number): void {
  * `get-optimum()` operation.
  */
 export function getOptimum(self: bigint): number {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.optimum;
 }
 
@@ -8333,7 +8333,7 @@ export function getOptimum(self: bigint): number {
  * `set-optimum()` operation.
  */
 export function setOptimum(self: bigint, value: number): void {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   obj.optimum = value;
 }
 
@@ -8341,7 +8341,7 @@ export function setOptimum(self: bigint, value: number): void {
  * `get-labels()` operation.
  */
 export function HtmlMeterElementGetLabels(self: bigint): bigint {
-  const obj = getHtmlMeterElement(self);
+  const obj = getHTMLMeterElement(self);
   return obj.labels;
 }
 
@@ -8352,24 +8352,24 @@ export function HtmlMeterElementGetLabels(self: bigint): bigint {
 /** Type alias */
 export type HtmlFieldSetElementHandle = bigint;
 
-/** Handle table for HtmlFieldSetElement instances */
-const _htmlFieldSetElementhandles = new Map<bigint, HtmlFieldSetElement>();
-let _nextHtmlFieldSetElement = 1n;
+/** Handle table for HTMLFieldSetElement instances */
+const _htmlFieldSetElementhandles = new Map<bigint, HTMLFieldSetElement>();
+let _nextHTMLFieldSetElement = 1n;
 
-/** Get a HtmlFieldSetElement by handle, throwing if not found. */
-function getHtmlFieldSetElement(handle: bigint): HtmlFieldSetElement {
+/** Get a HTMLFieldSetElement by handle, throwing if not found. */
+function getHTMLFieldSetElement(handle: bigint): HTMLFieldSetElement {
   const obj = _htmlFieldSetElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlFieldSetElement handle ${handle} not found`);
+    throw new Error(`HTMLFieldSetElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-disabled()` operation.
  */
 export function HtmlFieldSetElementGetDisabled(self: bigint): boolean {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.disabled;
 }
 
@@ -8377,7 +8377,7 @@ export function HtmlFieldSetElementGetDisabled(self: bigint): boolean {
  * `set-disabled()` operation.
  */
 export function HtmlFieldSetElementSetDisabled(self: bigint, value: boolean): void {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   obj.disabled = value;
 }
 
@@ -8385,7 +8385,7 @@ export function HtmlFieldSetElementSetDisabled(self: bigint, value: boolean): vo
  * `get-form()` operation.
  */
 export function HtmlFieldSetElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.form ?? undefined;
 }
 
@@ -8393,7 +8393,7 @@ export function HtmlFieldSetElementGetForm(self: bigint): bigint | undefined {
  * `get-name()` operation.
  */
 export function HtmlFieldSetElementGetName(self: bigint): string {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.name;
 }
 
@@ -8401,7 +8401,7 @@ export function HtmlFieldSetElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlFieldSetElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   obj.name = value;
 }
 
@@ -8409,7 +8409,7 @@ export function HtmlFieldSetElementSetName(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlFieldSetElementGetType(self: bigint): string {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.type;
 }
 
@@ -8417,7 +8417,7 @@ export function HtmlFieldSetElementGetType(self: bigint): string {
  * `get-elements()` operation.
  */
 export function HtmlFieldSetElementGetElements(self: bigint): bigint {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.elements;
 }
 
@@ -8425,7 +8425,7 @@ export function HtmlFieldSetElementGetElements(self: bigint): bigint {
  * `get-will-validate()` operation.
  */
 export function HtmlFieldSetElementGetWillValidate(self: bigint): boolean {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.willValidate;
 }
 
@@ -8433,7 +8433,7 @@ export function HtmlFieldSetElementGetWillValidate(self: bigint): boolean {
  * `get-validity()` operation.
  */
 export function HtmlFieldSetElementGetValidity(self: bigint): bigint {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.validity;
 }
 
@@ -8441,7 +8441,7 @@ export function HtmlFieldSetElementGetValidity(self: bigint): bigint {
  * `get-validation-message()` operation.
  */
 export function HtmlFieldSetElementGetValidationMessage(self: bigint): string {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.validationMessage;
 }
 
@@ -8449,7 +8449,7 @@ export function HtmlFieldSetElementGetValidationMessage(self: bigint): string {
  * `check-validity()` operation.
  */
 export function HtmlFieldSetElementCheckValidity(self: bigint): boolean {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.checkValidity();
 }
 
@@ -8457,7 +8457,7 @@ export function HtmlFieldSetElementCheckValidity(self: bigint): boolean {
  * `report-validity()` operation.
  */
 export function HtmlFieldSetElementReportValidity(self: bigint): boolean {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   return obj.reportValidity();
 }
 
@@ -8465,7 +8465,7 @@ export function HtmlFieldSetElementReportValidity(self: bigint): boolean {
  * `set-custom-validity()` operation.
  */
 export function HtmlFieldSetElementSetCustomValidity(self: bigint, error: string): void {
-  const obj = getHtmlFieldSetElement(self);
+  const obj = getHTMLFieldSetElement(self);
   obj.customValidity = error;
 }
 
@@ -8476,24 +8476,24 @@ export function HtmlFieldSetElementSetCustomValidity(self: bigint, error: string
 /** Type alias */
 export type HtmlLegendElementHandle = bigint;
 
-/** Handle table for HtmlLegendElement instances */
-const _htmlLegendElementhandles = new Map<bigint, HtmlLegendElement>();
-let _nextHtmlLegendElement = 1n;
+/** Handle table for HTMLLegendElement instances */
+const _htmlLegendElementhandles = new Map<bigint, HTMLLegendElement>();
+let _nextHTMLLegendElement = 1n;
 
-/** Get a HtmlLegendElement by handle, throwing if not found. */
-function getHtmlLegendElement(handle: bigint): HtmlLegendElement {
+/** Get a HTMLLegendElement by handle, throwing if not found. */
+function getHTMLLegendElement(handle: bigint): HTMLLegendElement {
   const obj = _htmlLegendElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlLegendElement handle ${handle} not found`);
+    throw new Error(`HTMLLegendElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-form()` operation.
  */
 export function HtmlLegendElementGetForm(self: bigint): bigint | undefined {
-  const obj = getHtmlLegendElement(self);
+  const obj = getHTMLLegendElement(self);
   return obj.form ?? undefined;
 }
 
@@ -8501,7 +8501,7 @@ export function HtmlLegendElementGetForm(self: bigint): bigint | undefined {
  * `get-align()` operation.
  */
 export function HtmlLegendElementGetAlign(self: bigint): string {
-  const obj = getHtmlLegendElement(self);
+  const obj = getHTMLLegendElement(self);
   return obj.align;
 }
 
@@ -8509,7 +8509,7 @@ export function HtmlLegendElementGetAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function HtmlLegendElementSetAlign(self: bigint, value: string): void {
-  const obj = getHtmlLegendElement(self);
+  const obj = getHTMLLegendElement(self);
   obj.align = value;
 }
 
@@ -8531,7 +8531,7 @@ function getValidityState(handle: bigint): ValidityState {
     throw new Error(`ValidityState handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-value-missing()` operation.
@@ -8639,7 +8639,7 @@ function getSubmitEvent(handle: bigint): SubmitEvent {
     throw new Error(`SubmitEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-submitter()` operation.
@@ -8667,7 +8667,7 @@ function getFormDataEvent(handle: bigint): FormDataEvent {
     throw new Error(`FormDataEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-form-data()` operation.
@@ -8684,24 +8684,24 @@ export function FormDataEventGetFormData(self: bigint): bigint {
 /** Type alias */
 export type HtmlDetailsElementHandle = bigint;
 
-/** Handle table for HtmlDetailsElement instances */
-const _htmlDetailsElementhandles = new Map<bigint, HtmlDetailsElement>();
-let _nextHtmlDetailsElement = 1n;
+/** Handle table for HTMLDetailsElement instances */
+const _htmlDetailsElementhandles = new Map<bigint, HTMLDetailsElement>();
+let _nextHTMLDetailsElement = 1n;
 
-/** Get a HtmlDetailsElement by handle, throwing if not found. */
-function getHtmlDetailsElement(handle: bigint): HtmlDetailsElement {
+/** Get a HTMLDetailsElement by handle, throwing if not found. */
+function getHTMLDetailsElement(handle: bigint): HTMLDetailsElement {
   const obj = _htmlDetailsElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDetailsElement handle ${handle} not found`);
+    throw new Error(`HTMLDetailsElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlDetailsElementGetName(self: bigint): string {
-  const obj = getHtmlDetailsElement(self);
+  const obj = getHTMLDetailsElement(self);
   return obj.name;
 }
 
@@ -8709,7 +8709,7 @@ export function HtmlDetailsElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlDetailsElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlDetailsElement(self);
+  const obj = getHTMLDetailsElement(self);
   obj.name = value;
 }
 
@@ -8717,7 +8717,7 @@ export function HtmlDetailsElementSetName(self: bigint, value: string): void {
  * `get-open()` operation.
  */
 export function HtmlDetailsElementGetOpen(self: bigint): boolean {
-  const obj = getHtmlDetailsElement(self);
+  const obj = getHTMLDetailsElement(self);
   return obj.open;
 }
 
@@ -8725,7 +8725,7 @@ export function HtmlDetailsElementGetOpen(self: bigint): boolean {
  * `set-open()` operation.
  */
 export function HtmlDetailsElementSetOpen(self: bigint, value: boolean): void {
-  const obj = getHtmlDetailsElement(self);
+  const obj = getHTMLDetailsElement(self);
   obj.open = value;
 }
 
@@ -8736,24 +8736,24 @@ export function HtmlDetailsElementSetOpen(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlDialogElementHandle = bigint;
 
-/** Handle table for HtmlDialogElement instances */
-const _htmlDialogElementhandles = new Map<bigint, HtmlDialogElement>();
-let _nextHtmlDialogElement = 1n;
+/** Handle table for HTMLDialogElement instances */
+const _htmlDialogElementhandles = new Map<bigint, HTMLDialogElement>();
+let _nextHTMLDialogElement = 1n;
 
-/** Get a HtmlDialogElement by handle, throwing if not found. */
-function getHtmlDialogElement(handle: bigint): HtmlDialogElement {
+/** Get a HTMLDialogElement by handle, throwing if not found. */
+function getHTMLDialogElement(handle: bigint): HTMLDialogElement {
   const obj = _htmlDialogElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDialogElement handle ${handle} not found`);
+    throw new Error(`HTMLDialogElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-open()` operation.
  */
 export function HtmlDialogElementGetOpen(self: bigint): boolean {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   return obj.open;
 }
 
@@ -8761,7 +8761,7 @@ export function HtmlDialogElementGetOpen(self: bigint): boolean {
  * `set-open()` operation.
  */
 export function HtmlDialogElementSetOpen(self: bigint, value: boolean): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.open = value;
 }
 
@@ -8769,7 +8769,7 @@ export function HtmlDialogElementSetOpen(self: bigint, value: boolean): void {
  * `get-return-value()` operation.
  */
 export function HtmlDialogElementGetReturnValue(self: bigint): string {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   return obj.returnValue;
 }
 
@@ -8777,7 +8777,7 @@ export function HtmlDialogElementGetReturnValue(self: bigint): string {
  * `set-return-value()` operation.
  */
 export function HtmlDialogElementSetReturnValue(self: bigint, value: string): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.returnValue = value;
 }
 
@@ -8785,7 +8785,7 @@ export function HtmlDialogElementSetReturnValue(self: bigint, value: string): vo
  * `get-closed-by()` operation.
  */
 export function getClosedBy(self: bigint): string {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   return obj.closedBy;
 }
 
@@ -8793,7 +8793,7 @@ export function getClosedBy(self: bigint): string {
  * `set-closed-by()` operation.
  */
 export function setClosedBy(self: bigint, value: string): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.closedBy = value;
 }
 
@@ -8801,7 +8801,7 @@ export function setClosedBy(self: bigint, value: string): void {
  * `show()` operation.
  */
 export function show(self: bigint): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.show();
 }
 
@@ -8809,53 +8809,23 @@ export function show(self: bigint): void {
  * `show-modal()` operation.
  */
 export function showModal(self: bigint): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.showModal();
 }
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `HtmlDialogElementPollClose()`
  */
-export function HtmlDialogElementClose(self: bigint, returnValue: string | undefined): bigint {
-  const requestId = _nextAsyncHandle++;
-  const obj = getHtmlDialogElement(self);
-  const promise = obj.close(returnValue)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function HtmlDialogElementPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function HtmlDialogElementClose(self: bigint, returnValue: string | undefined): void {
+  const obj = getHTMLDialogElement(self);
+  obj.close(returnValue);
 }
 
 /**
  * `request-close()` operation.
  */
 export function HtmlDialogElementRequestClose(self: bigint, returnValue: string | undefined): void {
-  const obj = getHtmlDialogElement(self);
+  const obj = getHTMLDialogElement(self);
   obj.requestClose(returnValue);
 }
 
@@ -8866,24 +8836,24 @@ export function HtmlDialogElementRequestClose(self: bigint, returnValue: string 
 /** Type alias */
 export type HtmlScriptElementHandle = bigint;
 
-/** Handle table for HtmlScriptElement instances */
-const _htmlScriptElementhandles = new Map<bigint, HtmlScriptElement>();
-let _nextHtmlScriptElement = 1n;
+/** Handle table for HTMLScriptElement instances */
+const _htmlScriptElementhandles = new Map<bigint, HTMLScriptElement>();
+let _nextHTMLScriptElement = 1n;
 
-/** Get a HtmlScriptElement by handle, throwing if not found. */
-function getHtmlScriptElement(handle: bigint): HtmlScriptElement {
+/** Get a HTMLScriptElement by handle, throwing if not found. */
+function getHTMLScriptElement(handle: bigint): HTMLScriptElement {
   const obj = _htmlScriptElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlScriptElement handle ${handle} not found`);
+    throw new Error(`HTMLScriptElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
  */
 export function HtmlScriptElementGetType(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.type;
 }
 
@@ -8891,7 +8861,7 @@ export function HtmlScriptElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlScriptElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.type = value;
 }
 
@@ -8899,7 +8869,7 @@ export function HtmlScriptElementSetType(self: bigint, value: string): void {
  * `get-src()` operation.
  */
 export function HtmlScriptElementGetSrc(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.src;
 }
 
@@ -8907,7 +8877,7 @@ export function HtmlScriptElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlScriptElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.src = value;
 }
 
@@ -8915,7 +8885,7 @@ export function HtmlScriptElementSetSrc(self: bigint, value: string): void {
  * `get-no-module()` operation.
  */
 export function getNoModule(self: bigint): boolean {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.noModule;
 }
 
@@ -8923,7 +8893,7 @@ export function getNoModule(self: bigint): boolean {
  * `set-no-module()` operation.
  */
 export function setNoModule(self: bigint, value: boolean): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.noModule = value;
 }
 
@@ -8931,7 +8901,7 @@ export function setNoModule(self: bigint, value: boolean): void {
  * `get-async()` operation.
  */
 export function getAsync(self: bigint): boolean {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.async;
 }
 
@@ -8939,7 +8909,7 @@ export function getAsync(self: bigint): boolean {
  * `set-async()` operation.
  */
 export function setAsync(self: bigint, value: boolean): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.async = value;
 }
 
@@ -8947,7 +8917,7 @@ export function setAsync(self: bigint, value: boolean): void {
  * `get-defer()` operation.
  */
 export function getDefer(self: bigint): boolean {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.defer;
 }
 
@@ -8955,7 +8925,7 @@ export function getDefer(self: bigint): boolean {
  * `set-defer()` operation.
  */
 export function setDefer(self: bigint, value: boolean): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.defer = value;
 }
 
@@ -8963,7 +8933,7 @@ export function setDefer(self: bigint, value: boolean): void {
  * `get-blocking()` operation.
  */
 export function HtmlScriptElementGetBlocking(self: bigint): bigint {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.blocking;
 }
 
@@ -8971,7 +8941,7 @@ export function HtmlScriptElementGetBlocking(self: bigint): bigint {
  * `get-cross-origin()` operation.
  */
 export function HtmlScriptElementGetCrossOrigin(self: bigint): string | undefined {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.crossOrigin ?? undefined;
 }
 
@@ -8979,7 +8949,7 @@ export function HtmlScriptElementGetCrossOrigin(self: bigint): string | undefine
  * `set-cross-origin()` operation.
  */
 export function HtmlScriptElementSetCrossOrigin(self: bigint, value: string | undefined): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.crossOrigin = value;
 }
 
@@ -8987,7 +8957,7 @@ export function HtmlScriptElementSetCrossOrigin(self: bigint, value: string | un
  * `get-referrer-policy()` operation.
  */
 export function HtmlScriptElementGetReferrerPolicy(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.referrerPolicy;
 }
 
@@ -8995,7 +8965,7 @@ export function HtmlScriptElementGetReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function HtmlScriptElementSetReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -9003,7 +8973,7 @@ export function HtmlScriptElementSetReferrerPolicy(self: bigint, value: string):
  * `get-integrity()` operation.
  */
 export function HtmlScriptElementGetIntegrity(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.integrity;
 }
 
@@ -9011,7 +8981,7 @@ export function HtmlScriptElementGetIntegrity(self: bigint): string {
  * `set-integrity()` operation.
  */
 export function HtmlScriptElementSetIntegrity(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.integrity = value;
 }
 
@@ -9019,7 +8989,7 @@ export function HtmlScriptElementSetIntegrity(self: bigint, value: string): void
  * `get-fetch-priority()` operation.
  */
 export function HtmlScriptElementGetFetchPriority(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.fetchPriority;
 }
 
@@ -9027,7 +8997,7 @@ export function HtmlScriptElementGetFetchPriority(self: bigint): string {
  * `set-fetch-priority()` operation.
  */
 export function HtmlScriptElementSetFetchPriority(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.fetchPriority = value;
 }
 
@@ -9035,7 +9005,7 @@ export function HtmlScriptElementSetFetchPriority(self: bigint, value: string): 
  * `get-text()` operation.
  */
 export function HtmlScriptElementGetText(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.text;
 }
 
@@ -9043,7 +9013,7 @@ export function HtmlScriptElementGetText(self: bigint): string {
  * `set-text()` operation.
  */
 export function HtmlScriptElementSetText(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.text = value;
 }
 
@@ -9051,14 +9021,14 @@ export function HtmlScriptElementSetText(self: bigint, value: string): void {
  * `supports()` operation.
  */
 export function supports(type: string): boolean {
-  return HtmlScriptElement.supports(type);
+  return HTMLScriptElement.supports(type);
 }
 
 /**
  * `get-charset()` operation.
  */
 export function HtmlScriptElementGetCharset(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.charset;
 }
 
@@ -9066,7 +9036,7 @@ export function HtmlScriptElementGetCharset(self: bigint): string {
  * `set-charset()` operation.
  */
 export function HtmlScriptElementSetCharset(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.charset = value;
 }
 
@@ -9074,7 +9044,7 @@ export function HtmlScriptElementSetCharset(self: bigint, value: string): void {
  * `get-event()` operation.
  */
 export function getEvent(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.event;
 }
 
@@ -9082,7 +9052,7 @@ export function getEvent(self: bigint): string {
  * `set-event()` operation.
  */
 export function setEvent(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.event = value;
 }
 
@@ -9090,7 +9060,7 @@ export function setEvent(self: bigint, value: string): void {
  * `get-html-for()` operation.
  */
 export function HtmlScriptElementGetHtmlFor(self: bigint): string {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   return obj.htmlFor;
 }
 
@@ -9098,7 +9068,7 @@ export function HtmlScriptElementGetHtmlFor(self: bigint): string {
  * `set-html-for()` operation.
  */
 export function HtmlScriptElementSetHtmlFor(self: bigint, value: string): void {
-  const obj = getHtmlScriptElement(self);
+  const obj = getHTMLScriptElement(self);
   obj.htmlFor = value;
 }
 
@@ -9109,24 +9079,24 @@ export function HtmlScriptElementSetHtmlFor(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlTemplateElementHandle = bigint;
 
-/** Handle table for HtmlTemplateElement instances */
-const _htmlTemplateElementhandles = new Map<bigint, HtmlTemplateElement>();
-let _nextHtmlTemplateElement = 1n;
+/** Handle table for HTMLTemplateElement instances */
+const _htmlTemplateElementhandles = new Map<bigint, HTMLTemplateElement>();
+let _nextHTMLTemplateElement = 1n;
 
-/** Get a HtmlTemplateElement by handle, throwing if not found. */
-function getHtmlTemplateElement(handle: bigint): HtmlTemplateElement {
+/** Get a HTMLTemplateElement by handle, throwing if not found. */
+function getHTMLTemplateElement(handle: bigint): HTMLTemplateElement {
   const obj = _htmlTemplateElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlTemplateElement handle ${handle} not found`);
+    throw new Error(`HTMLTemplateElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-content()` operation.
  */
 export function HtmlTemplateElementGetContent(self: bigint): bigint {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.content;
 }
 
@@ -9134,7 +9104,7 @@ export function HtmlTemplateElementGetContent(self: bigint): bigint {
  * `get-shadow-root-mode()` operation.
  */
 export function getShadowRootMode(self: bigint): string {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.shadowRootMode;
 }
 
@@ -9142,7 +9112,7 @@ export function getShadowRootMode(self: bigint): string {
  * `set-shadow-root-mode()` operation.
  */
 export function setShadowRootMode(self: bigint, value: string): void {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   obj.shadowRootMode = value;
 }
 
@@ -9150,7 +9120,7 @@ export function setShadowRootMode(self: bigint, value: string): void {
  * `get-shadow-root-delegates-focus()` operation.
  */
 export function getShadowRootDelegatesFocus(self: bigint): boolean {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.shadowRootDelegatesFocus;
 }
 
@@ -9158,7 +9128,7 @@ export function getShadowRootDelegatesFocus(self: bigint): boolean {
  * `set-shadow-root-delegates-focus()` operation.
  */
 export function setShadowRootDelegatesFocus(self: bigint, value: boolean): void {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   obj.shadowRootDelegatesFocus = value;
 }
 
@@ -9166,7 +9136,7 @@ export function setShadowRootDelegatesFocus(self: bigint, value: boolean): void 
  * `get-shadow-root-clonable()` operation.
  */
 export function getShadowRootClonable(self: bigint): boolean {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.shadowRootClonable;
 }
 
@@ -9174,7 +9144,7 @@ export function getShadowRootClonable(self: bigint): boolean {
  * `set-shadow-root-clonable()` operation.
  */
 export function setShadowRootClonable(self: bigint, value: boolean): void {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   obj.shadowRootClonable = value;
 }
 
@@ -9182,7 +9152,7 @@ export function setShadowRootClonable(self: bigint, value: boolean): void {
  * `get-shadow-root-serializable()` operation.
  */
 export function getShadowRootSerializable(self: bigint): boolean {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.shadowRootSerializable;
 }
 
@@ -9190,7 +9160,7 @@ export function getShadowRootSerializable(self: bigint): boolean {
  * `set-shadow-root-serializable()` operation.
  */
 export function setShadowRootSerializable(self: bigint, value: boolean): void {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   obj.shadowRootSerializable = value;
 }
 
@@ -9198,7 +9168,7 @@ export function setShadowRootSerializable(self: bigint, value: boolean): void {
  * `get-shadow-root-custom-element-registry()` operation.
  */
 export function getShadowRootCustomElementRegistry(self: bigint): string {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   return obj.shadowRootCustomElementRegistry;
 }
 
@@ -9206,7 +9176,7 @@ export function getShadowRootCustomElementRegistry(self: bigint): string {
  * `set-shadow-root-custom-element-registry()` operation.
  */
 export function setShadowRootCustomElementRegistry(self: bigint, value: string): void {
-  const obj = getHtmlTemplateElement(self);
+  const obj = getHTMLTemplateElement(self);
   obj.shadowRootCustomElementRegistry = value;
 }
 
@@ -9217,24 +9187,24 @@ export function setShadowRootCustomElementRegistry(self: bigint, value: string):
 /** Type alias */
 export type HtmlSlotElementHandle = bigint;
 
-/** Handle table for HtmlSlotElement instances */
-const _htmlSlotElementhandles = new Map<bigint, HtmlSlotElement>();
-let _nextHtmlSlotElement = 1n;
+/** Handle table for HTMLSlotElement instances */
+const _htmlSlotElementhandles = new Map<bigint, HTMLSlotElement>();
+let _nextHTMLSlotElement = 1n;
 
-/** Get a HtmlSlotElement by handle, throwing if not found. */
-function getHtmlSlotElement(handle: bigint): HtmlSlotElement {
+/** Get a HTMLSlotElement by handle, throwing if not found. */
+function getHTMLSlotElement(handle: bigint): HTMLSlotElement {
   const obj = _htmlSlotElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlSlotElement handle ${handle} not found`);
+    throw new Error(`HTMLSlotElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlSlotElementGetName(self: bigint): string {
-  const obj = getHtmlSlotElement(self);
+  const obj = getHTMLSlotElement(self);
   return obj.name;
 }
 
@@ -9242,7 +9212,7 @@ export function HtmlSlotElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlSlotElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlSlotElement(self);
+  const obj = getHTMLSlotElement(self);
   obj.name = value;
 }
 
@@ -9250,7 +9220,7 @@ export function HtmlSlotElementSetName(self: bigint, value: string): void {
  * `assigned-nodes()` operation.
  */
 export function assignedNodes(self: bigint, options: bigint | undefined): (bigint)[] {
-  const obj = getHtmlSlotElement(self);
+  const obj = getHTMLSlotElement(self);
   return obj.assignedNodes(options);
 }
 
@@ -9258,7 +9228,7 @@ export function assignedNodes(self: bigint, options: bigint | undefined): (bigin
  * `assigned-elements()` operation.
  */
 export function assignedElements(self: bigint, options: bigint | undefined): (bigint)[] {
-  const obj = getHtmlSlotElement(self);
+  const obj = getHTMLSlotElement(self);
   return obj.assignedElements(options);
 }
 
@@ -9266,7 +9236,7 @@ export function assignedElements(self: bigint, options: bigint | undefined): (bi
  * `assign()` operation.
  */
 export function HtmlSlotElementAssign(self: bigint, nodes: (bigint)[]): void {
-  const obj = getHtmlSlotElement(self);
+  const obj = getHTMLSlotElement(self);
   obj.assign(nodes);
 }
 
@@ -9277,24 +9247,24 @@ export function HtmlSlotElementAssign(self: bigint, nodes: (bigint)[]): void {
 /** Type alias */
 export type HtmlCanvasElementHandle = bigint;
 
-/** Handle table for HtmlCanvasElement instances */
-const _htmlCanvasElementhandles = new Map<bigint, HtmlCanvasElement>();
-let _nextHtmlCanvasElement = 1n;
+/** Handle table for HTMLCanvasElement instances */
+const _htmlCanvasElementhandles = new Map<bigint, HTMLCanvasElement>();
+let _nextHTMLCanvasElement = 1n;
 
-/** Get a HtmlCanvasElement by handle, throwing if not found. */
-function getHtmlCanvasElement(handle: bigint): HtmlCanvasElement {
+/** Get a HTMLCanvasElement by handle, throwing if not found. */
+function getHTMLCanvasElement(handle: bigint): HTMLCanvasElement {
   const obj = _htmlCanvasElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlCanvasElement handle ${handle} not found`);
+    throw new Error(`HTMLCanvasElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
  */
 export function HtmlCanvasElementGetWidth(self: bigint): number {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   return obj.width;
 }
 
@@ -9302,7 +9272,7 @@ export function HtmlCanvasElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function HtmlCanvasElementSetWidth(self: bigint, value: number): void {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   obj.width = value;
 }
 
@@ -9310,7 +9280,7 @@ export function HtmlCanvasElementSetWidth(self: bigint, value: number): void {
  * `get-height()` operation.
  */
 export function HtmlCanvasElementGetHeight(self: bigint): number {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   return obj.height;
 }
 
@@ -9318,7 +9288,7 @@ export function HtmlCanvasElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function HtmlCanvasElementSetHeight(self: bigint, value: number): void {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   obj.height = value;
 }
 
@@ -9326,7 +9296,7 @@ export function HtmlCanvasElementSetHeight(self: bigint, value: number): void {
  * `get-context()` operation.
  */
 export function HtmlCanvasElementGetContext(self: bigint, contextId: string, options: string | undefined): bigint | undefined {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   return obj.context ?? undefined;
 }
 
@@ -9334,7 +9304,7 @@ export function HtmlCanvasElementGetContext(self: bigint, contextId: string, opt
  * `to-data-url()` operation.
  */
 export function toDataUrl(self: bigint, type: string | undefined, quality: string | undefined): string {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   return obj.toDataUrl(type, quality);
 }
 
@@ -9342,7 +9312,7 @@ export function toDataUrl(self: bigint, type: string | undefined, quality: strin
  * `to-blob()` operation.
  */
 export function toBlob(self: bigint, callback: bigint, type: string | undefined, quality: string | undefined): void {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   obj.toBlob(callback, type, quality);
 }
 
@@ -9350,7 +9320,7 @@ export function toBlob(self: bigint, callback: bigint, type: string | undefined,
  * `transfer-control-to-offscreen()` operation.
  */
 export function transferControlToOffscreen(self: bigint): bigint {
-  const obj = getHtmlCanvasElement(self);
+  const obj = getHTMLCanvasElement(self);
   return obj.transferControlToOffscreen();
 }
 
@@ -9372,7 +9342,7 @@ function getCanvasRenderingContext2D(handle: bigint): CanvasRenderingContext2D {
     throw new Error(`CanvasRenderingContext2D handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-canvas()` operation.
@@ -9400,7 +9370,7 @@ function getCanvasSettings(handle: bigint): CanvasSettings {
     throw new Error(`CanvasSettings handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-context-attributes()` operation.
@@ -9428,7 +9398,7 @@ function getCanvasState(handle: bigint): CanvasState {
     throw new Error(`CanvasState handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `save()` operation.
@@ -9480,7 +9450,7 @@ function getCanvasTransform(handle: bigint): CanvasTransform {
     throw new Error(`CanvasTransform handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `scale()` operation.
@@ -9556,7 +9526,7 @@ function getCanvasCompositing(handle: bigint): CanvasCompositing {
     throw new Error(`CanvasCompositing handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-global-alpha()` operation.
@@ -9608,7 +9578,7 @@ function getCanvasImageSmoothing(handle: bigint): CanvasImageSmoothing {
     throw new Error(`CanvasImageSmoothing handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-image-smoothing-enabled()` operation.
@@ -9658,7 +9628,7 @@ function registerCanvasFillStrokeStyles(obj: CanvasFillStrokeStyles): bigint {
   const handle = _nextCanvasFillStrokeStyles++;
   _canvasFillStrokeStyleshandles.set(handle, obj);
   return handle;
-
+}
 
 /** Get a CanvasFillStrokeStyles by handle, throwing if not found. */
 function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
@@ -9667,7 +9637,7 @@ function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
     throw new Error(`CanvasFillStrokeStyles handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-stroke-style()` operation.
@@ -9751,7 +9721,7 @@ function getCanvasShadowStyles(handle: bigint): CanvasShadowStyles {
     throw new Error(`CanvasShadowStyles handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-shadow-offset-x()` operation.
@@ -9835,7 +9805,7 @@ function getCanvasFilters(handle: bigint): CanvasFilters {
     throw new Error(`CanvasFilters handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-filter()` operation.
@@ -9871,7 +9841,7 @@ function getCanvasRect(handle: bigint): CanvasRect {
     throw new Error(`CanvasRect handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `clear-rect()` operation.
@@ -9915,7 +9885,7 @@ function getCanvasDrawPath(handle: bigint): CanvasDrawPath {
     throw new Error(`CanvasDrawPath handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `begin-path()` operation.
@@ -9983,7 +9953,7 @@ function getCanvasUserInterface(handle: bigint): CanvasUserInterface {
     throw new Error(`CanvasUserInterface handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `draw-focus-if-needed()` operation.
@@ -10011,7 +9981,7 @@ function getCanvasText(handle: bigint): CanvasText {
     throw new Error(`CanvasText handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `fill-text()` operation.
@@ -10055,7 +10025,7 @@ function getCanvasDrawImage(handle: bigint): CanvasDrawImage {
     throw new Error(`CanvasDrawImage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `draw-image()` operation.
@@ -10081,7 +10051,7 @@ function registerCanvasImageData(obj: CanvasImageData): bigint {
   const handle = _nextCanvasImageData++;
   _canvasImageDatahandles.set(handle, obj);
   return handle;
-
+}
 
 /** Get a CanvasImageData by handle, throwing if not found. */
 function getCanvasImageData(handle: bigint): CanvasImageData {
@@ -10090,7 +10060,7 @@ function getCanvasImageData(handle: bigint): CanvasImageData {
     throw new Error(`CanvasImageData handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `create-image-data()` operation.
@@ -10134,7 +10104,7 @@ function getCanvasPathDrawingStyles(handle: bigint): CanvasPathDrawingStyles {
     throw new Error(`CanvasPathDrawingStyles handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-line-width()` operation.
@@ -10250,7 +10220,7 @@ function getCanvasTextDrawingStyles(handle: bigint): CanvasTextDrawingStyles {
     throw new Error(`CanvasTextDrawingStyles handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-lang()` operation.
@@ -10446,7 +10416,7 @@ function getCanvasPath(handle: bigint): CanvasPath {
     throw new Error(`CanvasPath handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `close-path()` operation.
@@ -10546,7 +10516,7 @@ function getCanvasGradient(handle: bigint): CanvasGradient {
     throw new Error(`CanvasGradient handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-color-stop()` operation.
@@ -10574,7 +10544,7 @@ function getCanvasPattern(handle: bigint): CanvasPattern {
     throw new Error(`CanvasPattern handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `set-transform()` operation.
@@ -10602,7 +10572,7 @@ function getTextMetrics(handle: bigint): TextMetrics {
     throw new Error(`TextMetrics handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
@@ -10718,7 +10688,7 @@ function getPath2D(handle: bigint): Path2D {
     throw new Error(`Path2D handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-path()` operation.
@@ -10746,7 +10716,7 @@ function getImageBitmapRenderingContext(handle: bigint): ImageBitmapRenderingCon
     throw new Error(`ImageBitmapRenderingContext handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-canvas()` operation.
@@ -10782,7 +10752,7 @@ function getOffscreenCanvas(handle: bigint): OffscreenCanvas {
     throw new Error(`OffscreenCanvas handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
@@ -10890,7 +10860,7 @@ function getOffscreenCanvasRenderingContext2D(handle: bigint): OffscreenCanvasRe
     throw new Error(`OffscreenCanvasRenderingContext2D handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-canvas()` operation.
@@ -10918,7 +10888,7 @@ function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
     throw new Error(`CustomElementRegistry handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `define()` operation.
@@ -10978,7 +10948,7 @@ function getElementInternals(handle: bigint): ElementInternals {
     throw new Error(`ElementInternals handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-shadow-root()` operation.
@@ -11086,7 +11056,7 @@ function getVisibilityStateEntry(handle: bigint): VisibilityStateEntry {
     throw new Error(`VisibilityStateEntry handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -11138,7 +11108,7 @@ function getUserActivation(handle: bigint): UserActivation {
     throw new Error(`UserActivation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-has-been-active()` operation.
@@ -11174,7 +11144,7 @@ function getToggleEvent(handle: bigint): ToggleEvent {
     throw new Error(`ToggleEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-old-state()` operation.
@@ -11218,7 +11188,7 @@ function getCommandEvent(handle: bigint): CommandEvent {
     throw new Error(`CommandEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-source()` operation.
@@ -11254,7 +11224,7 @@ function getElementContentEditable(handle: bigint): ElementContentEditable {
     throw new Error(`ElementContentEditable handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-content-editable()` operation.
@@ -11330,7 +11300,7 @@ function getCloseWatcher(handle: bigint): CloseWatcher {
     throw new Error(`CloseWatcher handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `request-close()` operation.
@@ -11342,40 +11312,10 @@ export function CloseWatcherRequestClose(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `CloseWatcherPollClose()`
  */
-export function CloseWatcherClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function CloseWatcherClose(self: bigint): void {
   const obj = getCloseWatcher(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function CloseWatcherPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -11436,7 +11376,7 @@ function getDataTransfer(handle: bigint): DataTransfer {
     throw new Error(`DataTransfer handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-drop-effect()` operation.
@@ -11544,7 +11484,7 @@ function getDataTransferItemList(handle: bigint): DataTransferItemList {
     throw new Error(`DataTransferItemList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -11604,7 +11544,7 @@ function getDataTransferItem(handle: bigint): DataTransferItem {
     throw new Error(`DataTransferItem handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-kind()` operation.
@@ -11656,7 +11596,7 @@ function getDragEvent(handle: bigint): DragEvent {
     throw new Error(`DragEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data-transfer()` operation.
@@ -11684,7 +11624,7 @@ function getPopoverTargetAttributes(handle: bigint): PopoverTargetAttributes {
     throw new Error(`PopoverTargetAttributes handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-popover-target-element()` operation.
@@ -11736,7 +11676,7 @@ function getOrigin(handle: bigint): Origin {
     throw new Error(`Origin handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `from()` operation.
@@ -11772,7 +11712,7 @@ export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok:
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -11817,7 +11757,7 @@ function getBarProp(handle: bigint): BarProp {
     throw new Error(`BarProp handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-visible()` operation.
@@ -11845,7 +11785,7 @@ function getLocation(handle: bigint): Location {
     throw new Error(`Location handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
@@ -12033,7 +11973,7 @@ function getHistory(handle: bigint): History {
     throw new Error(`History handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -12125,7 +12065,7 @@ function getNavigation(handle: bigint): Navigation {
     throw new Error(`Navigation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `entries()` operation.
@@ -12305,7 +12245,7 @@ function getNavigationHistoryEntry(handle: bigint): NavigationHistoryEntry {
     throw new Error(`NavigationHistoryEntry handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-url()` operation.
@@ -12389,7 +12329,7 @@ function getNavigationTransition(handle: bigint): NavigationTransition {
     throw new Error(`NavigationTransition handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-navigation-type()` operation.
@@ -12449,7 +12389,7 @@ function getNavigationActivation(handle: bigint): NavigationActivation {
     throw new Error(`NavigationActivation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-from()` operation.
@@ -12493,7 +12433,7 @@ function getNavigateEvent(handle: bigint): NavigateEvent {
     throw new Error(`NavigateEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-navigation-type()` operation.
@@ -12617,7 +12557,7 @@ function getNavigationPrecommitController(handle: bigint): NavigationPrecommitCo
     throw new Error(`NavigationPrecommitController handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `redirect()` operation.
@@ -12653,7 +12593,7 @@ function getNavigationDestination(handle: bigint): NavigationDestination {
     throw new Error(`NavigationDestination handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-url()` operation.
@@ -12721,7 +12661,7 @@ function getNavigationCurrentEntryChangeEvent(handle: bigint): NavigationCurrent
     throw new Error(`NavigationCurrentEntryChangeEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-navigation-type()` operation.
@@ -12757,7 +12697,7 @@ function getPopStateEvent(handle: bigint): PopStateEvent {
     throw new Error(`PopStateEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.
@@ -12793,7 +12733,7 @@ function getHashChangeEvent(handle: bigint): HashChangeEvent {
     throw new Error(`HashChangeEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-old-url()` operation.
@@ -12829,7 +12769,7 @@ function getPageSwapEvent(handle: bigint): PageSwapEvent {
     throw new Error(`PageSwapEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-activation()` operation.
@@ -12865,7 +12805,7 @@ function getPageRevealEvent(handle: bigint): PageRevealEvent {
     throw new Error(`PageRevealEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-view-transition()` operation.
@@ -12893,7 +12833,7 @@ function getPageTransitionEvent(handle: bigint): PageTransitionEvent {
     throw new Error(`PageTransitionEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-persisted()` operation.
@@ -12921,7 +12861,7 @@ function getBeforeUnloadEvent(handle: bigint): BeforeUnloadEvent {
     throw new Error(`BeforeUnloadEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-return-value()` operation.
@@ -12957,7 +12897,7 @@ function getNotRestoredReasonDetails(handle: bigint): NotRestoredReasonDetails {
     throw new Error(`NotRestoredReasonDetails handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-reason()` operation.
@@ -12972,7 +12912,7 @@ export function NotRestoredReasonDetailsGetReason(self: bigint): string {
  */
 export function NotRestoredReasonDetailsToJson(self: bigint): bigint {
   const obj = getNotRestoredReasonDetails(self);
-  return obj.toJson();
+  return obj.toJSON();
 }
 
 // ---------------------------------------------------------------------------
@@ -12993,7 +12933,7 @@ function getNotRestoredReasons(handle: bigint): NotRestoredReasons {
     throw new Error(`NotRestoredReasons handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
@@ -13048,7 +12988,7 @@ export function getChildren(self: bigint): (bigint)[] | undefined {
  */
 export function NotRestoredReasonsToJson(self: bigint): bigint {
   const obj = getNotRestoredReasons(self);
-  return obj.toJson();
+  return obj.toJSON();
 }
 
 // ---------------------------------------------------------------------------
@@ -13069,7 +13009,7 @@ function getErrorEvent(handle: bigint): ErrorEvent {
     throw new Error(`ErrorEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-message()` operation.
@@ -13129,7 +13069,7 @@ function getPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
     throw new Error(`PromiseRejectionEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-promise()` operation.
@@ -13154,24 +13094,24 @@ export function PromiseRejectionEventGetReason(self: bigint): string {
 /** Type alias */
 export type DomParserHandle = bigint;
 
-/** Handle table for DomParser instances */
-const _domParserhandles = new Map<bigint, DomParser>();
-let _nextDomParser = 1n;
+/** Handle table for DOMParser instances */
+const _domParserhandles = new Map<bigint, DOMParser>();
+let _nextDOMParser = 1n;
 
-/** Get a DomParser by handle, throwing if not found. */
-function getDomParser(handle: bigint): DomParser {
+/** Get a DOMParser by handle, throwing if not found. */
+function getDOMParser(handle: bigint): DOMParser {
   const obj = _domParserhandles.get(handle);
   if (!obj) {
-    throw new Error(`DomParser handle ${handle} not found`);
+    throw new Error(`DOMParser handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `parse-from-string()` operation.
  */
 export function parseFromString(self: bigint, string: bigint, type: bigint): bigint {
-  const obj = getDomParser(self);
+  const obj = getDOMParser(self);
   return obj.parseFromString(string, type);
 }
 
@@ -13182,24 +13122,24 @@ export function parseFromString(self: bigint, string: bigint, type: bigint): big
 /** Type alias */
 export type XmlSerializerHandle = bigint;
 
-/** Handle table for XmlSerializer instances */
-const _xmlSerializerhandles = new Map<bigint, XmlSerializer>();
-let _nextXmlSerializer = 1n;
+/** Handle table for XMLSerializer instances */
+const _xmlSerializerhandles = new Map<bigint, XMLSerializer>();
+let _nextXMLSerializer = 1n;
 
-/** Get a XmlSerializer by handle, throwing if not found. */
-function getXmlSerializer(handle: bigint): XmlSerializer {
+/** Get a XMLSerializer by handle, throwing if not found. */
+function getXMLSerializer(handle: bigint): XMLSerializer {
   const obj = _xmlSerializerhandles.get(handle);
   if (!obj) {
-    throw new Error(`XmlSerializer handle ${handle} not found`);
+    throw new Error(`XMLSerializer handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `serialize-to-string()` operation.
  */
 export function serializeToString(self: bigint, root: bigint): string {
-  const obj = getXmlSerializer(self);
+  const obj = getXMLSerializer(self);
   return obj.serializeToString(root);
 }
 
@@ -13210,24 +13150,24 @@ export function serializeToString(self: bigint, root: bigint): string {
 /** Type alias */
 export type NavigatorIdHandle = bigint;
 
-/** Handle table for NavigatorId instances */
-const _navigatorIdhandles = new Map<bigint, NavigatorId>();
-let _nextNavigatorId = 1n;
+/** Handle table for NavigatorID instances */
+const _navigatorIdhandles = new Map<bigint, NavigatorID>();
+let _nextNavigatorID = 1n;
 
-/** Get a NavigatorId by handle, throwing if not found. */
-function getNavigatorId(handle: bigint): NavigatorId {
+/** Get a NavigatorID by handle, throwing if not found. */
+function getNavigatorID(handle: bigint): NavigatorID {
   const obj = _navigatorIdhandles.get(handle);
   if (!obj) {
-    throw new Error(`NavigatorId handle ${handle} not found`);
+    throw new Error(`NavigatorID handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-app-code-name()` operation.
  */
 export function getAppCodeName(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.appCodeName;
 }
 
@@ -13235,7 +13175,7 @@ export function getAppCodeName(self: bigint): string {
  * `get-app-name()` operation.
  */
 export function getAppName(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.appName;
 }
 
@@ -13243,7 +13183,7 @@ export function getAppName(self: bigint): string {
  * `get-app-version()` operation.
  */
 export function getAppVersion(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.appVersion;
 }
 
@@ -13251,7 +13191,7 @@ export function getAppVersion(self: bigint): string {
  * `get-platform()` operation.
  */
 export function getPlatform(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.platform;
 }
 
@@ -13259,7 +13199,7 @@ export function getPlatform(self: bigint): string {
  * `get-product()` operation.
  */
 export function getProduct(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.product;
 }
 
@@ -13267,7 +13207,7 @@ export function getProduct(self: bigint): string {
  * `get-product-sub()` operation.
  */
 export function getProductSub(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.productSub;
 }
 
@@ -13275,7 +13215,7 @@ export function getProductSub(self: bigint): string {
  * `get-user-agent()` operation.
  */
 export function getUserAgent(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.userAgent;
 }
 
@@ -13283,7 +13223,7 @@ export function getUserAgent(self: bigint): string {
  * `get-vendor()` operation.
  */
 export function getVendor(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.vendor;
 }
 
@@ -13291,7 +13231,7 @@ export function getVendor(self: bigint): string {
  * `get-vendor-sub()` operation.
  */
 export function getVendorSub(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.vendorSub;
 }
 
@@ -13299,7 +13239,7 @@ export function getVendorSub(self: bigint): string {
  * `taint-enabled()` operation.
  */
 export function taintEnabled(self: bigint): boolean {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.taintEnabled();
 }
 
@@ -13307,7 +13247,7 @@ export function taintEnabled(self: bigint): boolean {
  * `get-oscpu()` operation.
  */
 export function getOscpu(self: bigint): string {
-  const obj = getNavigatorId(self);
+  const obj = getNavigatorID(self);
   return obj.oscpu;
 }
 
@@ -13329,7 +13269,7 @@ function getNavigatorLanguage(handle: bigint): NavigatorLanguage {
     throw new Error(`NavigatorLanguage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-language()` operation.
@@ -13365,7 +13305,7 @@ function getNavigatorOnLine(handle: bigint): NavigatorOnLine {
     throw new Error(`NavigatorOnLine handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-on-line()` operation.
@@ -13393,7 +13333,7 @@ function getNavigatorContentUtils(handle: bigint): NavigatorContentUtils {
     throw new Error(`NavigatorContentUtils handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `register-protocol-handler()` operation.
@@ -13429,7 +13369,7 @@ function getNavigatorCookies(handle: bigint): NavigatorCookies {
     throw new Error(`NavigatorCookies handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-cookie-enabled()` operation.
@@ -13457,7 +13397,7 @@ function getNavigatorPlugins(handle: bigint): NavigatorPlugins {
     throw new Error(`NavigatorPlugins handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-plugins()` operation.
@@ -13509,7 +13449,7 @@ function getPluginArray(handle: bigint): PluginArray {
     throw new Error(`PluginArray handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `refresh()` operation.
@@ -13540,7 +13480,7 @@ export function PluginArrayItem(self: bigint, index: number): bigint | undefined
  */
 export function PluginArrayNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = getPluginArray(self);
-  return obj.namedItem(name) ?? undefined;
+  return obj.getNamedItem(name) ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -13561,7 +13501,7 @@ function getMimeTypeArray(handle: bigint): MimeTypeArray {
     throw new Error(`MimeTypeArray handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -13584,7 +13524,7 @@ export function MimeTypeArrayItem(self: bigint, index: number): bigint | undefin
  */
 export function MimeTypeArrayNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = getMimeTypeArray(self);
-  return obj.namedItem(name) ?? undefined;
+  return obj.getNamedItem(name) ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -13605,7 +13545,7 @@ function getPlugin(handle: bigint): Plugin {
     throw new Error(`Plugin handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -13652,7 +13592,7 @@ export function PluginItem(self: bigint, index: number): bigint | undefined {
  */
 export function PluginNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = getPlugin(self);
-  return obj.namedItem(name) ?? undefined;
+  return obj.getNamedItem(name) ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -13673,7 +13613,7 @@ function getMimeType(handle: bigint): MimeType {
     throw new Error(`MimeType handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -13725,7 +13665,7 @@ function getImageData(handle: bigint): ImageData {
     throw new Error(`ImageData handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
@@ -13785,7 +13725,7 @@ function getImageBitmap(handle: bigint): ImageBitmap {
     throw new Error(`ImageBitmap handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-width()` operation.
@@ -13805,40 +13745,10 @@ export function ImageBitmapGetHeight(self: bigint): number {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `ImageBitmapPollClose()`
  */
-export function ImageBitmapClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function ImageBitmapClose(self: bigint): void {
   const obj = getImageBitmap(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function ImageBitmapPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 // ---------------------------------------------------------------------------
@@ -13859,7 +13769,7 @@ function getAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
     throw new Error(`AnimationFrameProvider handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `request-animation-frame()` operation.
@@ -13895,7 +13805,7 @@ function getMessageEvent(handle: bigint): MessageEvent {
     throw new Error(`MessageEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data()` operation.
@@ -13963,7 +13873,7 @@ function getEventSource(handle: bigint): EventSource {
     throw new Error(`EventSource handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-url()` operation.
@@ -14039,40 +13949,10 @@ export function EventSourceSetOnerror(self: bigint, value: EventHandlerRecord): 
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `EventSourcePollClose()`
  */
-export function EventSourceClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function EventSourceClose(self: bigint): void {
   const obj = getEventSource(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function EventSourcePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 // ---------------------------------------------------------------------------
@@ -14093,7 +13973,7 @@ function getMessageChannel(handle: bigint): MessageChannel {
     throw new Error(`MessageChannel handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-port1()` operation.
@@ -14129,7 +14009,7 @@ function getMessageEventTarget(handle: bigint): MessageEventTarget {
     throw new Error(`MessageEventTarget handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-onmessage()` operation.
@@ -14181,7 +14061,7 @@ function getMessagePort(handle: bigint): MessagePort {
     throw new Error(`MessagePort handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `post-message()` operation.
@@ -14201,40 +14081,10 @@ export function MessagePortStart(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `MessagePortPollClose()`
  */
-export function MessagePortClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function MessagePortClose(self: bigint): void {
   const obj = getMessagePort(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function MessagePortPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -14271,7 +14121,7 @@ function getBroadcastChannel(handle: bigint): BroadcastChannel {
     throw new Error(`BroadcastChannel handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -14291,40 +14141,10 @@ export function BroadcastChannelPostMessage(self: bigint, message: string): void
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `BroadcastChannelPollClose()`
  */
-export function BroadcastChannelClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function BroadcastChannelClose(self: bigint): void {
   const obj = getBroadcastChannel(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function BroadcastChannelPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -14377,7 +14197,7 @@ function getWorkerGlobalScope(handle: bigint): WorkerGlobalScope {
     throw new Error(`WorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-self()` operation.
@@ -14525,7 +14345,7 @@ function getDedicatedWorkerGlobalScope(handle: bigint): DedicatedWorkerGlobalSco
     throw new Error(`DedicatedWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -14545,40 +14365,10 @@ export function DedicatedWorkerGlobalScopePostMessage(self: bigint, message: str
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `DedicatedWorkerGlobalScopePollClose()`
  */
-export function DedicatedWorkerGlobalScopeClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function DedicatedWorkerGlobalScopeClose(self: bigint): void {
   const obj = getDedicatedWorkerGlobalScope(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function DedicatedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 // ---------------------------------------------------------------------------
@@ -14599,7 +14389,7 @@ function getSharedWorkerGlobalScope(handle: bigint): SharedWorkerGlobalScope {
     throw new Error(`SharedWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -14611,40 +14401,10 @@ export function SharedWorkerGlobalScopeGetName(self: bigint): string {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `SharedWorkerGlobalScopePollClose()`
  */
-export function SharedWorkerGlobalScopeClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function SharedWorkerGlobalScopeClose(self: bigint): void {
   const obj = getSharedWorkerGlobalScope(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function SharedWorkerGlobalScopePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -14681,7 +14441,7 @@ function getAbstractWorker(handle: bigint): AbstractWorker {
     throw new Error(`AbstractWorker handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-onerror()` operation.
@@ -14717,7 +14477,7 @@ function getWorker(handle: bigint): Worker {
     throw new Error(`Worker handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `terminate()` operation.
@@ -14753,7 +14513,7 @@ function getSharedWorker(handle: bigint): SharedWorker {
     throw new Error(`SharedWorker handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-port()` operation.
@@ -14781,7 +14541,7 @@ function getNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentHard
     throw new Error(`NavigatorConcurrentHardware handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-hardware-concurrency()` operation.
@@ -14809,7 +14569,7 @@ function getWorkerNavigator(handle: bigint): WorkerNavigator {
     throw new Error(`WorkerNavigator handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-media-capabilities()` operation.
@@ -14853,7 +14613,7 @@ function getWorkerLocation(handle: bigint): WorkerLocation {
     throw new Error(`WorkerLocation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
@@ -14953,7 +14713,7 @@ function getWorklet(handle: bigint): Worklet {
     throw new Error(`Worklet handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-module()` operation.
@@ -14981,7 +14741,7 @@ function getStorage(handle: bigint): Storage {
     throw new Error(`Storage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -15049,7 +14809,7 @@ function getWindowSessionStorage(handle: bigint): WindowSessionStorage {
     throw new Error(`WindowSessionStorage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-session-storage()` operation.
@@ -15077,7 +14837,7 @@ function getWindowLocalStorage(handle: bigint): WindowLocalStorage {
     throw new Error(`WindowLocalStorage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-local-storage()` operation.
@@ -15105,7 +14865,7 @@ function getStorageEvent(handle: bigint): StorageEvent {
     throw new Error(`StorageEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-key()` operation.
@@ -15162,24 +14922,24 @@ export function initStorageEvent(self: bigint, type: string, bubbles: boolean | 
 /** Type alias */
 export type HtmlMarqueeElementHandle = bigint;
 
-/** Handle table for HtmlMarqueeElement instances */
-const _htmlMarqueeElementhandles = new Map<bigint, HtmlMarqueeElement>();
-let _nextHtmlMarqueeElement = 1n;
+/** Handle table for HTMLMarqueeElement instances */
+const _htmlMarqueeElementhandles = new Map<bigint, HTMLMarqueeElement>();
+let _nextHTMLMarqueeElement = 1n;
 
-/** Get a HtmlMarqueeElement by handle, throwing if not found. */
-function getHtmlMarqueeElement(handle: bigint): HtmlMarqueeElement {
+/** Get a HTMLMarqueeElement by handle, throwing if not found. */
+function getHTMLMarqueeElement(handle: bigint): HTMLMarqueeElement {
   const obj = _htmlMarqueeElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlMarqueeElement handle ${handle} not found`);
+    throw new Error(`HTMLMarqueeElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-behavior()` operation.
  */
 export function getBehavior(self: bigint): string {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.behavior;
 }
 
@@ -15187,7 +14947,7 @@ export function getBehavior(self: bigint): string {
  * `set-behavior()` operation.
  */
 export function setBehavior(self: bigint, value: string): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.behavior = value;
 }
 
@@ -15195,7 +14955,7 @@ export function setBehavior(self: bigint, value: string): void {
  * `get-bg-color()` operation.
  */
 export function HtmlMarqueeElementGetBgColor(self: bigint): string {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.bgColor;
 }
 
@@ -15203,7 +14963,7 @@ export function HtmlMarqueeElementGetBgColor(self: bigint): string {
  * `set-bg-color()` operation.
  */
 export function HtmlMarqueeElementSetBgColor(self: bigint, value: string): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.bgColor = value;
 }
 
@@ -15211,7 +14971,7 @@ export function HtmlMarqueeElementSetBgColor(self: bigint, value: string): void 
  * `get-direction()` operation.
  */
 export function HtmlMarqueeElementGetDirection(self: bigint): string {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.direction;
 }
 
@@ -15219,7 +14979,7 @@ export function HtmlMarqueeElementGetDirection(self: bigint): string {
  * `set-direction()` operation.
  */
 export function HtmlMarqueeElementSetDirection(self: bigint, value: string): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.direction = value;
 }
 
@@ -15227,7 +14987,7 @@ export function HtmlMarqueeElementSetDirection(self: bigint, value: string): voi
  * `get-height()` operation.
  */
 export function HtmlMarqueeElementGetHeight(self: bigint): string {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.height;
 }
 
@@ -15235,7 +14995,7 @@ export function HtmlMarqueeElementGetHeight(self: bigint): string {
  * `set-height()` operation.
  */
 export function HtmlMarqueeElementSetHeight(self: bigint, value: string): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.height = value;
 }
 
@@ -15243,7 +15003,7 @@ export function HtmlMarqueeElementSetHeight(self: bigint, value: string): void {
  * `get-hspace()` operation.
  */
 export function HtmlMarqueeElementGetHspace(self: bigint): number {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.hspace;
 }
 
@@ -15251,7 +15011,7 @@ export function HtmlMarqueeElementGetHspace(self: bigint): number {
  * `set-hspace()` operation.
  */
 export function HtmlMarqueeElementSetHspace(self: bigint, value: number): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.hspace = value;
 }
 
@@ -15259,7 +15019,7 @@ export function HtmlMarqueeElementSetHspace(self: bigint, value: number): void {
  * `get-loop()` operation.
  */
 export function HtmlMarqueeElementGetLoop(self: bigint): number {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.loop;
 }
 
@@ -15267,7 +15027,7 @@ export function HtmlMarqueeElementGetLoop(self: bigint): number {
  * `set-loop()` operation.
  */
 export function HtmlMarqueeElementSetLoop(self: bigint, value: number): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.loop = value;
 }
 
@@ -15275,7 +15035,7 @@ export function HtmlMarqueeElementSetLoop(self: bigint, value: number): void {
  * `get-scroll-amount()` operation.
  */
 export function getScrollAmount(self: bigint): number {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.scrollAmount;
 }
 
@@ -15283,7 +15043,7 @@ export function getScrollAmount(self: bigint): number {
  * `set-scroll-amount()` operation.
  */
 export function setScrollAmount(self: bigint, value: number): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.scrollAmount = value;
 }
 
@@ -15291,7 +15051,7 @@ export function setScrollAmount(self: bigint, value: number): void {
  * `get-scroll-delay()` operation.
  */
 export function getScrollDelay(self: bigint): number {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.scrollDelay;
 }
 
@@ -15299,7 +15059,7 @@ export function getScrollDelay(self: bigint): number {
  * `set-scroll-delay()` operation.
  */
 export function setScrollDelay(self: bigint, value: number): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.scrollDelay = value;
 }
 
@@ -15307,7 +15067,7 @@ export function setScrollDelay(self: bigint, value: number): void {
  * `get-true-speed()` operation.
  */
 export function getTrueSpeed(self: bigint): boolean {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.trueSpeed;
 }
 
@@ -15315,7 +15075,7 @@ export function getTrueSpeed(self: bigint): boolean {
  * `set-true-speed()` operation.
  */
 export function setTrueSpeed(self: bigint, value: boolean): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.trueSpeed = value;
 }
 
@@ -15323,7 +15083,7 @@ export function setTrueSpeed(self: bigint, value: boolean): void {
  * `get-vspace()` operation.
  */
 export function HtmlMarqueeElementGetVspace(self: bigint): number {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.vspace;
 }
 
@@ -15331,7 +15091,7 @@ export function HtmlMarqueeElementGetVspace(self: bigint): number {
  * `set-vspace()` operation.
  */
 export function HtmlMarqueeElementSetVspace(self: bigint, value: number): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.vspace = value;
 }
 
@@ -15339,7 +15099,7 @@ export function HtmlMarqueeElementSetVspace(self: bigint, value: number): void {
  * `get-width()` operation.
  */
 export function HtmlMarqueeElementGetWidth(self: bigint): string {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   return obj.width;
 }
 
@@ -15347,7 +15107,7 @@ export function HtmlMarqueeElementGetWidth(self: bigint): string {
  * `set-width()` operation.
  */
 export function HtmlMarqueeElementSetWidth(self: bigint, value: string): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.width = value;
 }
 
@@ -15355,7 +15115,7 @@ export function HtmlMarqueeElementSetWidth(self: bigint, value: string): void {
  * `start()` operation.
  */
 export function HtmlMarqueeElementStart(self: bigint): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.start();
 }
 
@@ -15363,7 +15123,7 @@ export function HtmlMarqueeElementStart(self: bigint): void {
  * `stop()` operation.
  */
 export function stop(self: bigint): void {
-  const obj = getHtmlMarqueeElement(self);
+  const obj = getHTMLMarqueeElement(self);
   obj.stop();
 }
 
@@ -15374,24 +15134,24 @@ export function stop(self: bigint): void {
 /** Type alias */
 export type HtmlFrameSetElementHandle = bigint;
 
-/** Handle table for HtmlFrameSetElement instances */
-const _htmlFrameSetElementhandles = new Map<bigint, HtmlFrameSetElement>();
-let _nextHtmlFrameSetElement = 1n;
+/** Handle table for HTMLFrameSetElement instances */
+const _htmlFrameSetElementhandles = new Map<bigint, HTMLFrameSetElement>();
+let _nextHTMLFrameSetElement = 1n;
 
-/** Get a HtmlFrameSetElement by handle, throwing if not found. */
-function getHtmlFrameSetElement(handle: bigint): HtmlFrameSetElement {
+/** Get a HTMLFrameSetElement by handle, throwing if not found. */
+function getHTMLFrameSetElement(handle: bigint): HTMLFrameSetElement {
   const obj = _htmlFrameSetElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlFrameSetElement handle ${handle} not found`);
+    throw new Error(`HTMLFrameSetElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-cols()` operation.
  */
 export function HtmlFrameSetElementGetCols(self: bigint): string {
-  const obj = getHtmlFrameSetElement(self);
+  const obj = getHTMLFrameSetElement(self);
   return obj.cols;
 }
 
@@ -15399,7 +15159,7 @@ export function HtmlFrameSetElementGetCols(self: bigint): string {
  * `set-cols()` operation.
  */
 export function HtmlFrameSetElementSetCols(self: bigint, value: string): void {
-  const obj = getHtmlFrameSetElement(self);
+  const obj = getHTMLFrameSetElement(self);
   obj.cols = value;
 }
 
@@ -15407,7 +15167,7 @@ export function HtmlFrameSetElementSetCols(self: bigint, value: string): void {
  * `get-rows()` operation.
  */
 export function HtmlFrameSetElementGetRows(self: bigint): string {
-  const obj = getHtmlFrameSetElement(self);
+  const obj = getHTMLFrameSetElement(self);
   return obj.rows;
 }
 
@@ -15415,7 +15175,7 @@ export function HtmlFrameSetElementGetRows(self: bigint): string {
  * `set-rows()` operation.
  */
 export function HtmlFrameSetElementSetRows(self: bigint, value: string): void {
-  const obj = getHtmlFrameSetElement(self);
+  const obj = getHTMLFrameSetElement(self);
   obj.rows = value;
 }
 
@@ -15426,24 +15186,24 @@ export function HtmlFrameSetElementSetRows(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlFrameElementHandle = bigint;
 
-/** Handle table for HtmlFrameElement instances */
-const _htmlFrameElementhandles = new Map<bigint, HtmlFrameElement>();
-let _nextHtmlFrameElement = 1n;
+/** Handle table for HTMLFrameElement instances */
+const _htmlFrameElementhandles = new Map<bigint, HTMLFrameElement>();
+let _nextHTMLFrameElement = 1n;
 
-/** Get a HtmlFrameElement by handle, throwing if not found. */
-function getHtmlFrameElement(handle: bigint): HtmlFrameElement {
+/** Get a HTMLFrameElement by handle, throwing if not found. */
+function getHTMLFrameElement(handle: bigint): HTMLFrameElement {
   const obj = _htmlFrameElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlFrameElement handle ${handle} not found`);
+    throw new Error(`HTMLFrameElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlFrameElementGetName(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.name;
 }
 
@@ -15451,7 +15211,7 @@ export function HtmlFrameElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlFrameElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.name = value;
 }
 
@@ -15459,7 +15219,7 @@ export function HtmlFrameElementSetName(self: bigint, value: string): void {
  * `get-scrolling()` operation.
  */
 export function HtmlFrameElementGetScrolling(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.scrolling;
 }
 
@@ -15467,7 +15227,7 @@ export function HtmlFrameElementGetScrolling(self: bigint): string {
  * `set-scrolling()` operation.
  */
 export function HtmlFrameElementSetScrolling(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.scrolling = value;
 }
 
@@ -15475,7 +15235,7 @@ export function HtmlFrameElementSetScrolling(self: bigint, value: string): void 
  * `get-src()` operation.
  */
 export function HtmlFrameElementGetSrc(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.src;
 }
 
@@ -15483,7 +15243,7 @@ export function HtmlFrameElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlFrameElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.src = value;
 }
 
@@ -15491,7 +15251,7 @@ export function HtmlFrameElementSetSrc(self: bigint, value: string): void {
  * `get-frame-border()` operation.
  */
 export function HtmlFrameElementGetFrameBorder(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.frameBorder;
 }
 
@@ -15499,7 +15259,7 @@ export function HtmlFrameElementGetFrameBorder(self: bigint): string {
  * `set-frame-border()` operation.
  */
 export function HtmlFrameElementSetFrameBorder(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.frameBorder = value;
 }
 
@@ -15507,7 +15267,7 @@ export function HtmlFrameElementSetFrameBorder(self: bigint, value: string): voi
  * `get-long-desc()` operation.
  */
 export function HtmlFrameElementGetLongDesc(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.longDesc;
 }
 
@@ -15515,7 +15275,7 @@ export function HtmlFrameElementGetLongDesc(self: bigint): string {
  * `set-long-desc()` operation.
  */
 export function HtmlFrameElementSetLongDesc(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.longDesc = value;
 }
 
@@ -15523,7 +15283,7 @@ export function HtmlFrameElementSetLongDesc(self: bigint, value: string): void {
  * `get-no-resize()` operation.
  */
 export function getNoResize(self: bigint): boolean {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.noResize;
 }
 
@@ -15531,7 +15291,7 @@ export function getNoResize(self: bigint): boolean {
  * `set-no-resize()` operation.
  */
 export function setNoResize(self: bigint, value: boolean): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.noResize = value;
 }
 
@@ -15539,7 +15299,7 @@ export function setNoResize(self: bigint, value: boolean): void {
  * `get-content-document()` operation.
  */
 export function HtmlFrameElementGetContentDocument(self: bigint): bigint | undefined {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.contentDocument ?? undefined;
 }
 
@@ -15547,7 +15307,7 @@ export function HtmlFrameElementGetContentDocument(self: bigint): bigint | undef
  * `get-content-window()` operation.
  */
 export function HtmlFrameElementGetContentWindow(self: bigint): bigint | undefined {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.contentWindow ?? undefined;
 }
 
@@ -15555,7 +15315,7 @@ export function HtmlFrameElementGetContentWindow(self: bigint): bigint | undefin
  * `get-margin-height()` operation.
  */
 export function HtmlFrameElementGetMarginHeight(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.marginHeight;
 }
 
@@ -15563,7 +15323,7 @@ export function HtmlFrameElementGetMarginHeight(self: bigint): string {
  * `set-margin-height()` operation.
  */
 export function HtmlFrameElementSetMarginHeight(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.marginHeight = value;
 }
 
@@ -15571,7 +15331,7 @@ export function HtmlFrameElementSetMarginHeight(self: bigint, value: string): vo
  * `get-margin-width()` operation.
  */
 export function HtmlFrameElementGetMarginWidth(self: bigint): string {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   return obj.marginWidth;
 }
 
@@ -15579,7 +15339,7 @@ export function HtmlFrameElementGetMarginWidth(self: bigint): string {
  * `set-margin-width()` operation.
  */
 export function HtmlFrameElementSetMarginWidth(self: bigint, value: string): void {
-  const obj = getHtmlFrameElement(self);
+  const obj = getHTMLFrameElement(self);
   obj.marginWidth = value;
 }
 
@@ -15590,24 +15350,24 @@ export function HtmlFrameElementSetMarginWidth(self: bigint, value: string): voi
 /** Type alias */
 export type HtmlDirectoryElementHandle = bigint;
 
-/** Handle table for HtmlDirectoryElement instances */
-const _htmlDirectoryElementhandles = new Map<bigint, HtmlDirectoryElement>();
-let _nextHtmlDirectoryElement = 1n;
+/** Handle table for HTMLDirectoryElement instances */
+const _htmlDirectoryElementhandles = new Map<bigint, HTMLDirectoryElement>();
+let _nextHTMLDirectoryElement = 1n;
 
-/** Get a HtmlDirectoryElement by handle, throwing if not found. */
-function getHtmlDirectoryElement(handle: bigint): HtmlDirectoryElement {
+/** Get a HTMLDirectoryElement by handle, throwing if not found. */
+function getHTMLDirectoryElement(handle: bigint): HTMLDirectoryElement {
   const obj = _htmlDirectoryElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlDirectoryElement handle ${handle} not found`);
+    throw new Error(`HTMLDirectoryElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-compact()` operation.
  */
 export function HtmlDirectoryElementGetCompact(self: bigint): boolean {
-  const obj = getHtmlDirectoryElement(self);
+  const obj = getHTMLDirectoryElement(self);
   return obj.compact;
 }
 
@@ -15615,7 +15375,7 @@ export function HtmlDirectoryElementGetCompact(self: bigint): boolean {
  * `set-compact()` operation.
  */
 export function HtmlDirectoryElementSetCompact(self: bigint, value: boolean): void {
-  const obj = getHtmlDirectoryElement(self);
+  const obj = getHTMLDirectoryElement(self);
   obj.compact = value;
 }
 
@@ -15626,24 +15386,24 @@ export function HtmlDirectoryElementSetCompact(self: bigint, value: boolean): vo
 /** Type alias */
 export type HtmlFontElementHandle = bigint;
 
-/** Handle table for HtmlFontElement instances */
-const _htmlFontElementhandles = new Map<bigint, HtmlFontElement>();
-let _nextHtmlFontElement = 1n;
+/** Handle table for HTMLFontElement instances */
+const _htmlFontElementhandles = new Map<bigint, HTMLFontElement>();
+let _nextHTMLFontElement = 1n;
 
-/** Get a HtmlFontElement by handle, throwing if not found. */
-function getHtmlFontElement(handle: bigint): HtmlFontElement {
+/** Get a HTMLFontElement by handle, throwing if not found. */
+function getHTMLFontElement(handle: bigint): HTMLFontElement {
   const obj = _htmlFontElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlFontElement handle ${handle} not found`);
+    throw new Error(`HTMLFontElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-color()` operation.
  */
 export function HtmlFontElementGetColor(self: bigint): string {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   return obj.color;
 }
 
@@ -15651,7 +15411,7 @@ export function HtmlFontElementGetColor(self: bigint): string {
  * `set-color()` operation.
  */
 export function HtmlFontElementSetColor(self: bigint, value: string): void {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   obj.color = value;
 }
 
@@ -15659,7 +15419,7 @@ export function HtmlFontElementSetColor(self: bigint, value: string): void {
  * `get-face()` operation.
  */
 export function getFace(self: bigint): string {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   return obj.face;
 }
 
@@ -15667,7 +15427,7 @@ export function getFace(self: bigint): string {
  * `set-face()` operation.
  */
 export function setFace(self: bigint, value: string): void {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   obj.face = value;
 }
 
@@ -15675,7 +15435,7 @@ export function setFace(self: bigint, value: string): void {
  * `get-size()` operation.
  */
 export function HtmlFontElementGetSize(self: bigint): string {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   return obj.size;
 }
 
@@ -15683,7 +15443,7 @@ export function HtmlFontElementGetSize(self: bigint): string {
  * `set-size()` operation.
  */
 export function HtmlFontElementSetSize(self: bigint, value: string): void {
-  const obj = getHtmlFontElement(self);
+  const obj = getHTMLFontElement(self);
   obj.size = value;
 }
 
@@ -15694,24 +15454,24 @@ export function HtmlFontElementSetSize(self: bigint, value: string): void {
 /** Type alias */
 export type HtmlParamElementHandle = bigint;
 
-/** Handle table for HtmlParamElement instances */
-const _htmlParamElementhandles = new Map<bigint, HtmlParamElement>();
-let _nextHtmlParamElement = 1n;
+/** Handle table for HTMLParamElement instances */
+const _htmlParamElementhandles = new Map<bigint, HTMLParamElement>();
+let _nextHTMLParamElement = 1n;
 
-/** Get a HtmlParamElement by handle, throwing if not found. */
-function getHtmlParamElement(handle: bigint): HtmlParamElement {
+/** Get a HTMLParamElement by handle, throwing if not found. */
+function getHTMLParamElement(handle: bigint): HTMLParamElement {
   const obj = _htmlParamElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlParamElement handle ${handle} not found`);
+    throw new Error(`HTMLParamElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function HtmlParamElementGetName(self: bigint): string {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   return obj.name;
 }
 
@@ -15719,7 +15479,7 @@ export function HtmlParamElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlParamElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   obj.name = value;
 }
 
@@ -15727,7 +15487,7 @@ export function HtmlParamElementSetName(self: bigint, value: string): void {
  * `get-value()` operation.
  */
 export function HtmlParamElementGetValue(self: bigint): string {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   return obj.value;
 }
 
@@ -15735,7 +15495,7 @@ export function HtmlParamElementGetValue(self: bigint): string {
  * `set-value()` operation.
  */
 export function HtmlParamElementSetValue(self: bigint, value: string): void {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   obj.value = value;
 }
 
@@ -15743,7 +15503,7 @@ export function HtmlParamElementSetValue(self: bigint, value: string): void {
  * `get-type()` operation.
  */
 export function HtmlParamElementGetType(self: bigint): string {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   return obj.type;
 }
 
@@ -15751,7 +15511,7 @@ export function HtmlParamElementGetType(self: bigint): string {
  * `set-type()` operation.
  */
 export function HtmlParamElementSetType(self: bigint, value: string): void {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   obj.type = value;
 }
 
@@ -15759,7 +15519,7 @@ export function HtmlParamElementSetType(self: bigint, value: string): void {
  * `get-value-type()` operation.
  */
 export function getValueType(self: bigint): string {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   return obj.valueType;
 }
 
@@ -15767,7 +15527,7 @@ export function getValueType(self: bigint): string {
  * `set-value-type()` operation.
  */
 export function setValueType(self: bigint, value: string): void {
-  const obj = getHtmlParamElement(self);
+  const obj = getHTMLParamElement(self);
   obj.valueType = value;
 }
 
@@ -15789,14 +15549,14 @@ function getExternal(handle: bigint): External {
     throw new Error(`External handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-search-provider()` operation.
  */
 export function addSearchProvider(self: bigint): void {
   const obj = getExternal(self);
-  obj.addSearchProvider();
+  obj.AddSearchProvider();
 }
 
 /**
@@ -15804,7 +15564,7 @@ export function addSearchProvider(self: bigint): void {
  */
 export function isSearchProviderInstalled(self: bigint): void {
   const obj = getExternal(self);
-  obj.isSearchProviderInstalled();
+  obj.IsSearchProviderInstalled();
 }
 
 // ---------------------------------------------------------------------------
@@ -16720,7 +16480,6 @@ export default {
   show,
   showModal,
   HtmlDialogElementClose,
-  HtmlDialogElementPollClose,
   HtmlDialogElementRequestClose,
   HtmlScriptElementGetType,
   HtmlScriptElementSetType,
@@ -16939,7 +16698,6 @@ export default {
   setInputMode,
   CloseWatcherRequestClose,
   CloseWatcherClose,
-  CloseWatcherPollClose,
   destroy,
   getOncancel,
   setOncancel,
@@ -17139,7 +16897,6 @@ export default {
   ImageBitmapGetWidth,
   ImageBitmapGetHeight,
   ImageBitmapClose,
-  ImageBitmapPollClose,
   requestAnimationFrame,
   cancelAnimationFrame,
   MessageEventGetData,
@@ -17158,7 +16915,6 @@ export default {
   EventSourceGetOnerror,
   EventSourceSetOnerror,
   EventSourceClose,
-  EventSourcePollClose,
   getPort1,
   getPort2,
   MessageEventTargetGetOnmessage,
@@ -17168,13 +16924,11 @@ export default {
   MessagePortPostMessage,
   MessagePortStart,
   MessagePortClose,
-  MessagePortPollClose,
   MessagePortGetOnclose,
   MessagePortSetOnclose,
   BroadcastChannelGetName,
   BroadcastChannelPostMessage,
   BroadcastChannelClose,
-  BroadcastChannelPollClose,
   BroadcastChannelGetOnmessage,
   BroadcastChannelSetOnmessage,
   BroadcastChannelGetOnmessageerror,
@@ -17198,10 +16952,8 @@ export default {
   DedicatedWorkerGlobalScopeGetName,
   DedicatedWorkerGlobalScopePostMessage,
   DedicatedWorkerGlobalScopeClose,
-  DedicatedWorkerGlobalScopePollClose,
   SharedWorkerGlobalScopeGetName,
   SharedWorkerGlobalScopeClose,
-  SharedWorkerGlobalScopePollClose,
   getOnconnect,
   setOnconnect,
   AbstractWorkerGetOnerror,

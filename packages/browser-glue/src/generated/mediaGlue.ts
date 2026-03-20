@@ -48,12 +48,12 @@ function getMediaCapabilities(handle: bigint): MediaCapabilities {
     throw new Error(`MediaCapabilities handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `decoding-info()` operation.
  */
-export function decodingInfo(self: bigint, configuration: bigint): bigint {
+export function decodingInfo(self: bigint, configuration: string): bigint {
   const obj = getMediaCapabilities(self);
   return obj.decodingInfo(configuration);
 }
@@ -84,7 +84,7 @@ function getMediaStream(handle: bigint): MediaStream {
     throw new Error(`MediaStream handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-id()` operation.
@@ -113,7 +113,7 @@ export function getVideoTracks(self: bigint): (bigint)[] {
 /**
  * `get-tracks()` operation.
  */
-export function getTracks(self: bigint): (bigint)[] {
+export function getTracks(self: bigint): (string)[] {
   const obj = getMediaStream(self);
   return obj.tracks;
 }
@@ -144,46 +144,16 @@ export function removeTrack(self: bigint, track: bigint): void {
 
 /**
  * `clone()` operation.
- *
- * Async operation: returns request ID, poll with `MediaStreamPollClone()`
  */
 export function MediaStreamClone(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getMediaStream(self);
-  const promise = obj.clone()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `clone()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function MediaStreamPollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.clone();
 }
 
 /**
  * `get-active()` operation.
  */
-export function getActive(self: bigint): boolean {
+export function getActive(self: bigint): string {
   const obj = getMediaStream(self);
   return obj.active;
 }
@@ -199,7 +169,7 @@ export function getOnaddtrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onaddtrack()` operation.
  */
-export function setOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+export function setOnaddtrack(self: bigint, value: bigint): void {
   const obj = getMediaStream(self);
   obj.onaddtrack = value;
 }
@@ -238,7 +208,7 @@ function getMediaStreamTrack(handle: bigint): MediaStreamTrack {
     throw new Error(`MediaStreamTrack handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-kind()` operation.
@@ -307,7 +277,7 @@ export function setOnmute(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onunmute()` operation.
  */
-export function getOnunmute(self: bigint): EventHandlerRecord {
+export function getOnunmute(self: bigint): string {
   const obj = getMediaStreamTrack(self);
   return obj.onunmute;
 }
@@ -346,40 +316,10 @@ export function setOnended(self: bigint, value: EventHandlerRecord): void {
 
 /**
  * `clone()` operation.
- *
- * Async operation: returns request ID, poll with `MediaStreamTrackPollClone()`
  */
 export function MediaStreamTrackClone(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getMediaStreamTrack(self);
-  const promise = obj.clone()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `clone()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function MediaStreamTrackPollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.clone();
 }
 
 /**
@@ -440,7 +380,7 @@ function getMediaStreamTrackEvent(handle: bigint): MediaStreamTrackEvent {
     throw new Error(`MediaStreamTrackEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-track()` operation.
@@ -468,7 +408,7 @@ function getOverconstrainedError(handle: bigint): OverconstrainedError {
     throw new Error(`OverconstrainedError handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-constraint()` operation.
@@ -496,7 +436,7 @@ function getMediaDevices(handle: bigint): MediaDevices {
     throw new Error(`MediaDevices handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-ondevicechange()` operation.
@@ -509,7 +449,7 @@ export function getOndevicechange(self: bigint): EventHandlerRecord {
 /**
  * `set-ondevicechange()` operation.
  */
-export function setOndevicechange(self: bigint, value: EventHandlerRecord): void {
+export function setOndevicechange(self: bigint, value: string): void {
   const obj = getMediaDevices(self);
   obj.ondevicechange = value;
 }
@@ -549,7 +489,7 @@ export function pollEnumerateDevices(requestId: bigint): { ok: true; value: bigi
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -571,7 +511,7 @@ export function getUserMedia(self: bigint, constraints: bigint | undefined): big
 /**
  * `get-display-media()` operation.
  */
-export function getDisplayMedia(self: bigint, options: boolean | undefined): bigint {
+export function getDisplayMedia(self: bigint, options: bigint | undefined): bigint {
   const obj = getMediaDevices(self);
   return obj.displayMedia;
 }
@@ -594,7 +534,7 @@ function getMediaDeviceInfo(handle: bigint): MediaDeviceInfo {
     throw new Error(`MediaDeviceInfo handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-device-id()` operation.
@@ -633,7 +573,7 @@ export function getGroupId(self: bigint): string {
  */
 export function toJson(self: bigint): bigint {
   const obj = getMediaDeviceInfo(self);
-  return obj.toJson();
+  return obj.toJSON();
 }
 
 // ---------------------------------------------------------------------------
@@ -654,7 +594,7 @@ function getInputDeviceInfo(handle: bigint): InputDeviceInfo {
     throw new Error(`InputDeviceInfo handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-capabilities()` operation.
@@ -682,12 +622,12 @@ function getDeviceChangeEvent(handle: bigint): DeviceChangeEvent {
     throw new Error(`DeviceChangeEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-devices()` operation.
  */
-export function getDevices(self: bigint): (bigint)[] {
+export function getDevices(self: bigint): boolean {
   const obj = getDeviceChangeEvent(self);
   return obj.devices;
 }
@@ -695,7 +635,7 @@ export function getDevices(self: bigint): (bigint)[] {
 /**
  * `get-user-inserted-devices()` operation.
  */
-export function getUserInsertedDevices(self: bigint): string {
+export function getUserInsertedDevices(self: bigint): (bigint)[] {
   const obj = getDeviceChangeEvent(self);
   return obj.userInsertedDevices;
 }
@@ -718,7 +658,7 @@ function getMediaSession(handle: bigint): MediaSession {
     throw new Error(`MediaSession handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-metadata()` operation.
@@ -731,7 +671,7 @@ export function getMetadata(self: bigint): bigint | undefined {
 /**
  * `set-metadata()` operation.
  */
-export function setMetadata(self: bigint, value: boolean): void {
+export function setMetadata(self: bigint, value: bigint | undefined): void {
   const obj = getMediaSession(self);
   obj.metadata = value;
 }
@@ -739,7 +679,7 @@ export function setMetadata(self: bigint, value: boolean): void {
 /**
  * `get-playback-state()` operation.
  */
-export function getPlaybackState(self: bigint): bigint {
+export function getPlaybackState(self: bigint): boolean {
   const obj = getMediaSession(self);
   return obj.playbackState;
 }
@@ -755,7 +695,7 @@ export function setPlaybackState(self: bigint, value: bigint): void {
 /**
  * `set-action-handler()` operation.
  */
-export function setActionHandler(self: bigint, action: bigint, handler: number): void {
+export function setActionHandler(self: bigint, action: bigint, handler: bigint | undefined): void {
   const obj = getMediaSession(self);
   obj.actionHandler = handler;
 }
@@ -771,7 +711,7 @@ export function setPositionState(self: bigint, state: bigint | undefined): void 
 /**
  * `set-microphone-active()` operation.
  */
-export function setMicrophoneActive(self: bigint, active: boolean): bigint {
+export function setMicrophoneActive(self: bigint, active: string): bigint {
   const obj = getMediaSession(self);
   obj.microphoneActive = active;
 }
@@ -787,7 +727,7 @@ export function setCameraActive(self: bigint, active: boolean): bigint {
 /**
  * `set-screenshare-active()` operation.
  */
-export function setScreenshareActive(self: bigint, active: number): bigint {
+export function setScreenshareActive(self: bigint, active: boolean): bigint {
   const obj = getMediaSession(self);
   obj.screenshareActive = active;
 }
@@ -810,7 +750,7 @@ function getMediaMetadata(handle: bigint): MediaMetadata {
     throw new Error(`MediaMetadata handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-title()` operation.
@@ -863,7 +803,7 @@ export function setAlbum(self: bigint, value: string): void {
 /**
  * `get-artwork()` operation.
  */
-export function MediaMetadataGetArtwork(self: bigint): (string)[] {
+export function MediaMetadataGetArtwork(self: bigint): (bigint)[] {
   const obj = getMediaMetadata(self);
   return obj.artwork;
 }
@@ -871,7 +811,7 @@ export function MediaMetadataGetArtwork(self: bigint): (string)[] {
 /**
  * `set-artwork()` operation.
  */
-export function setArtwork(self: bigint, value: (bigint)[]): void {
+export function setArtwork(self: bigint, value: (boolean)[]): void {
   const obj = getMediaMetadata(self);
   obj.artwork = value;
 }
@@ -902,7 +842,7 @@ function getChapterInformation(handle: bigint): ChapterInformation {
     throw new Error(`ChapterInformation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-title()` operation.
@@ -946,12 +886,12 @@ function getMediaRecorder(handle: bigint): MediaRecorder {
     throw new Error(`MediaRecorder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-stream()` operation.
  */
-export function getStream(self: bigint): boolean {
+export function getStream(self: bigint): bigint {
   const obj = getMediaRecorder(self);
   return obj.stream;
 }
@@ -1015,7 +955,7 @@ export function getOndataavailable(self: bigint): EventHandlerRecord {
 /**
  * `set-ondataavailable()` operation.
  */
-export function setOndataavailable(self: bigint, value: EventHandlerRecord): void {
+export function setOndataavailable(self: bigint, value: bigint | undefined): void {
   const obj = getMediaRecorder(self);
   obj.ondataavailable = value;
 }
@@ -1031,7 +971,7 @@ export function MediaRecorderGetOnpause(self: bigint): EventHandlerRecord {
 /**
  * `set-onpause()` operation.
  */
-export function MediaRecorderSetOnpause(self: bigint, value: EventHandlerRecord): void {
+export function MediaRecorderSetOnpause(self: bigint, value: number): void {
   const obj = getMediaRecorder(self);
   obj.onpause = value;
 }
@@ -1071,7 +1011,7 @@ export function MediaRecorderSetOnerror(self: bigint, value: EventHandlerRecord)
 /**
  * `get-video-bits-per-second()` operation.
  */
-export function getVideoBitsPerSecond(self: bigint): number {
+export function getVideoBitsPerSecond(self: bigint): bigint {
   const obj = getMediaRecorder(self);
   return obj.videoBitsPerSecond;
 }
@@ -1135,7 +1075,7 @@ export function requestData(self: bigint): void {
 /**
  * `is-type-supported()` operation.
  */
-export function isTypeSupported(type: string): boolean {
+export function isTypeSupported(type: string): number {
   return MediaRecorder.isTypeSupported(type);
 }
 
@@ -1157,12 +1097,12 @@ function getBlobEvent(handle: bigint): BlobEvent {
     throw new Error(`BlobEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): string {
+export function getData(self: bigint): number {
   const obj = getBlobEvent(self);
   return obj.data;
 }
@@ -1193,12 +1133,12 @@ function getCaptureController(handle: bigint): CaptureController {
     throw new Error(`CaptureController handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `set-focus-behavior()` operation.
  */
-export function setFocusBehavior(self: bigint, focusBehavior: bigint): void {
+export function setFocusBehavior(self: bigint, focusBehavior: string): void {
   const obj = getCaptureController(self);
   obj.focusBehavior = focusBehavior;
 }
@@ -1221,7 +1161,7 @@ function getSpeechRecognition(handle: bigint): SpeechRecognition {
     throw new Error(`SpeechRecognition handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-grammars()` operation.
@@ -1290,7 +1230,7 @@ export function setInterimResults(self: bigint, value: boolean): void {
 /**
  * `get-max-alternatives()` operation.
  */
-export function getMaxAlternatives(self: bigint): string {
+export function getMaxAlternatives(self: bigint): bigint | undefined {
   const obj = getSpeechRecognition(self);
   return obj.maxAlternatives;
 }
@@ -1330,7 +1270,7 @@ export function getPhrases(self: bigint): (bigint)[] {
 /**
  * `set-phrases()` operation.
  */
-export function setPhrases(self: bigint, value: (bigint)[]): void {
+export function setPhrases(self: bigint, value: (string)[]): void {
   const obj = getSpeechRecognition(self);
   obj.phrases = value;
 }
@@ -1353,40 +1293,10 @@ export function SpeechRecognitionStop(self: bigint): void {
 
 /**
  * `abort()` operation.
- *
- * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function abort(self: bigint): void {
   const obj = getSpeechRecognition(self);
-  const promise = obj.abort()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `abort()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.abort();
 }
 
 /**
@@ -1446,7 +1356,7 @@ export function getOnspeechstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onspeechstart()` operation.
  */
-export function setOnspeechstart(self: bigint, value: boolean): void {
+export function setOnspeechstart(self: bigint, value: string): void {
   const obj = getSpeechRecognition(self);
   obj.onspeechstart = value;
 }
@@ -1550,7 +1460,7 @@ export function SpeechRecognitionSetOnerror(self: bigint, value: EventHandlerRec
 /**
  * `get-onstart()` operation.
  */
-export function SpeechRecognitionGetOnstart(self: bigint): EventHandlerRecord {
+export function SpeechRecognitionGetOnstart(self: bigint): boolean {
   const obj = getSpeechRecognition(self);
   return obj.onstart;
 }
@@ -1566,7 +1476,7 @@ export function SpeechRecognitionSetOnstart(self: bigint, value: EventHandlerRec
 /**
  * `get-onend()` operation.
  */
-export function SpeechRecognitionGetOnend(self: bigint): bigint {
+export function SpeechRecognitionGetOnend(self: bigint): EventHandlerRecord {
   const obj = getSpeechRecognition(self);
   return obj.onend;
 }
@@ -1597,7 +1507,7 @@ function getSpeechRecognitionErrorEvent(handle: bigint): SpeechRecognitionErrorE
     throw new Error(`SpeechRecognitionErrorEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-error()` operation.
@@ -1633,7 +1543,7 @@ function getSpeechRecognitionAlternative(handle: bigint): SpeechRecognitionAlter
     throw new Error(`SpeechRecognitionAlternative handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-transcript()` operation.
@@ -1669,12 +1579,12 @@ function getSpeechRecognitionResult(handle: bigint): SpeechRecognitionResult {
     throw new Error(`SpeechRecognitionResult handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
-export function SpeechRecognitionResultGetLength(self: bigint): string {
+export function SpeechRecognitionResultGetLength(self: bigint): number {
   const obj = getSpeechRecognitionResult(self);
   return obj.length;
 }
@@ -1690,7 +1600,7 @@ export function SpeechRecognitionResultItem(self: bigint, index: number): bigint
 /**
  * `get-is-final()` operation.
  */
-export function getIsFinal(self: bigint): number {
+export function getIsFinal(self: bigint): boolean {
   const obj = getSpeechRecognitionResult(self);
   return obj.isFinal;
 }
@@ -1713,7 +1623,7 @@ function getSpeechRecognitionResultList(handle: bigint): SpeechRecognitionResult
     throw new Error(`SpeechRecognitionResultList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -1749,7 +1659,7 @@ function getSpeechRecognitionEvent(handle: bigint): SpeechRecognitionEvent {
     throw new Error(`SpeechRecognitionEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-result-index()` operation.
@@ -1785,7 +1695,7 @@ function getSpeechGrammar(handle: bigint): SpeechGrammar {
     throw new Error(`SpeechGrammar handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
@@ -1806,7 +1716,7 @@ export function setSrc(self: bigint, value: string): void {
 /**
  * `get-weight()` operation.
  */
-export function getWeight(self: bigint): number {
+export function getWeight(self: bigint): string {
   const obj = getSpeechGrammar(self);
   return obj.weight;
 }
@@ -1837,7 +1747,7 @@ function getSpeechGrammarList(handle: bigint): SpeechGrammarList {
     throw new Error(`SpeechGrammarList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -1858,7 +1768,7 @@ export function SpeechGrammarListItem(self: bigint, index: number): bigint {
 /**
  * `add-from-uri()` operation.
  */
-export function addFromUri(self: bigint, src: string, weight: string | undefined): void {
+export function addFromUri(self: bigint, src: number, weight: string): void {
   const obj = getSpeechGrammarList(self);
   obj.addFromUri(src, weight);
 }
@@ -1889,12 +1799,12 @@ function getSpeechRecognitionPhrase(handle: bigint): SpeechRecognitionPhrase {
     throw new Error(`SpeechRecognitionPhrase handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-phrase()` operation.
  */
-export function getPhrase(self: bigint): string {
+export function getPhrase(self: bigint): string | undefined {
   const obj = getSpeechRecognitionPhrase(self);
   return obj.phrase;
 }
@@ -1925,7 +1835,7 @@ function getSpeechSynthesis(handle: bigint): SpeechSynthesis {
     throw new Error(`SpeechSynthesis handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-pending()` operation.
@@ -1954,7 +1864,7 @@ export function getPaused(self: bigint): boolean {
 /**
  * `get-onvoiceschanged()` operation.
  */
-export function getOnvoiceschanged(self: bigint): EventHandlerRecord {
+export function getOnvoiceschanged(self: bigint): string {
   const obj = getSpeechSynthesis(self);
   return obj.onvoiceschanged;
 }
@@ -1962,7 +1872,7 @@ export function getOnvoiceschanged(self: bigint): EventHandlerRecord {
 /**
  * `set-onvoiceschanged()` operation.
  */
-export function setOnvoiceschanged(self: bigint, value: bigint): void {
+export function setOnvoiceschanged(self: bigint, value: EventHandlerRecord): void {
   const obj = getSpeechSynthesis(self);
   obj.onvoiceschanged = value;
 }
@@ -1977,40 +1887,10 @@ export function speak(self: bigint, utterance: bigint): void {
 
 /**
  * `cancel()` operation.
- *
- * Async operation: returns request ID, poll with `pollCancel()`
  */
-export function cancel(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function cancel(self: bigint): void {
   const obj = getSpeechSynthesis(self);
-  const promise = obj.cancel()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `cancel()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollCancel(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.cancel();
 }
 
 /**
@@ -2055,7 +1935,7 @@ function getSpeechSynthesisUtterance(handle: bigint): SpeechSynthesisUtterance {
     throw new Error(`SpeechSynthesisUtterance handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-text()` operation.
@@ -2092,7 +1972,7 @@ export function SpeechSynthesisUtteranceSetLang(self: bigint, value: string): vo
 /**
  * `get-voice()` operation.
  */
-export function getVoice(self: bigint): bigint | undefined {
+export function getVoice(self: bigint): number | undefined {
   const obj = getSpeechSynthesisUtterance(self);
   return obj.voice ?? undefined;
 }
@@ -2252,7 +2132,7 @@ export function setOnmark(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onboundary()` operation.
  */
-export function getOnboundary(self: bigint): bigint {
+export function getOnboundary(self: bigint): EventHandlerRecord {
   const obj = getSpeechSynthesisUtterance(self);
   return obj.onboundary;
 }
@@ -2260,7 +2140,7 @@ export function getOnboundary(self: bigint): bigint {
 /**
  * `set-onboundary()` operation.
  */
-export function setOnboundary(self: bigint, value: EventHandlerRecord): void {
+export function setOnboundary(self: bigint, value: string): void {
   const obj = getSpeechSynthesisUtterance(self);
   obj.onboundary = value;
 }
@@ -2283,12 +2163,12 @@ function getSpeechSynthesisEvent(handle: bigint): SpeechSynthesisEvent {
     throw new Error(`SpeechSynthesisEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-utterance()` operation.
  */
-export function getUtterance(self: bigint): boolean {
+export function getUtterance(self: bigint): bigint {
   const obj = getSpeechSynthesisEvent(self);
   return obj.utterance;
 }
@@ -2304,7 +2184,7 @@ export function getCharIndex(self: bigint): number {
 /**
  * `get-char-length()` operation.
  */
-export function getCharLength(self: bigint): number {
+export function getCharLength(self: bigint): boolean {
   const obj = getSpeechSynthesisEvent(self);
   return obj.charLength;
 }
@@ -2343,7 +2223,7 @@ function getSpeechSynthesisErrorEvent(handle: bigint): SpeechSynthesisErrorEvent
     throw new Error(`SpeechSynthesisErrorEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-error()` operation.
@@ -2371,12 +2251,12 @@ function getSpeechSynthesisVoice(handle: bigint): SpeechSynthesisVoice {
     throw new Error(`SpeechSynthesisVoice handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-voice-uri()` operation.
  */
-export function getVoiceUri(self: bigint): boolean {
+export function getVoiceUri(self: bigint): string {
   const obj = getSpeechSynthesisVoice(self);
   return obj.voiceUri;
 }
@@ -2400,7 +2280,7 @@ export function SpeechSynthesisVoiceGetLang(self: bigint): string {
 /**
  * `get-local-service()` operation.
  */
-export function getLocalService(self: bigint): bigint | undefined {
+export function getLocalService(self: bigint): boolean {
   const obj = getSpeechSynthesisVoice(self);
   return obj.localService;
 }
@@ -2428,7 +2308,6 @@ export default {
   addTrack,
   removeTrack,
   MediaStreamClone,
-  MediaStreamPollClone,
   getActive,
   getOnaddtrack,
   setOnaddtrack,
@@ -2448,7 +2327,6 @@ export default {
   getOnended,
   setOnended,
   MediaStreamTrackClone,
-  MediaStreamTrackPollClone,
   MediaStreamTrackStop,
   MediaStreamTrackGetCapabilities,
   getConstraints,
@@ -2536,7 +2414,6 @@ export default {
   SpeechRecognitionStart,
   SpeechRecognitionStop,
   abort,
-  pollAbort,
   available,
   install,
   getOnaudiostart,
@@ -2589,7 +2466,6 @@ export default {
   setOnvoiceschanged,
   speak,
   cancel,
-  pollCancel,
   SpeechSynthesisPause,
   SpeechSynthesisResume,
   getVoices,

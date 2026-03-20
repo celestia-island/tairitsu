@@ -18,19 +18,6 @@ export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | n
 
 
 // ---------------------------------------------------------------------------
-// Async handle table for Promise-based operations
-// ---------------------------------------------------------------------------
-
-let _nextAsyncHandle = 1n;
-
-interface AsyncHandle<T> {
-  promise: Promise<T>;
-  result: { ok: true; value: T } | { ok: false; error: string } | null;
-}
-
-const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
-
-// ---------------------------------------------------------------------------
 // WIT interface: event
 // ---------------------------------------------------------------------------
 
@@ -48,7 +35,7 @@ function getEvent(handle: bigint): Event {
     throw new Error(`Event handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -228,7 +215,7 @@ function getCustomEvent(handle: bigint): CustomEvent {
     throw new Error(`CustomEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-detail()` operation.
@@ -264,7 +251,7 @@ function getEventTarget(handle: bigint): EventTarget {
     throw new Error(`EventTarget handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-event-listener()` operation.
@@ -308,7 +295,7 @@ function getEventListener(handle: bigint): EventListener {
     throw new Error(`EventListener handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `handle-event()` operation.
@@ -336,7 +323,7 @@ function getAbortController(handle: bigint): AbortController {
     throw new Error(`AbortController handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-signal()` operation.
@@ -348,40 +335,10 @@ export function getSignal(self: bigint): bigint {
 
 /**
  * `abort()` operation.
- *
- * Async operation: returns request ID, poll with `AbortControllerPollAbort()`
  */
-export function AbortControllerAbort(self: bigint, reason: string | undefined): bigint {
-  const requestId = _nextAsyncHandle++;
+export function AbortControllerAbort(self: bigint, reason: string | undefined): void {
   const obj = getAbortController(self);
-  const promise = obj.abort(reason)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `abort()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AbortControllerPollAbort(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.abort(reason);
 }
 
 // ---------------------------------------------------------------------------
@@ -402,43 +359,13 @@ function getAbortSignal(handle: bigint): AbortSignal {
     throw new Error(`AbortSignal handle ${handle} not found`);
   }
   return obj;
-
-
-/**
- * `abort()` operation.
- *
- * Async operation: returns request ID, poll with `AbortSignalPollAbort()`
- */
-export function AbortSignalAbort(reason: string | undefined): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = AbortSignal.abort(reason)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
 }
 
 /**
- * Poll an async `abort()` operation.
- * Returns undefined if still pending, or the result if complete.
+ * `abort()` operation.
  */
-export function AbortSignalPollAbort(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function AbortSignalAbort(reason: string | undefined): bigint {
+  return AbortSignal.abort(reason);
 }
 
 /**
@@ -513,7 +440,7 @@ function getNonElementParentNode(handle: bigint): NonElementParentNode {
     throw new Error(`NonElementParentNode handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-element-by-id()` operation.
@@ -541,7 +468,7 @@ function getParentNode(handle: bigint): ParentNode {
     throw new Error(`ParentNode handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-children()` operation.
@@ -641,7 +568,7 @@ function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
     throw new Error(`NonDocumentTypeChildNode handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-previous-element-sibling()` operation.
@@ -677,7 +604,7 @@ function getChildNode(handle: bigint): ChildNode {
     throw new Error(`ChildNode handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `before()` operation.
@@ -729,7 +656,7 @@ function getSlottable(handle: bigint): Slottable {
     throw new Error(`Slottable handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-assigned-slot()` operation.
@@ -757,7 +684,7 @@ function getNodeList(handle: bigint): NodeList {
     throw new Error(`NodeList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `item()` operation.
@@ -782,24 +709,24 @@ export function NodeListGetLength(self: bigint): number {
 /** Type alias */
 export type HtmlCollectionHandle = bigint;
 
-/** Handle table for HtmlCollection instances */
-const _htmlCollectionhandles = new Map<bigint, HtmlCollection>();
-let _nextHtmlCollection = 1n;
+/** Handle table for HTMLCollection instances */
+const _htmlCollectionhandles = new Map<bigint, HTMLCollection>();
+let _nextHTMLCollection = 1n;
 
-/** Get a HtmlCollection by handle, throwing if not found. */
-function getHtmlCollection(handle: bigint): HtmlCollection {
+/** Get a HTMLCollection by handle, throwing if not found. */
+function getHTMLCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlCollection handle ${handle} not found`);
+    throw new Error(`HTMLCollection handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
 export function HtmlCollectionGetLength(self: bigint): number {
-  const obj = getHtmlCollection(self);
+  const obj = getHTMLCollection(self);
   return obj.length;
 }
 
@@ -807,7 +734,7 @@ export function HtmlCollectionGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function HtmlCollectionItem(self: bigint, index: number): bigint | undefined {
-  const obj = getHtmlCollection(self);
+  const obj = getHTMLCollection(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -815,8 +742,8 @@ export function HtmlCollectionItem(self: bigint, index: number): bigint | undefi
  * `named-item()` operation.
  */
 export function namedItem(self: bigint, name: string): bigint | undefined {
-  const obj = getHtmlCollection(self);
-  return obj.namedItem(name) ?? undefined;
+  const obj = getHTMLCollection(self);
+  return obj.getNamedItem(name) ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -837,7 +764,7 @@ function getMutationObserver(handle: bigint): MutationObserver {
     throw new Error(`MutationObserver handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `observe()` operation.
@@ -881,7 +808,7 @@ function getMutationRecord(handle: bigint): MutationRecord {
     throw new Error(`MutationRecord handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -973,7 +900,7 @@ function getNode(handle: bigint): Node {
     throw new Error(`Node handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-node-type()` operation.
@@ -1180,7 +1107,7 @@ export function lookupPrefix(self: bigint, namespace: string | undefined): strin
  */
 export function NodeLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
   const obj = getNode(self);
-  return obj.lookupNamespaceUri(prefix) ?? undefined;
+  return obj.lookupNamespaceURI(prefix) ?? undefined;
 }
 
 /**
@@ -1230,31 +1157,31 @@ export function removeChild(self: bigint, child: bigint): bigint {
 /** Type alias */
 export type DomImplementationHandle = bigint;
 
-/** Handle table for DomImplementation instances */
-const _domImplementationhandles = new Map<bigint, DomImplementation>();
-let _nextDomImplementation = 1n;
+/** Handle table for DOMImplementation instances */
+const _domImplementationhandles = new Map<bigint, DOMImplementation>();
+let _nextDOMImplementation = 1n;
 
-/** Register a new DomImplementation and return its handle. */
-function registerDomImplementation(obj: DomImplementation): bigint {
-  const handle = _nextDomImplementation++;
+/** Register a new DOMImplementation and return its handle. */
+function registerDOMImplementation(obj: DOMImplementation): bigint {
+  const handle = _nextDOMImplementation++;
   _domImplementationhandles.set(handle, obj);
   return handle;
+}
 
-
-/** Get a DomImplementation by handle, throwing if not found. */
-function getDomImplementation(handle: bigint): DomImplementation {
+/** Get a DOMImplementation by handle, throwing if not found. */
+function getDOMImplementation(handle: bigint): DOMImplementation {
   const obj = _domImplementationhandles.get(handle);
   if (!obj) {
-    throw new Error(`DomImplementation handle ${handle} not found`);
+    throw new Error(`DOMImplementation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `create-document-type()` operation.
  */
 export function createDocumentType(self: bigint, name: string, publicId: string, systemId: string): bigint {
-  const obj = getDomImplementation(self);
+  const obj = getDOMImplementation(self);
   return obj.createDocumentType(name, publicId, systemId);
 }
 
@@ -1262,7 +1189,7 @@ export function createDocumentType(self: bigint, name: string, publicId: string,
  * `create-document()` operation.
  */
 export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
-  const obj = getDomImplementation(self);
+  const obj = getDOMImplementation(self);
   return obj.createDocument(namespace, qualifiedName, doctype);
 }
 
@@ -1270,7 +1197,7 @@ export function createDocument(self: bigint, namespace: string | undefined, qual
  * `create-html-document()` operation.
  */
 export function createHtmlDocument(self: bigint, title: string | undefined): bigint {
-  const obj = getDomImplementation(self);
+  const obj = getDOMImplementation(self);
   return obj.createHtmlDocument(title);
 }
 
@@ -1278,7 +1205,7 @@ export function createHtmlDocument(self: bigint, title: string | undefined): big
  * `has-feature()` operation.
  */
 export function hasFeature(self: bigint): boolean {
-  const obj = getDomImplementation(self);
+  const obj = getDOMImplementation(self);
   return obj.hasFeature();
 }
 
@@ -1300,7 +1227,7 @@ function getDocumentType(handle: bigint): DocumentType {
     throw new Error(`DocumentType handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -1344,7 +1271,7 @@ function getShadowRoot(handle: bigint): ShadowRoot {
     throw new Error(`ShadowRoot handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-mode()` operation.
@@ -1460,7 +1387,7 @@ function getNamedNodeMap(handle: bigint): NamedNodeMap {
     throw new Error(`NamedNodeMap handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
@@ -1523,7 +1450,7 @@ export function removeNamedItem(self: bigint, qualifiedName: string): bigint {
  */
 export function removeNamedItemNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = getNamedNodeMap(self);
-  return obj.removeNamedItemNs(namespace, localName);
+  return obj.removeNamedItemNS(namespace, localName);
 }
 
 // ---------------------------------------------------------------------------
@@ -1544,7 +1471,7 @@ function getAttr(handle: bigint): Attr {
     throw new Error(`Attr handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-namespace-uri()` operation.
@@ -1628,7 +1555,7 @@ function getCharacterData(handle: bigint): CharacterData {
     throw new Error(`CharacterData handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data()` operation.
@@ -1712,7 +1639,7 @@ function getText(handle: bigint): Text {
     throw new Error(`Text handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `split-text()` operation.
@@ -1748,7 +1675,7 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
     throw new Error(`ProcessingInstruction handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-target()` operation.
@@ -1776,7 +1703,7 @@ function getAbstractRange(handle: bigint): AbstractRange {
     throw new Error(`AbstractRange handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-start-container()` operation.
@@ -1836,7 +1763,7 @@ function getNodeIterator(handle: bigint): NodeIterator {
     throw new Error(`NodeIterator handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-root()` operation.
@@ -1920,12 +1847,12 @@ function getTreeWalker(handle: bigint): TreeWalker {
     throw new Error(`TreeWalker handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-root()` operation.
  */
-export function TreeWalkerGetRoot(self: bigint): EventHandlerRecord {
+export function TreeWalkerGetRoot(self: bigint): bigint {
   const obj = getTreeWalker(self);
   return obj.root;
 }
@@ -2036,7 +1963,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
     throw new Error(`NodeFilter handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `accept-node()` operation.
@@ -2053,24 +1980,24 @@ export function acceptNode(self: bigint, node: bigint): number {
 /** Type alias */
 export type DomTokenListHandle = bigint;
 
-/** Handle table for DomTokenList instances */
-const _domTokenListhandles = new Map<bigint, DomTokenList>();
-let _nextDomTokenList = 1n;
+/** Handle table for DOMTokenList instances */
+const _domTokenListhandles = new Map<bigint, DOMTokenList>();
+let _nextDOMTokenList = 1n;
 
-/** Get a DomTokenList by handle, throwing if not found. */
-function getDomTokenList(handle: bigint): DomTokenList {
+/** Get a DOMTokenList by handle, throwing if not found. */
+function getDOMTokenList(handle: bigint): DOMTokenList {
   const obj = _domTokenListhandles.get(handle);
   if (!obj) {
-    throw new Error(`DomTokenList handle ${handle} not found`);
+    throw new Error(`DOMTokenList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-length()` operation.
  */
 export function DomTokenListGetLength(self: bigint): number {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.length;
 }
 
@@ -2078,7 +2005,7 @@ export function DomTokenListGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function DomTokenListItem(self: bigint, index: number): string | undefined {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -2086,7 +2013,7 @@ export function DomTokenListItem(self: bigint, index: number): string | undefine
  * `contains()` operation.
  */
 export function DomTokenListContains(self: bigint, token: string): boolean {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.contains(token);
 }
 
@@ -2094,7 +2021,7 @@ export function DomTokenListContains(self: bigint, token: string): boolean {
  * `add()` operation.
  */
 export function add(self: bigint, tokens: (string)[]): void {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   obj.add(tokens);
 }
 
@@ -2102,7 +2029,7 @@ export function add(self: bigint, tokens: (string)[]): void {
  * `remove()` operation.
  */
 export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   obj.remove(tokens);
 }
 
@@ -2110,7 +2037,7 @@ export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
  * `toggle()` operation.
  */
 export function toggle(self: bigint, token: string, force: boolean | undefined): boolean {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.toggle(token, force);
 }
 
@@ -2118,7 +2045,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
  * `replace()` operation.
  */
 export function replace(self: bigint, token: string, newToken: string): boolean {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.replace(token, newToken);
 }
 
@@ -2126,7 +2053,7 @@ export function replace(self: bigint, token: string, newToken: string): boolean 
  * `supports()` operation.
  */
 export function supports(self: bigint, token: string): boolean {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.supports(token);
 }
 
@@ -2134,7 +2061,7 @@ export function supports(self: bigint, token: string): boolean {
  * `get-value()` operation.
  */
 export function DomTokenListGetValue(self: bigint): bigint {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   return obj.value;
 }
 
@@ -2142,7 +2069,7 @@ export function DomTokenListGetValue(self: bigint): bigint {
  * `set-value()` operation.
  */
 export function DomTokenListSetValue(self: bigint, value: bigint): void {
-  const obj = getDomTokenList(self);
+  const obj = getDOMTokenList(self);
   obj.value = value;
 }
 
@@ -2164,7 +2091,7 @@ function getXPathResult(handle: bigint): XPathResult {
     throw new Error(`XPathResult handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-result-type()` operation.
@@ -2256,7 +2183,7 @@ function getXPathExpression(handle: bigint): XPathExpression {
     throw new Error(`XPathExpression handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `evaluate()` operation.
@@ -2273,25 +2200,25 @@ export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type:
 /** Type alias */
 export type XPathNsResolverHandle = bigint;
 
-/** Handle table for XPathNsResolver instances */
-const _xPathNsResolverhandles = new Map<bigint, XPathNsResolver>();
-let _nextXPathNsResolver = 1n;
+/** Handle table for XPathNSResolver instances */
+const _xPathNsResolverhandles = new Map<bigint, XPathNSResolver>();
+let _nextXPathNSResolver = 1n;
 
-/** Get a XPathNsResolver by handle, throwing if not found. */
-function getXPathNsResolver(handle: bigint): XPathNsResolver {
+/** Get a XPathNSResolver by handle, throwing if not found. */
+function getXPathNSResolver(handle: bigint): XPathNSResolver {
   const obj = _xPathNsResolverhandles.get(handle);
   if (!obj) {
-    throw new Error(`XPathNsResolver handle ${handle} not found`);
+    throw new Error(`XPathNSResolver handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `lookup-namespace-uri()` operation.
  */
 export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
-  const obj = getXPathNsResolver(self);
-  return obj.lookupNamespaceUri(prefix) ?? undefined;
+  const obj = getXPathNSResolver(self);
+  return obj.lookupNamespaceURI(prefix) ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -2310,7 +2237,7 @@ function registerXPathEvaluatorBase(obj: XPathEvaluatorBase): bigint {
   const handle = _nextXPathEvaluatorBase++;
   _xPathEvaluatorBasehandles.set(handle, obj);
   return handle;
-
+}
 
 /** Get a XPathEvaluatorBase by handle, throwing if not found. */
 function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
@@ -2319,7 +2246,7 @@ function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
     throw new Error(`XPathEvaluatorBase handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `create-expression()` operation.
@@ -2334,7 +2261,7 @@ export function createExpression(self: bigint, expression: string, resolver: big
  */
 export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
   const obj = getXPathEvaluatorBase(self);
-  return obj.createNsResolver(nodeResolver);
+  return obj.createNSResolver(nodeResolver);
 }
 
 /**
@@ -2352,24 +2279,24 @@ export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, con
 /** Type alias */
 export type XsltProcessorHandle = bigint;
 
-/** Handle table for XsltProcessor instances */
-const _xsltProcessorhandles = new Map<bigint, XsltProcessor>();
-let _nextXsltProcessor = 1n;
+/** Handle table for XSLTProcessor instances */
+const _xsltProcessorhandles = new Map<bigint, XSLTProcessor>();
+let _nextXSLTProcessor = 1n;
 
-/** Get a XsltProcessor by handle, throwing if not found. */
-function getXsltProcessor(handle: bigint): XsltProcessor {
+/** Get a XSLTProcessor by handle, throwing if not found. */
+function getXSLTProcessor(handle: bigint): XSLTProcessor {
   const obj = _xsltProcessorhandles.get(handle);
   if (!obj) {
-    throw new Error(`XsltProcessor handle ${handle} not found`);
+    throw new Error(`XSLTProcessor handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `import-stylesheet()` operation.
  */
 export function importStylesheet(self: bigint, style: bigint): void {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   obj.importStylesheet(style);
 }
 
@@ -2377,7 +2304,7 @@ export function importStylesheet(self: bigint, style: bigint): void {
  * `transform-to-fragment()` operation.
  */
 export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   return obj.transformToFragment(source, output);
 }
 
@@ -2385,7 +2312,7 @@ export function transformToFragment(self: bigint, source: bigint, output: bigint
  * `transform-to-document()` operation.
  */
 export function transformToDocument(self: bigint, source: bigint): bigint {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   return obj.transformToDocument(source);
 }
 
@@ -2393,7 +2320,7 @@ export function transformToDocument(self: bigint, source: bigint): bigint {
  * `set-parameter()` operation.
  */
 export function setParameter(self: bigint, namespaceUri: string, localName: string, value: string): void {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   obj.parameter = value;
 }
 
@@ -2401,7 +2328,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
  * `get-parameter()` operation.
  */
 export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   return obj.parameter;
 }
 
@@ -2409,7 +2336,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: stri
  * `remove-parameter()` operation.
  */
 export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }
 
@@ -2417,7 +2344,7 @@ export function removeParameter(self: bigint, namespaceUri: string, localName: s
  * `clear-parameters()` operation.
  */
 export function clearParameters(self: bigint): void {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   obj.clearParameters();
 }
 
@@ -2425,7 +2352,7 @@ export function clearParameters(self: bigint): void {
  * `reset()` operation.
  */
 export function reset(self: bigint): void {
-  const obj = getXsltProcessor(self);
+  const obj = getXSLTProcessor(self);
   obj.reset();
 }
 
@@ -2462,9 +2389,7 @@ export default {
   handleEvent,
   getSignal,
   AbortControllerAbort,
-  AbortControllerPollAbort,
   AbortSignalAbort,
-  AbortSignalPollAbort,
   timeout,
   any,
   getAborted,

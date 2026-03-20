@@ -48,7 +48,7 @@ function getAnimation(handle: bigint): Animation {
     throw new Error(`Animation handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-id()` operation.
@@ -91,39 +91,9 @@ export function pending(handle: bigint): boolean {
 
 /**
  * `cancel()` operation.
- *
- * Async operation: returns request ID, poll with `pollCancel()`
  */
-export function cancel(handle: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = Animation.cancel(handle)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `cancel()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollCancel(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function cancel(handle: bigint): void {
+  return Animation.cancel(handle);
 }
 
 /**
@@ -150,7 +120,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: boolean): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
   return Animation.updatePlaybackRate(handle, playbackRate);
 }
 
@@ -216,7 +186,6 @@ export default {
   setPlaybackRate,
   pending,
   cancel,
-  pollCancel,
   finish,
   play,
   pause,

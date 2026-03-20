@@ -35,7 +35,7 @@ function getRo(handle: bigint): ResizeObserver {
     throw new Error(`ResizeObserver handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `observe()` operation.

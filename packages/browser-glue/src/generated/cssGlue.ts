@@ -18,19 +18,6 @@ export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | n
 
 
 // ---------------------------------------------------------------------------
-// Async handle table for Promise-based operations
-// ---------------------------------------------------------------------------
-
-let _nextAsyncHandle = 1n;
-
-interface AsyncHandle<T> {
-  promise: Promise<T>;
-  result: { ok: true; value: T } | { ok: false; error: string } | null;
-}
-
-const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
-
-// ---------------------------------------------------------------------------
 // WIT interface: animation-event
 // ---------------------------------------------------------------------------
 
@@ -48,7 +35,7 @@ function getAnimationEvent(handle: bigint): AnimationEvent {
     throw new Error(`AnimationEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-animation-name()` operation.
@@ -81,24 +68,24 @@ export function AnimationEventGetPseudoElement(self: bigint): string {
 /** Type alias */
 export type CssRuleHandle = bigint;
 
-/** Handle table for CssRule instances */
-const _cssRulehandles = new Map<bigint, CssRule>();
-let _nextCssRule = 1n;
+/** Handle table for CSSRule instances */
+const _cssRulehandles = new Map<bigint, CSSRule>();
+let _nextCSSRule = 1n;
 
-/** Get a CssRule by handle, throwing if not found. */
-function getCssRule(handle: bigint): CssRule {
+/** Get a CSSRule by handle, throwing if not found. */
+function getCSSRule(handle: bigint): CSSRule {
   const obj = _cssRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssRule handle ${handle} not found`);
+    throw new Error(`CSSRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-css-text()` operation.
  */
 export function CssRuleGetCssText(self: bigint): string {
-  const obj = getCssRule(self);
+  const obj = getCSSRule(self);
   return obj.cssText;
 }
 
@@ -106,7 +93,7 @@ export function CssRuleGetCssText(self: bigint): string {
  * `set-css-text()` operation.
  */
 export function CssRuleSetCssText(self: bigint, value: string): void {
-  const obj = getCssRule(self);
+  const obj = getCSSRule(self);
   obj.cssText = value;
 }
 
@@ -114,7 +101,7 @@ export function CssRuleSetCssText(self: bigint, value: string): void {
  * `get-parent-rule()` operation.
  */
 export function CssRuleGetParentRule(self: bigint): bigint | undefined {
-  const obj = getCssRule(self);
+  const obj = getCSSRule(self);
   return obj.parentRule ?? undefined;
 }
 
@@ -122,7 +109,7 @@ export function CssRuleGetParentRule(self: bigint): bigint | undefined {
  * `get-parent-style-sheet()` operation.
  */
 export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
-  const obj = getCssRule(self);
+  const obj = getCSSRule(self);
   return obj.parentStyleSheet ?? undefined;
 }
 
@@ -130,7 +117,7 @@ export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
  * `get-type()` operation.
  */
 export function CssRuleGetType(self: bigint): number {
-  const obj = getCssRule(self);
+  const obj = getCSSRule(self);
   return obj.type;
 }
 
@@ -141,24 +128,24 @@ export function CssRuleGetType(self: bigint): number {
 /** Type alias */
 export type CssKeyframeRuleHandle = bigint;
 
-/** Handle table for CssKeyframeRule instances */
-const _cssKeyframeRulehandles = new Map<bigint, CssKeyframeRule>();
-let _nextCssKeyframeRule = 1n;
+/** Handle table for CSSKeyframeRule instances */
+const _cssKeyframeRulehandles = new Map<bigint, CSSKeyframeRule>();
+let _nextCSSKeyframeRule = 1n;
 
-/** Get a CssKeyframeRule by handle, throwing if not found. */
-function getCssKeyframeRule(handle: bigint): CssKeyframeRule {
+/** Get a CSSKeyframeRule by handle, throwing if not found. */
+function getCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
   const obj = _cssKeyframeRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssKeyframeRule handle ${handle} not found`);
+    throw new Error(`CSSKeyframeRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-key-text()` operation.
  */
 export function getKeyText(self: bigint): string {
-  const obj = getCssKeyframeRule(self);
+  const obj = getCSSKeyframeRule(self);
   return obj.keyText;
 }
 
@@ -166,7 +153,7 @@ export function getKeyText(self: bigint): string {
  * `set-key-text()` operation.
  */
 export function setKeyText(self: bigint, value: string): void {
-  const obj = getCssKeyframeRule(self);
+  const obj = getCSSKeyframeRule(self);
   obj.keyText = value;
 }
 
@@ -174,7 +161,7 @@ export function setKeyText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssKeyframeRuleGetStyle(self: bigint): bigint {
-  const obj = getCssKeyframeRule(self);
+  const obj = getCSSKeyframeRule(self);
   return obj.style;
 }
 
@@ -185,24 +172,24 @@ export function CssKeyframeRuleGetStyle(self: bigint): bigint {
 /** Type alias */
 export type CssKeyframesRuleHandle = bigint;
 
-/** Handle table for CssKeyframesRule instances */
-const _cssKeyframesRulehandles = new Map<bigint, CssKeyframesRule>();
-let _nextCssKeyframesRule = 1n;
+/** Handle table for CSSKeyframesRule instances */
+const _cssKeyframesRulehandles = new Map<bigint, CSSKeyframesRule>();
+let _nextCSSKeyframesRule = 1n;
 
-/** Get a CssKeyframesRule by handle, throwing if not found. */
-function getCssKeyframesRule(handle: bigint): CssKeyframesRule {
+/** Get a CSSKeyframesRule by handle, throwing if not found. */
+function getCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
   const obj = _cssKeyframesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssKeyframesRule handle ${handle} not found`);
+    throw new Error(`CSSKeyframesRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function CssKeyframesRuleGetName(self: bigint): string {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   return obj.name;
 }
 
@@ -210,7 +197,7 @@ export function CssKeyframesRuleGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function CssKeyframesRuleSetName(self: bigint, value: string): void {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   obj.name = value;
 }
 
@@ -218,7 +205,7 @@ export function CssKeyframesRuleSetName(self: bigint, value: string): void {
  * `get-css-rules()` operation.
  */
 export function CssKeyframesRuleGetCssRules(self: bigint): bigint {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   return obj.cssRules;
 }
 
@@ -226,7 +213,7 @@ export function CssKeyframesRuleGetCssRules(self: bigint): bigint {
  * `get-length()` operation.
  */
 export function CssKeyframesRuleGetLength(self: bigint): number {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   return obj.length;
 }
 
@@ -234,7 +221,7 @@ export function CssKeyframesRuleGetLength(self: bigint): number {
  * `css-keyframe-rule()` operation.
  */
 export function cssKeyframeRule(self: bigint, index: number): void {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   obj.cssKeyframeRule(index);
 }
 
@@ -242,7 +229,7 @@ export function cssKeyframeRule(self: bigint, index: number): void {
  * `append-rule()` operation.
  */
 export function appendRule(self: bigint, rule: string): void {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   obj.appendRule(rule);
 }
 
@@ -250,7 +237,7 @@ export function appendRule(self: bigint, rule: string): void {
  * `delete-rule()` operation.
  */
 export function CssKeyframesRuleDeleteRule(self: bigint, select: string): void {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   obj.deleteRule(select);
 }
 
@@ -258,7 +245,7 @@ export function CssKeyframesRuleDeleteRule(self: bigint, select: string): void {
  * `find-rule()` operation.
  */
 export function findRule(self: bigint, select: string): bigint | undefined {
-  const obj = getCssKeyframesRule(self);
+  const obj = getCSSKeyframesRule(self);
   return obj.findRule(select) ?? undefined;
 }
 
@@ -280,7 +267,7 @@ function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
     throw new Error(`GlobalEventHandlers handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-onanimationstart()` operation.
@@ -1873,24 +1860,24 @@ export function setOntouchcancel(self: bigint, value: EventHandlerRecord): void 
 /** Type alias */
 export type CssConditionRuleHandle = bigint;
 
-/** Handle table for CssConditionRule instances */
-const _cssConditionRulehandles = new Map<bigint, CssConditionRule>();
-let _nextCssConditionRule = 1n;
+/** Handle table for CSSConditionRule instances */
+const _cssConditionRulehandles = new Map<bigint, CSSConditionRule>();
+let _nextCSSConditionRule = 1n;
 
-/** Get a CssConditionRule by handle, throwing if not found. */
-function getCssConditionRule(handle: bigint): CssConditionRule {
+/** Get a CSSConditionRule by handle, throwing if not found. */
+function getCSSConditionRule(handle: bigint): CSSConditionRule {
   const obj = _cssConditionRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssConditionRule handle ${handle} not found`);
+    throw new Error(`CSSConditionRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-condition-text()` operation.
  */
 export function getConditionText(self: bigint): string {
-  const obj = getCssConditionRule(self);
+  const obj = getCSSConditionRule(self);
   return obj.conditionText;
 }
 
@@ -1901,24 +1888,24 @@ export function getConditionText(self: bigint): string {
 /** Type alias */
 export type CssMediaRuleHandle = bigint;
 
-/** Handle table for CssMediaRule instances */
-const _cssMediaRulehandles = new Map<bigint, CssMediaRule>();
-let _nextCssMediaRule = 1n;
+/** Handle table for CSSMediaRule instances */
+const _cssMediaRulehandles = new Map<bigint, CSSMediaRule>();
+let _nextCSSMediaRule = 1n;
 
-/** Get a CssMediaRule by handle, throwing if not found. */
-function getCssMediaRule(handle: bigint): CssMediaRule {
+/** Get a CSSMediaRule by handle, throwing if not found. */
+function getCSSMediaRule(handle: bigint): CSSMediaRule {
   const obj = _cssMediaRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssMediaRule handle ${handle} not found`);
+    throw new Error(`CSSMediaRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-media()` operation.
  */
 export function CssMediaRuleGetMedia(self: bigint): bigint {
-  const obj = getCssMediaRule(self);
+  const obj = getCSSMediaRule(self);
   return obj.media;
 }
 
@@ -1926,7 +1913,7 @@ export function CssMediaRuleGetMedia(self: bigint): bigint {
  * `get-matches()` operation.
  */
 export function CssMediaRuleGetMatches(self: bigint): boolean {
-  const obj = getCssMediaRule(self);
+  const obj = getCSSMediaRule(self);
   return obj.matches;
 }
 
@@ -1937,24 +1924,24 @@ export function CssMediaRuleGetMatches(self: bigint): boolean {
 /** Type alias */
 export type CssSupportsRuleHandle = bigint;
 
-/** Handle table for CssSupportsRule instances */
-const _cssSupportsRulehandles = new Map<bigint, CssSupportsRule>();
-let _nextCssSupportsRule = 1n;
+/** Handle table for CSSSupportsRule instances */
+const _cssSupportsRulehandles = new Map<bigint, CSSSupportsRule>();
+let _nextCSSSupportsRule = 1n;
 
-/** Get a CssSupportsRule by handle, throwing if not found. */
-function getCssSupportsRule(handle: bigint): CssSupportsRule {
+/** Get a CSSSupportsRule by handle, throwing if not found. */
+function getCSSSupportsRule(handle: bigint): CSSSupportsRule {
   const obj = _cssSupportsRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssSupportsRule handle ${handle} not found`);
+    throw new Error(`CSSSupportsRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-matches()` operation.
  */
 export function CssSupportsRuleGetMatches(self: bigint): boolean {
-  const obj = getCssSupportsRule(self);
+  const obj = getCSSSupportsRule(self);
   return obj.matches;
 }
 
@@ -1965,24 +1952,24 @@ export function CssSupportsRuleGetMatches(self: bigint): boolean {
 /** Type alias */
 export type CssFontFaceDescriptorsHandle = bigint;
 
-/** Handle table for CssFontFaceDescriptors instances */
-const _cssFontFaceDescriptorshandles = new Map<bigint, CssFontFaceDescriptors>();
-let _nextCssFontFaceDescriptors = 1n;
+/** Handle table for CSSFontFaceDescriptors instances */
+const _cssFontFaceDescriptorshandles = new Map<bigint, CSSFontFaceDescriptors>();
+let _nextCSSFontFaceDescriptors = 1n;
 
-/** Get a CssFontFaceDescriptors by handle, throwing if not found. */
-function getCssFontFaceDescriptors(handle: bigint): CssFontFaceDescriptors {
+/** Get a CSSFontFaceDescriptors by handle, throwing if not found. */
+function getCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
   const obj = _cssFontFaceDescriptorshandles.get(handle);
   if (!obj) {
-    throw new Error(`CssFontFaceDescriptors handle ${handle} not found`);
+    throw new Error(`CSSFontFaceDescriptors handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-src()` operation.
  */
 export function CssFontFaceDescriptorsGetSrc(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.src;
 }
 
@@ -1990,7 +1977,7 @@ export function CssFontFaceDescriptorsGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function CssFontFaceDescriptorsSetSrc(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.src = value;
 }
 
@@ -1998,7 +1985,7 @@ export function CssFontFaceDescriptorsSetSrc(self: bigint, value: string): void 
  * `get-font-family()` operation.
  */
 export function CssFontFaceDescriptorsGetFontFamily(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontFamily;
 }
 
@@ -2006,7 +1993,7 @@ export function CssFontFaceDescriptorsGetFontFamily(self: bigint): string {
  * `set-font-family()` operation.
  */
 export function CssFontFaceDescriptorsSetFontFamily(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontFamily = value;
 }
 
@@ -2014,7 +2001,7 @@ export function CssFontFaceDescriptorsSetFontFamily(self: bigint, value: string)
  * `get-font-style()` operation.
  */
 export function getFontStyle(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontStyle;
 }
 
@@ -2022,7 +2009,7 @@ export function getFontStyle(self: bigint): string {
  * `set-font-style()` operation.
  */
 export function setFontStyle(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontStyle = value;
 }
 
@@ -2030,7 +2017,7 @@ export function setFontStyle(self: bigint, value: string): void {
  * `get-font-weight()` operation.
  */
 export function getFontWeight(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontWeight;
 }
 
@@ -2038,7 +2025,7 @@ export function getFontWeight(self: bigint): string {
  * `set-font-weight()` operation.
  */
 export function setFontWeight(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontWeight = value;
 }
 
@@ -2046,7 +2033,7 @@ export function setFontWeight(self: bigint, value: string): void {
  * `get-font-stretch()` operation.
  */
 export function getFontStretch(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontStretch;
 }
 
@@ -2054,7 +2041,7 @@ export function getFontStretch(self: bigint): string {
  * `set-font-stretch()` operation.
  */
 export function setFontStretch(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontStretch = value;
 }
 
@@ -2062,7 +2049,7 @@ export function setFontStretch(self: bigint, value: string): void {
  * `get-font-width()` operation.
  */
 export function getFontWidth(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontWidth;
 }
 
@@ -2070,7 +2057,7 @@ export function getFontWidth(self: bigint): string {
  * `set-font-width()` operation.
  */
 export function setFontWidth(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontWidth = value;
 }
 
@@ -2078,7 +2065,7 @@ export function setFontWidth(self: bigint, value: string): void {
  * `get-unicode-range()` operation.
  */
 export function getUnicodeRange(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.unicodeRange;
 }
 
@@ -2086,7 +2073,7 @@ export function getUnicodeRange(self: bigint): string {
  * `set-unicode-range()` operation.
  */
 export function setUnicodeRange(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.unicodeRange = value;
 }
 
@@ -2094,7 +2081,7 @@ export function setUnicodeRange(self: bigint, value: string): void {
  * `get-font-feature-settings()` operation.
  */
 export function getFontFeatureSettings(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontFeatureSettings;
 }
 
@@ -2102,7 +2089,7 @@ export function getFontFeatureSettings(self: bigint): string {
  * `set-font-feature-settings()` operation.
  */
 export function setFontFeatureSettings(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontFeatureSettings = value;
 }
 
@@ -2110,7 +2097,7 @@ export function setFontFeatureSettings(self: bigint, value: string): void {
  * `get-font-variation-settings()` operation.
  */
 export function getFontVariationSettings(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontVariationSettings;
 }
 
@@ -2118,7 +2105,7 @@ export function getFontVariationSettings(self: bigint): string {
  * `set-font-variation-settings()` operation.
  */
 export function setFontVariationSettings(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontVariationSettings = value;
 }
 
@@ -2126,7 +2113,7 @@ export function setFontVariationSettings(self: bigint, value: string): void {
  * `get-font-named-instance()` operation.
  */
 export function getFontNamedInstance(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontNamedInstance;
 }
 
@@ -2134,7 +2121,7 @@ export function getFontNamedInstance(self: bigint): string {
  * `set-font-named-instance()` operation.
  */
 export function setFontNamedInstance(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontNamedInstance = value;
 }
 
@@ -2142,7 +2129,7 @@ export function setFontNamedInstance(self: bigint, value: string): void {
  * `get-font-display()` operation.
  */
 export function getFontDisplay(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontDisplay;
 }
 
@@ -2150,7 +2137,7 @@ export function getFontDisplay(self: bigint): string {
  * `set-font-display()` operation.
  */
 export function setFontDisplay(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontDisplay = value;
 }
 
@@ -2158,7 +2145,7 @@ export function setFontDisplay(self: bigint, value: string): void {
  * `get-font-language-override()` operation.
  */
 export function getFontLanguageOverride(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.fontLanguageOverride;
 }
 
@@ -2166,7 +2153,7 @@ export function getFontLanguageOverride(self: bigint): string {
  * `set-font-language-override()` operation.
  */
 export function setFontLanguageOverride(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.fontLanguageOverride = value;
 }
 
@@ -2174,7 +2161,7 @@ export function setFontLanguageOverride(self: bigint, value: string): void {
  * `get-ascent-override()` operation.
  */
 export function getAscentOverride(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.ascentOverride;
 }
 
@@ -2182,7 +2169,7 @@ export function getAscentOverride(self: bigint): string {
  * `set-ascent-override()` operation.
  */
 export function setAscentOverride(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.ascentOverride = value;
 }
 
@@ -2190,7 +2177,7 @@ export function setAscentOverride(self: bigint, value: string): void {
  * `get-descent-override()` operation.
  */
 export function getDescentOverride(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.descentOverride;
 }
 
@@ -2198,7 +2185,7 @@ export function getDescentOverride(self: bigint): string {
  * `set-descent-override()` operation.
  */
 export function setDescentOverride(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.descentOverride = value;
 }
 
@@ -2206,7 +2193,7 @@ export function setDescentOverride(self: bigint, value: string): void {
  * `get-line-gap-override()` operation.
  */
 export function getLineGapOverride(self: bigint): string {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   return obj.lineGapOverride;
 }
 
@@ -2214,7 +2201,7 @@ export function getLineGapOverride(self: bigint): string {
  * `set-line-gap-override()` operation.
  */
 export function setLineGapOverride(self: bigint, value: string): void {
-  const obj = getCssFontFaceDescriptors(self);
+  const obj = getCSSFontFaceDescriptors(self);
   obj.lineGapOverride = value;
 }
 
@@ -2225,24 +2212,24 @@ export function setLineGapOverride(self: bigint, value: string): void {
 /** Type alias */
 export type CssFontFaceRuleHandle = bigint;
 
-/** Handle table for CssFontFaceRule instances */
-const _cssFontFaceRulehandles = new Map<bigint, CssFontFaceRule>();
-let _nextCssFontFaceRule = 1n;
+/** Handle table for CSSFontFaceRule instances */
+const _cssFontFaceRulehandles = new Map<bigint, CSSFontFaceRule>();
+let _nextCSSFontFaceRule = 1n;
 
-/** Get a CssFontFaceRule by handle, throwing if not found. */
-function getCssFontFaceRule(handle: bigint): CssFontFaceRule {
+/** Get a CSSFontFaceRule by handle, throwing if not found. */
+function getCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
   const obj = _cssFontFaceRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssFontFaceRule handle ${handle} not found`);
+    throw new Error(`CSSFontFaceRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-style()` operation.
  */
 export function CssFontFaceRuleGetStyle(self: bigint): bigint {
-  const obj = getCssFontFaceRule(self);
+  const obj = getCSSFontFaceRule(self);
   return obj.style;
 }
 
@@ -2253,24 +2240,24 @@ export function CssFontFaceRuleGetStyle(self: bigint): bigint {
 /** Type alias */
 export type CssFontFeatureValuesRuleHandle = bigint;
 
-/** Handle table for CssFontFeatureValuesRule instances */
-const _cssFontFeatureValuesRulehandles = new Map<bigint, CssFontFeatureValuesRule>();
-let _nextCssFontFeatureValuesRule = 1n;
+/** Handle table for CSSFontFeatureValuesRule instances */
+const _cssFontFeatureValuesRulehandles = new Map<bigint, CSSFontFeatureValuesRule>();
+let _nextCSSFontFeatureValuesRule = 1n;
 
-/** Get a CssFontFeatureValuesRule by handle, throwing if not found. */
-function getCssFontFeatureValuesRule(handle: bigint): CssFontFeatureValuesRule {
+/** Get a CSSFontFeatureValuesRule by handle, throwing if not found. */
+function getCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRule {
   const obj = _cssFontFeatureValuesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssFontFeatureValuesRule handle ${handle} not found`);
+    throw new Error(`CSSFontFeatureValuesRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-font-family()` operation.
  */
 export function CssFontFeatureValuesRuleGetFontFamily(self: bigint): string {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.fontFamily;
 }
 
@@ -2278,7 +2265,7 @@ export function CssFontFeatureValuesRuleGetFontFamily(self: bigint): string {
  * `set-font-family()` operation.
  */
 export function CssFontFeatureValuesRuleSetFontFamily(self: bigint, value: string): void {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   obj.fontFamily = value;
 }
 
@@ -2286,7 +2273,7 @@ export function CssFontFeatureValuesRuleSetFontFamily(self: bigint, value: strin
  * `get-annotation()` operation.
  */
 export function getAnnotation(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.annotation;
 }
 
@@ -2294,7 +2281,7 @@ export function getAnnotation(self: bigint): bigint {
  * `get-ornaments()` operation.
  */
 export function getOrnaments(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.ornaments;
 }
 
@@ -2302,7 +2289,7 @@ export function getOrnaments(self: bigint): bigint {
  * `get-stylistic()` operation.
  */
 export function getStylistic(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.stylistic;
 }
 
@@ -2310,7 +2297,7 @@ export function getStylistic(self: bigint): bigint {
  * `get-swash()` operation.
  */
 export function getSwash(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.swash;
 }
 
@@ -2318,7 +2305,7 @@ export function getSwash(self: bigint): bigint {
  * `get-character-variant()` operation.
  */
 export function getCharacterVariant(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.characterVariant;
 }
 
@@ -2326,7 +2313,7 @@ export function getCharacterVariant(self: bigint): bigint {
  * `get-styleset()` operation.
  */
 export function getStyleset(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.styleset;
 }
 
@@ -2334,7 +2321,7 @@ export function getStyleset(self: bigint): bigint {
  * `get-historical-forms()` operation.
  */
 export function getHistoricalForms(self: bigint): bigint {
-  const obj = getCssFontFeatureValuesRule(self);
+  const obj = getCSSFontFeatureValuesRule(self);
   return obj.historicalForms;
 }
 
@@ -2345,24 +2332,24 @@ export function getHistoricalForms(self: bigint): bigint {
 /** Type alias */
 export type CssFontFeatureValuesMapHandle = bigint;
 
-/** Handle table for CssFontFeatureValuesMap instances */
-const _cssFontFeatureValuesMaphandles = new Map<bigint, CssFontFeatureValuesMap>();
-let _nextCssFontFeatureValuesMap = 1n;
+/** Handle table for CSSFontFeatureValuesMap instances */
+const _cssFontFeatureValuesMaphandles = new Map<bigint, CSSFontFeatureValuesMap>();
+let _nextCSSFontFeatureValuesMap = 1n;
 
-/** Get a CssFontFeatureValuesMap by handle, throwing if not found. */
-function getCssFontFeatureValuesMap(handle: bigint): CssFontFeatureValuesMap {
+/** Get a CSSFontFeatureValuesMap by handle, throwing if not found. */
+function getCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap {
   const obj = _cssFontFeatureValuesMaphandles.get(handle);
   if (!obj) {
-    throw new Error(`CssFontFeatureValuesMap handle ${handle} not found`);
+    throw new Error(`CSSFontFeatureValuesMap handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `set()` operation.
  */
 export function _set(self: bigint, featureValueName: string, values: number): void {
-  const obj = getCssFontFeatureValuesMap(self);
+  const obj = getCSSFontFeatureValuesMap(self);
   obj.set(featureValueName, values);
 }
 
@@ -2373,24 +2360,24 @@ export function _set(self: bigint, featureValueName: string, values: number): vo
 /** Type alias */
 export type CssFontPaletteValuesRuleHandle = bigint;
 
-/** Handle table for CssFontPaletteValuesRule instances */
-const _cssFontPaletteValuesRulehandles = new Map<bigint, CssFontPaletteValuesRule>();
-let _nextCssFontPaletteValuesRule = 1n;
+/** Handle table for CSSFontPaletteValuesRule instances */
+const _cssFontPaletteValuesRulehandles = new Map<bigint, CSSFontPaletteValuesRule>();
+let _nextCSSFontPaletteValuesRule = 1n;
 
-/** Get a CssFontPaletteValuesRule by handle, throwing if not found. */
-function getCssFontPaletteValuesRule(handle: bigint): CssFontPaletteValuesRule {
+/** Get a CSSFontPaletteValuesRule by handle, throwing if not found. */
+function getCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRule {
   const obj = _cssFontPaletteValuesRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssFontPaletteValuesRule handle ${handle} not found`);
+    throw new Error(`CSSFontPaletteValuesRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function CssFontPaletteValuesRuleGetName(self: bigint): string {
-  const obj = getCssFontPaletteValuesRule(self);
+  const obj = getCSSFontPaletteValuesRule(self);
   return obj.name;
 }
 
@@ -2398,7 +2385,7 @@ export function CssFontPaletteValuesRuleGetName(self: bigint): string {
  * `get-font-family()` operation.
  */
 export function CssFontPaletteValuesRuleGetFontFamily(self: bigint): string {
-  const obj = getCssFontPaletteValuesRule(self);
+  const obj = getCSSFontPaletteValuesRule(self);
   return obj.fontFamily;
 }
 
@@ -2406,7 +2393,7 @@ export function CssFontPaletteValuesRuleGetFontFamily(self: bigint): string {
  * `get-base-palette()` operation.
  */
 export function getBasePalette(self: bigint): string {
-  const obj = getCssFontPaletteValuesRule(self);
+  const obj = getCSSFontPaletteValuesRule(self);
   return obj.basePalette;
 }
 
@@ -2414,7 +2401,7 @@ export function getBasePalette(self: bigint): string {
  * `get-override-colors()` operation.
  */
 export function getOverrideColors(self: bigint): string {
-  const obj = getCssFontPaletteValuesRule(self);
+  const obj = getCSSFontPaletteValuesRule(self);
   return obj.overrideColors;
 }
 
@@ -2436,7 +2423,7 @@ function getTransitionEvent(handle: bigint): TransitionEvent {
     throw new Error(`TransitionEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-property-name()` operation.
@@ -2780,39 +2767,9 @@ export function setStatus(value: string): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `WindowPollClose()`
  */
-export function WindowClose(): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = window.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function WindowPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function WindowClose(): void {
+  window.close();
 }
 
 /**
@@ -3008,7 +2965,7 @@ function getMediaQueryList(handle: bigint): MediaQueryList {
     throw new Error(`MediaQueryList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-media()` operation.
@@ -3076,7 +3033,7 @@ function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
     throw new Error(`MediaQueryListEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-media()` operation.
@@ -3112,7 +3069,7 @@ function getScreen(handle: bigint): Screen {
     throw new Error(`Screen handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-avail-width()` operation.
@@ -3315,7 +3272,7 @@ export function createElement(localName: string, options: string | undefined): b
  * `create-element-ns()` operation.
  */
 export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  return document.createElementNs(namespace, qualifiedName, options);
+  return document.createElementNS(namespace, qualifiedName, options);
 }
 
 /**
@@ -3336,7 +3293,7 @@ export function createTextNode(data: string): bigint {
  * `create-cdata-section()` operation.
  */
 export function createCdataSection(data: string): bigint {
-  return document.createCdataSection(data);
+  return document.createCDATASection(data);
 }
 
 /**
@@ -3378,7 +3335,7 @@ export function createAttribute(localName: string): bigint {
  * `create-attribute-ns()` operation.
  */
 export function createAttributeNs(namespace: string | undefined, qualifiedName: string): bigint {
-  return document.createAttributeNs(namespace, qualifiedName);
+  return document.createAttributeNS(namespace, qualifiedName);
 }
 
 /**
@@ -3642,76 +3599,16 @@ export function DocumentOpen(unused1: string | undefined, unused2: string | unde
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `DocumentPollClose()`
  */
-export function DocumentClose(): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = document.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function DocumentPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function DocumentClose(): void {
+  document.close();
 }
 
 /**
  * `write()` operation.
- *
- * Async operation: returns request ID, poll with `pollWrite()`
  */
-export function write(text: (bigint)[]): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = document.write(text)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `write()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollWrite(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function write(text: (bigint)[]): void {
+  document.write(text);
 }
 
 /**
@@ -3963,7 +3860,7 @@ function getCaretPosition(handle: bigint): CaretPosition {
     throw new Error(`CaretPosition handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-offset-node()` operation.
@@ -4007,7 +3904,7 @@ function getElement(handle: bigint): Element {
     throw new Error(`Element handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-client-rects()` operation.
@@ -4310,7 +4207,7 @@ export function removeAttribute(self: bigint, qualifiedName: string): void {
  */
 export function removeAttributeNs(self: bigint, namespace: string | undefined, localName: string): void {
   const obj = getElement(self);
-  obj.removeAttributeNs(namespace, localName);
+  obj.removeAttributeNS(namespace, localName);
 }
 
 /**
@@ -4334,7 +4231,7 @@ export function hasAttribute(self: bigint, qualifiedName: string): boolean {
  */
 export function hasAttributeNs(self: bigint, namespace: string | undefined, localName: string): boolean {
   const obj = getElement(self);
-  return obj.hasAttributeNs(namespace, localName);
+  return obj.hasAttributeNS(namespace, localName);
 }
 
 /**
@@ -4558,7 +4455,7 @@ export function setOuterHtml(self: bigint, value: bigint): void {
  */
 export function insertAdjacentHtml(self: bigint, position: string, string: bigint): void {
   const obj = getElement(self);
-  obj.insertAdjacentHtml(position, string);
+  obj.insertAdjacentHTML(position, string);
 }
 
 /**
@@ -4592,24 +4489,24 @@ export function hasPointerCapture(self: bigint, pointerId: number): boolean {
 /** Type alias */
 export type HtmlElementHandle = bigint;
 
-/** Handle table for HtmlElement instances */
-const _htmlElementhandles = new Map<bigint, HtmlElement>();
-let _nextHtmlElement = 1n;
+/** Handle table for HTMLElement instances */
+const _htmlElementhandles = new Map<bigint, HTMLElement>();
+let _nextHTMLElement = 1n;
 
-/** Get a HtmlElement by handle, throwing if not found. */
-function getHtmlElement(handle: bigint): HtmlElement {
+/** Get a HTMLElement by handle, throwing if not found. */
+function getHTMLElement(handle: bigint): HTMLElement {
   const obj = _htmlElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlElement handle ${handle} not found`);
+    throw new Error(`HTMLElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-scroll-parent()` operation.
  */
 export function getScrollParent(self: bigint): bigint | undefined {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.scrollParent ?? undefined;
 }
 
@@ -4617,7 +4514,7 @@ export function getScrollParent(self: bigint): bigint | undefined {
  * `get-offset-parent()` operation.
  */
 export function getOffsetParent(self: bigint): bigint | undefined {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.offsetParent ?? undefined;
 }
 
@@ -4625,7 +4522,7 @@ export function getOffsetParent(self: bigint): bigint | undefined {
  * `get-offset-top()` operation.
  */
 export function HtmlElementGetOffsetTop(self: bigint): number {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.offsetTop;
 }
 
@@ -4633,7 +4530,7 @@ export function HtmlElementGetOffsetTop(self: bigint): number {
  * `get-offset-left()` operation.
  */
 export function HtmlElementGetOffsetLeft(self: bigint): number {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.offsetLeft;
 }
 
@@ -4641,7 +4538,7 @@ export function HtmlElementGetOffsetLeft(self: bigint): number {
  * `get-offset-width()` operation.
  */
 export function getOffsetWidth(self: bigint): number {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.offsetWidth;
 }
 
@@ -4649,7 +4546,7 @@ export function getOffsetWidth(self: bigint): number {
  * `get-offset-height()` operation.
  */
 export function getOffsetHeight(self: bigint): number {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.offsetHeight;
 }
 
@@ -4657,7 +4554,7 @@ export function getOffsetHeight(self: bigint): number {
  * `get-title()` operation.
  */
 export function HtmlElementGetTitle(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.title;
 }
 
@@ -4665,7 +4562,7 @@ export function HtmlElementGetTitle(self: bigint): string {
  * `set-title()` operation.
  */
 export function HtmlElementSetTitle(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.title = value;
 }
 
@@ -4673,7 +4570,7 @@ export function HtmlElementSetTitle(self: bigint, value: string): void {
  * `get-lang()` operation.
  */
 export function getLang(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.lang;
 }
 
@@ -4681,7 +4578,7 @@ export function getLang(self: bigint): string {
  * `set-lang()` operation.
  */
 export function setLang(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.lang = value;
 }
 
@@ -4689,7 +4586,7 @@ export function setLang(self: bigint, value: string): void {
  * `get-translate()` operation.
  */
 export function getTranslate(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.translate;
 }
 
@@ -4697,7 +4594,7 @@ export function getTranslate(self: bigint): boolean {
  * `set-translate()` operation.
  */
 export function setTranslate(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.translate = value;
 }
 
@@ -4705,7 +4602,7 @@ export function setTranslate(self: bigint, value: boolean): void {
  * `get-dir()` operation.
  */
 export function HtmlElementGetDir(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.dir;
 }
 
@@ -4713,7 +4610,7 @@ export function HtmlElementGetDir(self: bigint): string {
  * `set-dir()` operation.
  */
 export function HtmlElementSetDir(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.dir = value;
 }
 
@@ -4721,7 +4618,7 @@ export function HtmlElementSetDir(self: bigint, value: string): void {
  * `get-hidden()` operation.
  */
 export function HtmlElementGetHidden(self: bigint): boolean | undefined {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.hidden ?? undefined;
 }
 
@@ -4729,7 +4626,7 @@ export function HtmlElementGetHidden(self: bigint): boolean | undefined {
  * `set-hidden()` operation.
  */
 export function setHidden(self: bigint, value: boolean | undefined): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.hidden = value;
 }
 
@@ -4737,7 +4634,7 @@ export function setHidden(self: bigint, value: boolean | undefined): void {
  * `get-inert()` operation.
  */
 export function getInert(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.inert;
 }
 
@@ -4745,7 +4642,7 @@ export function getInert(self: bigint): boolean {
  * `set-inert()` operation.
  */
 export function setInert(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.inert = value;
 }
 
@@ -4753,7 +4650,7 @@ export function setInert(self: bigint, value: boolean): void {
  * `click()` operation.
  */
 export function click(self: bigint): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.click();
 }
 
@@ -4761,7 +4658,7 @@ export function click(self: bigint): void {
  * `get-access-key()` operation.
  */
 export function getAccessKey(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.accessKey;
 }
 
@@ -4769,7 +4666,7 @@ export function getAccessKey(self: bigint): string {
  * `set-access-key()` operation.
  */
 export function setAccessKey(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.accessKey = value;
 }
 
@@ -4777,7 +4674,7 @@ export function setAccessKey(self: bigint, value: string): void {
  * `get-access-key-label()` operation.
  */
 export function getAccessKeyLabel(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.accessKeyLabel;
 }
 
@@ -4785,7 +4682,7 @@ export function getAccessKeyLabel(self: bigint): string {
  * `get-draggable()` operation.
  */
 export function getDraggable(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.draggable;
 }
 
@@ -4793,7 +4690,7 @@ export function getDraggable(self: bigint): boolean {
  * `set-draggable()` operation.
  */
 export function setDraggable(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.draggable = value;
 }
 
@@ -4801,7 +4698,7 @@ export function setDraggable(self: bigint, value: boolean): void {
  * `get-spellcheck()` operation.
  */
 export function getSpellcheck(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.spellcheck;
 }
 
@@ -4809,7 +4706,7 @@ export function getSpellcheck(self: bigint): boolean {
  * `set-spellcheck()` operation.
  */
 export function setSpellcheck(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.spellcheck = value;
 }
 
@@ -4817,7 +4714,7 @@ export function setSpellcheck(self: bigint, value: boolean): void {
  * `get-writing-suggestions()` operation.
  */
 export function getWritingSuggestions(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.writingSuggestions;
 }
 
@@ -4825,7 +4722,7 @@ export function getWritingSuggestions(self: bigint): string {
  * `set-writing-suggestions()` operation.
  */
 export function setWritingSuggestions(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.writingSuggestions = value;
 }
 
@@ -4833,7 +4730,7 @@ export function setWritingSuggestions(self: bigint, value: string): void {
  * `get-autocapitalize()` operation.
  */
 export function getAutocapitalize(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.autocapitalize;
 }
 
@@ -4841,7 +4738,7 @@ export function getAutocapitalize(self: bigint): string {
  * `set-autocapitalize()` operation.
  */
 export function setAutocapitalize(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.autocapitalize = value;
 }
 
@@ -4849,7 +4746,7 @@ export function setAutocapitalize(self: bigint, value: string): void {
  * `get-autocorrect()` operation.
  */
 export function getAutocorrect(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.autocorrect;
 }
 
@@ -4857,7 +4754,7 @@ export function getAutocorrect(self: bigint): boolean {
  * `set-autocorrect()` operation.
  */
 export function setAutocorrect(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.autocorrect = value;
 }
 
@@ -4865,7 +4762,7 @@ export function setAutocorrect(self: bigint, value: boolean): void {
  * `get-inner-text()` operation.
  */
 export function getInnerText(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.innerText;
 }
 
@@ -4873,7 +4770,7 @@ export function getInnerText(self: bigint): string {
  * `set-inner-text()` operation.
  */
 export function setInnerText(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.innerText = value;
 }
 
@@ -4881,7 +4778,7 @@ export function setInnerText(self: bigint, value: string): void {
  * `get-outer-text()` operation.
  */
 export function getOuterText(self: bigint): string {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.outerText;
 }
 
@@ -4889,7 +4786,7 @@ export function getOuterText(self: bigint): string {
  * `set-outer-text()` operation.
  */
 export function setOuterText(self: bigint, value: string): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.outerText = value;
 }
 
@@ -4897,7 +4794,7 @@ export function setOuterText(self: bigint, value: string): void {
  * `attach-internals()` operation.
  */
 export function attachInternals(self: bigint): bigint {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.attachInternals();
 }
 
@@ -4905,7 +4802,7 @@ export function attachInternals(self: bigint): bigint {
  * `show-popover()` operation.
  */
 export function showPopover(self: bigint, options: bigint | undefined): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.showPopover(options);
 }
 
@@ -4913,7 +4810,7 @@ export function showPopover(self: bigint, options: bigint | undefined): void {
  * `hide-popover()` operation.
  */
 export function hidePopover(self: bigint): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.hidePopover();
 }
 
@@ -4921,7 +4818,7 @@ export function hidePopover(self: bigint): void {
  * `toggle-popover()` operation.
  */
 export function togglePopover(self: bigint, options: bigint | undefined): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.togglePopover(options);
 }
 
@@ -4929,7 +4826,7 @@ export function togglePopover(self: bigint, options: bigint | undefined): boolea
  * `get-popover()` operation.
  */
 export function getPopover(self: bigint): string | undefined {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.popover ?? undefined;
 }
 
@@ -4937,7 +4834,7 @@ export function getPopover(self: bigint): string | undefined {
  * `set-popover()` operation.
  */
 export function setPopover(self: bigint, value: string | undefined): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.popover = value;
 }
 
@@ -4945,7 +4842,7 @@ export function setPopover(self: bigint, value: string | undefined): void {
  * `get-heading-offset()` operation.
  */
 export function getHeadingOffset(self: bigint): number {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.headingOffset;
 }
 
@@ -4953,7 +4850,7 @@ export function getHeadingOffset(self: bigint): number {
  * `set-heading-offset()` operation.
  */
 export function setHeadingOffset(self: bigint, value: number): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.headingOffset = value;
 }
 
@@ -4961,7 +4858,7 @@ export function setHeadingOffset(self: bigint, value: number): void {
  * `get-heading-reset()` operation.
  */
 export function getHeadingReset(self: bigint): boolean {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   return obj.headingReset;
 }
 
@@ -4969,7 +4866,7 @@ export function getHeadingReset(self: bigint): boolean {
  * `set-heading-reset()` operation.
  */
 export function setHeadingReset(self: bigint, value: boolean): void {
-  const obj = getHtmlElement(self);
+  const obj = getHTMLElement(self);
   obj.headingReset = value;
 }
 
@@ -4980,24 +4877,24 @@ export function setHeadingReset(self: bigint, value: boolean): void {
 /** Type alias */
 export type HtmlImageElementHandle = bigint;
 
-/** Handle table for HtmlImageElement instances */
-const _htmlImageElementhandles = new Map<bigint, HtmlImageElement>();
-let _nextHtmlImageElement = 1n;
+/** Handle table for HTMLImageElement instances */
+const _htmlImageElementhandles = new Map<bigint, HTMLImageElement>();
+let _nextHTMLImageElement = 1n;
 
-/** Get a HtmlImageElement by handle, throwing if not found. */
-function getHtmlImageElement(handle: bigint): HtmlImageElement {
+/** Get a HTMLImageElement by handle, throwing if not found. */
+function getHTMLImageElement(handle: bigint): HTMLImageElement {
   const obj = _htmlImageElementhandles.get(handle);
   if (!obj) {
-    throw new Error(`HtmlImageElement handle ${handle} not found`);
+    throw new Error(`HTMLImageElement handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-x()` operation.
  */
 export function HtmlImageElementGetX(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.x;
 }
 
@@ -5005,7 +4902,7 @@ export function HtmlImageElementGetX(self: bigint): number {
  * `get-y()` operation.
  */
 export function HtmlImageElementGetY(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.y;
 }
 
@@ -5013,7 +4910,7 @@ export function HtmlImageElementGetY(self: bigint): number {
  * `get-alt()` operation.
  */
 export function getAlt(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.alt;
 }
 
@@ -5021,7 +4918,7 @@ export function getAlt(self: bigint): string {
  * `set-alt()` operation.
  */
 export function setAlt(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.alt = value;
 }
 
@@ -5029,7 +4926,7 @@ export function setAlt(self: bigint, value: string): void {
  * `get-src()` operation.
  */
 export function HtmlImageElementGetSrc(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.src;
 }
 
@@ -5037,7 +4934,7 @@ export function HtmlImageElementGetSrc(self: bigint): string {
  * `set-src()` operation.
  */
 export function HtmlImageElementSetSrc(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.src = value;
 }
 
@@ -5045,7 +4942,7 @@ export function HtmlImageElementSetSrc(self: bigint, value: string): void {
  * `get-srcset()` operation.
  */
 export function getSrcset(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.srcset;
 }
 
@@ -5053,7 +4950,7 @@ export function getSrcset(self: bigint): string {
  * `set-srcset()` operation.
  */
 export function setSrcset(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.srcset = value;
 }
 
@@ -5061,7 +4958,7 @@ export function setSrcset(self: bigint, value: string): void {
  * `get-sizes()` operation.
  */
 export function getSizes(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.sizes;
 }
 
@@ -5069,7 +4966,7 @@ export function getSizes(self: bigint): string {
  * `set-sizes()` operation.
  */
 export function setSizes(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.sizes = value;
 }
 
@@ -5077,7 +4974,7 @@ export function setSizes(self: bigint, value: string): void {
  * `get-cross-origin()` operation.
  */
 export function getCrossOrigin(self: bigint): string | undefined {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.crossOrigin ?? undefined;
 }
 
@@ -5085,7 +4982,7 @@ export function getCrossOrigin(self: bigint): string | undefined {
  * `set-cross-origin()` operation.
  */
 export function setCrossOrigin(self: bigint, value: string | undefined): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.crossOrigin = value;
 }
 
@@ -5093,7 +4990,7 @@ export function setCrossOrigin(self: bigint, value: string | undefined): void {
  * `get-use-map()` operation.
  */
 export function getUseMap(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.useMap;
 }
 
@@ -5101,7 +4998,7 @@ export function getUseMap(self: bigint): string {
  * `set-use-map()` operation.
  */
 export function setUseMap(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.useMap = value;
 }
 
@@ -5109,7 +5006,7 @@ export function setUseMap(self: bigint, value: string): void {
  * `get-is-map()` operation.
  */
 export function getIsMap(self: bigint): boolean {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.isMap;
 }
 
@@ -5117,7 +5014,7 @@ export function getIsMap(self: bigint): boolean {
  * `set-is-map()` operation.
  */
 export function setIsMap(self: bigint, value: boolean): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.isMap = value;
 }
 
@@ -5125,7 +5022,7 @@ export function setIsMap(self: bigint, value: boolean): void {
  * `get-width()` operation.
  */
 export function HtmlImageElementGetWidth(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.width;
 }
 
@@ -5133,7 +5030,7 @@ export function HtmlImageElementGetWidth(self: bigint): number {
  * `set-width()` operation.
  */
 export function setWidth(self: bigint, value: number): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.width = value;
 }
 
@@ -5141,7 +5038,7 @@ export function setWidth(self: bigint, value: number): void {
  * `get-height()` operation.
  */
 export function HtmlImageElementGetHeight(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.height;
 }
 
@@ -5149,7 +5046,7 @@ export function HtmlImageElementGetHeight(self: bigint): number {
  * `set-height()` operation.
  */
 export function setHeight(self: bigint, value: number): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.height = value;
 }
 
@@ -5157,7 +5054,7 @@ export function setHeight(self: bigint, value: number): void {
  * `get-natural-width()` operation.
  */
 export function getNaturalWidth(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.naturalWidth;
 }
 
@@ -5165,7 +5062,7 @@ export function getNaturalWidth(self: bigint): number {
  * `get-natural-height()` operation.
  */
 export function getNaturalHeight(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.naturalHeight;
 }
 
@@ -5173,7 +5070,7 @@ export function getNaturalHeight(self: bigint): number {
  * `get-complete()` operation.
  */
 export function getComplete(self: bigint): boolean {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.complete;
 }
 
@@ -5181,7 +5078,7 @@ export function getComplete(self: bigint): boolean {
  * `get-current-src()` operation.
  */
 export function getCurrentSrc(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.currentSrc;
 }
 
@@ -5189,7 +5086,7 @@ export function getCurrentSrc(self: bigint): string {
  * `get-referrer-policy()` operation.
  */
 export function getReferrerPolicy(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.referrerPolicy;
 }
 
@@ -5197,7 +5094,7 @@ export function getReferrerPolicy(self: bigint): string {
  * `set-referrer-policy()` operation.
  */
 export function setReferrerPolicy(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.referrerPolicy = value;
 }
 
@@ -5205,7 +5102,7 @@ export function setReferrerPolicy(self: bigint, value: string): void {
  * `get-decoding()` operation.
  */
 export function getDecoding(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.decoding;
 }
 
@@ -5213,7 +5110,7 @@ export function getDecoding(self: bigint): string {
  * `set-decoding()` operation.
  */
 export function setDecoding(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.decoding = value;
 }
 
@@ -5221,7 +5118,7 @@ export function setDecoding(self: bigint, value: string): void {
  * `get-loading()` operation.
  */
 export function getLoading(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.loading;
 }
 
@@ -5229,7 +5126,7 @@ export function getLoading(self: bigint): string {
  * `set-loading()` operation.
  */
 export function setLoading(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.loading = value;
 }
 
@@ -5237,7 +5134,7 @@ export function setLoading(self: bigint, value: string): void {
  * `get-fetch-priority()` operation.
  */
 export function getFetchPriority(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.fetchPriority;
 }
 
@@ -5245,7 +5142,7 @@ export function getFetchPriority(self: bigint): string {
  * `set-fetch-priority()` operation.
  */
 export function setFetchPriority(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.fetchPriority = value;
 }
 
@@ -5253,7 +5150,7 @@ export function setFetchPriority(self: bigint, value: string): void {
  * `decode()` operation.
  */
 export function decode(self: bigint): bigint {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.decode();
 }
 
@@ -5261,7 +5158,7 @@ export function decode(self: bigint): bigint {
  * `get-name()` operation.
  */
 export function HtmlImageElementGetName(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.name;
 }
 
@@ -5269,7 +5166,7 @@ export function HtmlImageElementGetName(self: bigint): string {
  * `set-name()` operation.
  */
 export function HtmlImageElementSetName(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.name = value;
 }
 
@@ -5277,7 +5174,7 @@ export function HtmlImageElementSetName(self: bigint, value: string): void {
  * `get-lowsrc()` operation.
  */
 export function getLowsrc(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.lowsrc;
 }
 
@@ -5285,7 +5182,7 @@ export function getLowsrc(self: bigint): string {
  * `set-lowsrc()` operation.
  */
 export function setLowsrc(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.lowsrc = value;
 }
 
@@ -5293,7 +5190,7 @@ export function setLowsrc(self: bigint, value: string): void {
  * `get-align()` operation.
  */
 export function getAlign(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.align;
 }
 
@@ -5301,7 +5198,7 @@ export function getAlign(self: bigint): string {
  * `set-align()` operation.
  */
 export function setAlign(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.align = value;
 }
 
@@ -5309,7 +5206,7 @@ export function setAlign(self: bigint, value: string): void {
  * `get-hspace()` operation.
  */
 export function getHspace(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.hspace;
 }
 
@@ -5317,7 +5214,7 @@ export function getHspace(self: bigint): number {
  * `set-hspace()` operation.
  */
 export function setHspace(self: bigint, value: number): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.hspace = value;
 }
 
@@ -5325,7 +5222,7 @@ export function setHspace(self: bigint, value: number): void {
  * `get-vspace()` operation.
  */
 export function getVspace(self: bigint): number {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.vspace;
 }
 
@@ -5333,7 +5230,7 @@ export function getVspace(self: bigint): number {
  * `set-vspace()` operation.
  */
 export function setVspace(self: bigint, value: number): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.vspace = value;
 }
 
@@ -5341,7 +5238,7 @@ export function setVspace(self: bigint, value: number): void {
  * `get-long-desc()` operation.
  */
 export function getLongDesc(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.longDesc;
 }
 
@@ -5349,7 +5246,7 @@ export function getLongDesc(self: bigint): string {
  * `set-long-desc()` operation.
  */
 export function setLongDesc(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.longDesc = value;
 }
 
@@ -5357,7 +5254,7 @@ export function setLongDesc(self: bigint, value: string): void {
  * `get-border()` operation.
  */
 export function getBorder(self: bigint): string {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   return obj.border;
 }
 
@@ -5365,7 +5262,7 @@ export function getBorder(self: bigint): string {
  * `set-border()` operation.
  */
 export function setBorder(self: bigint, value: string): void {
-  const obj = getHtmlImageElement(self);
+  const obj = getHTMLImageElement(self);
   obj.border = value;
 }
 
@@ -5385,7 +5282,7 @@ function registerRange(obj: Range): bigint {
   const handle = _nextRange++;
   _rangeHandles.set(handle, obj);
   return handle;
-
+}
 
 /** Get a Range by handle, throwing if not found. */
 function getRange(handle: bigint): Range {
@@ -5394,7 +5291,7 @@ function getRange(handle: bigint): Range {
     throw new Error(`Range handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-client-rects()` operation.
@@ -5606,7 +5503,7 @@ function getMouseEvent(handle: bigint): MouseEvent {
     throw new Error(`MouseEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-screen-x()` operation.
@@ -5794,7 +5691,7 @@ function getGeometryUtils(handle: bigint): GeometryUtils {
     throw new Error(`GeometryUtils handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-box-quads()` operation.
@@ -5846,7 +5743,7 @@ function getVisualViewport(handle: bigint): VisualViewport {
     throw new Error(`VisualViewport handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-offset-left()` operation.
@@ -5970,7 +5867,7 @@ function getMediaList(handle: bigint): MediaList {
     throw new Error(`MediaList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-media-text()` operation.
@@ -6038,7 +5935,7 @@ function getStyleSheet(handle: bigint): StyleSheet {
     throw new Error(`StyleSheet handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -6111,24 +6008,24 @@ export function setDisabled(self: bigint, value: boolean): void {
 /** Type alias */
 export type CssStyleSheetHandle = bigint;
 
-/** Handle table for CssStyleSheet instances */
-const _cssStyleSheethandles = new Map<bigint, CssStyleSheet>();
-let _nextCssStyleSheet = 1n;
+/** Handle table for CSSStyleSheet instances */
+const _cssStyleSheethandles = new Map<bigint, CSSStyleSheet>();
+let _nextCSSStyleSheet = 1n;
 
-/** Get a CssStyleSheet by handle, throwing if not found. */
-function getCssStyleSheet(handle: bigint): CssStyleSheet {
+/** Get a CSSStyleSheet by handle, throwing if not found. */
+function getCSSStyleSheet(handle: bigint): CSSStyleSheet {
   const obj = _cssStyleSheethandles.get(handle);
   if (!obj) {
-    throw new Error(`CssStyleSheet handle ${handle} not found`);
+    throw new Error(`CSSStyleSheet handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-owner-rule()` operation.
  */
 export function getOwnerRule(self: bigint): bigint | undefined {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.ownerRule ?? undefined;
 }
 
@@ -6136,7 +6033,7 @@ export function getOwnerRule(self: bigint): bigint | undefined {
  * `get-css-rules()` operation.
  */
 export function CssStyleSheetGetCssRules(self: bigint): bigint {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.cssRules;
 }
 
@@ -6144,7 +6041,7 @@ export function CssStyleSheetGetCssRules(self: bigint): bigint {
  * `insert-rule()` operation.
  */
 export function CssStyleSheetInsertRule(self: bigint, rule: string, index: number | undefined): number {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.insertRule(rule, index);
 }
 
@@ -6152,7 +6049,7 @@ export function CssStyleSheetInsertRule(self: bigint, rule: string, index: numbe
  * `delete-rule()` operation.
  */
 export function CssStyleSheetDeleteRule(self: bigint, index: number): void {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   obj.deleteRule(index);
 }
 
@@ -6160,7 +6057,7 @@ export function CssStyleSheetDeleteRule(self: bigint, index: number): void {
  * `replace()` operation.
  */
 export function replace(self: bigint, text: string): bigint {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.replace(text);
 }
 
@@ -6168,7 +6065,7 @@ export function replace(self: bigint, text: string): bigint {
  * `replace-sync()` operation.
  */
 export function replaceSync(self: bigint, text: string): void {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   obj.replaceSync(text);
 }
 
@@ -6176,7 +6073,7 @@ export function replaceSync(self: bigint, text: string): void {
  * `get-rules()` operation.
  */
 export function getRules(self: bigint): bigint {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.rules;
 }
 
@@ -6184,7 +6081,7 @@ export function getRules(self: bigint): bigint {
  * `add-rule()` operation.
  */
 export function addRule(self: bigint, selector: string | undefined, style: string | undefined, index: number | undefined): number {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   return obj.addRule(selector, style, index);
 }
 
@@ -6192,7 +6089,7 @@ export function addRule(self: bigint, selector: string | undefined, style: strin
  * `remove-rule()` operation.
  */
 export function removeRule(self: bigint, index: number | undefined): void {
-  const obj = getCssStyleSheet(self);
+  const obj = getCSSStyleSheet(self);
   obj.removeRule(index);
 }
 
@@ -6214,7 +6111,7 @@ function getStyleSheetList(handle: bigint): StyleSheetList {
     throw new Error(`StyleSheetList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `item()` operation.
@@ -6250,7 +6147,7 @@ function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
     throw new Error(`DocumentOrShadowRoot handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-style-sheets()` operation.
@@ -6318,7 +6215,7 @@ function getLinkStyle(handle: bigint): LinkStyle {
     throw new Error(`LinkStyle handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-sheet()` operation.
@@ -6335,24 +6232,24 @@ export function getSheet(self: bigint): bigint | undefined {
 /** Type alias */
 export type CssRuleListHandle = bigint;
 
-/** Handle table for CssRuleList instances */
-const _cssRuleListhandles = new Map<bigint, CssRuleList>();
-let _nextCssRuleList = 1n;
+/** Handle table for CSSRuleList instances */
+const _cssRuleListhandles = new Map<bigint, CSSRuleList>();
+let _nextCSSRuleList = 1n;
 
-/** Get a CssRuleList by handle, throwing if not found. */
-function getCssRuleList(handle: bigint): CssRuleList {
+/** Get a CSSRuleList by handle, throwing if not found. */
+function getCSSRuleList(handle: bigint): CSSRuleList {
   const obj = _cssRuleListhandles.get(handle);
   if (!obj) {
-    throw new Error(`CssRuleList handle ${handle} not found`);
+    throw new Error(`CSSRuleList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `item()` operation.
  */
 export function CssRuleListItem(self: bigint, index: number): bigint | undefined {
-  const obj = getCssRuleList(self);
+  const obj = getCSSRuleList(self);
   return obj.item(index) ?? undefined;
 }
 
@@ -6360,7 +6257,7 @@ export function CssRuleListItem(self: bigint, index: number): bigint | undefined
  * `get-length()` operation.
  */
 export function CssRuleListGetLength(self: bigint): number {
-  const obj = getCssRuleList(self);
+  const obj = getCSSRuleList(self);
   return obj.length;
 }
 
@@ -6371,24 +6268,24 @@ export function CssRuleListGetLength(self: bigint): number {
 /** Type alias */
 export type CssStyleRuleHandle = bigint;
 
-/** Handle table for CssStyleRule instances */
-const _cssStyleRulehandles = new Map<bigint, CssStyleRule>();
-let _nextCssStyleRule = 1n;
+/** Handle table for CSSStyleRule instances */
+const _cssStyleRulehandles = new Map<bigint, CSSStyleRule>();
+let _nextCSSStyleRule = 1n;
 
-/** Get a CssStyleRule by handle, throwing if not found. */
-function getCssStyleRule(handle: bigint): CssStyleRule {
+/** Get a CSSStyleRule by handle, throwing if not found. */
+function getCSSStyleRule(handle: bigint): CSSStyleRule {
   const obj = _cssStyleRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssStyleRule handle ${handle} not found`);
+    throw new Error(`CSSStyleRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-selector-text()` operation.
  */
 export function CssStyleRuleGetSelectorText(self: bigint): string {
-  const obj = getCssStyleRule(self);
+  const obj = getCSSStyleRule(self);
   return obj.selectorText;
 }
 
@@ -6396,7 +6293,7 @@ export function CssStyleRuleGetSelectorText(self: bigint): string {
  * `set-selector-text()` operation.
  */
 export function CssStyleRuleSetSelectorText(self: bigint, value: string): void {
-  const obj = getCssStyleRule(self);
+  const obj = getCSSStyleRule(self);
   obj.selectorText = value;
 }
 
@@ -6404,7 +6301,7 @@ export function CssStyleRuleSetSelectorText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssStyleRuleGetStyle(self: bigint): bigint {
-  const obj = getCssStyleRule(self);
+  const obj = getCSSStyleRule(self);
   return obj.style;
 }
 
@@ -6415,24 +6312,24 @@ export function CssStyleRuleGetStyle(self: bigint): bigint {
 /** Type alias */
 export type CssImportRuleHandle = bigint;
 
-/** Handle table for CssImportRule instances */
-const _cssImportRulehandles = new Map<bigint, CssImportRule>();
-let _nextCssImportRule = 1n;
+/** Handle table for CSSImportRule instances */
+const _cssImportRulehandles = new Map<bigint, CSSImportRule>();
+let _nextCSSImportRule = 1n;
 
-/** Get a CssImportRule by handle, throwing if not found. */
-function getCssImportRule(handle: bigint): CssImportRule {
+/** Get a CSSImportRule by handle, throwing if not found. */
+function getCSSImportRule(handle: bigint): CSSImportRule {
   const obj = _cssImportRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssImportRule handle ${handle} not found`);
+    throw new Error(`CSSImportRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-href()` operation.
  */
 export function CssImportRuleGetHref(self: bigint): string {
-  const obj = getCssImportRule(self);
+  const obj = getCSSImportRule(self);
   return obj.href;
 }
 
@@ -6440,7 +6337,7 @@ export function CssImportRuleGetHref(self: bigint): string {
  * `get-media()` operation.
  */
 export function CssImportRuleGetMedia(self: bigint): bigint {
-  const obj = getCssImportRule(self);
+  const obj = getCSSImportRule(self);
   return obj.media;
 }
 
@@ -6448,7 +6345,7 @@ export function CssImportRuleGetMedia(self: bigint): bigint {
  * `get-style-sheet()` operation.
  */
 export function getStyleSheet(self: bigint): bigint | undefined {
-  const obj = getCssImportRule(self);
+  const obj = getCSSImportRule(self);
   return obj.styleSheet ?? undefined;
 }
 
@@ -6456,7 +6353,7 @@ export function getStyleSheet(self: bigint): bigint | undefined {
  * `get-layer-name()` operation.
  */
 export function getLayerName(self: bigint): string | undefined {
-  const obj = getCssImportRule(self);
+  const obj = getCSSImportRule(self);
   return obj.layerName ?? undefined;
 }
 
@@ -6464,7 +6361,7 @@ export function getLayerName(self: bigint): string | undefined {
  * `get-supports-text()` operation.
  */
 export function getSupportsText(self: bigint): string | undefined {
-  const obj = getCssImportRule(self);
+  const obj = getCSSImportRule(self);
   return obj.supportsText ?? undefined;
 }
 
@@ -6475,24 +6372,24 @@ export function getSupportsText(self: bigint): string | undefined {
 /** Type alias */
 export type CssGroupingRuleHandle = bigint;
 
-/** Handle table for CssGroupingRule instances */
-const _cssGroupingRulehandles = new Map<bigint, CssGroupingRule>();
-let _nextCssGroupingRule = 1n;
+/** Handle table for CSSGroupingRule instances */
+const _cssGroupingRulehandles = new Map<bigint, CSSGroupingRule>();
+let _nextCSSGroupingRule = 1n;
 
-/** Get a CssGroupingRule by handle, throwing if not found. */
-function getCssGroupingRule(handle: bigint): CssGroupingRule {
+/** Get a CSSGroupingRule by handle, throwing if not found. */
+function getCSSGroupingRule(handle: bigint): CSSGroupingRule {
   const obj = _cssGroupingRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssGroupingRule handle ${handle} not found`);
+    throw new Error(`CSSGroupingRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-css-rules()` operation.
  */
 export function CssGroupingRuleGetCssRules(self: bigint): bigint {
-  const obj = getCssGroupingRule(self);
+  const obj = getCSSGroupingRule(self);
   return obj.cssRules;
 }
 
@@ -6500,7 +6397,7 @@ export function CssGroupingRuleGetCssRules(self: bigint): bigint {
  * `insert-rule()` operation.
  */
 export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: number | undefined): number {
-  const obj = getCssGroupingRule(self);
+  const obj = getCSSGroupingRule(self);
   return obj.insertRule(rule, index);
 }
 
@@ -6508,7 +6405,7 @@ export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: num
  * `delete-rule()` operation.
  */
 export function CssGroupingRuleDeleteRule(self: bigint, index: number): void {
-  const obj = getCssGroupingRule(self);
+  const obj = getCSSGroupingRule(self);
   obj.deleteRule(index);
 }
 
@@ -6519,24 +6416,24 @@ export function CssGroupingRuleDeleteRule(self: bigint, index: number): void {
 /** Type alias */
 export type CssPageDescriptorsHandle = bigint;
 
-/** Handle table for CssPageDescriptors instances */
-const _cssPageDescriptorshandles = new Map<bigint, CssPageDescriptors>();
-let _nextCssPageDescriptors = 1n;
+/** Handle table for CSSPageDescriptors instances */
+const _cssPageDescriptorshandles = new Map<bigint, CSSPageDescriptors>();
+let _nextCSSPageDescriptors = 1n;
 
-/** Get a CssPageDescriptors by handle, throwing if not found. */
-function getCssPageDescriptors(handle: bigint): CssPageDescriptors {
+/** Get a CSSPageDescriptors by handle, throwing if not found. */
+function getCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
   const obj = _cssPageDescriptorshandles.get(handle);
   if (!obj) {
-    throw new Error(`CssPageDescriptors handle ${handle} not found`);
+    throw new Error(`CSSPageDescriptors handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-margin()` operation.
  */
 export function getMargin(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.margin;
 }
 
@@ -6544,7 +6441,7 @@ export function getMargin(self: bigint): string {
  * `set-margin()` operation.
  */
 export function setMargin(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.margin = value;
 }
 
@@ -6552,7 +6449,7 @@ export function setMargin(self: bigint, value: string): void {
  * `get-margin-top()` operation.
  */
 export function getMarginTop(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.marginTop;
 }
 
@@ -6560,7 +6457,7 @@ export function getMarginTop(self: bigint): string {
  * `set-margin-top()` operation.
  */
 export function setMarginTop(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.marginTop = value;
 }
 
@@ -6568,7 +6465,7 @@ export function setMarginTop(self: bigint, value: string): void {
  * `get-margin-right()` operation.
  */
 export function getMarginRight(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.marginRight;
 }
 
@@ -6576,7 +6473,7 @@ export function getMarginRight(self: bigint): string {
  * `set-margin-right()` operation.
  */
 export function setMarginRight(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.marginRight = value;
 }
 
@@ -6584,7 +6481,7 @@ export function setMarginRight(self: bigint, value: string): void {
  * `get-margin-bottom()` operation.
  */
 export function getMarginBottom(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.marginBottom;
 }
 
@@ -6592,7 +6489,7 @@ export function getMarginBottom(self: bigint): string {
  * `set-margin-bottom()` operation.
  */
 export function setMarginBottom(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.marginBottom = value;
 }
 
@@ -6600,7 +6497,7 @@ export function setMarginBottom(self: bigint, value: string): void {
  * `get-margin-left()` operation.
  */
 export function getMarginLeft(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.marginLeft;
 }
 
@@ -6608,7 +6505,7 @@ export function getMarginLeft(self: bigint): string {
  * `set-margin-left()` operation.
  */
 export function setMarginLeft(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.marginLeft = value;
 }
 
@@ -6616,7 +6513,7 @@ export function setMarginLeft(self: bigint, value: string): void {
  * `get-size()` operation.
  */
 export function getSize(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.size;
 }
 
@@ -6624,7 +6521,7 @@ export function getSize(self: bigint): string {
  * `set-size()` operation.
  */
 export function setSize(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.size = value;
 }
 
@@ -6632,7 +6529,7 @@ export function setSize(self: bigint, value: string): void {
  * `get-page-orientation()` operation.
  */
 export function getPageOrientation(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.pageOrientation;
 }
 
@@ -6640,7 +6537,7 @@ export function getPageOrientation(self: bigint): string {
  * `set-page-orientation()` operation.
  */
 export function setPageOrientation(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.pageOrientation = value;
 }
 
@@ -6648,7 +6545,7 @@ export function setPageOrientation(self: bigint, value: string): void {
  * `get-marks()` operation.
  */
 export function getMarks(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.marks;
 }
 
@@ -6656,7 +6553,7 @@ export function getMarks(self: bigint): string {
  * `set-marks()` operation.
  */
 export function setMarks(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.marks = value;
 }
 
@@ -6664,7 +6561,7 @@ export function setMarks(self: bigint, value: string): void {
  * `get-bleed()` operation.
  */
 export function getBleed(self: bigint): string {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   return obj.bleed;
 }
 
@@ -6672,7 +6569,7 @@ export function getBleed(self: bigint): string {
  * `set-bleed()` operation.
  */
 export function setBleed(self: bigint, value: string): void {
-  const obj = getCssPageDescriptors(self);
+  const obj = getCSSPageDescriptors(self);
   obj.bleed = value;
 }
 
@@ -6683,24 +6580,24 @@ export function setBleed(self: bigint, value: string): void {
 /** Type alias */
 export type CssPageRuleHandle = bigint;
 
-/** Handle table for CssPageRule instances */
-const _cssPageRulehandles = new Map<bigint, CssPageRule>();
-let _nextCssPageRule = 1n;
+/** Handle table for CSSPageRule instances */
+const _cssPageRulehandles = new Map<bigint, CSSPageRule>();
+let _nextCSSPageRule = 1n;
 
-/** Get a CssPageRule by handle, throwing if not found. */
-function getCssPageRule(handle: bigint): CssPageRule {
+/** Get a CSSPageRule by handle, throwing if not found. */
+function getCSSPageRule(handle: bigint): CSSPageRule {
   const obj = _cssPageRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssPageRule handle ${handle} not found`);
+    throw new Error(`CSSPageRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-selector-text()` operation.
  */
 export function CssPageRuleGetSelectorText(self: bigint): string {
-  const obj = getCssPageRule(self);
+  const obj = getCSSPageRule(self);
   return obj.selectorText;
 }
 
@@ -6708,7 +6605,7 @@ export function CssPageRuleGetSelectorText(self: bigint): string {
  * `set-selector-text()` operation.
  */
 export function CssPageRuleSetSelectorText(self: bigint, value: string): void {
-  const obj = getCssPageRule(self);
+  const obj = getCSSPageRule(self);
   obj.selectorText = value;
 }
 
@@ -6716,7 +6613,7 @@ export function CssPageRuleSetSelectorText(self: bigint, value: string): void {
  * `get-style()` operation.
  */
 export function CssPageRuleGetStyle(self: bigint): bigint {
-  const obj = getCssPageRule(self);
+  const obj = getCSSPageRule(self);
   return obj.style;
 }
 
@@ -6727,24 +6624,24 @@ export function CssPageRuleGetStyle(self: bigint): bigint {
 /** Type alias */
 export type CssMarginRuleHandle = bigint;
 
-/** Handle table for CssMarginRule instances */
-const _cssMarginRulehandles = new Map<bigint, CssMarginRule>();
-let _nextCssMarginRule = 1n;
+/** Handle table for CSSMarginRule instances */
+const _cssMarginRulehandles = new Map<bigint, CSSMarginRule>();
+let _nextCSSMarginRule = 1n;
 
-/** Get a CssMarginRule by handle, throwing if not found. */
-function getCssMarginRule(handle: bigint): CssMarginRule {
+/** Get a CSSMarginRule by handle, throwing if not found. */
+function getCSSMarginRule(handle: bigint): CSSMarginRule {
   const obj = _cssMarginRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssMarginRule handle ${handle} not found`);
+    throw new Error(`CSSMarginRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
  */
 export function CssMarginRuleGetName(self: bigint): string {
-  const obj = getCssMarginRule(self);
+  const obj = getCSSMarginRule(self);
   return obj.name;
 }
 
@@ -6752,7 +6649,7 @@ export function CssMarginRuleGetName(self: bigint): string {
  * `get-style()` operation.
  */
 export function CssMarginRuleGetStyle(self: bigint): bigint {
-  const obj = getCssMarginRule(self);
+  const obj = getCSSMarginRule(self);
   return obj.style;
 }
 
@@ -6763,24 +6660,24 @@ export function CssMarginRuleGetStyle(self: bigint): bigint {
 /** Type alias */
 export type CssNamespaceRuleHandle = bigint;
 
-/** Handle table for CssNamespaceRule instances */
-const _cssNamespaceRulehandles = new Map<bigint, CssNamespaceRule>();
-let _nextCssNamespaceRule = 1n;
+/** Handle table for CSSNamespaceRule instances */
+const _cssNamespaceRulehandles = new Map<bigint, CSSNamespaceRule>();
+let _nextCSSNamespaceRule = 1n;
 
-/** Get a CssNamespaceRule by handle, throwing if not found. */
-function getCssNamespaceRule(handle: bigint): CssNamespaceRule {
+/** Get a CSSNamespaceRule by handle, throwing if not found. */
+function getCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
   const obj = _cssNamespaceRulehandles.get(handle);
   if (!obj) {
-    throw new Error(`CssNamespaceRule handle ${handle} not found`);
+    throw new Error(`CSSNamespaceRule handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-namespace-uri()` operation.
  */
 export function CssNamespaceRuleGetNamespaceUri(self: bigint): string {
-  const obj = getCssNamespaceRule(self);
+  const obj = getCSSNamespaceRule(self);
   return obj.namespaceUri;
 }
 
@@ -6788,7 +6685,7 @@ export function CssNamespaceRuleGetNamespaceUri(self: bigint): string {
  * `get-prefix()` operation.
  */
 export function CssNamespaceRuleGetPrefix(self: bigint): string {
-  const obj = getCssNamespaceRule(self);
+  const obj = getCSSNamespaceRule(self);
   return obj.prefix;
 }
 
@@ -6799,24 +6696,24 @@ export function CssNamespaceRuleGetPrefix(self: bigint): string {
 /** Type alias */
 export type CssStyleDeclarationHandle = bigint;
 
-/** Handle table for CssStyleDeclaration instances */
-const _cssStyleDeclarationhandles = new Map<bigint, CssStyleDeclaration>();
-let _nextCssStyleDeclaration = 1n;
+/** Handle table for CSSStyleDeclaration instances */
+const _cssStyleDeclarationhandles = new Map<bigint, CSSStyleDeclaration>();
+let _nextCSSStyleDeclaration = 1n;
 
-/** Get a CssStyleDeclaration by handle, throwing if not found. */
-function getCssStyleDeclaration(handle: bigint): CssStyleDeclaration {
+/** Get a CSSStyleDeclaration by handle, throwing if not found. */
+function getCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   const obj = _cssStyleDeclarationhandles.get(handle);
   if (!obj) {
-    throw new Error(`CssStyleDeclaration handle ${handle} not found`);
+    throw new Error(`CSSStyleDeclaration handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-css-text()` operation.
  */
 export function CssStyleDeclarationGetCssText(self: bigint): string {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.cssText;
 }
 
@@ -6824,7 +6721,7 @@ export function CssStyleDeclarationGetCssText(self: bigint): string {
  * `set-css-text()` operation.
  */
 export function CssStyleDeclarationSetCssText(self: bigint, value: string): void {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   obj.cssText = value;
 }
 
@@ -6832,7 +6729,7 @@ export function CssStyleDeclarationSetCssText(self: bigint, value: string): void
  * `get-length()` operation.
  */
 export function CssStyleDeclarationGetLength(self: bigint): number {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.length;
 }
 
@@ -6840,7 +6737,7 @@ export function CssStyleDeclarationGetLength(self: bigint): number {
  * `item()` operation.
  */
 export function CssStyleDeclarationItem(self: bigint, index: number): string {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.item(index);
 }
 
@@ -6848,7 +6745,7 @@ export function CssStyleDeclarationItem(self: bigint, index: number): string {
  * `get-property-value()` operation.
  */
 export function getPropertyValue(self: bigint, property: string): string {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.propertyValue;
 }
 
@@ -6856,7 +6753,7 @@ export function getPropertyValue(self: bigint, property: string): string {
  * `get-property-priority()` operation.
  */
 export function getPropertyPriority(self: bigint, property: string): string {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.propertyPriority;
 }
 
@@ -6864,7 +6761,7 @@ export function getPropertyPriority(self: bigint, property: string): string {
  * `set-property()` operation.
  */
 export function setProperty(self: bigint, property: string, value: string, priority: string | undefined): void {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   obj.property = priority;
 }
 
@@ -6872,7 +6769,7 @@ export function setProperty(self: bigint, property: string, value: string, prior
  * `remove-property()` operation.
  */
 export function removeProperty(self: bigint, property: string): string {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.removeProperty(property);
 }
 
@@ -6880,7 +6777,7 @@ export function removeProperty(self: bigint, property: string): string {
  * `get-parent-rule()` operation.
  */
 export function CssStyleDeclarationGetParentRule(self: bigint): bigint | undefined {
-  const obj = getCssStyleDeclaration(self);
+  const obj = getCSSStyleDeclaration(self);
   return obj.parentRule ?? undefined;
 }
 
@@ -6891,24 +6788,24 @@ export function CssStyleDeclarationGetParentRule(self: bigint): bigint | undefin
 /** Type alias */
 export type CssStylePropertiesHandle = bigint;
 
-/** Handle table for CssStyleProperties instances */
-const _cssStylePropertieshandles = new Map<bigint, CssStyleProperties>();
-let _nextCssStyleProperties = 1n;
+/** Handle table for CSSStyleProperties instances */
+const _cssStylePropertieshandles = new Map<bigint, CSSStyleProperties>();
+let _nextCSSStyleProperties = 1n;
 
-/** Get a CssStyleProperties by handle, throwing if not found. */
-function getCssStyleProperties(handle: bigint): CssStyleProperties {
+/** Get a CSSStyleProperties by handle, throwing if not found. */
+function getCSSStyleProperties(handle: bigint): CSSStyleProperties {
   const obj = _cssStylePropertieshandles.get(handle);
   if (!obj) {
-    throw new Error(`CssStyleProperties handle ${handle} not found`);
+    throw new Error(`CSSStyleProperties handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-css-float()` operation.
  */
 export function getCssFloat(self: bigint): string {
-  const obj = getCssStyleProperties(self);
+  const obj = getCSSStyleProperties(self);
   return obj.cssFloat;
 }
 
@@ -6916,7 +6813,7 @@ export function getCssFloat(self: bigint): string {
  * `set-css-float()` operation.
  */
 export function setCssFloat(self: bigint, value: string): void {
-  const obj = getCssStyleProperties(self);
+  const obj = getCSSStyleProperties(self);
   obj.cssFloat = value;
 }
 
@@ -6927,24 +6824,24 @@ export function setCssFloat(self: bigint, value: string): void {
 /** Type alias */
 export type ElementCssInlineStyleHandle = bigint;
 
-/** Handle table for ElementCssInlineStyle instances */
-const _elementCssInlineStylehandles = new Map<bigint, ElementCssInlineStyle>();
-let _nextElementCssInlineStyle = 1n;
+/** Handle table for ElementCSSInlineStyle instances */
+const _elementCssInlineStylehandles = new Map<bigint, ElementCSSInlineStyle>();
+let _nextElementCSSInlineStyle = 1n;
 
-/** Get a ElementCssInlineStyle by handle, throwing if not found. */
-function getElementCssInlineStyle(handle: bigint): ElementCssInlineStyle {
+/** Get a ElementCSSInlineStyle by handle, throwing if not found. */
+function getElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
   const obj = _elementCssInlineStylehandles.get(handle);
   if (!obj) {
-    throw new Error(`ElementCssInlineStyle handle ${handle} not found`);
+    throw new Error(`ElementCSSInlineStyle handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-style()` operation.
  */
 export function ElementCssInlineStyleGetStyle(self: bigint): bigint {
-  const obj = getElementCssInlineStyle(self);
+  const obj = getElementCSSInlineStyle(self);
   return obj.style;
 }
 
@@ -7266,7 +7163,6 @@ export default {
   getStatus,
   setStatus,
   WindowClose,
-  WindowPollClose,
   getClosed,
   stop,
   focus,
@@ -7373,9 +7269,7 @@ export default {
   getCurrentScript,
   DocumentOpen,
   DocumentClose,
-  DocumentPollClose,
   write,
-  pollWrite,
   writeln,
   getDefaultView,
   hasFocus,
