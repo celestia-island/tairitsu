@@ -168,7 +168,7 @@ class CodeGenerator:
                     lines.append("  if (obj === undefined) {")
                     lines.append(f"    throw new Error(`{wit_type} handle ${{handle}} not found`);")
                     lines.append("  }")
-                    lines.append("  return obj;")
+                    lines.append("  return obj!;")
                     lines.append("}")
                     lines.append("")
                     lines.append(f"/** Lookup an optional {wit_type} value by handle. */")
@@ -227,7 +227,7 @@ class CodeGenerator:
                         lines.append("  if (!obj) {")
                         lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
                         lines.append("  }")
-                        lines.append("  return obj;")
+                        lines.append("  return obj!;")
                         lines.append("}")
                         generated_helpers.add(iface.handle_pascal)
 
@@ -445,7 +445,26 @@ class CodeGenerator:
         needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
         
-        if func.params:
+        if func.is_setter_but_method:
+            args = self._get_converted_browser_args(func, iface, skip_self=True)
+            if func.return_is_void:
+                lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
+            elif func.return_is_optional:
+                result = f"{obj_ref_with_assertion}.{func.browser_method}({args})"
+                key = (iface.wit_name, kebab_to_camel(func.wit_name))
+                if key in HANDLE_RETURNING_FUNCTIONS:
+                    target_iface = HANDLE_RETURNING_FUNCTIONS[key]
+                    target_var, target_pascal = self._get_handle_info(target_iface)
+                    lines.append(f"  const result = {result};")
+                    lines.append(f"  if (result === null) return undefined;")
+                    lines.append(f"  const handle = _next{target_pascal}++;")
+                    lines.append(f"  _{target_var}.set(handle, result);")
+                    lines.append("  return handle;")
+                else:
+                    lines.append(f"  return {result} ?? undefined;")
+            else:
+                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
+        elif func.params:
             value_param = func.params[-1].name
             value_expr = value_param
             

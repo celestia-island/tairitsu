@@ -26,6 +26,7 @@ from .config import (
     ASYNC_PATTERNS,
     ASYNC_METHOD_OVERRIDES,
     GETTER_BUT_ACTUALLY_METHOD,
+    SETTER_BUT_ACTUALLY_METHOD,
     ENUM_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
     BOOLEAN_TO_BIGINT_PROPERTIES,
@@ -144,6 +145,7 @@ class WitParser:
         is_setter = wit_name.startswith("set-")
         is_async = self._is_async_function(wit_name, func, interface.name)
         is_getter_but_method = is_getter and wit_name[4:] in GETTER_BUT_ACTUALLY_METHOD
+        is_setter_but_method = is_setter and wit_name[4:] in SETTER_BUT_ACTUALLY_METHOD
         
         has_self_param = any(p.name == "self" for p in func.params)
         first_param_is_handle = (
@@ -221,6 +223,7 @@ class WitParser:
             is_setter=is_setter,
             is_static=is_static,
             is_getter_but_method=is_getter_but_method,
+            is_setter_but_method=is_setter_but_method,
             return_is_void=return_is_void,
             return_is_optional=return_is_optional,
             return_is_handle=return_is_handle,

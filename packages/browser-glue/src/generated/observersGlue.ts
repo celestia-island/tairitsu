@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -204,6 +204,10 @@ export type Exception = any;
 // Synthetic handle tables for primitive/utility types
 // ---------------------------------------------------------------------------
 
+/** Handle table for dom-rect-read-only values */
+const _domRectReadOnlyHandles = new Map<bigint, DOMRectReadOnly>();
+let _nextDomRectReadOnly = 1n;
+
 /** Handle table for element values */
 const _elementHandles = new Map<bigint, Element>();
 let _nextElement = 1n;
@@ -216,13 +220,30 @@ let _nextNumberList = 1n;
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
 
+/** Lookup a dom-rect-read-only value by handle. */
+function lookupDomRectReadOnly(handle: bigint): DOMRectReadOnly {
+  const obj = _domRectReadOnlyHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`dom-rect-read-only handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional dom-rect-read-only value by handle. */
+function lookupOptionDomRectReadOnly(handle: bigint | undefined): DOMRectReadOnly | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _domRectReadOnlyHandles.get(handle);
+}
+
 /** Lookup a element value by handle. */
 function lookupElement(handle: bigint): Element {
   const obj = _elementHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`element handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional element value by handle. */
@@ -239,7 +260,7 @@ function lookupNumberList(handle: bigint): number[] {
   if (obj === undefined) {
     throw new Error(`number-list handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional number-list value by handle. */
@@ -267,7 +288,7 @@ function lookupIntersectionObserver(handle: bigint): IntersectionObserver {
   if (!obj) {
     throw new Error(`IntersectionObserver handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-root()` operation.
@@ -318,7 +339,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): boolean {
+export function getTrackVisibility(self: bigint): (bigint)[] {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -326,7 +347,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: bigint): void {
+export function IntersectionObserverObserve(self: bigint, target: string): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(target);
 }
@@ -334,7 +355,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
+export function IntersectionObserverUnobserve(self: bigint, target: boolean): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(target);
 }
@@ -350,7 +371,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): number {
+export function takeRecords(self: bigint): (bigint)[] {
   const obj = lookupIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -372,7 +393,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
   if (!obj) {
     throw new Error(`IntersectionObserverEntry handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-time()` operation.
@@ -387,7 +408,10 @@ export function getTime(self: bigint): number {
  */
 export function getRootBounds(self: bigint): bigint | undefined {
   const obj = lookupIntersectionObserverEntry(self);
-  return obj.rootBounds ?? undefined;
+  const result = obj.rootBounds;
+  const handle = _nextDomRectReadOnly++;
+  _domRectReadOnlyHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -395,7 +419,10 @@ export function getRootBounds(self: bigint): bigint | undefined {
  */
 export function getBoundingClientRect(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
-  return obj.getBoundingClientRect();
+  const result = obj.getBoundingClientRect();
+  const handle = _nextDomRectReadOnly++;
+  _domRectReadOnlyHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -403,7 +430,10 @@ export function getBoundingClientRect(self: bigint): bigint {
  */
 export function getIntersectionRect(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
-  return obj.intersectionRect;
+  const result = obj.intersectionRect;
+  const handle = _nextDomRectReadOnly++;
+  _domRectReadOnlyHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -433,7 +463,7 @@ export function getIntersectionRatio(self: bigint): number {
 /**
  * `get-target()` operation.
  */
-export function IntersectionObserverEntryGetTarget(self: bigint): boolean {
+export function IntersectionObserverEntryGetTarget(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.target;
 }
@@ -455,12 +485,12 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
   if (!obj) {
     throw new Error(`ResizeObserver handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: number | undefined, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: EventHandlerRecord | undefined): void {
   const obj = lookupResizeObserver(self);
   obj.observe(target, options);
 }
@@ -468,7 +498,7 @@ export function ResizeObserverObserve(self: bigint, target: number | undefined, 
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: bigint): void {
+export function ResizeObserverUnobserve(self: bigint, target: boolean): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -498,7 +528,7 @@ function lookupResizeObserverEntry(handle: bigint): ResizeObserverEntry {
   if (!obj) {
     throw new Error(`ResizeObserverEntry handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-target()` operation.
@@ -513,13 +543,16 @@ export function ResizeObserverEntryGetTarget(self: bigint): bigint {
  */
 export function getContentRect(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
-  return obj.contentRect;
+  const result = obj.contentRect;
+  const handle = _nextDomRectReadOnly++;
+  _domRectReadOnlyHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-border-box-size()` operation.
  */
-export function getBorderBoxSize(self: bigint): bigint {
+export function getBorderBoxSize(self: bigint): (bigint)[] {
   const obj = lookupResizeObserverEntry(self);
   return obj.borderBoxSize;
 }
@@ -527,7 +560,7 @@ export function getBorderBoxSize(self: bigint): bigint {
 /**
  * `get-content-box-size()` operation.
  */
-export function getContentBoxSize(self: bigint): string {
+export function getContentBoxSize(self: bigint): (number)[] {
   const obj = lookupResizeObserverEntry(self);
   return obj.contentBoxSize;
 }
@@ -557,12 +590,12 @@ function lookupResizeObserverSize(handle: bigint): ResizeObserverSize {
   if (!obj) {
     throw new Error(`ResizeObserverSize handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): string {
+export function getInlineSize(self: bigint): number {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }

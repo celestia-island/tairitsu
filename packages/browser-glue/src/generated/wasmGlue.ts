@@ -38,16 +38,16 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 export type VoidFunctionRecord = VoidFunction;
 
 /** Type definition for GeometryUtils */
-export type GeometryUtils = unknown;
+export type GeometryUtils = any;
 
 /** Type definition for HyperlinkElementUtils */
-export type HyperlinkElementUtils = unknown;
+export type HyperlinkElementUtils = any;
 
 /** Type definition for PopoverTargetAttributes */
-export type PopoverTargetAttributes = unknown;
+export type PopoverTargetAttributes = any;
 
 /** Type definition for CSSPageDescriptors */
-export type CSSPageDescriptors = unknown;
+export type CSSPageDescriptors = any;
 
 /** Type definition for CSSMarginRule */
 export type CSSMarginRule = CSSRule;
@@ -59,22 +59,22 @@ export type CSSStyleProperties = Record<string, string>;
 export type Origin = string;
 
 /** Type definition for FetchLaterResult */
-export type FetchLaterResult = unknown;
+export type FetchLaterResult = any;
 
 /** Type definition for NotRestoredReasonDetails */
-export type NotRestoredReasonDetails = unknown;
+export type NotRestoredReasonDetails = any;
 
 /** Type definition for NotRestoredReasons */
-export type NotRestoredReasons = unknown;
+export type NotRestoredReasons = any;
 
 /** Type definition for DeviceChangeEvent */
 export type DeviceChangeEvent = Event;
 
 /** Type definition for ChapterInformation */
-export type ChapterInformation = unknown;
+export type ChapterInformation = any;
 
 /** Type definition for PerformanceTimingConfidence */
-export type PerformanceTimingConfidence = unknown;
+export type PerformanceTimingConfidence = any;
 
 /** Type definition for NotificationEvent */
 export type NotificationEvent = Event;
@@ -89,22 +89,22 @@ export type CommandEvent = Event;
 export type CloseWatcher = EventTarget;
 
 /** Type definition for CaptureController */
-export type CaptureController = unknown;
+export type CaptureController = any;
 
 /** Type definition for Navigation */
-export type Navigation = unknown;
+export type Navigation = any;
 
 /** Type definition for NavigationTransition */
-export type NavigationTransition = unknown;
+export type NavigationTransition = any;
 
 /** Type definition for NavigateEvent */
 export type NavigateEvent = Event;
 
 /** Type definition for NavigationPrecommitController */
-export type NavigationPrecommitController = unknown;
+export type NavigationPrecommitController = any;
 
 /** Type definition for NavigationDestination */
-export type NavigationDestination = unknown;
+export type NavigationDestination = any;
 
 /** Type definition for NavigationCurrentEntryChangeEvent */
 export type NavigationCurrentEntryChangeEvent = Event;
@@ -231,7 +231,7 @@ function lookupAny(handle: bigint): any {
   if (obj === undefined) {
     throw new Error(`any handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 
 /** Lookup an optional any value by handle. */
@@ -259,26 +259,26 @@ function lookupModule(handle: bigint): WebAssembly.Module {
   if (!obj) {
     throw new Error(`WebAssembly.Module handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: number): (bigint)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): boolean {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (number)[] {
+export function customSections(moduleObject: boolean, sectionName: string): (Uint8Array)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -299,7 +299,7 @@ function lookupInstance(handle: bigint): Instance {
   if (!obj) {
     throw new Error(`Instance handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-exports()` operation.
@@ -329,12 +329,12 @@ function lookupMemory(handle: bigint): Memory {
   if (!obj) {
     throw new Error(`Memory handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): string {
+export function MemoryGrow(self: bigint, delta: bigint): bigint {
   const obj = lookupMemory(self);
   return BigInt((obj as any).grow(delta));
 }
@@ -380,7 +380,7 @@ function lookupTable(handle: bigint): Table {
   if (!obj) {
     throw new Error(`Table handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `grow()` operation.
@@ -431,7 +431,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: boolean | undefined): void {
+export function _set(self: bigint, index: bigint | undefined, value: string | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -461,7 +461,7 @@ function lookupGlobal(handle: bigint): Global {
   if (!obj) {
     throw new Error(`Global handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `value-of()` operation.
@@ -485,7 +485,7 @@ export function getValue(self: bigint): bigint {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: EventHandlerRecord): void {
+export function setValue(self: bigint, value: string): void {
   const obj = lookupGlobal(self);
   (obj as any).value = value;
 }
@@ -507,12 +507,12 @@ function lookupException(handle: bigint): Exception {
   if (!obj) {
     throw new Error(`Exception handle ${handle} not found`);
   }
-  return obj;
+  return obj!;
 }
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: string): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -520,7 +520,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: string): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: string): boolean {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }
