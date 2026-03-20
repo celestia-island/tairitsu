@@ -294,6 +294,7 @@ BROWSER_API_NAME_MAPPINGS = {
     "attribute-node": "getAttributeNode",
     "attribute-node-ns": "getAttributeNodeNS",
     "attribute-names": "getAttributeNames",
+    "get-transform": "getTransform",
     "set-attribute": "setAttribute",
     "set-attribute-ns": "setAttributeNS",
     "remove-attribute-ns": "removeAttributeNS",
@@ -1698,6 +1699,259 @@ HANDLE_RETURNING_FUNCTIONS = {
     # IntersectionObserverEntry
     ("intersection-observer-entry", "getTarget"): "element",
     ("intersection-observer-entry", "target"): "element",
+    # HTMLMediaElement methods
+    ("html-media-element", "addTextTrack"): "text-track",
+    # HTMLTableElement methods
+    ("html-table-element", "createCaption"): "html-table-caption-element",
+    ("html-table-element", "createTHead"): "html-table-section-element",
+    ("html-table-element", "createTFoot"): "html-table-section-element",
+    ("html-table-element", "createTBody"): "html-table-section-element",
+    ("html-table-element", "insertRow"): "html-table-row-element",
+    # HTMLTableSectionElement methods
+    ("html-table-section-element", "insertRow"): "html-table-row-element",
+    # HTMLTableRowElement methods
+    ("html-table-row-element", "insertCell"): "html-table-cell-element",
+    # HTMLFieldSetElement/HTMLObjectElement validity
+    ("html-field-set-element", "getValidity"): "validity-state",
+    ("html-object-element", "getValidity"): "validity-state",
+    # HTMLElement validity (for elements with validation)
+    ("html-element", "getValidity"): "validity-state",
+    # HTMLFormElement methods
+    ("html-form-element", "getElements"): "html-collection",
+    # HTMLInputElement validity
+    ("html-input-element", "getValidity"): "validity-state",
+    # HTMLTextAreaElement validity
+    ("html-text-area-element", "getValidity"): "validity-state",
+    # HTMLSelectElement validity
+    ("html-select-element", "getValidity"): "validity-state",
+    # HTMLButtonElement validity
+    ("html-button-element", "getValidity"): "validity-state",
+    # HTMLOutputElement validity
+    ("html-output-element", "getValidity"): "validity-state",
+    # ElementInternals
+    ("html-element", "getInternals"): "element-internals",
+    ("element-internals", "getValidity"): "validity-state",
+    ("element-internals", "getForm"): "html-form-element",
+    ("element-internals", "getCustomStateSet"): "custom-state-set",
+    # Canvas methods - using mixin interface names from WIT
+    ("html-canvas-element", "transferControlToOffscreen"): "offscreencanvas",
+    ("canvas-fill-stroke-styles", "createLinearGradient"): "canvas-gradient",
+    ("canvas-fill-stroke-styles", "createRadialGradient"): "canvas-gradient",
+    ("canvas-fill-stroke-styles", "createConicGradient"): "canvas-gradient",
+    ("canvas-fill-stroke-styles", "createPattern"): "canvas-pattern",
+    ("canvas-image-data", "createImageData"): "image-data",
+    ("canvas-image-data", "getImageData"): "image-data",
+    ("canvas-text", "measureText"): "text-metrics",
+    ("canvas-path-drawing-styles", "getLineDash"): "float-32-list",
+    ("canvas-transform", "getTransform"): "dom-matrix",
+    ("canvas-state", "getCanvas"): "any",
+    ("offscreen-canvas-fill-stroke-styles", "createLinearGradient"): "canvas-gradient",
+    ("offscreen-canvas-fill-stroke-styles", "createRadialGradient"): "canvas-gradient",
+    ("offscreen-canvas-fill-stroke-styles", "createConicGradient"): "canvas-gradient",
+    ("offscreen-canvas-fill-stroke-styles", "createPattern"): "canvas-pattern",
+    ("offscreen-canvas-image-data", "createImageData"): "image-data",
+    ("offscreen-canvas-image-data", "getImageData"): "image-data",
+    ("offscreen-canvas-text", "measureText"): "text-metrics",
+    ("offscreen-canvas-path-drawing-styles", "getLineDash"): "float-32-list",
+    ("offscreen-canvas-transform", "getTransform"): "dom-matrix",
+    ("offscreen-canvas-state", "getCanvas"): "any",
+    # Canvas settings
+    ("canvas-settings", "getContextAttributes"): "any",
+    # OffscreenCanvas methods
+    ("offscreencanvas", "getContext"): "any",
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # ResizeObserverEntry
+    ("resize-observer-entry", "getContentRect"): "dom-rect-read-only",
+    ("resize-observer-entry", "getBorderBoxSize"): "resize-observer-size-list",
+    ("resize-observer-entry", "getContentBoxSize"): "resize-observer-size-list",
+    ("resize-observer-entry", "getDevicePixelContentBoxSize"): "resize-observer-size",
+    # Navigation
+    ("navigation", "getCurrentEntry"): "navigation-history-entry",
+    ("navigation", "getActivation"): "navigation-activation",
+    ("navigation", "getTransition"): "view-transition",
+    # Navigator plugins
+    ("navigator", "getPlugins"): "plugin-array",
+    ("navigator", "getMimeTypes"): "mime-type-array",
+    # PluginArray/MimeTypeArray
+    ("plugin-array", "item"): "plugin",
+    ("plugin-array", "namedItem"): "plugin",
+    ("mime-type-array", "item"): "mime-type",
+    ("mime-type-array", "namedItem"): "mime-type",
+    # Plugin
+    ("plugin", "item"): "mime-type",
+    ("plugin", "namedItem"): "mime-type",
+    # MessageChannel
+    ("message-channel", "getPort1"): "message-port",
+    ("message-channel", "getPort2"): "message-port",
+    # Window storage
+    ("window", "getLocalStorage"): "storage",
+    ("window", "getSessionStorage"): "storage",
+    # Document/Window for iframes
+    ("htmli-frame-element", "getContentDocument"): "document",
+    ("htmli-frame-element", "getContentWindow"): "window",
+    ("html-object-element", "getContentDocument"): "document",
+    ("html-object-element", "getContentWindow"): "window",
+    # HTMLSelectElement
+    ("html-select-element", "getOptions"): "html-options-collection",
+    ("html-select-element", "getSelectedOptions"): "html-collection",
+    # HTMLOptionsCollection
+    ("html-options-collection", "item"): "html-option-element",
+    ("html-options-collection", "namedItem"): "html-option-element",
+    # HTMLFormElement
+    ("html-form-element", "item"): "element",
+    ("html-form-element", "namedItem"): "element",
+    # DataTransfer
+    ("data-transfer", "getItems"): "data-transfer-item-list",
+    ("data-transfer", "getFiles"): "file-list",
+    ("data-transfer-item-list", "item"): "data-transfer-item",
+    # FileList
+    ("file-list", "item"): "file",
+    # MediaStream methods
+    ("media-stream", "getTrackById"): "media-stream-track",
+    ("media-stream-track", "getCapabilities"): "any",
+    ("media-stream-track", "getConstraints"): "any",
+    ("media-stream-track", "getSettings"): "any",
+    # MediaRecorder
+    ("media-recorder", "getStream"): "media-stream",
+    # Blob
+    ("blob", "slice"): "blob",
+    # SpeechRecognition
+    ("speech-recognition-result-list", "item"): "speech-recognition-result",
+    ("speech-recognition-result", "item"): "speech-recognition-alternative",
+    # SpeechSynthesis
+    ("speech-synthesis", "getVoices"): "speech-synthesis-voice-list",
+    ("speech-synthesis-voice-list", "item"): "speech-synthesis-voice",
+    # ServiceWorker
+    ("service-worker-container", "getController"): "service-worker",
+    ("service-worker-container", "getReady"): "service-worker-registration",
+    ("service-worker-registration", "getActive"): "service-worker",
+    ("service-worker-registration", "getWaiting"): "service-worker",
+    ("service-worker-registration", "getInstalling"): "service-worker",
+    ("service-worker-registration", "getNavigationPreload"): "navigation-preload-manager",
+    # Performance
+    ("performance", "getTiming"): "performance-timing",
+    ("performance", "getNavigation"): "performance-navigation",
+    ("performance", "mark"): "performance-mark",
+    ("performance", "measure"): "performance-measure",
+    # StorageManager
+    ("navigator", "getStorage"): "storage-manager",
+    # RTC
+    ("rtc-rtp-sender", "getTrack"): "media-stream-track",
+    ("rtc-rtp-sender", "getTransport"): "rtc-dtls-transport",
+    ("rtc-rtp-receiver", "getTrack"): "media-stream-track",
+    ("rtc-rtp-receiver", "getTransport"): "rtc-dtls-transport",
+    ("rtc-rtp-transceiver", "getSender"): "rtc-rtp-sender",
+    ("rtc-rtp-transceiver", "getReceiver"): "rtc-rtp-receiver",
+    ("rtc-data-channel", "getTransport"): "rtc-sctp-transport",
+    # PaymentRequest
+    ("payment-response", "getShippingAddress"): "payment-address",
+    # FormData
+    ("html-form-element", "getFormData"): "form-data",
+    ("form-data-event", "getFormData"): "form-data",
+    # IntersectionObserver
+    ("intersection-observer", "getRoot"): "element",
+    # ResizeObserverEntry target
+    ("resize-observer-entry", "getTarget"): "element",
+    # ResizeObserverSize
+    ("resize-observer-entry", "getContentBoxSize"): "resize-observer-size-list",
+    ("resize-observer-entry", "getBorderBoxSize"): "resize-observer-size-list",
+    # DocumentFragment for templates
+    ("html-template-element", "getContent"): "document-fragment",
+    # ValidityState for HTML elements
+    ("html-element", "getValidity"): "validity-state",
+    # FormDataEvent
+    ("form-data-event", "getFormData"): "form-data",
+    # SubmitEvent
+    ("submit-event", "getSubmitter"): "html-element",
+    # Navigator
+    ("navigator", "getPlugins"): "plugin-array",
+    ("navigator", "getMimeTypes"): "mime-type-array",
+    # PluginArray/MimeTypeArray
+    ("plugin-array", "item"): "plugin",
+    ("plugin-array", "namedItem"): "plugin",
+    ("mime-type-array", "item"): "mime-type",
+    ("mime-type-array", "namedItem"): "mime-type",
+    # Plugin
+    ("plugin", "item"): "mime-type",
+    ("plugin", "namedItem"): "mime-type",
+    # Navigator storage
+    ("navigator", "getStorage"): "storage-manager",
+    # MessageChannel
+    ("message-channel", "getPort1"): "message-port",
+    ("message-channel", "getPort2"): "message-port",
+    # Window storage
+    ("window", "getLocalStorage"): "storage",
+    ("window", "getSessionStorage"): "storage",
+    # MessageEvent source
+    ("message-event", "getSource"): "message-event-source",
+    # Canvas/ImageBitmap
+    ("image-bitmap-context", "getCanvas"): "any",
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # CustomStateSet
+    ("element-internals", "getCustomStateSet"): "custom-state-set",
+    # Navigation
+    ("navigation", "getCurrentEntry"): "navigation-history-entry",
+    ("navigation", "getActivation"): "navigation-activation",
+    ("navigation", "getTransition"): "view-transition",
+    # MediaStream
+    ("media-stream", "getTrackById"): "media-stream-track",
+    ("media-stream", "getTracks"): "any",
+    ("media-stream", "getAudioTracks"): "any",
+    ("media-stream", "getVideoTracks"): "any",
+    # MediaStreamTrack
+    ("media-stream-track", "getCapabilities"): "any",
+    ("media-stream-track", "getConstraints"): "any",
+    ("media-stream-track", "getSettings"): "any",
+    # MediaDevices
+    ("media-devices", "enumerateDevices"): "any",
+    # MediaRecorder
+    ("media-recorder", "getStream"): "media-stream",
+    # Blob
+    ("blob", "slice"): "blob",
+    # SpeechRecognition
+    ("speech-recognition-result-list", "item"): "speech-recognition-result",
+    ("speech-recognition-result", "item"): "speech-recognition-alternative",
+    # SpeechSynthesis
+    ("speech-synthesis", "getVoices"): "speech-synthesis-voice-list",
+    ("speech-synthesis-voice-list", "item"): "speech-synthesis-voice",
+    # ServiceWorker
+    ("service-worker-container", "getController"): "service-worker",
+    ("service-worker-container", "getReady"): "service-worker-registration",
+    ("service-worker-registration", "getActive"): "service-worker",
+    ("service-worker-registration", "getWaiting"): "service-worker",
+    ("service-worker-registration", "getInstalling"): "service-worker",
+    ("service-worker-registration", "getNavigationPreload"): "navigation-preload-manager",
+    # Performance
+    ("performance", "getTiming"): "performance-timing",
+    ("performance", "getNavigation"): "performance-navigation",
+    ("performance", "mark"): "performance-mark",
+    ("performance", "measure"): "performance-measure",
+    ("performance", "getEntries"): "any",
+    ("performance", "getEntriesByType"): "any",
+    ("performance", "getEntriesByName"): "any",
+    # RTC
+    ("rtc-peer-connection", "getLocalDescription"): "any",
+    ("rtc-peer-connection", "getRemoteDescription"): "any",
+    ("rtc-peer-connection", "getCurrentLocalDescription"): "any",
+    ("rtc-peer-connection", "getPendingLocalDescription"): "any",
+    ("rtc-peer-connection", "getCurrentRemoteDescription"): "any",
+    ("rtc-peer-connection", "getPendingRemoteDescription"): "any",
+    ("rtc-peer-connection", "getConfiguration"): "any",
+    ("rtc-rtp-sender", "getTrack"): "media-stream-track",
+    ("rtc-rtp-sender", "getTransport"): "rtc-dtls-transport",
+    ("rtc-rtp-sender", "getParameters"): "any",
+    ("rtc-rtp-receiver", "getTrack"): "media-stream-track",
+    ("rtc-rtp-receiver", "getTransport"): "rtc-dtls-transport",
+    ("rtc-rtp-receiver", "getParameters"): "any",
+    ("rtc-rtp-receiver", "getSynchronizationSources"): "any",
+    ("rtc-rtp-transceiver", "getSender"): "rtc-rtp-sender",
+    ("rtc-rtp-transceiver", "getReceiver"): "rtc-rtp-receiver",
+    ("rtc-data-channel", "getTransport"): "rtc-sctp-transport",
+    ("rtc-ice-transport", "getComponent"): "any",
+    ("rtc-dtls-transport", "getTransport"): "rtc-ice-transport",
+    ("rtc-sctp-transport", "getTransport"): "rtc-ice-transport",
+    # PaymentRequest
+    ("payment-response", "getShippingAddress"): "payment-address",
 }
 
 
@@ -2567,14 +2821,14 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("subtle-crypto", "derive-bits", "base-key"): "handle:crypto-key",
     ("subtle-crypto", "import-key", "format"): "enum:KeyFormat",
     ("subtle-crypto", "import-key", "algorithm"): "dictionary:AlgorithmIdentifier",
-    ("subtle-crypto", "import-key", "key-data"): "buffer-source",
+    ("subtle-crypto", "import-key", "key-data"): "any",
     ("subtle-crypto", "export-key", "format"): "enum:KeyFormat",
     ("subtle-crypto", "export-key", "key"): "handle:crypto-key",
     ("subtle-crypto", "wrap-key", "format"): "enum:KeyFormat",
     ("subtle-crypto", "wrap-key", "key"): "handle:crypto-key",
     ("subtle-crypto", "wrap-key", "wrapping-key"): "handle:crypto-key",
     ("subtle-crypto", "unwrap-key", "format"): "enum:KeyFormat",
-    ("subtle-crypto", "unwrap-key", "wrapped-key"): "buffer-source",
+    ("subtle-crypto", "unwrap-key", "wrapped-key"): "any",
     ("subtle-crypto", "unwrap-key", "unwrapping-key"): "handle:crypto-key",
     ("subtle-crypto", "unwrap-key", "algorithm"): "dictionary:AlgorithmIdentifier",
     # MediaQueryList addListener/removeListener - callback is event handler
@@ -2699,6 +2953,291 @@ PARAMETER_BIGINT_TO_NUMBER = {
     # Workers methods
     ("dedicated-worker-global-scope", "get"): True,
     ("worker-global-scope", "get"): True,
+    # WebGL buffer-source parameters (bigint → AllowSharedBufferSource)
+    ("web-gl-rendering-context-overloads", "buffer-sub-data", "data"): "buffer-source",
+    ("web-gl2-rendering-context-overloads", "buffer-sub-data", "src-data"): "buffer-source",
+    # WebGL nullable-buffer-source parameters (Uint8Array | undefined → ArrayBufferView | null)
+    ("web-gl-rendering-context-overloads", "read-pixels", "pixels"): "nullable-buffer-source",
+    ("web-gl-rendering-context-overloads", "tex-image2-d", "pixels"): "nullable-buffer-source",
+    ("web-gl-rendering-context-overloads", "tex-sub-image2-d", "pixels"): "nullable-buffer-source",
+    # WebGL2 object type casts (WebGLObject | null → specific type | null)
+    ("web-gl2-rendering-context-base", "bind-transform-feedback", "tf"): "any",
+    ("web-gl2-rendering-context-base", "is-vertex-array", "vertex-array"): "any",
+    # SubtleCrypto buffer-source parameters (already typed arrays, just need cast)
+    ("subtle-crypto", "encrypt", "data"): "any",
+    ("subtle-crypto", "decrypt", "data"): "any",
+    ("subtle-crypto", "sign", "data"): "any",
+    ("subtle-crypto", "verify", "signature"): "any",
+    ("subtle-crypto", "verify", "data"): "any",
+    ("subtle-crypto", "digest", "data"): "any",
+    ("subtle-crypto", "derive-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "derive-bits", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "wrap-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "unwrap-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    # DOM methods - handle lookups
+    ("event-target", "dispatch-event", "event"): "handle:event",
+    ("range", "compare-boundary-points", "source-range"): "handle:range",
+    ("range", "select-node", "node"): "handle:node",
+    ("range", "select-node-contents", "node"): "handle:node",
+    ("range", "is-point-in-range", "node"): "handle:node",
+    ("range", "compare-point", "node"): "handle:node",
+    ("range", "intersects-node", "node"): "handle:node",
+    ("range", "insert-node", "node"): "handle:node",
+    ("range", "surround-contents", "new-parent"): "handle:node",
+    ("range", "set-start", "node"): "handle:node",
+    ("range", "set-end", "node"): "handle:node",
+    ("range", "set-start-before", "node"): "handle:node",
+    ("range", "set-start-after", "node"): "handle:node",
+    ("range", "set-end-before", "node"): "handle:node",
+    ("range", "set-end-after", "node"): "handle:node",
+    ("range", "clone-range", "range"): "handle:range",
+    # NodeIterator and TreeWalker
+    ("node-iterator", "next-node"): True,
+    ("node-iterator", "previous-node"): True,
+    ("tree-walker", "next-node"): True,
+    ("tree-walker", "previous-node"): True,
+    # Node methods - handle lookups
+    ("node", "append-child", "node"): "handle:node",
+    ("node", "insert-before", "node"): "handle:node",
+    ("node", "replace-child", "node"): "handle:node",
+    ("node", "remove-child", "node"): "handle:node",
+    ("node", "clone-node", "deep"): "boolean",
+    ("node", "is-default-namespace", "namespace"): "string",
+    ("node", "lookup-namespace-uri", "prefix"): "string",
+    ("node", "lookup-prefix", "namespace"): "string",
+    ("node", "normalize"): True,
+    ("node", "contains", "other"): "optional-handle:node",
+    ("node", "compare-document-position", "other"): "handle:node",
+    ("node", "is-equal-node", "other"): "optional-handle:node",
+    # Element methods - handle lookups and enum conversions
+    ("element", "get-attribute-node", "qualified-name"): "string",
+    ("element", "set-attribute-node", "attr"): "handle:attr",
+    ("element", "set-attribute-node-ns", "attr"): "handle:attr",
+    ("element", "remove-attribute-node", "attr"): "handle:attr",
+    ("element", "insert-adjacent-element", "where"): "enum:InsertPosition",
+    ("element", "insert-adjacent-text", "where"): "enum:InsertPosition",
+    ("element", "insert-adjacent-html", "position"): "enum:InsertPosition",
+    ("element", "insert-adjacent-element", "element"): "handle:element",
+    ("element", "set-pointer-capture", "pointer-id"): True,
+    ("element", "release-pointer-capture", "pointer-id"): True,
+    ("element", "has-pointer-capture", "pointer-id"): True,
+    ("element", "scroll", "options"): "any",
+    ("element", "scroll-to", "options"): "any",
+    ("element", "scroll-by", "options"): "any",
+    ("element", "check-visibility", "options"): "any",
+    ("element", "request-pointer-lock"): True,
+    ("element", "request-fullscreen", "options"): "any",
+    # ParentNode methods - variadic (string | Node)[] - use any for complex union spread
+    ("parent-node", "prepend", "nodes"): "any",
+    ("parent-node", "append", "nodes"): "any",
+    ("parent-node", "replace-children", "nodes"): "any",
+    # Document methods - node lookups and string conversions
+    ("document", "import-node", "node"): "handle:node",
+    ("document", "adopt-node", "node"): "handle:node",
+    ("document", "create-event", "event-interface-name"): "string",
+    ("document", "create-range", "range"): "handle:range",
+    ("document", "get-elements-by-tag-name-ns", "namespace-uri"): "string",
+    ("document", "get-elements-by-tag-name-ns", "local-name"): "string",
+    ("document", "create-element-ns", "namespace"): "string",
+    ("document", "create-element-ns", "qualified-name"): "string",
+    ("document", "create-attribute-ns", "namespace"): "string",
+    ("document", "create-attribute-ns", "qualified-name"): "string",
+    ("document", "create-cdata-section", "data"): "string",
+    ("document", "create-processing-instruction", "target"): "string",
+    ("document", "create-processing-instruction", "data"): "string",
+    ("document", "create-comment", "data"): "string",
+    ("document", "create-text-node", "data"): "string",
+    ("document", "element-from-point", "x"): True,
+    ("document", "element-from-point", "y"): True,
+    # CharacterData methods
+    ("character-data", "append-data", "data"): "string",
+    ("character-data", "insert-data", "offset"): True,
+    ("character-data", "insert-data", "data"): "string",
+    ("character-data", "delete-data", "offset"): True,
+    ("character-data", "delete-data", "count"): True,
+    ("character-data", "replace-data", "offset"): True,
+    ("character-data", "replace-data", "count"): True,
+    ("character-data", "replace-data", "data"): "string",
+    ("character-data", "substring-data", "offset"): True,
+    ("character-data", "substring-data", "count"): True,
+    # Attr methods
+    ("attr", "get-owner-element", "element"): "handle:element",
+    # NamedNodeMap methods
+    ("named-node-map", "get-named-item", "qualified-name"): "string",
+    ("named-node-map", "get-named-item-ns", "namespace"): "string",
+    ("named-node-map", "get-named-item-ns", "local-name"): "string",
+    ("named-node-map", "set-named-item", "attr"): "handle:attr",
+    ("named-node-map", "set-named-item-ns", "attr"): "handle:attr",
+    ("named-node-map", "remove-named-item", "qualified-name"): "string",
+    ("named-node-map", "remove-named-item-ns", "namespace"): "string",
+    ("named-node-map", "remove-named-item-ns", "local-name"): "string",
+    # DOMTokenList methods
+    ("dom-token-list", "add", "tokens"): "any",
+    ("dom-token-list", "remove", "tokens"): "any",
+    ("dom-token-list", "toggle", "token"): "string",
+    ("dom-token-list", "replace", "token"): "string",
+    ("dom-token-list", "replace", "new-token"): "string",
+    ("dom-token-list", "supports", "token"): "string",
+    # Event listener options
+    ("event-target", "add-event-listener", "options"): "event-listener-options",
+    ("event-target", "remove-event-listener", "options"): "event-listener-options",
+    # AbortController
+    ("abort-controller", "abort", "reason"): "any",
+    # Gamepad
+    ("gamepad-haptic-actuator", "play-effect", "type"): "enum:GamepadHapticEffectType",
+    ("gamepad-haptic-actuator", "reset", "type"): "enum:GamepadHapticEffectType",
+    # Geolocation
+    ("geolocation", "get-current-position", "success-callback"): "handle:position-callback",
+    ("geolocation", "watch-position", "success-callback"): "handle:position-callback",
+    ("geolocation", "get-current-position", "error-callback"): "optional-handle:position-error-callback",
+    ("geolocation", "watch-position", "error-callback"): "optional-handle:position-error-callback",
+    ("geolocation", "watch-position", "options"): "any",
+    # TypedArray returns - need to wrap in handle
+    ("gamepad", "get-axes", "axes"): "handle:float-32-list",
+    ("gamepad", "get-buttons", "buttons"): "handle:gamepad-button-list",
+    # CSS methods
+    ("css-style-declaration", "set-property", "property"): "string",
+    ("css-style-declaration", "set-property", "value"): "string",
+    ("css-style-declaration", "set-property", "priority"): "string",
+    ("css-style-declaration", "remove-property", "property"): "string",
+    ("css-style-sheet", "insert-rule", "rule"): "string",
+    ("css-style-sheet", "insert-rule", "index"): True,
+    ("css-style-sheet", "delete-rule", "index"): True,
+    ("css-style-sheet", "add-rule", "selector"): "string",
+    ("css-style-sheet", "add-rule", "style"): "string",
+    ("css-style-sheet", "add-rule", "index"): True,
+    ("css-style-sheet", "remove-rule", "index"): True,
+    ("css-keyframes-rule", "append-rule", "rule"): "string",
+    ("css-keyframes-rule", "delete-rule", "key"): "string",
+    ("css-keyframes-rule", "find-rule", "key"): "string",
+    ("css-grouping-rule", "insert-rule", "rule"): "string",
+    ("css-grouping-rule", "insert-rule", "index"): True,
+    ("css-grouping-rule", "delete-rule", "index"): True,
+    ("css-media-rule", "insert-rule", "rule"): "string",
+    ("css-media-rule", "insert-rule", "index"): True,
+    ("css-media-rule", "delete-rule", "index"): True,
+    # Window methods
+    ("window", "get-computed-style", "elt"): "handle:element",
+    ("window", "get-computed-style", "pseudo"): "string",
+    ("window", "scroll", "options"): "any",
+    ("window", "scroll-to", "options"): "any",
+    ("window", "scroll-by", "options"): "any",
+    ("window", "open", "url"): "string",
+    ("window", "open", "target"): "string",
+    ("window", "open", "features"): "string",
+    ("window", "post-message", "message"): "any",
+    ("window", "post-message", "options"): "any",
+    # Selection methods
+    ("selection", "add-range", "range"): "handle:range",
+    ("selection", "remove-range", "range"): "handle:range",
+    ("selection", "collapse", "node"): "optional-handle:node",
+    ("selection", "collapse", "offset"): True,
+    ("selection", "collapse-to-start"): True,
+    ("selection", "collapse-to-end"): True,
+    ("selection", "extend", "node"): "handle:node",
+    ("selection", "extend", "offset"): True,
+    ("selection", "set-base-and-extent", "anchor-node"): "handle:node",
+    ("selection", "set-base-and-extent", "anchor-offset"): True,
+    ("selection", "set-base-and-extent", "focus-node"): "handle:node",
+    ("selection", "set-base-and-extent", "focus-offset"): True,
+    ("selection", "contains-node", "node"): "handle:node",
+    ("selection", "contains-node", "partial-containment"): "boolean",
+    # DOMImplementation methods
+    ("dom-implementation", "create-document-type", "qualified-name"): "string",
+    ("dom-implementation", "create-document-type", "public-id"): "string",
+    ("dom-implementation", "create-document-type", "system-id"): "string",
+    ("dom-implementation", "create-document", "namespace"): "string",
+    ("dom-implementation", "create-document", "qualified-name"): "string",
+    ("dom-implementation", "create-document", "doctype"): "optional-handle:document-type",
+    ("dom-implementation", "create-html-document", "title"): "string",
+    ("dom-implementation", "has-feature"): True,
+    # Crypto algorithm parameters - need any cast
+    ("subtle-crypto", "wrap-key", "wrap-algorithm"): "any",
+    # Document methods
+    ("document", "caret-position-from-point", "options"): "any",
+    ("document", "writeln", "text"): "string",
+    ("document", "write", "text"): "string",
+    # HTMLElement togglePopover
+    ("html-element", "toggle-popover", "options"): "boolean",
+    # Gamepad methods
+    ("gamepad-haptic-actuator", "play-effect", "params"): "any",
+    # Element methods - string parameters
+    ("element", "set-attribute", "value"): "string",
+    ("element", "set-attribute-ns", "value"): "string",
+    ("element", "set-html-unsafe", "html"): "string",
+    ("element", "insert-adjacent-html", "string"): "string",
+    # AbortSignal methods
+    ("abort-signal", "timeout", "milliseconds"): True,
+    ("abort-signal", "any", "signals"): "handle-array:abort-signal",
+    # MutationObserver
+    ("mutation-observer", "observe", "target"): "handle:node",
+    ("mutation-observer", "observe", "options"): "any",
+    # ChildNode methods - nodes array to spread
+    ("child-node", "before", "nodes"): "any",
+    ("child-node", "after", "nodes"): "any",
+    ("child-node", "replace-with", "nodes"): "any",
+    # Range methods
+    ("range", "create-contextual-fragment", "string"): "string",
+    # Node methods - handle conversions
+    ("node", "replace-child", "child"): "handle:node",
+    ("node", "is-equal-node", "other-node"): "optional-handle:node",
+    ("node", "is-same-node", "other-node"): "optional-handle:node",
+    ("node", "insert-before", "child"): "optional-handle:node",
+    ("node", "remove-child", "child"): "handle:node",
+    # XPath methods
+    ("x-path-expression", "evaluate", "context-node"): "handle:node",
+    ("x-path-expression", "evaluate", "result"): "optional-handle:xpath-result",
+    ("x-path-evaluator-base", "create-ns-resolver", "node-resolver"): "handle:node",
+    ("x-path-evaluator-base", "create-expression", "resolver"): "any",
+    ("x-path-evaluator-base", "evaluate", "context-node"): "handle:node",
+    ("x-path-evaluator-base", "evaluate", "resolver"): "any",
+    ("x-path-evaluator-base", "evaluate", "result"): "optional-handle:xpath-result",
+    # XSLTProcessor methods
+    ("xslt-processor", "import-stylesheet", "style"): "handle:node",
+    ("xslt-processor", "transform-to-fragment", "source"): "handle:node",
+    ("xslt-processor", "transform-to-fragment", "output"): "handle:document",
+    ("xslt-processor", "transform-to-document", "source"): "handle:node",
+    # UIEvent methods
+    ("ui-event", "init-ui-event", "type-arg"): "string",
+    ("ui-event", "init-ui-event", "bubbles-arg"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "cancelable-arg"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "view-arg"): "optional-handle:window",
+    ("ui-event", "init-ui-event", "detail-arg"): True,
+    # KeyboardEvent methods
+    ("keyboard-event", "init-keyboard-event", "type-arg"): "string",
+    ("keyboard-event", "init-keyboard-event", "bubbles-arg"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "cancelable-arg"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "view-arg"): "optional-handle:window",
+    ("keyboard-event", "init-keyboard-event", "key-arg"): "string",
+    ("keyboard-event", "init-keyboard-event", "alt-key"): "boolean-or-undefined",
+    # ReadableStream methods
+    ("readable-stream", "pipe-through", "transform"): "any",
+    ("readable-stream", "pipe-through", "options"): "any",
+    ("readable-stream", "pipe-to", "destination"): "any",
+    ("readable-stream", "pipe-to", "options"): "any",
+    # WindowOrWorkerGlobalScope methods
+    ("window-or-worker-global-scope", "fetch", "input"): "any",
+    ("window-or-worker-global-scope", "fetch", "init"): "any",
+    ("window-or-worker-global-scope", "create-image-bitmap", "image"): "any",
+    ("window-or-worker-global-scope", "create-image-bitmap", "options"): "any",
+    # Response methods
+    ("response", "json", "init"): "any",
+    # CompositionEvent methods
+    ("composition-event", "init-composition-event", "type-arg"): "string",
+    # Clipboard methods
+    ("clipboard", "write", "data"): "any",
+    # HTMLOptionsCollection methods
+    ("html-options-collection", "add", "element"): "any",
+    ("html-options-collection", "add", "before"): "any",
+    # Headers methods - string parameters
+    ("headers", "delete", "name"): "string",
+    ("headers", "get", "name"): "string",
+    ("headers", "has", "name"): "string",
+    ("headers", "set", "name"): "string",
+    # HTMLMediaElement methods
+    ("html-media-element", "add-text-track", "kind"): "enum:TextTrackKind",
+    # ShadowRoot methods
+    ("shadow-root", "set-html-unsafe", "html"): "string",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -3667,6 +4206,30 @@ GETTER_BUT_ACTUALLY_METHOD = {
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
 # These should call a method instead of setting a property
+# Parameters to skip when calling browser methods (WIT has them but browser API doesn't)
+# Maps (interface, function, param_name) -> True to skip the parameter
+PARAMS_TO_SKIP = {
+    # HTMLElement.showPopover() doesn't take options
+    ("html-element", "show-popover", "options"): True,
+    # Clipboard.read() doesn't take formats
+    ("clipboard", "read", "formats"): True,
+    # ReadableStreamBYOBReader.read() only takes view, not options
+    ("readable-stream-byob-reader", "read", "options"): True,
+    # PaymentResponse.complete() only takes result, not details
+    ("payment-response", "complete", "details"): True,
+    # ResizeObserver.observe() requires target parameter - handled separately
+}
+
+# Methods that need different browser method name for setters
+# Key is (interface_name, wit_name[4:]) - the part after "set-"
+SETTER_METHOD_NAMES = {
+    ("named-node-map", "named-item"): "setNamedItem",
+    ("named-node-map", "named-item-ns"): "setNamedItemNS",
+    ("window-or-worker-global-scope", "timeout"): "setTimeout",
+    ("window-or-worker-global-scope", "interval"): "setInterval",
+    ("rtc-rtp-sender", "parameters"): "setParameters",
+}
+
 SETTER_BUT_ACTUALLY_METHOD = {
     "attribute", "attribute-ns", "attribute-node", "attribute-node-ns",
     "html-unsafe", "pointer-capture",
@@ -3679,6 +4242,14 @@ SETTER_BUT_ACTUALLY_METHOD = {
     "popover-target-element",
     # Canvas methods
     "set-transform",
+    # NamedNodeMap methods that return replaced Attr (wit_name[4:] after "set-")
+    "named-item", "named-item-ns",
+    # Timer methods that return timeout/interval ID (wit_name[4:] after "set-")
+    "timeout", "interval",
+    # RTCRtpSender - setParameters is a method
+    "parameters",
+    # MediaSession - screenshareActive setter returns void but WIT expects return
+    "screenshare-active",
 }
 
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces

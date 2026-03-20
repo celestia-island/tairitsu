@@ -572,9 +572,9 @@ export function HeadersAppend(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function HeadersDelete(self: bigint, name: string): void {
+export function HeadersDelete(self: bigint, name: EventHandlerRecord): void {
   const obj = lookupHeaders(self);
-  obj.delete(name);
+  obj.delete(name as any);
 }
 
 /**
@@ -582,7 +582,7 @@ export function HeadersDelete(self: bigint, name: string): void {
  */
 export function HeadersGet(self: bigint, name: string): bigint | undefined {
   const obj = lookupHeaders(self);
-  const _callResult = obj.get(name);
+  const _callResult = obj.get(name as any);
   const handle = _nextString++;
   _stringHandles.set(handle, _callResult);
   return handle;
@@ -601,15 +601,15 @@ export function getSetCookie(self: bigint): (string)[] {
  */
 export function HeadersHas(self: bigint, name: string): boolean {
   const obj = lookupHeaders(self);
-  return obj.has(name);
+  return obj.has(name as any);
 }
 
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: (bigint)[]): void {
   const obj = lookupHeaders(self);
-  obj.set(name, value);
+  obj.set(name as any, value);
 }
 
 // ---------------------------------------------------------------------------
@@ -646,7 +646,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
+export function getBodyUsed(self: bigint): bigint {
   const obj = lookupBody(self);
   return obj.bodyUsed;
 }
@@ -681,12 +681,12 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollArrayBuffer(requestId: bigint): { ok: true; value: (string)[] } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: (string)[] } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -719,12 +719,12 @@ export function blob(self: bigint): bigint {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -795,12 +795,12 @@ export function formData(self: bigint): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -908,7 +908,7 @@ export function getMethod(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): string {
+export function RequestGetUrl(self: bigint): number {
   const obj = lookupRequest(self);
   return obj.url;
 }
@@ -1056,7 +1056,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): string | undefined {
+export function getKeepalive(self: bigint): boolean {
   const obj = lookupRequest(self);
   return obj.keepalive;
 }
@@ -1064,7 +1064,7 @@ export function getKeepalive(self: bigint): string | undefined {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): string {
+export function getIsReloadNavigation(self: bigint): EventHandlerRecord {
   const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
@@ -1131,7 +1131,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: EventHandlerRecord): bigint {
+export function redirect(url: string, status: number | undefined): bigint {
   const _callResult = Response.redirect(url, status);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1141,8 +1141,8 @@ export function redirect(url: string, status: EventHandlerRecord): bigint {
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: EventHandlerRecord): bigint {
-  const _callResult = Response.json(data, init);
+export function ResponseJson(data: string, init: string | undefined): bigint {
+  const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
   return handle;
@@ -1264,7 +1264,7 @@ function lookupWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalSc
 export function fetch(self: bigint, input: bigint, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  const promise = obj.fetch(input, init)
+  const promise = obj.fetch(input as any, init as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1358,7 +1358,7 @@ export function atob(self: bigint, data: string): string {
  */
 export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  (obj as any).timeout = _arguments;
+  return (obj as any).setTimeout(handler, timeout, _arguments);
 }
 
 /**
@@ -1372,9 +1372,9 @@ export function clearTimeout(self: bigint, id: number | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
+export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (bigint | undefined)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  (obj as any).interval = _arguments;
+  return (obj as any).setInterval(handler, timeout, _arguments);
 }
 
 /**
@@ -1398,10 +1398,10 @@ export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void
  *
  * Async operation: returns request ID, poll with `pollCreateImageBitmap()`
  */
-export function createImageBitmap(self: bigint, image: bigint, options: string): bigint {
+export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  const promise = obj.createImageBitmap(image, options)
+  const promise = obj.createImageBitmap(image as any, options as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1434,7 +1434,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
+export function structuredClone(self: bigint, value: bigint | undefined, options: bigint | undefined): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value, options);
 }
@@ -1498,7 +1498,7 @@ export type ReadableStreamHandle = bigint;
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: string): bigint {
+export function from(asyncIterable: number): bigint {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 
@@ -1564,7 +1564,7 @@ export function getReader(self: bigint, options: bigint | undefined): bigint {
  */
 export function pipeThrough(self: bigint, transform: bigint, options: bigint | undefined): bigint {
   const obj = lookupReadableStream(self);
-  const _callResult = obj.pipeThrough(transform, options);
+  const _callResult = obj.pipeThrough(transform as any, options as any);
   const handle = _nextReadableStream++;
   _readableStreamHandles.set(handle, _callResult);
   return handle;
@@ -1578,7 +1578,7 @@ export function pipeThrough(self: bigint, transform: bigint, options: bigint | u
 export function pipeTo(self: bigint, destination: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStream(self);
-  const promise = obj.pipeTo(destination, options)
+  const promise = obj.pipeTo(destination as any, options as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1806,7 +1806,7 @@ function lookupReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReade
 export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStreamBYOBReader(self);
-  const promise = obj.read(view, options)
+  const promise = obj.read(view)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -2742,7 +2742,7 @@ export function getTimeout(self: bigint): number {
  */
 export function XmlHttpRequestSetTimeout(self: bigint, value: number): void {
   const obj = lookupXMLHttpRequest(self);
-  obj.timeout = value;
+  obj.setTimeout(value);
 }
 
 /**

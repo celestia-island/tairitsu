@@ -225,6 +225,12 @@ export type URLHref = string;
 /** Type alias */
 export type RoHandle = bigint;
 
+/** Type alias */
+export type ElementHandle = bigint;
+
+/** Type alias */
+export type ResizeObserverOptionsHandle = bigint;
+
 /** Handle table for ResizeObserver instances */
 const _roHandles = new Map<bigint, ResizeObserver>();
 let _nextRo = 1n;
@@ -240,9 +246,9 @@ function lookupRo(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function observe(handle: bigint): void {
+export function observe(handle: bigint, target: bigint, options: bigint | undefined): void {
   const obj = lookupRo(handle);
-  obj.observe();
+  obj.observe(target, options);
 }
 
 // ---------------------------------------------------------------------------

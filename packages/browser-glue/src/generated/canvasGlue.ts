@@ -3387,7 +3387,7 @@ export function WebGlRenderingContextOverloadsBufferData(self: bigint, target: b
  */
 export function WebGlRenderingContextOverloadsBufferSubData(self: bigint, target: bigint, offset: bigint, data: bigint): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.bufferSubData(Number(target), Number(offset), data);
+  obj.bufferSubData(Number(target), Number(offset), lookupBufferSource(data));
 }
 
 /**
@@ -3411,7 +3411,7 @@ export function WebGlRenderingContextOverloadsCompressedTexSubImage2D(self: bigi
  */
 export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.readPixels(Number(x), Number(y), Number(width), Number(height), Number(format), Number(type), pixels);
+  obj.readPixels(Number(x), Number(y), Number(width), Number(height), Number(format), Number(type), pixels ?? null);
 }
 
 /**
@@ -3419,7 +3419,7 @@ export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint
  */
 export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.texImage2D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(border), Number(format), Number(type), pixels);
+  obj.texImage2D(Number(target), Number(level), Number(internalformat), Number(width), Number(height), Number(border), Number(format), Number(type), pixels ?? null);
 }
 
 /**
@@ -3427,7 +3427,7 @@ export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: b
  */
 export function WebGlRenderingContextOverloadsTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
   const obj = lookupWebGLRenderingContextOverloads(self);
-  obj.texSubImage2D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(width), Number(height), Number(format), Number(type), pixels);
+  obj.texSubImage2D(Number(target), Number(level), Number(xoffset), Number(yoffset), Number(width), Number(height), Number(format), Number(type), pixels ?? null);
 }
 
 /**
@@ -4150,7 +4150,7 @@ export function isTransformFeedback(self: bigint, tf: bigint | undefined): bigin
  */
 export function bindTransformFeedback(self: bigint, target: bigint, tf: bigint | undefined): void {
   const obj = lookupWebGL2RenderingContextBase(self);
-  obj.bindTransformFeedback(Number(target), tf);
+  obj.bindTransformFeedback(Number(target), tf as any);
 }
 
 /**
@@ -4321,7 +4321,7 @@ export function deleteVertexArray(self: bigint, vertexArray: bigint | undefined)
  */
 export function isVertexArray(self: bigint, vertexArray: bigint | undefined): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  return obj.isVertexArray(vertexArray) ? 1n : 0n;
+  return obj.isVertexArray(vertexArray as any) ? 1n : 0n;
 }
 
 /**
@@ -4364,7 +4364,7 @@ export function WebGl2RenderingContextOverloadsBufferData(self: bigint, target: 
  */
 export function WebGl2RenderingContextOverloadsBufferSubData(self: bigint, target: bigint, dstByteOffset: bigint, srcData: bigint): void {
   const obj = lookupWebGL2RenderingContextOverloads(self);
-  obj.bufferSubData(Number(target), Number(dstByteOffset), srcData);
+  obj.bufferSubData(Number(target), Number(dstByteOffset), lookupBufferSource(srcData));
 }
 
 /**

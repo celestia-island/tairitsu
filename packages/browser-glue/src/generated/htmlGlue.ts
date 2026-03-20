@@ -239,6 +239,10 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 const _anyHandles = new Map<bigint, any>();
 let _nextAny = 1n;
 
+/** Handle table for canvas-gradient values */
+const _canvasGradientHandles = new Map<bigint, CanvasGradient>();
+let _nextCanvasGradient = 1n;
+
 /** Handle table for data-transfer values */
 const _dataTransferHandles = new Map<bigint, DataTransfer>();
 let _nextDataTransfer = 1n;
@@ -246,6 +250,10 @@ let _nextDataTransfer = 1n;
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
 let _nextDocument = 1n;
+
+/** Handle table for document-fragment values */
+const _documentFragmentHandles = new Map<bigint, DocumentFragment>();
+let _nextDocumentFragment = 1n;
 
 /** Handle table for dom-matrix values */
 const _domMatrixhandles = new Map<bigint, DOMMatrix>();
@@ -262,6 +270,10 @@ let _nextDomTokenList = 1n;
 /** Handle table for element-list values */
 const _elementListHandles = new Map<bigint, Element[]>();
 let _nextElementList = 1n;
+
+/** Handle table for float-32-list values */
+const _float32ListHandles = new Map<bigint, Float32Array>();
+let _nextFloat32List = 1n;
 
 /** Handle table for html-collection values */
 const _htmlCollectionHandles = new Map<bigint, HTMLCollection>();
@@ -299,6 +311,10 @@ let _nextMediaProvider = 1n;
 const _messagePortHandles = new Map<bigint, MessagePort>();
 let _nextMessagePort = 1n;
 
+/** Handle table for mime-type values */
+const _mimeTypeHandles = new Map<bigint, MimeType>();
+let _nextMimeType = 1n;
+
 /** Handle table for node-list values */
 const _nodeListHandles = new Map<bigint, NodeList>();
 let _nextNodeList = 1n;
@@ -331,6 +347,10 @@ let _nextTimeRanges = 1n;
 const _validityStateHandles = new Map<bigint, ValidityState>();
 let _nextValidityState = 1n;
 
+/** Handle table for view-transition values */
+const _viewTransitionHandles = new Map<bigint, ViewTransition>();
+let _nextViewTransition = 1n;
+
 /** Handle table for window values */
 const _windowHandles = new Map<bigint, Window>();
 let _nextWindow = 1n;
@@ -354,6 +374,23 @@ function lookupOptionAny(handle: bigint | undefined): any | null {
     return null;
   }
   return _anyHandles.get(handle) ?? null;
+}
+
+/** Lookup a canvas-gradient value by handle. */
+function lookupCanvasGradient(handle: bigint): CanvasGradient {
+  const obj = _canvasGradientHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`canvas-gradient handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional canvas-gradient value by handle. */
+function lookupOptionCanvasGradient(handle: bigint | undefined): CanvasGradient | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasGradientHandles.get(handle) ?? null;
 }
 
 /** Lookup a data-transfer value by handle. */
@@ -388,6 +425,23 @@ function lookupOptionDocument(handle: bigint | undefined): Document | null {
     return null;
   }
   return _documentHandles.get(handle) ?? null;
+}
+
+/** Lookup a document-fragment value by handle. */
+function lookupDocumentFragment(handle: bigint): DocumentFragment {
+  const obj = _documentFragmentHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`document-fragment handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional document-fragment value by handle. */
+function lookupOptionDocumentFragment(handle: bigint | undefined): DocumentFragment | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _documentFragmentHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-matrix value by handle. */
@@ -456,6 +510,23 @@ function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
     return null;
   }
   return _elementListHandles.get(handle) ?? null;
+}
+
+/** Lookup a float-32-list value by handle. */
+function lookupFloat32List(handle: bigint): Float32Array {
+  const obj = _float32ListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`float-32-list handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional float-32-list value by handle. */
+function lookupOptionFloat32List(handle: bigint | undefined): Float32Array | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _float32ListHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-collection value by handle. */
@@ -611,6 +682,23 @@ function lookupOptionMessagePort(handle: bigint | undefined): MessagePort | null
   return _messagePortHandles.get(handle) ?? null;
 }
 
+/** Lookup a mime-type value by handle. */
+function lookupMimeType(handle: bigint): MimeType {
+  const obj = _mimeTypeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`mime-type handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional mime-type value by handle. */
+function lookupOptionMimeType(handle: bigint | undefined): MimeType | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mimeTypeHandles.get(handle) ?? null;
+}
+
 /** Lookup a node-list value by handle. */
 function lookupNodeList(handle: bigint): NodeList {
   const obj = _nodeListHandles.get(handle);
@@ -745,6 +833,23 @@ function lookupOptionValidityState(handle: bigint | undefined): ValidityState | 
     return null;
   }
   return _validityStateHandles.get(handle) ?? null;
+}
+
+/** Lookup a view-transition value by handle. */
+function lookupViewTransition(handle: bigint): ViewTransition {
+  const obj = _viewTransitionHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`view-transition handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional view-transition value by handle. */
+function lookupOptionViewTransition(handle: bigint | undefined): ViewTransition | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _viewTransitionHandles.get(handle) ?? null;
 }
 
 /** Lookup a window value by handle. */
@@ -882,7 +987,7 @@ export function HtmlOptionsCollectionUndefined(self: bigint, index: number, opti
  */
 export function HtmlOptionsCollectionAdd(self: bigint, element: bigint, before: bigint | undefined): void {
   const obj = lookupHTMLOptionsCollection(self);
-  obj.add(element, before);
+  obj.add(element as any, before as any);
 }
 
 /**
@@ -3252,7 +3357,11 @@ export function setLoading(self: bigint, value: string): void {
  */
 export function HtmliFrameElementGetContentDocument(self: bigint): bigint | undefined {
   const obj = lookupHTMLIFrameElement(self);
-  return obj.contentDocument ?? undefined;
+  const _callResult = obj.contentDocument;
+  if (_callResult === null) return undefined;
+  const handle = _nextDocument++;
+  _documentHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -3260,7 +3369,11 @@ export function HtmliFrameElementGetContentDocument(self: bigint): bigint | unde
  */
 export function HtmliFrameElementGetContentWindow(self: bigint): bigint | undefined {
   const obj = lookupHTMLIFrameElement(self);
-  return obj.contentWindow ?? undefined;
+  const _callResult = obj.contentWindow;
+  if (_callResult === null) return undefined;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -4226,7 +4339,13 @@ export function load(self: bigint): void {
  */
 export function canPlayType(self: bigint, type: string): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.canPlayType(type);
+  const value = obj.canPlayType(type);
+  switch (value) {
+    case '': return 0n;
+    case 'probably': return 1n;
+    case 'maybe': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -4545,7 +4664,10 @@ export function getTextTracks(self: bigint): bigint {
  */
 export function addTextTrack(self: bigint, kind: bigint, label: string | undefined, language: string | undefined): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.addTextTrack(kind, label, language);
+  const _callResult = obj.addTextTrack(kind as any, label, language);
+  const handle = _nextTextTrack++;
+  _textTrackHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -5603,7 +5725,10 @@ export function setCaption(self: bigint, value: bigint | undefined): void {
  */
 export function createCaption(self: bigint): bigint {
   const obj = lookupHTMLTableElement(self);
-  return obj.createCaption();
+  const _callResult = obj.createCaption();
+  const handle = _nextHtmlTableCaptionElement++;
+  _htmlTableCaptionElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5639,7 +5764,10 @@ export function setTHead(self: bigint, value: bigint | undefined): void {
  */
 export function createTHead(self: bigint): bigint {
   const obj = lookupHTMLTableElement(self);
-  return obj.createTHead();
+  const _callResult = obj.createTHead();
+  const handle = _nextHtmlTableSectionElement++;
+  _htmlTableSectionElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5675,7 +5803,10 @@ export function setTFoot(self: bigint, value: bigint | undefined): void {
  */
 export function createTFoot(self: bigint): bigint {
   const obj = lookupHTMLTableElement(self);
-  return obj.createTFoot();
+  const _callResult = obj.createTFoot();
+  const handle = _nextHtmlTableSectionElement++;
+  _htmlTableSectionElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5702,7 +5833,10 @@ export function getTBodies(self: bigint): bigint {
  */
 export function createTBody(self: bigint): bigint {
   const obj = lookupHTMLTableElement(self);
-  return obj.createTBody();
+  const _callResult = obj.createTBody();
+  const handle = _nextHtmlTableSectionElement++;
+  _htmlTableSectionElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5721,7 +5855,10 @@ export function HtmlTableElementGetRows(self: bigint): bigint {
  */
 export function HtmlTableElementInsertRow(self: bigint, index: number | undefined): bigint {
   const obj = lookupHTMLTableElement(self);
-  return obj.insertRow(index);
+  const _callResult = obj.insertRow(index);
+  const handle = _nextHtmlTableRowElement++;
+  _htmlTableRowElementhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -6061,7 +6198,10 @@ export function HtmlTableSectionElementGetRows(self: bigint): bigint {
  */
 export function HtmlTableSectionElementInsertRow(self: bigint, index: number | undefined): bigint {
   const obj = lookupHTMLTableSectionElement(self);
-  return obj.insertRow(index);
+  const _callResult = obj.insertRow(index);
+  const handle = _nextHtmlTableRowElement++;
+  _htmlTableRowElementhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -6187,7 +6327,10 @@ export function getCells(self: bigint): bigint {
  */
 export function insertCell(self: bigint, index: number | undefined): bigint {
   const obj = lookupHTMLTableRowElement(self);
-  return obj.insertCell(index);
+  const _callResult = obj.insertCell(index);
+  const handle = _nextHtmlTableCellElement++;
+  _htmlTableCellElementhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -9315,7 +9458,10 @@ export function HtmlFieldSetElementGetWillValidate(self: bigint): boolean {
  */
 export function HtmlFieldSetElementGetValidity(self: bigint): bigint {
   const obj = lookupHTMLFieldSetElement(self);
-  return obj.validity;
+  const _callResult = obj.validity;
+  const handle = _nextValidityState++;
+  _validityStateHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -9543,7 +9689,10 @@ function lookupFormDataEvent(handle: bigint): FormDataEvent {
  */
 export function FormDataEventGetFormData(self: bigint): bigint {
   const obj = lookupFormDataEvent(self);
-  return obj.formData;
+  const _callResult = obj.formData;
+  const handle = _nextFormData++;
+  _formDatahandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -9965,7 +10114,10 @@ function lookupHTMLTemplateElement(handle: bigint): HTMLTemplateElement {
  */
 export function HtmlTemplateElementGetContent(self: bigint): bigint {
   const obj = lookupHTMLTemplateElement(self);
-  return obj.content;
+  const _callResult = obj.content;
+  const handle = _nextDocumentFragment++;
+  _documentFragmentHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10197,7 +10349,10 @@ export function toBlob(self: bigint, callback: bigint, type: string | undefined,
  */
 export function transferControlToOffscreen(self: bigint): bigint {
   const obj = lookupHTMLCanvasElement(self);
-  return obj.transferControlToOffscreen();
+  const _callResult = obj.transferControlToOffscreen();
+  const handle = _nextOffscreencanvas++;
+  _offscreencanvasHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -10251,7 +10406,10 @@ function lookupCanvasSettings(handle: bigint): CanvasSettings {
  */
 export function getContextAttributes(self: bigint): bigint {
   const obj = lookupCanvasSettings(self);
-  return obj.getContextAttributes();
+  const _callResult = obj.getContextAttributes();
+  const handle = _nextAny++;
+  _anyHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -10361,7 +10519,7 @@ export function transform(self: bigint, a: number, b: number, c: number, d: numb
  */
 export function getTransform(self: bigint): bigint {
   const obj = lookupCanvasTransform(self);
-  const _callResult = obj.transform();
+  const _callResult = obj.getTransform();
   const handle = _nextDomMatrix++;
   _domMatrixhandles.set(handle, _callResult);
   return handle;
@@ -10559,7 +10717,10 @@ export function setFillStyle(self: bigint, value: string): void {
  */
 export function createLinearGradient(self: bigint, x0: number, y0: number, x1: number, y1: number): bigint {
   const obj = lookupCanvasFillStrokeStyles(self);
-  return obj.createLinearGradient(x0, y0, x1, y1);
+  const _callResult = obj.createLinearGradient(x0, y0, x1, y1);
+  const handle = _nextCanvasGradient++;
+  _canvasGradientHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10567,7 +10728,10 @@ export function createLinearGradient(self: bigint, x0: number, y0: number, x1: n
  */
 export function createRadialGradient(self: bigint, x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): bigint {
   const obj = lookupCanvasFillStrokeStyles(self);
-  return obj.createRadialGradient(x0, y0, r0, x1, y1, r1);
+  const _callResult = obj.createRadialGradient(x0, y0, r0, x1, y1, r1);
+  const handle = _nextCanvasGradient++;
+  _canvasGradientHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10575,7 +10739,10 @@ export function createRadialGradient(self: bigint, x0: number, y0: number, r0: n
  */
 export function createConicGradient(self: bigint, startAngle: number, x: number, y: number): bigint {
   const obj = lookupCanvasFillStrokeStyles(self);
-  return obj.createConicGradient(startAngle, x, y);
+  const _callResult = obj.createConicGradient(startAngle, x, y);
+  const handle = _nextCanvasGradient++;
+  _canvasGradientHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10583,7 +10750,10 @@ export function createConicGradient(self: bigint, startAngle: number, x: number,
  */
 export function createPattern(self: bigint, image: bigint, repetition: string): bigint | undefined {
   const obj = lookupCanvasFillStrokeStyles(self);
-  return obj.createPattern(image, repetition) ?? undefined;
+  const _callResult = obj.createPattern(image, repetition);
+  const handle = _nextCanvasPattern++;
+  _canvasPatternhandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -10881,7 +11051,10 @@ export function strokeText(self: bigint, text: string, x: number, y: number, max
  */
 export function measureText(self: bigint, text: string): bigint {
   const obj = lookupCanvasText(self);
-  return obj.measureText(text);
+  const _callResult = obj.measureText(text);
+  const handle = _nextTextMetrics++;
+  _textMetricshandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -10941,7 +11114,10 @@ function lookupCanvasImageData(handle: bigint): CanvasImageData {
  */
 export function createImageData(self: bigint, sw: number, sh: number, settings: bigint | undefined): bigint {
   const obj = lookupCanvasImageData(self);
-  return obj.createImageData(sw, sh, settings);
+  const _callResult = obj.createImageData(sw, sh, settings);
+  const handle = _nextImageData++;
+  _imageDatahandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -11081,9 +11257,12 @@ export function setLineDash(self: bigint, segments: (number)[]): void {
 /**
  * `get-line-dash()` operation.
  */
-export function getLineDash(self: bigint): (number)[] {
+export function getLineDash(self: bigint): bigint {
   const obj = lookupCanvasPathDrawingStyles(self);
-  return (obj as any).lineDash;
+  const _callResult = (obj as any).lineDash;
+  const handle = _nextFloat32List++;
+  _float32ListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -11491,18 +11670,6 @@ export function ellipse(self: bigint, x: number, y: number, radiusX: number, rad
 /** Type alias */
 export type CanvasGradientHandle = bigint;
 
-/** Handle table for CanvasGradient instances */
-const _canvasGradienthandles = new Map<bigint, CanvasGradient>();
-let _nextCanvasGradient = 1n;
-
-/** Lookup a CanvasGradient by handle, throwing if not found. */
-function lookupCanvasGradient(handle: bigint): CanvasGradient {
-  const obj = _canvasGradienthandles.get(handle);
-  if (!obj) {
-    throw new Error(`CanvasGradient handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `add-color-stop()` operation.
  */
@@ -12008,7 +12175,11 @@ export function setFormValue(self: bigint, value: bigint | undefined, state: big
  */
 export function ElementInternalsGetForm(self: bigint): bigint | undefined {
   const obj = lookupElementInternals(self);
-  return obj.form ?? undefined;
+  const _callResult = obj.form;
+  if (_callResult === null) return undefined;
+  const handle = _nextHtmlFormElement++;
+  _htmlFormElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -12032,7 +12203,10 @@ export function ElementInternalsGetWillValidate(self: bigint): boolean {
  */
 export function ElementInternalsGetValidity(self: bigint): bigint {
   const obj = lookupElementInternals(self);
-  return obj.validity;
+  const _callResult = obj.validity;
+  const handle = _nextValidityState++;
+  _validityStateHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -13124,7 +13298,11 @@ export function entries(self: bigint): (bigint)[] {
  */
 export function getCurrentEntry(self: bigint): bigint | undefined {
   const obj = lookupNavigation(self);
-  return obj.currentEntry ?? undefined;
+  const _callResult = obj.currentEntry;
+  if (_callResult === null) return undefined;
+  const handle = _nextNavigationHistoryEntry++;
+  _navigationHistoryEntryhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -13140,7 +13318,11 @@ export function updateCurrentEntry(self: bigint, options: bigint): void {
  */
 export function getTransition(self: bigint): bigint | undefined {
   const obj = lookupNavigation(self);
-  return obj.transition ?? undefined;
+  const _callResult = obj.transition;
+  if (_callResult === null) return undefined;
+  const handle = _nextViewTransition++;
+  _viewTransitionHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -13148,7 +13330,11 @@ export function getTransition(self: bigint): bigint | undefined {
  */
 export function NavigationGetActivation(self: bigint): bigint | undefined {
   const obj = lookupNavigation(self);
-  return obj.activation ?? undefined;
+  const _callResult = obj.activation;
+  if (_callResult === null) return undefined;
+  const handle = _nextNavigationActivation++;
+  _navigationActivationhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -14530,7 +14716,10 @@ export function PluginArrayGetLength(self: bigint): number {
  */
 export function PluginArrayItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupPluginArray(self);
-  return obj.item(index) ?? undefined;
+  const _callResult = obj.item(index);
+  const handle = _nextPlugin++;
+  _pluginHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -14538,7 +14727,10 @@ export function PluginArrayItem(self: bigint, index: number): bigint | undefined
  */
 export function PluginArrayNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = lookupPluginArray(self);
-  return obj.namedItem(name) ?? undefined;
+  const _callResult = obj.namedItem(name);
+  const handle = _nextPlugin++;
+  _pluginHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14573,7 +14765,10 @@ export function MimeTypeArrayGetLength(self: bigint): number {
  */
 export function MimeTypeArrayItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupMimeTypeArray(self);
-  return obj.item(index) ?? undefined;
+  const _callResult = obj.item(index);
+  const handle = _nextMimeType++;
+  _mimeTypeHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -14581,7 +14776,10 @@ export function MimeTypeArrayItem(self: bigint, index: number): bigint | undefin
  */
 export function MimeTypeArrayNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = lookupMimeTypeArray(self);
-  return obj.namedItem(name) ?? undefined;
+  const _callResult = obj.namedItem(name);
+  const handle = _nextMimeType++;
+  _mimeTypeHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14640,7 +14838,10 @@ export function PluginGetLength(self: bigint): number {
  */
 export function PluginItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupPlugin(self);
-  return obj.item(index) ?? undefined;
+  const _callResult = obj.item(index);
+  const handle = _nextMimeType++;
+  _mimeTypeHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -14648,7 +14849,10 @@ export function PluginItem(self: bigint, index: number): bigint | undefined {
  */
 export function PluginNamedItem(self: bigint, name: string): bigint | undefined {
   const obj = lookupPlugin(self);
-  return obj.namedItem(name) ?? undefined;
+  const _callResult = obj.namedItem(name);
+  const handle = _nextMimeType++;
+  _mimeTypeHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14658,18 +14862,6 @@ export function PluginNamedItem(self: bigint, name: string): bigint | undefined 
 /** Type alias */
 export type MimeTypeHandle = bigint;
 
-/** Handle table for MimeType instances */
-const _mimeTypehandles = new Map<bigint, MimeType>();
-let _nextMimeType = 1n;
-
-/** Lookup a MimeType by handle, throwing if not found. */
-function lookupMimeType(handle: bigint): MimeType {
-  const obj = _mimeTypehandles.get(handle);
-  if (!obj) {
-    throw new Error(`MimeType handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `get-type()` operation.
  */
@@ -14892,7 +15084,11 @@ export function getLastEventId(self: bigint): string {
  */
 export function MessageEventGetSource(self: bigint): bigint | undefined {
   const obj = lookupMessageEvent(self);
-  return obj.source ?? undefined;
+  const _callResult = obj.source;
+  if (_callResult === null) return undefined;
+  const handle = _nextMessageEventSource++;
+  _messageEventSourcehandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
