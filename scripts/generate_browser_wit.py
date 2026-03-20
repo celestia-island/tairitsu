@@ -690,6 +690,41 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
 
     return "\n".join(lines)
 
+def _generate_special_type_defs(interfaces: List[WebIDLInterface]) -> List[str]:
+    """Generate type definitions for special types like event-handler-record."""
+    lines = []
+    
+    # Find the global-event-handlers interface
+    global_event_handlers_iface = next(
+        (iface for iface in interfaces if iface.name == "global-event-handlers"),
+        None
+    )
+    
+    if global_event_handlers_iface:
+        lines.append("/// Event handler function type")
+        lines.append("///")
+        lines.append("type event-handler-record = record {")
+        
+        # Collect all event handler names from the interface
+        event_handlers = []
+        for member in global_event_handlers_iface.members:
+            if member.kind == "attribute" and member.name.startswith("on"):
+                # Convert kebab-case to camelCase
+                parts = member.name.split("-")
+                handler_name = parts[0] + "".join(p.capitalize() for p in parts[1:])
+                event_handlers.append(handler_name)
+        
+        # Generate record fields (sorted for consistency)
+        for handler in sorted(event_handlers):
+            lines.append(f"    {handler}: option<event-handler-handle>;")
+        
+        lines.append("};")
+        lines.append("")
+        lines.append("/// Event handler function handle")
+        lines.append("type event-handler-handle = u64;")
+        lines.append("")
+    
+    return lines
 
 def generate_domain_wit(
     domain: str,
@@ -730,6 +765,9 @@ def generate_domain_wit(
         f"package tairitsu-browser:{domain}@0.2.0;",
         "",
     ]
+
+    # Generate type definitions for special types (e.g., event handlers)
+    type_defs_lines = _generate_special_type_defs(interfaces)
 
     # Build world block
     world_imports = "\n".join(
