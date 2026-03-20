@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -250,7 +253,7 @@ function lookupNavigatorStorage(handle: bigint): NavigatorStorage {
 /**
  * `get-storage()` operation.
  */
-export function getStorage(self: bigint): string {
+export function getStorage(self: bigint): bigint {
   const obj = lookupNavigatorStorage(self);
   return obj.storage;
 }
@@ -304,12 +307,12 @@ export function persisted(self: bigint): bigint {
  * Poll an async `persisted()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersisted(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollPersisted(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**

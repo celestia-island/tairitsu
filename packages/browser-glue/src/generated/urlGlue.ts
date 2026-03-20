@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -237,14 +240,14 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: number, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: string | undefined): bigint {
+export function canParse(url: EventHandlerRecord, base: string | undefined): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
@@ -415,7 +418,7 @@ export function setSearch(self: bigint, value: string): void {
 /**
  * `get-search-params()` operation.
  */
-export function getSearchParams(self: bigint): bigint {
+export function getSearchParams(self: bigint): string {
   const obj = lookupURL(self);
   return obj.searchParams;
 }
@@ -474,7 +477,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: string, value: EventHandlerRecord): void {
+export function append(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name, value);
 }
@@ -482,7 +485,7 @@ export function append(self: bigint, name: string, value: EventHandlerRecord): v
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: EventHandlerRecord | undefined): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -490,7 +493,7 @@ export function _delete(self: bigint, name: string, value: EventHandlerRecord | 
 /**
  * `get()` operation.
  */
-export function _get(self: bigint, name: string): string | undefined {
+export function _get(self: bigint, name: string): EventHandlerRecord | undefined {
   const obj = lookupURLSearchParams(self);
   return obj.get(name) ?? undefined;
 }
@@ -506,7 +509,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: string, value: EventHandlerRecord | undefined): boolean {
+export function has(self: bigint, name: string, value: string | undefined): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value);
 }

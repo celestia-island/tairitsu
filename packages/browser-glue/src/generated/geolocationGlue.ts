@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 

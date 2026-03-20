@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -236,6 +239,10 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 const _anyHandles = new Map<bigint, any>();
 let _nextAny = 1n;
 
+/** Handle table for buffer-source values */
+const _bufferSourceHandles = new Map<bigint, BufferSource>();
+let _nextBufferSource = 1n;
+
 /** Handle table for dom-rect-read-only values */
 const _domRectReadOnlyHandles = new Map<bigint, DOMRectReadOnly>();
 let _nextDomRectReadOnly = 1n;
@@ -315,6 +322,23 @@ function lookupOptionAny(handle: bigint | undefined): any | null {
     return null;
   }
   return _anyHandles.get(handle) ?? null;
+}
+
+/** Lookup a buffer-source value by handle. */
+function lookupBufferSource(handle: bigint): BufferSource {
+  const obj = _bufferSourceHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`buffer-source handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional buffer-source value by handle. */
+function lookupOptionBufferSource(handle: bigint | undefined): BufferSource | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _bufferSourceHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-rect-read-only value by handle. */
@@ -1274,7 +1298,7 @@ export function EncodedAudioChunkGetTimestamp(self: bigint): bigint {
 export function EncodedAudioChunkGetDuration(self: bigint): bigint | undefined {
   const obj = lookupEncodedAudioChunk(self);
   const value = obj.duration;
-  return value !== undefined ? BigInt(value) : undefined;
+  return value != null ? BigInt(value) : undefined;
 }
 
 /**
@@ -1339,7 +1363,7 @@ export function EncodedVideoChunkGetTimestamp(self: bigint): bigint {
 export function EncodedVideoChunkGetDuration(self: bigint): bigint | undefined {
   const obj = lookupEncodedVideoChunk(self);
   const value = obj.duration;
-  return value !== undefined ? BigInt(value) : undefined;
+  return value != null ? BigInt(value) : undefined;
 }
 
 /**
@@ -1439,7 +1463,7 @@ export function AudioDataGetTimestamp(self: bigint): bigint {
 /**
  * `allocation-size()` operation.
  */
-export function AudioDataAllocationSize(self: bigint, options: AudioDataAllocationOptions | undefined): number {
+export function AudioDataAllocationSize(self: bigint, options: any): number {
   const obj = lookupAudioData(self);
   return obj.allocationSize(options);
 }
@@ -1447,7 +1471,7 @@ export function AudioDataAllocationSize(self: bigint, options: AudioDataAllocati
 /**
  * `copy-to()` operation.
  */
-export function AudioDataCopyTo(self: bigint, destination: bigint, options: AudioDataCopyToOptions | undefined): void {
+export function AudioDataCopyTo(self: bigint, destination: bigint, options: any): void {
   const obj = lookupAudioData(self);
   obj.copyTo(lookupBufferSource(destination), options);
 }
@@ -1585,7 +1609,7 @@ export function getDisplayHeight(self: bigint): bigint {
 export function VideoFrameGetDuration(self: bigint): bigint | undefined {
   const obj = lookupVideoFrame(self);
   const value = obj.duration;
-  return value !== undefined ? BigInt(value) : undefined;
+  return value != null ? BigInt(value) : undefined;
 }
 
 /**
@@ -1618,7 +1642,7 @@ export function metadata(self: bigint): bigint {
 /**
  * `allocation-size()` operation.
  */
-export function VideoFrameAllocationSize(self: bigint, options: VideoFrameAllocationOptions | undefined): number {
+export function VideoFrameAllocationSize(self: bigint, options: any): number {
   const obj = lookupVideoFrame(self);
   return obj.allocationSize(options);
 }
@@ -1628,7 +1652,7 @@ export function VideoFrameAllocationSize(self: bigint, options: VideoFrameAlloca
  *
  * Async operation: returns request ID, poll with `pollCopyTo()`
  */
-export function VideoFrameCopyTo(self: bigint, destination: bigint, options: VideoFrameCopyToOptions | undefined): bigint {
+export function VideoFrameCopyTo(self: bigint, destination: bigint, options: any): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupVideoFrame(self);
   const promise = obj.copyTo(lookupBufferSource(destination), options)

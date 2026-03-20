@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -237,14 +240,14 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): { ok: true; value: string } | { ok: false; error: string } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): bigint {
+export function url(handle: bigint): string {
   const obj = lookupWs(handle);
   return (obj as any).url();
 }
@@ -252,7 +255,7 @@ export function url(handle: bigint): bigint {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
   return (obj as any).readyState();
 }
@@ -260,7 +263,7 @@ export function readyState(handle: bigint): number {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): EventHandlerRecord {
+export function bufferedAmount(handle: bigint): bigint {
   const obj = lookupWs(handle);
   return (obj as any).bufferedAmount();
 }
@@ -268,7 +271,7 @@ export function bufferedAmount(handle: bigint): EventHandlerRecord {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
   return (obj as any).extensions();
 }
@@ -276,7 +279,7 @@ export function extensions(handle: bigint): string {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): string {
+export function protocol(handle: bigint): boolean | undefined {
   const obj = lookupWs(handle);
   return (obj as any).protocol();
 }
@@ -284,7 +287,7 @@ export function protocol(handle: bigint): string {
 /**
  * `close()` operation.
  */
-export function close(handle: bigint, code: bigint, reason: string): void {
+export function close(handle: bigint, code: number, reason: string): void {
   const obj = lookupWs(handle);
   obj.close(code, reason);
 }
@@ -292,7 +295,7 @@ export function close(handle: bigint, code: bigint, reason: string): void {
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string | undefined): void {
+export function send(handle: bigint, data: string): void {
   const obj = lookupWs(handle);
   obj.send(data);
 }

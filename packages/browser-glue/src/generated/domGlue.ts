@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -243,6 +246,10 @@ let _nextDocumentType = 1n;
 const _elementHandles = new Map<bigint, Element>();
 let _nextElement = 1n;
 
+/** Handle table for event-listener values */
+const _eventListenerHandles = new Map<bigint, EventListener>();
+let _nextEventListener = 1n;
+
 /** Handle table for event-target values */
 const _eventTargetHandles = new Map<bigint, EventTarget>();
 let _nextEventTarget = 1n;
@@ -399,6 +406,23 @@ function lookupOptionElement(handle: bigint | undefined): Element | null {
     return null;
   }
   return _elementHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-listener value by handle. */
+function lookupEventListener(handle: bigint): EventListener {
+  const obj = _eventListenerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-listener handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-listener value by handle. */
+function lookupOptionEventListener(handle: bigint | undefined): EventListener | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventListenerHandles.get(handle) ?? null;
 }
 
 /** Lookup a event-target value by handle. */
@@ -889,18 +913,6 @@ export function dispatchEvent(self: bigint, event: bigint): boolean {
 /** Type alias */
 export type EventListenerHandle = bigint;
 
-/** Handle table for EventListener instances */
-const _eventListenerhandles = new Map<bigint, EventListener>();
-let _nextEventListener = 1n;
-
-/** Lookup a EventListener by handle, throwing if not found. */
-function lookupEventListener(handle: bigint): EventListener {
-  const obj = _eventListenerhandles.get(handle);
-  if (!obj) {
-    throw new Error(`EventListener handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `handle-event()` operation.
  */
@@ -2406,9 +2418,9 @@ export function getStartContainer(self: bigint): bigint {
 /**
  * `get-start-offset()` operation.
  */
-export function getStartOffset(self: bigint): number {
+export function getStartOffset(self: bigint): bigint {
   const obj = lookupAbstractRange(self);
-  return obj.startOffset;
+  return BigInt(obj.startOffset);
 }
 
 /**
@@ -2425,9 +2437,9 @@ export function getEndContainer(self: bigint): bigint {
 /**
  * `get-end-offset()` operation.
  */
-export function getEndOffset(self: bigint): number {
+export function getEndOffset(self: bigint): bigint {
   const obj = lookupAbstractRange(self);
-  return obj.endOffset;
+  return BigInt(obj.endOffset);
 }
 
 /**
@@ -2739,7 +2751,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): EventHandlerRecord {
+export function DomTokenListContains(self: bigint, token: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2747,7 +2759,7 @@ export function DomTokenListContains(self: bigint, token: string): EventHandlerR
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: (EventHandlerRecord)[]): void {
+export function add(self: bigint, tokens: (string)[]): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens);
 }
@@ -2771,7 +2783,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: bigint, newToken: string): boolean {
+export function replace(self: bigint, token: string, newToken: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token, newToken);
 }
@@ -2779,7 +2791,7 @@ export function replace(self: bigint, token: bigint, newToken: string): boolean 
 /**
  * `supports()` operation.
  */
-export function supports(self: bigint, token: string): boolean {
+export function supports(self: bigint, token: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.supports(token);
 }
@@ -2838,7 +2850,7 @@ export function getResultType(self: bigint): number {
 /**
  * `get-number-value()` operation.
  */
-export function getNumberValue(self: bigint): number {
+export function getNumberValue(self: bigint): bigint {
   const obj = lookupXPathResult(self);
   return obj.numberValue;
 }
@@ -2846,7 +2858,7 @@ export function getNumberValue(self: bigint): number {
 /**
  * `get-string-value()` operation.
  */
-export function getStringValue(self: bigint): string {
+export function getStringValue(self: bigint): EventHandlerRecord {
   const obj = lookupXPathResult(self);
   return obj.stringValue;
 }
@@ -2854,7 +2866,7 @@ export function getStringValue(self: bigint): string {
 /**
  * `get-boolean-value()` operation.
  */
-export function getBooleanValue(self: bigint): boolean {
+export function getBooleanValue(self: bigint): EventHandlerRecord {
   const obj = lookupXPathResult(self);
   return obj.booleanValue;
 }

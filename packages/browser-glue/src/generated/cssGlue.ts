@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -324,6 +327,14 @@ let _nextElementList = 1n;
 const _eventHandles = new Map<bigint, Event>();
 let _nextEvent = 1n;
 
+/** Handle table for event-listener values */
+const _eventListenerHandles = new Map<bigint, EventListener>();
+let _nextEventListener = 1n;
+
+/** Handle table for event-target values */
+const _eventTargetHandles = new Map<bigint, EventTarget>();
+let _nextEventTarget = 1n;
+
 /** Handle table for external values */
 const _externalHandles = new Map<bigint, External>();
 let _nextExternal = 1n;
@@ -363,6 +374,10 @@ let _nextNavigator = 1n;
 /** Handle table for node values */
 const _nodeHandles = new Map<bigint, Node>();
 let _nextNode = 1n;
+
+/** Handle table for node-filter values */
+const _nodeFilterHandles = new Map<bigint, NodeFilter>();
+let _nextNodeFilter = 1n;
 
 /** Handle table for node-iterator values */
 const _nodeIteratorHandles = new Map<bigint, NodeIterator>();
@@ -831,6 +846,40 @@ function lookupOptionEvent(handle: bigint | undefined): Event | null {
   return _eventHandles.get(handle) ?? null;
 }
 
+/** Lookup a event-listener value by handle. */
+function lookupEventListener(handle: bigint): EventListener {
+  const obj = _eventListenerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-listener handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-listener value by handle. */
+function lookupOptionEventListener(handle: bigint | undefined): EventListener | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventListenerHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-target value by handle. */
+function lookupEventTarget(handle: bigint): EventTarget {
+  const obj = _eventTargetHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-target handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-target value by handle. */
+function lookupOptionEventTarget(handle: bigint | undefined): EventTarget | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventTargetHandles.get(handle) ?? null;
+}
+
 /** Lookup a external value by handle. */
 function lookupExternal(handle: bigint): External {
   const obj = _externalHandles.get(handle);
@@ -999,6 +1048,23 @@ function lookupOptionNode(handle: bigint | undefined): Node | null {
     return null;
   }
   return _nodeHandles.get(handle) ?? null;
+}
+
+/** Lookup a node-filter value by handle. */
+function lookupNodeFilter(handle: bigint): NodeFilter {
+  const obj = _nodeFilterHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`node-filter handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional node-filter value by handle. */
+function lookupOptionNodeFilter(handle: bigint | undefined): NodeFilter | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _nodeFilterHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-iterator value by handle. */
@@ -4041,7 +4107,10 @@ export function getHistory(): bigint {
  * `get-navigation()` operation.
  */
 export function getNavigation(): bigint {
-  return window.navigator;
+  const _callResult = window.navigator;
+  const handle = _nextNavigator++;
+  _navigatorHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5801,9 +5870,13 @@ export function getAttribute(self: bigint, qualifiedName: string): bigint | unde
 /**
  * `get-attribute-ns()` operation.
  */
-export function getAttributeNs(self: bigint, namespace: string | undefined, localName: string): string | undefined {
+export function getAttributeNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
   const obj = lookupElement(self);
-  return obj.getAttributeNS(namespace, localName) ?? undefined;
+  const _callResult = obj.getAttributeNS(namespace, localName);
+  if (_callResult === null) return undefined;
+  const handle = _nextString++;
+  _stringHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5863,9 +5936,12 @@ export function hasAttribute(self: bigint, qualifiedName: string): bigint {
 /**
  * `has-attribute-ns()` operation.
  */
-export function hasAttributeNs(self: bigint, namespace: string | undefined, localName: string): boolean {
+export function hasAttributeNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
-  return obj.hasAttributeNS(namespace, localName);
+  const _callResult = obj.hasAttributeNS(namespace, localName);
+  const handle = _nextBoolean++;
+  _booleanHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -6749,9 +6825,9 @@ export function setIsMap(self: bigint, value: boolean): void {
 /**
  * `get-width()` operation.
  */
-export function HtmlImageElementGetWidth(self: bigint): number {
+export function HtmlImageElementGetWidth(self: bigint): bigint {
   const obj = lookupHTMLImageElement(self);
-  return obj.width;
+  return BigInt(obj.width);
 }
 
 /**
@@ -6765,9 +6841,9 @@ export function setWidth(self: bigint, value: number): void {
 /**
  * `get-height()` operation.
  */
-export function HtmlImageElementGetHeight(self: bigint): number {
+export function HtmlImageElementGetHeight(self: bigint): bigint {
   const obj = lookupHTMLImageElement(self);
-  return obj.height;
+  return BigInt(obj.height);
 }
 
 /**
@@ -7424,7 +7500,11 @@ export function getButtons(self: bigint): number {
  */
 export function getRelatedTarget(self: bigint): bigint | undefined {
   const obj = lookupMouseEvent(self);
-  return obj.relatedTarget ?? undefined;
+  const _callResult = obj.relatedTarget;
+  if (_callResult === null) return undefined;
+  const handle = _nextEventTarget++;
+  _eventTargetHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -8013,7 +8093,11 @@ export function DocumentOrShadowRootGetCustomElementRegistry(self: bigint): bigi
  */
 export function getFullscreenElement(self: bigint): bigint | undefined {
   const obj = lookupDocumentOrShadowRoot(self);
-  return obj.fullscreenElement ?? undefined;
+  const _callResult = obj.fullscreenElement;
+  if (_callResult === null) return undefined;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**

@@ -1496,6 +1496,208 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("navigator", "getMimeTypes"): "mime-type-array",
     # IntersectionObserver
     ("intersection-observer", "getRoot"): "element",
+    # Window - getNavigation returns Navigator
+    ("window", "getNavigation"): "navigator",
+    # Element - attribute getters that return Attr
+    ("element", "getAttributeNode"): "attr",
+    ("element", "getAttributeNodeNs"): "attr",
+    # MouseEvent - relatedTarget
+    ("mouse-event", "getRelatedTarget"): "event-target",
+    # Event - target getters
+    ("event", "getTarget"): "event-target",
+    ("event", "getCurrentTarget"): "event-target",
+    ("event", "getSrcElement"): "element",
+    # DocumentOrShadowRoot - element getters
+    ("document-or-shadow-root", "getFullscreenElement"): "element",
+    ("document-or-shadow-root", "getActiveElement"): "element",
+    ("document-or-shadow-root", "getPointerLockElement"): "element",
+    ("document-or-shadow-root", "getStyleSheetList"): "css-style-sheet-list",
+    # CSSRule - parent getters
+    ("css-rule", "getParentRule"): "css-rule",
+    ("css-rule", "getParentStyleSheet"): "css-style-sheet",
+    # Body - getBody
+    ("body", "getBody"): "readable-stream",
+    # ReadableByteStreamController
+    ("readable-byte-stream-controller", "getByobRequest"): "readable-stream-byob-request",
+    # XMLHttpRequest
+    ("xml-http-request", "getResponseXml"): "document",
+    # ClipboardEvent
+    ("clipboard-event", "getClipboardData"): "data-transfer",
+    # Touch
+    ("touch", "getTarget"): "event-target",
+    # TouchList - item
+    ("touch-list", "item"): "touch",
+    # UIEvent - view
+    ("ui-event", "getView"): "window",
+    # DragEvent
+    ("drag-event", "getDataTransfer"): "data-transfer",
+    # PointerEvent - getCoalescedEvents/getPredictedEvents
+    ("pointer-event", "getCoalescedEvents"): "pointer-event-list",
+    ("pointer-event", "getPredictedEvents"): "pointer-event-list",
+    # Event - composedPath
+    ("event", "composedPath"): "event-target-list",
+    # HTMLElement - offsetParent
+    ("html-element", "getOffsetParent"): "element",
+    # HTMLIFrameElement
+    ("html-iframe-element", "getContentDocument"): "document",
+    ("html-iframe-element", "getContentWindow"): "window",
+    # HTMLObjectElement
+    ("html-object-element", "getContentDocument"): "document",
+    ("html-object-element", "getContentWindow"): "window",
+    # HTMLSlotElement
+    ("html-slot-element", "getAssignedElements"): "element-list",
+    ("html-slot-element", "assignedElements"): "element-list",
+    ("html-slot-element", "assignedNodes"): "node-list",
+    # TextTrackList
+    ("text-track-list", "item"): "text-track",
+    ("text-track-list", "getTextTrack"): "text-track",
+    # TextTrackCueList
+    ("text-track-cue-list", "item"): "text-track-cue",
+    ("text-track-cue-list", "getCueById"): "text-track-cue",
+    # TextTrack
+    ("text-track", "getCues"): "text-track-cue-list",
+    ("text-track", "getActiveCues"): "text-track-cue-list",
+    # DataTransferItemList
+    ("data-transfer-item-list", "item"): "data-transfer-item",
+    # DataTransfer
+    ("data-transfer", "getItems"): "data-transfer-item-list",
+    ("data-transfer", "getFiles"): "file-list",
+    # FileList
+    ("file-list", "item"): "file",
+    # Selection
+    ("selection", "getAnchorNode"): "node",
+    ("selection", "getFocusNode"): "node",
+    ("selection", "getRangeAt"): "range",
+    # Node
+    ("node", "getRootNode"): "node",
+    ("node", "getParentNode"): "node",
+    ("node", "getParentElement"): "element",
+    ("node", "getFirstChild"): "node",
+    ("node", "getLastChild"): "node",
+    ("node", "getNextSibling"): "node",
+    ("node", "getPreviousSibling"): "node",
+    ("node", "getOwnerDocument"): "document",
+    ("node", "getChildNodes"): "node-list",
+    ("node", "cloneNode"): "node",
+    ("node", "insertBefore"): "node",
+    ("node", "appendChild"): "node",
+    ("node", "replaceChild"): "node",
+    ("node", "removeChild"): "node",
+    # Attr
+    ("attr", "getOwnerElement"): "element",
+    # Element
+    ("element", "closest"): "element",
+    ("element", "matches"): "boolean",
+    ("element", "webkitMatchesSelector"): "boolean",
+    ("element", "getElementsByTagName"): "html-collection",
+    ("element", "getElementsByTagNameNs"): "html-collection",
+    ("element", "getElementsByClassName"): "html-collection",
+    ("element", "querySelector"): "element",
+    ("element", "querySelectorAll"): "node-list",
+    ("element", "getBoundingClientRect"): "dom-rect",
+    ("element", "getClientRects"): "dom-rect-list",
+    ("element", "getAttribute"): "string",
+    ("element", "getAttributeNs"): "string",
+    ("element", "getAttributeNames"): "string-list",
+    ("element", "hasAttribute"): "boolean",
+    ("element", "hasAttributeNs"): "boolean",
+    ("element", "hasAttributes"): "boolean",
+    ("element", "getShadowRoot"): "shadow-root",
+    ("element", "getInternals"): "element-internals",
+    # Document
+    ("document", "getElementById"): "element",
+    ("document", "getElementsByTagName"): "html-collection",
+    ("document", "getElementsByTagNameNs"): "html-collection",
+    ("document", "getElementsByClassName"): "html-collection",
+    ("document", "getElementsByName"): "node-list",
+    ("document", "querySelector"): "element",
+    ("document", "querySelectorAll"): "node-list",
+    ("document", "createElement"): "element",
+    ("document", "createElementNs"): "element",
+    ("document", "createDocumentFragment"): "document-fragment",
+    ("document", "createTextNode"): "text",
+    ("document", "createComment"): "comment",
+    ("document", "createAttribute"): "attr",
+    ("document", "createAttributeNs"): "attr",
+    ("document", "createRange"): "range",
+    ("document", "createNodeIterator"): "node-iterator",
+    ("document", "createTreeWalker"): "tree-walker",
+    ("document", "importNode"): "node",
+    ("document", "adoptNode"): "node",
+    ("document", "getSelection"): "selection",
+    ("document", "getElementsByTag"): "html-collection",
+    ("document", "getElementsByTagNs"): "html-collection",
+    ("document", "getBody"): "html-element",
+    ("document", "getHead"): "html-element",
+    ("document", "getDocumentElement"): "element",
+    ("document", "getDoctype"): "document-type",
+    ("document", "getImplementation"): "dom-implementation",
+    ("document", "getActiveElement"): "element",
+    ("document", "getStyleSheets"): "style-sheet-list",
+    ("document", "getScrollingElement"): "element",
+    # DOMRectList
+    ("dom-rect-list", "item"): "dom-rect",
+    # DOMTokenList
+    ("dom-token-list", "item"): "string",
+    # HTMLCollection
+    ("html-collection", "item"): "element",
+    ("html-collection", "namedItem"): "element",
+    # NodeList
+    ("node-list", "item"): "node",
+    # NamedNodeMap
+    ("named-node-map", "item"): "attr",
+    ("named-node-map", "getNamedItem"): "attr",
+    ("named-node-map", "getNamedItemNs"): "attr",
+    # Range
+    ("range", "getStartContainer"): "node",
+    ("range", "getEndContainer"): "node",
+    ("range", "getCommonAncestorContainer"): "node",
+    ("range", "getBoundingClientRect"): "dom-rect",
+    ("range", "getClientRects"): "dom-rect-list",
+    ("range", "cloneContents"): "document-fragment",
+    ("range", "createContextualFragment"): "document-fragment",
+    ("range", "extractContents"): "document-fragment",
+    ("range", "cloneRange"): "range",
+    # ShadowRoot
+    ("shadow-root", "getHost"): "element",
+    # TreeWalker
+    ("tree-walker", "getRoot"): "node",
+    ("tree-walker", "getCurrentNode"): "node",
+    ("tree-walker", "parentNode"): "node",
+    ("tree-walker", "firstChild"): "node",
+    ("tree-walker", "lastChild"): "node",
+    ("tree-walker", "nextSibling"): "node",
+    ("tree-walker", "previousSibling"): "node",
+    ("tree-walker", "nextNode"): "node",
+    ("tree-walker", "previousNode"): "node",
+    ("tree-walker", "getFilter"): "node-filter",
+    # NodeIterator
+    ("node-iterator", "getRoot"): "node",
+    ("node-iterator", "getReferenceNode"): "node",
+    ("node-iterator", "getFilter"): "node-filter",
+    ("node-iterator", "nextNode"): "node",
+    ("node-iterator", "previousNode"): "node",
+    # Canvas
+    ("canvas-rendering-context", "createLinearGradient"): "canvas-gradient",
+    ("canvas-rendering-context", "createRadialGradient"): "canvas-gradient",
+    ("canvas-rendering-context", "createConicGradient"): "canvas-gradient",
+    ("canvas-rendering-context", "createPattern"): "canvas-pattern",
+    ("canvas-rendering-context", "createImageData"): "image-data",
+    ("canvas-rendering-context", "getImageData"): "image-data",
+    ("canvas-rendering-context", "measureText"): "text-metrics",
+    ("canvas-rendering-context", "getLineDash"): "float-32-list",
+    ("canvas-rendering-context", "getTransform"): "dom-matrix",
+    ("canvas-rendering-context", "getCanvas"): "any",
+    # OffscreenCanvas
+    ("offscreencanvas", "getContext"): "any",
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # HTMLCanvasElement
+    ("html-canvas-element", "getContext"): "any",
+    # DOMParser
+    ("dom-parser", "parseFromString"): "document",
+    # IntersectionObserverEntry
+    ("intersection-observer-entry", "getTarget"): "element",
+    ("intersection-observer-entry", "target"): "element",
 }
 
 
@@ -1523,13 +1725,13 @@ DICTIONARY_PARAMETER_TYPES = {
     ("video-encoder", "configure", "config"): "VideoEncoderConfig",
     ("video-encoder", "is-config-supported", "config"): "VideoEncoderConfig",
     ("video-encoder", "encode", "options"): "VideoEncoderEncodeOptions",
-    ("credentials-container", "get", "options"): "CredentialRequestOptions | undefined",
-    ("credentials-container", "create", "options"): "CredentialCreationOptions | undefined",
+    ("credentials-container", "get", "options"): "any",
+    ("credentials-container", "create", "options"): "any",
     # WebCodecs
-    ("audio-data", "copy-to", "options"): "AudioDataCopyToOptions | undefined",
-    ("audio-data", "allocation-size", "options"): "AudioDataAllocationOptions | undefined",
-    ("video-frame", "copy-to", "options"): "VideoFrameCopyToOptions | undefined",
-    ("video-frame", "allocation-size", "options"): "VideoFrameAllocationOptions | undefined",
+    ("audio-data", "copy-to", "options"): "any",
+    ("audio-data", "allocation-size", "options"): "any",
+    ("video-frame", "copy-to", "options"): "any",
+    ("video-frame", "allocation-size", "options"): "any",
     ("image-decoder", "decode", "options"): "ImageDecodeOptions | undefined",
     ("image-decoder", "parse", "options"): "ImageParseOptions",
     # Canvas
@@ -2615,6 +2817,22 @@ ENUM_PROPERTIES = {
     # Request method/referrer (string→bigint enums)
     ("request", "method"): "HttpMethod",
     ("request", "referrer"): "ReferrerUrl",
+    # Gamepad id (string → bigint)
+    ("gamepad", "id"): "GamepadId",
+    # HTMLMediaElement canPlayType/preload
+    ("html-media-element", "canPlayType"): "CanPlayTypeResult",
+    ("html-media-element", "preload"): "PreloadString",
+    # Notification tag
+    ("notification", "tag"): "NotificationTag",
+    ("notification", "title"): "NotificationTitle",
+    # Request URL (string → bigint)
+    ("request", "getUrl"): "RequestUrl",
+    # XMLHttpRequest responseURL
+    ("xml-http-request", "responseURL"): "ResponseUrl",
+    # DataTransfer types
+    ("data-transfer", "types"): "DataTransferTypes",
+    # ClipboardChangeEvent types
+    ("clipboard-change-event", "types"): "ClipboardTypes",
 }
 
 # Enum value mappings (string → bigint)
@@ -2977,6 +3195,55 @@ ENUM_VALUE_MAPPINGS = {
     "ReferrerUrl": {
         "": 0,
     },
+    # Gamepad ID as enum
+    "GamepadId": {
+        "": 0,
+    },
+    # Notification tag/title
+    "NotificationTag": {
+        "": 0,
+    },
+    "NotificationTitle": {
+        "": 0,
+    },
+    # Request URL
+    "RequestUrl": {
+        "": 0,
+    },
+    "ResponseUrl": {
+        "": 0,
+    },
+    # HTTP Method
+    "HttpMethod": {
+        "": 0,
+        "GET": 1,
+        "POST": 2,
+        "PUT": 3,
+        "DELETE": 4,
+        "HEAD": 5,
+        "OPTIONS": 6,
+        "PATCH": 7,
+    },
+    # CanPlayType result
+    "CanPlayTypeResult": {
+        "": 0,
+        "probably": 1,
+        "maybe": 2,
+    },
+    # Preload string
+    "PreloadString": {
+        "": 0,
+        "none": 1,
+        "metadata": 2,
+        "auto": 3,
+    },
+    # DataTransfer types
+    "DataTransferTypes": {
+        "": 0,
+    },
+    "ClipboardTypes": {
+        "": 0,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -3020,6 +3287,15 @@ ENUM_SETTER_PROPERTIES = {
     ("dom-token-list", "value"): "DOMTokenListValue",
     # HTMLIFrameElement setter
     ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
+}
+
+# Properties that return readonly arrays that need to be converted to mutable arrays
+# Maps (interface, property) to True
+READONLY_ARRAY_PROPERTIES = {
+    # DataTransfer types
+    ("data-transfer", "types"): True,
+    ("clipboard-change-event", "types"): True,
+    ("clipboard-item", "types"): True,
 }
 
 # Methods that return boolean but need to be converted to bigint
@@ -3287,6 +3563,46 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # Additional number→bigint for TS2322 fixes
     ("touch", "identifier"): True,
     ("response", "status"): True,
+    # AbstractRange
+    ("abstract-range", "endOffset"): True,
+    ("abstract-range", "startOffset"): True,
+    # WheelEvent
+    ("wheel-event", "deltaMode"): True,
+    # Performance
+    ("performance-entry", "startTime"): True,
+    ("performance-entry", "duration"): True,
+    ("performance-resource-timing", "transferSize"): True,
+    ("performance-resource-timing", "encodedBodySize"): True,
+    ("performance-resource-timing", "decodedBodySize"): True,
+    # PointerEvent
+    ("pointer-event", "pointerId"): True,
+    ("pointer-event", "width"): True,
+    ("pointer-event", "height"): True,
+    ("pointer-event", "pressure"): True,
+    ("pointer-event", "tangentialPressure"): True,
+    ("pointer-event", "tiltX"): True,
+    ("pointer-event", "tiltY"): True,
+    ("pointer-event", "twist"): True,
+    ("pointer-event", "altitudeAngle"): True,
+    ("pointer-event", "azimuthAngle"): True,
+    # TouchEvent
+    ("touch-event", "touchPointId"): True,
+    # WebSocket
+    ("ws", "readyState"): True,
+    ("ws", "bufferedAmount"): True,
+    # Gamepad
+    ("gamepad", "timestamp"): True,
+    ("gamepad", "index"): True,
+    # RTC
+    ("rtc-data-channel", "maxMessageSize"): True,
+    # HTMLMediaElement
+    ("html-media-element", "readyState"): True,
+    ("html-media-element", "networkState"): True,
+    # HTMLImageElement
+    ("html-image-element", "naturalWidth"): True,
+    ("html-image-element", "naturalHeight"): True,
+    ("html-image-element", "width"): True,
+    ("html-image-element", "height"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -3519,10 +3835,14 @@ SYNTHETIC_HANDLE_TYPES = {
     # Additional types for TS2322 fixes
     "canvas-gradient": ("CanvasGradient", "canvasGradientHandles", "CanvasGradient"),
     "view-transition": ("ViewTransition", "viewTransitionHandles", "ViewTransition"),
+    # Types for parameter conversion
+    "buffer-source": ("BufferSource", "bufferSourceHandles", "BufferSource"),
+    "event-listener": ("EventListener", "eventListenerHandles", "EventListener"),
 }
 
 # Type definitions that need to be generated in glue code
 CUSTOM_TYPE_DEFINITIONS = {
+    "DOMTokenListValue": "string",
     "EventHandlerRecord": "any",
     "WebGLObject": "any",
     "u64": "bigint",
@@ -4281,6 +4601,32 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("message-event", "initMessageEvent"),
     # Cache - addAll takes RequestInfo[] which is complex
     ("cache", "addAll"),
+}
+
+# Properties that return readonly arrays and need spreading
+# Format: (interface_wit_name, property_name)
+READONLY_ARRAY_PROPERTIES = {
+    ("data-transfer", "types"),
+    ("performance", "entryList"),
+    ("navigator-language", "languages"),
+    ("performance-entry-list", "entryList"),
+    ("clipboard-item", "types"),
+    ("performance-observer", "supportedEntryTypes"),
+}
+
+# Properties that return arrays of objects that need handle conversion
+# Format: (interface_wit_name, method_name_in_camelCase) -> (target_type, element_type)
+# target_type is the synthetic type for the array, element_type is the type of each element
+HANDLE_RETURNING_ARRAY_PROPERTIES = {
+    ("message-event", "getPorts"): ("message-port-list", "message-port"),
+    ("media-metadata", "getArtwork"): ("media-image-list", "media-image"),
+    ("resize-observer-entry", "getBorderBoxSize"): ("resize-observer-size-list", "resize-observer-size"),
+    ("resize-observer-entry", "getContentBoxSize"): ("resize-observer-size-list", "resize-observer-size"),
+    ("resize-observer-entry", "getDevicePixelContentBoxSize"): ("resize-observer-size-list", "resize-observer-size"),
+    ("rtc-rtp-receiver", "getStreams"): ("media-stream-list", "media-stream"),
+    ("rtc-peer-connection", "getLocalStreams"): ("media-stream-list", "media-stream"),
+    ("rtc-track-event", "getStreams"): ("media-stream-list", "media-stream"),
+    ("extendable-message-event", "getPorts"): ("message-port-list", "message-port"),
 }
 
 # JavaScript/TypeScript reserved keywords
