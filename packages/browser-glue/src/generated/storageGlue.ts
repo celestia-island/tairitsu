@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -100,7 +108,7 @@ export function persisted(self: bigint): bigint {
  * Poll an async `persisted()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersisted(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollPersisted(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };

@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -111,7 +119,7 @@ export function getState(self: bigint): bigint {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): string {
+export function getName(self: bigint): number {
   const obj = getPermissionStatus(self);
   return obj.name;
 }
@@ -119,7 +127,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): string {
+export function getOnchange(self: bigint): number {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
@@ -127,7 +135,7 @@ export function getOnchange(self: bigint): string {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchange(self: bigint, value: bigint): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

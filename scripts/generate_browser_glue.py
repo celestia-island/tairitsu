@@ -205,6 +205,11 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("crypto", "getSubtle"): "subtle-crypto",
 }
 
+# Type definitions that need to be generated in glue code
+CUSTOM_TYPE_DEFINITIONS = {
+    "EventHandlerRecord": "{ [key: string]: ((...args: any[]) => void) | null | undefined; };",
+}
+
 
 # ---------------------------------------------------------------------------
 # Code Generation Data Structures
@@ -564,7 +569,19 @@ class BrowserGlueGenerator:
         lines.append(" * All browser objects are represented as opaque bigint handles.")
         lines.append(" */")
         lines.append("")
-
+        
+        # Custom type definitions
+        if CUSTOM_TYPE_DEFINITIONS:
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("// Custom type definitions")
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("")
+            for type_name, type_def in CUSTOM_TYPE_DEFINITIONS.items():
+                lines.append(f"/** Type definition for {type_name} */")
+                lines.append(f"export type {type_name} = {type_def};")
+                lines.append("")
+            lines.append("")
+        
         # Collect all function names to detect duplicates across interfaces
         all_function_names = []
         for iface in domain.interfaces:

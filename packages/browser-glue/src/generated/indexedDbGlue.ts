@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -299,7 +307,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: string): void {
+export function advance(handle: bigint, count: number): void {
   return IdbCursor.advance(handle, count);
 }
 
@@ -347,7 +355,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string | undefined {
+export function IdbRequestSource(handle: bigint): string {
   return IDBRequest.source(handle);
 }
 

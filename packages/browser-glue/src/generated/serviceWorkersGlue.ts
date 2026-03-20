@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // WIT interface: service-worker-registration
 // ---------------------------------------------------------------------------
 
@@ -66,7 +74,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: bigint): void {
+export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
   return ServiceWorker.postMessage(handle, message, transfer);
 }
 
