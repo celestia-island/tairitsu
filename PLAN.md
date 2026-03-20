@@ -1,88 +1,84 @@
-# 汇总：packages/browser-glue 生成文件的 TypeScript 错误
+# Browser Glue TypeScript 错误修复计划
 
-说明：下面按 TypeScript 错误代码归并，同类错误合并列出受影响的文件和行号（以文件->行号序列表示）。每一类错误下先给出简要含义说明，再列出文件与行号供定位。该错误集合来自编辑器/编译器诊断（生成文件位于 packages/browser-glue/src/generated）。
+## 当前状态
 
-## 已修复的问题
+**错误数量：1778 个** (从原始 ~2500+ 减少)
 
-1. **`Cannot find name 'entry'`** (TS2304)
-   - 原因：`_render_async_body` 中 `.then()` 回调使用了 `entry` 变量但没有定义
-   - 修复：在 `.then()` 开头添加 `const entry = _asyncHandles.get(requestId);`
+## 错误分布
 
-2. **`Parameter 'result' implicitly has an 'any' type`** (TS7006)
-   - 原因：async 函数中 `.then()` 回调的 `result` 参数缺少类型注解
-   - 修复：将 `.then((result) =>` 改为 `.then((result: unknown) =>`
+| 错误类型 | 数量 | 描述 |
+|---------|------|------|
+| TS2322 | 806 | 类型不匹配 - 返回对象/number/string 但期望 bigint |
+| TS2345 | 267 | 参数类型不匹配 |
+| TS2304 | 246 | 未声明的标识符 (`_nextWebGlObject`, `getU64` 等) |
+| TS2693 | 118 | 类作为值使用 |
+| TS18046 | 95 | 类型缩小问题 |
+| TS2769 | 68 | 没有匹配的重载 |
+| TS2339 | 58 | 属性不存在 |
 
-3. **部分 async 方法错误标记**
-   - 原因：`close`, `reset`, `abort` 等方法在某些接口上不是 async 的
-   - 修复：添加 `ASYNC_METHOD_OVERRIDES` 配置来精确控制每个接口的 async 方法
+## 根本原因分析
 
-4. **`browser_attr` 未使用 API 名称映射**
-   - 原因：`browser_attr` 只使用 `kebab_to_camel`，没有使用 `BROWSER_API_NAME_MAPPINGS`
-   - 修复：在 `generate_function` 中使用 `BROWSER_API_NAME_MAPPINGS.get(attr_name, ...)`
+### 1. 缺少 Handle 表和辅助函数 (TS2304)
+- 生成代码引用 `_nextWebGlObject`, `_nextString` 等变量
+- 但这些只在接口有 `handle_type` 时才生成
+- 需要为返回对象的方法创建对应的 handle 表
 
-5. **枚举属性返回 string 而非 bigint**
-   - 原因：某些属性在浏览器中是 string 枚举，但 WIT 定义为 bigint
-   - 修复：添加 `ENUM_PROPERTIES` 和 `ENUM_VALUE_MAPPINGS` 配置，生成 switch 语句转换
+### 2. 类型不匹配 (TS2322)
+- WIT 定义所有返回值为 bigint (handle)
+- 但浏览器 API 返回对象、number、string、boolean
+- 需要在 `HANDLE_RETURNING_FUNCTIONS` 中配置 wrap 逻辑
 
-6. **number 属性返回 number 而非 bigint**
-   - 原因：某些属性在浏览器中是 number，但 WIT 定义为 bigint
-   - 修复：添加 `NUMBER_TO_BIGINT_PROPERTIES` 配置，生成 `BigInt()` 转换
+### 3. 参数类型不匹配 (TS2345)
+- bigint 参数需要转换为正确的浏览器类型
+- 需要扩展 `PARAMETER_BIGINT_TO_NUMBER` 和 `PARAMETER_HANDLE_MAPPING`
 
-7. **参数 handle lookup 目标接口错误**
-   - 原因：`PARAMETER_HANDLE_MAPPING` 中的目标接口设置不正确
-   - 修复：更新映射表使用正确的接口名
+## 修复策略
 
-## 剩余问题（约 2478 个错误）
+### 阶段 1: 修复 TS2304 缺失标识符 (高优先级)
+- 为返回对象的方法添加 handle 表
+- 添加缺失的辅助函数 (`getU64`, `getOption`, `u64`)
+- 预期减少 ~200 错误
 
-当前错误分布：
-- TS2322 (822个): 类型不匹配
-- TS2345 (311个): 参数类型不匹配
-- TS2339 (213个): 属性不存在
-- TS2304 (139个): 未声明的标识符
-- TS2551 (69个): 方法名错误
-- TS2769 (67个): 没有匹配的重载
+### 阶段 2: 修复 TS2322 类型不匹配
+- 扩展 `HANDLE_RETURNING_FUNCTIONS` 配置
+- 添加更多 `NUMBER_TO_BIGINT_PROPERTIES`
+- 添加更多 `BOOLEAN_TO_BIGINT_PROPERTIES`
+- 添加更多 `ENUM_PROPERTIES`
+- 预期减少 ~500 错误
 
-### 主要问题类别
+### 阶段 3: 修复 TS2345 参数类型
+- 扩展 `PARAMETER_BIGINT_TO_NUMBER`
+- 扩展 `PARAMETER_HANDLE_MAPPING`
+- 预期减少 ~200 错误
 
-1) 错误码 2322 — "Type 'A' is not assignable to type 'B'"
-   - 含义：类型不匹配，赋值或返回值的类型与目标类型不兼容
-   - 常见原因：
-     - getter 返回对象而非 bigint handle
-     - 方法返回 Promise 但被当作普通方法处理
-     - 返回类型应该是 number/string 但定义为 bigint
+### 阶段 4: 修复剩余错误
+- TS2693 类作为值
+- TS2339 属性不存在
+- TS18046 类型缩小
 
-2) 错误码 2345 — "Argument of type 'A' is not assignable to parameter of type 'B'"
-   - 含义：函数调用/方法调用时传参类型不匹配
-   - 常见原因：
-     - 参数需要 handle lookup 但没有配置
-     - 参数需要类型转换（如 bigint -> number）
+## 已完成
 
-3) 错误码 2339 — "Property 'X' does not exist on type 'Y'"
-   - 含义：访问对象上不存在的属性或方法
-   - 常见原因：
-     - 某些属性在 TypeScript DOM 类型中不存在
-     - 属性名拼写错误
+- [x] 修复 `Cannot find name 'entry'`
+- [x] 修复 `Parameter 'result' implicitly has an 'any' type`
+- [x] 添加 `ASYNC_METHOD_OVERRIDES` 配置
+- [x] 修复 `browser_attr` 映射
+- [x] 添加 `ENUM_PROPERTIES` 和 `ENUM_VALUE_MAPPINGS`
+- [x] 添加 `NUMBER_TO_BIGINT_PROPERTIES`
+- [x] 添加 `BOOLEAN_TO_BIGINT_PROPERTIES`
+- [x] 添加 `CUSTOM_TYPE_DEFINITIONS`
+- [x] 添加 `GETTER_BUT_ACTUALLY_METHOD`
+- [x] 添加 `PROPERTIES_NEEDING_TYPE_ASSERTION`
+- [x] 提交: `78a752a` - "fix: reduce TypeScript errors in browser-glue generated code"
 
-4) 错误码 2304 — "Cannot find name 'X'"
-   - 含义：引用了未声明的变量/标识符
-   - 常见原因：
-     - 缺失类型定义（如 WebGLObject）
+## 进行中
 
-## 下一步建议
+- [ ] 阶段 1: 修复 TS2304 缺失标识符
+- [ ] 阶段 2: 修复 TS2322 类型不匹配
+- [ ] 阶段 3: 修复 TS2345 参数类型
+- [ ] 阶段 4: 修复剩余错误
 
-1. **添加更多返回类型转换配置**
-   - 扩展 `ENUM_PROPERTIES` 和 `NUMBER_TO_BIGINT_PROPERTIES`
-   - 添加对象到 handle 的转换逻辑
+## 目标
 
-2. **添加更多参数类型转换配置**
-   - 扩展 `PARAMETER_HANDLE_MAPPING`
-   - 扩展 `DICTIONARY_PARAMETER_TYPES`
-   - 扩展 `PARAMETER_BIGINT_TO_NUMBER`
-
-3. **添加缺失的类型定义**
-   - 在 `CUSTOM_TYPE_DEFINITIONS` 中添加缺失的类型
-
-4. **修复属性名错误**
-   - 扩展 `BROWSER_API_NAME_MAPPINGS`
-
-—— 结束 ——
+- 所有 TypeScript 编译错误归零
+- 无假实现、TODO 或 Mock 接口
+- E2E 测试通过

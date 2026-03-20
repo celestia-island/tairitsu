@@ -11,12 +11,16 @@ from .config import (
     GLOBAL_SINGLETONS,
     CUSTOM_TYPE_DEFINITIONS,
     PARAMETER_BIGINT_TO_NUMBER,
+    PARAMETER_HANDLE_MAPPING,
     HANDLE_RETURNING_FUNCTIONS,
     STATIC_METHOD_NEEDS_TYPE_ASSERTION,
     ENUM_PROPERTIES,
     ENUM_VALUE_MAPPINGS,
     NUMBER_TO_BIGINT_PROPERTIES,
+    BOOLEAN_TO_BIGINT_PROPERTIES,
     PROPERTIES_NEEDING_TYPE_ASSERTION,
+    SYNTHETIC_HANDLE_TYPES,
+    correct_type_casing,
 )
 from .models import (
     GeneratedDomain, GeneratedInterface, GeneratedFunction,
@@ -25,6 +29,19 @@ from .models import (
 
 class CodeGenerator:
     """Generates TypeScript code from parsed WIT structures."""
+
+    def _get_handle_info(self, target_iface: str) -> tuple:
+        """Get handle variable name and pascal name for a target interface.
+        
+        Returns (handle_var, handle_pascal) tuple.
+        """
+        if target_iface in SYNTHETIC_HANDLE_TYPES:
+            _, handle_var, handle_pascal = SYNTHETIC_HANDLE_TYPES[target_iface]
+            return handle_var, handle_pascal
+        else:
+            handle_pascal = kebab_to_pascal(target_iface)
+            handle_var = kebab_to_camel(target_iface + "Handles")
+            return handle_var, handle_pascal
 
     def render_module(self, domain: GeneratedDomain, source_file: str) -> str:
         """Render TypeScript module for a domain using simple string templating."""
@@ -102,6 +119,53 @@ class CodeGenerator:
             lines.append("")
             lines.append("const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();")
             lines.append("")
+
+        needed_synthetic_types = set()
+        for iface in domain.interfaces:
+            for func in iface.functions:
+                key = (iface.wit_name, kebab_to_camel(func.wit_name))
+                if key in HANDLE_RETURNING_FUNCTIONS:
+                    target_type = HANDLE_RETURNING_FUNCTIONS[key]
+                    if target_type in SYNTHETIC_HANDLE_TYPES:
+                        needed_synthetic_types.add(target_type)
+
+        if needed_synthetic_types:
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("// Synthetic handle tables for primitive/utility types")
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("")
+            for wit_type in sorted(needed_synthetic_types):
+                if wit_type in SYNTHETIC_HANDLE_TYPES:
+                    ts_type, handle_var, handle_pascal = SYNTHETIC_HANDLE_TYPES[wit_type]
+                    lines.append(f"/** Handle table for {wit_type} values */")
+                    lines.append(f"const _{handle_var} = new Map<bigint, {ts_type}>();")
+                    lines.append(f"let _next{handle_pascal} = 1n;")
+                    lines.append("")
+            
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("// Helper functions for handle lookups")
+            lines.append("// ---------------------------------------------------------------------------")
+            lines.append("")
+            for wit_type in sorted(needed_synthetic_types):
+                if wit_type in SYNTHETIC_HANDLE_TYPES:
+                    ts_type, handle_var, handle_pascal = SYNTHETIC_HANDLE_TYPES[wit_type]
+                    lines.append(f"/** Get a {wit_type} value by handle. */")
+                    lines.append(f"function get{handle_pascal}(handle: bigint): {ts_type} {{")
+                    lines.append(f"  const obj = _{handle_var}.get(handle);")
+                    lines.append("  if (obj === undefined) {")
+                    lines.append(f"    throw new Error(`{wit_type} handle ${{handle}} not found`);")
+                    lines.append("  }")
+                    lines.append("  return obj;")
+                    lines.append("}")
+                    lines.append("")
+                    lines.append(f"/** Get an optional {wit_type} value by handle. */")
+                    lines.append(f"function getOption{handle_pascal}(handle: bigint | undefined): {ts_type} | undefined {{")
+                    lines.append("  if (handle === undefined || handle === 0n) {")
+                    lines.append("    return undefined;")
+                    lines.append("  }")
+                    lines.append(f"  return _{handle_var}.get(handle);")
+                    lines.append("}")
+                    lines.append("")
 
         for iface in domain.interfaces:
             lines.append("// ---------------------------------------------------------------------------")
@@ -288,25 +352,36 @@ class CodeGenerator:
         needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
         
+        handle_key = (iface.wit_name, kebab_to_camel(func.wit_name))
+        
         if func.is_getter_but_method:
             method_name = func.browser_attr
             args = self._get_converted_browser_args(func, iface, skip_self=True)
-            if func.return_is_optional:
+            if handle_key in HANDLE_RETURNING_FUNCTIONS:
+                target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
+                target_var, target_pascal = self._get_handle_info(target_iface)
+                lines.append(f"  const result = {obj_ref_with_assertion}.{method_name}({args});")
+                if func.return_is_optional:
+                    lines.append(f"  if (result === null) return undefined;")
+                lines.append(f"  const handle = _next{target_pascal}++;")
+                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append("  return handle;")
+            elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ?? undefined;")
             elif func.return_is_void:
                 lines.append(f"  {obj_ref_with_assertion}.{method_name}({args});")
             else:
                 lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args});")
-        elif (iface.wit_name, kebab_to_camel(func.wit_name)) in HANDLE_RETURNING_FUNCTIONS:
+        elif handle_key in HANDLE_RETURNING_FUNCTIONS:
             target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.wit_name, kebab_to_camel(func.wit_name))]
-            target_pascal = kebab_to_pascal(target_iface)
-            target_var = kebab_to_camel(target_iface + "Handles")
+            target_var, target_pascal = self._get_handle_info(target_iface)
             lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_attr};")
             lines.append(f"  const handle = _next{target_pascal}++;")
             lines.append(f"  _{target_var}.set(handle, result);")
             lines.append("  return handle;")
         else:
             enum_key = (iface.wit_name, prop_name)
+            bool_key = (iface.wit_name, func.wit_name)
             if enum_key in ENUM_PROPERTIES:
                 enum_name = ENUM_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
@@ -322,6 +397,12 @@ class CodeGenerator:
                     lines.append(f"  return value !== undefined ? BigInt(value) : undefined;")
                 else:
                     lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_attr});")
+            elif bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
+                if func.return_is_optional:
+                    lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
+                    lines.append(f"  return value !== undefined ? (value ? 1n : 0n) : undefined;")
+                else:
+                    lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ? 1n : 0n;")
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? undefined;")
             else:
@@ -350,9 +431,13 @@ class CodeGenerator:
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render static function body."""
+        bool_key = (iface.wit_name, func.wit_name)
         if func.browser_class:
             args = self._get_converted_browser_args(func, iface, skip_self=False)
-            lines.append(f"  return {func.browser_class}.{func.browser_method}({args});")
+            if bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
+                lines.append(f"  return {func.browser_class}.{func.browser_method}({args}) ? 1n : 0n;")
+            else:
+                lines.append(f"  return {func.browser_class}.{func.browser_method}({args});")
         else:
             lines.append(f"  // Static operation: {func.wit_name}")
             lines.append(f"  throw new Error('Static operation not implemented: {func.wit_name}');")
@@ -379,8 +464,7 @@ class CodeGenerator:
             key = (iface.wit_name, kebab_to_camel(func.wit_name))
             if key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[key]
-                target_pascal = kebab_to_pascal(target_iface)
-                target_var = kebab_to_camel(target_iface + "Handles")
+                target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_method}({args});")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, result);")
@@ -389,6 +473,10 @@ class CodeGenerator:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
         elif func.return_is_optional:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ?? undefined;")
+        elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
+            lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
+        elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
+            lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         else:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
 
@@ -492,11 +580,24 @@ class CodeGenerator:
                 key = (iface.wit_name, func.wit_name, param.name)
                 if key in PARAMETER_BIGINT_TO_NUMBER:
                     conversion_type = PARAMETER_BIGINT_TO_NUMBER[key]
-                    if conversion_type == "handle":
-                        target_pascal = kebab_to_pascal(param.wit_type_str.replace("-handle", "").replace("-list", ""))
+                    if conversion_type == "handle" or (isinstance(conversion_type, str) and conversion_type.startswith("handle:")):
+                        if isinstance(conversion_type, str) and conversion_type.startswith("handle:"):
+                            target_wit_type = conversion_type[7:]
+                        else:
+                            target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
+                        _, target_pascal = self._get_handle_info(target_wit_type)
                         converted_args.append(f"get{target_pascal}({param.name})")
+                    elif conversion_type == "optional-handle" or (isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:")):
+                        if isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:"):
+                            target_wit_type = conversion_type[16:]
+                        else:
+                            target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
+                        _, target_pascal = self._get_handle_info(target_wit_type)
+                        converted_args.append(f"getOption{target_pascal}({param.name})")
                     elif conversion_type == "array":
                         converted_args.append(f"Array.from({param.name}).map(Number)")
+                    elif conversion_type == "boolean":
+                        converted_args.append(f"Boolean({param.name})")
                     else:
                         converted_args.append(f"Number({param.name})")
                 else:
