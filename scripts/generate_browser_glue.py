@@ -151,6 +151,19 @@ INTERFACE_TO_BROWSER_CLASS: Dict[str, str] = {
 
     # WebRTC
     "rtc-peer-connection": "RTCPeerConnection",
+
+    # Credentials
+    "credential": "Credential",
+    "password-credential": "PasswordCredential",
+    "federated-credential": "FederatedCredential",
+    "credential-user-data": "any",
+}
+
+# Types that don't exist in TypeScript DOM library (use 'any' for handles)
+MISSING_TYPES_IN_DOM = {
+    "credential-user-data": "any",
+    "password-credential": "any",
+    "federated-credential": "any",
 }
 
 # Known global singleton objects (not instantiated, use global reference)
@@ -170,6 +183,8 @@ ASYNC_PATTERNS = [
     "clone", "from", "create-image-bitmap",
     "get-user-media", "enumerate-devices",
     "query", "request",
+    # Credentials API (CredentialsContainer methods)
+    "get", "store", "create", "prevent-silent-access",
 ]
 
 # Attribute getters that return handles (need wrapping)
@@ -239,8 +254,9 @@ class GeneratedInterface:
     handle_var: str
     handle_pascal: str
     browser_class: str
-    functions: List[GeneratedFunction]
-    type_aliases: List[GeneratedTypeAlias]
+    js_type_for_handles: str = ""
+    functions: List[GeneratedFunction] = field(default_factory=list)
+    type_aliases: List[GeneratedTypeAlias] = field(default_factory=list)
     create_function: bool = False
 
 
@@ -284,6 +300,8 @@ class BrowserGlueGenerator:
         # Convert function name
         wit_name = func.name
         ts_name = kebab_to_camel(wit_name)
+        # Store original method name before escaping reserved words
+        browser_method = ts_name
         # Escape reserved words by prefixing with underscore
         if ts_name in self.JS_RESERVED_WORDS:
             ts_name = f"_{ts_name}"
@@ -352,7 +370,7 @@ class BrowserGlueGenerator:
             return_is_void = False
 
         # Determine browser API mapping
-        browser_method = ts_name
+        # browser_method is already set above (before reserved word prefixing)
         browser_attr = ""
         browser_args = ", ".join(browser_args_list)
         
@@ -413,6 +431,8 @@ class BrowserGlueGenerator:
 
         # Map to browser class (fallback to PascalCase if not explicitly mapped)
         browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, kebab_to_pascal(wit_name))
+        # Check if this type doesn't exist in DOM and needs to use 'any'
+        js_type_for_handles = MISSING_TYPES_IN_DOM.get(wit_name, browser_class)
 
         # Generate type aliases
         type_aliases: List[GeneratedTypeAlias] = []
@@ -463,6 +483,7 @@ class BrowserGlueGenerator:
             handle_var=handle_var,
             handle_pascal=handle_pascal,
             browser_class=browser_class,
+            js_type_for_handles=js_type_for_handles,
             functions=functions,
             type_aliases=type_aliases,
             create_function=create_function,
@@ -586,6 +607,7 @@ class BrowserGlueGenerator:
              # Handle table (skip for global singletons like navigator, window, document)
             if iface.handle_type:
                 is_singleton = iface.wit_name in GLOBAL_SINGLETONS
+                js_type = iface.js_type_for_handles or iface.browser_class
                 
                 if is_singleton:
                     # For global singletons, use a fixed handle and direct access
@@ -601,27 +623,27 @@ class BrowserGlueGenerator:
                 else:
                     # Normal object instantiation with handle table
                     lines.append(f"/** Handle table for {iface.browser_class} instances */")
-                    lines.append(f"const _{iface.handle_var} = new Map<bigint, {iface.browser_class}>();")
+                    lines.append(f"const _{iface.handle_var} = new Map<bigint, {js_type}>();")
                     lines.append(f"let _next{iface.handle_pascal} = 1n;")
                     lines.append("")
 
                     if iface.create_function:
                         lines.append(f"/** Register a new {iface.browser_class} and return its handle. */")
-                        lines.append(f"function register{iface.handle_pascal}(obj: {iface.browser_class}): bigint {{")
+                        lines.append(f"function register{iface.handle_pascal}(obj: {js_type}): bigint {{")
                         lines.append(f"  const handle = _next{iface.handle_pascal}++;")
                         lines.append(f"  _{iface.handle_var}.set(handle, obj);")
                         lines.append("  return handle;")
-                        lines.append("}")
+                        lines.append("")
                         lines.append("")
 
                     lines.append(f"/** Get a {iface.browser_class} by handle, throwing if not found. */")
-                    lines.append(f"function get{iface.handle_pascal}(handle: bigint): {iface.browser_class} {{")
+                    lines.append(f"function get{iface.handle_pascal}(handle: bigint): {js_type} {{")
                     lines.append(f"  const obj = _{iface.handle_var}.get(handle);")
                     lines.append("  if (!obj) {")
                     lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
                     lines.append("  }")
                     lines.append("  return obj;")
-                    lines.append("}")
+                    lines.append("")
                     lines.append("")
 
             # Functions
