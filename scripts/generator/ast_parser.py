@@ -28,6 +28,7 @@ from .config import (
     GETTER_BUT_ACTUALLY_METHOD,
     ENUM_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
+    BOOLEAN_TO_BIGINT_PROPERTIES,
 )
 from .models import (
     GeneratedParam, GeneratedFunction, GeneratedTypeAlias,
@@ -172,6 +173,12 @@ class WitParser:
                 ts_return = "bigint"
                 return_is_void = False
 
+        for bool_key in [(interface.name, wit_name), (interface.name, ts_name)]:
+            if bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
+                ts_return = "bigint"
+                ts_return_inner = ""
+                break
+
         browser_attr = ""
         if is_getter:
             attr_name = wit_name[4:]
@@ -308,13 +315,14 @@ class WitParser:
         if wit_name.startswith("poll-"):
             return False
 
-        if wit_name.startswith("get-") or wit_name.startswith("set-"):
-            return False
-
-        # Check for interface-specific overrides first
+        # Check for interface-specific overrides first (before get-/set- check)
         key = (iface_name, wit_name)
         if key in ASYNC_METHOD_OVERRIDES:
             return ASYNC_METHOD_OVERRIDES[key]
+
+        # By default, getters and setters are not async
+        if wit_name.startswith("get-") or wit_name.startswith("set-"):
+            return False
 
         wit_lower = wit_name.lower()
         for pattern in ASYNC_PATTERNS:
