@@ -24,6 +24,8 @@ from .config import (
     correct_type_casing,
     READONLY_ARRAY_PROPERTIES,
     HANDLE_RETURNING_ARRAY_PROPERTIES,
+    PARAMS_TO_SKIP,
+    SETTER_METHOD_NAMES,
 )
 from .models import (
     GeneratedDomain, GeneratedInterface, GeneratedFunction,
@@ -493,10 +495,12 @@ class CodeGenerator:
         
         if func.is_setter_but_method:
             args = self._get_converted_browser_args(func, iface, skip_self=True)
+            setter_method_key = (iface.wit_name, func.wit_name[4:] if func.wit_name.startswith("set-") else func.wit_name)
+            method_name = SETTER_METHOD_NAMES.get(setter_method_key, func.browser_method)
             if func.return_is_void:
-                lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
+                lines.append(f"  {obj_ref_with_assertion}.{method_name}({args});")
             elif func.return_is_optional:
-                _result_expr = f"{obj_ref_with_assertion}.{func.browser_method}({args})"
+                _result_expr = f"{obj_ref_with_assertion}.{method_name}({args})"
                 key = (iface.wit_name, kebab_to_camel(func.wit_name))
                 if key in HANDLE_RETURNING_FUNCTIONS:
                     target_iface = HANDLE_RETURNING_FUNCTIONS[key]
@@ -509,7 +513,17 @@ class CodeGenerator:
                 else:
                     lines.append(f"  return {_result_expr} ?? undefined;")
             else:
-                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
+                _result_expr = f"{obj_ref_with_assertion}.{method_name}({args})"
+                key = (iface.wit_name, kebab_to_camel(func.wit_name))
+                if key in HANDLE_RETURNING_FUNCTIONS:
+                    target_iface = HANDLE_RETURNING_FUNCTIONS[key]
+                    target_var, target_pascal = self._get_handle_info(target_iface)
+                    lines.append(f"  const _callResult = {_result_expr};")
+                    lines.append(f"  const handle = _next{target_pascal}++;")
+                    lines.append(f"  _{target_var}.set(handle, _callResult);")
+                    lines.append("  return handle;")
+                else:
+                    lines.append(f"  return {_result_expr};")
         elif func.params:
             value_param = func.params[-1].name
             value_expr = value_param
@@ -569,8 +583,18 @@ class CodeGenerator:
         needs_type_assertion = (iface.wit_name, method_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
         obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion and obj_ref else obj_ref
 
+        enum_key = (iface.wit_name, method_name)
         if func.return_is_void:
             lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
+        elif enum_key in ENUM_PROPERTIES:
+            enum_name = ENUM_PROPERTIES[enum_key]
+            enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
+            lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_method}({args});")
+            lines.append(f"  switch (value) {{")
+            for enum_str, enum_int in enum_values.items():
+                lines.append(f"    case '{enum_str}': return {enum_int}n;")
+            lines.append(f"    default: return 0n;")
+            lines.append(f"  }}")
         elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
         elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
@@ -683,6 +707,10 @@ class CodeGenerator:
             if skip_self and param.name == func.self_param:
                 continue
             if func.skip_first_param and param.name == func.params[0].name:
+                continue
+            
+            skip_key = (iface.wit_name, func.wit_name, param.wit_name)
+            if skip_key in PARAMS_TO_SKIP:
                 continue
             
             if param.needs_handle_lookup and param.target_handle_pascal:

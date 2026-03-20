@@ -235,38 +235,13 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // Synthetic handle tables for primitive/utility types
 // ---------------------------------------------------------------------------
 
-/** Handle table for any values */
-const _anyHandles = new Map<bigint, any>();
-let _nextAny = 1n;
-
 /** Handle table for message-port values */
 const _messagePortHandles = new Map<bigint, MessagePort>();
 let _nextMessagePort = 1n;
 
-/** Handle table for promise-any values */
-const _promiseAnyHandles = new Map<bigint, Promise<any>>();
-let _nextPromiseAny = 1n;
-
 // ---------------------------------------------------------------------------
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
-
-/** Lookup a any value by handle. */
-function lookupAny(handle: bigint): any {
-  const obj = _anyHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`any handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional any value by handle. */
-function lookupOptionAny(handle: bigint | undefined): any | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _anyHandles.get(handle) ?? null;
-}
 
 /** Lookup a message-port value by handle. */
 function lookupMessagePort(handle: bigint): MessagePort {
@@ -283,23 +258,6 @@ function lookupOptionMessagePort(handle: bigint | undefined): MessagePort | null
     return null;
   }
   return _messagePortHandles.get(handle) ?? null;
-}
-
-/** Lookup a promise-any value by handle. */
-function lookupPromiseAny(handle: bigint): Promise<any> {
-  const obj = _promiseAnyHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`promise-any handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional promise-any value by handle. */
-function lookupOptionPromiseAny(handle: bigint | undefined): Promise<any> | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _promiseAnyHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,7 +306,7 @@ export function ServiceWorkerGetState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (number)[]): void {
+export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupServiceWorker(self);
   obj.postMessage(message, transfer);
 }
@@ -395,8 +353,8 @@ export function getController(self: bigint): bigint | undefined {
   const obj = lookupServiceWorkerContainer(self);
   const _callResult = (obj as any).controller();
   if (_callResult === null) return undefined;
-  const handle = _nextAny++;
-  _anyHandles.set(handle, _callResult);
+  const handle = _nextServiceWorker++;
+  _serviceWorkerhandles.set(handle, _callResult);
   return handle;
 }
 
@@ -443,7 +401,7 @@ export function pollGetReady(requestId: bigint): { ok: true } | { ok: false; err
  *
  * Async operation: returns request ID, poll with `pollRegister()`
  */
-export function register(self: bigint, scriptUrl: string, options: string): bigint {
+export function register(self: bigint, scriptUrl: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerContainer(self);
   const promise = obj.register(scriptUrl, options)
@@ -468,12 +426,12 @@ export function register(self: bigint, scriptUrl: string, options: string): bigi
  * Poll an async `register()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollRegister(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollRegister(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -549,7 +507,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessage(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerContainer(self);
   obj.onmessage = value;
 }
@@ -557,7 +515,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): EventHandlerRecord {
+export function getOnmessageerror(self: bigint): (bigint)[] {
   const obj = lookupServiceWorkerContainer(self);
   return obj.onmessageerror;
 }
@@ -733,12 +691,12 @@ export function NavigationPreloadManagerGetState(self: bigint): bigint {
  * Poll an async `getState()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollGetState(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollGetState(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string | undefined } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -763,7 +721,7 @@ function lookupClient(handle: bigint): Client {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): number {
+export function getUrl(self: bigint): string {
   const obj = lookupClient(self);
   return obj.url;
 }
@@ -779,7 +737,7 @@ export function getFrameType(self: bigint): bigint {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): number {
+export function getId(self: bigint): string {
   const obj = lookupClient(self);
   return obj.id;
 }
@@ -846,7 +804,7 @@ export function getAncestorOrigins(self: bigint): (string)[] {
 /**
  * `focus()` operation.
  */
-export function focus(self: bigint): bigint {
+export function focus(self: bigint): number {
   const obj = lookupWindowClient(self);
   return obj.focus();
 }
@@ -854,7 +812,7 @@ export function focus(self: bigint): bigint {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: string): string {
+export function navigate(self: bigint, url: string): number {
   const obj = lookupWindowClient(self);
   return obj.navigate(url);
 }
@@ -881,7 +839,7 @@ function lookupClients(handle: bigint): Clients {
 /**
  * `match-all()` operation.
  */
-export function ClientsMatchAll(self: bigint, options: bigint | undefined): string {
+export function ClientsMatchAll(self: bigint, options: bigint | undefined): number {
   const obj = lookupClients(self);
   return obj.matchAll(options);
 }
@@ -897,7 +855,7 @@ export function openWindow(self: bigint, url: string): bigint {
 /**
  * `claim()` operation.
  */
-export function claim(self: bigint): bigint {
+export function claim(self: bigint): number {
   const obj = lookupClients(self);
   return obj.claim();
 }
@@ -994,7 +952,7 @@ export function getPreloadResponse(self: bigint): bigint {
 /**
  * `get-client-id()` operation.
  */
-export function getClientId(self: bigint): string {
+export function getClientId(self: bigint): bigint {
   const obj = lookupFetchEvent(self);
   return (obj as any).clientId;
 }
@@ -1061,7 +1019,7 @@ export function getData(self: bigint): string {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: bigint): bigint {
   const obj = lookupExtendableMessageEvent(self);
   return obj.origin;
 }
@@ -1077,7 +1035,7 @@ export function getLastEventId(self: bigint): string {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: bigint): number {
+export function getSource(self: bigint): bigint | undefined {
   const obj = lookupExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -1085,7 +1043,7 @@ export function getSource(self: bigint): number {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): (bigint)[] {
+export function getPorts(self: bigint): number {
   const obj = lookupExtendableMessageEvent(self);
   const _arr = obj.ports;
   const _handles: bigint[] = [];
@@ -1121,7 +1079,7 @@ function lookupCache(handle: bigint): Cache {
  *
  * Async operation: returns request ID, poll with `pollMatchAll()`
  */
-export function CacheMatchAll(self: bigint, request: number | undefined, options: bigint | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = obj.matchAll(request, options)
@@ -1184,12 +1142,12 @@ export function add(self: bigint, request: bigint): bigint {
  * Poll an async `add()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollAdd(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollAdd(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1197,7 +1155,7 @@ export function pollAdd(requestId: bigint): { ok: true; value: bigint } | { ok: 
  *
  * Async operation: returns request ID, poll with `pollAddAll()`
  */
-export function addAll(self: bigint, requests: (bigint)[]): bigint {
+export function addAll(self: bigint, requests: number): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = (obj as any).addAll(requests)
@@ -1311,7 +1269,7 @@ export function CachePollDelete(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `CachePollKeys()`
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: bigint | undefined, options: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
   const promise = obj.keys(request, options)
@@ -1444,7 +1402,7 @@ export function pollOpen(requestId: bigint): { ok: true; value: bigint } | { ok:
  *
  * Async operation: returns request ID, poll with `CacheStoragePollDelete()`
  */
-export function CacheStorageDelete(self: bigint, cacheName: number): bigint {
+export function CacheStorageDelete(self: bigint, cacheName: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCacheStorage(self);
   const promise = obj.delete(cacheName)
@@ -1469,12 +1427,12 @@ export function CacheStorageDelete(self: bigint, cacheName: number): bigint {
  * Poll an async `_delete()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function CacheStoragePollDelete(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function CacheStoragePollDelete(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1507,12 +1465,12 @@ export function CacheStorageKeys(self: bigint): bigint {
  * Poll an async `keys()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function CacheStoragePollKeys(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function CacheStoragePollKeys(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------

@@ -284,7 +284,7 @@ function lookupPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: string): bigint {
+export function query(self: bigint, permissionDesc: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPermissions(self);
   const promise = (obj as any).getQuery(permissionDesc)
@@ -373,7 +373,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchange(self: bigint, value: string): void {
   const obj = lookupPermissionStatus(self);
   obj.onchange = value;
 }

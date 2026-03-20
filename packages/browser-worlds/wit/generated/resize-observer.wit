@@ -27,9 +27,13 @@ interface types {
 interface resize-observer {
 /// Opaque handle to a ResizeObserver instance.
     type ro-handle = u64;
+    /// Opaque handle to an Element instance.
+    type element-handle = u64;
+    /// Opaque handle to ResizeObserverOptions.
+    type resize-observer-options-handle = u64;
 
     // new-resize-observer: skipped (unmappable parameter type)
-    observe: func(handle: ro-handle);
+    observe: func(handle: ro-handle, target: element-handle, options: option<resize-observer-options-handle>);
 }
 
 /// WIT world for resize-observer — import into your WASM component.

@@ -247,7 +247,7 @@ export function parse(url: string, base: string | undefined): bigint | undefined
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: EventHandlerRecord, base: string | undefined): bigint {
+export function canParse(url: string, base: string | undefined): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
@@ -286,7 +286,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): string {
+export function getProtocol(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.protocol;
 }
@@ -310,7 +310,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: string): void {
+export function setUsername(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.username = value;
 }
@@ -346,7 +346,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.host = value;
 }
@@ -418,7 +418,7 @@ export function setSearch(self: bigint, value: string): void {
 /**
  * `get-search-params()` operation.
  */
-export function getSearchParams(self: bigint): string {
+export function getSearchParams(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.searchParams;
 }
@@ -477,7 +477,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: string, value: string): void {
+export function append(self: bigint, name: bigint | undefined, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name, value);
 }
@@ -493,7 +493,7 @@ export function _delete(self: bigint, name: string, value: string | undefined): 
 /**
  * `get()` operation.
  */
-export function _get(self: bigint, name: string): EventHandlerRecord | undefined {
+export function _get(self: bigint, name: string): string | undefined {
   const obj = lookupURLSearchParams(self);
   return obj.get(name) ?? undefined;
 }
