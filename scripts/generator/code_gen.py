@@ -15,6 +15,8 @@ from .config import (
     STATIC_METHOD_NEEDS_TYPE_ASSERTION,
     ENUM_PROPERTIES,
     ENUM_VALUE_MAPPINGS,
+    NUMBER_TO_BIGINT_PROPERTIES,
+    PROPERTIES_NEEDING_TYPE_ASSERTION,
 )
 from .models import (
     GeneratedDomain, GeneratedInterface, GeneratedFunction,
@@ -251,7 +253,8 @@ class CodeGenerator:
                             if func.browser_class else
                             f"  // TODO: Implement async operation {func.wit_name}")
 
-        lines.append("    .then((result) => {")
+        lines.append("    .then((result: unknown) => {")
+        lines.append("      const entry = _asyncHandles.get(requestId);")
         lines.append("      if (entry) {")
         if func.return_is_void:
             lines.append("        entry.result = { ok: true };")
@@ -273,45 +276,56 @@ class CodeGenerator:
         """Render getter function body."""
         if func.is_global_singleton:
             obj_ref = func.browser_class
+        elif func.is_static:
+            obj_ref = func.browser_class
         elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
         else:
             obj_ref = "obj"
         
+        prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
+        needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
+        obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
+        
         if func.is_getter_but_method:
             method_name = func.browser_attr
             args = self._get_converted_browser_args(func, iface, skip_self=True)
             if func.return_is_optional:
-                lines.append(f"  return {obj_ref}.{method_name}({args}) ?? undefined;")
+                lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ?? undefined;")
             elif func.return_is_void:
-                lines.append(f"  {obj_ref}.{method_name}({args});")
+                lines.append(f"  {obj_ref_with_assertion}.{method_name}({args});")
             else:
-                lines.append(f"  return {obj_ref}.{method_name}({args});")
-        elif (iface.name, kebab_to_camel(func.wit_name)) in HANDLE_RETURNING_FUNCTIONS:
-            target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.name, kebab_to_camel(func.wit_name))]
+                lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args});")
+        elif (iface.wit_name, kebab_to_camel(func.wit_name)) in HANDLE_RETURNING_FUNCTIONS:
+            target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.wit_name, kebab_to_camel(func.wit_name))]
             target_pascal = kebab_to_pascal(target_iface)
             target_var = kebab_to_camel(target_iface + "Handles")
-            lines.append(f"  const result = {obj_ref}.{func.browser_attr};")
+            lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_attr};")
             lines.append(f"  const handle = _next{target_pascal}++;")
             lines.append(f"  _{target_var}.set(handle, result);")
             lines.append("  return handle;")
         else:
-            prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
             enum_key = (iface.wit_name, prop_name)
             if enum_key in ENUM_PROPERTIES:
                 enum_name = ENUM_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
-                lines.append(f"  const value = {obj_ref}.{func.browser_attr};")
+                lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
                 lines.append(f"  switch (value) {{")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"    case '{enum_str}': return {enum_int}n;")
                 lines.append(f"    default: return 0n;")
                 lines.append(f"  }}")
+            elif enum_key in NUMBER_TO_BIGINT_PROPERTIES:
+                if func.return_is_optional:
+                    lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
+                    lines.append(f"  return value !== undefined ? BigInt(value) : undefined;")
+                else:
+                    lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_attr});")
             elif func.return_is_optional:
-                lines.append(f"  return {obj_ref}.{func.browser_attr} ?? undefined;")
+                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? undefined;")
             else:
-                lines.append(f"  return {obj_ref}.{func.browser_attr};")
+                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr};")
 
     def _render_setter_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render setter function body."""
@@ -323,12 +337,16 @@ class CodeGenerator:
         else:
             obj_ref = "obj"
         
+        prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("set-") else func.wit_name)
+        needs_type_assertion = (iface.wit_name, prop_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
+        obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion else obj_ref
+        
         if func.params:
             value_param = func.params[-1].name
             value_expr = value_param
             if func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
                 value_expr = f"get{func.params[-1].target_handle_pascal}({value_param})"
-            lines.append(f"  {obj_ref}.{func.browser_attr} = {value_expr};")
+            lines.append(f"  {obj_ref_with_assertion}.{func.browser_attr} = {value_expr};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render static function body."""
@@ -350,25 +368,29 @@ class CodeGenerator:
             obj_ref = "" if func.is_global_singleton else "obj"
         
         args = self._get_converted_browser_args(func, iface, skip_self=True)
+        
+        method_name = func.browser_method if func.browser_method else kebab_to_camel(func.wit_name)
+        needs_type_assertion = (iface.wit_name, method_name) in PROPERTIES_NEEDING_TYPE_ASSERTION
+        obj_ref_with_assertion = f"({obj_ref} as any)" if needs_type_assertion and obj_ref else obj_ref
 
         if func.return_is_void:
-            lines.append(f"  {obj_ref}.{func.browser_method}({args});")
+            lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
         elif func.return_is_handle:
-            key = (iface.name, kebab_to_camel(func.wit_name))
+            key = (iface.wit_name, kebab_to_camel(func.wit_name))
             if key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                 target_pascal = kebab_to_pascal(target_iface)
                 target_var = kebab_to_camel(target_iface + "Handles")
-                lines.append(f"  const result = {obj_ref}.{func.browser_method}({args});")
+                lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_method}({args});")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, result);")
                 lines.append("  return handle;")
             else:
-                lines.append(f"  return {obj_ref}.{func.browser_method}({args});")
+                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
         elif func.return_is_optional:
-            lines.append(f"  return {obj_ref}.{func.browser_method}({args}) ?? undefined;")
+            lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ?? undefined;")
         else:
-            lines.append(f"  return {obj_ref}.{func.browser_method}({args});")
+            lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
 
     def _render_poll_function(
         self,
@@ -467,9 +489,16 @@ class CodeGenerator:
             if param.needs_handle_lookup and param.target_handle_pascal:
                 converted_args.append(f"get{param.target_handle_pascal}({param.name})")
             else:
-                key = (iface.name, func.wit_name, param.name)
+                key = (iface.wit_name, func.wit_name, param.name)
                 if key in PARAMETER_BIGINT_TO_NUMBER:
-                    converted_args.append(f"Number({param.name})")
+                    conversion_type = PARAMETER_BIGINT_TO_NUMBER[key]
+                    if conversion_type == "handle":
+                        target_pascal = kebab_to_pascal(param.wit_type_str.replace("-handle", "").replace("-list", ""))
+                        converted_args.append(f"get{target_pascal}({param.name})")
+                    elif conversion_type == "array":
+                        converted_args.append(f"Array.from({param.name}).map(Number)")
+                    else:
+                        converted_args.append(f"Number({param.name})")
                 else:
                     converted_args.append(param.name)
         
