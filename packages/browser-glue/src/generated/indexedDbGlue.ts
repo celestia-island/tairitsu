@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -222,7 +222,7 @@ function getIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): string {
   const obj = getIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -394,7 +394,7 @@ export function IdbIndexKeyPath(handle: bigint): string {
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): string {
+export function multiEntry(handle: bigint): boolean {
   const obj = getIDBIndex(handle);
   return obj.multiEntry();
 }
@@ -469,7 +469,7 @@ export function _continue(handle: bigint, key: string): void {
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
+export function continuePrimaryKey(handle: bigint, key: number, primaryKey: string): void {
   const obj = getIDBCursor(handle);
   obj.continuePrimaryKey(key, primaryKey);
 }
@@ -504,7 +504,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): boolean {
+export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = getIDBRequest(handle);
   return obj.source() ?? undefined;
 }

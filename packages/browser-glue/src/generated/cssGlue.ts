@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -221,6 +221,10 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 const _attrHandles = new Map<bigint, Attr>();
 let _nextAttr = 1n;
 
+/** Handle table for bar-prop values */
+const _barPropHandles = new Map<bigint, BarProp>();
+let _nextBarProp = 1n;
+
 /** Handle table for boolean values */
 const _booleanHandles = new Map<bigint, boolean>();
 let _nextBoolean = 1n;
@@ -237,9 +241,25 @@ let _nextCssKeyframeRule = 1n;
 const _cssRuleHandles = new Map<bigint, CSSRule>();
 let _nextCssRule = 1n;
 
+/** Handle table for css-rule-list values */
+const _cssRuleListHandles = new Map<bigint, CSSRuleList>();
+let _nextCssRuleList = 1n;
+
 /** Handle table for css-style-declaration values */
 const _cssStyleDeclarationHandles = new Map<bigint, CSSStyleDeclaration>();
 let _nextCssStyleDeclaration = 1n;
+
+/** Handle table for css-style-sheet values */
+const _cssStyleSheetHandles = new Map<bigint, CSSStyleSheet>();
+let _nextCssStyleSheet = 1n;
+
+/** Handle table for css-style-sheet-list values */
+const _cssStyleSheetListHandles = new Map<bigint, CSSStyleSheet[]>();
+let _nextCssStyleSheetList = 1n;
+
+/** Handle table for custom-element-registry values */
+const _customElementRegistryHandles = new Map<bigint, CustomElementRegistry>();
+let _nextCustomElementRegistry = 1n;
 
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
@@ -249,6 +269,14 @@ let _nextDocument = 1n;
 const _documentFragmentHandles = new Map<bigint, DocumentFragment>();
 let _nextDocumentFragment = 1n;
 
+/** Handle table for document-type values */
+const _documentTypeHandles = new Map<bigint, DocumentType>();
+let _nextDocumentType = 1n;
+
+/** Handle table for dom-implementation values */
+const _domImplementationHandles = new Map<bigint, DOMImplementation>();
+let _nextDomImplementation = 1n;
+
 /** Handle table for dom-rect values */
 const _domRectHandles = new Map<bigint, DOMRect>();
 let _nextDomRect = 1n;
@@ -256,6 +284,10 @@ let _nextDomRect = 1n;
 /** Handle table for dom-rect-list values */
 const _domRectListHandles = new Map<bigint, DOMRectList>();
 let _nextDomRectList = 1n;
+
+/** Handle table for dom-token-list values */
+const _domTokenListHandles = new Map<bigint, DOMTokenList>();
+let _nextDomTokenList = 1n;
 
 /** Handle table for element values */
 const _elementHandles = new Map<bigint, Element>();
@@ -269,9 +301,33 @@ let _nextElementList = 1n;
 const _eventHandles = new Map<bigint, Event>();
 let _nextEvent = 1n;
 
+/** Handle table for history values */
+const _historyHandles = new Map<bigint, History>();
+let _nextHistory = 1n;
+
 /** Handle table for html-collection values */
 const _htmlCollectionHandles = new Map<bigint, HTMLCollection>();
 let _nextHtmlCollection = 1n;
+
+/** Handle table for html-element values */
+const _htmlElementHandles = new Map<bigint, HTMLElement>();
+let _nextHtmlElement = 1n;
+
+/** Handle table for location values */
+const _locationHandles = new Map<bigint, Location>();
+let _nextLocation = 1n;
+
+/** Handle table for media-list values */
+const _mediaListHandles = new Map<bigint, MediaList>();
+let _nextMediaList = 1n;
+
+/** Handle table for named-node-map values */
+const _namedNodeMapHandles = new Map<bigint, NamedNodeMap>();
+let _nextNamedNodeMap = 1n;
+
+/** Handle table for navigator values */
+const _navigatorHandles = new Map<bigint, Navigator>();
+let _nextNavigator = 1n;
 
 /** Handle table for node values */
 const _nodeHandles = new Map<bigint, Node>();
@@ -293,6 +349,14 @@ let _nextNumber = 1n;
 const _processingInstructionHandles = new Map<bigint, ProcessingInstruction>();
 let _nextProcessingInstruction = 1n;
 
+/** Handle table for screen values */
+const _screenHandles = new Map<bigint, Screen>();
+let _nextScreen = 1n;
+
+/** Handle table for screen-orientation values */
+const _screenOrientationHandles = new Map<bigint, ScreenOrientation>();
+let _nextScreenOrientation = 1n;
+
 /** Handle table for shadow-root values */
 const _shadowRootHandles = new Map<bigint, ShadowRoot>();
 let _nextShadowRoot = 1n;
@@ -305,6 +369,10 @@ let _nextString = 1n;
 const _stringListHandles = new Map<bigint, string[]>();
 let _nextStringList = 1n;
 
+/** Handle table for style-sheet-list values */
+const _styleSheetListHandles = new Map<bigint, StyleSheetList>();
+let _nextStyleSheetList = 1n;
+
 /** Handle table for text values */
 const _textHandles = new Map<bigint, Text>();
 let _nextText = 1n;
@@ -312,6 +380,10 @@ let _nextText = 1n;
 /** Handle table for tree-walker values */
 const _treeWalkerHandles = new Map<bigint, TreeWalker>();
 let _nextTreeWalker = 1n;
+
+/** Handle table for visual-viewport values */
+const _visualViewportHandles = new Map<bigint, VisualViewport>();
+let _nextVisualViewport = 1n;
 
 /** Handle table for void values */
 const _voidHandles = new Map<bigint, void>();
@@ -340,6 +412,23 @@ function getOptionAttr(handle: bigint | undefined): Attr | undefined {
     return undefined;
   }
   return _attrHandles.get(handle);
+}
+
+/** Get a bar-prop value by handle. */
+function getBarProp(handle: bigint): BarProp {
+  const obj = _barPropHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`bar-prop handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional bar-prop value by handle. */
+function getOptionBarProp(handle: bigint | undefined): BarProp | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _barPropHandles.get(handle);
 }
 
 /** Get a boolean value by handle. */
@@ -410,6 +499,23 @@ function getOptionCssRule(handle: bigint | undefined): CSSRule | undefined {
   return _cssRuleHandles.get(handle);
 }
 
+/** Get a css-rule-list value by handle. */
+function getCssRuleList(handle: bigint): CSSRuleList {
+  const obj = _cssRuleListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`css-rule-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional css-rule-list value by handle. */
+function getOptionCssRuleList(handle: bigint | undefined): CSSRuleList | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _cssRuleListHandles.get(handle);
+}
+
 /** Get a css-style-declaration value by handle. */
 function getCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
   const obj = _cssStyleDeclarationHandles.get(handle);
@@ -425,6 +531,57 @@ function getOptionCssStyleDeclaration(handle: bigint | undefined): CSSStyleDecla
     return undefined;
   }
   return _cssStyleDeclarationHandles.get(handle);
+}
+
+/** Get a css-style-sheet value by handle. */
+function getCssStyleSheet(handle: bigint): CSSStyleSheet {
+  const obj = _cssStyleSheetHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`css-style-sheet handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional css-style-sheet value by handle. */
+function getOptionCssStyleSheet(handle: bigint | undefined): CSSStyleSheet | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _cssStyleSheetHandles.get(handle);
+}
+
+/** Get a css-style-sheet-list value by handle. */
+function getCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
+  const obj = _cssStyleSheetListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`css-style-sheet-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional css-style-sheet-list value by handle. */
+function getOptionCssStyleSheetList(handle: bigint | undefined): CSSStyleSheet[] | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _cssStyleSheetListHandles.get(handle);
+}
+
+/** Get a custom-element-registry value by handle. */
+function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
+  const obj = _customElementRegistryHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`custom-element-registry handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional custom-element-registry value by handle. */
+function getOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _customElementRegistryHandles.get(handle);
 }
 
 /** Get a document value by handle. */
@@ -461,6 +618,40 @@ function getOptionDocumentFragment(handle: bigint | undefined): DocumentFragment
   return _documentFragmentHandles.get(handle);
 }
 
+/** Get a document-type value by handle. */
+function getDocumentType(handle: bigint): DocumentType {
+  const obj = _documentTypeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`document-type handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional document-type value by handle. */
+function getOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _documentTypeHandles.get(handle);
+}
+
+/** Get a dom-implementation value by handle. */
+function getDomImplementation(handle: bigint): DOMImplementation {
+  const obj = _domImplementationHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`dom-implementation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional dom-implementation value by handle. */
+function getOptionDomImplementation(handle: bigint | undefined): DOMImplementation | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _domImplementationHandles.get(handle);
+}
+
 /** Get a dom-rect value by handle. */
 function getDomRect(handle: bigint): DOMRect {
   const obj = _domRectHandles.get(handle);
@@ -493,6 +684,23 @@ function getOptionDomRectList(handle: bigint | undefined): DOMRectList | undefin
     return undefined;
   }
   return _domRectListHandles.get(handle);
+}
+
+/** Get a dom-token-list value by handle. */
+function getDomTokenList(handle: bigint): DOMTokenList {
+  const obj = _domTokenListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`dom-token-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional dom-token-list value by handle. */
+function getOptionDomTokenList(handle: bigint | undefined): DOMTokenList | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _domTokenListHandles.get(handle);
 }
 
 /** Get a element value by handle. */
@@ -546,6 +754,23 @@ function getOptionEvent(handle: bigint | undefined): Event | undefined {
   return _eventHandles.get(handle);
 }
 
+/** Get a history value by handle. */
+function getHistory(handle: bigint): History {
+  const obj = _historyHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`history handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional history value by handle. */
+function getOptionHistory(handle: bigint | undefined): History | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _historyHandles.get(handle);
+}
+
 /** Get a html-collection value by handle. */
 function getHtmlCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionHandles.get(handle);
@@ -561,6 +786,91 @@ function getOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | u
     return undefined;
   }
   return _htmlCollectionHandles.get(handle);
+}
+
+/** Get a html-element value by handle. */
+function getHtmlElement(handle: bigint): HTMLElement {
+  const obj = _htmlElementHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`html-element handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional html-element value by handle. */
+function getOptionHtmlElement(handle: bigint | undefined): HTMLElement | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _htmlElementHandles.get(handle);
+}
+
+/** Get a location value by handle. */
+function getLocation(handle: bigint): Location {
+  const obj = _locationHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`location handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional location value by handle. */
+function getOptionLocation(handle: bigint | undefined): Location | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _locationHandles.get(handle);
+}
+
+/** Get a media-list value by handle. */
+function getMediaList(handle: bigint): MediaList {
+  const obj = _mediaListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`media-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional media-list value by handle. */
+function getOptionMediaList(handle: bigint | undefined): MediaList | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _mediaListHandles.get(handle);
+}
+
+/** Get a named-node-map value by handle. */
+function getNamedNodeMap(handle: bigint): NamedNodeMap {
+  const obj = _namedNodeMapHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`named-node-map handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional named-node-map value by handle. */
+function getOptionNamedNodeMap(handle: bigint | undefined): NamedNodeMap | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _namedNodeMapHandles.get(handle);
+}
+
+/** Get a navigator value by handle. */
+function getNavigator(handle: bigint): Navigator {
+  const obj = _navigatorHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`navigator handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional navigator value by handle. */
+function getOptionNavigator(handle: bigint | undefined): Navigator | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _navigatorHandles.get(handle);
 }
 
 /** Get a node value by handle. */
@@ -648,6 +958,40 @@ function getOptionProcessingInstruction(handle: bigint | undefined): ProcessingI
   return _processingInstructionHandles.get(handle);
 }
 
+/** Get a screen value by handle. */
+function getScreen(handle: bigint): Screen {
+  const obj = _screenHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`screen handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional screen value by handle. */
+function getOptionScreen(handle: bigint | undefined): Screen | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _screenHandles.get(handle);
+}
+
+/** Get a screen-orientation value by handle. */
+function getScreenOrientation(handle: bigint): ScreenOrientation {
+  const obj = _screenOrientationHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`screen-orientation handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional screen-orientation value by handle. */
+function getOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _screenOrientationHandles.get(handle);
+}
+
 /** Get a shadow-root value by handle. */
 function getShadowRoot(handle: bigint): ShadowRoot {
   const obj = _shadowRootHandles.get(handle);
@@ -699,6 +1043,23 @@ function getOptionStringList(handle: bigint | undefined): string[] | undefined {
   return _stringListHandles.get(handle);
 }
 
+/** Get a style-sheet-list value by handle. */
+function getStyleSheetList(handle: bigint): StyleSheetList {
+  const obj = _styleSheetListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`style-sheet-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional style-sheet-list value by handle. */
+function getOptionStyleSheetList(handle: bigint | undefined): StyleSheetList | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _styleSheetListHandles.get(handle);
+}
+
 /** Get a text value by handle. */
 function getText(handle: bigint): Text {
   const obj = _textHandles.get(handle);
@@ -731,6 +1092,23 @@ function getOptionTreeWalker(handle: bigint | undefined): TreeWalker | undefined
     return undefined;
   }
   return _treeWalkerHandles.get(handle);
+}
+
+/** Get a visual-viewport value by handle. */
+function getVisualViewport(handle: bigint): VisualViewport {
+  const obj = _visualViewportHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`visual-viewport handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional visual-viewport value by handle. */
+function getOptionVisualViewport(handle: bigint | undefined): VisualViewport | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _visualViewportHandles.get(handle);
 }
 
 /** Get a void value by handle. */
@@ -850,7 +1228,10 @@ export function CssRuleSetCssText(self: bigint, value: string): void {
  */
 export function CssRuleGetParentRule(self: bigint): bigint | undefined {
   const obj = getCSSRule(self);
-  return obj.parentRule ?? undefined;
+  const result = obj.parentRule;
+  const handle = _nextCssRule++;
+  _cssRuleHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -858,7 +1239,10 @@ export function CssRuleGetParentRule(self: bigint): bigint | undefined {
  */
 export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
   const obj = getCSSRule(self);
-  return obj.parentStyleSheet ?? undefined;
+  const result = obj.parentStyleSheet;
+  const handle = _nextCssStyleSheet++;
+  _cssStyleSheetHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -909,7 +1293,10 @@ export function setKeyText(self: bigint, value: string): void {
  */
 export function CssKeyframeRuleGetStyle(self: bigint): bigint {
   const obj = getCSSKeyframeRule(self);
-  return obj.style;
+  const result = obj.style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -2652,7 +3039,10 @@ function getCSSMediaRule(handle: bigint): CSSMediaRule {
  */
 export function CssMediaRuleGetMedia(self: bigint): bigint {
   const obj = getCSSMediaRule(self);
-  return obj.media;
+  const result = obj.media;
+  const handle = _nextMediaList++;
+  _mediaListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -2973,7 +3363,10 @@ function getCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
  */
 export function CssFontFaceRuleGetStyle(self: bigint): bigint {
   const obj = getCSSFontFaceRule(self);
-  return obj.style;
+  const result = obj.style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -3217,14 +3610,20 @@ export function matchMedia(query: string): bigint {
  * `get-screen()` operation.
  */
 export function WindowGetScreen(): bigint {
-  return window.screen;
+  const result = window.screen;
+  const handle = _nextScreen++;
+  _screenHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-visual-viewport()` operation.
  */
 export function WindowGetVisualViewport(): bigint | undefined {
-  return window.visualViewport ?? undefined;
+  const result = window.visualViewport;
+  const handle = _nextVisualViewport++;
+  _visualViewportHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3404,28 +3803,40 @@ export function fetchLater(input: bigint, init: bigint | undefined): bigint {
  * `get-window()` operation.
  */
 export function getWindow(): bigint {
-  return window.window;
+  const result = window.window;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-self()` operation.
  */
 export function getSelf(): bigint {
-  return window.self;
+  const result = window.self;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-document()` operation.
  */
 export function getDocument(): bigint {
-  return window.document;
+  const result = window.document;
+  const handle = _nextDocument++;
+  _documentHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-name()` operation.
  */
-export function WindowGetName(): string {
-  return window.name;
+export function WindowGetName(): bigint {
+  const result = window.name;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3439,14 +3850,20 @@ export function WindowSetName(value: string): void {
  * `get-location()` operation.
  */
 export function WindowGetLocation(): bigint {
-  return window.location;
+  const result = window.location;
+  const handle = _nextLocation++;
+  _locationHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-history()` operation.
  */
 export function getHistory(): bigint {
-  return window.history;
+  const result = window.history;
+  const handle = _nextHistory++;
+  _historyHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3460,49 +3877,70 @@ export function getNavigation(): bigint {
  * `get-custom-elements()` operation.
  */
 export function getCustomElements(): bigint {
-  return window.customElements;
+  const result = window.customElements;
+  const handle = _nextCustomElementRegistry++;
+  _customElementRegistryHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-locationbar()` operation.
  */
 export function getLocationbar(): bigint {
-  return window.locationbar;
+  const result = window.locationbar;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-menubar()` operation.
  */
 export function getMenubar(): bigint {
-  return window.menubar;
+  const result = window.menubar;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-personalbar()` operation.
  */
 export function getPersonalbar(): bigint {
-  return window.personalbar;
+  const result = window.personalbar;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-scrollbars()` operation.
  */
 export function getScrollbars(): bigint {
-  return window.scrollbars;
+  const result = window.scrollbars;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-statusbar()` operation.
  */
 export function getStatusbar(): bigint {
-  return window.statusbar;
+  const result = window.statusbar;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-toolbar()` operation.
  */
 export function getToolbar(): bigint {
-  return window.toolbar;
+  const result = window.toolbar;
+  const handle = _nextBarProp++;
+  _barPropHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3558,7 +3996,10 @@ export function blur(): void {
  * `get-frames()` operation.
  */
 export function getFrames(): bigint {
-  return window.frames;
+  const result = window.frames;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3572,14 +4013,20 @@ export function WindowGetLength(): number {
  * `get-top()` operation.
  */
 export function getTop(): bigint | undefined {
-  return window.top ?? undefined;
+  const result = window.top;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-opener()` operation.
  */
-export function getOpener(): string {
-  return window.opener;
+export function getOpener(): bigint {
+  const result = window.opener;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3593,7 +4040,10 @@ export function setOpener(value: string): void {
  * `get-parent()` operation.
  */
 export function getParent(): bigint | undefined {
-  return window.parent ?? undefined;
+  const result = window.parent;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3624,7 +4074,10 @@ export function WindowObject(name: string): void {
  * `get-navigator()` operation.
  */
 export function getNavigator(): bigint {
-  return window.navigator;
+  const result = window.navigator;
+  const handle = _nextNavigator++;
+  _navigatorHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3651,7 +4104,7 @@ export function alert(): void {
 /**
  * `confirm()` operation.
  */
-export function confirm(message: string | undefined): boolean {
+export function confirm(message: string | undefined): bigint {
   const result = window.confirm();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -3661,7 +4114,7 @@ export function confirm(message: string | undefined): boolean {
 /**
  * `prompt()` operation.
  */
-export function prompt(message: string | undefined, _default: string | undefined): string | undefined {
+export function prompt(message: string | undefined, _default: string | undefined): bigint | undefined {
   const result = window.prompt(_default);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -3884,7 +4337,10 @@ export function getPixelDepth(self: bigint): number {
  */
 export function getOrientation(self: bigint): bigint {
   const obj = getScreen(self);
-  return obj.orientation;
+  const result = obj.orientation;
+  const handle = _nextScreenOrientation++;
+  _screenOrientationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -3915,7 +4371,7 @@ export function elementFromPoint(x: number, y: number): bigint | undefined {
 /**
  * `elements-from-point()` operation.
  */
-export function elementsFromPoint(x: number, y: number): (bigint)[] {
+export function elementsFromPoint(x: number, y: number): bigint {
   const result = document.elementsFromPoint(y);
   const handle = _nextElementList++;
   _elementListHandles.set(handle, result);
@@ -3936,14 +4392,20 @@ export function caretPositionFromPoint(x: number, y: number, options: bigint | u
  * `get-scrolling-element()` operation.
  */
 export function getScrollingElement(): bigint | undefined {
-  return document.scrollingElement ?? undefined;
+  const result = document.scrollingElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-implementation()` operation.
  */
 export function getImplementation(): bigint {
-  return document.implementation;
+  const result = document.implementation;
+  const handle = _nextDomImplementation++;
+  _domImplementationHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -3999,14 +4461,20 @@ export function getContentType(): string {
  * `get-doctype()` operation.
  */
 export function getDoctype(): bigint | undefined {
-  return document.doctype ?? undefined;
+  const result = document.doctype;
+  const handle = _nextDocumentType++;
+  _documentTypeHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-document-element()` operation.
  */
 export function getDocumentElement(): bigint | undefined {
-  return document.documentElement ?? undefined;
+  const result = document.documentElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4267,14 +4735,20 @@ export function parseHtmlUnsafe(html: bigint): bigint {
  * `get-location()` operation.
  */
 export function DocumentGetLocation(): bigint | undefined {
-  return document.location ?? undefined;
+  const result = document.location;
+  const handle = _nextLocation++;
+  _locationHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-domain()` operation.
  */
-export function getDomain(): string {
-  return document.domain;
+export function getDomain(): bigint {
+  const result = document.domain;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4287,15 +4761,21 @@ export function setDomain(value: string): void {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(): string {
-  return document.referrer;
+export function getReferrer(): bigint {
+  const result = document.referrer;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-cookie()` operation.
  */
-export function getCookie(): string {
-  return document.cookie;
+export function getCookie(): bigint {
+  const result = document.cookie;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4308,15 +4788,21 @@ export function setCookie(value: string): void {
 /**
  * `get-last-modified()` operation.
  */
-export function getLastModified(): string {
-  return document.lastModified;
+export function getLastModified(): bigint {
+  const result = document.lastModified;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-ready-state()` operation.
  */
 export function getReadyState(): bigint {
-  return document.readyState;
+  const result = document.readyState;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4329,8 +4815,11 @@ export function DocumentObject(name: string): void {
 /**
  * `get-title()` operation.
  */
-export function DocumentGetTitle(): string {
-  return document.title;
+export function DocumentGetTitle(): bigint {
+  const result = document.title;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4343,8 +4832,11 @@ export function DocumentSetTitle(value: string): void {
 /**
  * `get-dir()` operation.
  */
-export function DocumentGetDir(): string {
-  return document.dir;
+export function DocumentGetDir(): bigint {
+  const result = document.dir;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4358,7 +4850,10 @@ export function DocumentSetDir(value: string): void {
  * `get-body()` operation.
  */
 export function getBody(): bigint | undefined {
-  return document.body ?? undefined;
+  const result = document.body;
+  const handle = _nextHtmlElement++;
+  _htmlElementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4372,49 +4867,70 @@ export function setBody(value: bigint | undefined): void {
  * `get-head()` operation.
  */
 export function getHead(): bigint | undefined {
-  return document.head ?? undefined;
+  const result = document.head;
+  const handle = _nextHtmlElement++;
+  _htmlElementHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-images()` operation.
  */
 export function getImages(): bigint {
-  return document.images;
+  const result = document.images;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-embeds()` operation.
  */
 export function getEmbeds(): bigint {
-  return document.embeds;
+  const result = document.embeds;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-plugins()` operation.
  */
 export function getPlugins(): bigint {
-  return document.plugins;
+  const result = document.plugins;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-links()` operation.
  */
 export function getLinks(): bigint {
-  return document.links;
+  const result = document.links;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-forms()` operation.
  */
 export function getForms(): bigint {
-  return document.forms;
+  const result = document.forms;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-scripts()` operation.
  */
 export function getScripts(): bigint {
-  return document.scripts;
+  const result = document.scripts;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4431,7 +4947,10 @@ export function getElementsByName(elementName: string): bigint {
  * `get-current-script()` operation.
  */
 export function getCurrentScript(): bigint | undefined {
-  return document.currentScript ?? undefined;
+  const result = document.currentScript;
+  const handle = _nextHtmlElement++;
+  _htmlElementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4469,13 +4988,16 @@ export function writeln(text: (bigint)[]): void {
  * `get-default-view()` operation.
  */
 export function getDefaultView(): bigint | undefined {
-  return document.defaultView ?? undefined;
+  const result = document.defaultView;
+  const handle = _nextWindow++;
+  _windowHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `has-focus()` operation.
  */
-export function hasFocus(): boolean {
+export function hasFocus(): bigint {
   const result = document.hasFocus();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4499,7 +5021,7 @@ export function setDesignMode(value: string): void {
 /**
  * `exec-command()` operation.
  */
-export function execCommand(commandId: string, showUi: boolean | undefined, value: string | undefined): boolean {
+export function execCommand(commandId: string, showUi: boolean | undefined, value: string | undefined): bigint {
   const result = document.execCommand(showUi, value);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4509,7 +5031,7 @@ export function execCommand(commandId: string, showUi: boolean | undefined, valu
 /**
  * `query-command-enabled()` operation.
  */
-export function queryCommandEnabled(commandId: string): boolean {
+export function queryCommandEnabled(commandId: string): bigint {
   const result = document.queryCommandEnabled();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4519,7 +5041,7 @@ export function queryCommandEnabled(commandId: string): boolean {
 /**
  * `query-command-indeterm()` operation.
  */
-export function queryCommandIndeterm(commandId: string): boolean {
+export function queryCommandIndeterm(commandId: string): bigint {
   const result = document.queryCommandIndeterm();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4529,7 +5051,7 @@ export function queryCommandIndeterm(commandId: string): boolean {
 /**
  * `query-command-state()` operation.
  */
-export function queryCommandState(commandId: string): boolean {
+export function queryCommandState(commandId: string): bigint {
   const result = document.queryCommandState();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4539,7 +5061,7 @@ export function queryCommandState(commandId: string): boolean {
 /**
  * `query-command-supported()` operation.
  */
-export function queryCommandSupported(commandId: string): boolean {
+export function queryCommandSupported(commandId: string): bigint {
   const result = document.queryCommandSupported();
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
@@ -4549,7 +5071,7 @@ export function queryCommandSupported(commandId: string): boolean {
 /**
  * `query-command-value()` operation.
  */
-export function queryCommandValue(commandId: string): string {
+export function queryCommandValue(commandId: string): bigint {
   const result = document.queryCommandValue();
   const handle = _nextString++;
   _stringHandles.set(handle, result);
@@ -4672,7 +5194,10 @@ export function setBgColor(value: string): void {
  * `get-anchors()` operation.
  */
 export function getAnchors(): bigint {
-  return document.anchors;
+  const result = document.anchors;
+  const handle = _nextHtmlCollection++;
+  _htmlCollectionHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -4797,7 +5322,7 @@ export function ElementGetBoundingClientRect(self: bigint): bigint {
 /**
  * `check-visibility()` operation.
  */
-export function checkVisibility(self: bigint, options: CheckVisibilityOptions | undefined): boolean {
+export function checkVisibility(self: bigint, options: CheckVisibilityOptions | undefined): bigint {
   const obj = getElement(self);
   const result = obj.checkVisibility(options);
   const handle = _nextBoolean++;
@@ -5006,7 +5531,10 @@ export function setClassName(self: bigint, value: string): void {
  */
 export function getClassList(self: bigint): bigint {
   const obj = getElement(self);
-  return obj.classList;
+  const result = obj.classList;
+  const handle = _nextDomTokenList++;
+  _domTokenListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5028,7 +5556,7 @@ export function setSlot(self: bigint, value: string): void {
 /**
  * `has-attributes()` operation.
  */
-export function hasAttributes(self: bigint): boolean {
+export function hasAttributes(self: bigint): bigint {
   const obj = getElement(self);
   const result = obj.hasAttributes();
   const handle = _nextBoolean++;
@@ -5041,13 +5569,16 @@ export function hasAttributes(self: bigint): boolean {
  */
 export function getAttributes(self: bigint): bigint {
   const obj = getElement(self);
-  return obj.attributes;
+  const result = obj.attributes;
+  const handle = _nextNamedNodeMap++;
+  _namedNodeMapHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-attribute-names()` operation.
  */
-export function getAttributeNames(self: bigint): (string)[] {
+export function getAttributeNames(self: bigint): bigint {
   const obj = getElement(self);
   const result = obj.getAttributeNames;
   const handle = _nextStringList++;
@@ -5058,7 +5589,7 @@ export function getAttributeNames(self: bigint): (string)[] {
 /**
  * `get-attribute()` operation.
  */
-export function getAttribute(self: bigint, qualifiedName: string): string | undefined {
+export function getAttribute(self: bigint, qualifiedName: string): bigint | undefined {
   const obj = getElement(self);
   const result = obj.getAttribute;
   const handle = _nextString++;
@@ -5109,7 +5640,7 @@ export function removeAttributeNs(self: bigint, namespace: string | undefined, l
 /**
  * `toggle-attribute()` operation.
  */
-export function toggleAttribute(self: bigint, qualifiedName: string, force: boolean | undefined): boolean {
+export function toggleAttribute(self: bigint, qualifiedName: string, force: boolean | undefined): bigint {
   const obj = getElement(self);
   const result = obj.toggleAttribute(qualifiedName, force);
   const handle = _nextBoolean++;
@@ -5120,7 +5651,7 @@ export function toggleAttribute(self: bigint, qualifiedName: string, force: bool
 /**
  * `has-attribute()` operation.
  */
-export function hasAttribute(self: bigint, qualifiedName: string): boolean {
+export function hasAttribute(self: bigint, qualifiedName: string): bigint {
   const obj = getElement(self);
   const result = obj.hasAttribute(qualifiedName);
   const handle = _nextBoolean++;
@@ -5198,7 +5729,10 @@ export function attachShadow(self: bigint, init: bigint): bigint {
  */
 export function getShadowRoot(self: bigint): bigint | undefined {
   const obj = getElement(self);
-  return obj.shadowRoot ?? undefined;
+  const result = obj.shadowRoot;
+  const handle = _nextShadowRoot++;
+  _shadowRootHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -5223,7 +5757,7 @@ export function closest(self: bigint, selectors: string): bigint | undefined {
 /**
  * `matches()` operation.
  */
-export function matches(self: bigint, selectors: string): boolean {
+export function matches(self: bigint, selectors: string): bigint {
   const obj = getElement(self);
   const result = obj.matches(selectors);
   const handle = _nextBoolean++;
@@ -5234,7 +5768,7 @@ export function matches(self: bigint, selectors: string): boolean {
 /**
  * `webkit-matches-selector()` operation.
  */
-export function webkitMatchesSelector(self: bigint, selectors: string): boolean {
+export function webkitMatchesSelector(self: bigint, selectors: string): bigint {
   const obj = getElement(self);
   const result = obj.webkitMatchesSelector(selectors);
   const handle = _nextBoolean++;
@@ -5321,12 +5855,12 @@ export function requestFullscreen(self: bigint, options: FullscreenOptions | und
  * Poll an async `requestFullscreen()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollRequestFullscreen(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollRequestFullscreen(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result ?? undefined;
 }
 
 /**
@@ -5473,7 +6007,10 @@ export function getScrollParent(self: bigint): bigint | undefined {
  */
 export function getOffsetParent(self: bigint): bigint | undefined {
   const obj = getHTMLElement(self);
-  return obj.offsetParent ?? undefined;
+  const result = obj.offsetParent;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6010,33 +6547,45 @@ export function setHeight(self: bigint, value: number): void {
 /**
  * `get-natural-width()` operation.
  */
-export function getNaturalWidth(self: bigint): number {
+export function getNaturalWidth(self: bigint): bigint {
   const obj = getHTMLImageElement(self);
-  return obj.naturalWidth;
+  const result = obj.naturalWidth;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-natural-height()` operation.
  */
-export function getNaturalHeight(self: bigint): number {
+export function getNaturalHeight(self: bigint): bigint {
   const obj = getHTMLImageElement(self);
-  return obj.naturalHeight;
+  const result = obj.naturalHeight;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-complete()` operation.
  */
-export function getComplete(self: bigint): boolean {
+export function getComplete(self: bigint): bigint {
   const obj = getHTMLImageElement(self);
-  return obj.complete;
+  const result = obj.complete;
+  const handle = _nextBoolean++;
+  _booleanHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-current-src()` operation.
  */
-export function getCurrentSrc(self: bigint): string {
+export function getCurrentSrc(self: bigint): bigint {
   const obj = getHTMLImageElement(self);
-  return obj.currentSrc;
+  const result = obj.currentSrc;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6283,7 +6832,10 @@ function getRange(handle: bigint): Range {
  */
 export function RangeGetClientRects(self: bigint): bigint {
   const obj = getRange(self);
-  return obj.getClientRects;
+  const result = obj.getClientRects;
+  const handle = _nextDomRectList++;
+  _domRectListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6291,7 +6843,10 @@ export function RangeGetClientRects(self: bigint): bigint {
  */
 export function RangeGetBoundingClientRect(self: bigint): bigint {
   const obj = getRange(self);
-  return obj.getBoundingClientRect();
+  const result = obj.getBoundingClientRect();
+  const handle = _nextDomRect++;
+  _domRectHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6299,7 +6854,10 @@ export function RangeGetBoundingClientRect(self: bigint): bigint {
  */
 export function getCommonAncestorContainer(self: bigint): bigint {
   const obj = getRange(self);
-  return obj.commonAncestorContainer;
+  const result = obj.commonAncestorContainer;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6403,7 +6961,10 @@ export function extractContents(self: bigint): bigint {
  */
 export function cloneContents(self: bigint): bigint {
   const obj = getRange(self);
-  return obj.cloneContents();
+  const result = obj.cloneContents();
+  const handle = _nextDocumentFragment++;
+  _documentFragmentHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6467,7 +7028,10 @@ export function intersectsNode(self: bigint, node: bigint): boolean {
  */
 export function createContextualFragment(self: bigint, string: bigint): bigint {
   const obj = getRange(self);
-  return obj.createContextualFragment(string);
+  const result = obj.createContextualFragment(string);
+  const handle = _nextDocumentFragment++;
+  _documentFragmentHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -6730,57 +7294,78 @@ function getVisualViewport(handle: bigint): VisualViewport {
 /**
  * `get-offset-left()` operation.
  */
-export function VisualViewportGetOffsetLeft(self: bigint): number {
+export function VisualViewportGetOffsetLeft(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.offsetLeft;
+  const result = obj.offsetLeft;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-offset-top()` operation.
  */
-export function VisualViewportGetOffsetTop(self: bigint): number {
+export function VisualViewportGetOffsetTop(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.offsetTop;
+  const result = obj.offsetTop;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-page-left()` operation.
  */
-export function getPageLeft(self: bigint): number {
+export function getPageLeft(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.pageLeft;
+  const result = obj.pageLeft;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-page-top()` operation.
  */
-export function getPageTop(self: bigint): number {
+export function getPageTop(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.pageTop;
+  const result = obj.pageTop;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-width()` operation.
  */
-export function VisualViewportGetWidth(self: bigint): number {
+export function VisualViewportGetWidth(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.width;
+  const result = obj.width;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-height()` operation.
  */
-export function VisualViewportGetHeight(self: bigint): number {
+export function VisualViewportGetHeight(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.height;
+  const result = obj.height;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-scale()` operation.
  */
-export function getScale(self: bigint): number {
+export function getScale(self: bigint): bigint {
   const obj = getVisualViewport(self);
-  return obj.scale;
+  const result = obj.scale;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6855,7 +7440,10 @@ function getMediaList(handle: bigint): MediaList {
  */
 export function getMediaText(self: bigint): bigint {
   const obj = getMediaList(self);
-  return obj.mediaText;
+  const result = obj.mediaText;
+  const handle = _nextString++;
+  _stringHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6869,15 +7457,18 @@ export function setMediaText(self: bigint, value: bigint): void {
 /**
  * `get-length()` operation.
  */
-export function MediaListGetLength(self: bigint): number {
+export function MediaListGetLength(self: bigint): bigint {
   const obj = getMediaList(self);
-  return obj.length;
+  const result = obj.length;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `item()` operation.
  */
-export function MediaListItem(self: bigint, index: number): string | undefined {
+export function MediaListItem(self: bigint, index: number): bigint | undefined {
   const obj = getMediaList(self);
   const result = obj.item(index);
   const handle = _nextString++;
@@ -6941,7 +7532,10 @@ export function StyleSheetGetHref(self: bigint): string | undefined {
  */
 export function getOwnerNode(self: bigint): bigint | undefined {
   const obj = getStyleSheet(self);
-  return obj.ownerNode ?? undefined;
+  const result = obj.ownerNode;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -6949,7 +7543,10 @@ export function getOwnerNode(self: bigint): bigint | undefined {
  */
 export function StyleSheetGetParentStyleSheet(self: bigint): bigint | undefined {
   const obj = getStyleSheet(self);
-  return obj.parentStyleSheet ?? undefined;
+  const result = obj.parentStyleSheet;
+  const handle = _nextCssStyleSheet++;
+  _cssStyleSheetHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7008,7 +7605,10 @@ function getCSSStyleSheet(handle: bigint): CSSStyleSheet {
  */
 export function getOwnerRule(self: bigint): bigint | undefined {
   const obj = getCSSStyleSheet(self);
-  return obj.ownerRule ?? undefined;
+  const result = obj.ownerRule;
+  const handle = _nextCssRule++;
+  _cssRuleHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7016,13 +7616,16 @@ export function getOwnerRule(self: bigint): bigint | undefined {
  */
 export function CssStyleSheetGetCssRules(self: bigint): bigint {
   const obj = getCSSStyleSheet(self);
-  return obj.cssRules;
+  const result = obj.cssRules;
+  const handle = _nextCssRuleList++;
+  _cssRuleListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `insert-rule()` operation.
  */
-export function CssStyleSheetInsertRule(self: bigint, rule: string, index: number | undefined): number {
+export function CssStyleSheetInsertRule(self: bigint, rule: string, index: number | undefined): bigint {
   const obj = getCSSStyleSheet(self);
   const result = obj.insertRule(rule, index);
   const handle = _nextNumber++;
@@ -7068,12 +7671,12 @@ export function replace(self: bigint, text: string): bigint {
  * Poll an async `replace()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollReplace(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollReplace(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result ?? undefined;
 }
 
 /**
@@ -7095,7 +7698,7 @@ export function getRules(self: bigint): bigint {
 /**
  * `add-rule()` operation.
  */
-export function addRule(self: bigint, selector: string | undefined, style: string | undefined, index: number | undefined): number {
+export function addRule(self: bigint, selector: string | undefined, style: string | undefined, index: number | undefined): bigint {
   const obj = getCSSStyleSheet(self);
   const result = obj.addRule(selector, style, index);
   const handle = _nextNumber++;
@@ -7170,15 +7773,21 @@ function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
  */
 export function getStyleSheets(self: bigint): bigint {
   const obj = getDocumentOrShadowRoot(self);
-  return obj.styleSheets;
+  const result = obj.styleSheets;
+  const handle = _nextStyleSheetList++;
+  _styleSheetListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `get-adopted-style-sheets()` operation.
  */
-export function getAdoptedStyleSheets(self: bigint): (bigint)[] {
+export function getAdoptedStyleSheets(self: bigint): bigint {
   const obj = getDocumentOrShadowRoot(self);
-  return obj.adoptedStyleSheets;
+  const result = obj.adoptedStyleSheets;
+  const handle = _nextCssStyleSheetList++;
+  _cssStyleSheetListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7210,7 +7819,10 @@ export function getFullscreenElement(self: bigint): bigint | undefined {
  */
 export function getActiveElement(self: bigint): bigint | undefined {
   const obj = getDocumentOrShadowRoot(self);
-  return obj.activeElement ?? undefined;
+  const result = obj.activeElement;
+  const handle = _nextElement++;
+  _elementHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7237,7 +7849,10 @@ function getLinkStyle(handle: bigint): LinkStyle {
  */
 export function getSheet(self: bigint): bigint | undefined {
   const obj = getLinkStyle(self);
-  return obj.sheet ?? undefined;
+  const result = obj.sheet;
+  const handle = _nextCssStyleSheet++;
+  _cssStyleSheetHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7318,7 +7933,10 @@ export function CssStyleRuleSetSelectorText(self: bigint, value: string): void {
  */
 export function CssStyleRuleGetStyle(self: bigint): bigint {
   const obj = getCSSStyleRule(self);
-  return obj.style;
+  const result = obj.style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7353,7 +7971,10 @@ export function CssImportRuleGetHref(self: bigint): string {
  */
 export function CssImportRuleGetMedia(self: bigint): bigint {
   const obj = getCSSImportRule(self);
-  return obj.media;
+  const result = obj.media;
+  const handle = _nextMediaList++;
+  _mediaListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7361,7 +7982,10 @@ export function CssImportRuleGetMedia(self: bigint): bigint {
  */
 export function CssImportRuleGetStyleSheet(self: bigint): bigint | undefined {
   const obj = getCSSImportRule(self);
-  return obj.styleSheet ?? undefined;
+  const result = obj.styleSheet;
+  const handle = _nextCssStyleSheet++;
+  _cssStyleSheetHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -7404,13 +8028,16 @@ function getCSSGroupingRule(handle: bigint): CSSGroupingRule {
  */
 export function CssGroupingRuleGetCssRules(self: bigint): bigint {
   const obj = getCSSGroupingRule(self);
-  return obj.cssRules;
+  const result = obj.cssRules;
+  const handle = _nextCssRuleList++;
+  _cssRuleListHandles.set(handle, result);
+  return handle;
 }
 
 /**
  * `insert-rule()` operation.
  */
-export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: number | undefined): number {
+export function CssGroupingRuleInsertRule(self: bigint, rule: string, index: number | undefined): bigint {
   const obj = getCSSGroupingRule(self);
   const result = obj.insertRule(rule, index);
   const handle = _nextNumber++;
@@ -7629,7 +8256,10 @@ export function CssPageRuleSetSelectorText(self: bigint, value: string): void {
  */
 export function CssPageRuleGetStyle(self: bigint): bigint {
   const obj = getCSSPageRule(self);
-  return obj.style;
+  const result = obj.style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7664,7 +8294,10 @@ export function CssMarginRuleGetName(self: bigint): string {
  */
 export function CssMarginRuleGetStyle(self: bigint): bigint {
   const obj = getCSSMarginRule(self);
-  return (obj as any).style;
+  const result = (obj as any).style;
+  const handle = _nextCssStyleDeclaration++;
+  _cssStyleDeclarationHandles.set(handle, result);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7748,7 +8381,7 @@ export function CssStyleDeclarationGetLength(self: bigint): number {
 /**
  * `item()` operation.
  */
-export function CssStyleDeclarationItem(self: bigint, index: number): string {
+export function CssStyleDeclarationItem(self: bigint, index: number): bigint {
   const obj = getCSSStyleDeclaration(self);
   const result = obj.item(index);
   const handle = _nextString++;
@@ -7759,7 +8392,7 @@ export function CssStyleDeclarationItem(self: bigint, index: number): string {
 /**
  * `get-property-value()` operation.
  */
-export function getPropertyValue(self: bigint, property: string): string {
+export function getPropertyValue(self: bigint, property: string): bigint {
   const obj = getCSSStyleDeclaration(self);
   const result = obj.getPropertyValue(property);
   const handle = _nextString++;
@@ -7770,7 +8403,7 @@ export function getPropertyValue(self: bigint, property: string): string {
 /**
  * `get-property-priority()` operation.
  */
-export function getPropertyPriority(self: bigint, property: string): string {
+export function getPropertyPriority(self: bigint, property: string): bigint {
   const obj = getCSSStyleDeclaration(self);
   const result = obj.getPropertyPriority(property);
   const handle = _nextString++;
@@ -7789,7 +8422,7 @@ export function setProperty(self: bigint, property: string, value: string, prior
 /**
  * `remove-property()` operation.
  */
-export function removeProperty(self: bigint, property: string): string {
+export function removeProperty(self: bigint, property: string): bigint {
   const obj = getCSSStyleDeclaration(self);
   const result = obj.removeProperty(property);
   const handle = _nextString++;

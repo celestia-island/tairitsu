@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -251,7 +251,7 @@ export function ServiceWorkerGetState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
+export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: number): void {
   const obj = getServiceWorker(self);
   obj.postMessage(message, transfer);
 }
@@ -259,7 +259,7 @@ export function ServiceWorkerPostMessage(self: bigint, message: string, transfer
 /**
  * `get-onstatechange()` operation.
  */
-export function getOnstatechange(self: bigint): bigint {
+export function getOnstatechange(self: bigint): EventHandlerRecord {
   const obj = getServiceWorker(self);
   return obj.onstatechange;
 }
@@ -307,7 +307,7 @@ export function getController(self: bigint): bigint | undefined {
 export function getReady(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getServiceWorkerContainer(self);
-  const promise = obj.getReady()
+  const promise = (obj as any).getReady()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -440,7 +440,7 @@ export function setOncontrollerchange(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): number {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessage;
 }
@@ -448,7 +448,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessage(self: bigint, value: boolean): void {
   const obj = getServiceWorkerContainer(self);
   obj.onmessage = value;
 }
@@ -456,7 +456,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): number {
+export function getOnmessageerror(self: bigint): EventHandlerRecord {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessageerror;
 }
@@ -464,7 +464,7 @@ export function getOnmessageerror(self: bigint): number {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: number): void {
+export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorkerContainer(self);
   obj.onmessageerror = value;
 }
@@ -569,7 +569,7 @@ export function pollDisable(requestId: bigint): { ok: true; value: bigint } | { 
  *
  * Async operation: returns request ID, poll with `pollSetHeaderValue()`
  */
-export function setHeaderValue(self: bigint, value: number): bigint {
+export function setHeaderValue(self: bigint, value: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getNavigationPreloadManager(self);
   const promise = obj.setHeaderValue(value)
@@ -662,7 +662,7 @@ function getClient(handle: bigint): Client {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): number {
+export function getUrl(self: bigint): string {
   const obj = getClient(self);
   return obj.url;
 }
@@ -678,7 +678,7 @@ export function getFrameType(self: bigint): bigint {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): number {
+export function getId(self: bigint): string {
   const obj = getClient(self);
   return obj.id;
 }
@@ -686,7 +686,7 @@ export function getId(self: bigint): number {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): number {
+export function getType(self: bigint): bigint {
   const obj = getClient(self);
   return obj.type;
 }
@@ -753,7 +753,7 @@ export function focus(self: bigint): bigint {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: string): number {
+export function navigate(self: bigint, url: string): bigint {
   const obj = getWindowClient(self);
   return obj.navigate(url);
 }
@@ -788,7 +788,7 @@ export function ClientsMatchAll(self: bigint, options: bigint | undefined): bigi
 /**
  * `open-window()` operation.
  */
-export function openWindow(self: bigint, url: string): bigint {
+export function openWindow(self: bigint, url: string): string | undefined {
   const obj = getClients(self);
   return obj.openWindow(url);
 }
@@ -825,7 +825,7 @@ function getExtendableEvent(handle: bigint): ExtendableEvent {
  */
 export function waitUntil(self: bigint, f: bigint): void {
   const obj = getExtendableEvent(self);
-  obj.waitUntil(f);
+  (obj as any).waitUntil(f);
 }
 
 // ---------------------------------------------------------------------------
@@ -852,7 +852,7 @@ function getInstallEvent(handle: bigint): InstallEvent {
  */
 export function addRoutes(self: bigint, rules: bigint): bigint {
   const obj = getInstallEvent(self);
-  return obj.addRoutes(rules);
+  return (obj as any).addRoutes(rules);
 }
 
 // ---------------------------------------------------------------------------
@@ -879,7 +879,7 @@ function getFetchEvent(handle: bigint): FetchEvent {
  */
 export function getRequest(self: bigint): bigint {
   const obj = getFetchEvent(self);
-  return obj.request;
+  return (obj as any).request;
 }
 
 /**
@@ -887,7 +887,7 @@ export function getRequest(self: bigint): bigint {
  */
 export function getPreloadResponse(self: bigint): bigint {
   const obj = getFetchEvent(self);
-  return obj.preloadResponse;
+  return (obj as any).preloadResponse;
 }
 
 /**
@@ -895,23 +895,23 @@ export function getPreloadResponse(self: bigint): bigint {
  */
 export function getClientId(self: bigint): string {
   const obj = getFetchEvent(self);
-  return obj.clientId;
+  return (obj as any).clientId;
 }
 
 /**
  * `get-resulting-client-id()` operation.
  */
-export function getResultingClientId(self: bigint): string {
+export function getResultingClientId(self: bigint): bigint {
   const obj = getFetchEvent(self);
-  return obj.resultingClientId;
+  return (obj as any).resultingClientId;
 }
 
 /**
  * `get-replaces-client-id()` operation.
  */
-export function getReplacesClientId(self: bigint): bigint {
+export function getReplacesClientId(self: bigint): string {
   const obj = getFetchEvent(self);
-  return obj.replacesClientId;
+  return (obj as any).replacesClientId;
 }
 
 /**
@@ -919,7 +919,7 @@ export function getReplacesClientId(self: bigint): bigint {
  */
 export function getHandled(self: bigint): bigint {
   const obj = getFetchEvent(self);
-  return obj.handled;
+  return (obj as any).handled;
 }
 
 /**
@@ -927,7 +927,7 @@ export function getHandled(self: bigint): bigint {
  */
 export function respondWith(self: bigint, r: bigint): void {
   const obj = getFetchEvent(self);
-  obj.respondWith(r);
+  (obj as any).respondWith(r);
 }
 
 // ---------------------------------------------------------------------------
@@ -952,7 +952,7 @@ function getExtendableMessageEvent(handle: bigint): ExtendableMessageEvent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): bigint | undefined {
+export function getData(self: bigint): bigint {
   const obj = getExtendableMessageEvent(self);
   return obj.data;
 }
@@ -984,7 +984,7 @@ export function getSource(self: bigint): bigint | undefined {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): bigint {
+export function getPorts(self: bigint): (string)[] {
   const obj = getExtendableMessageEvent(self);
   return obj.ports;
 }
@@ -1013,7 +1013,7 @@ function getCache(handle: bigint): Cache {
  *
  * Async operation: returns request ID, poll with `pollMatchAll()`
  */
-export function CacheMatchAll(self: bigint, request: bigint, options: bigint | undefined | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCache(self);
   const promise = obj.matchAll(request, options)
@@ -1038,12 +1038,12 @@ export function CacheMatchAll(self: bigint, request: bigint, options: bigint | u
  * Poll an async `matchAll()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollMatchAll(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollMatchAll(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1051,7 +1051,7 @@ export function pollMatchAll(requestId: bigint): { ok: true; value: string | und
  *
  * Async operation: returns request ID, poll with `pollAdd()`
  */
-export function add(self: bigint, request: bigint): bigint {
+export function add(self: bigint, request: EventHandlerRecord): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCache(self);
   const promise = obj.add(request)
@@ -1127,7 +1127,7 @@ export function pollAddAll(requestId: bigint): { ok: true; value: bigint } | { o
  *
  * Async operation: returns request ID, poll with `pollPut()`
  */
-export function put(self: bigint, request: bigint, response: bigint): bigint {
+export function put(self: bigint, request: bigint, response: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCache(self);
   const promise = obj.put(request, response)
@@ -1152,12 +1152,12 @@ export function put(self: bigint, request: bigint, response: bigint): bigint {
  * Poll an async `put()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPut(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function pollPut(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1165,7 +1165,7 @@ export function pollPut(requestId: bigint): { ok: true; value: bigint | undefine
  *
  * Async operation: returns request ID, poll with `CachePollDelete()`
  */
-export function CacheDelete(self: bigint, request: bigint, options: bigint | undefined): bigint {
+export function CacheDelete(self: bigint, request: number, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCache(self);
   const promise = obj.delete(request, options)
@@ -1203,7 +1203,7 @@ export function CachePollDelete(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `CachePollKeys()`
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: bigint | undefined, options: boolean): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCache(self);
   const promise = obj.keys(request, options)

@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -281,7 +281,7 @@ export function pollCreateOffer(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `pollCreateAnswer()`
  */
-export function createAnswer(self: bigint, options: bigint | undefined): bigint {
+export function createAnswer(self: bigint, options: boolean | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRTCPeerConnection(self);
   const promise = obj.createAnswer(options)
@@ -319,7 +319,7 @@ export function pollCreateAnswer(requestId: bigint): { ok: true; value: bigint }
  *
  * Async operation: returns request ID, poll with `pollSetLocalDescription()`
  */
-export function setLocalDescription(self: bigint, description: bigint): bigint {
+export function setLocalDescription(self: bigint, description: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRTCPeerConnection(self);
   const promise = obj.setLocalDescription(description)
@@ -355,7 +355,7 @@ export function pollSetLocalDescription(requestId: bigint): { ok: true; value: b
 /**
  * `get-local-description()` operation.
  */
-export function getLocalDescription(self: bigint): bigint | undefined {
+export function getLocalDescription(self: bigint): string | undefined {
   const obj = getRTCPeerConnection(self);
   return obj.localDescription ?? undefined;
 }
@@ -433,7 +433,7 @@ export function getCurrentRemoteDescription(self: bigint): bigint | undefined {
 /**
  * `get-pending-remote-description()` operation.
  */
-export function getPendingRemoteDescription(self: bigint): bigint | undefined {
+export function getPendingRemoteDescription(self: bigint): string | undefined {
   const obj = getRTCPeerConnection(self);
   return obj.pendingRemoteDescription ?? undefined;
 }
@@ -468,18 +468,18 @@ export function addIceCandidate(self: bigint, candidate: bigint | undefined): bi
  * Poll an async `addIceCandidate()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollAddIceCandidate(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
+export function pollAddIceCandidate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `get-signaling-state()` operation.
  */
-export function getSignalingState(self: bigint): bigint {
+export function getSignalingState(self: bigint): string {
   const obj = getRTCPeerConnection(self);
   return obj.signalingState;
 }
@@ -524,7 +524,7 @@ export function getCanTrickleIceCandidates(self: bigint): boolean | undefined {
 export function restartIce(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRTCPeerConnection(self);
-  const promise = obj.restartIce()
+  const promise = (obj as any).restartIce()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -589,7 +589,7 @@ export function getOnnegotiationneeded(self: bigint): EventHandlerRecord {
 /**
  * `set-onnegotiationneeded()` operation.
  */
-export function setOnnegotiationneeded(self: bigint, value: bigint): void {
+export function setOnnegotiationneeded(self: bigint, value: EventHandlerRecord): void {
   const obj = getRTCPeerConnection(self);
   obj.onnegotiationneeded = value;
 }
@@ -605,7 +605,7 @@ export function getOnicecandidate(self: bigint): EventHandlerRecord {
 /**
  * `set-onicecandidate()` operation.
  */
-export function setOnicecandidate(self: bigint, value: string): void {
+export function setOnicecandidate(self: bigint, value: EventHandlerRecord): void {
   const obj = getRTCPeerConnection(self);
   obj.onicecandidate = value;
 }
@@ -661,7 +661,7 @@ export function setOniceconnectionstatechange(self: bigint, value: EventHandlerR
 /**
  * `get-onicegatheringstatechange()` operation.
  */
-export function getOnicegatheringstatechange(self: bigint): bigint {
+export function getOnicegatheringstatechange(self: bigint): boolean {
   const obj = getRTCPeerConnection(self);
   return obj.onicegatheringstatechange;
 }
@@ -730,7 +730,7 @@ export function pollGenerateCertificate(requestId: bigint): { ok: true; value: b
 /**
  * `get-senders()` operation.
  */
-export function getSenders(self: bigint): string {
+export function getSenders(self: bigint): (bigint)[] {
   const obj = getRTCPeerConnection(self);
   return (obj as any).senders;
 }
@@ -746,7 +746,7 @@ export function getReceivers(self: bigint): (bigint)[] {
 /**
  * `get-transceivers()` operation.
  */
-export function getTransceivers(self: bigint): (bigint)[] {
+export function getTransceivers(self: bigint): string {
   const obj = getRTCPeerConnection(self);
   return obj.getTransceivers;
 }
@@ -754,7 +754,7 @@ export function getTransceivers(self: bigint): (bigint)[] {
 /**
  * `add-track()` operation.
  */
-export function addTrack(self: bigint, track: bigint, streams: (bigint)[]): bigint {
+export function addTrack(self: bigint, track: string, streams: (bigint)[]): bigint {
   const obj = getRTCPeerConnection(self);
   return obj.addTrack(track, streams);
 }
@@ -770,7 +770,7 @@ export function removeTrack(self: bigint, sender: bigint): void {
 /**
  * `add-transceiver()` operation.
  */
-export function addTransceiver(self: bigint, trackOrKind: bigint, init: bigint | undefined): boolean {
+export function addTransceiver(self: bigint, trackOrKind: (bigint)[] | undefined, init: bigint | undefined): bigint {
   const obj = getRTCPeerConnection(self);
   return obj.addTransceiver(trackOrKind, init);
 }
@@ -794,7 +794,7 @@ export function setOntrack(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-sctp()` operation.
  */
-export function getSctp(self: bigint): string {
+export function getSctp(self: bigint): bigint | undefined {
   const obj = getRTCPeerConnection(self);
   return obj.sctp ?? undefined;
 }
@@ -802,7 +802,7 @@ export function getSctp(self: bigint): string {
 /**
  * `create-data-channel()` operation.
  */
-export function createDataChannel(self: bigint, label: string, dataChannelDict: string): bigint {
+export function createDataChannel(self: bigint, label: string, dataChannelDict: string | undefined): bigint {
   const obj = getRTCPeerConnection(self);
   return obj.createDataChannel(label, dataChannelDict);
 }
@@ -818,7 +818,7 @@ export function getOndatachannel(self: bigint): EventHandlerRecord {
 /**
  * `set-ondatachannel()` operation.
  */
-export function setOndatachannel(self: bigint, value: EventHandlerRecord): void {
+export function setOndatachannel(self: bigint, value: string): void {
   const obj = getRTCPeerConnection(self);
   obj.ondatachannel = value;
 }
@@ -828,7 +828,7 @@ export function setOndatachannel(self: bigint, value: EventHandlerRecord): void 
  *
  * Async operation: returns request ID, poll with `pollGetStats()`
  */
-export function RtcPeerConnectionGetStats(self: bigint, selector: string | undefined): bigint {
+export function RtcPeerConnectionGetStats(self: bigint, selector: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRTCPeerConnection(self);
   const promise = obj.getStats(selector)
@@ -942,7 +942,7 @@ export function getSdpMid(self: bigint): string | undefined {
 /**
  * `get-sdp-m-line-index()` operation.
  */
-export function getSdpMLineIndex(self: bigint): number | undefined {
+export function getSdpMLineIndex(self: bigint): string | undefined {
   const obj = getRTCIceCandidate(self);
   return obj.sdpMLineIndex ?? undefined;
 }
@@ -958,7 +958,7 @@ export function getFoundation(self: bigint): string | undefined {
 /**
  * `get-component()` operation.
  */
-export function RtcIceCandidateGetComponent(self: bigint): string | undefined {
+export function RtcIceCandidateGetComponent(self: bigint): bigint | undefined {
   const obj = getRTCIceCandidate(self);
   return obj.component ?? undefined;
 }
@@ -982,7 +982,7 @@ export function RtcIceCandidateGetAddress(self: bigint): string | undefined {
 /**
  * `get-protocol()` operation.
  */
-export function RtcIceCandidateGetProtocol(self: bigint): bigint | undefined {
+export function RtcIceCandidateGetProtocol(self: bigint): string {
   const obj = getRTCIceCandidate(self);
   return obj.protocol ?? undefined;
 }
@@ -1006,7 +1006,7 @@ export function RtcIceCandidateGetType(self: bigint): bigint | undefined {
 /**
  * `get-tcp-type()` operation.
  */
-export function getTcpType(self: bigint): string {
+export function getTcpType(self: bigint): bigint | undefined {
   const obj = getRTCIceCandidate(self);
   return obj.tcpType ?? undefined;
 }
@@ -1014,7 +1014,7 @@ export function getTcpType(self: bigint): string {
 /**
  * `get-related-address()` operation.
  */
-export function getRelatedAddress(self: bigint): string | undefined {
+export function getRelatedAddress(self: bigint): (string)[] {
   const obj = getRTCIceCandidate(self);
   return obj.relatedAddress ?? undefined;
 }
@@ -1022,7 +1022,7 @@ export function getRelatedAddress(self: bigint): string | undefined {
 /**
  * `get-related-port()` operation.
  */
-export function getRelatedPort(self: bigint): string | undefined {
+export function getRelatedPort(self: bigint): number | undefined {
   const obj = getRTCIceCandidate(self);
   return obj.relatedPort ?? undefined;
 }
@@ -1081,7 +1081,7 @@ function getRTCPeerConnectionIceEvent(handle: bigint): RTCPeerConnectionIceEvent
 /**
  * `get-candidate()` operation.
  */
-export function RtcPeerConnectionIceEventGetCandidate(self: bigint): string {
+export function RtcPeerConnectionIceEventGetCandidate(self: bigint): bigint | undefined {
   const obj = getRTCPeerConnectionIceEvent(self);
   return obj.candidate ?? undefined;
 }
@@ -1118,15 +1118,15 @@ function getRTCPeerConnectionIceEvent(handle: bigint): RTCPeerConnectionIceEvent
  */
 export function RtcPeerConnectionIceErrorEventGetAddress(self: bigint): string | undefined {
   const obj = getRTCPeerConnectionIceEvent(self);
-  return obj.address ?? undefined;
+  return (obj as any).address ?? undefined;
 }
 
 /**
  * `get-port()` operation.
  */
-export function RtcPeerConnectionIceErrorEventGetPort(self: bigint): string {
+export function RtcPeerConnectionIceErrorEventGetPort(self: bigint): number | undefined {
   const obj = getRTCPeerConnectionIceEvent(self);
-  return obj.port ?? undefined;
+  return (obj as any).port ?? undefined;
 }
 
 /**
@@ -1134,7 +1134,7 @@ export function RtcPeerConnectionIceErrorEventGetPort(self: bigint): string {
  */
 export function RtcPeerConnectionIceErrorEventGetUrl(self: bigint): string {
   const obj = getRTCPeerConnectionIceEvent(self);
-  return obj.url;
+  return (obj as any).url;
 }
 
 /**
@@ -1142,15 +1142,15 @@ export function RtcPeerConnectionIceErrorEventGetUrl(self: bigint): string {
  */
 export function getErrorCode(self: bigint): number {
   const obj = getRTCPeerConnectionIceEvent(self);
-  return obj.errorCode;
+  return (obj as any).errorCode;
 }
 
 /**
  * `get-error-text()` operation.
  */
-export function getErrorText(self: bigint): string {
+export function getErrorText(self: bigint): bigint {
   const obj = getRTCPeerConnectionIceEvent(self);
-  return obj.errorText;
+  return (obj as any).errorText;
 }
 
 // ---------------------------------------------------------------------------
@@ -1183,7 +1183,7 @@ export function getExpires(self: bigint): bigint {
 /**
  * `get-fingerprints()` operation.
  */
-export function getFingerprints(self: bigint): (bigint)[] {
+export function getFingerprints(self: bigint): (number)[] {
   const obj = getRTCCertificate(self);
   return obj.getFingerprints();
 }
@@ -1218,7 +1218,7 @@ export function RtcRtpSenderGetTrack(self: bigint): bigint | undefined {
 /**
  * `get-transport()` operation.
  */
-export function RtcRtpSenderGetTransport(self: bigint): bigint {
+export function RtcRtpSenderGetTransport(self: bigint): bigint | undefined {
   const obj = getRTCRtpSender(self);
   return obj.transport ?? undefined;
 }
@@ -1226,7 +1226,7 @@ export function RtcRtpSenderGetTransport(self: bigint): bigint {
 /**
  * `get-capabilities()` operation.
  */
-export function RtcRtpSenderGetCapabilities(kind: string): bigint | undefined {
+export function RtcRtpSenderGetCapabilities(kind: string): string | undefined {
   return (RTCRtpSender as any).getCapabilities ?? undefined;
 }
 
@@ -1287,7 +1287,7 @@ export function pollReplaceTrack(requestId: bigint): { ok: true; value: bigint }
 /**
  * `set-streams()` operation.
  */
-export function setStreams(self: bigint, streams: bigint): void {
+export function setStreams(self: bigint, streams: string): void {
   const obj = getRTCRtpSender(self);
   (obj as any).streams = streams;
 }
@@ -1303,7 +1303,7 @@ export function RtcRtpSenderGetStats(self: bigint): bigint {
 /**
  * `get-dtmf()` operation.
  */
-export function getDtmf(self: bigint): number | undefined {
+export function getDtmf(self: bigint): string {
   const obj = getRTCRtpSender(self);
   return obj.dtmf ?? undefined;
 }
@@ -1330,7 +1330,7 @@ function getRTCRtpReceiver(handle: bigint): RTCRtpReceiver {
 /**
  * `get-track()` operation.
  */
-export function RtcRtpReceiverGetTrack(self: bigint): bigint | undefined {
+export function RtcRtpReceiverGetTrack(self: bigint): bigint {
   const obj = getRTCRtpReceiver(self);
   return obj.track;
 }
@@ -1353,7 +1353,7 @@ export function RtcRtpReceiverGetCapabilities(kind: string): bigint | undefined 
 /**
  * `get-parameters()` operation.
  */
-export function RtcRtpReceiverGetParameters(self: bigint): string {
+export function RtcRtpReceiverGetParameters(self: bigint): bigint {
   const obj = getRTCRtpReceiver(self);
   return obj.getParameters();
 }
@@ -1377,7 +1377,7 @@ export function getSynchronizationSources(self: bigint): (bigint)[] {
 /**
  * `get-stats()` operation.
  */
-export function RtcRtpReceiverGetStats(self: bigint): number {
+export function RtcRtpReceiverGetStats(self: bigint): bigint {
   const obj = getRTCRtpReceiver(self);
   return (obj as any).stats;
 }
@@ -1385,7 +1385,7 @@ export function RtcRtpReceiverGetStats(self: bigint): number {
 /**
  * `get-jitter-buffer-target()` operation.
  */
-export function getJitterBufferTarget(self: bigint): number | undefined {
+export function getJitterBufferTarget(self: bigint): number {
   const obj = getRTCRtpReceiver(self);
   return obj.jitterBufferTarget ?? undefined;
 }
@@ -1420,7 +1420,7 @@ function getRTCRtpTransceiver(handle: bigint): RTCRtpTransceiver {
 /**
  * `get-mid()` operation.
  */
-export function getMid(self: bigint): string | undefined {
+export function getMid(self: bigint): bigint | undefined {
   const obj = getRTCRtpTransceiver(self);
   return obj.mid ?? undefined;
 }
@@ -1460,7 +1460,7 @@ export function setDirection(self: bigint, value: bigint): void {
 /**
  * `get-current-direction()` operation.
  */
-export function getCurrentDirection(self: bigint): bigint {
+export function getCurrentDirection(self: bigint): bigint | undefined {
   const obj = getRTCRtpTransceiver(self);
   return obj.currentDirection ?? undefined;
 }
@@ -1503,7 +1503,7 @@ function getRTCDtlsTransport(handle: bigint): RTCDtlsTransport {
 /**
  * `get-ice-transport()` operation.
  */
-export function getIceTransport(self: bigint): bigint {
+export function getIceTransport(self: bigint): string | undefined {
   const obj = getRTCDtlsTransport(self);
   return obj.iceTransport;
 }
@@ -1511,7 +1511,7 @@ export function getIceTransport(self: bigint): bigint {
 /**
  * `get-state()` operation.
  */
-export function RtcDtlsTransportGetState(self: bigint): bigint {
+export function RtcDtlsTransportGetState(self: bigint): (bigint)[] {
   const obj = getRTCDtlsTransport(self);
   return obj.state;
 }
@@ -1535,7 +1535,7 @@ export function RtcDtlsTransportGetOnstatechange(self: bigint): EventHandlerReco
 /**
  * `set-onstatechange()` operation.
  */
-export function RtcDtlsTransportSetOnstatechange(self: bigint, value: EventHandlerRecord): void {
+export function RtcDtlsTransportSetOnstatechange(self: bigint, value: number): void {
   const obj = getRTCDtlsTransport(self);
   obj.onstatechange = value;
 }
@@ -1578,7 +1578,7 @@ function getRTCIceTransport(handle: bigint): RTCIceTransport {
 /**
  * `get-role()` operation.
  */
-export function getRole(self: bigint): bigint {
+export function getRole(self: bigint): EventHandlerRecord {
   const obj = getRTCIceTransport(self);
   return (obj as any).role;
 }
@@ -1602,7 +1602,7 @@ export function RtcIceTransportGetState(self: bigint): bigint {
 /**
  * `get-gathering-state()` operation.
  */
-export function getGatheringState(self: bigint): string | undefined {
+export function getGatheringState(self: bigint): bigint {
   const obj = getRTCIceTransport(self);
   return obj.gatheringState;
 }
@@ -1634,7 +1634,7 @@ export function getSelectedCandidatePair(self: bigint): bigint | undefined {
 /**
  * `get-local-parameters()` operation.
  */
-export function getLocalParameters(self: bigint): number {
+export function getLocalParameters(self: bigint): EventHandlerRecord | undefined {
   const obj = getRTCIceTransport(self);
   return (obj as any).localParameters ?? undefined;
 }
@@ -1752,7 +1752,7 @@ function getRTCTrackEvent(handle: bigint): RTCTrackEvent {
 /**
  * `get-receiver()` operation.
  */
-export function RtcTrackEventGetReceiver(self: bigint): EventHandlerRecord {
+export function RtcTrackEventGetReceiver(self: bigint): bigint {
   const obj = getRTCTrackEvent(self);
   return obj.receiver;
 }
@@ -1760,7 +1760,7 @@ export function RtcTrackEventGetReceiver(self: bigint): EventHandlerRecord {
 /**
  * `get-track()` operation.
  */
-export function RtcTrackEventGetTrack(self: bigint): bigint {
+export function RtcTrackEventGetTrack(self: bigint): EventHandlerRecord {
   const obj = getRTCTrackEvent(self);
   return obj.track;
 }
@@ -1819,7 +1819,7 @@ export function RtcSctpTransportGetState(self: bigint): bigint {
 /**
  * `get-max-message-size()` operation.
  */
-export function getMaxMessageSize(self: bigint): EventHandlerRecord | undefined {
+export function getMaxMessageSize(self: bigint): number | undefined {
   const obj = getRTCSctpTransport(self);
   return obj.maxMessageSize ?? undefined;
 }
@@ -1886,7 +1886,7 @@ export function getOrdered(self: bigint): boolean {
 /**
  * `get-max-packet-life-time()` operation.
  */
-export function getMaxPacketLifeTime(self: bigint): number | undefined {
+export function getMaxPacketLifeTime(self: bigint): EventHandlerRecord | undefined {
   const obj = getRTCDataChannel(self);
   return obj.maxPacketLifeTime ?? undefined;
 }
@@ -1918,7 +1918,7 @@ export function getNegotiated(self: bigint): boolean {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): OnErrorEventHandlerRecord {
+export function getId(self: bigint): number | undefined {
   const obj = getRTCDataChannel(self);
   return obj.id ?? undefined;
 }
@@ -1934,7 +1934,7 @@ export function getReadyState(self: bigint): bigint {
 /**
  * `get-buffered-amount()` operation.
  */
-export function getBufferedAmount(self: bigint): number {
+export function getBufferedAmount(self: bigint): bigint {
   const obj = getRTCDataChannel(self);
   return obj.bufferedAmount;
 }
@@ -2014,7 +2014,7 @@ export function getOnclosing(self: bigint): EventHandlerRecord {
 /**
  * `set-onclosing()` operation.
  */
-export function setOnclosing(self: bigint, value: string): void {
+export function setOnclosing(self: bigint, value: EventHandlerRecord): void {
   const obj = getRTCDataChannel(self);
   obj.onclosing = value;
 }
@@ -2030,7 +2030,7 @@ export function getOnclose(self: bigint): EventHandlerRecord {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: bigint, value: EventHandlerRecord): void {
+export function setOnclose(self: bigint, value: bigint): void {
   const obj = getRTCDataChannel(self);
   obj.onclose = value;
 }
@@ -2078,7 +2078,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: EventHandlerRecord): void {
+export function send(self: bigint, data: string): void {
   const obj = getRTCDataChannel(self);
   obj.send(data);
 }
@@ -2132,7 +2132,7 @@ function getRTCDTMFSender(handle: bigint): RTCDTMFSender {
 /**
  * `insert-dtmf()` operation.
  */
-export function insertDtmf(self: bigint, tones: (bigint)[], duration: number | undefined, interToneGap: number | undefined): void {
+export function insertDtmf(self: bigint, tones: string, duration: number | undefined, interToneGap: number | undefined): void {
   const obj = getRTCDTMFSender(self);
   obj.insertDTMF(tones, duration, interToneGap);
 }
@@ -2191,7 +2191,7 @@ function getRTCDTMFToneChangeEvent(handle: bigint): RTCDTMFToneChangeEvent {
 /**
  * `get-tone()` operation.
  */
-export function getTone(self: bigint): string {
+export function getTone(self: bigint): bigint | undefined {
   const obj = getRTCDTMFToneChangeEvent(self);
   return obj.tone;
 }
@@ -2226,7 +2226,7 @@ export function getErrorDetail(self: bigint): bigint {
 /**
  * `get-sdp-line-number()` operation.
  */
-export function getSdpLineNumber(self: bigint): number | undefined {
+export function getSdpLineNumber(self: bigint): number {
   const obj = getRTCError(self);
   return obj.sdpLineNumber ?? undefined;
 }
@@ -2277,7 +2277,7 @@ function getRTCErrorEvent(handle: bigint): RTCErrorEvent {
 /**
  * `get-error()` operation.
  */
-export function getError(self: bigint): string {
+export function getError(self: bigint): bigint {
   const obj = getRTCErrorEvent(self);
   return obj.error;
 }

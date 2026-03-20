@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -230,7 +230,7 @@ export function getUrl(self: bigint): string {
 /**
  * `get-ready-state()` operation.
  */
-export function getReadyState(self: bigint): number {
+export function getReadyState(self: bigint): bigint | undefined {
   const obj = getWebSocket(self);
   return obj.readyState;
 }
@@ -238,7 +238,7 @@ export function getReadyState(self: bigint): number {
 /**
  * `get-buffered-amount()` operation.
  */
-export function getBufferedAmount(self: bigint): bigint {
+export function getBufferedAmount(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.bufferedAmount;
 }
@@ -246,7 +246,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): string {
+export function getOnopen(self: bigint): EventHandlerRecord {
   const obj = getWebSocket(self);
   return obj.onopen;
 }
@@ -254,7 +254,7 @@ export function getOnopen(self: bigint): string {
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: bigint): void {
+export function setOnopen(self: bigint, value: EventHandlerRecord): void {
   const obj = getWebSocket(self);
   obj.onopen = value;
 }
@@ -294,7 +294,7 @@ export function setOnclose(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): string {
+export function getExtensions(self: bigint): bigint | undefined {
   const obj = getWebSocket(self);
   return obj.extensions;
 }
@@ -302,7 +302,7 @@ export function getExtensions(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): bigint {
+export function getProtocol(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.protocol;
 }
@@ -310,7 +310,7 @@ export function getProtocol(self: bigint): bigint {
 /**
  * `close()` operation.
  */
-export function close(self: bigint, code: string, reason: string | undefined): void {
+export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
   const obj = getWebSocket(self);
   obj.close(code, reason);
 }
@@ -326,7 +326,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: string): void {
+export function setOnmessage(self: bigint, value: number | undefined): void {
   const obj = getWebSocket(self);
   obj.onmessage = value;
 }
@@ -334,7 +334,7 @@ export function setOnmessage(self: bigint, value: string): void {
 /**
  * `get-binary-type()` operation.
  */
-export function getBinaryType(self: bigint): string | undefined {
+export function getBinaryType(self: bigint): bigint {
   const obj = getWebSocket(self);
   return obj.binaryType;
 }
@@ -350,7 +350,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: string): void {
+export function send(self: bigint, data: Uint8Array): void {
   const obj = getWebSocket(self);
   obj.send(data);
 }
@@ -393,7 +393,7 @@ export function getCode(self: bigint): number {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: bigint): (number)[] {
   const obj = getCloseEvent(self);
   return obj.reason;
 }

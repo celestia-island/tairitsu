@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -251,7 +251,7 @@ export function setId(handle: bigint, value: string): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): string {
+export function getPlaybackRate(handle: bigint): number {
   const obj = getAnimation(handle);
   return obj.playbackRate;
 }
@@ -259,7 +259,7 @@ export function getPlaybackRate(handle: bigint): string {
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: number): void {
+export function setPlaybackRate(handle: bigint, value: string): void {
   const obj = getAnimation(handle);
   obj.playbackRate = value;
 }
@@ -267,7 +267,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): string {
+export function pending(handle: bigint): boolean {
   const obj = getAnimation(handle);
   return obj.pending();
 }
@@ -307,7 +307,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: string): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
   const obj = getAnimation(handle);
   obj.updatePlaybackRate(playbackRate);
 }
@@ -328,7 +328,7 @@ export function reverse(handle: bigint): void {
 export function persist(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAnimation(handle);
-  const promise = obj.persist()
+  const promise = (obj as any).persist()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {

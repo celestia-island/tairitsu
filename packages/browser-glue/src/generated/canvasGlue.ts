@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -225,6 +225,14 @@ let _nextAny = 1n;
 const _domRectHandles = new Map<bigint, DOMRect>();
 let _nextDomRect = 1n;
 
+/** Handle table for image-track values */
+const _imageTrackHandles = new Map<bigint, ImageTrack>();
+let _nextImageTrack = 1n;
+
+/** Handle table for image-track-list values */
+const _imageTrackListHandles = new Map<bigint, ImageTrackList>();
+let _nextImageTrackList = 1n;
+
 /** Handle table for number values */
 const _numberHandles = new Map<bigint, number>();
 let _nextNumber = 1n;
@@ -285,6 +293,40 @@ function getOptionDomRect(handle: bigint | undefined): DOMRect | undefined {
     return undefined;
   }
   return _domRectHandles.get(handle);
+}
+
+/** Get a image-track value by handle. */
+function getImageTrack(handle: bigint): ImageTrack {
+  const obj = _imageTrackHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`image-track handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional image-track value by handle. */
+function getOptionImageTrack(handle: bigint | undefined): ImageTrack | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _imageTrackHandles.get(handle);
+}
+
+/** Get a image-track-list value by handle. */
+function getImageTrackList(handle: bigint): ImageTrackList {
+  const obj = _imageTrackListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`image-track-list handle ${handle} not found`);
+  }
+  return obj;
+}
+
+/** Get an optional image-track-list value by handle. */
+function getOptionImageTrackList(handle: bigint | undefined): ImageTrackList | undefined {
+  if (handle === undefined || handle === 0n) {
+    return undefined;
+  }
+  return _imageTrackListHandles.get(handle);
 }
 
 /** Get a number value by handle. */
@@ -1242,7 +1284,7 @@ export function getNumberOfChannels(self: bigint): number {
  */
 export function AudioDataGetDuration(self: bigint): bigint {
   const obj = getAudioData(self);
-  return obj.duration;
+  return BigInt(obj.duration);
 }
 
 /**
@@ -1250,7 +1292,7 @@ export function AudioDataGetDuration(self: bigint): bigint {
  */
 export function AudioDataGetTimestamp(self: bigint): bigint {
   const obj = getAudioData(self);
-  return obj.timestamp;
+  return BigInt(obj.timestamp);
 }
 
 /**
@@ -1327,7 +1369,7 @@ export function VideoFrameGetFormat(self: bigint): bigint | undefined {
 /**
  * `get-coded-width()` operation.
  */
-export function getCodedWidth(self: bigint): number {
+export function getCodedWidth(self: bigint): bigint {
   const obj = getVideoFrame(self);
   return BigInt(obj.codedWidth);
 }
@@ -1335,7 +1377,7 @@ export function getCodedWidth(self: bigint): number {
 /**
  * `get-coded-height()` operation.
  */
-export function getCodedHeight(self: bigint): number {
+export function getCodedHeight(self: bigint): bigint {
   const obj = getVideoFrame(self);
   return BigInt(obj.codedHeight);
 }
@@ -1381,7 +1423,7 @@ export function getFlip(self: bigint): boolean {
 /**
  * `get-display-width()` operation.
  */
-export function getDisplayWidth(self: bigint): number {
+export function getDisplayWidth(self: bigint): bigint {
   const obj = getVideoFrame(self);
   return BigInt(obj.displayWidth);
 }
@@ -1389,7 +1431,7 @@ export function getDisplayWidth(self: bigint): number {
 /**
  * `get-display-height()` operation.
  */
-export function getDisplayHeight(self: bigint): number {
+export function getDisplayHeight(self: bigint): bigint {
   const obj = getVideoFrame(self);
   return BigInt(obj.displayHeight);
 }
@@ -1597,7 +1639,7 @@ function getImageDecoder(handle: bigint): ImageDecoder {
 /**
  * `get-type()` operation.
  */
-export function ImageDecoderGetType(self: bigint): string {
+export function ImageDecoderGetType(self: bigint): bigint {
   const obj = getImageDecoder(self);
   const result = obj.type;
   const handle = _nextString++;
@@ -1656,7 +1698,10 @@ export function pollGetCompleted(requestId: bigint): { ok: true; value: bigint }
  */
 export function getTracks(self: bigint): bigint {
   const obj = getImageDecoder(self);
-  return obj.tracks;
+  const result = obj.tracks;
+  const handle = _nextImageTrackList++;
+  _imageTrackListHandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -1689,12 +1734,12 @@ export function ImageDecoderDecode(self: bigint, options: ImageDecodeOptions | u
  * Poll an async `decode()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollDecode(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollDecode(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result ?? undefined;
 }
 
 /**
@@ -1785,7 +1830,7 @@ export function imageTrack(self: bigint, index: number): void {
 export function getReady(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getImageTrackList(self);
-  const promise = obj.getReady()
+  const promise = (obj as any).getReady()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1838,7 +1883,7 @@ export function getSelectedTrack(self: bigint): bigint | undefined {
   const obj = getImageTrackList(self);
   const result = obj.selectedTrack;
   const handle = _nextImageTrack++;
-  _imageTrackhandles.set(handle, result);
+  _imageTrackHandles.set(handle, result);
   return handle;
 }
 
@@ -1872,7 +1917,7 @@ export function getAnimated(self: bigint): boolean {
 /**
  * `get-frame-count()` operation.
  */
-export function getFrameCount(self: bigint): number {
+export function getFrameCount(self: bigint): bigint {
   const obj = getImageTrack(self);
   return BigInt(obj.frameCount);
 }
@@ -1880,7 +1925,7 @@ export function getFrameCount(self: bigint): number {
 /**
  * `get-repetition-count()` operation.
  */
-export function getRepetitionCount(self: bigint): number {
+export function getRepetitionCount(self: bigint): bigint {
   const obj = getImageTrack(self);
   return BigInt(obj.repetitionCount);
 }
@@ -2100,7 +2145,12 @@ export function getDrawingBufferColorSpace(self: bigint): bigint {
  */
 export function setDrawingBufferColorSpace(self: bigint, value: bigint): void {
   const obj = getWebGLRenderingContextBase(self);
-  obj.drawingBufferColorSpace = value;
+  const value = value;
+  let enumValue: PredefinedColorSpace;
+  if (value === 0n) { enumValue = 'srgb'; }
+  if (value === 1n) { enumValue = 'display-p3'; }
+  else { enumValue = 'srgb'; }
+  obj.drawingBufferColorSpace = enumValue;
 }
 
 /**
@@ -2121,7 +2171,12 @@ export function getUnpackColorSpace(self: bigint): bigint {
  */
 export function setUnpackColorSpace(self: bigint, value: bigint): void {
   const obj = getWebGLRenderingContextBase(self);
-  obj.unpackColorSpace = value;
+  const value = value;
+  let enumValue: PredefinedColorSpace;
+  if (value === 0n) { enumValue = 'srgb'; }
+  if (value === 1n) { enumValue = 'display-p3'; }
+  else { enumValue = 'srgb'; }
+  obj.unpackColorSpace = enumValue;
 }
 
 /**
@@ -2147,7 +2202,7 @@ export function isContextLost(self: bigint): boolean {
 /**
  * `get-supported-extensions()` operation.
  */
-export function getSupportedExtensions(self: bigint): (string)[] | undefined {
+export function getSupportedExtensions(self: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getSupportedExtensions();
   if (result === null) return undefined;
@@ -2621,7 +2676,7 @@ export function getActiveUniform(self: bigint, program: bigint, index: bigint): 
 /**
  * `get-attached-shaders()` operation.
  */
-export function getAttachedShaders(self: bigint, program: bigint): (bigint)[] | undefined {
+export function getAttachedShaders(self: bigint, program: bigint): bigint | undefined {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getAttachedShaders(program);
   if (result === null) return undefined;
@@ -2641,7 +2696,7 @@ export function getAttribLocation(self: bigint, program: bigint, name: string): 
 /**
  * `get-buffer-parameter()` operation.
  */
-export function getBufferParameter(self: bigint, target: bigint, pname: bigint): string {
+export function getBufferParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getBufferParameter(Number(target), Number(pname));
   const handle = _nextAny++;
@@ -2652,7 +2707,7 @@ export function getBufferParameter(self: bigint, target: bigint, pname: bigint):
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, pname: bigint): string {
+export function getParameter(self: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getParameter(pname);
   const handle = _nextAny++;
@@ -2671,7 +2726,7 @@ export function getError(self: bigint): bigint {
 /**
  * `get-framebuffer-attachment-parameter()` operation.
  */
-export function getFramebufferAttachmentParameter(self: bigint, target: bigint, attachment: bigint, pname: bigint): string {
+export function getFramebufferAttachmentParameter(self: bigint, target: bigint, attachment: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getFramebufferAttachmentParameter(Number(target), Number(attachment), Number(pname));
   const handle = _nextAny++;
@@ -2682,7 +2737,7 @@ export function getFramebufferAttachmentParameter(self: bigint, target: bigint, 
 /**
  * `get-program-parameter()` operation.
  */
-export function getProgramParameter(self: bigint, program: bigint, pname: bigint): string {
+export function getProgramParameter(self: bigint, program: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getProgramParameter(getWebGlObject(program), Number(pname));
   const handle = _nextAny++;
@@ -2701,7 +2756,7 @@ export function getProgramInfoLog(self: bigint, program: bigint): string | undef
 /**
  * `get-renderbuffer-parameter()` operation.
  */
-export function getRenderbufferParameter(self: bigint, target: bigint, pname: bigint): string {
+export function getRenderbufferParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getRenderbufferParameter(Number(target), Number(pname));
   const handle = _nextAny++;
@@ -2712,7 +2767,7 @@ export function getRenderbufferParameter(self: bigint, target: bigint, pname: bi
 /**
  * `get-shader-parameter()` operation.
  */
-export function getShaderParameter(self: bigint, shader: bigint, pname: bigint): string {
+export function getShaderParameter(self: bigint, shader: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getShaderParameter(getWebGlObject(shader), Number(pname));
   const handle = _nextAny++;
@@ -2751,7 +2806,7 @@ export function getShaderSource(self: bigint, shader: bigint): string | undefine
 /**
  * `get-tex-parameter()` operation.
  */
-export function getTexParameter(self: bigint, target: bigint, pname: bigint): string {
+export function getTexParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getTexParameter(Number(target), Number(pname));
   const handle = _nextAny++;
@@ -2762,7 +2817,7 @@ export function getTexParameter(self: bigint, target: bigint, pname: bigint): st
 /**
  * `get-uniform()` operation.
  */
-export function getUniform(self: bigint, program: bigint, location: bigint): string {
+export function getUniform(self: bigint, program: bigint, location: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getUniform(program, Number(location));
   const handle = _nextAny++;
@@ -2785,7 +2840,7 @@ export function getUniformLocation(self: bigint, program: bigint, name: string):
 /**
  * `get-vertex-attrib()` operation.
  */
-export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): string {
+export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const result = obj.getVertexAttrib(Number(index), Number(pname));
   const handle = _nextAny++;
@@ -3430,7 +3485,7 @@ export function readBuffer(self: bigint, src: bigint): void {
 /**
  * `get-internalformat-parameter()` operation.
  */
-export function getInternalformatParameter(self: bigint, target: bigint, internalformat: bigint, pname: bigint): string {
+export function getInternalformatParameter(self: bigint, target: bigint, internalformat: bigint, pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getInternalformatParameter(Number(target), internalformat, Number(pname));
   const handle = _nextAny++;
@@ -3795,7 +3850,7 @@ export function getQuery(self: bigint, target: bigint, pname: bigint): bigint | 
 /**
  * `get-query-parameter()` operation.
  */
-export function getQueryParameter(self: bigint, query: bigint, pname: bigint): string {
+export function getQueryParameter(self: bigint, query: bigint, pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getQueryParameter(getWebGlObject(query), pname);
   const handle = _nextAny++;
@@ -3857,7 +3912,7 @@ export function samplerParameterf(self: bigint, sampler: bigint, pname: bigint, 
 /**
  * `get-sampler-parameter()` operation.
  */
-export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint): string {
+export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getSamplerParameter(getWebGlObject(sampler), pname);
   const handle = _nextAny++;
@@ -3911,7 +3966,7 @@ export function waitSync(self: bigint, sync: bigint, flags: bigint, timeout: big
 /**
  * `get-sync-parameter()` operation.
  */
-export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): string {
+export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getSyncParameter(getWebGlObject(sync), pname);
   const handle = _nextAny++;
@@ -4025,7 +4080,7 @@ export function bindBufferRange(self: bigint, target: bigint, index: bigint, buf
 /**
  * `get-indexed-parameter()` operation.
  */
-export function getIndexedParameter(self: bigint, target: bigint, index: bigint): string {
+export function getIndexedParameter(self: bigint, target: bigint, index: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getIndexedParameter(Number(target), index);
   const handle = _nextAny++;
@@ -4036,7 +4091,7 @@ export function getIndexedParameter(self: bigint, target: bigint, index: bigint)
 /**
  * `get-uniform-indices()` operation.
  */
-export function getUniformIndices(self: bigint, program: bigint, uniformNames: (string)[]): (bigint)[] | undefined {
+export function getUniformIndices(self: bigint, program: bigint, uniformNames: (string)[]): bigint | undefined {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getUniformIndices(getWebGlObject(program), uniformNames);
   if (result === null) return undefined;
@@ -4048,7 +4103,7 @@ export function getUniformIndices(self: bigint, program: bigint, uniformNames: (
 /**
  * `get-active-uniforms()` operation.
  */
-export function getActiveUniforms(self: bigint, program: bigint, uniformIndices: (bigint)[], pname: bigint): string {
+export function getActiveUniforms(self: bigint, program: bigint, uniformIndices: (bigint)[], pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getActiveUniforms(getWebGlObject(program), uniformIndices, pname);
   const handle = _nextAny++;
@@ -4070,7 +4125,7 @@ export function getUniformBlockIndex(self: bigint, program: bigint, uniformBlock
 /**
  * `get-active-uniform-block-parameter()` operation.
  */
-export function getActiveUniformBlockParameter(self: bigint, program: bigint, uniformBlockIndex: bigint, pname: bigint): string {
+export function getActiveUniformBlockParameter(self: bigint, program: bigint, uniformBlockIndex: bigint, pname: bigint): bigint {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getActiveUniformBlockParameter(getWebGlObject(program), uniformBlockIndex, pname);
   const handle = _nextAny++;
@@ -4081,7 +4136,7 @@ export function getActiveUniformBlockParameter(self: bigint, program: bigint, un
 /**
  * `get-active-uniform-block-name()` operation.
  */
-export function getActiveUniformBlockName(self: bigint, program: bigint, uniformBlockIndex: bigint): string | undefined {
+export function getActiveUniformBlockName(self: bigint, program: bigint, uniformBlockIndex: bigint): bigint | undefined {
   const obj = getWebGL2RenderingContextBase(self);
   const result = obj.getActiveUniformBlockName(getWebGlObject(program), uniformBlockIndex);
   if (result === null) return undefined;

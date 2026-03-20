@@ -54,6 +54,9 @@ INTERFACE_TO_BROWSER_CLASS = {
     "password-credential": "PasswordCredential",
     "federated-credential": "FederatedCredential",
     "credential-user-data": "any",
+    "module": "WebAssembly.Module",
+    "origin": "Origin",
+    "speech-recognition": "SpeechRecognition",
 }
 
 # Types that don't exist in TypeScript DOM library (use 'any' for handles)
@@ -430,6 +433,19 @@ STATIC_METHOD_RETURN_OVERRIDES = {
 # Static methods that need type assertions (methods missing from TypeScript DOM lib)
 STATIC_METHOD_NEEDS_TYPE_ASSERTION = {
     ("Credential", "isConditionalMediationAvailable"),
+    ("Origin", "from"),
+    ("SpeechRecognition", "available"),
+    ("SpeechRecognition", "install"),
+    ("Module", "exports"),
+    ("Module", "imports"),
+    ("Module", "customSections"),
+    ("ImageTrackList", "getReady"),
+    ("ReadableStream", "from"),
+    ("FileReader", "newFileReader"),
+    ("Permissions", "getQuery"),
+    ("Table", "get"),
+    ("URLSearchParams", "all"),
+    ("WebSocket", "connect"),
 }
 
 # Functions that return browser objects (need to wrap in handle)
@@ -686,6 +702,251 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("parent-node", "getElementsByName"): "node-list",
     # NonElementParentNode
     ("non-element-parent-node", "getElementById"): "element",
+    # CSSRule - parent properties return CSSRule/CSSStyleSheet
+    ("css-rule", "getParentRule"): "css-rule",
+    ("css-rule", "getParentStyleSheet"): "css-style-sheet",
+    # CSSKeyframeRule - style property
+    ("css-keyframe-rule", "getStyle"): "css-style-declaration",
+    # CSSStyleRule - style property
+    ("css-style-rule", "getStyle"): "css-style-declaration",
+    # CSSMediaRule - media property
+    ("css-media-rule", "getMedia"): "media-list",
+    # CSSImportRule - styleSheet/media properties
+    ("css-import-rule", "getStyleSheet"): "css-style-sheet",
+    ("css-import-rule", "getMedia"): "media-list",
+    # CSSGroupingRule - cssRules property
+    ("css-grouping-rule", "getCssRules"): "css-rule-list",
+    # CSSStyleSheet - ownerRule/media/cssRules properties
+    ("css-style-sheet", "getOwnerRule"): "css-rule",
+    ("css-style-sheet", "getMedia"): "media-list",
+    ("css-style-sheet", "getCssRules"): "css-rule-list",
+    # StyleSheet - ownerNode/parentStyleSheet properties
+    ("style-sheet", "getOwnerNode"): "element",
+    ("style-sheet", "getParentStyleSheet"): "css-style-sheet",
+    # Window - object properties
+    ("window", "getWindow"): "window",
+    ("window", "getSelf"): "window",
+    ("window", "getDocument"): "document",
+    ("window", "getName"): "string",
+    ("window", "getLocation"): "location",
+    ("window", "getHistory"): "history",
+    ("window", "getCustomElements"): "custom-element-registry",
+    ("window", "getLocationbar"): "bar-prop",
+    ("window", "getMenubar"): "bar-prop",
+    ("window", "getPersonalbar"): "bar-prop",
+    ("window", "getScrollbars"): "bar-prop",
+    ("window", "getStatusbar"): "bar-prop",
+    ("window", "getToolbar"): "bar-prop",
+    ("window", "getNavigator"): "navigator",
+    ("window", "getScreen"): "screen",
+    ("window", "getVisualViewport"): "visual-viewport",
+    ("window", "getOpener"): "window",
+    ("window", "getParent"): "window",
+    ("window", "getFrames"): "window",
+    ("window", "getTop"): "window",
+    # Screen - orientation property
+    ("screen", "getOrientation"): "screen-orientation",
+    # Document - many object properties
+    ("document", "getLocation"): "location",
+    ("document", "getDomain"): "string",
+    ("document", "getReferrer"): "string",
+    ("document", "getCookie"): "string",
+    ("document", "getLastModified"): "string",
+    ("document", "getReadyState"): "string",
+    ("document", "getTitle"): "string",
+    ("document", "getDir"): "string",
+    ("document", "getHead"): "html-element",
+    ("document", "getBody"): "html-element",
+    ("document", "getDocumentElement"): "element",
+    ("document", "getDoctype"): "document-type",
+    ("document", "getImplementation"): "dom-implementation",
+    ("document", "getActiveElement"): "element",
+    ("document", "getStyleSheets"): "style-sheet-list",
+    ("document", "getScrollingElement"): "element",
+    ("document", "getEmbeds"): "html-collection",
+    ("document", "getPlugins"): "html-collection",
+    ("document", "getForms"): "html-collection",
+    ("document", "getLinks"): "html-collection",
+    ("document", "getAnchors"): "html-collection",
+    ("document", "getImages"): "html-collection",
+    ("document", "getScripts"): "html-collection",
+    ("document", "getDefaultView"): "window",
+    ("document", "getCurrentScript"): "html-element",
+    ("document", "getFirstChild"): "node",
+    ("document", "getFirstChildElement"): "element",
+    ("document", "getLastChild"): "node",
+    ("document", "getLastChildElement"): "element",
+    # Navigator - object properties
+    ("navigator", "getClipboard"): "clipboard",
+    ("navigator", "getCredentials"): "credentials-container",
+    ("navigator", "getGeolocation"): "geolocation",
+    ("navigator", "getUserActivation"): "user-activation",
+    ("navigator", "getMediaCapabilities"): "media-capabilities",
+    ("navigator", "getMediaDevices"): "media-devices",
+    ("navigator", "getMediaSession"): "media-session",
+    ("navigator", "getPermissions"): "permissions",
+    ("navigator", "getServiceWorker"): "service-worker-container",
+    ("navigator", "getBattery"): "battery-manager",
+    ("navigator", "getGamepads"): "gamepad-list",
+    ("navigator", "getLanguages"): "string-list",
+    ("navigator", "getPlugins"): "plugin-array",
+    ("navigator", "getMimeTypes"): "mime-type-array",
+    ("navigator", "getExternal"): "external",
+    ("navigator", "getSpeechSynthesis"): "speech-synthesis",
+    # Element - object properties
+    ("element", "getAttributes"): "named-node-map",
+    ("element", "getClassList"): "dom-token-list",
+    ("element", "getChildren"): "html-collection",
+    ("element", "getFirstChild"): "node",
+    ("element", "getFirstChildElement"): "element",
+    ("element", "getLastChild"): "node",
+    ("element", "getLastChildElement"): "element",
+    ("element", "getNextElementSibling"): "element",
+    ("element", "getPreviousElementSibling"): "element",
+    ("element", "getParentElement"): "element",
+    ("element", "getShadowRoot"): "shadow-root",
+    ("element", "getInternals"): "element-internals",
+    # HTMLElement - object properties
+    ("html-element", "getDataset"): "dom-string-map",
+    ("html-element", "getClassList"): "dom-token-list",
+    ("html-element", "getOffsetParent"): "element",
+    ("html-element", "getStyle"): "css-style-declaration",
+    # HTMLImageElement
+    ("html-image-element", "getComplete"): "boolean",
+    ("html-image-element", "getNaturalWidth"): "number",
+    ("html-image-element", "getNaturalHeight"): "number",
+    ("html-image-element", "getCurrentSrc"): "string",
+    # HTMLMediaElement
+    ("html-media-element", "getError"): "media-error",
+    ("html-media-element", "getSrcObject"): "media-provider",
+    ("html-media-element", "getBuffered"): "time-ranges",
+    ("html-media-element", "getSeekable"): "time-ranges",
+    ("html-media-element", "getPlayed"): "time-ranges",
+    ("html-media-element", "getTextTracks"): "text-track-list",
+    # HTMLVideoElement
+    ("html-video-element", "getVideoTracks"): "video-track-list",
+    ("html-video-element", "getAudioTracks"): "audio-track-list",
+    # HTMLTrackElement
+    ("html-track-element", "getTrack"): "text-track",
+    ("html-track-element", "getReadyState"): "number",
+    # TextTrack
+    ("text-track", "getCues"): "text-track-cue-list",
+    ("text-track", "getActiveCues"): "text-track-cue-list",
+    ("text-track", "getKind"): "string",
+    ("text-track", "getLabel"): "string",
+    ("text-track", "getLanguage"): "string",
+    ("text-track", "getId"): "string",
+    ("text-track", "getMode"): "string",
+    # TextTrackList
+    ("text-track-list", "getLength"): "number",
+    ("text-track-list", "getTextTrack"): "text-track",
+    # HTMLTableElement
+    ("html-table-element", "getCaption"): "html-table-caption-element",
+    ("html-table-element", "getTHead"): "html-table-section-element",
+    ("html-table-element", "getTFoot"): "html-table-section-element",
+    ("html-table-element", "getRows"): "html-collection",
+    ("html-table-element", "getTBodies"): "html-collection",
+    # HTMLFormElement
+    ("html-form-element", "getElements"): "html-collection",
+    ("html-form-element", "getLength"): "number",
+    # HTMLInputElement
+    ("html-input-element", "getList"): "html-element",
+    ("html-input-element", "getForm"): "html-form-element",
+    ("html-input-element", "getLabels"): "node-list",
+    ("html-input-element", "getValidity"): "validity-state",
+    ("html-input-element", "getValidationMessage"): "string",
+    # HTMLSelectElement
+    ("html-select-element", "getForm"): "html-form-element",
+    ("html-select-element", "getOptions"): "html-options-collection",
+    ("html-select-element", "getSelectedOptions"): "html-collection",
+    ("html-select-element", "getValidity"): "validity-state",
+    # HTMLTextAreaElement
+    ("html-text-area-element", "getForm"): "html-form-element",
+    ("html-text-area-element", "getValidity"): "validity-state",
+    # HTMLButtonElement
+    ("html-button-element", "getForm"): "html-form-element",
+    ("html-button-element", "getValidity"): "validity-state",
+    # HTMLIFrameElement
+    ("html-iframe-element", "getContentDocument"): "document",
+    ("html-iframe-element", "getContentWindow"): "window",
+    # HTMLObjectElement
+    ("html-object-element", "getContentDocument"): "document",
+    ("html-object-element", "getContentWindow"): "window",
+    ("html-object-element", "getForm"): "html-form-element",
+    ("html-object-element", "getValidity"): "validity-state",
+    # HTMLFieldSetElement
+    ("html-field-set-element", "getElements"): "html-collection",
+    ("html-field-set-element", "getForm"): "html-form-element",
+    # HTMLOutputElement
+    ("html-output-element", "getForm"): "html-form-element",
+    ("html-output-element", "getValidity"): "validity-state",
+    # HTMLLabelElement
+    ("html-label-element", "getControl"): "html-element",
+    ("html-label-element", "getForm"): "html-form-element",
+    # Range - object properties
+    ("range", "getStartContainer"): "node",
+    ("range", "getEndContainer"): "node",
+    ("range", "getCommonAncestorContainer"): "node",
+    ("range", "getCollapsed"): "boolean",
+    ("range", "getBoundingClientRect"): "dom-rect",
+    ("range", "getClientRects"): "dom-rect-list",
+    ("range", "cloneContents"): "document-fragment",
+    ("range", "createContextualFragment"): "document-fragment",
+    # DOMImplementation
+    ("dom-implementation", "createDocumentType"): "document-type",
+    ("dom-implementation", "createDocument"): "document",
+    ("dom-implementation", "createHTMLDocument"): "document",
+    # DocumentType
+    ("document-type", "getName"): "string",
+    ("document-type", "getPublicId"): "string",
+    ("document-type", "getSystemId"): "string",
+    # Node - object properties
+    ("node", "getParentNode"): "node",
+    ("node", "getParentElement"): "element",
+    ("node", "getFirstChild"): "node",
+    ("node", "getLastChild"): "node",
+    ("node", "getNextSibling"): "node",
+    ("node", "getPreviousSibling"): "node",
+    ("node", "getOwnerDocument"): "document",
+    ("node", "getchildNodes"): "node-list",
+    # Event - object properties
+    ("event", "getTarget"): "event-target",
+    ("event", "getCurrentTarget"): "event-target",
+    ("event", "getSrcElement"): "element",
+    # DocumentOrShadowRoot - object properties
+    ("document-or-shadow-root", "getActiveElement"): "element",
+    ("document-or-shadow-root", "getStyleSheets"): "style-sheet-list",
+    ("document-or-shadow-root", "getAdoptedStyleSheets"): "css-style-sheet-list",
+    # VisualViewport
+    ("visual-viewport", "getOffsetLeft"): "number",
+    ("visual-viewport", "getOffsetTop"): "number",
+    ("visual-viewport", "getPageLeft"): "number",
+    ("visual-viewport", "getPageTop"): "number",
+    ("visual-viewport", "getWidth"): "number",
+    ("visual-viewport", "getHeight"): "number",
+    ("visual-viewport", "getScale"): "number",
+    # LinkStyle
+    ("link-style", "getSheet"): "css-style-sheet",
+    # ImageDecoder
+    ("image-decoder", "getTracks"): "image-track-list",
+    ("image-decoder", "getType"): "string",
+    # CryptoKey - enum and object properties
+    ("crypto-key", "getType"): "string",
+    ("crypto-key", "getAlgorithm"): "any",
+    ("crypto-key", "getUsages"): "string-list",
+    # Gamepad
+    ("gamepad", "getButtons"): "gamepad-button-list",
+    ("gamepad", "getAxes"): "float-32-list",
+    ("gamepad", "getHapticActuators"): "gamepad-haptic-actuator-list",
+    # MediaList
+    ("media-list", "getLength"): "number",
+    ("media-list", "getMediaText"): "string",
+    # CSSPageRule
+    ("css-page-rule", "getStyle"): "css-style-declaration",
+    # CSSMarginRule
+    ("css-margin-rule", "getStyle"): "css-style-declaration",
+    # CSSFontFaceRule
+    ("css-font-face-rule", "getStyle"): "css-style-declaration",
 }
 
 
@@ -1097,6 +1358,15 @@ ENUM_VALUE_MAPPINGS = {
     },
 }
 
+# Setters that accept enum values (bigint in WIT, string in DOM)
+# Maps (interface, property_name) to enum type name
+# NOTE: property_name should be in camelCase
+ENUM_SETTER_PROPERTIES = {
+    # WebGL color space setters
+    ("web-gl-rendering-context-base", "drawingBufferColorSpace"): "PredefinedColorSpace",
+    ("web-gl-rendering-context-base", "unpackColorSpace"): "PredefinedColorSpace",
+}
+
 # Methods that return boolean but need to be converted to bigint
 # Maps (interface, method_name) to True
 BOOLEAN_TO_BIGINT_PROPERTIES = {
@@ -1149,6 +1419,8 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("encoded-audio-chunk", "duration"): True,
     ("encoded-video-chunk", "timestamp"): True,
     ("encoded-video-chunk", "duration"): True,
+    ("audio-data", "timestamp"): True,
+    ("audio-data", "duration"): True,
     ("video-frame", "timestamp"): True,
     ("video-frame", "duration"): True,
     ("video-frame", "codedWidth"): True,
@@ -1261,6 +1533,38 @@ SYNTHETIC_HANDLE_TYPES = {
     "named-node-map": ("NamedNodeMap", "namedNodeMapHandles", "NamedNodeMap"),
     "html-all-collection": ("HTMLAllCollection", "htmlAllCollectionHandles", "HtmlAllCollection"),
     "element-internals": ("ElementInternals", "elementInternalsHandles", "ElementInternals"),
+    # Additional types needed for handle wrapping
+    "clipboard": ("Clipboard", "clipboardHandles", "Clipboard"),
+    "credentials-container": ("CredentialsContainer", "credentialsContainerHandles", "CredentialsContainer"),
+    "geolocation": ("Geolocation", "geolocationHandles", "Geolocation"),
+    "user-activation": ("UserActivation", "userActivationHandles", "UserActivation"),
+    "media-capabilities": ("MediaCapabilities", "mediaCapabilitiesHandles", "MediaCapabilities"),
+    "media-devices": ("MediaDevices", "mediaDevicesHandles", "MediaDevices"),
+    "media-session": ("MediaSession", "mediaSessionHandles", "MediaSession"),
+    "permissions": ("Permissions", "permissionsHandles", "Permissions"),
+    "service-worker-container": ("ServiceWorkerContainer", "serviceWorkerContainerHandles", "ServiceWorkerContainer"),
+    "battery-manager": ("BatteryManager", "batteryManagerHandles", "BatteryManager"),
+    "gamepad-list": ("Gamepad[]", "gamepadListHandles", "GamepadList"),
+    "plugin-array": ("PluginArray", "pluginArrayHandles", "PluginArray"),
+    "mime-type-array": ("MimeTypeArray", "mimeTypeArrayHandles", "MimeTypeArray"),
+    "style-sheet-list": ("StyleSheetList", "styleSheetListHandles", "StyleSheetList"),
+    "css-style-sheet-list": ("CSSStyleSheet[]", "cssStyleSheetListHandles", "CssStyleSheetList"),
+    "text-track": ("TextTrack", "textTrackHandles", "TextTrack"),
+    "text-track-list": ("TextTrackList", "textTrackListHandles", "TextTrackList"),
+    "text-track-cue-list": ("TextTrackCueList", "textTrackCueListHandles", "TextTrackCueList"),
+    "audio-track-list": ("AudioTrackList", "audioTrackListHandles", "AudioTrackList"),
+    "video-track-list": ("VideoTrackList", "videoTrackListHandles", "VideoTrackList"),
+    "media-error": ("MediaError", "mediaErrorHandles", "MediaError"),
+    "media-provider": ("MediaProvider", "mediaProviderHandles", "MediaProvider"),
+    "html-table-caption-element": ("HTMLTableCaptionElement", "htmlTableCaptionElementHandles", "HtmlTableCaptionElement"),
+    "html-table-section-element": ("HTMLTableSectionElement", "htmlTableSectionElementHandles", "HtmlTableSectionElement"),
+    "html-options-collection": ("HTMLOptionsCollection", "htmlOptionsCollectionHandles", "HtmlOptionsCollection"),
+    "gamepad-button-list": ("GamepadButton[]", "gamepadButtonListHandles", "GamepadButtonList"),
+    "gamepad-haptic-actuator-list": ("GamepadHapticActuator[]", "gamepadHapticActuatorListHandles", "GamepadHapticActuatorList"),
+    "float-32-list": ("Float32Array", "float32ListHandles", "Float32List"),
+    "dom-string-map": ("DOMStringMap", "domStringMapHandles", "DomStringMap"),
+    "image-track-list": ("ImageTrackList", "imageTrackListHandles", "ImageTrackList"),
+    "image-track": ("ImageTrack", "imageTrackHandles", "ImageTrack"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -1304,14 +1608,14 @@ CUSTOM_TYPE_DEFINITIONS = {
     "AudioTrack": "any",
     "VideoTrackList": "any",
     "VideoTrack": "any",
-    # Worker types (not in standard DOM lib)
-    "WorkerGlobalScope": "typeof WorkerGlobalScope",
-    "DedicatedWorkerGlobalScope": "typeof DedicatedWorkerGlobalScope",
-    "SharedWorkerGlobalScope": "typeof SharedWorkerGlobalScope",
+    # Worker types (not in standard DOM lib - interfaces only, no runtime value)
+    "WorkerGlobalScope": "any",
+    "DedicatedWorkerGlobalScope": "any",
+    "SharedWorkerGlobalScope": "any",
     "WorkerNavigator": "any",
     "WorkerLocation": "any",
     # Service Worker types
-    "ServiceWorkerGlobalScope": "typeof ServiceWorkerGlobalScope",
+    "ServiceWorkerGlobalScope": "any",
     "Client": "any",
     "WindowClient": "any",
     "Clients": "any",
@@ -1603,6 +1907,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("video-frame", "metadata"),
     # ImageTrackList
     ("image-track-list", "imageTrack"),
+    ("image-track-list", "getReady"),
     # WebGLRenderingContextBase
     ("web-gl-rendering-context-base", "drawingBufferFormat"),
     ("web-gl-rendering-context-base", "drawingBufferStorage"),
@@ -1668,7 +1973,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     # XPathNSResolver
     ("x-path-ns-resolver", "lookupNamespaceURI"),
     # ClipboardEvent
-    ("clipboard-event", "changeId"),
+    ("clipboard-change-event", "changeId"),
     # PointerEvent
     ("pointer-event", "persistentDeviceId"),
     # Touch
@@ -1729,45 +2034,70 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("custom-element-registry", "initialize"),
     # ToggleEvent
     ("toggle-event", "source"),
-    # Event - various subtypes
-    ("event", "source"),
-    ("event", "command"),
-    ("event", "requestClose"),
-    ("event", "close"),
-    ("event", "destroy"),
-    ("event", "oncancel"),
-    ("event", "onclose"),
-    ("event", "navigationType"),
-    ("event", "destination"),
-    ("event", "canIntercept"),
-    ("event", "userInitiated"),
-    ("event", "hashChange"),
-    ("event", "signal"),
-    ("event", "formData"),
-    ("event", "downloadRequest"),
-    ("event", "info"),
-    ("event", "hasUAVisualTransition"),
-    ("event", "intercept"),
-    ("event", "scroll"),
-    ("event", "from"),
-    ("event", "devices"),
-    ("event", "userInsertedDevices"),
-    ("event", "notification"),
-    ("event", "action"),
-    ("event", "error"),
-    ("event", "message"),
-    ("event", "resultIndex"),
-    ("event", "results"),
-    ("event", "waitUntil"),
-    ("event", "addRoutes"),
-    ("event", "request"),
-    ("event", "preloadResponse"),
-    ("event", "clientId"),
-    ("event", "resultingClientId"),
-    ("event", "replacesClientId"),
-    ("event", "handled"),
-    ("event", "respondWith"),
-    # EventTarget
+    # CommandEvent
+    ("command-event", "source"),
+    ("command-event", "command"),
+    # CloseWatcher (EventTarget subtype)
+    ("close-watcher", "requestClose"),
+    ("close-watcher", "close"),
+    ("close-watcher", "destroy"),
+    ("close-watcher", "oncancel"),
+    ("close-watcher", "onclose"),
+    # NavigateEvent
+    ("navigate-event", "navigationType"),
+    ("navigate-event", "destination"),
+    ("navigate-event", "canIntercept"),
+    ("navigate-event", "userInitiated"),
+    ("navigate-event", "hashChange"),
+    ("navigate-event", "signal"),
+    ("navigate-event", "formData"),
+    ("navigate-event", "downloadRequest"),
+    ("navigate-event", "info"),
+    ("navigate-event", "hasUAVisualTransition"),
+    ("navigate-event", "intercept"),
+    ("navigate-event", "scroll"),
+    # NavigationCurrentEntryChangeEvent
+    ("navigation-current-entry-change-event", "navigationType"),
+    ("navigation-current-entry-change-event", "from"),
+    # DeviceChangeEvent
+    ("device-change-event", "devices"),
+    ("device-change-event", "userInsertedDevices"),
+    # SpeechRecognitionErrorEvent
+    ("speech-recognition-error-event", "error"),
+    ("speech-recognition-error-event", "message"),
+    # SpeechRecognitionEvent
+    ("speech-recognition-event", "resultIndex"),
+    ("speech-recognition-event", "results"),
+    # NotificationEvent
+    ("notification-event", "notification"),
+    ("notification-event", "action"),
+    # ServiceWorkerContainer
+    ("service-worker-container", "getReady"),
+    # Animation
+    ("animation", "persist"),
+    # RTCPeerConnection
+    ("rtc-peer-connection", "restartIce"),
+    # Geolocation (callback-based, but generator treats as async)
+    ("geolocation", "getCurrentPosition"),
+    ("extendable-event", "waitUntil"),
+    ("extendable-event", "addRoutes"),
+    # InstallEvent
+    ("install-event", "addRoutes"),
+    # FetchEvent
+    ("fetch-event", "request"),
+    ("fetch-event", "preloadResponse"),
+    ("fetch-event", "clientId"),
+    ("fetch-event", "resultingClientId"),
+    ("fetch-event", "replacesClientId"),
+    ("fetch-event", "handled"),
+    ("fetch-event", "respondWith"),
+    # RTCPeerConnectionIceErrorEvent
+    ("rtc-peer-connection-ice-error-event", "address"),
+    ("rtc-peer-connection-ice-error-event", "port"),
+    ("rtc-peer-connection-ice-error-event", "url"),
+    ("rtc-peer-connection-ice-error-event", "errorCode"),
+    ("rtc-peer-connection-ice-error-event", "errorText"),
+    # EventTarget (keep generic ones)
     ("event-target", "requestClose"),
     ("event-target", "close"),
     ("event-target", "destroy"),
@@ -1886,6 +2216,10 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("notification", "maxActions"),
     # OffscreenCanvas
     ("offscreen-canvas", "context"),
+    # Permissions
+    ("permissions", "getQuery"),
+    # URLSearchParams
+    ("url-search-params", "all"),
 }
 
 # JavaScript/TypeScript reserved keywords

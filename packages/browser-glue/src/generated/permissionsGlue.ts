@@ -125,13 +125,13 @@ export type VideoTrackList = any;
 export type VideoTrack = any;
 
 /** Type definition for WorkerGlobalScope */
-export type WorkerGlobalScope = typeof WorkerGlobalScope;
+export type WorkerGlobalScope = any;
 
 /** Type definition for DedicatedWorkerGlobalScope */
-export type DedicatedWorkerGlobalScope = typeof DedicatedWorkerGlobalScope;
+export type DedicatedWorkerGlobalScope = any;
 
 /** Type definition for SharedWorkerGlobalScope */
-export type SharedWorkerGlobalScope = typeof SharedWorkerGlobalScope;
+export type SharedWorkerGlobalScope = any;
 
 /** Type definition for WorkerNavigator */
 export type WorkerNavigator = any;
@@ -140,7 +140,7 @@ export type WorkerNavigator = any;
 export type WorkerLocation = any;
 
 /** Type definition for ServiceWorkerGlobalScope */
-export type ServiceWorkerGlobalScope = typeof ServiceWorkerGlobalScope;
+export type ServiceWorkerGlobalScope = any;
 
 /** Type definition for Client */
 export type Client = any;
@@ -237,10 +237,10 @@ function getPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: bigint): bigint {
+export function query(self: bigint, permissionDesc: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPermissions(self);
-  const promise = obj.getQuery(permissionDesc)
+  const promise = (obj as any).getQuery(permissionDesc)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -292,7 +292,7 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): bigint {
+export function getState(self: bigint): string {
   const obj = getPermissionStatus(self);
   return obj.state;
 }
@@ -308,7 +308,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): string {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
