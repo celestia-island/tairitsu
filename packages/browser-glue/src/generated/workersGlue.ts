@@ -35,12 +35,12 @@ function getServiceWorker(handle: bigint): ServiceWorker {
     throw new Error(`ServiceWorker handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-script-url()` operation.
  */
-export function getScriptUrl(self: bigint): number {
+export function getScriptUrl(self: bigint): string {
   const obj = getServiceWorker(self);
   return obj.scriptUrl;
 }
@@ -56,7 +56,7 @@ export function ServiceWorkerGetState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ServiceWorkerPostMessage(self: bigint, message: number, transfer: bigint | undefined): void {
+export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (number)[]): void {
   const obj = getServiceWorker(self);
   obj.postMessage(message, transfer);
 }
@@ -72,7 +72,7 @@ export function getOnstatechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onstatechange()` operation.
  */
-export function setOnstatechange(self: bigint, value: number): void {
+export function setOnstatechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorker(self);
   obj.onstatechange = value;
 }
@@ -95,7 +95,7 @@ function getServiceWorkerContainer(handle: bigint): ServiceWorkerContainer {
     throw new Error(`ServiceWorkerContainer handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-controller()` operation.
@@ -172,7 +172,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): EventHandlerRecord {
+export function getOnmessageerror(self: bigint): number {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessageerror;
 }
@@ -203,7 +203,7 @@ function getNavigationPreloadManager(handle: bigint): NavigationPreloadManager {
     throw new Error(`NavigationPreloadManager handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `enable()` operation.
@@ -255,7 +255,7 @@ function getClient(handle: bigint): Client {
     throw new Error(`Client handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-url()` operation.
@@ -292,7 +292,7 @@ export function getType(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ClientPostMessage(self: bigint, message: bigint, transfer: (bigint)[]): void {
+export function ClientPostMessage(self: bigint, message: number, transfer: (number | undefined)[]): void {
   const obj = getClient(self);
   obj.postMessage(message, transfer);
 }
@@ -315,12 +315,12 @@ function getWindowClient(handle: bigint): WindowClient {
     throw new Error(`WindowClient handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-visibility-state()` operation.
  */
-export function getVisibilityState(self: bigint): number {
+export function getVisibilityState(self: bigint): bigint {
   const obj = getWindowClient(self);
   return obj.visibilityState;
 }
@@ -328,7 +328,7 @@ export function getVisibilityState(self: bigint): number {
 /**
  * `get-focused()` operation.
  */
-export function getFocused(self: bigint): boolean {
+export function getFocused(self: bigint): bigint | undefined {
   const obj = getWindowClient(self);
   return obj.focused;
 }
@@ -375,7 +375,7 @@ function getClients(handle: bigint): Clients {
     throw new Error(`Clients handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `match-all()` operation.
@@ -388,7 +388,7 @@ export function ClientsMatchAll(self: bigint, options: bigint | undefined): numb
 /**
  * `open-window()` operation.
  */
-export function openWindow(self: bigint, url: string): bigint {
+export function openWindow(self: bigint, url: bigint | undefined): bigint {
   const obj = getClients(self);
   return obj.openWindow(url);
 }
@@ -419,7 +419,7 @@ function getExtendableEvent(handle: bigint): ExtendableEvent {
     throw new Error(`ExtendableEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `wait-until()` operation.
@@ -447,7 +447,7 @@ function getInstallEvent(handle: bigint): InstallEvent {
     throw new Error(`InstallEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `add-routes()` operation.
@@ -475,7 +475,7 @@ function getFetchEvent(handle: bigint): FetchEvent {
     throw new Error(`FetchEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-request()` operation.
@@ -496,7 +496,7 @@ export function getPreloadResponse(self: bigint): bigint {
 /**
  * `get-client-id()` operation.
  */
-export function getClientId(self: bigint): string {
+export function getClientId(self: bigint): number {
   const obj = getFetchEvent(self);
   return obj.clientId;
 }
@@ -520,7 +520,7 @@ export function getReplacesClientId(self: bigint): string {
 /**
  * `get-handled()` operation.
  */
-export function getHandled(self: bigint): bigint {
+export function getHandled(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.handled;
 }
@@ -551,7 +551,7 @@ function getExtendableMessageEvent(handle: bigint): ExtendableMessageEvent {
     throw new Error(`ExtendableMessageEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-data()` operation.
@@ -580,7 +580,7 @@ export function getLastEventId(self: bigint): string {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: bigint): bigint {
+export function getSource(self: bigint): bigint | undefined {
   const obj = getExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -611,7 +611,7 @@ function getCache(handle: bigint): Cache {
     throw new Error(`Cache handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `match-all()` operation.
@@ -656,7 +656,7 @@ export function CacheDelete(self: bigint, request: bigint, options: bigint | und
 /**
  * `keys()` operation.
  */
-export function CacheKeys(self: bigint, request: string | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
@@ -679,7 +679,7 @@ function getCacheStorage(handle: bigint): CacheStorage {
     throw new Error(`CacheStorage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `has()` operation.
@@ -692,7 +692,7 @@ export function has(self: bigint, cacheName: string): bigint {
 /**
  * `open()` operation.
  */
-export function open(self: bigint, cacheName: string): bigint {
+export function open(self: bigint, cacheName: number): number {
   const obj = getCacheStorage(self);
   return obj.open(cacheName);
 }
@@ -700,7 +700,7 @@ export function open(self: bigint, cacheName: string): bigint {
 /**
  * `delete()` operation.
  */
-export function CacheStorageDelete(self: bigint, cacheName: string): bigint {
+export function CacheStorageDelete(self: bigint, cacheName: number): bigint {
   const obj = getCacheStorage(self);
   return obj.delete(cacheName);
 }

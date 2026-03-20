@@ -48,7 +48,7 @@ function getCredential(handle: bigint): Credential {
     throw new Error(`Credential handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-id()` operation.
@@ -73,7 +73,7 @@ export function getType(self: bigint): string {
  */
 export function isConditionalMediationAvailable(): bigint {
   const requestId = _nextAsyncHandle++;
-  const promise = Credential.isConditionalMediationAvailable()
+  const promise = (Credential as any).isConditionalMediationAvailable()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -95,12 +95,12 @@ export function isConditionalMediationAvailable(): bigint {
  * Poll an async `isConditionalMediationAvailable()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollIsConditionalMediationAvailable(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollIsConditionalMediationAvailable(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ function getCredentialUserData(handle: bigint): any {
     throw new Error(`any handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-name()` operation.
@@ -155,7 +155,7 @@ function registerCredentialsContainer(obj: CredentialsContainer): bigint {
   const handle = _nextCredentialsContainer++;
   _credentialsContainerhandles.set(handle, obj);
   return handle;
-
+}
 
 /** Get a CredentialsContainer by handle, throwing if not found. */
 function getCredentialsContainer(handle: bigint): CredentialsContainer {
@@ -164,7 +164,7 @@ function getCredentialsContainer(handle: bigint): CredentialsContainer {
     throw new Error(`CredentialsContainer handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get()` operation.
@@ -201,7 +201,7 @@ export function pollGet(requestId: bigint): { ok: true; value: bigint } | { ok: 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -239,7 +239,7 @@ export function pollStore(requestId: bigint): { ok: true; value: bigint } | { ok
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -277,7 +277,7 @@ export function pollCreate(requestId: bigint): { ok: true; value: bigint } | { o
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -315,7 +315,7 @@ export function pollPreventSilentAccess(requestId: bigint): { ok: true; value: b
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -336,7 +336,7 @@ function getPasswordCredential(handle: bigint): any {
     throw new Error(`PasswordCredential handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-password()` operation.
@@ -364,7 +364,7 @@ function getFederatedCredential(handle: bigint): any {
     throw new Error(`FederatedCredential handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-provider()` operation.

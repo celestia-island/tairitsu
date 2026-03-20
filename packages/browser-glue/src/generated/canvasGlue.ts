@@ -18,19 +18,6 @@ export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | n
 
 
 // ---------------------------------------------------------------------------
-// Async handle table for Promise-based operations
-// ---------------------------------------------------------------------------
-
-let _nextAsyncHandle = 1n;
-
-interface AsyncHandle<T> {
-  promise: Promise<T>;
-  result: { ok: true; value: T } | { ok: false; error: string } | null;
-}
-
-const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
-
-// ---------------------------------------------------------------------------
 // WIT interface: audio-decoder
 // ---------------------------------------------------------------------------
 
@@ -48,7 +35,7 @@ function getAudioDecoder(handle: bigint): AudioDecoder {
     throw new Error(`AudioDecoder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.
@@ -100,40 +87,10 @@ export function AudioDecoderDecode(self: bigint, chunk: bigint): void {
 
 /**
  * `flush()` operation.
- *
- * Async operation: returns request ID, poll with `AudioDecoderPollFlush()`
  */
 export function AudioDecoderFlush(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getAudioDecoder(self);
-  const promise = obj.flush()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `flush()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioDecoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.flush();
 }
 
 /**
@@ -146,40 +103,10 @@ export function AudioDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `AudioDecoderPollClose()`
  */
-export function AudioDecoderClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function AudioDecoderClose(self: bigint): void {
   const obj = getAudioDecoder(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -207,7 +134,7 @@ function getVideoDecoder(handle: bigint): VideoDecoder {
     throw new Error(`VideoDecoder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.
@@ -259,40 +186,10 @@ export function VideoDecoderDecode(self: bigint, chunk: bigint): void {
 
 /**
  * `flush()` operation.
- *
- * Async operation: returns request ID, poll with `VideoDecoderPollFlush()`
  */
 export function VideoDecoderFlush(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getVideoDecoder(self);
-  const promise = obj.flush()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `flush()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoDecoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.flush();
 }
 
 /**
@@ -305,40 +202,10 @@ export function VideoDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `VideoDecoderPollClose()`
  */
-export function VideoDecoderClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function VideoDecoderClose(self: bigint): void {
   const obj = getVideoDecoder(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -366,7 +233,7 @@ function getAudioEncoder(handle: bigint): AudioEncoder {
     throw new Error(`AudioEncoder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.
@@ -418,40 +285,10 @@ export function AudioEncoderEncode(self: bigint, data: bigint): void {
 
 /**
  * `flush()` operation.
- *
- * Async operation: returns request ID, poll with `AudioEncoderPollFlush()`
  */
 export function AudioEncoderFlush(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getAudioEncoder(self);
-  const promise = obj.flush()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `flush()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioEncoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.flush();
 }
 
 /**
@@ -464,40 +301,10 @@ export function AudioEncoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `AudioEncoderPollClose()`
  */
-export function AudioEncoderClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function AudioEncoderClose(self: bigint): void {
   const obj = getAudioEncoder(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioEncoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -525,7 +332,7 @@ function getVideoEncoder(handle: bigint): VideoEncoder {
     throw new Error(`VideoEncoder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.
@@ -577,40 +384,10 @@ export function VideoEncoderEncode(self: bigint, frame: bigint, options: bigint 
 
 /**
  * `flush()` operation.
- *
- * Async operation: returns request ID, poll with `VideoEncoderPollFlush()`
  */
 export function VideoEncoderFlush(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getVideoEncoder(self);
-  const promise = obj.flush()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `flush()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoEncoderPollFlush(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.flush();
 }
 
 /**
@@ -623,40 +400,10 @@ export function VideoEncoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `VideoEncoderPollClose()`
  */
-export function VideoEncoderClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function VideoEncoderClose(self: bigint): void {
   const obj = getVideoEncoder(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoEncoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -684,7 +431,7 @@ function getEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
     throw new Error(`EncodedAudioChunk handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -744,7 +491,7 @@ function getEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
     throw new Error(`EncodedVideoChunk handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -804,7 +551,7 @@ function getAudioData(handle: bigint): AudioData {
     throw new Error(`AudioData handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-format()` operation.
@@ -872,78 +619,18 @@ export function AudioDataCopyTo(self: bigint, destination: bigint, options: bigi
 
 /**
  * `clone()` operation.
- *
- * Async operation: returns request ID, poll with `AudioDataPollClone()`
  */
 export function AudioDataClone(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getAudioData(self);
-  const promise = obj.clone()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `clone()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioDataPollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.clone();
 }
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `AudioDataPollClose()`
  */
-export function AudioDataClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function AudioDataClose(self: bigint): void {
   const obj = getAudioData(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function AudioDataPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 // ---------------------------------------------------------------------------
@@ -964,7 +651,7 @@ function getVideoFrame(handle: bigint): VideoFrame {
     throw new Error(`VideoFrame handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-format()` operation.
@@ -1088,78 +775,18 @@ export function VideoFrameCopyTo(self: bigint, destination: bigint, options: big
 
 /**
  * `clone()` operation.
- *
- * Async operation: returns request ID, poll with `VideoFramePollClone()`
  */
 export function VideoFrameClone(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
   const obj = getVideoFrame(self);
-  const promise = obj.clone()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `clone()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoFramePollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  return obj.clone();
 }
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `VideoFramePollClose()`
  */
-export function VideoFrameClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function VideoFrameClose(self: bigint): void {
   const obj = getVideoFrame(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function VideoFramePollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 // ---------------------------------------------------------------------------
@@ -1180,7 +807,7 @@ function getVideoColorSpace(handle: bigint): VideoColorSpace {
     throw new Error(`VideoColorSpace handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-primaries()` operation.
@@ -1219,7 +846,7 @@ export function getFullRange(self: bigint): boolean | undefined {
  */
 export function toJson(self: bigint): bigint {
   const obj = getVideoColorSpace(self);
-  return obj.toJson();
+  return obj.toJSON();
 }
 
 // ---------------------------------------------------------------------------
@@ -1240,7 +867,7 @@ function getImageDecoder(handle: bigint): ImageDecoder {
     throw new Error(`ImageDecoder handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-type()` operation.
@@ -1292,40 +919,10 @@ export function ImageDecoderReset(self: bigint): void {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `ImageDecoderPollClose()`
  */
-export function ImageDecoderClose(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
+export function ImageDecoderClose(self: bigint): void {
   const obj = getImageDecoder(self);
-  const promise = obj.close()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function ImageDecoderPollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+  obj.close();
 }
 
 /**
@@ -1353,7 +950,7 @@ function getImageTrackList(handle: bigint): ImageTrackList {
     throw new Error(`ImageTrackList handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `image-track()` operation.
@@ -1413,7 +1010,7 @@ function getImageTrack(handle: bigint): ImageTrack {
     throw new Error(`ImageTrack handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-animated()` operation.
@@ -1462,24 +1059,24 @@ export function setSelected(self: bigint, value: boolean): void {
 /** Type alias */
 export type WebGlObjectHandle = bigint;
 
-/** Handle table for WebGlObject instances */
-const _webGlObjecthandles = new Map<bigint, WebGlObject>();
-let _nextWebGlObject = 1n;
+/** Handle table for WebGLObject instances */
+const _webGlObjecthandles = new Map<bigint, WebGLObject>();
+let _nextWebGLObject = 1n;
 
-/** Get a WebGlObject by handle, throwing if not found. */
-function getWebGlObject(handle: bigint): WebGlObject {
+/** Get a WebGLObject by handle, throwing if not found. */
+function getWebGLObject(handle: bigint): WebGLObject {
   const obj = _webGlObjecthandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlObject handle ${handle} not found`);
+    throw new Error(`WebGLObject handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-label()` operation.
  */
 export function getLabel(self: bigint): string {
-  const obj = getWebGlObject(self);
+  const obj = getWebGLObject(self);
   return obj.label;
 }
 
@@ -1487,7 +1084,7 @@ export function getLabel(self: bigint): string {
  * `set-label()` operation.
  */
 export function setLabel(self: bigint, value: string): void {
-  const obj = getWebGlObject(self);
+  const obj = getWebGLObject(self);
   obj.label = value;
 }
 
@@ -1498,24 +1095,24 @@ export function setLabel(self: bigint, value: string): void {
 /** Type alias */
 export type WebGlActiveInfoHandle = bigint;
 
-/** Handle table for WebGlActiveInfo instances */
-const _webGlActiveInfohandles = new Map<bigint, WebGlActiveInfo>();
-let _nextWebGlActiveInfo = 1n;
+/** Handle table for WebGLActiveInfo instances */
+const _webGlActiveInfohandles = new Map<bigint, WebGLActiveInfo>();
+let _nextWebGLActiveInfo = 1n;
 
-/** Get a WebGlActiveInfo by handle, throwing if not found. */
-function getWebGlActiveInfo(handle: bigint): WebGlActiveInfo {
+/** Get a WebGLActiveInfo by handle, throwing if not found. */
+function getWebGLActiveInfo(handle: bigint): WebGLActiveInfo {
   const obj = _webGlActiveInfohandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlActiveInfo handle ${handle} not found`);
+    throw new Error(`WebGLActiveInfo handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-size()` operation.
  */
 export function getSize(self: bigint): bigint {
-  const obj = getWebGlActiveInfo(self);
+  const obj = getWebGLActiveInfo(self);
   return obj.size;
 }
 
@@ -1523,7 +1120,7 @@ export function getSize(self: bigint): bigint {
  * `get-type()` operation.
  */
 export function WebGlActiveInfoGetType(self: bigint): bigint {
-  const obj = getWebGlActiveInfo(self);
+  const obj = getWebGLActiveInfo(self);
   return obj.type;
 }
 
@@ -1531,7 +1128,7 @@ export function WebGlActiveInfoGetType(self: bigint): bigint {
  * `get-name()` operation.
  */
 export function getName(self: bigint): string {
-  const obj = getWebGlActiveInfo(self);
+  const obj = getWebGLActiveInfo(self);
   return obj.name;
 }
 
@@ -1542,24 +1139,24 @@ export function getName(self: bigint): string {
 /** Type alias */
 export type WebGlShaderPrecisionFormatHandle = bigint;
 
-/** Handle table for WebGlShaderPrecisionFormat instances */
-const _webGlShaderPrecisionFormathandles = new Map<bigint, WebGlShaderPrecisionFormat>();
-let _nextWebGlShaderPrecisionFormat = 1n;
+/** Handle table for WebGLShaderPrecisionFormat instances */
+const _webGlShaderPrecisionFormathandles = new Map<bigint, WebGLShaderPrecisionFormat>();
+let _nextWebGLShaderPrecisionFormat = 1n;
 
-/** Get a WebGlShaderPrecisionFormat by handle, throwing if not found. */
-function getWebGlShaderPrecisionFormat(handle: bigint): WebGlShaderPrecisionFormat {
+/** Get a WebGLShaderPrecisionFormat by handle, throwing if not found. */
+function getWebGLShaderPrecisionFormat(handle: bigint): WebGLShaderPrecisionFormat {
   const obj = _webGlShaderPrecisionFormathandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlShaderPrecisionFormat handle ${handle} not found`);
+    throw new Error(`WebGLShaderPrecisionFormat handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-range-min()` operation.
  */
 export function getRangeMin(self: bigint): bigint {
-  const obj = getWebGlShaderPrecisionFormat(self);
+  const obj = getWebGLShaderPrecisionFormat(self);
   return obj.rangeMin;
 }
 
@@ -1567,7 +1164,7 @@ export function getRangeMin(self: bigint): bigint {
  * `get-range-max()` operation.
  */
 export function getRangeMax(self: bigint): bigint {
-  const obj = getWebGlShaderPrecisionFormat(self);
+  const obj = getWebGLShaderPrecisionFormat(self);
   return obj.rangeMax;
 }
 
@@ -1575,7 +1172,7 @@ export function getRangeMax(self: bigint): bigint {
  * `get-precision()` operation.
  */
 export function getPrecision(self: bigint): bigint {
-  const obj = getWebGlShaderPrecisionFormat(self);
+  const obj = getWebGLShaderPrecisionFormat(self);
   return obj.precision;
 }
 
@@ -1586,31 +1183,31 @@ export function getPrecision(self: bigint): bigint {
 /** Type alias */
 export type WebGlRenderingContextBaseHandle = bigint;
 
-/** Handle table for WebGlRenderingContextBase instances */
-const _webGlRenderingContextBasehandles = new Map<bigint, WebGlRenderingContextBase>();
-let _nextWebGlRenderingContextBase = 1n;
+/** Handle table for WebGLRenderingContextBase instances */
+const _webGlRenderingContextBasehandles = new Map<bigint, WebGLRenderingContextBase>();
+let _nextWebGLRenderingContextBase = 1n;
 
-/** Register a new WebGlRenderingContextBase and return its handle. */
-function registerWebGlRenderingContextBase(obj: WebGlRenderingContextBase): bigint {
-  const handle = _nextWebGlRenderingContextBase++;
+/** Register a new WebGLRenderingContextBase and return its handle. */
+function registerWebGLRenderingContextBase(obj: WebGLRenderingContextBase): bigint {
+  const handle = _nextWebGLRenderingContextBase++;
   _webGlRenderingContextBasehandles.set(handle, obj);
   return handle;
+}
 
-
-/** Get a WebGlRenderingContextBase by handle, throwing if not found. */
-function getWebGlRenderingContextBase(handle: bigint): WebGlRenderingContextBase {
+/** Get a WebGLRenderingContextBase by handle, throwing if not found. */
+function getWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextBase {
   const obj = _webGlRenderingContextBasehandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlRenderingContextBase handle ${handle} not found`);
+    throw new Error(`WebGLRenderingContextBase handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-canvas()` operation.
  */
 export function getCanvas(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.canvas;
 }
 
@@ -1618,7 +1215,7 @@ export function getCanvas(self: bigint): bigint {
  * `get-drawing-buffer-width()` operation.
  */
 export function getDrawingBufferWidth(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.drawingBufferWidth;
 }
 
@@ -1626,7 +1223,7 @@ export function getDrawingBufferWidth(self: bigint): bigint {
  * `get-drawing-buffer-height()` operation.
  */
 export function getDrawingBufferHeight(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.drawingBufferHeight;
 }
 
@@ -1634,7 +1231,7 @@ export function getDrawingBufferHeight(self: bigint): bigint {
  * `get-drawing-buffer-format()` operation.
  */
 export function getDrawingBufferFormat(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.drawingBufferFormat;
 }
 
@@ -1642,7 +1239,7 @@ export function getDrawingBufferFormat(self: bigint): bigint {
  * `get-drawing-buffer-color-space()` operation.
  */
 export function getDrawingBufferColorSpace(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.drawingBufferColorSpace;
 }
 
@@ -1650,7 +1247,7 @@ export function getDrawingBufferColorSpace(self: bigint): bigint {
  * `set-drawing-buffer-color-space()` operation.
  */
 export function setDrawingBufferColorSpace(self: bigint, value: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.drawingBufferColorSpace = value;
 }
 
@@ -1658,7 +1255,7 @@ export function setDrawingBufferColorSpace(self: bigint, value: bigint): void {
  * `get-unpack-color-space()` operation.
  */
 export function getUnpackColorSpace(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.unpackColorSpace;
 }
 
@@ -1666,7 +1263,7 @@ export function getUnpackColorSpace(self: bigint): bigint {
  * `set-unpack-color-space()` operation.
  */
 export function setUnpackColorSpace(self: bigint, value: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.unpackColorSpace = value;
 }
 
@@ -1674,7 +1271,7 @@ export function setUnpackColorSpace(self: bigint, value: bigint): void {
  * `get-context-attributes()` operation.
  */
 export function getContextAttributes(self: bigint): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.contextAttributes ?? undefined;
 }
 
@@ -1682,7 +1279,7 @@ export function getContextAttributes(self: bigint): bigint | undefined {
  * `is-context-lost()` operation.
  */
 export function isContextLost(self: bigint): boolean {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isContextLost();
 }
 
@@ -1690,7 +1287,7 @@ export function isContextLost(self: bigint): boolean {
  * `get-supported-extensions()` operation.
  */
 export function getSupportedExtensions(self: bigint): (string)[] | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.supportedExtensions ?? undefined;
 }
 
@@ -1698,7 +1295,7 @@ export function getSupportedExtensions(self: bigint): (string)[] | undefined {
  * `get-extension()` operation.
  */
 export function getExtension(self: bigint, name: string): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.extension ?? undefined;
 }
 
@@ -1706,7 +1303,7 @@ export function getExtension(self: bigint, name: string): bigint | undefined {
  * `drawing-buffer-storage()` operation.
  */
 export function drawingBufferStorage(self: bigint, sizedFormat: bigint, width: number, height: number): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.drawingBufferStorage(sizedFormat, width, height);
 }
 
@@ -1714,7 +1311,7 @@ export function drawingBufferStorage(self: bigint, sizedFormat: bigint, width: n
  * `active-texture()` operation.
  */
 export function activeTexture(self: bigint, texture: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.activeTexture(texture);
 }
 
@@ -1722,7 +1319,7 @@ export function activeTexture(self: bigint, texture: bigint): void {
  * `attach-shader()` operation.
  */
 export function attachShader(self: bigint, program: bigint, shader: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.attachShader(program, shader);
 }
 
@@ -1730,7 +1327,7 @@ export function attachShader(self: bigint, program: bigint, shader: bigint): voi
  * `bind-attrib-location()` operation.
  */
 export function bindAttribLocation(self: bigint, program: bigint, index: bigint, name: string): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.bindAttribLocation(program, index, name);
 }
 
@@ -1738,7 +1335,7 @@ export function bindAttribLocation(self: bigint, program: bigint, index: bigint,
  * `bind-buffer()` operation.
  */
 export function bindBuffer(self: bigint, target: bigint, buffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.bindBuffer(target, buffer);
 }
 
@@ -1746,7 +1343,7 @@ export function bindBuffer(self: bigint, target: bigint, buffer: bigint | undefi
  * `bind-framebuffer()` operation.
  */
 export function bindFramebuffer(self: bigint, target: bigint, framebuffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.bindFramebuffer(target, framebuffer);
 }
 
@@ -1754,7 +1351,7 @@ export function bindFramebuffer(self: bigint, target: bigint, framebuffer: bigin
  * `bind-renderbuffer()` operation.
  */
 export function bindRenderbuffer(self: bigint, target: bigint, renderbuffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.bindRenderbuffer(target, renderbuffer);
 }
 
@@ -1762,7 +1359,7 @@ export function bindRenderbuffer(self: bigint, target: bigint, renderbuffer: big
  * `bind-texture()` operation.
  */
 export function bindTexture(self: bigint, target: bigint, texture: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.bindTexture(target, texture);
 }
 
@@ -1770,7 +1367,7 @@ export function bindTexture(self: bigint, target: bigint, texture: bigint | unde
  * `blend-color()` operation.
  */
 export function blendColor(self: bigint, red: bigint, green: bigint, blue: bigint, alpha: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.blendColor(red, green, blue, alpha);
 }
 
@@ -1778,7 +1375,7 @@ export function blendColor(self: bigint, red: bigint, green: bigint, blue: bigin
  * `blend-equation()` operation.
  */
 export function blendEquation(self: bigint, mode: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.blendEquation(mode);
 }
 
@@ -1786,7 +1383,7 @@ export function blendEquation(self: bigint, mode: bigint): void {
  * `blend-equation-separate()` operation.
  */
 export function blendEquationSeparate(self: bigint, modeRgb: bigint, modeAlpha: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.blendEquationSeparate(modeRgb, modeAlpha);
 }
 
@@ -1794,7 +1391,7 @@ export function blendEquationSeparate(self: bigint, modeRgb: bigint, modeAlpha: 
  * `blend-func()` operation.
  */
 export function blendFunc(self: bigint, sfactor: bigint, dfactor: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.blendFunc(sfactor, dfactor);
 }
 
@@ -1802,7 +1399,7 @@ export function blendFunc(self: bigint, sfactor: bigint, dfactor: bigint): void 
  * `blend-func-separate()` operation.
  */
 export function blendFuncSeparate(self: bigint, srcRgb: bigint, dstRgb: bigint, srcAlpha: bigint, dstAlpha: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.blendFuncSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha);
 }
 
@@ -1810,7 +1407,7 @@ export function blendFuncSeparate(self: bigint, srcRgb: bigint, dstRgb: bigint, 
  * `check-framebuffer-status()` operation.
  */
 export function checkFramebufferStatus(self: bigint, target: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.checkFramebufferStatus(target);
 }
 
@@ -1818,7 +1415,7 @@ export function checkFramebufferStatus(self: bigint, target: bigint): bigint {
  * `clear()` operation.
  */
 export function clear(self: bigint, mask: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.clear(mask);
 }
 
@@ -1826,7 +1423,7 @@ export function clear(self: bigint, mask: bigint): void {
  * `clear-color()` operation.
  */
 export function clearColor(self: bigint, red: bigint, green: bigint, blue: bigint, alpha: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.clearColor(red, green, blue, alpha);
 }
 
@@ -1834,7 +1431,7 @@ export function clearColor(self: bigint, red: bigint, green: bigint, blue: bigin
  * `clear-depth()` operation.
  */
 export function clearDepth(self: bigint, depth: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.clearDepth(depth);
 }
 
@@ -1842,7 +1439,7 @@ export function clearDepth(self: bigint, depth: bigint): void {
  * `clear-stencil()` operation.
  */
 export function clearStencil(self: bigint, s: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.clearStencil(s);
 }
 
@@ -1850,7 +1447,7 @@ export function clearStencil(self: bigint, s: bigint): void {
  * `color-mask()` operation.
  */
 export function colorMask(self: bigint, red: bigint, green: bigint, blue: bigint, alpha: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.colorMask(red, green, blue, alpha);
 }
 
@@ -1858,7 +1455,7 @@ export function colorMask(self: bigint, red: bigint, green: bigint, blue: bigint
  * `compile-shader()` operation.
  */
 export function compileShader(self: bigint, shader: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.compileShader(shader);
 }
 
@@ -1866,7 +1463,7 @@ export function compileShader(self: bigint, shader: bigint): void {
  * `copy-tex-image2-d()` operation.
  */
 export function copyTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, x: bigint, y: bigint, width: bigint, height: bigint, border: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.copyTexImage2D(target, level, internalformat, x, y, width, height, border);
 }
 
@@ -1874,7 +1471,7 @@ export function copyTexImage2D(self: bigint, target: bigint, level: bigint, inte
  * `copy-tex-sub-image2-d()` operation.
  */
 export function copyTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, x: bigint, y: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
 }
 
@@ -1882,7 +1479,7 @@ export function copyTexSubImage2D(self: bigint, target: bigint, level: bigint, x
  * `create-buffer()` operation.
  */
 export function createBuffer(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createBuffer();
 }
 
@@ -1890,7 +1487,7 @@ export function createBuffer(self: bigint): bigint {
  * `create-framebuffer()` operation.
  */
 export function createFramebuffer(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createFramebuffer();
 }
 
@@ -1898,7 +1495,7 @@ export function createFramebuffer(self: bigint): bigint {
  * `create-program()` operation.
  */
 export function createProgram(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createProgram();
 }
 
@@ -1906,7 +1503,7 @@ export function createProgram(self: bigint): bigint {
  * `create-renderbuffer()` operation.
  */
 export function createRenderbuffer(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createRenderbuffer();
 }
 
@@ -1914,7 +1511,7 @@ export function createRenderbuffer(self: bigint): bigint {
  * `create-shader()` operation.
  */
 export function createShader(self: bigint, type: bigint): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createShader(type) ?? undefined;
 }
 
@@ -1922,7 +1519,7 @@ export function createShader(self: bigint, type: bigint): bigint | undefined {
  * `create-texture()` operation.
  */
 export function createTexture(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.createTexture();
 }
 
@@ -1930,7 +1527,7 @@ export function createTexture(self: bigint): bigint {
  * `cull-face()` operation.
  */
 export function cullFace(self: bigint, mode: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.cullFace(mode);
 }
 
@@ -1938,7 +1535,7 @@ export function cullFace(self: bigint, mode: bigint): void {
  * `delete-buffer()` operation.
  */
 export function deleteBuffer(self: bigint, buffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteBuffer(buffer);
 }
 
@@ -1946,7 +1543,7 @@ export function deleteBuffer(self: bigint, buffer: bigint | undefined): void {
  * `delete-framebuffer()` operation.
  */
 export function deleteFramebuffer(self: bigint, framebuffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteFramebuffer(framebuffer);
 }
 
@@ -1954,7 +1551,7 @@ export function deleteFramebuffer(self: bigint, framebuffer: bigint | undefined)
  * `delete-program()` operation.
  */
 export function deleteProgram(self: bigint, program: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteProgram(program);
 }
 
@@ -1962,7 +1559,7 @@ export function deleteProgram(self: bigint, program: bigint | undefined): void {
  * `delete-renderbuffer()` operation.
  */
 export function deleteRenderbuffer(self: bigint, renderbuffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteRenderbuffer(renderbuffer);
 }
 
@@ -1970,7 +1567,7 @@ export function deleteRenderbuffer(self: bigint, renderbuffer: bigint | undefine
  * `delete-shader()` operation.
  */
 export function deleteShader(self: bigint, shader: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteShader(shader);
 }
 
@@ -1978,7 +1575,7 @@ export function deleteShader(self: bigint, shader: bigint | undefined): void {
  * `delete-texture()` operation.
  */
 export function deleteTexture(self: bigint, texture: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.deleteTexture(texture);
 }
 
@@ -1986,7 +1583,7 @@ export function deleteTexture(self: bigint, texture: bigint | undefined): void {
  * `depth-func()` operation.
  */
 export function depthFunc(self: bigint, func: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.depthFunc(func);
 }
 
@@ -1994,7 +1591,7 @@ export function depthFunc(self: bigint, func: bigint): void {
  * `depth-mask()` operation.
  */
 export function depthMask(self: bigint, flag: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.depthMask(flag);
 }
 
@@ -2002,7 +1599,7 @@ export function depthMask(self: bigint, flag: bigint): void {
  * `depth-range()` operation.
  */
 export function depthRange(self: bigint, zNear: bigint, zFar: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.depthRange(zNear, zFar);
 }
 
@@ -2010,7 +1607,7 @@ export function depthRange(self: bigint, zNear: bigint, zFar: bigint): void {
  * `detach-shader()` operation.
  */
 export function detachShader(self: bigint, program: bigint, shader: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.detachShader(program, shader);
 }
 
@@ -2018,7 +1615,7 @@ export function detachShader(self: bigint, program: bigint, shader: bigint): voi
  * `disable()` operation.
  */
 export function disable(self: bigint, cap: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.disable(cap);
 }
 
@@ -2026,7 +1623,7 @@ export function disable(self: bigint, cap: bigint): void {
  * `disable-vertex-attrib-array()` operation.
  */
 export function disableVertexAttribArray(self: bigint, index: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.disableVertexAttribArray(index);
 }
 
@@ -2034,7 +1631,7 @@ export function disableVertexAttribArray(self: bigint, index: bigint): void {
  * `draw-arrays()` operation.
  */
 export function drawArrays(self: bigint, mode: bigint, first: bigint, count: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.drawArrays(mode, first, count);
 }
 
@@ -2042,7 +1639,7 @@ export function drawArrays(self: bigint, mode: bigint, first: bigint, count: big
  * `draw-elements()` operation.
  */
 export function drawElements(self: bigint, mode: bigint, count: bigint, type: bigint, offset: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.drawElements(mode, count, type, offset);
 }
 
@@ -2050,7 +1647,7 @@ export function drawElements(self: bigint, mode: bigint, count: bigint, type: bi
  * `enable()` operation.
  */
 export function enable(self: bigint, cap: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.enable(cap);
 }
 
@@ -2058,7 +1655,7 @@ export function enable(self: bigint, cap: bigint): void {
  * `enable-vertex-attrib-array()` operation.
  */
 export function enableVertexAttribArray(self: bigint, index: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.enableVertexAttribArray(index);
 }
 
@@ -2066,53 +1663,23 @@ export function enableVertexAttribArray(self: bigint, index: bigint): void {
  * `finish()` operation.
  */
 export function finish(self: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.finish();
 }
 
 /**
  * `flush()` operation.
- *
- * Async operation: returns request ID, poll with `WebGlRenderingContextBasePollFlush()`
  */
-export function WebGlRenderingContextBaseFlush(self: bigint): bigint {
-  const requestId = _nextAsyncHandle++;
-  const obj = getWebGlRenderingContextBase(self);
-  const promise = obj.flush()
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `flush()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function WebGlRenderingContextBasePollFlush(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function WebGlRenderingContextBaseFlush(self: bigint): void {
+  const obj = getWebGLRenderingContextBase(self);
+  obj.flush();
 }
 
 /**
  * `framebuffer-renderbuffer()` operation.
  */
 export function framebufferRenderbuffer(self: bigint, target: bigint, attachment: bigint, renderbuffertarget: bigint, renderbuffer: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 }
 
@@ -2120,7 +1687,7 @@ export function framebufferRenderbuffer(self: bigint, target: bigint, attachment
  * `framebuffer-texture2-d()` operation.
  */
 export function framebufferTexture2D(self: bigint, target: bigint, attachment: bigint, textarget: bigint, texture: bigint | undefined, level: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.framebufferTexture2D(target, attachment, textarget, texture, level);
 }
 
@@ -2128,7 +1695,7 @@ export function framebufferTexture2D(self: bigint, target: bigint, attachment: b
  * `front-face()` operation.
  */
 export function frontFace(self: bigint, mode: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.frontFace(mode);
 }
 
@@ -2136,7 +1703,7 @@ export function frontFace(self: bigint, mode: bigint): void {
  * `generate-mipmap()` operation.
  */
 export function generateMipmap(self: bigint, target: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.generateMipmap(target);
 }
 
@@ -2144,7 +1711,7 @@ export function generateMipmap(self: bigint, target: bigint): void {
  * `get-active-attrib()` operation.
  */
 export function getActiveAttrib(self: bigint, program: bigint, index: bigint): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.activeAttrib ?? undefined;
 }
 
@@ -2152,7 +1719,7 @@ export function getActiveAttrib(self: bigint, program: bigint, index: bigint): b
  * `get-active-uniform()` operation.
  */
 export function getActiveUniform(self: bigint, program: bigint, index: bigint): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.activeUniform ?? undefined;
 }
 
@@ -2160,7 +1727,7 @@ export function getActiveUniform(self: bigint, program: bigint, index: bigint): 
  * `get-attached-shaders()` operation.
  */
 export function getAttachedShaders(self: bigint, program: bigint): (bigint)[] | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.attachedShaders ?? undefined;
 }
 
@@ -2168,7 +1735,7 @@ export function getAttachedShaders(self: bigint, program: bigint): (bigint)[] | 
  * `get-attrib-location()` operation.
  */
 export function getAttribLocation(self: bigint, program: bigint, name: string): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.attribLocation;
 }
 
@@ -2176,7 +1743,7 @@ export function getAttribLocation(self: bigint, program: bigint, name: string): 
  * `get-buffer-parameter()` operation.
  */
 export function getBufferParameter(self: bigint, target: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.bufferParameter;
 }
 
@@ -2184,7 +1751,7 @@ export function getBufferParameter(self: bigint, target: bigint, pname: bigint):
  * `get-parameter()` operation.
  */
 export function getParameter(self: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.parameter;
 }
 
@@ -2192,7 +1759,7 @@ export function getParameter(self: bigint, pname: bigint): string {
  * `get-error()` operation.
  */
 export function getError(self: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.error;
 }
 
@@ -2200,7 +1767,7 @@ export function getError(self: bigint): bigint {
  * `get-framebuffer-attachment-parameter()` operation.
  */
 export function getFramebufferAttachmentParameter(self: bigint, target: bigint, attachment: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.framebufferAttachmentParameter;
 }
 
@@ -2208,7 +1775,7 @@ export function getFramebufferAttachmentParameter(self: bigint, target: bigint, 
  * `get-program-parameter()` operation.
  */
 export function getProgramParameter(self: bigint, program: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.programParameter;
 }
 
@@ -2216,7 +1783,7 @@ export function getProgramParameter(self: bigint, program: bigint, pname: bigint
  * `get-program-info-log()` operation.
  */
 export function getProgramInfoLog(self: bigint, program: bigint): string | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.programInfoLog ?? undefined;
 }
 
@@ -2224,7 +1791,7 @@ export function getProgramInfoLog(self: bigint, program: bigint): string | undef
  * `get-renderbuffer-parameter()` operation.
  */
 export function getRenderbufferParameter(self: bigint, target: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.renderbufferParameter;
 }
 
@@ -2232,7 +1799,7 @@ export function getRenderbufferParameter(self: bigint, target: bigint, pname: bi
  * `get-shader-parameter()` operation.
  */
 export function getShaderParameter(self: bigint, shader: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.shaderParameter;
 }
 
@@ -2240,7 +1807,7 @@ export function getShaderParameter(self: bigint, shader: bigint, pname: bigint):
  * `get-shader-precision-format()` operation.
  */
 export function getShaderPrecisionFormat(self: bigint, shadertype: bigint, precisiontype: bigint): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.shaderPrecisionFormat ?? undefined;
 }
 
@@ -2248,7 +1815,7 @@ export function getShaderPrecisionFormat(self: bigint, shadertype: bigint, preci
  * `get-shader-info-log()` operation.
  */
 export function getShaderInfoLog(self: bigint, shader: bigint): string | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.shaderInfoLog ?? undefined;
 }
 
@@ -2256,7 +1823,7 @@ export function getShaderInfoLog(self: bigint, shader: bigint): string | undefin
  * `get-shader-source()` operation.
  */
 export function getShaderSource(self: bigint, shader: bigint): string | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.shaderSource ?? undefined;
 }
 
@@ -2264,7 +1831,7 @@ export function getShaderSource(self: bigint, shader: bigint): string | undefine
  * `get-tex-parameter()` operation.
  */
 export function getTexParameter(self: bigint, target: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.texParameter;
 }
 
@@ -2272,7 +1839,7 @@ export function getTexParameter(self: bigint, target: bigint, pname: bigint): st
  * `get-uniform()` operation.
  */
 export function getUniform(self: bigint, program: bigint, location: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.uniform;
 }
 
@@ -2280,7 +1847,7 @@ export function getUniform(self: bigint, program: bigint, location: bigint): str
  * `get-uniform-location()` operation.
  */
 export function getUniformLocation(self: bigint, program: bigint, name: string): bigint | undefined {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.uniformLocation ?? undefined;
 }
 
@@ -2288,7 +1855,7 @@ export function getUniformLocation(self: bigint, program: bigint, name: string):
  * `get-vertex-attrib()` operation.
  */
 export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): string {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.vertexAttrib;
 }
 
@@ -2296,7 +1863,7 @@ export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): str
  * `get-vertex-attrib-offset()` operation.
  */
 export function getVertexAttribOffset(self: bigint, index: bigint, pname: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.vertexAttribOffset;
 }
 
@@ -2304,7 +1871,7 @@ export function getVertexAttribOffset(self: bigint, index: bigint, pname: bigint
  * `hint()` operation.
  */
 export function hint(self: bigint, target: bigint, mode: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.hint(target, mode);
 }
 
@@ -2312,7 +1879,7 @@ export function hint(self: bigint, target: bigint, mode: bigint): void {
  * `is-buffer()` operation.
  */
 export function isBuffer(self: bigint, buffer: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isBuffer(buffer);
 }
 
@@ -2320,7 +1887,7 @@ export function isBuffer(self: bigint, buffer: bigint | undefined): bigint {
  * `is-enabled()` operation.
  */
 export function isEnabled(self: bigint, cap: bigint): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isEnabled(cap);
 }
 
@@ -2328,7 +1895,7 @@ export function isEnabled(self: bigint, cap: bigint): bigint {
  * `is-framebuffer()` operation.
  */
 export function isFramebuffer(self: bigint, framebuffer: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isFramebuffer(framebuffer);
 }
 
@@ -2336,7 +1903,7 @@ export function isFramebuffer(self: bigint, framebuffer: bigint | undefined): bi
  * `is-program()` operation.
  */
 export function isProgram(self: bigint, program: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isProgram(program);
 }
 
@@ -2344,7 +1911,7 @@ export function isProgram(self: bigint, program: bigint | undefined): bigint {
  * `is-renderbuffer()` operation.
  */
 export function isRenderbuffer(self: bigint, renderbuffer: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isRenderbuffer(renderbuffer);
 }
 
@@ -2352,7 +1919,7 @@ export function isRenderbuffer(self: bigint, renderbuffer: bigint | undefined): 
  * `is-shader()` operation.
  */
 export function isShader(self: bigint, shader: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isShader(shader);
 }
 
@@ -2360,7 +1927,7 @@ export function isShader(self: bigint, shader: bigint | undefined): bigint {
  * `is-texture()` operation.
  */
 export function isTexture(self: bigint, texture: bigint | undefined): bigint {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   return obj.isTexture(texture);
 }
 
@@ -2368,7 +1935,7 @@ export function isTexture(self: bigint, texture: bigint | undefined): bigint {
  * `line-width()` operation.
  */
 export function lineWidth(self: bigint, width: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.lineWidth(width);
 }
 
@@ -2376,7 +1943,7 @@ export function lineWidth(self: bigint, width: bigint): void {
  * `link-program()` operation.
  */
 export function linkProgram(self: bigint, program: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.linkProgram(program);
 }
 
@@ -2384,7 +1951,7 @@ export function linkProgram(self: bigint, program: bigint): void {
  * `pixel-storei()` operation.
  */
 export function pixelStorei(self: bigint, pname: bigint, param: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.pixelStorei(pname, param);
 }
 
@@ -2392,7 +1959,7 @@ export function pixelStorei(self: bigint, pname: bigint, param: bigint): void {
  * `polygon-offset()` operation.
  */
 export function polygonOffset(self: bigint, factor: bigint, units: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.polygonOffset(factor, units);
 }
 
@@ -2400,7 +1967,7 @@ export function polygonOffset(self: bigint, factor: bigint, units: bigint): void
  * `renderbuffer-storage()` operation.
  */
 export function renderbufferStorage(self: bigint, target: bigint, internalformat: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.renderbufferStorage(target, internalformat, width, height);
 }
 
@@ -2408,7 +1975,7 @@ export function renderbufferStorage(self: bigint, target: bigint, internalformat
  * `sample-coverage()` operation.
  */
 export function sampleCoverage(self: bigint, value: bigint, invert: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.sampleCoverage(value, invert);
 }
 
@@ -2416,7 +1983,7 @@ export function sampleCoverage(self: bigint, value: bigint, invert: bigint): voi
  * `scissor()` operation.
  */
 export function scissor(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.scissor(x, y, width, height);
 }
 
@@ -2424,7 +1991,7 @@ export function scissor(self: bigint, x: bigint, y: bigint, width: bigint, heigh
  * `shader-source()` operation.
  */
 export function shaderSource(self: bigint, shader: bigint, source: string): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.shaderSource(shader, source);
 }
 
@@ -2432,7 +1999,7 @@ export function shaderSource(self: bigint, shader: bigint, source: string): void
  * `stencil-func()` operation.
  */
 export function stencilFunc(self: bigint, func: bigint, ref: bigint, mask: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilFunc(func, ref, mask);
 }
 
@@ -2440,7 +2007,7 @@ export function stencilFunc(self: bigint, func: bigint, ref: bigint, mask: bigin
  * `stencil-func-separate()` operation.
  */
 export function stencilFuncSeparate(self: bigint, face: bigint, func: bigint, ref: bigint, mask: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilFuncSeparate(face, func, ref, mask);
 }
 
@@ -2448,7 +2015,7 @@ export function stencilFuncSeparate(self: bigint, face: bigint, func: bigint, re
  * `stencil-mask()` operation.
  */
 export function stencilMask(self: bigint, mask: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilMask(mask);
 }
 
@@ -2456,7 +2023,7 @@ export function stencilMask(self: bigint, mask: bigint): void {
  * `stencil-mask-separate()` operation.
  */
 export function stencilMaskSeparate(self: bigint, face: bigint, mask: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilMaskSeparate(face, mask);
 }
 
@@ -2464,7 +2031,7 @@ export function stencilMaskSeparate(self: bigint, face: bigint, mask: bigint): v
  * `stencil-op()` operation.
  */
 export function stencilOp(self: bigint, fail: bigint, zfail: bigint, zpass: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilOp(fail, zfail, zpass);
 }
 
@@ -2472,7 +2039,7 @@ export function stencilOp(self: bigint, fail: bigint, zfail: bigint, zpass: bigi
  * `stencil-op-separate()` operation.
  */
 export function stencilOpSeparate(self: bigint, face: bigint, fail: bigint, zfail: bigint, zpass: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.stencilOpSeparate(face, fail, zfail, zpass);
 }
 
@@ -2480,7 +2047,7 @@ export function stencilOpSeparate(self: bigint, face: bigint, fail: bigint, zfai
  * `tex-parameterf()` operation.
  */
 export function texParameterf(self: bigint, target: bigint, pname: bigint, param: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.texParameterf(target, pname, param);
 }
 
@@ -2488,7 +2055,7 @@ export function texParameterf(self: bigint, target: bigint, pname: bigint, param
  * `tex-parameteri()` operation.
  */
 export function texParameteri(self: bigint, target: bigint, pname: bigint, param: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.texParameteri(target, pname, param);
 }
 
@@ -2496,7 +2063,7 @@ export function texParameteri(self: bigint, target: bigint, pname: bigint, param
  * `uniform1f()` operation.
  */
 export function uniform1f(self: bigint, location: bigint | undefined, x: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform1f(location, x);
 }
 
@@ -2504,7 +2071,7 @@ export function uniform1f(self: bigint, location: bigint | undefined, x: bigint)
  * `uniform2f()` operation.
  */
 export function uniform2f(self: bigint, location: bigint | undefined, x: bigint, y: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform2f(location, x, y);
 }
 
@@ -2512,7 +2079,7 @@ export function uniform2f(self: bigint, location: bigint | undefined, x: bigint,
  * `uniform3f()` operation.
  */
 export function uniform3f(self: bigint, location: bigint | undefined, x: bigint, y: bigint, z: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform3f(location, x, y, z);
 }
 
@@ -2520,7 +2087,7 @@ export function uniform3f(self: bigint, location: bigint | undefined, x: bigint,
  * `uniform4f()` operation.
  */
 export function uniform4f(self: bigint, location: bigint | undefined, x: bigint, y: bigint, z: bigint, w: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform4f(location, x, y, z, w);
 }
 
@@ -2528,7 +2095,7 @@ export function uniform4f(self: bigint, location: bigint | undefined, x: bigint,
  * `uniform1i()` operation.
  */
 export function uniform1i(self: bigint, location: bigint | undefined, x: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform1i(location, x);
 }
 
@@ -2536,7 +2103,7 @@ export function uniform1i(self: bigint, location: bigint | undefined, x: bigint)
  * `uniform2i()` operation.
  */
 export function uniform2i(self: bigint, location: bigint | undefined, x: bigint, y: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform2i(location, x, y);
 }
 
@@ -2544,7 +2111,7 @@ export function uniform2i(self: bigint, location: bigint | undefined, x: bigint,
  * `uniform3i()` operation.
  */
 export function uniform3i(self: bigint, location: bigint | undefined, x: bigint, y: bigint, z: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform3i(location, x, y, z);
 }
 
@@ -2552,7 +2119,7 @@ export function uniform3i(self: bigint, location: bigint | undefined, x: bigint,
  * `uniform4i()` operation.
  */
 export function uniform4i(self: bigint, location: bigint | undefined, x: bigint, y: bigint, z: bigint, w: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.uniform4i(location, x, y, z, w);
 }
 
@@ -2560,7 +2127,7 @@ export function uniform4i(self: bigint, location: bigint | undefined, x: bigint,
  * `use-program()` operation.
  */
 export function useProgram(self: bigint, program: bigint | undefined): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.useProgram(program);
 }
 
@@ -2568,7 +2135,7 @@ export function useProgram(self: bigint, program: bigint | undefined): void {
  * `validate-program()` operation.
  */
 export function validateProgram(self: bigint, program: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.validateProgram(program);
 }
 
@@ -2576,7 +2143,7 @@ export function validateProgram(self: bigint, program: bigint): void {
  * `vertex-attrib1f()` operation.
  */
 export function vertexAttrib1f(self: bigint, index: bigint, x: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib1f(index, x);
 }
 
@@ -2584,7 +2151,7 @@ export function vertexAttrib1f(self: bigint, index: bigint, x: bigint): void {
  * `vertex-attrib2f()` operation.
  */
 export function vertexAttrib2f(self: bigint, index: bigint, x: bigint, y: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib2f(index, x, y);
 }
 
@@ -2592,7 +2159,7 @@ export function vertexAttrib2f(self: bigint, index: bigint, x: bigint, y: bigint
  * `vertex-attrib3f()` operation.
  */
 export function vertexAttrib3f(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib3f(index, x, y, z);
 }
 
@@ -2600,7 +2167,7 @@ export function vertexAttrib3f(self: bigint, index: bigint, x: bigint, y: bigint
  * `vertex-attrib4f()` operation.
  */
 export function vertexAttrib4f(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint, w: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib4f(index, x, y, z, w);
 }
 
@@ -2608,7 +2175,7 @@ export function vertexAttrib4f(self: bigint, index: bigint, x: bigint, y: bigint
  * `vertex-attrib1fv()` operation.
  */
 export function vertexAttrib1fv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib1fv(index, values);
 }
 
@@ -2616,7 +2183,7 @@ export function vertexAttrib1fv(self: bigint, index: bigint, values: bigint): vo
  * `vertex-attrib2fv()` operation.
  */
 export function vertexAttrib2fv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib2fv(index, values);
 }
 
@@ -2624,7 +2191,7 @@ export function vertexAttrib2fv(self: bigint, index: bigint, values: bigint): vo
  * `vertex-attrib3fv()` operation.
  */
 export function vertexAttrib3fv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib3fv(index, values);
 }
 
@@ -2632,7 +2199,7 @@ export function vertexAttrib3fv(self: bigint, index: bigint, values: bigint): vo
  * `vertex-attrib4fv()` operation.
  */
 export function vertexAttrib4fv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttrib4fv(index, values);
 }
 
@@ -2640,7 +2207,7 @@ export function vertexAttrib4fv(self: bigint, index: bigint, values: bigint): vo
  * `vertex-attrib-pointer()` operation.
  */
 export function vertexAttribPointer(self: bigint, index: bigint, size: bigint, type: bigint, normalized: bigint, stride: bigint, offset: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.vertexAttribPointer(index, size, type, normalized, stride, offset);
 }
 
@@ -2648,7 +2215,7 @@ export function vertexAttribPointer(self: bigint, index: bigint, size: bigint, t
  * `viewport()` operation.
  */
 export function viewport(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGlRenderingContextBase(self);
+  const obj = getWebGLRenderingContextBase(self);
   obj.viewport(x, y, width, height);
 }
 
@@ -2659,24 +2226,24 @@ export function viewport(self: bigint, x: bigint, y: bigint, width: bigint, heig
 /** Type alias */
 export type WebGlRenderingContextOverloadsHandle = bigint;
 
-/** Handle table for WebGlRenderingContextOverloads instances */
-const _webGlRenderingContextOverloadshandles = new Map<bigint, WebGlRenderingContextOverloads>();
-let _nextWebGlRenderingContextOverloads = 1n;
+/** Handle table for WebGLRenderingContextOverloads instances */
+const _webGlRenderingContextOverloadshandles = new Map<bigint, WebGLRenderingContextOverloads>();
+let _nextWebGLRenderingContextOverloads = 1n;
 
-/** Get a WebGlRenderingContextOverloads by handle, throwing if not found. */
-function getWebGlRenderingContextOverloads(handle: bigint): WebGlRenderingContextOverloads {
+/** Get a WebGLRenderingContextOverloads by handle, throwing if not found. */
+function getWebGLRenderingContextOverloads(handle: bigint): WebGLRenderingContextOverloads {
   const obj = _webGlRenderingContextOverloadshandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlRenderingContextOverloads handle ${handle} not found`);
+    throw new Error(`WebGLRenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `buffer-data()` operation.
  */
 export function WebGlRenderingContextOverloadsBufferData(self: bigint, target: bigint, size: bigint, usage: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.bufferData(target, size, usage);
 }
 
@@ -2684,7 +2251,7 @@ export function WebGlRenderingContextOverloadsBufferData(self: bigint, target: b
  * `buffer-sub-data()` operation.
  */
 export function WebGlRenderingContextOverloadsBufferSubData(self: bigint, target: bigint, offset: bigint, data: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.bufferSubData(target, offset, data);
 }
 
@@ -2692,7 +2259,7 @@ export function WebGlRenderingContextOverloadsBufferSubData(self: bigint, target
  * `compressed-tex-image2-d()` operation.
  */
 export function WebGlRenderingContextOverloadsCompressedTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, data: Uint8Array): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.compressedTexImage2D(target, level, internalformat, width, height, border, data);
 }
 
@@ -2700,7 +2267,7 @@ export function WebGlRenderingContextOverloadsCompressedTexImage2D(self: bigint,
  * `compressed-tex-sub-image2-d()` operation.
  */
 export function WebGlRenderingContextOverloadsCompressedTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, data: Uint8Array): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data);
 }
 
@@ -2708,7 +2275,7 @@ export function WebGlRenderingContextOverloadsCompressedTexSubImage2D(self: bigi
  * `read-pixels()` operation.
  */
 export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.readPixels(x, y, width, height, format, type, pixels);
 }
 
@@ -2716,7 +2283,7 @@ export function WebGlRenderingContextOverloadsReadPixels(self: bigint, x: bigint
  * `tex-image2-d()` operation.
  */
 export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
@@ -2724,7 +2291,7 @@ export function WebGlRenderingContextOverloadsTexImage2D(self: bigint, target: b
  * `tex-sub-image2-d()` operation.
  */
 export function WebGlRenderingContextOverloadsTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 
@@ -2732,7 +2299,7 @@ export function WebGlRenderingContextOverloadsTexSubImage2D(self: bigint, target
  * `uniform1fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform1fv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform1fv(location, v);
 }
 
@@ -2740,7 +2307,7 @@ export function WebGlRenderingContextOverloadsUniform1fv(self: bigint, location:
  * `uniform2fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform2fv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform2fv(location, v);
 }
 
@@ -2748,7 +2315,7 @@ export function WebGlRenderingContextOverloadsUniform2fv(self: bigint, location:
  * `uniform3fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform3fv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform3fv(location, v);
 }
 
@@ -2756,7 +2323,7 @@ export function WebGlRenderingContextOverloadsUniform3fv(self: bigint, location:
  * `uniform4fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform4fv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform4fv(location, v);
 }
 
@@ -2764,7 +2331,7 @@ export function WebGlRenderingContextOverloadsUniform4fv(self: bigint, location:
  * `uniform1iv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform1iv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform1iv(location, v);
 }
 
@@ -2772,7 +2339,7 @@ export function WebGlRenderingContextOverloadsUniform1iv(self: bigint, location:
  * `uniform2iv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform2iv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform2iv(location, v);
 }
 
@@ -2780,7 +2347,7 @@ export function WebGlRenderingContextOverloadsUniform2iv(self: bigint, location:
  * `uniform3iv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform3iv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform3iv(location, v);
 }
 
@@ -2788,7 +2355,7 @@ export function WebGlRenderingContextOverloadsUniform3iv(self: bigint, location:
  * `uniform4iv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniform4iv(self: bigint, location: bigint | undefined, v: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniform4iv(location, v);
 }
 
@@ -2796,7 +2363,7 @@ export function WebGlRenderingContextOverloadsUniform4iv(self: bigint, location:
  * `uniform-matrix2fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniformMatrix2fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniformMatrix2fv(location, transpose, value);
 }
 
@@ -2804,7 +2371,7 @@ export function WebGlRenderingContextOverloadsUniformMatrix2fv(self: bigint, loc
  * `uniform-matrix3fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniformMatrix3fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniformMatrix3fv(location, transpose, value);
 }
 
@@ -2812,7 +2379,7 @@ export function WebGlRenderingContextOverloadsUniformMatrix3fv(self: bigint, loc
  * `uniform-matrix4fv()` operation.
  */
 export function WebGlRenderingContextOverloadsUniformMatrix4fv(self: bigint, location: bigint | undefined, transpose: bigint, value: bigint): void {
-  const obj = getWebGlRenderingContextOverloads(self);
+  const obj = getWebGLRenderingContextOverloads(self);
   obj.uniformMatrix4fv(location, transpose, value);
 }
 
@@ -2823,24 +2390,24 @@ export function WebGlRenderingContextOverloadsUniformMatrix4fv(self: bigint, loc
 /** Type alias */
 export type WebGlContextEventHandle = bigint;
 
-/** Handle table for WebGlContextEvent instances */
-const _webGlContextEventhandles = new Map<bigint, WebGlContextEvent>();
-let _nextWebGlContextEvent = 1n;
+/** Handle table for WebGLContextEvent instances */
+const _webGlContextEventhandles = new Map<bigint, WebGLContextEvent>();
+let _nextWebGLContextEvent = 1n;
 
-/** Get a WebGlContextEvent by handle, throwing if not found. */
-function getWebGlContextEvent(handle: bigint): WebGlContextEvent {
+/** Get a WebGLContextEvent by handle, throwing if not found. */
+function getWebGLContextEvent(handle: bigint): WebGLContextEvent {
   const obj = _webGlContextEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGlContextEvent handle ${handle} not found`);
+    throw new Error(`WebGLContextEvent handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-status-message()` operation.
  */
 export function getStatusMessage(self: bigint): string {
-  const obj = getWebGlContextEvent(self);
+  const obj = getWebGLContextEvent(self);
   return obj.statusMessage;
 }
 
@@ -2851,31 +2418,31 @@ export function getStatusMessage(self: bigint): string {
 /** Type alias */
 export type WebGl2RenderingContextBaseHandle = bigint;
 
-/** Handle table for WebGl2RenderingContextBase instances */
-const _webGl2RenderingContextBasehandles = new Map<bigint, WebGl2RenderingContextBase>();
-let _nextWebGl2RenderingContextBase = 1n;
+/** Handle table for WebGL2RenderingContextBase instances */
+const _webGl2RenderingContextBasehandles = new Map<bigint, WebGL2RenderingContextBase>();
+let _nextWebGL2RenderingContextBase = 1n;
 
-/** Register a new WebGl2RenderingContextBase and return its handle. */
-function registerWebGl2RenderingContextBase(obj: WebGl2RenderingContextBase): bigint {
-  const handle = _nextWebGl2RenderingContextBase++;
+/** Register a new WebGL2RenderingContextBase and return its handle. */
+function registerWebGL2RenderingContextBase(obj: WebGL2RenderingContextBase): bigint {
+  const handle = _nextWebGL2RenderingContextBase++;
   _webGl2RenderingContextBasehandles.set(handle, obj);
   return handle;
+}
 
-
-/** Get a WebGl2RenderingContextBase by handle, throwing if not found. */
-function getWebGl2RenderingContextBase(handle: bigint): WebGl2RenderingContextBase {
+/** Get a WebGL2RenderingContextBase by handle, throwing if not found. */
+function getWebGL2RenderingContextBase(handle: bigint): WebGL2RenderingContextBase {
   const obj = _webGl2RenderingContextBasehandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGl2RenderingContextBase handle ${handle} not found`);
+    throw new Error(`WebGL2RenderingContextBase handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `copy-buffer-sub-data()` operation.
  */
 export function copyBufferSubData(self: bigint, readTarget: bigint, writeTarget: bigint, readOffset: bigint, writeOffset: bigint, size: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
 }
 
@@ -2883,7 +2450,7 @@ export function copyBufferSubData(self: bigint, readTarget: bigint, writeTarget:
  * `get-buffer-sub-data()` operation.
  */
 export function getBufferSubData(self: bigint, target: bigint, srcByteOffset: bigint, dstBuffer: Uint8Array, dstOffset: bigint | undefined, length: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.bufferSubData;
 }
 
@@ -2891,7 +2458,7 @@ export function getBufferSubData(self: bigint, target: bigint, srcByteOffset: bi
  * `blit-framebuffer()` operation.
  */
 export function blitFramebuffer(self: bigint, srcX0: bigint, srcY0: bigint, srcX1: bigint, srcY1: bigint, dstX0: bigint, dstY0: bigint, dstX1: bigint, dstY1: bigint, mask: bigint, filter: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.blitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
@@ -2899,7 +2466,7 @@ export function blitFramebuffer(self: bigint, srcX0: bigint, srcY0: bigint, srcX
  * `framebuffer-texture-layer()` operation.
  */
 export function framebufferTextureLayer(self: bigint, target: bigint, attachment: bigint, texture: bigint | undefined, level: bigint, layer: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.framebufferTextureLayer(target, attachment, texture, level, layer);
 }
 
@@ -2907,7 +2474,7 @@ export function framebufferTextureLayer(self: bigint, target: bigint, attachment
  * `invalidate-framebuffer()` operation.
  */
 export function invalidateFramebuffer(self: bigint, target: bigint, attachments: (bigint)[]): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.invalidateFramebuffer(target, attachments);
 }
 
@@ -2915,7 +2482,7 @@ export function invalidateFramebuffer(self: bigint, target: bigint, attachments:
  * `invalidate-sub-framebuffer()` operation.
  */
 export function invalidateSubFramebuffer(self: bigint, target: bigint, attachments: (bigint)[], x: bigint, y: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.invalidateSubFramebuffer(target, attachments, x, y, width, height);
 }
 
@@ -2923,7 +2490,7 @@ export function invalidateSubFramebuffer(self: bigint, target: bigint, attachmen
  * `read-buffer()` operation.
  */
 export function readBuffer(self: bigint, src: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.readBuffer(src);
 }
 
@@ -2931,7 +2498,7 @@ export function readBuffer(self: bigint, src: bigint): void {
  * `get-internalformat-parameter()` operation.
  */
 export function getInternalformatParameter(self: bigint, target: bigint, internalformat: bigint, pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.internalformatParameter;
 }
 
@@ -2939,7 +2506,7 @@ export function getInternalformatParameter(self: bigint, target: bigint, interna
  * `renderbuffer-storage-multisample()` operation.
  */
 export function renderbufferStorageMultisample(self: bigint, target: bigint, samples: bigint, internalformat: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.renderbufferStorageMultisample(target, samples, internalformat, width, height);
 }
 
@@ -2947,7 +2514,7 @@ export function renderbufferStorageMultisample(self: bigint, target: bigint, sam
  * `tex-storage2-d()` operation.
  */
 export function texStorage2D(self: bigint, target: bigint, levels: bigint, internalformat: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.texStorage2D(target, levels, internalformat, width, height);
 }
 
@@ -2955,7 +2522,7 @@ export function texStorage2D(self: bigint, target: bigint, levels: bigint, inter
  * `tex-storage3-d()` operation.
  */
 export function texStorage3D(self: bigint, target: bigint, levels: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.texStorage3D(target, levels, internalformat, width, height, depth);
 }
 
@@ -2963,7 +2530,7 @@ export function texStorage3D(self: bigint, target: bigint, levels: bigint, inter
  * `tex-image3-d()` operation.
  */
 export function texImage3D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint, border: bigint, format: bigint, type: bigint, pboOffset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.texImage3D(target, level, internalformat, width, height, depth, border, format, type, pboOffset);
 }
 
@@ -2971,7 +2538,7 @@ export function texImage3D(self: bigint, target: bigint, level: bigint, internal
  * `tex-sub-image3-d()` operation.
  */
 export function texSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, width: bigint, height: bigint, depth: bigint, format: bigint, type: bigint, pboOffset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pboOffset);
 }
 
@@ -2979,7 +2546,7 @@ export function texSubImage3D(self: bigint, target: bigint, level: bigint, xoffs
  * `copy-tex-sub-image3-d()` operation.
  */
 export function copyTexSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, x: bigint, y: bigint, width: bigint, height: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y, width, height);
 }
 
@@ -2987,7 +2554,7 @@ export function copyTexSubImage3D(self: bigint, target: bigint, level: bigint, x
  * `compressed-tex-image3-d()` operation.
  */
 export function compressedTexImage3D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, depth: bigint, border: bigint, imageSize: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.compressedTexImage3D(target, level, internalformat, width, height, depth, border, imageSize, offset);
 }
 
@@ -2995,7 +2562,7 @@ export function compressedTexImage3D(self: bigint, target: bigint, level: bigint
  * `compressed-tex-sub-image3-d()` operation.
  */
 export function compressedTexSubImage3D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, zoffset: bigint, width: bigint, height: bigint, depth: bigint, format: bigint, imageSize: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.compressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, offset);
 }
 
@@ -3003,7 +2570,7 @@ export function compressedTexSubImage3D(self: bigint, target: bigint, level: big
  * `get-frag-data-location()` operation.
  */
 export function getFragDataLocation(self: bigint, program: bigint, name: string): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.fragDataLocation;
 }
 
@@ -3011,7 +2578,7 @@ export function getFragDataLocation(self: bigint, program: bigint, name: string)
  * `uniform1ui()` operation.
  */
 export function uniform1ui(self: bigint, location: bigint | undefined, v0: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform1ui(location, v0);
 }
 
@@ -3019,7 +2586,7 @@ export function uniform1ui(self: bigint, location: bigint | undefined, v0: bigin
  * `uniform2ui()` operation.
  */
 export function uniform2ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform2ui(location, v0, v1);
 }
 
@@ -3027,7 +2594,7 @@ export function uniform2ui(self: bigint, location: bigint | undefined, v0: bigin
  * `uniform3ui()` operation.
  */
 export function uniform3ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint, v2: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform3ui(location, v0, v1, v2);
 }
 
@@ -3035,7 +2602,7 @@ export function uniform3ui(self: bigint, location: bigint | undefined, v0: bigin
  * `uniform4ui()` operation.
  */
 export function uniform4ui(self: bigint, location: bigint | undefined, v0: bigint, v1: bigint, v2: bigint, v3: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform4ui(location, v0, v1, v2, v3);
 }
 
@@ -3043,7 +2610,7 @@ export function uniform4ui(self: bigint, location: bigint | undefined, v0: bigin
  * `uniform1uiv()` operation.
  */
 export function uniform1uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform1uiv(location, data, srcOffset, srcLength);
 }
 
@@ -3051,7 +2618,7 @@ export function uniform1uiv(self: bigint, location: bigint | undefined, data: bi
  * `uniform2uiv()` operation.
  */
 export function uniform2uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform2uiv(location, data, srcOffset, srcLength);
 }
 
@@ -3059,7 +2626,7 @@ export function uniform2uiv(self: bigint, location: bigint | undefined, data: bi
  * `uniform3uiv()` operation.
  */
 export function uniform3uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform3uiv(location, data, srcOffset, srcLength);
 }
 
@@ -3067,7 +2634,7 @@ export function uniform3uiv(self: bigint, location: bigint | undefined, data: bi
  * `uniform4uiv()` operation.
  */
 export function uniform4uiv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniform4uiv(location, data, srcOffset, srcLength);
 }
 
@@ -3075,7 +2642,7 @@ export function uniform4uiv(self: bigint, location: bigint | undefined, data: bi
  * `uniform-matrix3x2fv()` operation.
  */
 export function uniformMatrix3x2fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix3x2fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3083,7 +2650,7 @@ export function uniformMatrix3x2fv(self: bigint, location: bigint | undefined, t
  * `uniform-matrix4x2fv()` operation.
  */
 export function uniformMatrix4x2fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix4x2fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3091,7 +2658,7 @@ export function uniformMatrix4x2fv(self: bigint, location: bigint | undefined, t
  * `uniform-matrix2x3fv()` operation.
  */
 export function uniformMatrix2x3fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix2x3fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3099,7 +2666,7 @@ export function uniformMatrix2x3fv(self: bigint, location: bigint | undefined, t
  * `uniform-matrix4x3fv()` operation.
  */
 export function uniformMatrix4x3fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix4x3fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3107,7 +2674,7 @@ export function uniformMatrix4x3fv(self: bigint, location: bigint | undefined, t
  * `uniform-matrix2x4fv()` operation.
  */
 export function uniformMatrix2x4fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix2x4fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3115,7 +2682,7 @@ export function uniformMatrix2x4fv(self: bigint, location: bigint | undefined, t
  * `uniform-matrix3x4fv()` operation.
  */
 export function uniformMatrix3x4fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformMatrix3x4fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3123,7 +2690,7 @@ export function uniformMatrix3x4fv(self: bigint, location: bigint | undefined, t
  * `vertex-attrib-i4i()` operation.
  */
 export function vertexAttribI4i(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint, w: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribI4i(index, x, y, z, w);
 }
 
@@ -3131,7 +2698,7 @@ export function vertexAttribI4i(self: bigint, index: bigint, x: bigint, y: bigin
  * `vertex-attrib-i4iv()` operation.
  */
 export function vertexAttribI4iv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribI4iv(index, values);
 }
 
@@ -3139,7 +2706,7 @@ export function vertexAttribI4iv(self: bigint, index: bigint, values: bigint): v
  * `vertex-attrib-i4ui()` operation.
  */
 export function vertexAttribI4ui(self: bigint, index: bigint, x: bigint, y: bigint, z: bigint, w: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribI4ui(index, x, y, z, w);
 }
 
@@ -3147,7 +2714,7 @@ export function vertexAttribI4ui(self: bigint, index: bigint, x: bigint, y: bigi
  * `vertex-attrib-i4uiv()` operation.
  */
 export function vertexAttribI4uiv(self: bigint, index: bigint, values: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribI4uiv(index, values);
 }
 
@@ -3155,7 +2722,7 @@ export function vertexAttribI4uiv(self: bigint, index: bigint, values: bigint): 
  * `vertex-attrib-i-pointer()` operation.
  */
 export function vertexAttribIPointer(self: bigint, index: bigint, size: bigint, type: bigint, stride: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribIPointer(index, size, type, stride, offset);
 }
 
@@ -3163,7 +2730,7 @@ export function vertexAttribIPointer(self: bigint, index: bigint, size: bigint, 
  * `vertex-attrib-divisor()` operation.
  */
 export function vertexAttribDivisor(self: bigint, index: bigint, divisor: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.vertexAttribDivisor(index, divisor);
 }
 
@@ -3171,7 +2738,7 @@ export function vertexAttribDivisor(self: bigint, index: bigint, divisor: bigint
  * `draw-arrays-instanced()` operation.
  */
 export function drawArraysInstanced(self: bigint, mode: bigint, first: bigint, count: bigint, instanceCount: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.drawArraysInstanced(mode, first, count, instanceCount);
 }
 
@@ -3179,7 +2746,7 @@ export function drawArraysInstanced(self: bigint, mode: bigint, first: bigint, c
  * `draw-elements-instanced()` operation.
  */
 export function drawElementsInstanced(self: bigint, mode: bigint, count: bigint, type: bigint, offset: bigint, instanceCount: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.drawElementsInstanced(mode, count, type, offset, instanceCount);
 }
 
@@ -3187,7 +2754,7 @@ export function drawElementsInstanced(self: bigint, mode: bigint, count: bigint,
  * `draw-range-elements()` operation.
  */
 export function drawRangeElements(self: bigint, mode: bigint, start: bigint, end: bigint, count: bigint, type: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.drawRangeElements(mode, start, end, count, type, offset);
 }
 
@@ -3195,7 +2762,7 @@ export function drawRangeElements(self: bigint, mode: bigint, start: bigint, end
  * `draw-buffers()` operation.
  */
 export function drawBuffers(self: bigint, buffers: (bigint)[]): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.drawBuffers(buffers);
 }
 
@@ -3203,7 +2770,7 @@ export function drawBuffers(self: bigint, buffers: (bigint)[]): void {
  * `clear-bufferfv()` operation.
  */
 export function clearBufferfv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.clearBufferfv(buffer, drawbuffer, values, srcOffset);
 }
 
@@ -3211,7 +2778,7 @@ export function clearBufferfv(self: bigint, buffer: bigint, drawbuffer: bigint, 
  * `clear-bufferiv()` operation.
  */
 export function clearBufferiv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.clearBufferiv(buffer, drawbuffer, values, srcOffset);
 }
 
@@ -3219,7 +2786,7 @@ export function clearBufferiv(self: bigint, buffer: bigint, drawbuffer: bigint, 
  * `clear-bufferuiv()` operation.
  */
 export function clearBufferuiv(self: bigint, buffer: bigint, drawbuffer: bigint, values: bigint, srcOffset: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.clearBufferuiv(buffer, drawbuffer, values, srcOffset);
 }
 
@@ -3227,7 +2794,7 @@ export function clearBufferuiv(self: bigint, buffer: bigint, drawbuffer: bigint,
  * `clear-bufferfi()` operation.
  */
 export function clearBufferfi(self: bigint, buffer: bigint, drawbuffer: bigint, depth: bigint, stencil: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.clearBufferfi(buffer, drawbuffer, depth, stencil);
 }
 
@@ -3235,7 +2802,7 @@ export function clearBufferfi(self: bigint, buffer: bigint, drawbuffer: bigint, 
  * `create-query()` operation.
  */
 export function createQuery(self: bigint): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.createQuery();
 }
 
@@ -3243,7 +2810,7 @@ export function createQuery(self: bigint): bigint {
  * `delete-query()` operation.
  */
 export function deleteQuery(self: bigint, query: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.deleteQuery(query);
 }
 
@@ -3251,7 +2818,7 @@ export function deleteQuery(self: bigint, query: bigint | undefined): void {
  * `is-query()` operation.
  */
 export function isQuery(self: bigint, query: bigint | undefined): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.isQuery(query);
 }
 
@@ -3259,7 +2826,7 @@ export function isQuery(self: bigint, query: bigint | undefined): bigint {
  * `begin-query()` operation.
  */
 export function beginQuery(self: bigint, target: bigint, query: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.beginQuery(target, query);
 }
 
@@ -3267,7 +2834,7 @@ export function beginQuery(self: bigint, target: bigint, query: bigint): void {
  * `end-query()` operation.
  */
 export function endQuery(self: bigint, target: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.endQuery(target);
 }
 
@@ -3275,7 +2842,7 @@ export function endQuery(self: bigint, target: bigint): void {
  * `get-query()` operation.
  */
 export function getQuery(self: bigint, target: bigint, pname: bigint): bigint | undefined {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.query ?? undefined;
 }
 
@@ -3283,7 +2850,7 @@ export function getQuery(self: bigint, target: bigint, pname: bigint): bigint | 
  * `get-query-parameter()` operation.
  */
 export function getQueryParameter(self: bigint, query: bigint, pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.queryParameter;
 }
 
@@ -3291,7 +2858,7 @@ export function getQueryParameter(self: bigint, query: bigint, pname: bigint): s
  * `create-sampler()` operation.
  */
 export function createSampler(self: bigint): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.createSampler();
 }
 
@@ -3299,7 +2866,7 @@ export function createSampler(self: bigint): bigint {
  * `delete-sampler()` operation.
  */
 export function deleteSampler(self: bigint, sampler: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.deleteSampler(sampler);
 }
 
@@ -3307,7 +2874,7 @@ export function deleteSampler(self: bigint, sampler: bigint | undefined): void {
  * `is-sampler()` operation.
  */
 export function isSampler(self: bigint, sampler: bigint | undefined): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.isSampler(sampler);
 }
 
@@ -3315,7 +2882,7 @@ export function isSampler(self: bigint, sampler: bigint | undefined): bigint {
  * `bind-sampler()` operation.
  */
 export function bindSampler(self: bigint, unit: bigint, sampler: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.bindSampler(unit, sampler);
 }
 
@@ -3323,7 +2890,7 @@ export function bindSampler(self: bigint, unit: bigint, sampler: bigint | undefi
  * `sampler-parameteri()` operation.
  */
 export function samplerParameteri(self: bigint, sampler: bigint, pname: bigint, param: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.samplerParameteri(sampler, pname, param);
 }
 
@@ -3331,7 +2898,7 @@ export function samplerParameteri(self: bigint, sampler: bigint, pname: bigint, 
  * `sampler-parameterf()` operation.
  */
 export function samplerParameterf(self: bigint, sampler: bigint, pname: bigint, param: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.samplerParameterf(sampler, pname, param);
 }
 
@@ -3339,7 +2906,7 @@ export function samplerParameterf(self: bigint, sampler: bigint, pname: bigint, 
  * `get-sampler-parameter()` operation.
  */
 export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.samplerParameter;
 }
 
@@ -3347,7 +2914,7 @@ export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint
  * `fence-sync()` operation.
  */
 export function fenceSync(self: bigint, condition: bigint, flags: bigint): bigint | undefined {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.fenceSync(condition, flags) ?? undefined;
 }
 
@@ -3355,7 +2922,7 @@ export function fenceSync(self: bigint, condition: bigint, flags: bigint): bigin
  * `is-sync()` operation.
  */
 export function isSync(self: bigint, sync: bigint | undefined): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.isSync(sync);
 }
 
@@ -3363,7 +2930,7 @@ export function isSync(self: bigint, sync: bigint | undefined): bigint {
  * `delete-sync()` operation.
  */
 export function deleteSync(self: bigint, sync: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.deleteSync(sync);
 }
 
@@ -3371,7 +2938,7 @@ export function deleteSync(self: bigint, sync: bigint | undefined): void {
  * `client-wait-sync()` operation.
  */
 export function clientWaitSync(self: bigint, sync: bigint, flags: bigint, timeout: bigint): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.clientWaitSync(sync, flags, timeout);
 }
 
@@ -3379,7 +2946,7 @@ export function clientWaitSync(self: bigint, sync: bigint, flags: bigint, timeou
  * `wait-sync()` operation.
  */
 export function waitSync(self: bigint, sync: bigint, flags: bigint, timeout: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.waitSync(sync, flags, timeout);
 }
 
@@ -3387,7 +2954,7 @@ export function waitSync(self: bigint, sync: bigint, flags: bigint, timeout: big
  * `get-sync-parameter()` operation.
  */
 export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.syncParameter;
 }
 
@@ -3395,7 +2962,7 @@ export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): str
  * `create-transform-feedback()` operation.
  */
 export function createTransformFeedback(self: bigint): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.createTransformFeedback();
 }
 
@@ -3403,7 +2970,7 @@ export function createTransformFeedback(self: bigint): bigint {
  * `delete-transform-feedback()` operation.
  */
 export function deleteTransformFeedback(self: bigint, tf: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.deleteTransformFeedback(tf);
 }
 
@@ -3411,7 +2978,7 @@ export function deleteTransformFeedback(self: bigint, tf: bigint | undefined): v
  * `is-transform-feedback()` operation.
  */
 export function isTransformFeedback(self: bigint, tf: bigint | undefined): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.isTransformFeedback(tf);
 }
 
@@ -3419,7 +2986,7 @@ export function isTransformFeedback(self: bigint, tf: bigint | undefined): bigin
  * `bind-transform-feedback()` operation.
  */
 export function bindTransformFeedback(self: bigint, target: bigint, tf: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.bindTransformFeedback(target, tf);
 }
 
@@ -3427,7 +2994,7 @@ export function bindTransformFeedback(self: bigint, target: bigint, tf: bigint |
  * `begin-transform-feedback()` operation.
  */
 export function beginTransformFeedback(self: bigint, primitiveMode: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.beginTransformFeedback(primitiveMode);
 }
 
@@ -3435,7 +3002,7 @@ export function beginTransformFeedback(self: bigint, primitiveMode: bigint): voi
  * `end-transform-feedback()` operation.
  */
 export function endTransformFeedback(self: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.endTransformFeedback();
 }
 
@@ -3443,7 +3010,7 @@ export function endTransformFeedback(self: bigint): void {
  * `transform-feedback-varyings()` operation.
  */
 export function transformFeedbackVaryings(self: bigint, program: bigint, varyings: (string)[], bufferMode: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.transformFeedbackVaryings(program, varyings, bufferMode);
 }
 
@@ -3451,7 +3018,7 @@ export function transformFeedbackVaryings(self: bigint, program: bigint, varying
  * `get-transform-feedback-varying()` operation.
  */
 export function getTransformFeedbackVarying(self: bigint, program: bigint, index: bigint): bigint | undefined {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.transformFeedbackVarying ?? undefined;
 }
 
@@ -3459,7 +3026,7 @@ export function getTransformFeedbackVarying(self: bigint, program: bigint, index
  * `pause-transform-feedback()` operation.
  */
 export function pauseTransformFeedback(self: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.pauseTransformFeedback();
 }
 
@@ -3467,7 +3034,7 @@ export function pauseTransformFeedback(self: bigint): void {
  * `resume-transform-feedback()` operation.
  */
 export function resumeTransformFeedback(self: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.resumeTransformFeedback();
 }
 
@@ -3475,7 +3042,7 @@ export function resumeTransformFeedback(self: bigint): void {
  * `bind-buffer-base()` operation.
  */
 export function bindBufferBase(self: bigint, target: bigint, index: bigint, buffer: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.bindBufferBase(target, index, buffer);
 }
 
@@ -3483,7 +3050,7 @@ export function bindBufferBase(self: bigint, target: bigint, index: bigint, buff
  * `bind-buffer-range()` operation.
  */
 export function bindBufferRange(self: bigint, target: bigint, index: bigint, buffer: bigint | undefined, offset: bigint, size: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.bindBufferRange(target, index, buffer, offset, size);
 }
 
@@ -3491,7 +3058,7 @@ export function bindBufferRange(self: bigint, target: bigint, index: bigint, buf
  * `get-indexed-parameter()` operation.
  */
 export function getIndexedParameter(self: bigint, target: bigint, index: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.indexedParameter;
 }
 
@@ -3499,7 +3066,7 @@ export function getIndexedParameter(self: bigint, target: bigint, index: bigint)
  * `get-uniform-indices()` operation.
  */
 export function getUniformIndices(self: bigint, program: bigint, uniformNames: (string)[]): (bigint)[] | undefined {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.uniformIndices ?? undefined;
 }
 
@@ -3507,7 +3074,7 @@ export function getUniformIndices(self: bigint, program: bigint, uniformNames: (
  * `get-active-uniforms()` operation.
  */
 export function getActiveUniforms(self: bigint, program: bigint, uniformIndices: (bigint)[], pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.activeUniforms;
 }
 
@@ -3515,7 +3082,7 @@ export function getActiveUniforms(self: bigint, program: bigint, uniformIndices:
  * `get-uniform-block-index()` operation.
  */
 export function getUniformBlockIndex(self: bigint, program: bigint, uniformBlockName: string): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.uniformBlockIndex;
 }
 
@@ -3523,7 +3090,7 @@ export function getUniformBlockIndex(self: bigint, program: bigint, uniformBlock
  * `get-active-uniform-block-parameter()` operation.
  */
 export function getActiveUniformBlockParameter(self: bigint, program: bigint, uniformBlockIndex: bigint, pname: bigint): string {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.activeUniformBlockParameter;
 }
 
@@ -3531,7 +3098,7 @@ export function getActiveUniformBlockParameter(self: bigint, program: bigint, un
  * `get-active-uniform-block-name()` operation.
  */
 export function getActiveUniformBlockName(self: bigint, program: bigint, uniformBlockIndex: bigint): string | undefined {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.activeUniformBlockName ?? undefined;
 }
 
@@ -3539,7 +3106,7 @@ export function getActiveUniformBlockName(self: bigint, program: bigint, uniform
  * `uniform-block-binding()` operation.
  */
 export function uniformBlockBinding(self: bigint, program: bigint, uniformBlockIndex: bigint, uniformBlockBinding: bigint): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.uniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
 }
 
@@ -3547,7 +3114,7 @@ export function uniformBlockBinding(self: bigint, program: bigint, uniformBlockI
  * `create-vertex-array()` operation.
  */
 export function createVertexArray(self: bigint): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.createVertexArray();
 }
 
@@ -3555,7 +3122,7 @@ export function createVertexArray(self: bigint): bigint {
  * `delete-vertex-array()` operation.
  */
 export function deleteVertexArray(self: bigint, vertexArray: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.deleteVertexArray(vertexArray);
 }
 
@@ -3563,7 +3130,7 @@ export function deleteVertexArray(self: bigint, vertexArray: bigint | undefined)
  * `is-vertex-array()` operation.
  */
 export function isVertexArray(self: bigint, vertexArray: bigint | undefined): bigint {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   return obj.isVertexArray(vertexArray);
 }
 
@@ -3571,7 +3138,7 @@ export function isVertexArray(self: bigint, vertexArray: bigint | undefined): bi
  * `bind-vertex-array()` operation.
  */
 export function bindVertexArray(self: bigint, array: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextBase(self);
+  const obj = getWebGL2RenderingContextBase(self);
   obj.bindVertexArray(array);
 }
 
@@ -3582,24 +3149,24 @@ export function bindVertexArray(self: bigint, array: bigint | undefined): void {
 /** Type alias */
 export type WebGl2RenderingContextOverloadsHandle = bigint;
 
-/** Handle table for WebGl2RenderingContextOverloads instances */
-const _webGl2RenderingContextOverloadshandles = new Map<bigint, WebGl2RenderingContextOverloads>();
-let _nextWebGl2RenderingContextOverloads = 1n;
+/** Handle table for WebGL2RenderingContextOverloads instances */
+const _webGl2RenderingContextOverloadshandles = new Map<bigint, WebGL2RenderingContextOverloads>();
+let _nextWebGL2RenderingContextOverloads = 1n;
 
-/** Get a WebGl2RenderingContextOverloads by handle, throwing if not found. */
-function getWebGl2RenderingContextOverloads(handle: bigint): WebGl2RenderingContextOverloads {
+/** Get a WebGL2RenderingContextOverloads by handle, throwing if not found. */
+function getWebGL2RenderingContextOverloads(handle: bigint): WebGL2RenderingContextOverloads {
   const obj = _webGl2RenderingContextOverloadshandles.get(handle);
   if (!obj) {
-    throw new Error(`WebGl2RenderingContextOverloads handle ${handle} not found`);
+    throw new Error(`WebGL2RenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `buffer-data()` operation.
  */
 export function WebGl2RenderingContextOverloadsBufferData(self: bigint, target: bigint, size: bigint, usage: bigint): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.bufferData(target, size, usage);
 }
 
@@ -3607,7 +3174,7 @@ export function WebGl2RenderingContextOverloadsBufferData(self: bigint, target: 
  * `buffer-sub-data()` operation.
  */
 export function WebGl2RenderingContextOverloadsBufferSubData(self: bigint, target: bigint, dstByteOffset: bigint, srcData: bigint): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.bufferSubData(target, dstByteOffset, srcData);
 }
 
@@ -3615,7 +3182,7 @@ export function WebGl2RenderingContextOverloadsBufferSubData(self: bigint, targe
  * `tex-image2-d()` operation.
  */
 export function WebGl2RenderingContextOverloadsTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
@@ -3623,7 +3190,7 @@ export function WebGl2RenderingContextOverloadsTexImage2D(self: bigint, target: 
  * `tex-sub-image2-d()` operation.
  */
 export function WebGl2RenderingContextOverloadsTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, type: bigint, pixels: Uint8Array | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 
@@ -3631,7 +3198,7 @@ export function WebGl2RenderingContextOverloadsTexSubImage2D(self: bigint, targe
  * `compressed-tex-image2-d()` operation.
  */
 export function WebGl2RenderingContextOverloadsCompressedTexImage2D(self: bigint, target: bigint, level: bigint, internalformat: bigint, width: bigint, height: bigint, border: bigint, imageSize: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.compressedTexImage2D(target, level, internalformat, width, height, border, imageSize, offset);
 }
 
@@ -3639,7 +3206,7 @@ export function WebGl2RenderingContextOverloadsCompressedTexImage2D(self: bigint
  * `compressed-tex-sub-image2-d()` operation.
  */
 export function WebGl2RenderingContextOverloadsCompressedTexSubImage2D(self: bigint, target: bigint, level: bigint, xoffset: bigint, yoffset: bigint, width: bigint, height: bigint, format: bigint, imageSize: bigint, offset: bigint): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, offset);
 }
 
@@ -3647,7 +3214,7 @@ export function WebGl2RenderingContextOverloadsCompressedTexSubImage2D(self: big
  * `uniform1fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform1fv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform1fv(location, data, srcOffset, srcLength);
 }
 
@@ -3655,7 +3222,7 @@ export function WebGl2RenderingContextOverloadsUniform1fv(self: bigint, location
  * `uniform2fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform2fv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform2fv(location, data, srcOffset, srcLength);
 }
 
@@ -3663,7 +3230,7 @@ export function WebGl2RenderingContextOverloadsUniform2fv(self: bigint, location
  * `uniform3fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform3fv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform3fv(location, data, srcOffset, srcLength);
 }
 
@@ -3671,7 +3238,7 @@ export function WebGl2RenderingContextOverloadsUniform3fv(self: bigint, location
  * `uniform4fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform4fv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform4fv(location, data, srcOffset, srcLength);
 }
 
@@ -3679,7 +3246,7 @@ export function WebGl2RenderingContextOverloadsUniform4fv(self: bigint, location
  * `uniform1iv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform1iv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform1iv(location, data, srcOffset, srcLength);
 }
 
@@ -3687,7 +3254,7 @@ export function WebGl2RenderingContextOverloadsUniform1iv(self: bigint, location
  * `uniform2iv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform2iv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform2iv(location, data, srcOffset, srcLength);
 }
 
@@ -3695,7 +3262,7 @@ export function WebGl2RenderingContextOverloadsUniform2iv(self: bigint, location
  * `uniform3iv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform3iv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform3iv(location, data, srcOffset, srcLength);
 }
 
@@ -3703,7 +3270,7 @@ export function WebGl2RenderingContextOverloadsUniform3iv(self: bigint, location
  * `uniform4iv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniform4iv(self: bigint, location: bigint | undefined, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniform4iv(location, data, srcOffset, srcLength);
 }
 
@@ -3711,7 +3278,7 @@ export function WebGl2RenderingContextOverloadsUniform4iv(self: bigint, location
  * `uniform-matrix2fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniformMatrix2fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniformMatrix2fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3719,7 +3286,7 @@ export function WebGl2RenderingContextOverloadsUniformMatrix2fv(self: bigint, lo
  * `uniform-matrix3fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniformMatrix3fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniformMatrix3fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3727,7 +3294,7 @@ export function WebGl2RenderingContextOverloadsUniformMatrix3fv(self: bigint, lo
  * `uniform-matrix4fv()` operation.
  */
 export function WebGl2RenderingContextOverloadsUniformMatrix4fv(self: bigint, location: bigint | undefined, transpose: bigint, data: bigint, srcOffset: bigint | undefined, srcLength: bigint | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.uniformMatrix4fv(location, transpose, data, srcOffset, srcLength);
 }
 
@@ -3735,7 +3302,7 @@ export function WebGl2RenderingContextOverloadsUniformMatrix4fv(self: bigint, lo
  * `read-pixels()` operation.
  */
 export function WebGl2RenderingContextOverloadsReadPixels(self: bigint, x: bigint, y: bigint, width: bigint, height: bigint, format: bigint, type: bigint, dstData: Uint8Array | undefined): void {
-  const obj = getWebGl2RenderingContextOverloads(self);
+  const obj = getWebGL2RenderingContextOverloads(self);
   obj.readPixels(x, y, width, height, format, type, dstData);
 }
 
@@ -3751,10 +3318,8 @@ export default {
   AudioDecoderConfigure,
   AudioDecoderDecode,
   AudioDecoderFlush,
-  AudioDecoderPollFlush,
   AudioDecoderReset,
   AudioDecoderClose,
-  AudioDecoderPollClose,
   AudioDecoderIsConfigSupported,
   VideoDecoderGetState,
   VideoDecoderGetDecodeQueueSize,
@@ -3763,10 +3328,8 @@ export default {
   VideoDecoderConfigure,
   VideoDecoderDecode,
   VideoDecoderFlush,
-  VideoDecoderPollFlush,
   VideoDecoderReset,
   VideoDecoderClose,
-  VideoDecoderPollClose,
   VideoDecoderIsConfigSupported,
   AudioEncoderGetState,
   AudioEncoderGetEncodeQueueSize,
@@ -3775,10 +3338,8 @@ export default {
   AudioEncoderConfigure,
   AudioEncoderEncode,
   AudioEncoderFlush,
-  AudioEncoderPollFlush,
   AudioEncoderReset,
   AudioEncoderClose,
-  AudioEncoderPollClose,
   AudioEncoderIsConfigSupported,
   VideoEncoderGetState,
   VideoEncoderGetEncodeQueueSize,
@@ -3787,10 +3348,8 @@ export default {
   VideoEncoderConfigure,
   VideoEncoderEncode,
   VideoEncoderFlush,
-  VideoEncoderPollFlush,
   VideoEncoderReset,
   VideoEncoderClose,
-  VideoEncoderPollClose,
   VideoEncoderIsConfigSupported,
   EncodedAudioChunkGetType,
   EncodedAudioChunkGetTimestamp,
@@ -3811,9 +3370,7 @@ export default {
   AudioDataAllocationSize,
   AudioDataCopyTo,
   AudioDataClone,
-  AudioDataPollClone,
   AudioDataClose,
-  AudioDataPollClose,
   VideoFrameGetFormat,
   getCodedWidth,
   getCodedHeight,
@@ -3830,9 +3387,7 @@ export default {
   VideoFrameAllocationSize,
   VideoFrameCopyTo,
   VideoFrameClone,
-  VideoFramePollClone,
   VideoFrameClose,
-  VideoFramePollClose,
   getPrimaries,
   getTransfer,
   getMatrix,
@@ -3845,7 +3400,6 @@ export default {
   ImageDecoderDecode,
   ImageDecoderReset,
   ImageDecoderClose,
-  ImageDecoderPollClose,
   isTypeSupported,
   imageTrack,
   getReady,
@@ -3924,7 +3478,6 @@ export default {
   enableVertexAttribArray,
   finish,
   WebGlRenderingContextBaseFlush,
-  WebGlRenderingContextBasePollFlush,
   framebufferRenderbuffer,
   framebufferTexture2D,
   frontFace,

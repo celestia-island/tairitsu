@@ -18,19 +18,6 @@ export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | n
 
 
 // ---------------------------------------------------------------------------
-// Async handle table for Promise-based operations
-// ---------------------------------------------------------------------------
-
-let _nextAsyncHandle = 1n;
-
-interface AsyncHandle<T> {
-  promise: Promise<T>;
-  result: { ok: true; value: T } | { ok: false; error: string } | null;
-}
-
-const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
-
-// ---------------------------------------------------------------------------
 // WIT interface: web-socket
 // ---------------------------------------------------------------------------
 
@@ -48,12 +35,12 @@ function getWs(handle: bigint): WebSocket {
     throw new Error(`WebSocket handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint | undefined, protocols: string): { ok: true; value: bigint | undefined } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: EventHandlerRecord } {
   return WebSocket.connect(url, protocols);
 }
 
@@ -67,7 +54,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint {
+export function readyState(handle: bigint): number {
   return WebSocket.readyState(handle);
 }
 
@@ -94,45 +81,15 @@ export function protocol(handle: bigint): string {
 
 /**
  * `close()` operation.
- *
- * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: number, reason: string): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = WebSocket.close(handle, code, reason)
-    .then((result) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `close()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollClose(requestId: bigint): { ok: true } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result ?? undefined;
+export function close(handle: bigint, code: number, reason: string): void {
+  return WebSocket.close(handle, code, reason);
 }
 
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: bigint | undefined): void {
+export function send(handle: bigint, data: string): void {
   return WebSocket.send(handle, data);
 }
 
@@ -148,6 +105,5 @@ export default {
   extensions,
   protocol,
   close,
-  pollClose,
   send
 };

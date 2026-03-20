@@ -178,9 +178,8 @@ GLOBAL_SINGLETONS = {
 ASYNC_PATTERNS = [
     "estimate", "persist", "persisted", "fetch", "respond",
     "array-buffer", "blob", "text", "json", "bytes", "form-data",
-    "read", "write", "cancel", "close", "abort", "flush",
     "get-reader", "get-writer", "pipe-to", "pipe-through",
-    "clone", "from", "create-image-bitmap",
+    "from", "create-image-bitmap",
     "get-user-media", "enumerate-devices",
     "query", "request",
     # Credentials API (CredentialsContainer methods)
@@ -198,11 +197,102 @@ BROWSER_API_NAME_MAPPINGS = {
     "get-random-values": "getRandomValues",
     "random-uuid": "randomUUID",
     "is-conditional-mediation-available": "isConditionalMediationAvailable",
+    # JSON methods (toJSON casing)
+    "to-json": "toJSON",
+    # HTML properties (HTML casing)
+    "inner-html": "innerHTML",
+    "outer-html": "outerHTML",
+    # URI properties (URI casing)
+    "namespace-uri": "namespaceURI",
+    "document-uri": "documentURI",
+    "base-uri": "baseURI",
+    "voice-uri": "voiceURI",
+    "script-url": "scriptURL",
+    "old-url": "oldURL",
+    "new-url": "newURL",
+    # CSS properties (CSS casing)
+    "current-css-zoom": "currentCSSZoom",
+    # UA casing
+    "has-ua-visual-transition": "hasUAVisualTransition",
+    # Method name corrections (get/set prefixes and other variations)
+    "elements-by-tag-name": "getElementsByTagName",
+    "elements-by-tag-name-ns": "getElementsByTagNameNS",
+    "elements-by-class-name": "getElementsByClassName",
+    "element-by-id": "getElementById",
+    "elements-by-name": "getElementsByName",
+    "client-rects": "getClientRects",
+    "bounding-client-rect": "getBoundingClientRect",
+    "client-rect": "getClientRect",
+    "attribute": "getAttribute",
+    "attribute-ns": "getAttributeNS",
+    "attribute-node": "getAttributeNode",
+    "attribute-node-ns": "getAttributeNodeNS",
+    "attribute-names": "getAttributeNames",
+    "set-attribute": "setAttribute",
+    "set-attribute-ns": "setAttributeNS",
+    "remove-attribute-ns": "removeAttributeNS",
+    "has-attribute-ns": "hasAttributeNS",
+    "named-item": "getNamedItem",
+    "named-item-ns": "getNamedItemNS",
+    "track-by-id": "getTrackById",
+    "create-element-ns": "createElementNS",
+    "create-attribute-ns": "createAttributeNS",
+    "create-cdata-section": "createCDATASection",
+    "create-ns-resolver": "createNSResolver",
+    "insert-adjacent-html": "insertAdjacentHTML",
+    "pointer-capture": "hasPointerCapture",
+    "set-start-before": "setStartBefore",
+    "set-start-after": "setStartAfter",
+    "set-end-before": "setEndBefore",
+    "lookup-namespace-uri": "lookupNamespaceURI",
+    "remove-named-item-ns": "removeNamedItemNS",
+    "modifier-state": "getModifierState",
+    "coalesced-events": "getCoalescedEvents",
+    "predicted-events": "getPredictedEvents",
+    "set-cookie": "getSetCookie",
+    "context-attributes": "getContextAttributes",
+    "image-data": "getImageData",
+    "set-transform": "setTransform",
+    "form-value": "setFormValue",
+    "drag-image": "setDragImage",
+    "add-search-provider": "AddSearchProvider",
+    "is-search-provider-installed": "IsSearchProviderInstalled",
+    "audio-tracks": "getAudioTracks",
+    "video-tracks": "getVideoTracks",
+    "constraints": "getConstraints",
+    "supported-constraints": "getSupportedConstraints",
+    "user-media": "getUserMedia",
+    "display-media": "getDisplayMedia",
+    "action-handler": "setActionHandler",
+    "position-state": "setPositionState",
+    "microphone-active": "setMicrophoneActive",
+    "camera-active": "setCameraActive",
+    "notifications": "getNotifications",
+    "resource-timing-buffer-size": "setResourceTimingBufferSize",
+    "entries-by-type": "getEntriesByType",
+    "entries-by-name": "getEntriesByName",
+    "receivers": "getReceivers",
+    "transceivers": "getTransceivers",
+    "capabilities": "getCapabilities",
+    "configuration": "getConfiguration",
+    "current-position": "getCurrentPosition",
+    "registrations": "getRegistrations",
+    "header-value": "setHeaderValue",
+    "computed-style": "getComputedStyle",
+    "html-unsafe": "setHTMLUnsafe",
+    # Static constants (uppercase)
+    "attribute-node-constant": "ATTRIBUTE_NODE",
+    "close-constant": "CLOSED",
 }
 
 # Static method return type overrides (method name -> actual return type)
 STATIC_METHOD_RETURN_OVERRIDES = {
     ("credential", "isConditionalMediationAvailable"): "Promise<boolean>",
+}
+
+# Static methods that need type assertions (methods missing from TypeScript DOM lib)
+STATIC_METHOD_NEEDS_TYPE_ASSERTION = {
+    ("Credential", "isConditionalMediationAvailable"),
 }
 
 # Functions that return browser objects (need to wrap in handle)
@@ -214,6 +304,283 @@ HANDLE_RETURNING_FUNCTIONS = {
 CUSTOM_TYPE_DEFINITIONS = {
     "EventHandlerRecord": "{ [key: string]: ((...args: any[]) => void) | null | undefined; };",
 }
+
+# Type name casing corrections for TypeScript DOM types
+# Maps incorrectly capitalized PascalCase to correct TypeScript DOM type names
+TYPE_NAME_CASING_OVERRIDES = {
+    # IDB (IndexedDB) types
+    "IdbCursor": "IDBCursor",
+    "IdbCursorWithValue": "IDBCursorWithValue",
+    "IdbDatabase": "IDBDatabase",
+    "IdbFactory": "IDBFactory",
+    "IdbIndex": "IDBIndex",
+    "IdbKeyRange": "IDBKeyRange",
+    "IdbObjectStore": "IDBObjectStore",
+    "IdbOpenDBRequest": "IDBOpenDBRequest",
+    "IdbRequest": "IDBRequest",
+    "IdbTransaction": "IDBTransaction",
+    "IdbVersionChangeEvent": "IDBVersionChangeEvent",
+    
+    # WebGL types
+    "WebGlObject": "WebGLObject",
+    "WebGlBuffer": "WebGLBuffer",
+    "WebGlFramebuffer": "WebGLFramebuffer",
+    "WebGlProgram": "WebGLProgram",
+    "WebGlRenderbuffer": "WebGLRenderbuffer",
+    "WebGlShader": "WebGLShader",
+    "WebGlTexture": "WebGLTexture",
+    "WebGlUniformLocation": "WebGLUniformLocation",
+    "WebGlActiveInfo": "WebGLActiveInfo",
+    "WebGlShaderPrecisionFormat": "WebGLShaderPrecisionFormat",
+    "WebGlContextEvent": "WebGLContextEvent",
+    "WebGlRenderingContext": "WebGLRenderingContext",
+    "WebGlRenderingContextBase": "WebGLRenderingContextBase",
+    "WebGlRenderingContextOverloads": "WebGLRenderingContextOverloads",
+    "WebGl2RenderingContext": "WebGL2RenderingContext",
+    "WebGl2RenderingContextBase": "WebGL2RenderingContextBase",
+    "WebGl2RenderingContextOverloads": "WebGL2RenderingContextOverloads",
+    
+    # HTML types
+    "HtmlElement": "HTMLElement",
+    "HtmlAllCollection": "HTMLAllCollection",
+    "HtmlCollection": "HTMLCollection",
+    "HtmlCollectionBase": "HTMLCollectionBase",
+    "HtmlCollectionOf": "HTMLCollectionOf",
+    "HtmlFormControlsCollection": "HTMLFormControlsCollection",
+    "HtmlOptionsCollection": "HTMLOptionsCollection",
+    "HtmlAnchorElement": "HTMLAnchorElement",
+    "HtmlAreaElement": "HTMLAreaElement",
+    "HtmlAudioElement": "HTMLAudioElement",
+    "HtmlBaseElement": "HTMLBaseElement",
+    "HtmlBodyElement": "HTMLBodyElement",
+    "HtmlBrElement": "HTMLBRElement",
+    "HtmlButtonElement": "HTMLButtonElement",
+    "HtmlCanvasElement": "HTMLCanvasElement",
+    "HtmlDataElement": "HTMLDataElement",
+    "HtmlDataListElement": "HTMLDataListElement",
+    "HtmlDetailsElement": "HTMLDetailsElement",
+    "HtmlDialogElement": "HTMLDialogElement",
+    "HtmlDirectoryElement": "HTMLDirectoryElement",
+    "HtmlDivElement": "HTMLDivElement",
+    "HtmlDListElement": "HTMLDListElement",
+    "HtmlEmbedElement": "HTMLEmbedElement",
+    "HtmlFieldSetElement": "HTMLFieldSetElement",
+    "HtmlFontElement": "HTMLFontElement",
+    "HtmlFormElement": "HTMLFormElement",
+    "HtmlFrameElement": "HTMLFrameElement",
+    "HtmlFrameSetElement": "HTMLFrameSetElement",
+    "HtmlHeadElement": "HTMLHeadElement",
+    "HtmlHeadingElement": "HTMLHeadingElement",
+    "HtmlHrElement": "HTMLHRElement",
+    "HtmlHtmlElement": "HTMLHtmlElement",
+    "HtmlIFrameElement": "HTMLIFrameElement",
+    "HtmlImageElement": "HTMLImageElement",
+    "HtmlInputElement": "HTMLInputElement",
+    "HtmlLabelElement": "HTMLLabelElement",
+    "HtmlLegendElement": "HTMLLegendElement",
+    "HtmlLiElement": "HTMLLIElement",
+    "HtmlLinkElement": "HTMLLinkElement",
+    "HtmlMapElement": "HTMLMapElement",
+    "HtmlMarqueeElement": "HTMLMarqueeElement",
+    "HtmlMediaElement": "HTMLMediaElement",
+    "HtmlMenuElement": "HTMLMenuElement",
+    "HtmlMetaElement": "HTMLMetaElement",
+    "HtmlMeterElement": "HTMLMeterElement",
+    "HtmlModElement": "HTMLModElement",
+    "HtmlObjectElement": "HTMLObjectElement",
+    "HtmlOListElement": "HTMLOListElement",
+    "HtmlOptGroupElement": "HTMLOptGroupElement",
+    "HtmlOptionElement": "HTMLOptionElement",
+    "HtmlOutputElement": "HTMLOutputElement",
+    "HtmlParagraphElement": "HTMLParagraphElement",
+    "HtmlParamElement": "HTMLParamElement",
+    "HtmlPictureElement": "HTMLPictureElement",
+    "HtmlPreElement": "HTMLPreElement",
+    "HtmlProgressElement": "HTMLProgressElement",
+    "HtmlQuoteElement": "HTMLQuoteElement",
+    "HtmlScriptElement": "HTMLScriptElement",
+    "HtmlSelectElement": "HTMLSelectElement",
+    "HtmlSlotElement": "HTMLSlotElement",
+    "HtmlSourceElement": "HTMLSourceElement",
+    "HtmlSpanElement": "HTMLSpanElement",
+    "HtmlStyleElement": "HTMLStyleElement",
+    "HtmlTableCaptionElement": "HTMLTableCaptionElement",
+    "HtmlTableCellElement": "HTMLTableCellElement",
+    "HtmlTableColElement": "HTMLTableColElement",
+    "HtmlTableElement": "HTMLTableElement",
+    "HtmlTableRowElement": "HTMLTableRowElement",
+    "HtmlTableSectionElement": "HTMLTableSectionElement",
+    "HtmlTemplateElement": "HTMLTemplateElement",
+    "HtmlTextAreaElement": "HTMLTextAreaElement",
+    "HtmlTimeElement": "HTMLTimeElement",
+    "HtmlTitleElement": "HTMLTitleElement",
+    "HtmlTrackElement": "HTMLTrackElement",
+    "HtmlUListElement": "HTMLUListElement",
+    "HtmlUnknownElement": "HTMLUnknownElement",
+    "HtmlVideoElement": "HTMLVideoElement",
+    "HtmlOrSvgElement": "HTMLOrSVGElement",
+    "HtmlHyperlinkElementUtils": "HTMLHyperlinkElementUtils",
+    
+    # DOM types
+    "DomImplementation": "DOMImplementation",
+    "DomParser": "DOMParser",
+    "DomRect": "DOMRect",
+    "DomRectList": "DOMRectList",
+    "DomRectReadOnly": "DOMRectReadOnly",
+    "DomStringList": "DOMStringList",
+    "DomStringMap": "DOMStringMap",
+    "DomTokenList": "DOMTokenList",
+    "DomMatrix": "DOMMatrix",
+    "DomMatrixReadOnly": "DOMMatrixReadOnly",
+    "DomPoint": "DOMPoint",
+    "DomPointReadOnly": "DOMPointReadOnly",
+    "DomQuad": "DOMQuad",
+    "DomSettableTokenList": "DOMSettableTokenList",
+    
+    # CSS types
+    "CssRule": "CSSRule",
+    "CssRuleList": "CSSRuleList",
+    "CssStyleDeclaration": "CSSStyleDeclaration",
+    "CssStyleRule": "CSSStyleRule",
+    "CssStyleSheet": "CSSStyleSheet",
+    "CssConditionRule": "CSSConditionRule",
+    "CssContainerRule": "CSSContainerRule",
+    "CssCounterStyleRule": "CSSCounterStyleRule",
+    "CssFontFaceRule": "CSSFontFaceRule",
+    "CssFontFeatureValuesRule": "CSSFontFeatureValuesRule",
+    "CssFontPaletteValuesRule": "CSSFontPaletteValuesRule",
+    "CssGroupingRule": "CSSGroupingRule",
+    "CssImageLayerRepetition": "CSSImageLayerRepetition",
+    "CssImportRule": "CSSImportRule",
+    "CssKeyframeRule": "CSSKeyframeRule",
+    "CssKeyframesRule": "CSSKeyframesRule",
+    "CssKeywordValue": "CSSKeywordValue",
+    "CssMarginRule": "CSSMarginRule",
+    "CssMediaRule": "CSSMediaRule",
+    "CssNamespaceRule": "CSSNamespaceRule",
+    "CssNumericValue": "CSSNumericValue",
+    "CssPageRule": "CSSPageRule",
+    "CssPerspective": "CSSPerspective",
+    "CssPositionValue": "CSSPositionValue",
+    "CssPrimitiveValue": "CSSPrimitiveValue",
+    "CssPropertyRule": "CSSPropertyRule",
+    "CssRotate": "CSSRotate",
+    "CssScale": "CSSScale",
+    "CssSkew": "CSSSkew",
+    "CssStyleValue": "CSSStyleValue",
+    "CssSupportsRule": "CSSSupportsRule",
+    "CssTransformComponent": "CSSTransformComponent",
+    "CssTransformValue": "CSSTransformValue",
+    "CssTranslate": "CSSTranslate",
+    "CssUnitValue": "CSSUnitValue",
+    "CssUnparsedValue": "CSSUnparsedValue",
+    "CssValue": "CSSValue",
+    "CssValueList": "CSSValueList",
+    "CssVariableReferenceValue": "CSSVariableReferenceValue",
+    "CssFontFaceDescriptors": "CSSFontFaceDescriptors",
+    "CssFontFeatureValuesMap": "CSSFontFeatureValuesMap",
+    "CssPageDescriptors": "CSSPageDescriptors",
+    "CssStyleProperties": "CSSStyleProperties",
+    "ElementCssInlineStyle": "ElementCSSInlineStyle",
+    
+    # XML types
+    "XmlDocument": "XMLDocument",
+    "XmlHttpRequest": "XMLHttpRequest",
+    "XmlHttpRequestEventTarget": "XMLHttpRequestEventTarget",
+    "XmlHttpRequestUpload": "XMLHttpRequestUpload",
+    "XmlSerializer": "XMLSerializer",
+    
+    # UI types
+    "UiEvent": "UIEvent",
+    
+    # RTC (WebRTC) types
+    "RtcCertificate": "RTCCertificate",
+    "RtcDataChannel": "RTCDataChannel",
+    "RtcDataChannelEvent": "RTCDataChannelEvent",
+    "RtcDtlsTransport": "RTCDtlsTransport",
+    "RtcEncodedAudioFrame": "RTCEncodedAudioFrame",
+    "RtcEncodedVideoFrame": "RTCEncodedVideoFrame",
+    "RtcError": "RTCError",
+    "RtcErrorEvent": "RTCErrorEvent",
+    "RtcIceCandidate": "RTCIceCandidate",
+    "RtcIceCandidatePair": "RTCIceCandidatePair",
+    "RtcIceTransport": "RTCIceTransport",
+    "RtcPeerConnection": "RTCPeerConnection",
+    "RtcPeerConnectionIceErrorEvent": "RTCPeerConnectionIceErrorEvent",
+    "RtcPeerConnectionIceEvent": "RTCPeerConnectionIceEvent",
+    "RtcRtpReceiver": "RTCRtpReceiver",
+    "RtcRtpScriptTransform": "RTCRtpScriptTransform",
+    "RtcRtpSender": "RTCRtpSender",
+    "RtcRtpTransceiver": "RTCRtpTransceiver",
+    "RtcSctpTransport": "RTCSctpTransport",
+    "RtcSessionDescription": "RTCSessionDescription",
+    "RtcStatsReport": "RTCStatsReport",
+    "RtcTrackEvent": "RTCTrackEvent",
+    "RtcTransformEvent": "RTCTransformEvent",
+    "RtcdtmfSender": "RTCDTMFSender",
+    "RtcdtmfToneChangeEvent": "RTCDTMFToneChangeEvent",
+    
+    # Other acronyms
+    "Url": "URL",
+    "UrlSearchParams": "URLSearchParams",
+    "Origin": "Origin",
+    "Module": "Module",
+    "Instance": "Instance",
+    "Table": "Table",
+    "Memory": "Memory",
+    "Global": "Global",
+    "Exception": "Exception",
+    "GeometryUtils": "GeometryUtils",
+    "XPathNsResolver": "XPathNSResolver",
+    "XsltProcessor": "XSLTProcessor",
+    "HyperlinkElementUtils": "HyperlinkElementUtils",
+    "SpeechGrammar": "SpeechGrammar",
+    "SpeechGrammarList": "SpeechGrammarList",
+    "SpeechRecognition": "SpeechRecognition",
+    "SpeechRecognitionErrorEvent": "SpeechRecognitionErrorEvent",
+    "SpeechRecognitionEvent": "SpeechRecognitionEvent",
+    "SpeechRecognitionPhrase": "SpeechRecognitionPhrase",
+    "FetchLaterResult": "FetchLaterResult",
+    "VisibilityStateEntry": "VisibilityStateEntry",
+    "CommandEvent": "CommandEvent",
+    "CloseWatcher": "CloseWatcher",
+    "PopoverTargetAttributes": "PopoverTargetAttributes",
+    "Navigation": "Navigation",
+    "NavigationTransition": "NavigationTransition",
+    "NavigateEvent": "NavigateEvent",
+    "NavigationPrecommitController": "NavigationPrecommitController",
+    "NavigationDestination": "NavigationDestination",
+    "NavigationCurrentEntryChangeEvent": "NavigationCurrentEntryChangeEvent",
+    "NotRestoredReasonDetails": "NotRestoredReasonDetails",
+    "NotRestoredReasons": "NotRestoredReasons",
+    "NavigatorId": "NavigatorID",
+    "WorkerGlobalScope": "WorkerGlobalScope",
+    "DedicatedWorkerGlobalScope": "DedicatedWorkerGlobalScope",
+    "SharedWorkerGlobalScope": "SharedWorkerGlobalScope",
+    "WorkerNavigator": "WorkerNavigator",
+    "WorkerLocation": "WorkerLocation",
+    "PerformanceTimingConfidence": "PerformanceTimingConfidence",
+    "OnErrorEventHandlerRecord": "OnErrorEventHandlerNonNull",
+    "OnBeforeUnloadEventHandlerRecord": "OnBeforeUnloadEventHandlerNonNull",
+    "VoidFunctionRecord": "VoidFunction",
+    "MessageEventTarget": "MessageEventTarget",
+    "AudioTrackList": "AudioTrackList",
+    "AudioTrack": "AudioTrack",
+    "VideoTrackList": "VideoTrackList",
+    "VideoTrack": "VideoTrack",
+    "TextTrackCue": "TextTrackCue",
+    "TextTrackList": "TextTrackList",
+    "ReadableStreamByobReader": "ReadableStreamBYOBReader",
+    "ReadableStreamByobRequest": "ReadableStreamBYOBRequest",
+    "ClipboardChangeEvent": "ClipboardEvent",
+}
+
+
+def correct_type_casing(name: str) -> str:
+    """Correct the casing of a type name to match TypeScript DOM conventions."""
+    if name in TYPE_NAME_CASING_OVERRIDES:
+        return TYPE_NAME_CASING_OVERRIDES[name]
+    return name
 
 
 # ---------------------------------------------------------------------------
@@ -424,6 +791,7 @@ class BrowserGlueGenerator:
             # For Promise return types, mark as async
             if ts_return.startswith("Promise<"):
                 is_async = True
+                ts_return_inner = ts_return[8:-1]  # Extract type from Promise<T>
                 ts_return_inner_original = ts_return
                 ts_return = "bigint"
                 return_is_void = False
@@ -478,18 +846,18 @@ class BrowserGlueGenerator:
             if ta.name.endswith("-handle"):
                 handle_type = ta.name
                 handle_var = kebab_to_camel(ta.name.replace("-handle", "Handles"))
-                handle_pascal = kebab_to_pascal(ta.name.replace("-handle", ""))
+                handle_pascal = correct_type_casing(kebab_to_pascal(ta.name.replace("-handle", "")))
                 break
 
         # Map to browser class (fallback to PascalCase if not explicitly mapped)
-        browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, kebab_to_pascal(wit_name))
+        browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, correct_type_casing(kebab_to_pascal(wit_name)))
         # Check if this type doesn't exist in DOM and needs to use 'any'
         js_type_for_handles = MISSING_TYPES_IN_DOM.get(wit_name, browser_class)
 
         # Generate type aliases
         type_aliases: List[GeneratedTypeAlias] = []
         for ta in iface.type_aliases:
-            ts_name = kebab_to_pascal(ta.name)
+            ts_name = correct_type_casing(kebab_to_pascal(ta.name))
             # Fix: All handle types should be bigint
             if ta.name.endswith("-handle") or isinstance(ta.target, WitHandle):
                 ts_type = "bigint"
@@ -697,7 +1065,7 @@ class BrowserGlueGenerator:
                         lines.append(f"  const handle = _next{iface.handle_pascal}++;")
                         lines.append(f"  _{iface.handle_var}.set(handle, obj);")
                         lines.append("  return handle;")
-                        lines.append("")
+                        lines.append("}")
                         lines.append("")
 
                     lines.append(f"/** Get a {iface.browser_class} by handle, throwing if not found. */")
@@ -707,7 +1075,7 @@ class BrowserGlueGenerator:
                     lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
                     lines.append("  }")
                     lines.append("  return obj;")
-                    lines.append("")
+                    lines.append("}")
                     lines.append("")
 
             # Functions
@@ -796,7 +1164,12 @@ class BrowserGlueGenerator:
             # Static methods use the browser class directly
             obj_ref = func.browser_class  # e.g., "Credential"
             args = func.browser_args if func.browser_args else ""
-            lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
+            # Check if this method needs a type assertion
+            key = (iface.name, func.ts_name)
+            if key in STATIC_METHOD_NEEDS_TYPE_ASSERTION:
+                lines.append(f"  const promise = ({obj_ref} as any).{func.browser_method}({args})")
+            else:
+                lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
@@ -942,7 +1315,10 @@ class BrowserGlueGenerator:
         lines.append("  if (!entry) {")
         lines.append("    return { ok: false, error: `Unknown request ID ${requestId}` };")
         lines.append("  }")
-        lines.append("  return entry.result ?? undefined;")
+        if func.return_is_void or not func.ts_return_inner:
+            lines.append("  return entry.result ?? undefined;")
+        else:
+            lines.append(f"  return entry.result as {{ ok: true; value: {func.ts_return_inner} }} | {{ ok: false; error: string }} | null ?? undefined;")
         lines.append("}")
 
     def render_index(self, domains: List[GeneratedDomain]) -> str:

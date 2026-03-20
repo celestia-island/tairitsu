@@ -48,26 +48,26 @@ function getModule(handle: bigint): Module {
     throw new Error(`Module handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: boolean): (bigint)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): boolean {
+export function imports(moduleObject: number): (bigint)[] {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): ((bigint)[])[] {
+export function customSections(moduleObject: bigint, sectionName: string): ((string)[])[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -89,12 +89,12 @@ function getInstance(handle: bigint): Instance {
     throw new Error(`Instance handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): string {
+export function getExports(self: bigint): EventHandlerRecord {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -117,12 +117,12 @@ function getMemory(handle: bigint): Memory {
     throw new Error(`Memory handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: string): string | undefined {
+export function MemoryGrow(self: bigint, delta: bigint): string {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -130,7 +130,7 @@ export function MemoryGrow(self: bigint, delta: string): string | undefined {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): (string)[] {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -138,7 +138,7 @@ export function toFixedLengthBuffer(self: bigint): (string)[] {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): EventHandlerRecord {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.toResizableBuffer();
 }
@@ -146,7 +146,7 @@ export function toResizableBuffer(self: bigint): EventHandlerRecord {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): Uint8Array {
+export function getBuffer(self: bigint): bigint {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -169,12 +169,12 @@ function getTable(handle: bigint): Table {
     throw new Error(`Table handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: number | undefined): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
@@ -214,13 +214,13 @@ export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: bigint | undefined, value: bigint | undefined): void {
   const obj = getTable(self);
   obj.set(index, value);
 }
@@ -251,7 +251,7 @@ function getGlobal(handle: bigint): Global {
     throw new Error(`Global handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `value-of()` operation.
@@ -272,7 +272,7 @@ export function getValue(self: bigint): string {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: string): void {
+export function setValue(self: bigint, value: boolean): void {
   const obj = getGlobal(self);
   obj.value = value;
 }
@@ -295,7 +295,7 @@ function getException(handle: bigint): Exception {
     throw new Error(`Exception handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-arg()` operation.
@@ -308,7 +308,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): boolean {
+export function is(self: bigint, exceptionTag: bigint): bigint | undefined {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }

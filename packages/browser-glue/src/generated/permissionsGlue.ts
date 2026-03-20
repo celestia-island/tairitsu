@@ -48,7 +48,7 @@ function getPermissions(handle: bigint): Permissions {
     throw new Error(`Permissions handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `query()` operation.
@@ -85,7 +85,7 @@ export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
     throw new Error(`PermissionStatus handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-state()` operation.

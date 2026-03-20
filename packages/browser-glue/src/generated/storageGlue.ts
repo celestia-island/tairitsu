@@ -48,7 +48,7 @@ function getNavigatorStorage(handle: bigint): NavigatorStorage {
     throw new Error(`NavigatorStorage handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `get-storage()` operation.
@@ -76,7 +76,7 @@ function getStorageManager(handle: bigint): StorageManager {
     throw new Error(`StorageManager handle ${handle} not found`);
   }
   return obj;
-
+}
 
 /**
  * `persisted()` operation.
@@ -108,12 +108,12 @@ export function persisted(self: bigint): bigint {
  * Poll an async `persisted()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersisted(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollPersisted(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -151,7 +151,7 @@ export function pollPersist(requestId: bigint): { ok: true; value: bigint } | { 
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -184,12 +184,12 @@ export function estimate(self: bigint): bigint {
  * Poll an async `estimate()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollEstimate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollEstimate(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
