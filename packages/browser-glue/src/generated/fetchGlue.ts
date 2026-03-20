@@ -69,7 +69,7 @@ export function HeadersGet(self: bigint, name: string): string | undefined {
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): (bigint)[] {
+export function getSetCookie(self: bigint): (string)[] {
   const obj = getHeaders(self);
   return obj.setCookie;
 }
@@ -77,7 +77,7 @@ export function getSetCookie(self: bigint): (bigint)[] {
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: boolean): boolean {
+export function HeadersHas(self: bigint, name: string): boolean {
   const obj = getHeaders(self);
   return obj.has(name);
 }
@@ -85,7 +85,7 @@ export function HeadersHas(self: bigint, name: boolean): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
+export function HeadersSet(self: bigint, name: EventHandlerRecord, value: string): void {
   const obj = getHeaders(self);
   obj._set(name, value);
 }
@@ -113,7 +113,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined {
+export function getBody(self: bigint): boolean {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -121,7 +121,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
+export function getBodyUsed(self: bigint): string | undefined {
   const obj = getBody(self);
   return obj.bodyUsed;
 }
@@ -346,7 +346,7 @@ export function text(self: bigint): bigint {
  * Poll an async `text()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollText(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function pollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -393,7 +393,7 @@ export function RequestGetUrl(self: bigint): string {
 /**
  * `get-headers()` operation.
  */
-export function RequestGetHeaders(self: bigint): string {
+export function RequestGetHeaders(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.headers;
 }
@@ -401,7 +401,7 @@ export function RequestGetHeaders(self: bigint): string {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: bigint): boolean {
+export function getDestination(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.destination;
 }
@@ -409,7 +409,7 @@ export function getDestination(self: bigint): boolean {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint): string {
+export function getReferrer(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.referrer;
 }
@@ -433,7 +433,7 @@ export function getMode(self: bigint): bigint {
 /**
  * `get-credentials()` operation.
  */
-export function getCredentials(self: bigint): (bigint)[] {
+export function getCredentials(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.credentials;
 }
@@ -441,7 +441,7 @@ export function getCredentials(self: bigint): (bigint)[] {
 /**
  * `get-cache()` operation.
  */
-export function getCache(self: bigint): bigint {
+export function getCache(self: bigint): number {
   const obj = getRequest(self);
   return obj.cache;
 }
@@ -457,7 +457,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): number {
+export function getIntegrity(self: bigint): EventHandlerRecord {
   const obj = getRequest(self);
   return obj.integrity;
 }
@@ -570,7 +570,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: bigint, status: number | undefined): bigint {
+export function redirect(url: string, status: EventHandlerRecord): bigint {
   return Response.redirect(url, status);
 }
 
@@ -579,7 +579,7 @@ export function redirect(url: bigint, status: number | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `ResponsePollJson()`
  */
-export function ResponseJson(data: string, init: bigint): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getResponse(self);
   const promise = obj.json(data, init)
@@ -604,7 +604,7 @@ export function ResponseJson(data: string, init: bigint): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ResponsePollJson(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function ResponsePollJson(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -631,7 +631,7 @@ export function ResponseGetUrl(self: bigint): string {
 /**
  * `get-redirected()` operation.
  */
-export function getRedirected(self: bigint): bigint | undefined {
+export function getRedirected(self: bigint): boolean {
   const obj = getResponse(self);
   return obj.redirected;
 }
@@ -639,7 +639,7 @@ export function getRedirected(self: bigint): bigint | undefined {
 /**
  * `get-status()` operation.
  */
-export function ResponseGetStatus(self: bigint): bigint {
+export function ResponseGetStatus(self: bigint): number {
   const obj = getResponse(self);
   return obj.status;
 }
@@ -655,7 +655,7 @@ export function getOk(self: bigint): boolean {
 /**
  * `get-status-text()` operation.
  */
-export function ResponseGetStatusText(self: bigint): bigint {
+export function ResponseGetStatusText(self: bigint): string {
   const obj = getResponse(self);
   return obj.statusText;
 }
@@ -738,7 +738,7 @@ function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope
  *
  * Async operation: returns request ID, poll with `pollFetch()`
  */
-export function fetch(self: bigint, input: bigint | undefined, init: bigint | undefined): bigint {
+export function fetch(self: bigint, input: bigint, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getWindowOrWorkerGlobalScope(self);
   const promise = obj.fetch(input, init)
@@ -822,7 +822,7 @@ export function btoa(self: bigint, data: string): string {
 /**
  * `atob()` operation.
  */
-export function atob(self: bigint, data: bigint): string {
+export function atob(self: bigint, data: string): string {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.atob(data);
 }
@@ -830,7 +830,7 @@ export function atob(self: bigint, data: bigint): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint, _arguments: (bigint)[]): bigint {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (bigint | undefined)[]): number {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.timeout = _arguments;
 }
@@ -838,7 +838,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: number | undefined): void {
+export function clearTimeout(self: bigint, id: bigint | undefined): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }
@@ -846,7 +846,7 @@ export function clearTimeout(self: bigint, id: number | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
+export function setInterval(self: bigint, handler: bigint, timeout: bigint, _arguments: bigint): number {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.interval = _arguments;
 }
@@ -854,7 +854,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: number | und
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: number | undefined): void {
+export function clearInterval(self: bigint, id: bigint | undefined): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
@@ -862,7 +862,7 @@ export function clearInterval(self: bigint, id: number | undefined): void {
 /**
  * `queue-microtask()` operation.
  */
-export function queueMicrotask(self: bigint, callback: bigint): void {
+export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback);
 }
@@ -908,7 +908,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
+export function structuredClone(self: bigint, value: bigint, options: bigint): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value, options);
 }
@@ -916,7 +916,7 @@ export function structuredClone(self: bigint, value: string, options: bigint | u
 /**
  * `get-caches()` operation.
  */
-export function getCaches(self: bigint): bigint {
+export function getCaches(self: bigint): bigint | undefined {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.caches;
 }
@@ -952,7 +952,7 @@ function getFetchLaterResult(handle: bigint): FetchLaterResult {
 /**
  * `get-activated()` operation.
  */
-export function getActivated(self: bigint): boolean {
+export function getActivated(self: bigint): bigint | undefined {
   const obj = getFetchLaterResult(self);
   return obj.activated;
 }
@@ -1007,7 +1007,7 @@ export function from(asyncIterable: string): bigint {
  * Poll an async `from()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollFrom(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1028,7 +1028,7 @@ export function ReadableStreamGetLocked(self: bigint): boolean {
  *
  * Async operation: returns request ID, poll with `ReadableStreamPollCancel()`
  */
-export function ReadableStreamCancel(self: bigint, reason: string | undefined): bigint {
+export function ReadableStreamCancel(self: bigint, reason: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getReadableStream(self);
   const promise = obj.cancel(reason)
@@ -1053,7 +1053,7 @@ export function ReadableStreamCancel(self: bigint, reason: string | undefined): 
  * Poll an async `cancel()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: Uint8Array | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -2130,7 +2130,7 @@ function getXmlHttpRequestEventTarget(handle: bigint): XmlHttpRequestEventTarget
 /**
  * `get-onloadstart()` operation.
  */
-export function getOnloadstart(self: bigint): bigint {
+export function getOnloadstart(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onloadstart;
 }
@@ -2138,7 +2138,7 @@ export function getOnloadstart(self: bigint): bigint {
 /**
  * `set-onloadstart()` operation.
  */
-export function setOnloadstart(self: bigint, value: bigint): void {
+export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onloadstart = value;
 }
@@ -2146,7 +2146,7 @@ export function setOnloadstart(self: bigint, value: bigint): void {
 /**
  * `get-onprogress()` operation.
  */
-export function getOnprogress(self: bigint): bigint {
+export function getOnprogress(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onprogress;
 }
@@ -2154,7 +2154,7 @@ export function getOnprogress(self: bigint): bigint {
 /**
  * `set-onprogress()` operation.
  */
-export function setOnprogress(self: bigint, value: bigint): void {
+export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onprogress = value;
 }
@@ -2162,7 +2162,7 @@ export function setOnprogress(self: bigint, value: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): bigint {
+export function getOnabort(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onabort;
 }
@@ -2170,7 +2170,7 @@ export function getOnabort(self: bigint): bigint {
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: bigint): void {
+export function setOnabort(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onabort = value;
 }
@@ -2178,7 +2178,7 @@ export function setOnabort(self: bigint, value: bigint): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): bigint {
+export function getOnerror(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onerror;
 }
@@ -2186,7 +2186,7 @@ export function getOnerror(self: bigint): bigint {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: bigint): void {
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onerror = value;
 }
@@ -2194,7 +2194,7 @@ export function setOnerror(self: bigint, value: bigint): void {
 /**
  * `get-onload()` operation.
  */
-export function getOnload(self: bigint): bigint {
+export function getOnload(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onload;
 }
@@ -2202,7 +2202,7 @@ export function getOnload(self: bigint): bigint {
 /**
  * `set-onload()` operation.
  */
-export function setOnload(self: bigint, value: bigint): void {
+export function setOnload(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onload = value;
 }
@@ -2210,7 +2210,7 @@ export function setOnload(self: bigint, value: bigint): void {
 /**
  * `get-ontimeout()` operation.
  */
-export function getOntimeout(self: bigint): bigint {
+export function getOntimeout(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.ontimeout;
 }
@@ -2218,7 +2218,7 @@ export function getOntimeout(self: bigint): bigint {
 /**
  * `set-ontimeout()` operation.
  */
-export function setOntimeout(self: bigint, value: bigint): void {
+export function setOntimeout(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.ontimeout = value;
 }
@@ -2226,7 +2226,7 @@ export function setOntimeout(self: bigint, value: bigint): void {
 /**
  * `get-onloadend()` operation.
  */
-export function getOnloadend(self: bigint): bigint {
+export function getOnloadend(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequestEventTarget(self);
   return obj.onloadend;
 }
@@ -2234,7 +2234,7 @@ export function getOnloadend(self: bigint): bigint {
 /**
  * `set-onloadend()` operation.
  */
-export function setOnloadend(self: bigint, value: bigint): void {
+export function setOnloadend(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequestEventTarget(self);
   obj.onloadend = value;
 }
@@ -2262,7 +2262,7 @@ function getXmlHttpRequest(handle: bigint): XmlHttpRequest {
 /**
  * `get-onreadystatechange()` operation.
  */
-export function getOnreadystatechange(self: bigint): bigint {
+export function getOnreadystatechange(self: bigint): EventHandlerRecord {
   const obj = getXmlHttpRequest(self);
   return obj.onreadystatechange;
 }
@@ -2270,7 +2270,7 @@ export function getOnreadystatechange(self: bigint): bigint {
 /**
  * `set-onreadystatechange()` operation.
  */
-export function setOnreadystatechange(self: bigint, value: bigint): void {
+export function setOnreadystatechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getXmlHttpRequest(self);
   obj.onreadystatechange = value;
 }

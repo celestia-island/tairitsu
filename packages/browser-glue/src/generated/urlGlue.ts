@@ -32,14 +32,14 @@ function getUrl(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: bigint | undefined | undefined): bigint {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: boolean): boolean {
+export function canParse(url: string, base: string | undefined): boolean {
   return URL.canParse(url, base);
 }
 
@@ -78,7 +78,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `set-protocol()` operation.
  */
-export function setProtocol(self: bigint, value: string | undefined): void {
+export function setProtocol(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.protocol = value;
 }
@@ -86,7 +86,7 @@ export function setProtocol(self: bigint, value: string | undefined): void {
 /**
  * `get-username()` operation.
  */
-export function getUsername(self: bigint): number {
+export function getUsername(self: bigint): string {
   const obj = getUrl(self);
   return obj.username;
 }
@@ -110,7 +110,7 @@ export function getPassword(self: bigint): string {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: string): void {
+export function setPassword(self: bigint, value: bigint | undefined): void {
   const obj = getUrl(self);
   obj.password = value;
 }
@@ -206,7 +206,7 @@ export function getSearchParams(self: bigint): bigint {
 /**
  * `get-hash()` operation.
  */
-export function getHash(self: bigint): bigint {
+export function getHash(self: bigint): string {
   const obj = getUrl(self);
   return obj.hash;
 }
@@ -214,7 +214,7 @@ export function getHash(self: bigint): bigint {
 /**
  * `set-hash()` operation.
  */
-export function setHash(self: bigint, value: string): void {
+export function setHash(self: bigint, value: EventHandlerRecord): void {
   const obj = getUrl(self);
   obj.hash = value;
 }

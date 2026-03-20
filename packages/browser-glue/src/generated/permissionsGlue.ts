@@ -103,7 +103,7 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): bigint {
+export function getState(self: bigint): number {
   const obj = getPermissionStatus(self);
   return obj.state;
 }
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): number {
+export function getOnchange(self: bigint): EventHandlerRecord {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }

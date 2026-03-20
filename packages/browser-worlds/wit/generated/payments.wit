@@ -39,19 +39,19 @@ interface payment-request {
     get-shipping-type: func(self: payment-request-handle) -> option<u64>;
 
     /// `onshippingaddresschange` attribute — getter.
-    get-onshippingaddresschange: func(self: payment-request-handle) -> u64;
+    get-onshippingaddresschange: func(self: payment-request-handle) -> event-handler-record;
     /// `onshippingaddresschange` attribute — setter.
-    set-onshippingaddresschange: func(self: payment-request-handle, value: u64);
+    set-onshippingaddresschange: func(self: payment-request-handle, value: event-handler-record);
 
     /// `onshippingoptionchange` attribute — getter.
-    get-onshippingoptionchange: func(self: payment-request-handle) -> u64;
+    get-onshippingoptionchange: func(self: payment-request-handle) -> event-handler-record;
     /// `onshippingoptionchange` attribute — setter.
-    set-onshippingoptionchange: func(self: payment-request-handle, value: u64);
+    set-onshippingoptionchange: func(self: payment-request-handle, value: event-handler-record);
 
     /// `onpaymentmethodchange` attribute — getter.
-    get-onpaymentmethodchange: func(self: payment-request-handle) -> u64;
+    get-onpaymentmethodchange: func(self: payment-request-handle) -> event-handler-record;
     /// `onpaymentmethodchange` attribute — setter.
-    set-onpaymentmethodchange: func(self: payment-request-handle, value: u64);
+    set-onpaymentmethodchange: func(self: payment-request-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `PaymentResponse`
@@ -95,9 +95,9 @@ interface payment-response {
     retry: func(self: payment-response-handle, error-fields: option<u64>) -> u64;
 
     /// `onpayerdetailchange` attribute — getter.
-    get-onpayerdetailchange: func(self: payment-response-handle) -> u64;
+    get-onpayerdetailchange: func(self: payment-response-handle) -> event-handler-record;
     /// `onpayerdetailchange` attribute — setter.
-    set-onpayerdetailchange: func(self: payment-response-handle, value: u64);
+    set-onpayerdetailchange: func(self: payment-response-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `PaymentMethodChangeEvent`

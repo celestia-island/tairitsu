@@ -78,39 +78,39 @@ interface rtc-peer-connection {
     close: func(self: rtc-peer-connection-handle);
 
     /// `onnegotiationneeded` attribute — getter.
-    get-onnegotiationneeded: func(self: rtc-peer-connection-handle) -> u64;
+    get-onnegotiationneeded: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onnegotiationneeded` attribute — setter.
-    set-onnegotiationneeded: func(self: rtc-peer-connection-handle, value: u64);
+    set-onnegotiationneeded: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `onicecandidate` attribute — getter.
-    get-onicecandidate: func(self: rtc-peer-connection-handle) -> u64;
+    get-onicecandidate: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onicecandidate` attribute — setter.
-    set-onicecandidate: func(self: rtc-peer-connection-handle, value: u64);
+    set-onicecandidate: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `onicecandidateerror` attribute — getter.
-    get-onicecandidateerror: func(self: rtc-peer-connection-handle) -> u64;
+    get-onicecandidateerror: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onicecandidateerror` attribute — setter.
-    set-onicecandidateerror: func(self: rtc-peer-connection-handle, value: u64);
+    set-onicecandidateerror: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `onsignalingstatechange` attribute — getter.
-    get-onsignalingstatechange: func(self: rtc-peer-connection-handle) -> u64;
+    get-onsignalingstatechange: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onsignalingstatechange` attribute — setter.
-    set-onsignalingstatechange: func(self: rtc-peer-connection-handle, value: u64);
+    set-onsignalingstatechange: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `oniceconnectionstatechange` attribute — getter.
-    get-oniceconnectionstatechange: func(self: rtc-peer-connection-handle) -> u64;
+    get-oniceconnectionstatechange: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `oniceconnectionstatechange` attribute — setter.
-    set-oniceconnectionstatechange: func(self: rtc-peer-connection-handle, value: u64);
+    set-oniceconnectionstatechange: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `onicegatheringstatechange` attribute — getter.
-    get-onicegatheringstatechange: func(self: rtc-peer-connection-handle) -> u64;
+    get-onicegatheringstatechange: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onicegatheringstatechange` attribute — setter.
-    set-onicegatheringstatechange: func(self: rtc-peer-connection-handle, value: u64);
+    set-onicegatheringstatechange: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `onconnectionstatechange` attribute — getter.
-    get-onconnectionstatechange: func(self: rtc-peer-connection-handle) -> u64;
+    get-onconnectionstatechange: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `onconnectionstatechange` attribute — setter.
-    set-onconnectionstatechange: func(self: rtc-peer-connection-handle, value: u64);
+    set-onconnectionstatechange: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `generateCertificate()` operation.
     generate-certificate: func(keygen-algorithm: u64) -> u64;
@@ -134,9 +134,9 @@ interface rtc-peer-connection {
     add-transceiver: func(self: rtc-peer-connection-handle, track-or-kind: u64, init: option<u64>) -> u64;
 
     /// `ontrack` attribute — getter.
-    get-ontrack: func(self: rtc-peer-connection-handle) -> u64;
+    get-ontrack: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `ontrack` attribute — setter.
-    set-ontrack: func(self: rtc-peer-connection-handle, value: u64);
+    set-ontrack: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `sctp` attribute — getter.
     get-sctp: func(self: rtc-peer-connection-handle) -> option<u64>;
@@ -145,9 +145,9 @@ interface rtc-peer-connection {
     create-data-channel: func(self: rtc-peer-connection-handle, label: string, data-channel-dict: option<u64>) -> u64;
 
     /// `ondatachannel` attribute — getter.
-    get-ondatachannel: func(self: rtc-peer-connection-handle) -> u64;
+    get-ondatachannel: func(self: rtc-peer-connection-handle) -> event-handler-record;
     /// `ondatachannel` attribute — setter.
-    set-ondatachannel: func(self: rtc-peer-connection-handle, value: u64);
+    set-ondatachannel: func(self: rtc-peer-connection-handle, value: event-handler-record);
 
     /// `getStats()` operation.
     get-stats: func(self: rtc-peer-connection-handle, selector: option<u64>) -> u64;
@@ -391,14 +391,14 @@ interface rtc-dtls-transport {
     get-remote-certificates: func(self: rtc-dtls-transport-handle) -> list<list<u8>>;
 
     /// `onstatechange` attribute — getter.
-    get-onstatechange: func(self: rtc-dtls-transport-handle) -> u64;
+    get-onstatechange: func(self: rtc-dtls-transport-handle) -> event-handler-record;
     /// `onstatechange` attribute — setter.
-    set-onstatechange: func(self: rtc-dtls-transport-handle, value: u64);
+    set-onstatechange: func(self: rtc-dtls-transport-handle, value: event-handler-record);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: rtc-dtls-transport-handle) -> u64;
+    get-onerror: func(self: rtc-dtls-transport-handle) -> event-handler-record;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: rtc-dtls-transport-handle, value: u64);
+    set-onerror: func(self: rtc-dtls-transport-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `RTCIceTransport`
@@ -436,19 +436,19 @@ interface rtc-ice-transport {
     get-remote-parameters: func(self: rtc-ice-transport-handle) -> option<u64>;
 
     /// `onstatechange` attribute — getter.
-    get-onstatechange: func(self: rtc-ice-transport-handle) -> u64;
+    get-onstatechange: func(self: rtc-ice-transport-handle) -> event-handler-record;
     /// `onstatechange` attribute — setter.
-    set-onstatechange: func(self: rtc-ice-transport-handle, value: u64);
+    set-onstatechange: func(self: rtc-ice-transport-handle, value: event-handler-record);
 
     /// `ongatheringstatechange` attribute — getter.
-    get-ongatheringstatechange: func(self: rtc-ice-transport-handle) -> u64;
+    get-ongatheringstatechange: func(self: rtc-ice-transport-handle) -> event-handler-record;
     /// `ongatheringstatechange` attribute — setter.
-    set-ongatheringstatechange: func(self: rtc-ice-transport-handle, value: u64);
+    set-ongatheringstatechange: func(self: rtc-ice-transport-handle, value: event-handler-record);
 
     /// `onselectedcandidatepairchange` attribute — getter.
-    get-onselectedcandidatepairchange: func(self: rtc-ice-transport-handle) -> u64;
+    get-onselectedcandidatepairchange: func(self: rtc-ice-transport-handle) -> event-handler-record;
     /// `onselectedcandidatepairchange` attribute — setter.
-    set-onselectedcandidatepairchange: func(self: rtc-ice-transport-handle, value: u64);
+    set-onselectedcandidatepairchange: func(self: rtc-ice-transport-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `RTCIceCandidatePair`
@@ -504,9 +504,9 @@ interface rtc-sctp-transport {
     get-max-channels: func(self: rtc-sctp-transport-handle) -> option<u16>;
 
     /// `onstatechange` attribute — getter.
-    get-onstatechange: func(self: rtc-sctp-transport-handle) -> u64;
+    get-onstatechange: func(self: rtc-sctp-transport-handle) -> event-handler-record;
     /// `onstatechange` attribute — setter.
-    set-onstatechange: func(self: rtc-sctp-transport-handle, value: u64);
+    set-onstatechange: func(self: rtc-sctp-transport-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `RTCDataChannel`
@@ -549,37 +549,37 @@ interface rtc-data-channel {
     set-buffered-amount-low-threshold: func(self: rtc-data-channel-handle, value: u32);
 
     /// `onopen` attribute — getter.
-    get-onopen: func(self: rtc-data-channel-handle) -> u64;
+    get-onopen: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onopen` attribute — setter.
-    set-onopen: func(self: rtc-data-channel-handle, value: u64);
+    set-onopen: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `onbufferedamountlow` attribute — getter.
-    get-onbufferedamountlow: func(self: rtc-data-channel-handle) -> u64;
+    get-onbufferedamountlow: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onbufferedamountlow` attribute — setter.
-    set-onbufferedamountlow: func(self: rtc-data-channel-handle, value: u64);
+    set-onbufferedamountlow: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: rtc-data-channel-handle) -> u64;
+    get-onerror: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: rtc-data-channel-handle, value: u64);
+    set-onerror: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `onclosing` attribute — getter.
-    get-onclosing: func(self: rtc-data-channel-handle) -> u64;
+    get-onclosing: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onclosing` attribute — setter.
-    set-onclosing: func(self: rtc-data-channel-handle, value: u64);
+    set-onclosing: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: rtc-data-channel-handle) -> u64;
+    get-onclose: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: rtc-data-channel-handle, value: u64);
+    set-onclose: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `close()` operation.
     close: func(self: rtc-data-channel-handle);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: rtc-data-channel-handle) -> u64;
+    get-onmessage: func(self: rtc-data-channel-handle) -> event-handler-record;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: rtc-data-channel-handle, value: u64);
+    set-onmessage: func(self: rtc-data-channel-handle, value: event-handler-record);
 
     /// `binaryType` attribute — getter.
     get-binary-type: func(self: rtc-data-channel-handle) -> u64;
@@ -612,9 +612,9 @@ interface rtcdtmf-sender {
     insert-dtmf: func(self: rtcdtmf-sender-handle, tones: string, duration: option<u32>, inter-tone-gap: option<u32>);
 
     /// `ontonechange` attribute — getter.
-    get-ontonechange: func(self: rtcdtmf-sender-handle) -> u64;
+    get-ontonechange: func(self: rtcdtmf-sender-handle) -> event-handler-record;
     /// `ontonechange` attribute — setter.
-    set-ontonechange: func(self: rtcdtmf-sender-handle, value: u64);
+    set-ontonechange: func(self: rtcdtmf-sender-handle, value: event-handler-record);
 
     /// `canInsertDTMF` attribute — getter.
     get-can-insert-dtmf: func(self: rtcdtmf-sender-handle) -> bool;

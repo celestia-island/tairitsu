@@ -24,9 +24,9 @@ interface audio-decoder {
     get-decode-queue-size: func(self: audio-decoder-handle) -> u32;
 
     /// `ondequeue` attribute — getter.
-    get-ondequeue: func(self: audio-decoder-handle) -> u64;
+    get-ondequeue: func(self: audio-decoder-handle) -> event-handler-record;
     /// `ondequeue` attribute — setter.
-    set-ondequeue: func(self: audio-decoder-handle, value: u64);
+    set-ondequeue: func(self: audio-decoder-handle, value: event-handler-record);
 
     /// `configure()` operation.
     configure: func(self: audio-decoder-handle, config: u64);
@@ -61,9 +61,9 @@ interface video-decoder {
     get-decode-queue-size: func(self: video-decoder-handle) -> u32;
 
     /// `ondequeue` attribute — getter.
-    get-ondequeue: func(self: video-decoder-handle) -> u64;
+    get-ondequeue: func(self: video-decoder-handle) -> event-handler-record;
     /// `ondequeue` attribute — setter.
-    set-ondequeue: func(self: video-decoder-handle, value: u64);
+    set-ondequeue: func(self: video-decoder-handle, value: event-handler-record);
 
     /// `configure()` operation.
     configure: func(self: video-decoder-handle, config: u64);
@@ -98,9 +98,9 @@ interface audio-encoder {
     get-encode-queue-size: func(self: audio-encoder-handle) -> u32;
 
     /// `ondequeue` attribute — getter.
-    get-ondequeue: func(self: audio-encoder-handle) -> u64;
+    get-ondequeue: func(self: audio-encoder-handle) -> event-handler-record;
     /// `ondequeue` attribute — setter.
-    set-ondequeue: func(self: audio-encoder-handle, value: u64);
+    set-ondequeue: func(self: audio-encoder-handle, value: event-handler-record);
 
     /// `configure()` operation.
     configure: func(self: audio-encoder-handle, config: u64);
@@ -135,9 +135,9 @@ interface video-encoder {
     get-encode-queue-size: func(self: video-encoder-handle) -> u32;
 
     /// `ondequeue` attribute — getter.
-    get-ondequeue: func(self: video-encoder-handle) -> u64;
+    get-ondequeue: func(self: video-encoder-handle) -> event-handler-record;
     /// `ondequeue` attribute — setter.
-    set-ondequeue: func(self: video-encoder-handle, value: u64);
+    set-ondequeue: func(self: video-encoder-handle, value: event-handler-record);
 
     /// `configure()` operation.
     configure: func(self: video-encoder-handle, config: u64);

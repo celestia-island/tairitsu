@@ -475,7 +475,7 @@ export function throwIfAborted(self: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): bigint {
+export function getOnabort(self: bigint): EventHandlerRecord {
   const obj = getAbortSignal(self);
   return obj.onabort;
 }
@@ -483,7 +483,7 @@ export function getOnabort(self: bigint): bigint {
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: bigint): void {
+export function setOnabort(self: bigint, value: EventHandlerRecord): void {
   const obj = getAbortSignal(self);
   obj.onabort = value;
 }
@@ -1390,7 +1390,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `get-onslotchange()` operation.
  */
-export function getOnslotchange(self: bigint): bigint {
+export function getOnslotchange(self: bigint): EventHandlerRecord {
   const obj = getShadowRoot(self);
   return obj.onslotchange;
 }
@@ -1398,7 +1398,7 @@ export function getOnslotchange(self: bigint): bigint {
 /**
  * `set-onslotchange()` operation.
  */
-export function setOnslotchange(self: bigint, value: bigint): void {
+export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getShadowRoot(self);
   obj.onslotchange = value;
 }
@@ -1746,7 +1746,7 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
 /**
  * `get-target()` operation.
  */
-export function ProcessingInstructionGetTarget(self: bigint): bigint {
+export function ProcessingInstructionGetTarget(self: bigint): string {
   const obj = getProcessingInstruction(self);
   return obj.target;
 }
@@ -1998,7 +1998,7 @@ export function nextSibling(self: bigint): bigint | undefined {
 /**
  * `previous-node()` operation.
  */
-export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
+export function TreeWalkerPreviousNode(self: bigint): bigint {
   const obj = getTreeWalker(self);
   return obj.previousNode() ?? undefined;
 }
@@ -2034,7 +2034,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
 /**
  * `accept-node()` operation.
  */
-export function acceptNode(self: bigint, node: bigint): string {
+export function acceptNode(self: bigint, node: bigint): number {
   const obj = getNodeFilter(self);
   return obj.acceptNode(node);
 }
@@ -2070,7 +2070,7 @@ export function DomTokenListGetLength(self: bigint): number {
 /**
  * `item()` operation.
  */
-export function DomTokenListItem(self: bigint, index: number): string | undefined {
+export function DomTokenListItem(self: bigint, index: bigint): string | undefined {
   const obj = getDomTokenList(self);
   return obj.item(index) ?? undefined;
 }
@@ -2210,7 +2210,7 @@ export function getInvalidIteratorState(self: bigint): boolean {
 /**
  * `get-snapshot-length()` operation.
  */
-export function getSnapshotLength(self: bigint): string {
+export function getSnapshotLength(self: bigint): number {
   const obj = getXPathResult(self);
   return obj.snapshotLength;
 }
@@ -2333,7 +2333,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: string, resolver: bigint | undefined, type: bigint, result: bigint | undefined): bigint {
   const obj = getXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }
@@ -2369,7 +2369,7 @@ export function importStylesheet(self: bigint, style: bigint): void {
 /**
  * `transform-to-fragment()` operation.
  */
-export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
+export function transformToFragment(self: bigint, source: string, output: string): bigint {
   const obj = getXsltProcessor(self);
   return obj.transformToFragment(source, output);
 }
@@ -2393,7 +2393,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: bigint): string {
+export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
   const obj = getXsltProcessor(self);
   return obj.parameter;
 }

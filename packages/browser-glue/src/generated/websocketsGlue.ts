@@ -45,7 +45,7 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): bigint {
+export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
   return WebSocket.connect(url, protocols);
 }
 
@@ -59,7 +59,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint | undefined {
+export function readyState(handle: bigint): string {
   return WebSocket.readyState(handle);
 }
 
@@ -73,14 +73,14 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): bigint {
+export function extensions(handle: bigint): string {
   return WebSocket.extensions(handle);
 }
 
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): string {
+export function protocol(handle: bigint): bigint {
   return WebSocket.protocol(handle);
 }
 

@@ -48,7 +48,7 @@ export function ServiceWorkerGetState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
+export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: number): void {
   const obj = getServiceWorker(self);
   obj.postMessage(message, transfer);
 }
@@ -56,7 +56,7 @@ export function ServiceWorkerPostMessage(self: bigint, message: string, transfer
 /**
  * `get-onstatechange()` operation.
  */
-export function getOnstatechange(self: bigint): bigint {
+export function getOnstatechange(self: bigint): EventHandlerRecord {
   const obj = getServiceWorker(self);
   return obj.onstatechange;
 }
@@ -64,7 +64,7 @@ export function getOnstatechange(self: bigint): bigint {
 /**
  * `set-onstatechange()` operation.
  */
-export function setOnstatechange(self: bigint, value: bigint): void {
+export function setOnstatechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorker(self);
   obj.onstatechange = value;
 }
@@ -108,7 +108,7 @@ export function getReady(self: bigint): bigint {
 /**
  * `register()` operation.
  */
-export function register(self: bigint, scriptUrl: bigint, options: bigint | undefined): bigint {
+export function register(self: bigint, scriptUrl: bigint, options: boolean | undefined): bigint {
   const obj = getServiceWorkerContainer(self);
   return obj.register(scriptUrl, options);
 }
@@ -132,7 +132,7 @@ export function startMessages(self: bigint): void {
 /**
  * `get-oncontrollerchange()` operation.
  */
-export function getOncontrollerchange(self: bigint): bigint {
+export function getOncontrollerchange(self: bigint): EventHandlerRecord {
   const obj = getServiceWorkerContainer(self);
   return obj.oncontrollerchange;
 }
@@ -140,7 +140,7 @@ export function getOncontrollerchange(self: bigint): bigint {
 /**
  * `set-oncontrollerchange()` operation.
  */
-export function setOncontrollerchange(self: bigint, value: bigint): void {
+export function setOncontrollerchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorkerContainer(self);
   obj.oncontrollerchange = value;
 }
@@ -148,7 +148,7 @@ export function setOncontrollerchange(self: bigint, value: bigint): void {
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): bigint {
+export function getOnmessage(self: bigint): EventHandlerRecord {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessage;
 }
@@ -156,7 +156,7 @@ export function getOnmessage(self: bigint): bigint {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: bigint): void {
+export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorkerContainer(self);
   obj.onmessage = value;
 }
@@ -164,7 +164,7 @@ export function setOnmessage(self: bigint, value: bigint): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): bigint {
+export function getOnmessageerror(self: bigint): EventHandlerRecord {
   const obj = getServiceWorkerContainer(self);
   return obj.onmessageerror;
 }
@@ -172,7 +172,7 @@ export function getOnmessageerror(self: bigint): bigint {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: bigint): void {
+export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
   const obj = getServiceWorkerContainer(self);
   obj.onmessageerror = value;
 }
@@ -208,7 +208,7 @@ export function enable(self: bigint): bigint {
 /**
  * `disable()` operation.
  */
-export function disable(self: bigint): bigint {
+export function disable(self: bigint): number {
   const obj = getNavigationPreloadManager(self);
   return obj.disable();
 }
@@ -328,7 +328,7 @@ export function getFocused(self: bigint): boolean {
 /**
  * `get-ancestor-origins()` operation.
  */
-export function getAncestorOrigins(self: bigint): (string)[] {
+export function getAncestorOrigins(self: bigint): (number)[] {
   const obj = getWindowClient(self);
   return obj.ancestorOrigins;
 }
@@ -344,7 +344,7 @@ export function focus(self: bigint): bigint {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: string): string {
+export function navigate(self: bigint, url: string): bigint {
   const obj = getWindowClient(self);
   return obj.navigate(url);
 }
@@ -372,7 +372,7 @@ function getClients(handle: bigint): Clients {
 /**
  * `match-all()` operation.
  */
-export function ClientsMatchAll(self: bigint, options: bigint | undefined): bigint {
+export function ClientsMatchAll(self: bigint, options: bigint | undefined): string {
   const obj = getClients(self);
   return obj.matchAll(options);
 }
@@ -488,7 +488,7 @@ export function getPreloadResponse(self: bigint): bigint {
 /**
  * `get-client-id()` operation.
  */
-export function getClientId(self: bigint): string {
+export function getClientId(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.clientId;
 }
@@ -504,7 +504,7 @@ export function getResultingClientId(self: bigint): string {
 /**
  * `get-replaces-client-id()` operation.
  */
-export function getReplacesClientId(self: bigint): string {
+export function getReplacesClientId(self: bigint): number {
   const obj = getFetchEvent(self);
   return obj.replacesClientId;
 }
@@ -564,7 +564,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-last-event-id()` operation.
  */
-export function getLastEventId(self: bigint): string {
+export function getLastEventId(self: bigint): number {
   const obj = getExtendableMessageEvent(self);
   return obj.lastEventId;
 }
@@ -572,7 +572,7 @@ export function getLastEventId(self: bigint): string {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: bigint): bigint | undefined {
+export function getSource(self: bigint): number {
   const obj = getExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -580,7 +580,7 @@ export function getSource(self: bigint): bigint | undefined {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): bigint {
+export function getPorts(self: bigint): (bigint)[] {
   const obj = getExtendableMessageEvent(self);
   return obj.ports;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): Cache {
 /**
  * `match-all()` operation.
  */
-export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: number | undefined): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -616,7 +616,7 @@ export function CacheMatchAll(self: bigint, request: bigint | undefined, options
 /**
  * `add()` operation.
  */
-export function add(self: bigint, request: bigint): bigint {
+export function add(self: bigint, request: bigint): number {
   const obj = getCache(self);
   return obj.add(request);
 }
@@ -640,7 +640,7 @@ export function put(self: bigint, request: bigint, response: bigint): bigint {
 /**
  * `delete()` operation.
  */
-export function CacheDelete(self: bigint, request: bigint, options: bigint | undefined): bigint {
+export function CacheDelete(self: bigint, request: number, options: number): number {
   const obj = getCache(self);
   return obj._delete(request, options);
 }
@@ -648,7 +648,7 @@ export function CacheDelete(self: bigint, request: bigint, options: bigint | und
 /**
  * `keys()` operation.
  */
-export function CacheKeys(self: bigint, request: bigint, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: bigint | undefined, options: number): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
@@ -684,7 +684,7 @@ export function has(self: bigint, cacheName: string): bigint {
 /**
  * `open()` operation.
  */
-export function open(self: bigint, cacheName: string): bigint {
+export function open(self: bigint, cacheName: boolean): bigint {
   const obj = getCacheStorage(self);
   return obj.open(cacheName);
 }

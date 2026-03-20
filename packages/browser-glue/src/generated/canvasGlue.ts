@@ -61,7 +61,7 @@ export function AudioDecoderGetDecodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function AudioDecoderGetOndequeue(self: bigint): bigint {
+export function AudioDecoderGetOndequeue(self: bigint): EventHandlerRecord {
   const obj = getAudioDecoder(self);
   return obj.ondequeue;
 }
@@ -69,7 +69,7 @@ export function AudioDecoderGetOndequeue(self: bigint): bigint {
 /**
  * `set-ondequeue()` operation.
  */
-export function AudioDecoderSetOndequeue(self: bigint, value: bigint): void {
+export function AudioDecoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
   const obj = getAudioDecoder(self);
   obj.ondequeue = value;
 }
@@ -220,7 +220,7 @@ export function VideoDecoderGetDecodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function VideoDecoderGetOndequeue(self: bigint): bigint {
+export function VideoDecoderGetOndequeue(self: bigint): EventHandlerRecord {
   const obj = getVideoDecoder(self);
   return obj.ondequeue;
 }
@@ -228,7 +228,7 @@ export function VideoDecoderGetOndequeue(self: bigint): bigint {
 /**
  * `set-ondequeue()` operation.
  */
-export function VideoDecoderSetOndequeue(self: bigint, value: bigint): void {
+export function VideoDecoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
   const obj = getVideoDecoder(self);
   obj.ondequeue = value;
 }
@@ -379,7 +379,7 @@ export function AudioEncoderGetEncodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function AudioEncoderGetOndequeue(self: bigint): bigint {
+export function AudioEncoderGetOndequeue(self: bigint): EventHandlerRecord {
   const obj = getAudioEncoder(self);
   return obj.ondequeue;
 }
@@ -387,7 +387,7 @@ export function AudioEncoderGetOndequeue(self: bigint): bigint {
 /**
  * `set-ondequeue()` operation.
  */
-export function AudioEncoderSetOndequeue(self: bigint, value: bigint): void {
+export function AudioEncoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
   const obj = getAudioEncoder(self);
   obj.ondequeue = value;
 }
@@ -538,7 +538,7 @@ export function VideoEncoderGetEncodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function VideoEncoderGetOndequeue(self: bigint): bigint {
+export function VideoEncoderGetOndequeue(self: bigint): EventHandlerRecord {
   const obj = getVideoEncoder(self);
   return obj.ondequeue;
 }
@@ -546,7 +546,7 @@ export function VideoEncoderGetOndequeue(self: bigint): bigint {
 /**
  * `set-ondequeue()` operation.
  */
-export function VideoEncoderSetOndequeue(self: bigint, value: bigint): void {
+export function VideoEncoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
   const obj = getVideoEncoder(self);
   obj.ondequeue = value;
 }

@@ -39,14 +39,14 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): bigint {
+export function imports(moduleObject: bigint): (bigint)[] {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: number): (Uint8Array)[] {
+export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -73,7 +73,7 @@ function getInstance(handle: bigint): Instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): bigint {
+export function getExports(self: bigint): string {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -101,7 +101,7 @@ function getMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): boolean {
+export function MemoryGrow(self: bigint, delta: bigint): bigint {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -117,7 +117,7 @@ export function toFixedLengthBuffer(self: bigint): (string)[] {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): Uint8Array {
+export function toResizableBuffer(self: bigint): bigint {
   const obj = getMemory(self);
   return obj.toResizableBuffer();
 }
@@ -125,7 +125,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): Uint8Array {
+export function getBuffer(self: bigint): number {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -169,7 +169,7 @@ export function _get(self: bigint, index: bigint): string {
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: number | undefined): void {
   const obj = getTable(self);
   obj._set(index, value);
 }
@@ -205,7 +205,7 @@ function getGlobal(handle: bigint): Global {
 /**
  * `value-of()` operation.
  */
-export function valueOf(self: bigint): string {
+export function valueOf(self: bigint): bigint {
   const obj = getGlobal(self);
   return obj.valueOf();
 }
@@ -213,7 +213,7 @@ export function valueOf(self: bigint): string {
 /**
  * `get-value()` operation.
  */
-export function getValue(self: bigint): string {
+export function getValue(self: bigint): bigint | undefined {
   const obj = getGlobal(self);
   return obj.value;
 }
@@ -221,7 +221,7 @@ export function getValue(self: bigint): string {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: string): void {
+export function setValue(self: bigint, value: bigint): void {
   const obj = getGlobal(self);
   obj.value = value;
 }
