@@ -58,82 +58,62 @@ browser-glue/
 
 ## 执行步骤
 
-### Phase 1: 文件重命名
+### Phase 1: 文件重命名 ✅ 已完成
 
-#### 1.1 重命名手写文件
-```bash
-# src/
-mv src/dom-glue.ts src/dom.ts
-mv src/events-glue.ts src/events.ts
-mv src/fetch-glue.ts src/http.ts
-mv src/canvas-glue.ts src/canvas.ts
-mv src/handle-table.ts src/handles.ts
-mv src/generated-index.ts src/generated/index.ts
-```
+#### 1.1 重命名手写文件 ✅
+- 已完成：`src/dom.ts`, `src/events.ts`, `src/http.ts`, `src/canvas.ts`, `src/handles.ts`
 
-#### 1.2 重命名生成文件 (kebab → camelCase)
-```
-generated/auth-glue.ts → generated/authGlue.ts
-generated/crypto-glue.ts → generated/cryptoGlue.ts
-generated/css-glue.ts → generated/cssGlue.ts
-... (全部 26 个文件)
-```
+#### 1.2 重命名生成文件 (kebab → camelCase) ✅
+- 已完成：所有 28 个文件使用正确的 camelCase 命名
 
-#### 1.3 更新生成器脚本
-- `scripts/generate_browser_glue.py`: 输出文件名改为驼峰式
+#### 1.3 更新生成器脚本 ✅
+- 已完成：使用 `kebab_to_camel()` 替代 `replace("-", "")`
 
-### Phase 2: 修复 import 语句
+### Phase 2: 修复 import 语句 ✅ 已完成
 
-#### 2.1 移除 `.js` 扩展名
-```typescript
-// Before
-import { getElement } from "./handle-table.js";
+#### 2.1 移除 `.js` 扩展名 ✅
+- 已完成：所有 import 语句移除 `.js` 扩展名
 
-// After
-import { getElement } from "./handles";
-```
+#### 2.2 更新所有引用 ✅
+- 已完成：所有手写文件和生成文件的 import 路径已更新
+- 已完成：`generated/index.ts` 移动到 `src/generated/index.ts` 并更新引用路径
 
-#### 2.2 更新所有引用
-- `src/index.ts`
-- `src/dom.ts`
-- `src/events.ts`
-- `src/http.ts`
-- `src/canvas.ts`
-- `src/handles.ts`
-- `src/generated/index.ts`
+### Phase 3: 架构增强 ⏳ 待定
 
-### Phase 3: 架构增强
+> 注意：此阶段需要进一步的设计文档来指导实现细节
+> 当前架构已通过编译和测试验证，增强功能可根据实际需求逐步添加
 
-#### 3.1 增强 handles.ts
+#### 3.1 增强 handles.ts (待设计文档)
 - 添加类型安全的句柄注册
 - 添加批量操作支持
 - 添加垃圾回收钩子
 
-#### 3.2 增强 dom.ts
+#### 3.2 增强 dom.ts (待设计文档)
 - 添加批量 DOM 操作
 - 添加模板字符串支持
 - 添加选择器缓存
 
-#### 3.3 增强 events.ts
+#### 3.3 增强 events.ts (待设计文档)
 - 添加事件委托
 - 添加防抖/节流
 - 添加一次性事件
 
-#### 3.4 增强 http.ts
+#### 3.4 增强 http.ts (待设计文档)
 - 添加请求拦截器
 - 添加响应缓存
 - 添加重试逻辑
 
-#### 3.5 新增 async.ts
+#### 3.5 新增 async.ts (待设计文档)
 - Promise 桥接到 WIT
 - setTimeout/setInterval 封装
 - async/iterator 支持
 
-### Phase 4: 构建验证
+### Phase 4: 构建验证 ✅ 已完成
 
-1. 运行 `npm run build` 验证编译
-2. 运行 `cargo test -p tairitsu-browser-worlds` 验证 WIT
-3. 运行 `cargo build --all` 验证整体构建
+1. ✅ 运行 `npm run build` 验证编译 - 成功
+2. ✅ 运行 `cargo test -p tairitsu-browser-worlds` 验证 WIT - 通过（5 tests）
+3. ✅ 运行 `cargo build --all` 验证整体构建 - 成功
+4. ✅ 运行 E2E 测试 - 通过（7 tests）
 
 ---
 
