@@ -67,7 +67,7 @@ function getSw(handle: bigint): ServiceWorker {
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): string {
+export function scriptUrl(handle: bigint): bigint {
   return ServiceWorker.scriptUrl(handle);
 }
 

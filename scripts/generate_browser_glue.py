@@ -200,6 +200,11 @@ BROWSER_API_NAME_MAPPINGS = {
     "is-conditional-mediation-available": "isConditionalMediationAvailable",
 }
 
+# Static method return type overrides (method name -> actual return type)
+STATIC_METHOD_RETURN_OVERRIDES = {
+    ("credential", "isConditionalMediationAvailable"): "Promise<boolean>",
+}
+
 # Functions that return browser objects (need to wrap in handle)
 HANDLE_RETURNING_FUNCTIONS = {
     ("crypto", "getSubtle"): "subtle-crypto",
@@ -411,6 +416,17 @@ class BrowserGlueGenerator:
         # For global singletons, browser class access is different
         if is_global_singleton:
             browser_class = GLOBAL_SINGLETONS[interface.name]  # e.g., "navigator"
+        
+        # Apply static method return type overrides
+        key = (interface.name, ts_name)
+        if key in STATIC_METHOD_RETURN_OVERRIDES:
+            ts_return = STATIC_METHOD_RETURN_OVERRIDES[key]
+            # For Promise return types, mark as async
+            if ts_return.startswith("Promise<"):
+                is_async = True
+                ts_return_inner_original = ts_return
+                ts_return = "bigint"
+                return_is_void = False
 
         if is_getter:
             # get-foo → obj.foo
@@ -774,6 +790,11 @@ class BrowserGlueGenerator:
         # For global singletons, use the global reference directly
         if func.is_global_singleton:
             obj_ref = func.browser_class  # e.g., "navigator"
+            args = func.browser_args if func.browser_args else ""
+            lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
+        elif func.is_static:
+            # Static methods use the browser class directly
+            obj_ref = func.browser_class  # e.g., "Credential"
             args = func.browser_args if func.browser_args else ""
             lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         elif iface.handle_type and func.params:

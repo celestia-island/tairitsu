@@ -411,8 +411,7 @@ function getAbortSignal(handle: bigint): AbortSignal {
  */
 export function AbortSignalAbort(reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getAbortSignal(self);
-  const promise = obj.abort(reason)
+  const promise = AbortSignal.abort(reason)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1926,7 +1925,7 @@ function getTreeWalker(handle: bigint): TreeWalker {
 /**
  * `get-root()` operation.
  */
-export function TreeWalkerGetRoot(self: bigint): bigint {
+export function TreeWalkerGetRoot(self: bigint): EventHandlerRecord {
   const obj = getTreeWalker(self);
   return obj.root;
 }
