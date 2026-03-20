@@ -77,7 +77,12 @@ class WitParser:
             needs_lookup = False
             target_pascal = ""
             
-            if isinstance(p.type_, WitHandle):
+            if key in PARAMETER_HANDLE_MAPPING:
+                target_iface, _ = PARAMETER_HANDLE_MAPPING[key]
+                target_pascal = correct_type_casing(kebab_to_pascal(target_iface))
+                needs_lookup = True
+                ts_type = "bigint"
+            elif isinstance(p.type_, WitHandle):
                 ts_type = "bigint"
             elif key in DICTIONARY_PARAMETER_TYPES:
                 ts_type = DICTIONARY_PARAMETER_TYPES[key]
@@ -97,9 +102,10 @@ class WitParser:
             
             params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal))
 
-            if i == 0 and p.name == "self":
+            if i == 0:
                 self_param = param_name
-            elif not (i == 0 and is_global_singleton):
+            
+            if i > 0:
                 browser_args_list.append(param_name)
 
         ts_return = "void"

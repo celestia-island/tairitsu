@@ -52,7 +52,7 @@ function getEvent(handle: bigint): Event {
 /**
  * `get-type()` operation.
  */
-export function EventGetType(self: bigint): bigint | undefined {
+export function EventGetType(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.type;
 }
@@ -60,7 +60,7 @@ export function EventGetType(self: bigint): bigint | undefined {
 /**
  * `get-target()` operation.
  */
-export function EventGetTarget(self: bigint): Uint8Array {
+export function EventGetTarget(self: bigint): bigint | undefined {
   const obj = getEvent(self);
   return obj.target ?? undefined;
 }
@@ -76,7 +76,7 @@ export function getSrcElement(self: bigint): bigint | undefined {
 /**
  * `get-current-target()` operation.
  */
-export function getCurrentTarget(self: bigint): bigint | undefined {
+export function getCurrentTarget(self: bigint): bigint | undefined | undefined {
   const obj = getEvent(self);
   return obj.currentTarget ?? undefined;
 }
@@ -84,7 +84,7 @@ export function getCurrentTarget(self: bigint): bigint | undefined {
 /**
  * `composed-path()` operation.
  */
-export function composedPath(self: bigint): bigint {
+export function composedPath(self: bigint): (bigint)[] {
   const obj = getEvent(self);
   return obj.composedPath();
 }
@@ -92,7 +92,7 @@ export function composedPath(self: bigint): bigint {
 /**
  * `get-event-phase()` operation.
  */
-export function getEventPhase(self: bigint): number {
+export function getEventPhase(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.eventPhase;
 }
@@ -108,7 +108,7 @@ export function stopPropagation(self: bigint): void {
 /**
  * `get-cancel-bubble()` operation.
  */
-export function getCancelBubble(self: bigint): boolean {
+export function getCancelBubble(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.cancelBubble;
 }
@@ -140,7 +140,7 @@ export function getBubbles(self: bigint): bigint {
 /**
  * `get-cancelable()` operation.
  */
-export function getCancelable(self: bigint): bigint {
+export function getCancelable(self: bigint): boolean {
   const obj = getEvent(self);
   return obj.cancelable;
 }
@@ -148,7 +148,7 @@ export function getCancelable(self: bigint): bigint {
 /**
  * `get-return-value()` operation.
  */
-export function getReturnValue(self: bigint): boolean {
+export function getReturnValue(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.returnValue;
 }
@@ -180,7 +180,7 @@ export function getDefaultPrevented(self: bigint): boolean {
 /**
  * `get-composed()` operation.
  */
-export function getComposed(self: bigint): boolean {
+export function getComposed(self: bigint): bigint {
   const obj = getEvent(self);
   return obj.composed;
 }
@@ -204,7 +204,7 @@ export function getTimeStamp(self: bigint): number {
 /**
  * `init-event()` operation.
  */
-export function initEvent(self: bigint, type: string, bubbles: bigint | undefined | undefined, cancelable: bigint | undefined): void {
+export function initEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: bigint | undefined | undefined): void {
   const obj = getEvent(self);
   obj.initEvent(type, bubbles, cancelable);
 }
@@ -239,7 +239,7 @@ export function getDetail(self: bigint): string {
 /**
  * `init-custom-event()` operation.
  */
-export function initCustomEvent(self: bigint, type: string, bubbles: bigint, cancelable: Uint8Array | undefined, detail: number | undefined): void {
+export function initCustomEvent(self: bigint, type: Uint8Array, bubbles: boolean | undefined, cancelable: boolean | undefined, detail: string | undefined): void {
   const obj = getCustomEvent(self);
   obj.initCustomEvent(type, bubbles, cancelable, detail);
 }
@@ -351,7 +351,6 @@ export function AbortControllerAbort(self: bigint, reason: string | undefined): 
   const obj = getAbortController(self);
   const promise = obj.abort(reason)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -407,7 +406,6 @@ export function AbortSignalAbort(reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = AbortSignal.abort(reason)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1010,7 +1008,7 @@ export function getRootNode(self: bigint, options: bigint | undefined): bigint {
 /**
  * `get-parent-node()` operation.
  */
-export function getParentNode(self: bigint): bigint | undefined {
+export function NodeGetParentNode(self: bigint): bigint | undefined {
   const obj = getNode(self);
   return obj.parentNode ?? undefined;
 }
@@ -2477,7 +2475,7 @@ export default {
   getIsConnected,
   getOwnerDocument,
   getRootNode,
-  getParentNode,
+  NodeGetParentNode,
   getParentElement,
   hasChildNodes,
   getChildNodes,

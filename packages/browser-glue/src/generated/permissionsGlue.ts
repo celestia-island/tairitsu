@@ -59,7 +59,6 @@ export function query(self: bigint, permissionDesc: bigint): bigint {
   const obj = getPermissions(self);
   const promise = obj.query(permissionDesc)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -125,7 +124,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): string {
+export function getOnchange(self: bigint): number {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
@@ -133,7 +132,7 @@ export function getOnchange(self: bigint): string {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: string): void {
+export function setOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

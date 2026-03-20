@@ -40,7 +40,7 @@ function getGeo(handle: bigint): Geolocation {
  * `get-current-position()` operation.
  */
 export function getCurrentPosition(handle: bigint): void {
-  const obj = getGeo(self);
+  const obj = getGeo(handle);
   return obj.currentPosition;
 }
 

@@ -52,7 +52,7 @@ function getIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): boolean {
+export function cmp(handle: bigint, first: string, second: string): number {
   return IDBFactory.cmp(handle, first, second);
 }
 
@@ -78,7 +78,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
 /**
  * `name()` operation.
  */
-export function name(handle: bigint): string {
+export function name(handle: bigint): boolean {
   return IDBDatabase.name(handle);
 }
 
@@ -124,7 +124,6 @@ export function abort(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = IDBTransaction.abort(handle)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -175,7 +174,7 @@ function getIdbStore(handle: bigint): IDBObjectStore {
  * `get-name()` operation.
  */
 export function IdbObjectStoreGetName(handle: bigint): string {
-  const obj = getIdbStore(self);
+  const obj = getIdbStore(handle);
   return obj.name;
 }
 
@@ -183,7 +182,7 @@ export function IdbObjectStoreGetName(handle: bigint): string {
  * `set-name()` operation.
  */
 export function IdbObjectStoreSetName(handle: bigint, value: string): void {
-  const obj = getIdbStore(self);
+  const obj = getIdbStore(handle);
   obj.name = value;
 }
 
@@ -224,7 +223,7 @@ function getIDBIndex(handle: bigint): IDBIndex {
  * `get-name()` operation.
  */
 export function IdbIndexGetName(handle: bigint): string {
-  const obj = getIDBIndex(self);
+  const obj = getIDBIndex(handle);
   return obj.name;
 }
 
@@ -232,7 +231,7 @@ export function IdbIndexGetName(handle: bigint): string {
  * `set-name()` operation.
  */
 export function IdbIndexSetName(handle: bigint, value: string): void {
-  const obj = getIDBIndex(self);
+  const obj = getIDBIndex(handle);
   obj.name = value;
 }
 

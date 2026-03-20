@@ -53,7 +53,11 @@ class CodeGenerator:
             lines.append("")
         
         all_function_names = []
+        helper_function_names = set()
         for iface in domain.interfaces:
+            if iface.handle_type and iface.wit_name not in GLOBAL_SINGLETONS:
+                helper_name = f"get{iface.handle_pascal}"
+                helper_function_names.add(helper_name)
             for func in iface.functions:
                 all_function_names.append(func.ts_name)
                 if func.is_async and not func.has_explicit_poll:
@@ -61,6 +65,7 @@ class CodeGenerator:
         
         name_counts = Counter(all_function_names)
         duplicate_names = {name for name, count in name_counts.items() if count > 1}
+        duplicate_names.update(helper_function_names)
         
         function_namespace = {}
         for iface in domain.interfaces:
@@ -220,11 +225,11 @@ class CodeGenerator:
         
         if func.is_global_singleton:
             obj_ref = func.browser_class
-            args = func.browser_args if func.browser_args else ""
+            args = self._get_converted_browser_args(func, iface, skip_self=True)
             lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         elif func.is_static:
             obj_ref = func.browser_class
-            args = func.browser_args if func.browser_args else ""
+            args = self._get_converted_browser_args(func, iface, skip_self=False)
             key = (iface.name, func.ts_name)
             if key in STATIC_METHOD_NEEDS_TYPE_ASSERTION:
                 lines.append(f"  const promise = ({obj_ref} as any).{func.browser_method}({args})")
@@ -233,7 +238,7 @@ class CodeGenerator:
         elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
             obj_ref = "obj"
-            args = func.browser_args if func.browser_args else ""
+            args = self._get_converted_browser_args(func, iface, skip_self=True)
             lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         else:
             lines.append("  // No handle lookup needed")
@@ -247,7 +252,6 @@ class CodeGenerator:
                             f"  // TODO: Implement async operation {func.wit_name}")
 
         lines.append("    .then((result) => {")
-        lines.append("      const entry = _asyncHandles.get(requestId);")
         lines.append("      if (entry) {")
         if func.return_is_void:
             lines.append("        entry.result = { ok: true };")

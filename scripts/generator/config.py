@@ -220,6 +220,7 @@ PARAMETER_HANDLE_MAPPING = {
     ("audio-encoder", "encode", "options"): ("canvas", "AudioEncoderEncodeOptions"),
     ("video-encoder", "encode", "frame"): ("canvas", "VideoFrame"),
     ("video-encoder", "encode", "options"): ("canvas", "VideoEncoderEncodeOptions"),
+    ("credentials-container", "store", "credential"): ("credential", "Credential"),
 }
 
 # Parameters that are dictionary types (not handles) - should be passed directly as objects
@@ -235,6 +236,8 @@ DICTIONARY_PARAMETER_TYPES = {
     ("video-encoder", "configure", "config"): "VideoEncoderConfig",
     ("video-encoder", "is-config-supported", "config"): "VideoEncoderConfig",
     ("video-encoder", "encode", "options"): "VideoEncoderEncodeOptions",
+    ("credentials-container", "get", "options"): "CredentialRequestOptions | undefined",
+    ("credentials-container", "create", "options"): "CredentialCreationOptions | undefined",
 }
 
 # Parameters that need bigint to number conversion

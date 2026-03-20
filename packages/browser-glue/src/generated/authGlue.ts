@@ -74,7 +74,6 @@ export function isConditionalMediationAvailable(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = (Credential as any).isConditionalMediationAvailable()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -167,12 +166,11 @@ function getCredentialsContainer(handle: bigint): CredentialsContainer {
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, options: bigint | undefined): bigint {
+export function _get(self: bigint, options: CredentialRequestOptions | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
   const promise = obj.get(options)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -208,9 +206,8 @@ export function pollGet(requestId: bigint): { ok: true; value: bigint } | { ok: 
 export function store(self: bigint, credential: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
-  const promise = obj.store(credential)
+  const promise = obj.store(getCredential(credential))
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -243,12 +240,11 @@ export function pollStore(requestId: bigint): { ok: true; value: bigint } | { ok
  *
  * Async operation: returns request ID, poll with `pollCreate()`
  */
-export function create(self: bigint, options: bigint | undefined): bigint {
+export function create(self: bigint, options: CredentialCreationOptions | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
   const promise = obj.create(options)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -286,7 +282,6 @@ export function preventSilentAccess(self: bigint): bigint {
   const obj = getCredentialsContainer(self);
   const promise = obj.preventSilentAccess()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }

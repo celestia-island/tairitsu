@@ -72,7 +72,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
+export function postMessage(handle: bigint, message: bigint | undefined, transfer: (Uint8Array)[]): void {
   return ServiceWorker.postMessage(handle, message, transfer);
 }
 

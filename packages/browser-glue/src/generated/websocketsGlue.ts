@@ -52,28 +52,28 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint | undefined, protocols: number): number {
+export function connect(url: string, protocols: number): number {
   return WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): bigint | undefined {
+export function url(handle: bigint): string {
   return WebSocket.url(handle);
 }
 
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): string {
   return WebSocket.readyState(handle);
 }
 
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint {
+export function bufferedAmount(handle: bigint): string {
   return WebSocket.bufferedAmount(handle);
 }
 
@@ -96,11 +96,10 @@ export function protocol(handle: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: number, reason: string): bigint {
+export function close(handle: bigint, code: number, reason: number): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = WebSocket.close(handle, code, reason)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -131,7 +130,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: (string)[]): void {
+export function send(handle: bigint, data: string): void {
   return WebSocket.send(handle, data);
 }
 

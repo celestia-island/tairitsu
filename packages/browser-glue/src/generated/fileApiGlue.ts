@@ -52,7 +52,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): bigint {
   return FileReader.newFileReader();
 }
 
@@ -65,7 +65,6 @@ export function abort(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = FileReader.abort(handle)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -129,7 +128,7 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): bigint {
   return FileList.length(handle);
 }
 

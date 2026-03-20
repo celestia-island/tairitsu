@@ -52,21 +52,21 @@ function getModule(handle: bigint): Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (string)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
+export function imports(moduleObject: string): (bigint)[] {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (string)[] {
+export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -119,7 +119,7 @@ function getMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): string {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -170,7 +170,7 @@ function getTable(handle: bigint): Table {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: number): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
@@ -185,7 +185,6 @@ export function _get(self: bigint, index: bigint): bigint {
   const obj = getTable(self);
   const promise = obj.get(index)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -302,7 +301,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): number | undefined {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }

@@ -2473,14 +2473,14 @@ export function matchMedia(query: string): bigint {
 /**
  * `get-screen()` operation.
  */
-export function getScreen(): bigint {
+export function WindowGetScreen(): bigint {
   return window.screen;
 }
 
 /**
  * `get-visual-viewport()` operation.
  */
-export function getVisualViewport(): bigint | undefined {
+export function WindowGetVisualViewport(): bigint | undefined {
   return window.visualViewport ?? undefined;
 }
 
@@ -2773,7 +2773,6 @@ export function WindowClose(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = window.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -2817,7 +2816,6 @@ export function stop(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = window.stop()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -3475,7 +3473,7 @@ export function DocumentSetOnfullscreenerror(value: EventHandlerRecord): void {
  * `parse-html-unsafe()` operation.
  */
 export function parseHtmlUnsafe(html: bigint): bigint {
-  return document.parseHtmlUnsafe(html);
+  return document.parseHtmlUnsafe();
 }
 
 /**
@@ -3662,7 +3660,6 @@ export function DocumentClose(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = document.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -6412,7 +6409,7 @@ export function CssImportRuleGetMedia(self: bigint): bigint {
 /**
  * `get-style-sheet()` operation.
  */
-export function getStyleSheet(self: bigint): bigint | undefined {
+export function CssImportRuleGetStyleSheet(self: bigint): bigint | undefined {
   const obj = getCSSImportRule(self);
   return obj.styleSheet ?? undefined;
 }
@@ -7180,8 +7177,8 @@ export default {
   TransitionEventGetElapsedTime,
   TransitionEventGetPseudoElement,
   matchMedia,
-  getScreen,
-  getVisualViewport,
+  WindowGetScreen,
+  WindowGetVisualViewport,
   moveTo,
   moveBy,
   resizeTo,
@@ -7635,7 +7632,7 @@ export default {
   CssStyleRuleGetStyle,
   CssImportRuleGetHref,
   CssImportRuleGetMedia,
-  getStyleSheet,
+  CssImportRuleGetStyleSheet,
   getLayerName,
   getSupportsText,
   CssGroupingRuleGetCssRules,

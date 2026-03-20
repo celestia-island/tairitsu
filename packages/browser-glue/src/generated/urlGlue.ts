@@ -74,7 +74,7 @@ export function getHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: string): void {
+export function setHref(self: bigint, value: bigint): void {
   const obj = getURL(self);
   obj.href = value;
 }
@@ -122,7 +122,7 @@ export function setUsername(self: bigint, value: string): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): bigint {
+export function getPassword(self: bigint): string {
   const obj = getURL(self);
   return obj.password;
 }
@@ -130,7 +130,7 @@ export function getPassword(self: bigint): bigint {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: bigint): void {
+export function setPassword(self: bigint, value: string): void {
   const obj = getURL(self);
   obj.password = value;
 }
@@ -146,7 +146,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: bigint | undefined): void {
   const obj = getURL(self);
   obj.host = value;
 }
@@ -162,7 +162,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: bigint): void {
+export function setHostname(self: bigint, value: string): void {
   const obj = getURL(self);
   obj.hostname = value;
 }
@@ -178,7 +178,7 @@ export function getPort(self: bigint): string {
 /**
  * `set-port()` operation.
  */
-export function setPort(self: bigint, value: number): void {
+export function setPort(self: bigint, value: string): void {
   const obj = getURL(self);
   obj.port = value;
 }
@@ -218,7 +218,7 @@ export function setSearch(self: bigint, value: string): void {
 /**
  * `get-search-params()` operation.
  */
-export function getSearchParams(self: bigint): bigint {
+export function getSearchParams(self: bigint): string {
   const obj = getURL(self);
   return obj.searchParams;
 }
@@ -300,7 +300,6 @@ export function _get(self: bigint, name: string): bigint {
   const obj = getURLSearchParams(self);
   const promise = obj.get(name)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
