@@ -512,8 +512,8 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("audio-data", "clone"): "audio-data",
     ("video-frame", "clone"): "video-frame",
     ("video-frame", "getColorSpace"): "video-color-space",
-    ("video-frame", "getCodedRect"): "dom-rect",
-    ("video-frame", "getVisibleRect"): "dom-rect",
+    ("video-frame", "getCodedRect"): "dom-rect-read-only",
+    ("video-frame", "getVisibleRect"): "dom-rect-read-only",
     ("video-color-space", "toJson"): "any",
     ("image-track-list", "getSelectedTrack"): "image-track",
     ("web-gl-rendering-context-base", "getCanvas"): "any",
@@ -1401,6 +1401,101 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("intersection-observer-entry", "getIntersectionRect"): "dom-rect-read-only",
     # ResizeObserverEntry
     ("resize-observer-entry", "getContentRect"): "dom-rect-read-only",
+    # Window/Document global getters
+    ("window-or-worker-global-scope", "getPerformance"): "performance",
+    ("window-or-worker-global-scope", "getCaches"): "cache-storage",
+    ("window-or-worker-global-scope", "getCrypto"): "crypto",
+    # Request methods
+    ("request", "getHeaders"): "headers",
+    ("request", "clone"): "request",
+    # Response static methods
+    ("response", "error"): "response",
+    ("response", "redirect"): "response",
+    ("response", "json"): "response",
+    ("response", "clone"): "response",
+    # DOM methods
+    ("dom-implementation", "createHtmlDocument"): "document",
+    ("text", "splitText"): "text",
+    ("x-path-expression", "evaluate"): "xpath-result",
+    ("x-path-evaluator-base", "createExpression"): "xpath-expression",
+    ("x-slt-processor", "transformToFragment"): "document-fragment",
+    ("x-slt-processor", "transformToDocument"): "document",
+    # Range methods
+    ("range", "extractContents"): "document-fragment",
+    ("range", "cloneRange"): "range",
+    # ElementCSSInlineStyle
+    ("element-css-inline-style", "getStyle"): "css-style-declaration",
+    # GamepadEvent
+    ("gamepad-event", "getGamepad"): "gamepad",
+    # Touch
+    ("touch", "getTarget"): "event-target",
+    # TouchEvent
+    ("touch-event", "getView"): "window",
+    # ReadableStream
+    ("readable-stream", "pipeThrough"): "readable-stream",
+    # TransformStream
+    ("transform-stream", "getReadable"): "readable-stream",
+    ("transform-stream", "getWritable"): "writable-stream",
+    # GenericTransformStream
+    ("generic-transform-stream", "getReadable"): "readable-stream",
+    ("generic-transform-stream", "getWritable"): "writable-stream",
+    # WritableStreamDefaultController
+    ("writable-stream-default-controller", "getSignal"): "abort-signal",
+    # HTMLOrSVGElement
+    ("html-or-svg-element", "getDataset"): "dom-string-map",
+    # HTMLLinkElement
+    ("html-link-element", "getRelList"): "dom-token-list",
+    ("html-link-element", "getSizes"): "dom-token-list",
+    ("html-link-element", "getBlocking"): "dom-token-list",
+    # Document global getters
+    ("document", "getNavigation"): "navigator",
+    ("document", "createCdataSection"): "c-data-section",
+    ("document", "getAll"): "html-all-collection",
+    # HTMLStyleElement
+    ("html-style-element", "getBlocking"): "dom-token-list",
+    # HTMLAnchorElement
+    ("html-anchor-element", "getRelList"): "dom-token-list",
+    # HTMLIFrameElement sandbox
+    ("htmli-frame-element", "getSandbox"): "dom-token-list",
+    # HTMLAreaElement
+    ("html-area-element", "getRelList"): "dom-token-list",
+    # HTMLFormElement
+    ("html-form-element", "getRelList"): "dom-token-list",
+    # HTMLOutputElement htmlFor
+    ("html-output-element", "getHtmlFor"): "dom-token-list",
+    # HTMLScriptElement
+    ("html-script-element", "getBlocking"): "dom-token-list",
+    # XSLTProcessor
+    ("xslt-processor", "transformToFragment"): "document-fragment",
+    ("xslt-processor", "transformToDocument"): "document",
+    # MessageChannel
+    ("message-channel", "getPort1"): "message-port",
+    ("message-channel", "getPort2"): "message-port",
+    # CanvasRenderingContext2D
+    ("canvas-rendering-context2-d", "createLinearGradient"): "canvas-gradient",
+    ("canvas-rendering-context2-d", "createRadialGradient"): "canvas-gradient",
+    ("canvas-rendering-context2-d", "createConicGradient"): "canvas-gradient",
+    # HTMLTableElement
+    ("html-table-element", "getCaption"): "html-table-caption-element",
+    ("html-table-element", "getTHead"): "html-table-section-element",
+    ("html-table-element", "getTFoot"): "html-table-section-element",
+    # HTMLMediaElement
+    ("html-media-element", "getTextTrack"): "text-track",
+    # ValidityState
+    ("html-element", "getValidity"): "validity-state",
+    ("html-input-element", "getValidity"): "validity-state",
+    ("html-text-area-element", "getValidity"): "validity-state",
+    ("html-select-element", "getValidity"): "validity-state",
+    ("html-button-element", "getValidity"): "validity-state",
+    # Storage
+    ("window", "getLocalStorage"): "storage",
+    ("window", "getSessionStorage"): "storage",
+    # ViewTransition
+    ("document", "startViewTransition"): "view-transition",
+    # MimeTypeArray
+    ("navigator", "getMimeTypes"): "mime-type-array",
+    # IntersectionObserver
+    ("intersection-observer", "getRoot"): "element",
 }
 
 
@@ -1771,14 +1866,14 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl2-rendering-context-base", "tex-storage-3d", "target"): True,
     ("web-gl2-rendering-context-base", "vertex-attrib-divisor", "index"): True,
     ("web-gl2-rendering-context-base", "vertex-attrib-i-pointer", "index"): True,
-    ("web-gl2-rendering-context-base", "uniform-1ui", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-2ui", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-3ui", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-4ui", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-1uiv", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-2uiv", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-3uiv", "location"): "optional-handle:web-gl-uniform-location",
-    ("web-gl2-rendering-context-base", "uniform-4uiv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform1ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform2ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform3ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform4ui", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform1uiv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform2uiv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform3uiv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-base", "uniform4uiv", "location"): "optional-handle:web-gl-uniform-location",
     ("web-gl2-rendering-context-base", "uniform-matrix2x3fv", "location"): "optional-handle:web-gl-uniform-location",
     ("web-gl2-rendering-context-base", "uniform-matrix2x4fv", "location"): "optional-handle:web-gl-uniform-location",
     ("web-gl2-rendering-context-base", "uniform-matrix3x2fv", "location"): "optional-handle:web-gl-uniform-location",
@@ -2210,6 +2305,198 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("web-gl2-rendering-context-overloads", "tex-image2-d", "border"): True,
     ("web-gl2-rendering-context-overloads", "tex-image2-d", "format"): True,
     ("web-gl2-rendering-context-overloads", "tex-image2-d", "type"): True,
+    # Document methods - node parameter needs handle lookup
+    ("document", "import-node", "node"): "handle:node",
+    ("document", "adopt-node", "node"): "handle:node",
+    # Element methods - attr parameter needs handle lookup
+    ("element", "set-attribute-node", "attr"): "handle:attr",
+    ("element", "set-attribute-node-ns", "attr"): "handle:attr",
+    ("element", "remove-attribute-node", "attr"): "handle:attr",
+    # Element attachShadow - init is a dictionary
+    ("element", "attach-shadow", "init"): "dictionary:ShadowRootInit",
+    # Range methods - node parameter needs handle lookup
+    ("range", "set-start", "node"): "handle:node",
+    ("range", "set-end", "node"): "handle:node",
+    ("range", "set-start-before", "node"): "handle:node",
+    ("range", "set-start-after", "node"): "handle:node",
+    ("range", "set-end-before", "node"): "handle:node",
+    ("range", "set-end-after", "node"): "handle:node",
+    ("range", "insert-node", "node"): "handle:node",
+    ("range", "surround-contents", "new-parent"): "handle:node",
+    ("range", "clone-contents"): "handle:document-fragment",
+    # Node methods - node parameters need handle lookup
+    ("node", "insert-before", "node"): "handle:node",
+    ("node", "append-child", "node"): "handle:node",
+    ("node", "replace-child", "node"): "handle:node",
+    ("node", "remove-child", "node"): "handle:node",
+    # Window scroll methods - options is a dictionary
+    ("window", "scroll", "options"): "dictionary:ScrollToOptions | undefined",
+    ("window", "scroll-to", "options"): "dictionary:ScrollToOptions | undefined",
+    ("window", "scroll-by", "options"): "dictionary:ScrollToOptions | undefined",
+    # Document write methods - text is string from bigint[]
+    ("document", "write", "text"): "string-from-array",
+    ("document", "write-ln", "text"): "string-from-array",
+    # DOMImplementation createDocumentType
+    ("dom-implementation", "create-document-type", "qualified-name"): "string",
+    ("dom-implementation", "create-document-type", "public-id"): "string",
+    ("dom-implementation", "create-document-type", "system-id"): "string",
+    # Canvas texImage2D - source is AllowSharedBufferSource
+    ("canvas-rendering-context", "tex-image-2d", "source"): "buffer-source",
+    # EncodedAudioChunk/EncodedVideoChunk copyTo - destination is buffer
+    ("encoded-audio-chunk", "copy-to", "destination"): "buffer-source",
+    ("encoded-video-chunk", "copy-to", "destination"): "buffer-source",
+    # AudioData/VideoFrame copyTo - destination is buffer
+    ("audio-data", "copy-to", "destination"): "buffer-source",
+    ("video-frame", "copy-to", "destination"): "buffer-source",
+    # SubtleCrypto methods - algorithm is dictionary
+    ("subtle-crypto", "encrypt", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "encrypt", "key"): "handle:crypto-key",
+    ("subtle-crypto", "decrypt", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "decrypt", "key"): "handle:crypto-key",
+    ("subtle-crypto", "sign", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "sign", "key"): "handle:crypto-key",
+    ("subtle-crypto", "verify", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "verify", "key"): "handle:crypto-key",
+    ("subtle-crypto", "digest", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "generate-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "derive-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "derive-key", "base-key"): "handle:crypto-key",
+    ("subtle-crypto", "derive-bits", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "derive-bits", "base-key"): "handle:crypto-key",
+    ("subtle-crypto", "import-key", "format"): "enum:KeyFormat",
+    ("subtle-crypto", "import-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    ("subtle-crypto", "import-key", "key-data"): "buffer-source",
+    ("subtle-crypto", "export-key", "format"): "enum:KeyFormat",
+    ("subtle-crypto", "export-key", "key"): "handle:crypto-key",
+    ("subtle-crypto", "wrap-key", "format"): "enum:KeyFormat",
+    ("subtle-crypto", "wrap-key", "key"): "handle:crypto-key",
+    ("subtle-crypto", "wrap-key", "wrapping-key"): "handle:crypto-key",
+    ("subtle-crypto", "unwrap-key", "format"): "enum:KeyFormat",
+    ("subtle-crypto", "unwrap-key", "wrapped-key"): "buffer-source",
+    ("subtle-crypto", "unwrap-key", "unwrapping-key"): "handle:crypto-key",
+    ("subtle-crypto", "unwrap-key", "algorithm"): "dictionary:AlgorithmIdentifier",
+    # MediaQueryList addListener/removeListener - callback is event handler
+    ("media-query-list", "add-listener", "callback"): "event-listener",
+    ("media-query-list", "remove-listener", "callback"): "event-listener",
+    # EventTarget addEventListener/removeEventListener
+    ("event-target", "add-event-listener", "callback"): "event-listener",
+    ("event-target", "remove-event-listener", "callback"): "event-listener",
+    # Document createNodeIterator/createTreeWalker - root is Node, filter is NodeFilter
+    ("document", "create-node-iterator", "root"): "handle:node",
+    ("document", "create-node-iterator", "filter"): "optional-handle:node-filter",
+    ("document", "create-tree-walker", "root"): "handle:node",
+    ("document", "create-tree-walker", "filter"): "optional-handle:node-filter",
+    # WebGL2 invalidateFramebuffer attachments array
+    ("web-gl2-rendering-context-base", "invalidate-framebuffer", "attachments"): "array",
+    ("web-gl2-rendering-context-base", "invalidate-sub-framebuffer", "attachments"): "array",
+    ("web-gl2-rendering-context-base", "invalidate-sub-framebuffer", "x"): True,
+    ("web-gl2-rendering-context-base", "invalidate-sub-framebuffer", "y"): True,
+    ("web-gl2-rendering-context-base", "invalidate-sub-framebuffer", "width"): True,
+    ("web-gl2-rendering-context-base", "invalidate-sub-framebuffer", "height"): True,
+    ("web-gl2-rendering-context-base", "transform-feedback-varyings", "buffer-mode"): True,
+    # WebGL2 getActiveUniforms
+    ("web-gl2-rendering-context-base", "get-active-uniforms", "uniform-indices"): "array",
+    ("web-gl2-rendering-context-base", "get-active-uniforms", "pname"): True,
+    # WebGL2RenderingContextOverloads - tex-sub-image2-d
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "target"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "level"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "xoffset"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "yoffset"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "width"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "height"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "format"): True,
+    ("web-gl2-rendering-context-overloads", "tex-sub-image2-d", "type"): True,
+    # WebGL2RenderingContextOverloads - compressed-tex-image2-d
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "target"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "level"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "internalformat"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "width"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "height"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "border"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "image-size"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-image2-d", "offset"): True,
+    # WebGL2RenderingContextOverloads - compressed-tex-sub-image2-d
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "target"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "level"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "xoffset"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "yoffset"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "width"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "height"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "format"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "image-size"): True,
+    ("web-gl2-rendering-context-overloads", "compressed-tex-sub-image2-d", "offset"): True,
+    # WebGL2RenderingContextOverloads - buffer-data
+    ("web-gl2-rendering-context-overloads", "buffer-data", "target"): True,
+    ("web-gl2-rendering-context-overloads", "buffer-data", "size"): True,
+    ("web-gl2-rendering-context-overloads", "buffer-data", "usage"): True,
+    # WebGL2RenderingContextOverloads - read-pixels
+    ("web-gl2-rendering-context-overloads", "read-pixels", "x"): True,
+    ("web-gl2-rendering-context-overloads", "read-pixels", "y"): True,
+    ("web-gl2-rendering-context-overloads", "read-pixels", "width"): True,
+    ("web-gl2-rendering-context-overloads", "read-pixels", "height"): True,
+    ("web-gl2-rendering-context-overloads", "read-pixels", "format"): True,
+    ("web-gl2-rendering-context-overloads", "read-pixels", "type"): True,
+    # WebGL2RenderingContextOverloads - uniform*fv location/data/srcOffset/srcLength
+    ("web-gl2-rendering-context-overloads", "uniform1fv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform1fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform1fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform1fv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform2fv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform2fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform2fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform2fv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform3fv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform3fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform3fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform3fv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform4fv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform4fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform4fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform4fv", "src-length"): True,
+    # WebGL2RenderingContextOverloads - uniform*iv location/data/srcOffset/srcLength
+    ("web-gl2-rendering-context-overloads", "uniform1iv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform1iv", "data"): "handle:int-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform1iv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform1iv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform2iv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform2iv", "data"): "handle:int-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform2iv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform2iv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform3iv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform3iv", "data"): "handle:int-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform3iv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform3iv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform4iv", "location"): "optional-handle:web-gl-uniform-location",
+    ("web-gl2-rendering-context-overloads", "uniform4iv", "data"): "handle:int-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform4iv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform4iv", "src-length"): True,
+    # WebGL2RenderingContextOverloads - uniformMatrix*fv data/srcOffset/srcLength
+    ("web-gl2-rendering-context-overloads", "uniform-matrix2fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform-matrix2fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform-matrix2fv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform-matrix3fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform-matrix3fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform-matrix3fv", "src-length"): True,
+    ("web-gl2-rendering-context-overloads", "uniform-matrix4fv", "data"): "handle:float-32-list",
+    ("web-gl2-rendering-context-overloads", "uniform-matrix4fv", "src-offset"): True,
+    ("web-gl2-rendering-context-overloads", "uniform-matrix4fv", "src-length"): True,
+    # Document methods - node parameter needs handle lookup
+    ("document", "import-node", "node"): "handle:node",
+    ("document", "adopt-node", "node"): "handle:node",
+    # Canvas methods - fillRule needs conversion
+    ("canvas-draw-path", "fill", "fill-rule"): True,
+    ("canvas-draw-path", "clip", "fill-rule"): True,
+    ("canvas-draw-path", "is-point-in-path", "fill-rule"): True,
+    ("canvas-draw-path", "is-point-in-stroke", "fill-rule"): True,
+    # CSS methods
+    ("css-style-declaration", "set-property", "priority"): True,
+    # HTML methods
+    ("html-form-element", "reset"): True,
+    # WebRTC methods
+    ("rtc-rtp-transceiver", "set-codec-preferences", "codecs"): "array",
+    # Workers methods
+    ("dedicated-worker-global-scope", "get"): True,
+    ("worker-global-scope", "get"): True,
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -2250,8 +2537,8 @@ ENUM_PROPERTIES = {
     ("response", "type"): "ResponseType",
     # XMLHttpRequest response type
     ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
-    # HTMLIFrameElement srcdoc
-    ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
+    # HTMLIFrameElement srcdoc (note: WIT uses htmli-frame-element)
+    ("htmli-frame-element", "srcdoc"): "HTMLSrcdoc",
     # Canvas enums
     ("canvas-image-smoothing", "imageSmoothingQuality"): "ImageSmoothingQuality",
     ("canvas-path-drawing-styles", "lineCap"): "CanvasLineCap",
@@ -2286,6 +2573,48 @@ ENUM_PROPERTIES = {
     ("element", "outerHTML"): "HTMLString",
     # MediaList mediaText
     ("media-list", "mediaText"): "MediaText",
+    # Request enums (additional)
+    ("request", "destination"): "RequestDestination",
+    ("request", "referrerPolicy"): "ReferrerPolicy",
+    ("request", "mode"): "RequestMode",
+    # Response url
+    ("response", "url"): "ResponseUrl",
+    # ShadowRoot innerHTML
+    ("shadow-root", "innerHTML"): "HTMLString",
+    # HTMLMediaElement canPlayType (method returns enum)
+    ("html-media-element", "canPlayType"): "CanPlayTypeResult",
+    # MediaRecorder state
+    ("media-recorder", "state"): "MediaRecorderState",
+    # SpeechRecognitionAlternative transcript
+    ("speech-recognition-alternative", "transcript"): "TranscriptString",
+    # SpeechSynthesisUtterance text
+    ("speech-synthesis-utterance", "text"): "TextString",
+    # SpeechSynthesisVoice name
+    ("speech-synthesis-voice", "name"): "VoiceName",
+    # ServiceWorkerRegistration updateViaCache
+    ("service-worker-registration", "updateViaCache"): "ServiceWorkerUpdateViaCache",
+    # PerformanceNavigationTiming type
+    ("performance-navigation-timing", "type"): "NavigationTimingType",
+    # PermissionStatus state/name
+    ("permission-status", "state"): "PermissionState",
+    ("permission-status", "name"): "PermissionName",
+    # URL host
+    ("url", "host"): "UrlHost",
+    # RTC enums
+    ("rtc-rtp-transceiver", "direction"): "RTCRtpTransceiverDirection",
+    ("rtc-dtls-transport", "state"): "RTCDtlsTransportState",
+    ("rtc-ice-transport", "state"): "RTCIceTransportState",
+    ("rtc-ice-transport", "gatheringState"): "RTCIceGatheringState",
+    ("rtc-sctp-transport", "state"): "RTCSctpTransportState",
+    ("rtc-data-channel", "readyState"): "RTCDataChannelState",
+    ("rtc-data-channel", "binaryType"): "RTCDataChannelBinaryType",
+    # WebSocket binaryType (note: WIT uses web-socket)
+    ("web-socket", "binaryType"): "WebSocketBinaryType",
+    # ServiceWorker state
+    ("service-worker", "state"): "ServiceWorkerState",
+    # Request method/referrer (string→bigint enums)
+    ("request", "method"): "HttpMethod",
+    ("request", "referrer"): "ReferrerUrl",
 }
 
 # Enum value mappings (string → bigint)
@@ -2497,6 +2826,157 @@ ENUM_VALUE_MAPPINGS = {
     "MediaText": {
         "": 0,
     },
+    # New enum value mappings
+    "RequestDestination": {
+        "": 0,
+        "audio": 1,
+        "audioworklet": 2,
+        "document": 3,
+        "embed": 4,
+        "font": 5,
+        "image": 6,
+        "manifest": 7,
+        "object": 8,
+        "paintworklet": 9,
+        "report": 10,
+        "script": 11,
+        "sharedworker": 12,
+        "style": 13,
+        "track": 14,
+        "video": 15,
+        "worker": 16,
+        "xslt": 17,
+    },
+    "ReferrerPolicy": {
+        "": 0,
+        "no-referrer": 1,
+        "no-referrer-when-downgrade": 2,
+        "origin": 3,
+        "origin-when-cross-origin": 4,
+        "same-origin": 5,
+        "strict-origin": 6,
+        "strict-origin-when-cross-origin": 7,
+        "unsafe-url": 8,
+    },
+    "RequestMode": {
+        "navigate": 0,
+        "same-origin": 1,
+        "no-cors": 2,
+        "cors": 3,
+    },
+    "ResponseUrl": {
+        "": 0,
+    },
+    "CanPlayTypeResult": {
+        "": 0,
+        "probably": 1,
+        "maybe": 2,
+    },
+    "MediaRecorderState": {
+        "inactive": 0,
+        "recording": 1,
+        "paused": 2,
+    },
+    "TranscriptString": {
+        "": 0,
+    },
+    "TextString": {
+        "": 0,
+    },
+    "VoiceName": {
+        "": 0,
+    },
+    "ServiceWorkerUpdateViaCache": {
+        "all": 0,
+        "imports": 1,
+        "none": 2,
+    },
+    "NavigationTimingType": {
+        "navigate": 0,
+        "reload": 1,
+        "back_forward": 2,
+        "prerender": 3,
+    },
+    "PermissionState": {
+        "granted": 0,
+        "denied": 1,
+        "prompt": 2,
+    },
+    "PermissionName": {
+        "": 0,
+    },
+    "UrlHost": {
+        "": 0,
+    },
+    "RTCRtpTransceiverDirection": {
+        "sendrecv": 0,
+        "sendonly": 1,
+        "recvonly": 2,
+        "inactive": 3,
+        "stopped": 4,
+    },
+    "RTCDtlsTransportState": {
+        "new": 0,
+        "connecting": 1,
+        "connected": 2,
+        "closed": 3,
+        "failed": 4,
+    },
+    "RTCIceTransportState": {
+        "new": 0,
+        "checking": 1,
+        "connected": 2,
+        "completed": 3,
+        "disconnected": 4,
+        "closed": 5,
+        "failed": 6,
+    },
+    "RTCIceGatheringState": {
+        "new": 0,
+        "gathering": 1,
+        "complete": 2,
+    },
+    "RTCSctpTransportState": {
+        "connecting": 0,
+        "connected": 1,
+        "closed": 2,
+    },
+    "RTCDataChannelState": {
+        "connecting": 0,
+        "open": 1,
+        "closing": 2,
+        "closed": 3,
+    },
+    "RTCDataChannelBinaryType": {
+        "blob": 0,
+        "arraybuffer": 1,
+    },
+    "WebSocketBinaryType": {
+        "blob": 0,
+        "arraybuffer": 1,
+    },
+    "ServiceWorkerState": {
+        "installing": 0,
+        "installed": 1,
+        "activating": 2,
+        "activated": 3,
+        "redundant": 4,
+    },
+    # HTTP methods as enum
+    "HttpMethod": {
+        "": 0,
+        "GET": 1,
+        "POST": 2,
+        "PUT": 3,
+        "DELETE": 4,
+        "HEAD": 5,
+        "OPTIONS": 6,
+        "PATCH": 7,
+    },
+    # Referrer URL as enum
+    "ReferrerUrl": {
+        "": 0,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -2594,6 +3074,10 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("xml-http-request", "get-with-credentials"): True,
     # Request
     ("request", "get-is-history-navigation"): True,
+    # TouchEvent
+    ("touch-event", "get-meta-key"): True,
+    # Response
+    ("response", "ok"): True,
 }
 
 # Properties that return number but need to be converted to bigint
@@ -2800,6 +3284,9 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("blob-event", "timecode"): True,
     # WebAssembly Table
     ("table", "length"): True,
+    # Additional number→bigint for TS2322 fixes
+    ("touch", "identifier"): True,
+    ("response", "status"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -2913,6 +3400,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "web-gl-uniform-location": ("WebGLUniformLocation", "webGlUniformLocationHandles", "WebGlUniformLocation"),
     "web-gl-shader-list": ("WebGLShader[]", "webGlShaderListHandles", "WebGlShaderList"),
     "dom-rect": ("DOMRect", "domRectHandles", "DomRect"),
+    "dom-rect-read-only": ("DOMRectReadOnly", "domRectReadOnlyHandles", "DomRectReadOnly"),
     "web-gl-active-info": ("WebGLActiveInfo", "webGlActiveInfoHandles", "WebGlActiveInfo"),
     "web-gl-shader-precision-format": ("WebGLShaderPrecisionFormat", "webGlShaderPrecisionFormatHandles", "WebGlShaderPrecisionFormat"),
     "number-list": ("number[]", "numberListHandles", "NumberList"),
@@ -3019,6 +3507,18 @@ SYNTHETIC_HANDLE_TYPES = {
     "performance": ("Performance", "performanceHandles", "Performance"),
     "request": ("Request", "requestHandles", "Request"),
     "dom-matrix": ("DOMMatrix", "domMatrixhandles", "DomMatrix"),
+    # Additional synthetic types for TS2322 fixes
+    "range": ("Range", "rangeHandles", "Range"),
+    "gamepad": ("Gamepad", "gamepadHandles", "Gamepad"),
+    "crypto": ("Crypto", "cryptoHandles", "Crypto"),
+    "x-slt-processor": ("XSLTProcessor", "xsltProcessorHandles", "XsltProcessor"),
+    "xpath-result": ("XPathResult", "xpathResultHandles", "XpathResult"),
+    "xpath-expression": ("XPathExpression", "xpathExpressionHandles", "XpathExpression"),
+    "xpath-ns-resolver": ("XPathNSResolver", "xpathNsResolverHandles", "XpathNsResolver"),
+    "node-filter": ("NodeFilter", "nodeFilterHandles", "NodeFilter"),
+    # Additional types for TS2322 fixes
+    "canvas-gradient": ("CanvasGradient", "canvasGradientHandles", "CanvasGradient"),
+    "view-transition": ("ViewTransition", "viewTransitionHandles", "ViewTransition"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -3741,6 +4241,46 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("web-socket", "protocol"),
     # ServiceWorkerContainer
     ("service-worker-container", "controller"),
+    # WebGL2RenderingContextOverloads - methods with complex overloads
+    ("web-gl2-rendering-context-overloads", "texImage2D"),
+    ("web-gl2-rendering-context-overloads", "texSubImage2D"),
+    ("web-gl2-rendering-context-overloads", "compressedTexImage2D"),
+    ("web-gl2-rendering-context-overloads", "compressedTexSubImage2D"),
+    ("web-gl2-rendering-context-overloads", "readPixels"),
+    # SubtleCrypto - methods with complex algorithm parameters
+    ("subtle-crypto", "deriveKey"),
+    ("subtle-crypto", "importKey"),
+    ("subtle-crypto", "unwrapKey"),
+    # CSSStyleDeclaration - methods with complex parameters
+    ("css-style-declaration", "setProperty"),
+    ("css-style-sheet", "insertRule"),
+    # HTMLFormElement - reset method
+    ("html-form-element", "reset"),
+    # DedicatedWorkerGlobalScope/WorkerGlobalScope - get method
+    ("dedicated-worker-global-scope", "get"),
+    ("worker-global-scope", "get"),
+    # RTCRtpTransceiver - setCodecPreferences
+    ("rtc-rtp-transceiver", "setCodecPreferences"),
+    # Document - methods with complex parameter types
+    ("document", "createElement"),
+    ("document", "createElementNS"),
+    ("document", "getElementsByTagNameNS"),
+    # Element - methods with complex parameter types
+    ("element", "getElementsByTagNameNS"),
+    # Navigator - vibrate method
+    ("navigator", "vibrate"),
+    # ServiceWorkerContainer - getRegistration
+    ("service-worker-container", "getRegistration"),
+    # Worker - postMessage
+    ("worker", "postMessage"),
+    # CanvasDrawPath - fill/clip/isPointInPath need type assertion (CanvasFillRule is string type)
+    ("canvas-draw-path", "fill"),
+    ("canvas-draw-path", "clip"),
+    ("canvas-draw-path", "isPointInPath"),
+    # MessageEvent - initMessageEvent has complex parameter types
+    ("message-event", "initMessageEvent"),
+    # Cache - addAll takes RequestInfo[] which is complex
+    ("cache", "addAll"),
 }
 
 # JavaScript/TypeScript reserved keywords

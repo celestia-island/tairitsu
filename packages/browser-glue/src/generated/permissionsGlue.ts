@@ -281,7 +281,7 @@ function lookupPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: bigint): bigint {
+export function query(self: bigint, permissionDesc: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPermissions(self);
   const promise = (obj as any).getQuery(permissionDesc)
@@ -336,9 +336,15 @@ function lookupPermissionStatus(handle: bigint): PermissionStatus {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): string {
+export function getState(self: bigint): bigint {
   const obj = lookupPermissionStatus(self);
-  return obj.state;
+  const value = obj.state;
+  switch (value) {
+    case 'granted': return 0n;
+    case 'denied': return 1n;
+    case 'prompt': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -346,7 +352,11 @@ export function getState(self: bigint): string {
  */
 export function getName(self: bigint): bigint {
   const obj = lookupPermissionStatus(self);
-  return obj.name;
+  const value = obj.name;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
