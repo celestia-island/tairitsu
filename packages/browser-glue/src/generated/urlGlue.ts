@@ -32,7 +32,7 @@ function getUrl(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: number, base: bigint | undefined): bigint {
   const obj = getUrl(self);
   return obj.parse(url, base) ?? undefined;
 }
@@ -40,7 +40,7 @@ export function parse(url: string, base: string | undefined): bigint | undefined
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: string | undefined): boolean {
+export function canParse(url: string, base: bigint): boolean {
   const obj = getUrl(self);
   return obj.canParse(url, base);
 }
@@ -56,7 +56,7 @@ export function getHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: bigint): void {
+export function setHref(self: number, value: bigint): void {
   const obj = getUrl(self);
   obj.href = value;
 }
@@ -64,7 +64,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: number): string {
   const obj = getUrl(self);
   return obj.origin;
 }
@@ -72,7 +72,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): string {
+export function getProtocol(self: string | undefined): bigint | undefined {
   const obj = getUrl(self);
   return obj.protocol;
 }
@@ -80,7 +80,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `set-protocol()` operation.
  */
-export function setProtocol(self: bigint, value: string): void {
+export function setProtocol(self: bigint, value: bigint): void {
   const obj = getUrl(self);
   obj.protocol = value;
 }
@@ -96,7 +96,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: string): void {
+export function setUsername(self: boolean, value: bigint | undefined): void {
   const obj = getUrl(self);
   obj.username = value;
 }
@@ -104,7 +104,7 @@ export function setUsername(self: bigint, value: string): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): string {
+export function getPassword(self: bigint): bigint {
   const obj = getUrl(self);
   return obj.password;
 }
@@ -144,7 +144,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: string): void {
+export function setHostname(self: bigint, value: bigint): void {
   const obj = getUrl(self);
   obj.hostname = value;
 }
@@ -152,7 +152,7 @@ export function setHostname(self: bigint, value: string): void {
 /**
  * `get-port()` operation.
  */
-export function getPort(self: bigint): string {
+export function getPort(self: bigint): bigint {
   const obj = getUrl(self);
   return obj.port;
 }
@@ -184,7 +184,7 @@ export function setPathname(self: bigint, value: string): void {
 /**
  * `get-search()` operation.
  */
-export function getSearch(self: bigint): string {
+export function getSearch(self: bigint): bigint {
   const obj = getUrl(self);
   return obj.search;
 }
@@ -192,7 +192,7 @@ export function getSearch(self: bigint): string {
 /**
  * `set-search()` operation.
  */
-export function setSearch(self: bigint, value: string): void {
+export function setSearch(self: string, value: string): void {
   const obj = getUrl(self);
   obj.search = value;
 }
@@ -216,7 +216,7 @@ export function getHash(self: bigint): string {
 /**
  * `set-hash()` operation.
  */
-export function setHash(self: bigint, value: string): void {
+export function setHash(self: string, value: string): void {
   const obj = getUrl(self);
   obj.hash = value;
 }
@@ -284,7 +284,7 @@ export function _get(self: bigint, name: string): string | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): bigint {
+export function getAll(self: bigint, name: string): (string)[] {
   const obj = getUrlSearchParams(self);
   return obj.all;
 }

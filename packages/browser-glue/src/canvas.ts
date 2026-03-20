@@ -2,7 +2,7 @@
  * Canvas glue — implements the `tairitsu-browser:canvas` WIT import interfaces.
  */
 
-import { getCanvasElement } from "./handles.js";
+import { getCanvasElement } from "./handles";
 
 // ---------------------------------------------------------------------------
 // Context handle table

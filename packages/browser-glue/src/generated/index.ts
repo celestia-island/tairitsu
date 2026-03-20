@@ -18,50 +18,62 @@
  * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
  * - `./events` — `tairitsu-browser:events` (15 interfaces)
  * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
+ * - `./file-api` — `tairitsu-browser:file-api` (2 interfaces)
+ * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
  * - `./html` — `tairitsu-browser:html` (1 interfaces)
+ * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
  * - `./media` — `tairitsu-browser:media` (29 interfaces)
  * - `./notifications` — `tairitsu-browser:notifications` (4 interfaces)
  * - `./observers` — `tairitsu-browser:observers` (5 interfaces)
  * - `./payments` — `tairitsu-browser:payments` (4 interfaces)
  * - `./performance` — `tairitsu-browser:performance` (11 interfaces)
  * - `./permissions` — `tairitsu-browser:permissions` (2 interfaces)
+ * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
  * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
  * - `./storage` — `tairitsu-browser:storage` (2 interfaces)
  * - `./url` — `tairitsu-browser:url` (2 interfaces)
  * - `./wasm` — `tairitsu-browser:wasm` (6 interfaces)
+ * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
  * - `./webrtc` — `tairitsu-browser:webrtc` (20 interfaces)
  * - `./websocket` — `tairitsu-browser:websocket` (2 interfaces)
+ * - `./websockets` — `tairitsu-browser:websockets` (1 interfaces)
  * - `./workers` — `tairitsu-browser:workers` (12 interfaces)
  */
 
 // Re-export all generated modules
-export * as auth from "./generated/authGlue.js";
-export * as canvas from "./generated/canvasGlue.js";
-export * as crypto from "./generated/cryptoGlue.js";
-export * as css from "./generated/cssGlue.js";
-export * as device from "./generated/deviceGlue.js";
-export * as dom from "./generated/domGlue.js";
-export * as events from "./generated/eventsGlue.js";
-export * as fetch from "./generated/fetchGlue.js";
-export * as html from "./generated/htmlGlue.js";
-export * as media from "./generated/mediaGlue.js";
-export * as notifications from "./generated/notificationsGlue.js";
-export * as observers from "./generated/observersGlue.js";
-export * as payments from "./generated/paymentsGlue.js";
-export * as performance from "./generated/performanceGlue.js";
-export * as permissions from "./generated/permissionsGlue.js";
-export * as serviceworkers from "./generated/serviceworkersGlue.js";
-export * as storage from "./generated/storageGlue.js";
-export * as url from "./generated/urlGlue.js";
-export * as wasm from "./generated/wasmGlue.js";
-export * as webrtc from "./generated/webrtcGlue.js";
-export * as websocket from "./generated/websocketGlue.js";
-export * as workers from "./generated/workersGlue.js";
+export * as auth from "./authGlue";
+export * as canvas from "./canvasGlue";
+export * as crypto from "./cryptoGlue";
+export * as css from "./cssGlue";
+export * as device from "./deviceGlue";
+export * as dom from "./domGlue";
+export * as events from "./eventsGlue";
+export * as fetch from "./fetchGlue";
+export * as fileApi from "./fileApiGlue";
+export * as geolocation from "./geolocationGlue";
+export * as html from "./htmlGlue";
+export * as indexedDb from "./indexedDbGlue";
+export * as media from "./mediaGlue";
+export * as notifications from "./notificationsGlue";
+export * as observers from "./observersGlue";
+export * as payments from "./paymentsGlue";
+export * as performance from "./performanceGlue";
+export * as permissions from "./permissionsGlue";
+export * as resizeObserver from "./resizeObserverGlue";
+export * as serviceWorkers from "./serviceWorkersGlue";
+export * as storage from "./storageGlue";
+export * as url from "./urlGlue";
+export * as wasm from "./wasmGlue";
+export * as webAnimations from "./webAnimationsGlue";
+export * as webrtc from "./webrtcGlue";
+export * as websocket from "./websocketGlue";
+export * as websockets from "./websocketsGlue";
+export * as workers from "./workersGlue";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 22,
-  totalInterfaces: 260,
-  totalFunctions: 2446,
-  generatedAt: "2026-03-19T23:38:03.066246",
+  totalDomains: 28,
+  totalInterfaces: 273,
+  totalFunctions: 2496,
+  generatedAt: "2026-03-20T11:58:30.700007",
 };

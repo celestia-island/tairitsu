@@ -604,7 +604,7 @@ export function getId(self: bigint): bigint {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): (bigint)[] {
+export function getName(self: string): bigint {
   const obj = getPerformanceEntry(self);
   return obj.name;
 }
@@ -612,7 +612,7 @@ export function getName(self: bigint): (bigint)[] {
 /**
  * `get-entry-type()` operation.
  */
-export function getEntryType(self: bigint): (bigint)[] {
+export function getEntryType(self: bigint): bigint {
   const obj = getPerformanceEntry(self);
   return obj.entryType;
 }
@@ -620,7 +620,7 @@ export function getEntryType(self: bigint): (bigint)[] {
 /**
  * `get-start-time()` operation.
  */
-export function getStartTime(self: bigint): (bigint)[] {
+export function getStartTime(self: bigint): bigint | undefined {
   const obj = getPerformanceEntry(self);
   return obj.startTime;
 }
@@ -628,7 +628,7 @@ export function getStartTime(self: bigint): (bigint)[] {
 /**
  * `get-duration()` operation.
  */
-export function getDuration(self: bigint): bigint | undefined {
+export function getDuration(self: bigint): number {
   const obj = getPerformanceEntry(self);
   return obj.duration;
 }
@@ -636,7 +636,7 @@ export function getDuration(self: bigint): bigint | undefined {
 /**
  * `get-navigation-id()` operation.
  */
-export function getNavigationId(self: string): bigint {
+export function getNavigationId(self: bigint): bigint {
   const obj = getPerformanceEntry(self);
   return obj.navigationId;
 }
@@ -644,7 +644,7 @@ export function getNavigationId(self: string): bigint {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): bigint {
+export function toJson(self: string | undefined): bigint {
   const obj = getPerformanceEntry(self);
   return obj.toJson();
 }
@@ -672,7 +672,7 @@ function getPerformanceObserver(handle: bigint): performanceobserver {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, options: bigint | undefined): void {
+export function observe(self: bigint, options: Uint8Array): void {
   const obj = getPerformanceObserver(self);
   obj.observe(options);
 }
@@ -696,7 +696,7 @@ export function takeRecords(self: bigint): bigint {
 /**
  * `get-supported-entry-types()` operation.
  */
-export function getSupportedEntryTypes(): bigint {
+export function getSupportedEntryTypes(): (string)[] {
   return obj.supportedEntryTypes;
 }
 
@@ -723,7 +723,7 @@ function getPerformanceObserverEntryList(handle: bigint): performanceobserverent
 /**
  * `get-entries()` operation.
  */
-export function getEntries(self: bigint): string {
+export function getEntries(self: bigint): bigint {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entries;
 }
@@ -739,7 +739,7 @@ export function getEntriesByType(self: bigint, type: string): bigint {
 /**
  * `get-entries-by-name()` operation.
  */
-export function getEntriesByName(self: bigint, name: string, type: string | undefined): bigint {
+export function getEntriesByName(self: bigint, name: (string)[], type: number | undefined): bigint {
   const obj = getPerformanceObserverEntryList(self);
   return obj.entriesByName;
 }
@@ -767,7 +767,7 @@ function getPerformanceResourceTiming(handle: bigint): performanceresourcetiming
 /**
  * `get-initiator-type()` operation.
  */
-export function getInitiatorType(self: bigint): string {
+export function getInitiatorType(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.initiatorType;
 }
@@ -775,7 +775,7 @@ export function getInitiatorType(self: bigint): string {
 /**
  * `get-delivery-type()` operation.
  */
-export function getDeliveryType(self: bigint): string {
+export function getDeliveryType(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.deliveryType;
 }
@@ -783,7 +783,7 @@ export function getDeliveryType(self: bigint): string {
 /**
  * `get-next-hop-protocol()` operation.
  */
-export function getNextHopProtocol(self: bigint): bigint {
+export function getNextHopProtocol(self: bigint): number | undefined {
   const obj = getPerformanceResourceTiming(self);
   return obj.nextHopProtocol;
 }
@@ -791,7 +791,7 @@ export function getNextHopProtocol(self: bigint): bigint {
 /**
  * `get-worker-start()` operation.
  */
-export function getWorkerStart(self: bigint): bigint {
+export function getWorkerStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerStart;
 }
@@ -807,7 +807,7 @@ export function getRedirectStart(self: bigint): number {
 /**
  * `get-redirect-end()` operation.
  */
-export function getRedirectEnd(self: bigint): boolean {
+export function getRedirectEnd(self: bigint): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.redirectEnd;
 }
@@ -815,7 +815,7 @@ export function getRedirectEnd(self: bigint): boolean {
 /**
  * `get-fetch-start()` operation.
  */
-export function getFetchStart(self: bigint): number {
+export function getFetchStart(self: string): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.fetchStart;
 }
@@ -823,7 +823,7 @@ export function getFetchStart(self: bigint): number {
 /**
  * `get-domain-lookup-start()` operation.
  */
-export function getDomainLookupStart(self: string): number {
+export function getDomainLookupStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupStart;
 }
@@ -831,7 +831,7 @@ export function getDomainLookupStart(self: string): number {
 /**
  * `get-domain-lookup-end()` operation.
  */
-export function getDomainLookupEnd(self: bigint): bigint {
+export function getDomainLookupEnd(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.domainLookupEnd;
 }
@@ -839,7 +839,7 @@ export function getDomainLookupEnd(self: bigint): bigint {
 /**
  * `get-connect-start()` operation.
  */
-export function getConnectStart(self: number): bigint {
+export function getConnectStart(self: bigint | undefined): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.connectStart;
 }
@@ -847,7 +847,7 @@ export function getConnectStart(self: number): bigint {
 /**
  * `get-connect-end()` operation.
  */
-export function getConnectEnd(self: string): number {
+export function getConnectEnd(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.connectEnd;
 }
@@ -855,7 +855,7 @@ export function getConnectEnd(self: string): number {
 /**
  * `get-secure-connection-start()` operation.
  */
-export function getSecureConnectionStart(self: bigint): bigint {
+export function getSecureConnectionStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.secureConnectionStart;
 }
@@ -863,7 +863,7 @@ export function getSecureConnectionStart(self: bigint): bigint {
 /**
  * `get-request-start()` operation.
  */
-export function getRequestStart(self: bigint): bigint {
+export function getRequestStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.requestStart;
 }
@@ -871,7 +871,7 @@ export function getRequestStart(self: bigint): bigint {
 /**
  * `get-final-response-headers-start()` operation.
  */
-export function getFinalResponseHeadersStart(self: bigint): bigint {
+export function getFinalResponseHeadersStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.finalResponseHeadersStart;
 }
@@ -879,7 +879,7 @@ export function getFinalResponseHeadersStart(self: bigint): bigint {
 /**
  * `get-first-interim-response-start()` operation.
  */
-export function getFirstInterimResponseStart(self: string): bigint {
+export function getFirstInterimResponseStart(self: boolean): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.firstInterimResponseStart;
 }
@@ -887,7 +887,7 @@ export function getFirstInterimResponseStart(self: string): bigint {
 /**
  * `get-response-start()` operation.
  */
-export function getResponseStart(self: bigint): bigint | undefined {
+export function getResponseStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseStart;
 }
@@ -895,7 +895,7 @@ export function getResponseStart(self: bigint): bigint | undefined {
 /**
  * `get-response-end()` operation.
  */
-export function getResponseEnd(self: bigint): string | undefined {
+export function getResponseEnd(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseEnd;
 }
@@ -903,7 +903,7 @@ export function getResponseEnd(self: bigint): string | undefined {
 /**
  * `get-worker-router-evaluation-start()` operation.
  */
-export function getWorkerRouterEvaluationStart(self: string): string | undefined {
+export function getWorkerRouterEvaluationStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerRouterEvaluationStart;
 }
@@ -911,7 +911,7 @@ export function getWorkerRouterEvaluationStart(self: string): string | undefined
 /**
  * `get-worker-cache-lookup-start()` operation.
  */
-export function getWorkerCacheLookupStart(self: bigint): string {
+export function getWorkerCacheLookupStart(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerCacheLookupStart;
 }
@@ -919,7 +919,7 @@ export function getWorkerCacheLookupStart(self: bigint): string {
 /**
  * `get-worker-matched-router-source()` operation.
  */
-export function getWorkerMatchedRouterSource(self: bigint): bigint {
+export function getWorkerMatchedRouterSource(self: bigint): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.workerMatchedRouterSource;
 }
@@ -935,7 +935,7 @@ export function getWorkerFinalRouterSource(self: bigint): string {
 /**
  * `get-transfer-size()` operation.
  */
-export function getTransferSize(self: bigint): bigint {
+export function getTransferSize(self: boolean): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.transferSize;
 }
@@ -951,7 +951,7 @@ export function getEncodedBodySize(self: bigint): bigint {
 /**
  * `get-decoded-body-size()` operation.
  */
-export function getDecodedBodySize(self: string): number {
+export function getDecodedBodySize(self: bigint): bigint {
   const obj = getPerformanceResourceTiming(self);
   return obj.decodedBodySize;
 }
@@ -959,7 +959,7 @@ export function getDecodedBodySize(self: string): number {
 /**
  * `get-response-status()` operation.
  */
-export function getResponseStatus(self: bigint): bigint | undefined {
+export function getResponseStatus(self: bigint): number {
   const obj = getPerformanceResourceTiming(self);
   return obj.responseStatus;
 }
@@ -975,7 +975,7 @@ export function getRenderBlockingStatus(self: bigint): bigint {
 /**
  * `get-content-type()` operation.
  */
-export function getContentType(self: bigint): bigint {
+export function getContentType(self: bigint): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.contentType;
 }
@@ -983,7 +983,7 @@ export function getContentType(self: bigint): bigint {
 /**
  * `get-content-encoding()` operation.
  */
-export function getContentEncoding(self: bigint): bigint {
+export function getContentEncoding(self: bigint): string {
   const obj = getPerformanceResourceTiming(self);
   return obj.contentEncoding;
 }
@@ -1019,7 +1019,7 @@ function getPerformanceMark(handle: bigint): performancemark {
 /**
  * `get-detail()` operation.
  */
-export function getDetail(self: bigint): string {
+export function getDetail(self: bigint): bigint {
   const obj = getPerformanceMark(self);
   return obj.detail;
 }

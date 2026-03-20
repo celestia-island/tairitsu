@@ -32,7 +32,7 @@ function getModule(handle: bigint): module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (bigint)[] {
+export function exports(moduleObject: bigint): bigint {
   const obj = getModule(self);
   return obj.exports(moduleObject);
 }
@@ -40,7 +40,7 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (string)[] {
+export function imports(moduleObject: bigint): bigint {
   const obj = getModule(self);
   return obj.imports(moduleObject);
 }
@@ -48,7 +48,7 @@ export function imports(moduleObject: bigint): (string)[] {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: boolean): string | undefined {
+export function customSections(moduleObject: bigint, sectionName: string): ((string)[])[] {
   const obj = getModule(self);
   return obj.customSections(moduleObject, sectionName);
 }
@@ -76,7 +76,7 @@ function getInstance(handle: bigint): instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): bigint {
+export function getExports(self: bigint): string {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -104,7 +104,7 @@ function getMemory(handle: bigint): memory {
 /**
  * `grow()` operation.
  */
-export function grow(self: bigint, delta: string): bigint {
+export function grow(self: bigint, delta: string): string | undefined {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -112,7 +112,7 @@ export function grow(self: bigint, delta: string): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): string {
+export function toFixedLengthBuffer(self: bigint): (string)[] {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -260,7 +260,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): bigint {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }
