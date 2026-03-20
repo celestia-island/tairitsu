@@ -40,12 +40,12 @@ function getPaymentRequest(handle: bigint): PaymentRequest {
     throw new Error(`PaymentRequest handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `show()` operation.
  */
-export function show(self: bigint, detailsPromise: number): number {
+export function show(self: bigint, detailsPromise: bigint | undefined): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.show(detailsPromise);
 }
@@ -107,7 +107,7 @@ export function getId(self: bigint): string {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentRequestGetShippingAddress(self: bigint): bigint | undefined {
+export function PaymentRequestGetShippingAddress(self: bigint): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -115,7 +115,7 @@ export function PaymentRequestGetShippingAddress(self: bigint): bigint | undefin
 /**
  * `get-shipping-option()` operation.
  */
-export function PaymentRequestGetShippingOption(self: bigint): string {
+export function PaymentRequestGetShippingOption(self: bigint): string | undefined {
   const obj = getPaymentRequest(self);
   return obj.shippingOption ?? undefined;
 }
@@ -123,7 +123,7 @@ export function PaymentRequestGetShippingOption(self: bigint): string {
 /**
  * `get-shipping-type()` operation.
  */
-export function getShippingType(self: bigint): bigint | undefined {
+export function getShippingType(self: bigint): boolean {
   const obj = getPaymentRequest(self);
   return obj.shippingType ?? undefined;
 }
@@ -131,7 +131,7 @@ export function getShippingType(self: bigint): bigint | undefined {
 /**
  * `get-onshippingaddresschange()` operation.
  */
-export function getOnshippingaddresschange(self: bigint): string {
+export function getOnshippingaddresschange(self: bigint): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.onshippingaddresschange;
 }
@@ -139,7 +139,7 @@ export function getOnshippingaddresschange(self: bigint): string {
 /**
  * `set-onshippingaddresschange()` operation.
  */
-export function setOnshippingaddresschange(self: bigint, value: EventHandlerRecord): void {
+export function setOnshippingaddresschange(self: bigint, value: boolean): void {
   const obj = getPaymentRequest(self);
   obj.onshippingaddresschange = value;
 }
@@ -155,7 +155,7 @@ export function getOnshippingoptionchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onshippingoptionchange()` operation.
  */
-export function setOnshippingoptionchange(self: bigint, value: number): void {
+export function setOnshippingoptionchange(self: bigint, value: string): void {
   const obj = getPaymentRequest(self);
   obj.onshippingoptionchange = value;
 }
@@ -163,7 +163,7 @@ export function setOnshippingoptionchange(self: bigint, value: number): void {
 /**
  * `get-onpaymentmethodchange()` operation.
  */
-export function getOnpaymentmethodchange(self: bigint): bigint {
+export function getOnpaymentmethodchange(self: bigint): EventHandlerRecord {
   const obj = getPaymentRequest(self);
   return obj.onpaymentmethodchange;
 }
@@ -171,7 +171,7 @@ export function getOnpaymentmethodchange(self: bigint): bigint {
 /**
  * `set-onpaymentmethodchange()` operation.
  */
-export function setOnpaymentmethodchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnpaymentmethodchange(self: bigint, value: string): void {
   const obj = getPaymentRequest(self);
   obj.onpaymentmethodchange = value;
 }
@@ -194,12 +194,12 @@ function getPaymentResponse(handle: bigint): PaymentResponse {
     throw new Error(`PaymentResponse handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): number {
+export function toJson(self: bigint): string {
   const obj = getPaymentResponse(self);
   return obj.toJson();
 }
@@ -207,7 +207,7 @@ export function toJson(self: bigint): number {
 /**
  * `get-request-id()` operation.
  */
-export function getRequestId(self: bigint): EventHandlerRecord {
+export function getRequestId(self: bigint): string {
   const obj = getPaymentResponse(self);
   return obj.requestId;
 }
@@ -215,7 +215,7 @@ export function getRequestId(self: bigint): EventHandlerRecord {
 /**
  * `get-method-name()` operation.
  */
-export function PaymentResponseGetMethodName(self: bigint): string {
+export function PaymentResponseGetMethodName(self: bigint): number {
   const obj = getPaymentResponse(self);
   return obj.methodName;
 }
@@ -223,7 +223,7 @@ export function PaymentResponseGetMethodName(self: bigint): string {
 /**
  * `get-details()` operation.
  */
-export function getDetails(self: bigint): bigint {
+export function getDetails(self: bigint): string {
   const obj = getPaymentResponse(self);
   return obj.details;
 }
@@ -231,7 +231,7 @@ export function getDetails(self: bigint): bigint {
 /**
  * `get-shipping-address()` operation.
  */
-export function PaymentResponseGetShippingAddress(self: bigint): EventHandlerRecord {
+export function PaymentResponseGetShippingAddress(self: bigint): boolean {
   const obj = getPaymentResponse(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -239,7 +239,7 @@ export function PaymentResponseGetShippingAddress(self: bigint): EventHandlerRec
 /**
  * `get-shipping-option()` operation.
  */
-export function PaymentResponseGetShippingOption(self: bigint): EventHandlerRecord | undefined {
+export function PaymentResponseGetShippingOption(self: bigint): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.shippingOption ?? undefined;
 }
@@ -247,7 +247,7 @@ export function PaymentResponseGetShippingOption(self: bigint): EventHandlerReco
 /**
  * `get-payer-name()` operation.
  */
-export function getPayerName(self: bigint): string {
+export function getPayerName(self: bigint): EventHandlerRecord | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerName ?? undefined;
 }
@@ -295,7 +295,7 @@ export function getOnpayerdetailchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onpayerdetailchange()` operation.
  */
-export function setOnpayerdetailchange(self: bigint, value: boolean): void {
+export function setOnpayerdetailchange(self: bigint, value: string): void {
   const obj = getPaymentResponse(self);
   obj.onpayerdetailchange = value;
 }
@@ -318,7 +318,7 @@ function getPaymentMethodChangeEvent(handle: bigint): PaymentMethodChangeEvent {
     throw new Error(`PaymentMethodChangeEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-method-name()` operation.
@@ -354,12 +354,12 @@ function getPaymentRequestUpdateEvent(handle: bigint): PaymentRequestUpdateEvent
     throw new Error(`PaymentRequestUpdateEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `update-with()` operation.
  */
-export function updateWith(self: bigint, detailsPromise: bigint): void {
+export function updateWith(self: bigint, detailsPromise: number): void {
   const obj = getPaymentRequestUpdateEvent(self);
   obj.updateWith(detailsPromise);
 }

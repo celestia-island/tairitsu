@@ -40,7 +40,7 @@ function getAudioDecoder(handle: bigint): AudioDecoder {
     throw new Error(`AudioDecoder handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
@@ -199,7 +199,7 @@ function getVideoDecoder(handle: bigint): VideoDecoder {
     throw new Error(`VideoDecoder handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
@@ -358,7 +358,7 @@ function getAudioEncoder(handle: bigint): AudioEncoder {
     throw new Error(`AudioEncoder handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
@@ -517,7 +517,7 @@ function getVideoEncoder(handle: bigint): VideoEncoder {
     throw new Error(`VideoEncoder handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
@@ -676,7 +676,7 @@ function getEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
     throw new Error(`EncodedAudioChunk handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -736,7 +736,7 @@ function getEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
     throw new Error(`EncodedVideoChunk handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -796,7 +796,7 @@ function getAudioData(handle: bigint): AudioData {
     throw new Error(`AudioData handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-format()` operation.
@@ -956,7 +956,7 @@ function getVideoFrame(handle: bigint): VideoFrame {
     throw new Error(`VideoFrame handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-format()` operation.
@@ -1172,7 +1172,7 @@ function getVideoColorSpace(handle: bigint): VideoColorSpace {
     throw new Error(`VideoColorSpace handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-primaries()` operation.
@@ -1232,7 +1232,7 @@ function getImageDecoder(handle: bigint): ImageDecoder {
     throw new Error(`ImageDecoder handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -1345,7 +1345,7 @@ function getImageTrackList(handle: bigint): ImageTrackList {
     throw new Error(`ImageTrackList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `image-track()` operation.
@@ -1405,7 +1405,7 @@ function getImageTrack(handle: bigint): ImageTrack {
     throw new Error(`ImageTrack handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-animated()` operation.
@@ -1465,7 +1465,7 @@ function getWebGlObject(handle: bigint): WebGlObject {
     throw new Error(`WebGlObject handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-label()` operation.
@@ -1501,7 +1501,7 @@ function getWebGlActiveInfo(handle: bigint): WebGlActiveInfo {
     throw new Error(`WebGlActiveInfo handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-size()` operation.
@@ -1545,7 +1545,7 @@ function getWebGlShaderPrecisionFormat(handle: bigint): WebGlShaderPrecisionForm
     throw new Error(`WebGlShaderPrecisionFormat handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-range-min()` operation.
@@ -1587,7 +1587,7 @@ function registerWebGlRenderingContextBase(obj: WebGlRenderingContextBase): bigi
   const handle = _nextWebGlRenderingContextBase++;
   _webGlRenderingContextBasehandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a WebGlRenderingContextBase by handle, throwing if not found. */
 function getWebGlRenderingContextBase(handle: bigint): WebGlRenderingContextBase {
@@ -1596,7 +1596,7 @@ function getWebGlRenderingContextBase(handle: bigint): WebGlRenderingContextBase
     throw new Error(`WebGlRenderingContextBase handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-canvas()` operation.
@@ -2662,7 +2662,7 @@ function getWebGlRenderingContextOverloads(handle: bigint): WebGlRenderingContex
     throw new Error(`WebGlRenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `buffer-data()` operation.
@@ -2826,7 +2826,7 @@ function getWebGlContextEvent(handle: bigint): WebGlContextEvent {
     throw new Error(`WebGlContextEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-status-message()` operation.
@@ -2852,7 +2852,7 @@ function registerWebGl2RenderingContextBase(obj: WebGl2RenderingContextBase): bi
   const handle = _nextWebGl2RenderingContextBase++;
   _webGl2RenderingContextBasehandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a WebGl2RenderingContextBase by handle, throwing if not found. */
 function getWebGl2RenderingContextBase(handle: bigint): WebGl2RenderingContextBase {
@@ -2861,7 +2861,7 @@ function getWebGl2RenderingContextBase(handle: bigint): WebGl2RenderingContextBa
     throw new Error(`WebGl2RenderingContextBase handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `copy-buffer-sub-data()` operation.
@@ -3585,7 +3585,7 @@ function getWebGl2RenderingContextOverloads(handle: bigint): WebGl2RenderingCont
     throw new Error(`WebGl2RenderingContextOverloads handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `buffer-data()` operation.

@@ -40,12 +40,12 @@ function getFileReader(handle: bigint): FileReader {
     throw new Error(`FileReader handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): EventHandlerRecord {
+export function newFileReader(): number {
   return FileReader.newFileReader();
 }
 
@@ -90,14 +90,14 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): string {
+export function readyState(handle: bigint): number {
   return FileReader.readyState(handle);
 }
 
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): string {
+export function resultVal(handle: bigint): boolean | undefined {
   return FileReader.resultVal(handle);
 }
 
@@ -119,7 +119,7 @@ function getFileList(handle: bigint): FileList {
     throw new Error(`FileList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `length()` operation.

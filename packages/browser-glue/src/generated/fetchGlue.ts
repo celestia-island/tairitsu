@@ -40,12 +40,12 @@ function getHeaders(handle: bigint): Headers {
     throw new Error(`Headers handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: string, value: string): void {
+export function HeadersAppend(self: bigint, name: string, value: boolean | undefined): void {
   const obj = getHeaders(self);
   obj.append(name, value);
 }
@@ -55,15 +55,45 @@ export function HeadersAppend(self: bigint, name: string, value: string): void {
  */
 export function HeadersDelete(self: bigint, name: string): void {
   const obj = getHeaders(self);
-  obj._delete(name);
+  obj.delete(name);
 }
 
 /**
  * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `HeadersPollGet()`
  */
-export function HeadersGet(self: bigint, name: string): string | undefined {
+export function HeadersGet(self: bigint, name: string): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getHeaders(self);
-  return obj._get(name) ?? undefined;
+  const promise = obj.get(name)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function HeadersPollGet(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -85,9 +115,9 @@ export function HeadersHas(self: bigint, name: string): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: EventHandlerRecord, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: EventHandlerRecord): void {
   const obj = getHeaders(self);
-  obj._set(name, value);
+  obj.set(name, value);
 }
 
 // ---------------------------------------------------------------------------
@@ -108,12 +138,12 @@ function getBody(handle: bigint): Body {
     throw new Error(`Body handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): boolean {
+export function getBody(self: bigint): bigint {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -121,7 +151,7 @@ export function getBody(self: bigint): boolean {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): string | undefined {
+export function getBodyUsed(self: bigint): string {
   const obj = getBody(self);
   return obj.bodyUsed;
 }
@@ -232,7 +262,7 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -372,7 +402,7 @@ function getRequest(handle: bigint): Request {
     throw new Error(`Request handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-method()` operation.
@@ -409,7 +439,7 @@ export function getDestination(self: bigint): bigint {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint): bigint {
+export function getReferrer(self: bigint): string {
   const obj = getRequest(self);
   return obj.referrer;
 }
@@ -441,7 +471,7 @@ export function getCredentials(self: bigint): bigint {
 /**
  * `get-cache()` operation.
  */
-export function getCache(self: bigint): number {
+export function getCache(self: bigint): boolean {
   const obj = getRequest(self);
   return obj.cache;
 }
@@ -449,7 +479,7 @@ export function getCache(self: bigint): number {
 /**
  * `get-redirect()` operation.
  */
-export function getRedirect(self: bigint): bigint {
+export function getRedirect(self: bigint): number {
   const obj = getRequest(self);
   return obj.redirect;
 }
@@ -457,7 +487,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): EventHandlerRecord {
+export function getIntegrity(self: bigint): string {
   const obj = getRequest(self);
   return obj.integrity;
 }
@@ -532,7 +562,7 @@ export function RequestClone(self: bigint): bigint {
  * Poll an async `clone()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function RequestPollClone(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function RequestPollClone(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -558,7 +588,7 @@ function getResponse(handle: bigint): Response {
     throw new Error(`Response handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `error()` operation.
@@ -570,7 +600,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: EventHandlerRecord): bigint {
+export function redirect(url: string, status: number | undefined): bigint {
   return Response.redirect(url, status);
 }
 
@@ -604,7 +634,7 @@ export function ResponseJson(data: string, init: bigint | undefined): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ResponsePollJson(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function ResponsePollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -623,7 +653,7 @@ export function getType(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function ResponseGetUrl(self: bigint): string {
+export function ResponseGetUrl(self: bigint): number {
   const obj = getResponse(self);
   return obj.url;
 }
@@ -722,7 +752,7 @@ function registerWindowOrWorkerGlobalScope(obj: WindowOrWorkerGlobalScope): bigi
   const handle = _nextWindowOrWorkerGlobalScope++;
   _windowOrWorkerGlobalScopehandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a WindowOrWorkerGlobalScope by handle, throwing if not found. */
 function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
@@ -731,7 +761,7 @@ function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope
     throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `fetch()` operation.
@@ -814,7 +844,7 @@ export function reportError(self: bigint, e: string): void {
 /**
  * `btoa()` operation.
  */
-export function btoa(self: bigint, data: string): string {
+export function btoa(self: bigint, data: bigint | undefined): bigint | undefined {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.btoa(data);
 }
@@ -822,7 +852,7 @@ export function btoa(self: bigint, data: string): string {
 /**
  * `atob()` operation.
  */
-export function atob(self: bigint, data: string): string {
+export function atob(self: bigint, data: bigint): string {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.atob(data);
 }
@@ -830,7 +860,7 @@ export function atob(self: bigint, data: string): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (bigint | undefined)[]): number {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (string)[]): bigint | undefined {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.timeout = _arguments;
 }
@@ -838,7 +868,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: bigint | undefined): void {
+export function clearTimeout(self: bigint, id: number | undefined): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }
@@ -846,7 +876,7 @@ export function clearTimeout(self: bigint, id: bigint | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: bigint, _arguments: bigint): number {
+export function setInterval(self: bigint, handler: bigint | undefined, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.interval = _arguments;
 }
@@ -854,7 +884,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: bigint, _arg
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: bigint | undefined): void {
+export function clearInterval(self: bigint, id: number | undefined): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
@@ -862,7 +892,7 @@ export function clearInterval(self: bigint, id: bigint | undefined): void {
 /**
  * `queue-microtask()` operation.
  */
-export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
+export function queueMicrotask(self: bigint, callback: bigint): void {
   const obj = getWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback);
 }
@@ -908,7 +938,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: bigint, options: bigint): bigint {
+export function structuredClone(self: bigint, value: string, options: bigint): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value, options);
 }
@@ -916,7 +946,7 @@ export function structuredClone(self: bigint, value: bigint, options: bigint): b
 /**
  * `get-caches()` operation.
  */
-export function getCaches(self: bigint): bigint | undefined {
+export function getCaches(self: bigint): bigint {
   const obj = getWindowOrWorkerGlobalScope(self);
   return obj.caches;
 }
@@ -947,12 +977,12 @@ function getFetchLaterResult(handle: bigint): FetchLaterResult {
     throw new Error(`FetchLaterResult handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-activated()` operation.
  */
-export function getActivated(self: bigint): bigint | undefined {
+export function getActivated(self: bigint): boolean {
   const obj = getFetchLaterResult(self);
   return obj.activated;
 }
@@ -975,7 +1005,7 @@ function getReadableStream(handle: bigint): ReadableStream {
     throw new Error(`ReadableStream handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `from()` operation.
@@ -1007,7 +1037,7 @@ export function from(asyncIterable: string): bigint {
  * Poll an async `from()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFrom(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function pollFrom(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1053,7 +1083,7 @@ export function ReadableStreamCancel(self: bigint, reason: bigint): bigint {
  * Poll an async `cancel()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: Uint8Array | undefined } | { ok: false; error: string } | undefined {
+export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1171,7 +1201,7 @@ function getReadableStreamGenericReader(handle: bigint): ReadableStreamGenericRe
     throw new Error(`ReadableStreamGenericReader handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-closed()` operation.
@@ -1237,7 +1267,7 @@ function getReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultRe
     throw new Error(`ReadableStreamDefaultReader handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `read()` operation.
@@ -1303,7 +1333,7 @@ function getReadableStreamByobReader(handle: bigint): ReadableStreamByobReader {
     throw new Error(`ReadableStreamByobReader handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `read()` operation.
@@ -1369,7 +1399,7 @@ function getReadableStreamDefaultController(handle: bigint): ReadableStreamDefau
     throw new Error(`ReadableStreamDefaultController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-desired-size()` operation.
@@ -1451,7 +1481,7 @@ function getReadableByteStreamController(handle: bigint): ReadableByteStreamCont
     throw new Error(`ReadableByteStreamController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-byob-request()` operation.
@@ -1541,7 +1571,7 @@ function getReadableStreamByobRequest(handle: bigint): ReadableStreamByobRequest
     throw new Error(`ReadableStreamByobRequest handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-view()` operation.
@@ -1615,7 +1645,7 @@ function getWritableStream(handle: bigint): WritableStream {
     throw new Error(`WritableStream handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-locked()` operation.
@@ -1727,7 +1757,7 @@ function getWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWr
     throw new Error(`WritableStreamDefaultWriter handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-closed()` operation.
@@ -1893,7 +1923,7 @@ function getWritableStreamDefaultController(handle: bigint): WritableStreamDefau
     throw new Error(`WritableStreamDefaultController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-signal()` operation.
@@ -1929,7 +1959,7 @@ function getTransformStream(handle: bigint): TransformStream {
     throw new Error(`TransformStream handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-readable()` operation.
@@ -1965,7 +1995,7 @@ function getTransformStreamDefaultController(handle: bigint): TransformStreamDef
     throw new Error(`TransformStreamDefaultController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-desired-size()` operation.
@@ -2017,7 +2047,7 @@ function getByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy
     throw new Error(`ByteLengthQueuingStrategy handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-high-water-mark()` operation.
@@ -2053,7 +2083,7 @@ function getCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
     throw new Error(`CountQueuingStrategy handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-high-water-mark()` operation.
@@ -2089,7 +2119,7 @@ function getGenericTransformStream(handle: bigint): GenericTransformStream {
     throw new Error(`GenericTransformStream handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-readable()` operation.
@@ -2125,7 +2155,7 @@ function getXmlHttpRequestEventTarget(handle: bigint): XmlHttpRequestEventTarget
     throw new Error(`XmlHttpRequestEventTarget handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-onloadstart()` operation.
@@ -2257,7 +2287,7 @@ function getXmlHttpRequest(handle: bigint): XmlHttpRequest {
     throw new Error(`XmlHttpRequest handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-onreadystatechange()` operation.
@@ -2491,7 +2521,7 @@ function getFormData(handle: bigint): FormData {
     throw new Error(`FormData handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `append()` operation.
@@ -2506,15 +2536,45 @@ export function FormDataAppend(self: bigint, name: string, value: string): void 
  */
 export function FormDataDelete(self: bigint, name: string): void {
   const obj = getFormData(self);
-  obj._delete(name);
+  obj.delete(name);
 }
 
 /**
  * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `FormDataPollGet()`
  */
-export function FormDataGet(self: bigint, name: string): bigint | undefined {
+export function FormDataGet(self: bigint, name: string): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getFormData(self);
-  return obj._get(name) ?? undefined;
+  const promise = obj.get(name)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function FormDataPollGet(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -2538,7 +2598,7 @@ export function FormDataHas(self: bigint, name: string): boolean {
  */
 export function FormDataSet(self: bigint, name: string, value: string): void {
   const obj = getFormData(self);
-  obj._set(name, value);
+  obj.set(name, value);
 }
 
 // ---------------------------------------------------------------------------
@@ -2559,7 +2619,7 @@ function getProgressEvent(handle: bigint): ProgressEvent {
     throw new Error(`ProgressEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length-computable()` operation.
@@ -2593,6 +2653,7 @@ export default {
   HeadersAppend,
   HeadersDelete,
   HeadersGet,
+  HeadersPollGet,
   getSetCookie,
   HeadersHas,
   HeadersSet,
@@ -2767,6 +2828,7 @@ export default {
   FormDataAppend,
   FormDataDelete,
   FormDataGet,
+  FormDataPollGet,
   getAll,
   FormDataHas,
   FormDataSet,

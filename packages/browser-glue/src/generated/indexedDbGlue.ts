@@ -40,7 +40,7 @@ function getIdbFactory(handle: bigint): IdbFactory {
     throw new Error(`IdbFactory handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `cmp()` operation.
@@ -67,7 +67,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
     throw new Error(`IDBDatabase handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `name()` operation.
@@ -79,7 +79,7 @@ export function name(handle: bigint): string {
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): string {
+export function version(handle: bigint): bigint {
   return IDBDatabase.version(handle);
 }
 
@@ -101,7 +101,7 @@ function getIdbTx(handle: bigint): IDBTransaction {
     throw new Error(`IDBTransaction handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `commit()` operation.
@@ -166,7 +166,7 @@ function getIdbStore(handle: bigint): IdbObjectStore {
     throw new Error(`IdbObjectStore handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -216,7 +216,7 @@ function getIdbIndex(handle: bigint): IdbIndex {
     throw new Error(`IdbIndex handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -273,7 +273,7 @@ function getIdbCursor(handle: bigint): IdbCursor {
     throw new Error(`IdbCursor handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `source()` operation.
@@ -307,7 +307,7 @@ export function advance(handle: bigint, count: number): void {
  * `continue()` operation.
  */
 export function _continue(handle: bigint, key: string): void {
-  return IdbCursor._continue(handle, key);
+  return IdbCursor.continue(handle, key);
 }
 
 /**
@@ -335,7 +335,7 @@ function getIdbRequest(handle: bigint): IDBRequest {
     throw new Error(`IDBRequest handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `result-val()` operation.
@@ -347,7 +347,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): boolean | undefined {
+export function IdbRequestSource(handle: bigint): string | undefined {
   return IDBRequest.source(handle);
 }
 

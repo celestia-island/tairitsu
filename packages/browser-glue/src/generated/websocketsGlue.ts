@@ -40,12 +40,12 @@ function getWs(handle: bigint): WebSocket {
     throw new Error(`WebSocket handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): string {
   return WebSocket.connect(url, protocols);
 }
 
@@ -59,7 +59,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): string {
+export function readyState(handle: bigint): number {
   return WebSocket.readyState(handle);
 }
 
@@ -73,7 +73,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint): bigint | undefined {
   return WebSocket.extensions(handle);
 }
 

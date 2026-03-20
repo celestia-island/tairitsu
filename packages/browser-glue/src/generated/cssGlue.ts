@@ -40,7 +40,7 @@ function getAnimationEvent(handle: bigint): AnimationEvent {
     throw new Error(`AnimationEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-animation-name()` operation.
@@ -84,7 +84,7 @@ function getCssRule(handle: bigint): CssRule {
     throw new Error(`CssRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-css-text()` operation.
@@ -144,7 +144,7 @@ function getCssKeyframeRule(handle: bigint): CssKeyframeRule {
     throw new Error(`CssKeyframeRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-key-text()` operation.
@@ -188,7 +188,7 @@ function getCssKeyframesRule(handle: bigint): CssKeyframesRule {
     throw new Error(`CssKeyframesRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -272,7 +272,7 @@ function getGlobalEventrs(handle: bigint): GlobalEventHandlers {
     throw new Error(`GlobalEventHandlers handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-onanimationstart()` operation.
@@ -1876,7 +1876,7 @@ function getCssConditionRule(handle: bigint): CssConditionRule {
     throw new Error(`CssConditionRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-condition-text()` operation.
@@ -1904,7 +1904,7 @@ function getCssMediaRule(handle: bigint): CssMediaRule {
     throw new Error(`CssMediaRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-media()` operation.
@@ -1940,7 +1940,7 @@ function getCssSupportsRule(handle: bigint): CssSupportsRule {
     throw new Error(`CssSupportsRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-matches()` operation.
@@ -1968,7 +1968,7 @@ function getCssFontFaceDescriptors(handle: bigint): CssFontFaceDescriptors {
     throw new Error(`CssFontFaceDescriptors handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-src()` operation.
@@ -2228,7 +2228,7 @@ function getCssFontFaceRule(handle: bigint): CssFontFaceRule {
     throw new Error(`CssFontFaceRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-style()` operation.
@@ -2256,7 +2256,7 @@ function getCssFontFeatureValuesRule(handle: bigint): CssFontFeatureValuesRule {
     throw new Error(`CssFontFeatureValuesRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-font-family()` operation.
@@ -2348,14 +2348,14 @@ function getCssFontFeatureValuesMap(handle: bigint): CssFontFeatureValuesMap {
     throw new Error(`CssFontFeatureValuesMap handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `set()` operation.
  */
 export function _set(self: bigint, featureValueName: string, values: number): void {
   const obj = getCssFontFeatureValuesMap(self);
-  obj._set(featureValueName, values);
+  obj.set(featureValueName, values);
 }
 
 // ---------------------------------------------------------------------------
@@ -2376,7 +2376,7 @@ function getCssFontPaletteValuesRule(handle: bigint): CssFontPaletteValuesRule {
     throw new Error(`CssFontPaletteValuesRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -2428,7 +2428,7 @@ function getTransitionEvent(handle: bigint): TransitionEvent {
     throw new Error(`TransitionEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-property-name()` operation.
@@ -3000,7 +3000,7 @@ function getMediaQueryList(handle: bigint): MediaQueryList {
     throw new Error(`MediaQueryList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-media()` operation.
@@ -3068,7 +3068,7 @@ function getMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
     throw new Error(`MediaQueryListEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-media()` operation.
@@ -3104,7 +3104,7 @@ function getScreen(handle: bigint): Screen {
     throw new Error(`Screen handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-avail-width()` operation.
@@ -3955,7 +3955,7 @@ function getCaretPosition(handle: bigint): CaretPosition {
     throw new Error(`CaretPosition handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-offset-node()` operation.
@@ -3999,7 +3999,7 @@ function getElement(handle: bigint): Element {
     throw new Error(`Element handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-client-rects()` operation.
@@ -4595,7 +4595,7 @@ function getHtmlElement(handle: bigint): HtmlElement {
     throw new Error(`HtmlElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-scroll-parent()` operation.
@@ -4983,7 +4983,7 @@ function getHtmlImageElement(handle: bigint): HtmlImageElement {
     throw new Error(`HtmlImageElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-x()` operation.
@@ -5377,7 +5377,7 @@ function registerRange(obj: Range): bigint {
   const handle = _nextRange++;
   _rangeHandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a Range by handle, throwing if not found. */
 function getRange(handle: bigint): Range {
@@ -5386,7 +5386,7 @@ function getRange(handle: bigint): Range {
     throw new Error(`Range handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-client-rects()` operation.
@@ -5598,7 +5598,7 @@ function getMouseEvent(handle: bigint): MouseEvent {
     throw new Error(`MouseEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-screen-x()` operation.
@@ -5786,7 +5786,7 @@ function getGeometryUtils(handle: bigint): GeometryUtils {
     throw new Error(`GeometryUtils handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-box-quads()` operation.
@@ -5838,7 +5838,7 @@ function getVisualViewport(handle: bigint): VisualViewport {
     throw new Error(`VisualViewport handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-offset-left()` operation.
@@ -5962,7 +5962,7 @@ function getMediaList(handle: bigint): MediaList {
     throw new Error(`MediaList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-media-text()` operation.
@@ -6030,7 +6030,7 @@ function getStyleSheet(handle: bigint): StyleSheet {
     throw new Error(`StyleSheet handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -6114,7 +6114,7 @@ function getCssStyleSheet(handle: bigint): CssStyleSheet {
     throw new Error(`CssStyleSheet handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-owner-rule()` operation.
@@ -6206,7 +6206,7 @@ function getStyleSheetList(handle: bigint): StyleSheetList {
     throw new Error(`StyleSheetList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `item()` operation.
@@ -6242,7 +6242,7 @@ function getDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
     throw new Error(`DocumentOrShadowRoot handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-style-sheets()` operation.
@@ -6310,7 +6310,7 @@ function getLinkStyle(handle: bigint): LinkStyle {
     throw new Error(`LinkStyle handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-sheet()` operation.
@@ -6338,7 +6338,7 @@ function getCssRuleList(handle: bigint): CssRuleList {
     throw new Error(`CssRuleList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `item()` operation.
@@ -6374,7 +6374,7 @@ function getCssStyleRule(handle: bigint): CssStyleRule {
     throw new Error(`CssStyleRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-selector-text()` operation.
@@ -6418,7 +6418,7 @@ function getCssImportRule(handle: bigint): CssImportRule {
     throw new Error(`CssImportRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -6478,7 +6478,7 @@ function getCssGroupingRule(handle: bigint): CssGroupingRule {
     throw new Error(`CssGroupingRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-css-rules()` operation.
@@ -6522,7 +6522,7 @@ function getCssPageDescriptors(handle: bigint): CssPageDescriptors {
     throw new Error(`CssPageDescriptors handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-margin()` operation.
@@ -6686,7 +6686,7 @@ function getCssPageRule(handle: bigint): CssPageRule {
     throw new Error(`CssPageRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-selector-text()` operation.
@@ -6730,7 +6730,7 @@ function getCssMarginRule(handle: bigint): CssMarginRule {
     throw new Error(`CssMarginRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -6766,7 +6766,7 @@ function getCssNamespaceRule(handle: bigint): CssNamespaceRule {
     throw new Error(`CssNamespaceRule handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-namespace-uri()` operation.
@@ -6802,7 +6802,7 @@ function getCssStyleDeclaration(handle: bigint): CssStyleDeclaration {
     throw new Error(`CssStyleDeclaration handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-css-text()` operation.
@@ -6894,7 +6894,7 @@ function getCssStyleProperties(handle: bigint): CssStyleProperties {
     throw new Error(`CssStyleProperties handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-css-float()` operation.
@@ -6930,7 +6930,7 @@ function getElementCssInlineStyle(handle: bigint): ElementCssInlineStyle {
     throw new Error(`ElementCssInlineStyle handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-style()` operation.

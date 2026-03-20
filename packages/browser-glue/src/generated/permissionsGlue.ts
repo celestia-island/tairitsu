@@ -40,7 +40,7 @@ function getPermissions(handle: bigint): Permissions {
     throw new Error(`Permissions handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `query()` operation.
@@ -72,7 +72,7 @@ export function query(self: bigint, permissionDesc: bigint): bigint {
  * Poll an async `query()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollQuery(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollQuery(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -98,12 +98,12 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
     throw new Error(`PermissionStatus handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): number {
+export function getState(self: bigint): bigint {
   const obj = getPermissionStatus(self);
   return obj.state;
 }
@@ -127,7 +127,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: bigint): void {
+export function setOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

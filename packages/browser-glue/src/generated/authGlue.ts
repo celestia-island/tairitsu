@@ -10,6 +10,19 @@
  */
 
 // ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
+
+// ---------------------------------------------------------------------------
 // WIT interface: credential
 // ---------------------------------------------------------------------------
 
@@ -27,7 +40,7 @@ function getCredential(handle: bigint): Credential {
     throw new Error(`Credential handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-id()` operation.
@@ -59,18 +72,18 @@ export function isConditionalMediationAvailable(): bigint {
 /** Type alias */
 export type CredentialUserDataHandle = bigint;
 
-/** Handle table for CredentialUserData instances */
-const _credentialUserDatahandles = new Map<bigint, CredentialUserData>();
+/** Handle table for any instances */
+const _credentialUserDatahandles = new Map<bigint, any>();
 let _nextCredentialUserData = 1n;
 
-/** Get a CredentialUserData by handle, throwing if not found. */
-function getCredentialUserData(handle: bigint): CredentialUserData {
+/** Get a any by handle, throwing if not found. */
+function getCredentialUserData(handle: bigint): any {
   const obj = _credentialUserDatahandles.get(handle);
   if (!obj) {
-    throw new Error(`CredentialUserData handle ${handle} not found`);
+    throw new Error(`any handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -104,7 +117,7 @@ function registerCredentialsContainer(obj: CredentialsContainer): bigint {
   const handle = _nextCredentialsContainer++;
   _credentialsContainerhandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a CredentialsContainer by handle, throwing if not found. */
 function getCredentialsContainer(handle: bigint): CredentialsContainer {
@@ -113,38 +126,158 @@ function getCredentialsContainer(handle: bigint): CredentialsContainer {
     throw new Error(`CredentialsContainer handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollGet()`
  */
 export function _get(self: bigint, options: bigint | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
-  return obj._get(options);
+  const promise = obj.get(options)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollGet(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `store()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollStore()`
  */
 export function store(self: bigint, credential: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
-  return obj.store(credential);
+  const promise = obj.store(credential)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `store()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollStore(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `create()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollCreate()`
  */
 export function create(self: bigint, options: bigint | undefined): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
-  return obj.create(options);
+  const promise = obj.create(options)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `create()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollCreate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `prevent-silent-access()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollPreventSilentAccess()`
  */
 export function preventSilentAccess(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getCredentialsContainer(self);
-  return obj.preventSilentAccess();
+  const promise = obj.preventSilentAccess()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `preventSilentAccess()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollPreventSilentAccess(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,17 +288,17 @@ export function preventSilentAccess(self: bigint): bigint {
 export type PasswordCredentialHandle = bigint;
 
 /** Handle table for PasswordCredential instances */
-const _passwordCredentialhandles = new Map<bigint, PasswordCredential>();
+const _passwordCredentialhandles = new Map<bigint, any>();
 let _nextPasswordCredential = 1n;
 
 /** Get a PasswordCredential by handle, throwing if not found. */
-function getPasswordCredential(handle: bigint): PasswordCredential {
+function getPasswordCredential(handle: bigint): any {
   const obj = _passwordCredentialhandles.get(handle);
   if (!obj) {
     throw new Error(`PasswordCredential handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-password()` operation.
@@ -183,17 +316,17 @@ export function getPassword(self: bigint): string {
 export type FederatedCredentialHandle = bigint;
 
 /** Handle table for FederatedCredential instances */
-const _federatedCredentialhandles = new Map<bigint, FederatedCredential>();
+const _federatedCredentialhandles = new Map<bigint, any>();
 let _nextFederatedCredential = 1n;
 
 /** Get a FederatedCredential by handle, throwing if not found. */
-function getFederatedCredential(handle: bigint): FederatedCredential {
+function getFederatedCredential(handle: bigint): any {
   const obj = _federatedCredentialhandles.get(handle);
   if (!obj) {
     throw new Error(`FederatedCredential handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-provider()` operation.
@@ -222,9 +355,13 @@ export default {
   getName,
   getIconUrl,
   _get,
+  pollGet,
   store,
+  pollStore,
   create,
+  pollCreate,
   preventSilentAccess,
+  pollPreventSilentAccess,
   getPassword,
   getProvider,
   getProtocol

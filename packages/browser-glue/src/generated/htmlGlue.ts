@@ -40,7 +40,7 @@ function getHtmlAllCollection(handle: bigint): HtmlAllCollection {
     throw new Error(`HtmlAllCollection handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -76,7 +76,7 @@ function getRadioNodeList(handle: bigint): RadioNodeList {
     throw new Error(`RadioNodeList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value()` operation.
@@ -112,7 +112,7 @@ function getHtmlOptionsCollection(handle: bigint): HtmlOptionsCollection {
     throw new Error(`HtmlOptionsCollection handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -135,7 +135,7 @@ export function HtmlOptionsCollectionSetLength(self: bigint, value: number): voi
  */
 export function HtmlOptionsCollectionUndefined(self: bigint, index: number, option: bigint | undefined): void {
   const obj = getHtmlOptionsCollection(self);
-  obj._undefined(index, option);
+  obj.undefined(index, option);
 }
 
 /**
@@ -188,7 +188,7 @@ function getDomStringList(handle: bigint): DomStringList {
     throw new Error(`DomStringList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -232,7 +232,7 @@ function getHtmlOrSvgElement(handle: bigint): HtmlOrSvgElement {
     throw new Error(`HtmlOrSvgElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-dataset()` operation.
@@ -324,7 +324,7 @@ function getDomStringMap(handle: bigint): DomStringMap {
     throw new Error(`DomStringMap handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `dom-string()` operation.
@@ -339,7 +339,7 @@ export function domString(self: bigint, name: string): void {
  */
 export function DomStringMapUndefined(self: bigint, name: string, value: string): void {
   const obj = getDomStringMap(self);
-  obj._undefined(name, value);
+  obj.undefined(name, value);
 }
 
 // ---------------------------------------------------------------------------
@@ -360,7 +360,7 @@ function getHtmlHtmlElement(handle: bigint): HtmlHtmlElement {
     throw new Error(`HtmlHtmlElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-version()` operation.
@@ -396,7 +396,7 @@ function getHtmlTitleElement(handle: bigint): HtmlTitleElement {
     throw new Error(`HtmlTitleElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-text()` operation.
@@ -432,7 +432,7 @@ function getHtmlBaseElement(handle: bigint): HtmlBaseElement {
     throw new Error(`HtmlBaseElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -484,7 +484,7 @@ function getHtmlLinkElement(handle: bigint): HtmlLinkElement {
     throw new Error(`HtmlLinkElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -784,7 +784,7 @@ function getHtmlMetaElement(handle: bigint): HtmlMetaElement {
     throw new Error(`HtmlMetaElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -884,7 +884,7 @@ function getHtmlStyleElement(handle: bigint): HtmlStyleElement {
     throw new Error(`HtmlStyleElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-disabled()` operation.
@@ -960,7 +960,7 @@ function getHtmlBodyElement(handle: bigint): HtmlBodyElement {
     throw new Error(`HtmlBodyElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-text()` operation.
@@ -1076,7 +1076,7 @@ function getHtmlHeadingElement(handle: bigint): HtmlHeadingElement {
     throw new Error(`HtmlHeadingElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-align()` operation.
@@ -1112,7 +1112,7 @@ function getHtmlParagraphElement(handle: bigint): HtmlParagraphElement {
     throw new Error(`HtmlParagraphElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-align()` operation.
@@ -1148,7 +1148,7 @@ function getHtmlhrElement(handle: bigint): HtmlhrElement {
     throw new Error(`HtmlhrElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-align()` operation.
@@ -1248,7 +1248,7 @@ function getHtmlPreElement(handle: bigint): HtmlPreElement {
     throw new Error(`HtmlPreElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -1284,7 +1284,7 @@ function getHtmlQuoteElement(handle: bigint): HtmlQuoteElement {
     throw new Error(`HtmlQuoteElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-cite()` operation.
@@ -1320,7 +1320,7 @@ function getHtmloListElement(handle: bigint): HtmloListElement {
     throw new Error(`HtmloListElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-reversed()` operation.
@@ -1404,7 +1404,7 @@ function getHtmluListElement(handle: bigint): HtmluListElement {
     throw new Error(`HtmluListElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-compact()` operation.
@@ -1456,7 +1456,7 @@ function getHtmlMenuElement(handle: bigint): HtmlMenuElement {
     throw new Error(`HtmlMenuElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-compact()` operation.
@@ -1492,7 +1492,7 @@ function getHtmlliElement(handle: bigint): HtmlliElement {
     throw new Error(`HtmlliElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value()` operation.
@@ -1544,7 +1544,7 @@ function getHtmldListElement(handle: bigint): HtmldListElement {
     throw new Error(`HtmldListElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-compact()` operation.
@@ -1580,7 +1580,7 @@ function getHtmlDivElement(handle: bigint): HtmlDivElement {
     throw new Error(`HtmlDivElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-align()` operation.
@@ -1616,7 +1616,7 @@ function getHtmlAnchorElement(handle: bigint): HtmlAnchorElement {
     throw new Error(`HtmlAnchorElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-target()` operation.
@@ -1852,7 +1852,7 @@ function getHtmlDataElement(handle: bigint): HtmlDataElement {
     throw new Error(`HtmlDataElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value()` operation.
@@ -1888,7 +1888,7 @@ function getHtmlTimeElement(handle: bigint): HtmlTimeElement {
     throw new Error(`HtmlTimeElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-date-time()` operation.
@@ -1924,7 +1924,7 @@ function getHtmlbrElement(handle: bigint): HtmlbrElement {
     throw new Error(`HtmlbrElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-clear()` operation.
@@ -1960,7 +1960,7 @@ function getHyperlinkElementUtils(handle: bigint): HyperlinkElementUtils {
     throw new Error(`HyperlinkElementUtils handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-origin()` operation.
@@ -2132,7 +2132,7 @@ function getHtmlHyperlinkElementUtils(handle: bigint): HtmlHyperlinkElementUtils
     throw new Error(`HtmlHyperlinkElementUtils handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -2168,7 +2168,7 @@ function getHtmlModElement(handle: bigint): HtmlModElement {
     throw new Error(`HtmlModElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-cite()` operation.
@@ -2220,7 +2220,7 @@ function getHtmlSourceElement(handle: bigint): HtmlSourceElement {
     throw new Error(`HtmlSourceElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-src()` operation.
@@ -2352,7 +2352,7 @@ function getHtmliFrameElement(handle: bigint): HtmliFrameElement {
     throw new Error(`HtmliFrameElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-src()` operation.
@@ -2644,7 +2644,7 @@ function getHtmlEmbedElement(handle: bigint): HtmlEmbedElement {
     throw new Error(`HtmlEmbedElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-src()` operation.
@@ -2768,7 +2768,7 @@ function getHtmlObjectElement(handle: bigint): HtmlObjectElement {
     throw new Error(`HtmlObjectElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-data()` operation.
@@ -3124,7 +3124,7 @@ function getHtmlVideoElement(handle: bigint): HtmlVideoElement {
     throw new Error(`HtmlVideoElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -3224,7 +3224,7 @@ function getHtmlTrackElement(handle: bigint): HtmlTrackElement {
     throw new Error(`HtmlTrackElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-kind()` operation.
@@ -3340,7 +3340,7 @@ function getHtmlMediaElement(handle: bigint): HtmlMediaElement {
     throw new Error(`HtmlMediaElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-error()` operation.
@@ -3752,7 +3752,7 @@ function getMediaError(handle: bigint): MediaError {
     throw new Error(`MediaError handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-code()` operation.
@@ -3788,7 +3788,7 @@ function getAudioTrackList(handle: bigint): AudioTrackList {
     throw new Error(`AudioTrackList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -3880,7 +3880,7 @@ function getAudioTrack(handle: bigint): AudioTrack {
     throw new Error(`AudioTrack handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-id()` operation.
@@ -3948,7 +3948,7 @@ function getVideoTrackList(handle: bigint): VideoTrackList {
     throw new Error(`VideoTrackList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -4048,7 +4048,7 @@ function getVideoTrack(handle: bigint): VideoTrack {
     throw new Error(`VideoTrack handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-id()` operation.
@@ -4116,7 +4116,7 @@ function getTextTrackList(handle: bigint): TextTrackList {
     throw new Error(`TextTrackList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -4208,7 +4208,7 @@ function getTextTrack(handle: bigint): TextTrack {
     throw new Error(`TextTrack handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-kind()` operation.
@@ -4332,7 +4332,7 @@ function getTextTrackCueList(handle: bigint): TextTrackCueList {
     throw new Error(`TextTrackCueList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -4376,7 +4376,7 @@ function getTextTrackCue(handle: bigint): TextTrackCue {
     throw new Error(`TextTrackCue handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-track()` operation.
@@ -4500,7 +4500,7 @@ function getTimeRanges(handle: bigint): TimeRanges {
     throw new Error(`TimeRanges handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -4544,7 +4544,7 @@ function getTrackEvent(handle: bigint): TrackEvent {
     throw new Error(`TrackEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-track()` operation.
@@ -4572,7 +4572,7 @@ function getHtmlMapElement(handle: bigint): HtmlMapElement {
     throw new Error(`HtmlMapElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -4616,7 +4616,7 @@ function getHtmlAreaElement(handle: bigint): HtmlAreaElement {
     throw new Error(`HtmlAreaElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-alt()` operation.
@@ -4786,7 +4786,7 @@ function registerHtmlTableElement(obj: HtmlTableElement): bigint {
   const handle = _nextHtmlTableElement++;
   _htmlTableElementhandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a HtmlTableElement by handle, throwing if not found. */
 function getHtmlTableElement(handle: bigint): HtmlTableElement {
@@ -4795,7 +4795,7 @@ function getHtmlTableElement(handle: bigint): HtmlTableElement {
     throw new Error(`HtmlTableElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-caption()` operation.
@@ -5095,7 +5095,7 @@ function getHtmlTableCaptionElement(handle: bigint): HtmlTableCaptionElement {
     throw new Error(`HtmlTableCaptionElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-align()` operation.
@@ -5131,7 +5131,7 @@ function getHtmlTableColElement(handle: bigint): HtmlTableColElement {
     throw new Error(`HtmlTableColElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-span()` operation.
@@ -5247,7 +5247,7 @@ function getHtmlTableSectionElement(handle: bigint): HtmlTableSectionElement {
     throw new Error(`HtmlTableSectionElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-rows()` operation.
@@ -5355,7 +5355,7 @@ function getHtmlTableRowElement(handle: bigint): HtmlTableRowElement {
     throw new Error(`HtmlTableRowElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-row-index()` operation.
@@ -5495,7 +5495,7 @@ function getHtmlTableCellElement(handle: bigint): HtmlTableCellElement {
     throw new Error(`HtmlTableCellElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-col-span()` operation.
@@ -5747,7 +5747,7 @@ function getHtmlFormElement(handle: bigint): HtmlFormElement {
     throw new Error(`HtmlFormElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-accept-charset()` operation.
@@ -5999,7 +5999,7 @@ function getHtmlLabelElement(handle: bigint): HtmlLabelElement {
     throw new Error(`HtmlLabelElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-form()` operation.
@@ -6051,7 +6051,7 @@ function getHtmlInputElement(handle: bigint): HtmlInputElement {
     throw new Error(`HtmlInputElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-accept()` operation.
@@ -6847,7 +6847,7 @@ function getHtmlButtonElement(handle: bigint): HtmlButtonElement {
     throw new Error(`HtmlButtonElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-command()` operation.
@@ -7107,7 +7107,7 @@ function getHtmlSelectElement(handle: bigint): HtmlSelectElement {
     throw new Error(`HtmlSelectElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-autocomplete()` operation.
@@ -7282,7 +7282,7 @@ export function HtmlSelectElementRemove(self: bigint): void {
  */
 export function HtmlSelectElementUndefined(self: bigint, index: number, option: bigint | undefined): void {
   const obj = getHtmlSelectElement(self);
-  obj._undefined(index, option);
+  obj.undefined(index, option);
 }
 
 /**
@@ -7407,7 +7407,7 @@ function getHtmlDataListElement(handle: bigint): HtmlDataListElement {
     throw new Error(`HtmlDataListElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-options()` operation.
@@ -7435,7 +7435,7 @@ function getHtmlOptGroupElement(handle: bigint): HtmlOptGroupElement {
     throw new Error(`HtmlOptGroupElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-disabled()` operation.
@@ -7487,7 +7487,7 @@ function getHtmlOptionElement(handle: bigint): HtmlOptionElement {
     throw new Error(`HtmlOptionElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-disabled()` operation.
@@ -7619,7 +7619,7 @@ function getHtmlTextAreaElement(handle: bigint): HtmlTextAreaElement {
     throw new Error(`HtmlTextAreaElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-autocomplete()` operation.
@@ -8015,7 +8015,7 @@ function getHtmlOutputElement(handle: bigint): HtmlOutputElement {
     throw new Error(`HtmlOutputElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-html-for()` operation.
@@ -8163,7 +8163,7 @@ function getHtmlProgressElement(handle: bigint): HtmlProgressElement {
     throw new Error(`HtmlProgressElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value()` operation.
@@ -8231,7 +8231,7 @@ function getHtmlMeterElement(handle: bigint): HtmlMeterElement {
     throw new Error(`HtmlMeterElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value()` operation.
@@ -8355,7 +8355,7 @@ function getHtmlFieldSetElement(handle: bigint): HtmlFieldSetElement {
     throw new Error(`HtmlFieldSetElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-disabled()` operation.
@@ -8479,7 +8479,7 @@ function getHtmlLegendElement(handle: bigint): HtmlLegendElement {
     throw new Error(`HtmlLegendElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-form()` operation.
@@ -8523,7 +8523,7 @@ function getValidityState(handle: bigint): ValidityState {
     throw new Error(`ValidityState handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-value-missing()` operation.
@@ -8631,7 +8631,7 @@ function getSubmitEvent(handle: bigint): SubmitEvent {
     throw new Error(`SubmitEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-submitter()` operation.
@@ -8659,7 +8659,7 @@ function getFormDataEvent(handle: bigint): FormDataEvent {
     throw new Error(`FormDataEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-form-data()` operation.
@@ -8687,7 +8687,7 @@ function getHtmlDetailsElement(handle: bigint): HtmlDetailsElement {
     throw new Error(`HtmlDetailsElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -8739,7 +8739,7 @@ function getHtmlDialogElement(handle: bigint): HtmlDialogElement {
     throw new Error(`HtmlDialogElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-open()` operation.
@@ -8869,7 +8869,7 @@ function getHtmlScriptElement(handle: bigint): HtmlScriptElement {
     throw new Error(`HtmlScriptElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -9112,7 +9112,7 @@ function getHtmlTemplateElement(handle: bigint): HtmlTemplateElement {
     throw new Error(`HtmlTemplateElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-content()` operation.
@@ -9220,7 +9220,7 @@ function getHtmlSlotElement(handle: bigint): HtmlSlotElement {
     throw new Error(`HtmlSlotElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -9280,7 +9280,7 @@ function getHtmlCanvasElement(handle: bigint): HtmlCanvasElement {
     throw new Error(`HtmlCanvasElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -9364,7 +9364,7 @@ function getCanvasRenderingContext2D(handle: bigint): CanvasRenderingContext2D {
     throw new Error(`CanvasRenderingContext2D handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-canvas()` operation.
@@ -9392,7 +9392,7 @@ function getCanvasSettings(handle: bigint): CanvasSettings {
     throw new Error(`CanvasSettings handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-context-attributes()` operation.
@@ -9420,7 +9420,7 @@ function getCanvasState(handle: bigint): CanvasState {
     throw new Error(`CanvasState handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `save()` operation.
@@ -9472,7 +9472,7 @@ function getCanvasTransform(handle: bigint): CanvasTransform {
     throw new Error(`CanvasTransform handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `scale()` operation.
@@ -9548,7 +9548,7 @@ function getCanvasCompositing(handle: bigint): CanvasCompositing {
     throw new Error(`CanvasCompositing handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-global-alpha()` operation.
@@ -9600,7 +9600,7 @@ function getCanvasImageSmoothing(handle: bigint): CanvasImageSmoothing {
     throw new Error(`CanvasImageSmoothing handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-image-smoothing-enabled()` operation.
@@ -9650,7 +9650,7 @@ function registerCanvasFillStrokeStyles(obj: CanvasFillStrokeStyles): bigint {
   const handle = _nextCanvasFillStrokeStyles++;
   _canvasFillStrokeStyleshandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a CanvasFillStrokeStyles by handle, throwing if not found. */
 function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
@@ -9659,7 +9659,7 @@ function getCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
     throw new Error(`CanvasFillStrokeStyles handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-stroke-style()` operation.
@@ -9743,7 +9743,7 @@ function getCanvasShadowStyles(handle: bigint): CanvasShadowStyles {
     throw new Error(`CanvasShadowStyles handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-shadow-offset-x()` operation.
@@ -9827,7 +9827,7 @@ function getCanvasFilters(handle: bigint): CanvasFilters {
     throw new Error(`CanvasFilters handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-filter()` operation.
@@ -9863,7 +9863,7 @@ function getCanvasRect(handle: bigint): CanvasRect {
     throw new Error(`CanvasRect handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `clear-rect()` operation.
@@ -9907,7 +9907,7 @@ function getCanvasDrawPath(handle: bigint): CanvasDrawPath {
     throw new Error(`CanvasDrawPath handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `begin-path()` operation.
@@ -9975,7 +9975,7 @@ function getCanvasUserInterface(handle: bigint): CanvasUserInterface {
     throw new Error(`CanvasUserInterface handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `draw-focus-if-needed()` operation.
@@ -10003,7 +10003,7 @@ function getCanvasText(handle: bigint): CanvasText {
     throw new Error(`CanvasText handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `fill-text()` operation.
@@ -10047,7 +10047,7 @@ function getCanvasDrawImage(handle: bigint): CanvasDrawImage {
     throw new Error(`CanvasDrawImage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `draw-image()` operation.
@@ -10073,7 +10073,7 @@ function registerCanvasImageData(obj: CanvasImageData): bigint {
   const handle = _nextCanvasImageData++;
   _canvasImageDatahandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a CanvasImageData by handle, throwing if not found. */
 function getCanvasImageData(handle: bigint): CanvasImageData {
@@ -10082,7 +10082,7 @@ function getCanvasImageData(handle: bigint): CanvasImageData {
     throw new Error(`CanvasImageData handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `create-image-data()` operation.
@@ -10126,7 +10126,7 @@ function getCanvasPathDrawingStyles(handle: bigint): CanvasPathDrawingStyles {
     throw new Error(`CanvasPathDrawingStyles handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-line-width()` operation.
@@ -10242,7 +10242,7 @@ function getCanvasTextDrawingStyles(handle: bigint): CanvasTextDrawingStyles {
     throw new Error(`CanvasTextDrawingStyles handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-lang()` operation.
@@ -10438,7 +10438,7 @@ function getCanvasPath(handle: bigint): CanvasPath {
     throw new Error(`CanvasPath handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `close-path()` operation.
@@ -10538,7 +10538,7 @@ function getCanvasGradient(handle: bigint): CanvasGradient {
     throw new Error(`CanvasGradient handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `add-color-stop()` operation.
@@ -10566,7 +10566,7 @@ function getCanvasPattern(handle: bigint): CanvasPattern {
     throw new Error(`CanvasPattern handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `set-transform()` operation.
@@ -10594,7 +10594,7 @@ function getTextMetrics(handle: bigint): TextMetrics {
     throw new Error(`TextMetrics handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -10710,7 +10710,7 @@ function getPath2D(handle: bigint): Path2D {
     throw new Error(`Path2D handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `add-path()` operation.
@@ -10738,7 +10738,7 @@ function getImageBitmapRenderingContext(handle: bigint): ImageBitmapRenderingCon
     throw new Error(`ImageBitmapRenderingContext handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-canvas()` operation.
@@ -10774,7 +10774,7 @@ function getOffscreenCanvas(handle: bigint): OffscreenCanvas {
     throw new Error(`OffscreenCanvas handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -10882,7 +10882,7 @@ function getOffscreenCanvasRenderingContext2D(handle: bigint): OffscreenCanvasRe
     throw new Error(`OffscreenCanvasRenderingContext2D handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-canvas()` operation.
@@ -10910,7 +10910,7 @@ function getCustomElementRegistry(handle: bigint): CustomElementRegistry {
     throw new Error(`CustomElementRegistry handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `define()` operation.
@@ -10970,7 +10970,7 @@ function getElementInternals(handle: bigint): ElementInternals {
     throw new Error(`ElementInternals handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-shadow-root()` operation.
@@ -11078,7 +11078,7 @@ function getVisibilityStateEntry(handle: bigint): VisibilityStateEntry {
     throw new Error(`VisibilityStateEntry handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -11130,7 +11130,7 @@ function getUserActivation(handle: bigint): UserActivation {
     throw new Error(`UserActivation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-has-been-active()` operation.
@@ -11166,7 +11166,7 @@ function getToggleEvent(handle: bigint): ToggleEvent {
     throw new Error(`ToggleEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-old-state()` operation.
@@ -11210,7 +11210,7 @@ function getCommandEvent(handle: bigint): CommandEvent {
     throw new Error(`CommandEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-source()` operation.
@@ -11246,7 +11246,7 @@ function getElementContentEditable(handle: bigint): ElementContentEditable {
     throw new Error(`ElementContentEditable handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-content-editable()` operation.
@@ -11322,7 +11322,7 @@ function getCloseWatcher(handle: bigint): CloseWatcher {
     throw new Error(`CloseWatcher handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `request-close()` operation.
@@ -11428,7 +11428,7 @@ function getDataTransfer(handle: bigint): DataTransfer {
     throw new Error(`DataTransfer handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-drop-effect()` operation.
@@ -11536,7 +11536,7 @@ function getDataTransferItemList(handle: bigint): DataTransferItemList {
     throw new Error(`DataTransferItemList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -11596,7 +11596,7 @@ function getDataTransferItem(handle: bigint): DataTransferItem {
     throw new Error(`DataTransferItem handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-kind()` operation.
@@ -11648,7 +11648,7 @@ function getDragEvent(handle: bigint): DragEvent {
     throw new Error(`DragEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-data-transfer()` operation.
@@ -11676,7 +11676,7 @@ function getPopoverTargetAttributes(handle: bigint): PopoverTargetAttributes {
     throw new Error(`PopoverTargetAttributes handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-popover-target-element()` operation.
@@ -11728,7 +11728,7 @@ function getOrigin(handle: bigint): Origin {
     throw new Error(`Origin handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `from()` operation.
@@ -11810,7 +11810,7 @@ function getBarProp(handle: bigint): BarProp {
     throw new Error(`BarProp handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-visible()` operation.
@@ -11838,7 +11838,7 @@ function getLocation(handle: bigint): Location {
     throw new Error(`Location handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -12026,7 +12026,7 @@ function getHistory(handle: bigint): History {
     throw new Error(`History handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -12118,7 +12118,7 @@ function getNavigation(handle: bigint): Navigation {
     throw new Error(`Navigation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `entries()` operation.
@@ -12298,7 +12298,7 @@ function getNavigationHistoryEntry(handle: bigint): NavigationHistoryEntry {
     throw new Error(`NavigationHistoryEntry handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-url()` operation.
@@ -12382,7 +12382,7 @@ function getNavigationTransition(handle: bigint): NavigationTransition {
     throw new Error(`NavigationTransition handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-navigation-type()` operation.
@@ -12442,7 +12442,7 @@ function getNavigationActivation(handle: bigint): NavigationActivation {
     throw new Error(`NavigationActivation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-from()` operation.
@@ -12486,7 +12486,7 @@ function getNavigateEvent(handle: bigint): NavigateEvent {
     throw new Error(`NavigateEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-navigation-type()` operation.
@@ -12610,7 +12610,7 @@ function getNavigationPrecommitController(handle: bigint): NavigationPrecommitCo
     throw new Error(`NavigationPrecommitController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `redirect()` operation.
@@ -12646,7 +12646,7 @@ function getNavigationDestination(handle: bigint): NavigationDestination {
     throw new Error(`NavigationDestination handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-url()` operation.
@@ -12714,7 +12714,7 @@ function getNavigationCurrentEntryChangeEvent(handle: bigint): NavigationCurrent
     throw new Error(`NavigationCurrentEntryChangeEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-navigation-type()` operation.
@@ -12750,7 +12750,7 @@ function getPopStateEvent(handle: bigint): PopStateEvent {
     throw new Error(`PopStateEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-state()` operation.
@@ -12786,7 +12786,7 @@ function getHashChangeEvent(handle: bigint): HashChangeEvent {
     throw new Error(`HashChangeEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-old-url()` operation.
@@ -12822,7 +12822,7 @@ function getPageSwapEvent(handle: bigint): PageSwapEvent {
     throw new Error(`PageSwapEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-activation()` operation.
@@ -12858,7 +12858,7 @@ function getPageRevealEvent(handle: bigint): PageRevealEvent {
     throw new Error(`PageRevealEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-view-transition()` operation.
@@ -12886,7 +12886,7 @@ function getPageTransitionEvent(handle: bigint): PageTransitionEvent {
     throw new Error(`PageTransitionEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-persisted()` operation.
@@ -12914,7 +12914,7 @@ function getBeforeUnloadEvent(handle: bigint): BeforeUnloadEvent {
     throw new Error(`BeforeUnloadEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-return-value()` operation.
@@ -12950,7 +12950,7 @@ function getNotRestoredReasonDetails(handle: bigint): NotRestoredReasonDetails {
     throw new Error(`NotRestoredReasonDetails handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-reason()` operation.
@@ -12986,7 +12986,7 @@ function getNotRestoredReasons(handle: bigint): NotRestoredReasons {
     throw new Error(`NotRestoredReasons handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-src()` operation.
@@ -13062,7 +13062,7 @@ function getErrorEvent(handle: bigint): ErrorEvent {
     throw new Error(`ErrorEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-message()` operation.
@@ -13122,7 +13122,7 @@ function getPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
     throw new Error(`PromiseRejectionEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-promise()` operation.
@@ -13158,7 +13158,7 @@ function getDomParser(handle: bigint): DomParser {
     throw new Error(`DomParser handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `parse-from-string()` operation.
@@ -13186,7 +13186,7 @@ function getXmlSerializer(handle: bigint): XmlSerializer {
     throw new Error(`XmlSerializer handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `serialize-to-string()` operation.
@@ -13214,7 +13214,7 @@ function getNavigatorId(handle: bigint): NavigatorId {
     throw new Error(`NavigatorId handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-app-code-name()` operation.
@@ -13322,7 +13322,7 @@ function getNavigatorLanguage(handle: bigint): NavigatorLanguage {
     throw new Error(`NavigatorLanguage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-language()` operation.
@@ -13358,7 +13358,7 @@ function getNavigatorOnLine(handle: bigint): NavigatorOnLine {
     throw new Error(`NavigatorOnLine handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-on-line()` operation.
@@ -13386,7 +13386,7 @@ function getNavigatorContentUtils(handle: bigint): NavigatorContentUtils {
     throw new Error(`NavigatorContentUtils handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `register-protocol-handler()` operation.
@@ -13422,7 +13422,7 @@ function getNavigatorCookies(handle: bigint): NavigatorCookies {
     throw new Error(`NavigatorCookies handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-cookie-enabled()` operation.
@@ -13450,7 +13450,7 @@ function getNavigatorPlugins(handle: bigint): NavigatorPlugins {
     throw new Error(`NavigatorPlugins handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-plugins()` operation.
@@ -13502,7 +13502,7 @@ function getPluginArray(handle: bigint): PluginArray {
     throw new Error(`PluginArray handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `refresh()` operation.
@@ -13554,7 +13554,7 @@ function getMimeTypeArray(handle: bigint): MimeTypeArray {
     throw new Error(`MimeTypeArray handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -13598,7 +13598,7 @@ function getPlugin(handle: bigint): Plugin {
     throw new Error(`Plugin handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -13666,7 +13666,7 @@ function getMimeType(handle: bigint): MimeType {
     throw new Error(`MimeType handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -13718,7 +13718,7 @@ function getImageData(handle: bigint): ImageData {
     throw new Error(`ImageData handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -13778,7 +13778,7 @@ function getImageBitmap(handle: bigint): ImageBitmap {
     throw new Error(`ImageBitmap handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-width()` operation.
@@ -13852,7 +13852,7 @@ function getAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
     throw new Error(`AnimationFrameProvider handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `request-animation-frame()` operation.
@@ -13888,7 +13888,7 @@ function getMessageEvent(handle: bigint): MessageEvent {
     throw new Error(`MessageEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-data()` operation.
@@ -13956,7 +13956,7 @@ function getEventSource(handle: bigint): EventSource {
     throw new Error(`EventSource handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-url()` operation.
@@ -14086,7 +14086,7 @@ function getMessageChannel(handle: bigint): MessageChannel {
     throw new Error(`MessageChannel handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-port1()` operation.
@@ -14122,7 +14122,7 @@ function getMessageEventTarget(handle: bigint): MessageEventTarget {
     throw new Error(`MessageEventTarget handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-onmessage()` operation.
@@ -14174,7 +14174,7 @@ function getMessagePort(handle: bigint): MessagePort {
     throw new Error(`MessagePort handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `post-message()` operation.
@@ -14264,7 +14264,7 @@ function getBroadcastChannel(handle: bigint): BroadcastChannel {
     throw new Error(`BroadcastChannel handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -14370,7 +14370,7 @@ function getWorkerGlobalScope(handle: bigint): WorkerGlobalScope {
     throw new Error(`WorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-self()` operation.
@@ -14518,7 +14518,7 @@ function getDedicatedWorkerGlobalScope(handle: bigint): DedicatedWorkerGlobalSco
     throw new Error(`DedicatedWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -14592,7 +14592,7 @@ function getSharedWorkerGlobalScope(handle: bigint): SharedWorkerGlobalScope {
     throw new Error(`SharedWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -14674,7 +14674,7 @@ function getAbstractWorker(handle: bigint): AbstractWorker {
     throw new Error(`AbstractWorker handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-onerror()` operation.
@@ -14710,7 +14710,7 @@ function getWorker(handle: bigint): Worker {
     throw new Error(`Worker handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `terminate()` operation.
@@ -14746,7 +14746,7 @@ function getSharedWorker(handle: bigint): SharedWorker {
     throw new Error(`SharedWorker handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-port()` operation.
@@ -14774,7 +14774,7 @@ function getNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentHard
     throw new Error(`NavigatorConcurrentHardware handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-hardware-concurrency()` operation.
@@ -14802,7 +14802,7 @@ function getWorkerNavigator(handle: bigint): WorkerNavigator {
     throw new Error(`WorkerNavigator handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-media-capabilities()` operation.
@@ -14846,7 +14846,7 @@ function getWorkerLocation(handle: bigint): WorkerLocation {
     throw new Error(`WorkerLocation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-href()` operation.
@@ -14946,7 +14946,7 @@ function getWorklet(handle: bigint): Worklet {
     throw new Error(`Worklet handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `add-module()` operation.
@@ -14974,7 +14974,7 @@ function getStorage(handle: bigint): Storage {
     throw new Error(`Storage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -15042,7 +15042,7 @@ function getWindowSessionStorage(handle: bigint): WindowSessionStorage {
     throw new Error(`WindowSessionStorage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-session-storage()` operation.
@@ -15070,7 +15070,7 @@ function getWindowLocalStorage(handle: bigint): WindowLocalStorage {
     throw new Error(`WindowLocalStorage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-local-storage()` operation.
@@ -15098,7 +15098,7 @@ function getStorageEvent(handle: bigint): StorageEvent {
     throw new Error(`StorageEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-key()` operation.
@@ -15166,7 +15166,7 @@ function getHtmlMarqueeElement(handle: bigint): HtmlMarqueeElement {
     throw new Error(`HtmlMarqueeElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-behavior()` operation.
@@ -15378,7 +15378,7 @@ function getHtmlFrameSetElement(handle: bigint): HtmlFrameSetElement {
     throw new Error(`HtmlFrameSetElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-cols()` operation.
@@ -15430,7 +15430,7 @@ function getHtmlFrameElement(handle: bigint): HtmlFrameElement {
     throw new Error(`HtmlFrameElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -15594,7 +15594,7 @@ function getHtmlDirectoryElement(handle: bigint): HtmlDirectoryElement {
     throw new Error(`HtmlDirectoryElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-compact()` operation.
@@ -15630,7 +15630,7 @@ function getHtmlFontElement(handle: bigint): HtmlFontElement {
     throw new Error(`HtmlFontElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-color()` operation.
@@ -15698,7 +15698,7 @@ function getHtmlParamElement(handle: bigint): HtmlParamElement {
     throw new Error(`HtmlParamElement handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -15782,7 +15782,7 @@ function getExternal(handle: bigint): External {
     throw new Error(`External handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `add-search-provider()` operation.

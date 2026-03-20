@@ -40,7 +40,7 @@ function getNavigatorStorage(handle: bigint): NavigatorStorage {
     throw new Error(`NavigatorStorage handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-storage()` operation.
@@ -68,7 +68,7 @@ function getStorageManager(handle: bigint): StorageManager {
     throw new Error(`StorageManager handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `persisted()` operation.
