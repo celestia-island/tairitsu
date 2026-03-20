@@ -415,7 +415,11 @@ class BrowserGlueGenerator:
         type_aliases: List[GeneratedTypeAlias] = []
         for ta in iface.type_aliases:
             ts_name = kebab_to_pascal(ta.name)
-            ts_type = self.type_mapper.map_type(ta.target)
+            # Fix: All handle types should be bigint
+            if ta.name.endswith("-handle") or isinstance(ta.target, WitHandle):
+                ts_type = "bigint"
+            else:
+                ts_type = self.type_mapper.map_type(ta.target)
             type_aliases.append(GeneratedTypeAlias(
                 name=ta.name,
                 ts_name=ts_name,

@@ -1349,14 +1349,14 @@ export function SpeechRecognitionStop(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(self: bigint): void {
+export function abort(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getSpeechRecognition(self);
   const promise = obj.abort()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -1975,14 +1975,14 @@ export function speak(self: bigint, utterance: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollCancel()`
  */
-export function cancel(self: bigint): void {
+export function cancel(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getSpeechSynthesis(self);
   const promise = obj.cancel()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {

@@ -47,7 +47,7 @@ function getPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: number): bigint {
+export function query(self: bigint, permissionDesc: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPermissions(self);
   const promise = obj.query(permissionDesc)
@@ -119,7 +119,7 @@ export function getName(self: bigint): string {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint {
+export function getOnchange(self: bigint): number {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }

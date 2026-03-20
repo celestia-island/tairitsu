@@ -45,7 +45,7 @@ function getAnimation(handle: bigint): Animation {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): string {
+export function getId(handle: bigint): number {
   const obj = getAnimation(self);
   return obj.id;
 }
@@ -53,7 +53,7 @@ export function getId(handle: bigint): string {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: number): void {
+export function setId(handle: bigint, value: Uint8Array): void {
   const obj = getAnimation(self);
   obj.id = value;
 }
@@ -61,7 +61,7 @@ export function setId(handle: bigint, value: number): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): bigint {
+export function getPlaybackRate(handle: bigint): number {
   const obj = getAnimation(self);
   return obj.playbackRate;
 }
@@ -77,7 +77,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): boolean {
+export function pending(handle: bigint): string {
   const obj = getAnimation(self);
   return obj.pending(handle);
 }
@@ -87,14 +87,14 @@ export function pending(handle: bigint): boolean {
  *
  * Async operation: returns request ID, poll with `pollCancel()`
  */
-export function cancel(handle: bigint): void {
+export function cancel(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAnimation(self);
   const promise = obj.cancel(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -165,14 +165,14 @@ export function reverse(handle: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollPersist()`
  */
-export function persist(handle: bigint): void {
+export function persist(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAnimation(self);
   const promise = obj.persist(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {

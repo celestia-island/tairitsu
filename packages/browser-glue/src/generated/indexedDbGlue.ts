@@ -73,7 +73,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
 /**
  * `name()` operation.
  */
-export function name(handle: bigint): Uint8Array {
+export function name(handle: bigint): string {
   const obj = getIdbDb(self);
   return obj.name(handle);
 }
@@ -81,7 +81,7 @@ export function name(handle: bigint): Uint8Array {
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): bigint {
+export function version(handle: bigint): string | undefined {
   const obj = getIdbDb(self);
   return obj.version(handle);
 }
@@ -119,14 +119,14 @@ export function commit(handle: bigint): void {
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(handle: bigint): void {
+export function abort(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getIdbTx(self);
   const promise = obj.abort(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -175,7 +175,7 @@ function getIdbStore(handle: bigint): IdbObjectStore {
 /**
  * `get-name()` operation.
  */
-export function IdbObjectStoreGetName(handle: bigint): string {
+export function IdbObjectStoreGetName(handle: bigint): Uint8Array {
   const obj = getIdbStore(self);
   return obj.name;
 }
@@ -199,7 +199,7 @@ export function IdbObjectStoreKeyPath(handle: bigint): string {
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): boolean {
+export function autoIncrement(handle: bigint): string | undefined {
   const obj = getIdbStore(self);
   return obj.autoIncrement(handle);
 }
@@ -243,7 +243,7 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
 /**
  * `key-path()` operation.
  */
-export function IdbIndexKeyPath(handle: bigint): string {
+export function IdbIndexKeyPath(handle: bigint): number {
   const obj = getIdbIndex(self);
   return obj.keyPath(handle);
 }
@@ -295,7 +295,7 @@ export function IdbCursorSource(handle: bigint): string {
 /**
  * `key()` operation.
  */
-export function key(handle: bigint): string {
+export function key(handle: bigint): string | undefined {
   const obj = getIdbCursor(self);
   return obj.key(handle);
 }
@@ -311,7 +311,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: bigint): void {
+export function advance(handle: bigint, count: number): void {
   const obj = getIdbCursor(self);
   obj.advance(handle, count);
 }
@@ -327,7 +327,7 @@ export function _continue(handle: bigint, key: string): void {
 /**
  * `continue-primary-key()` operation.
  */
-export function continuePrimaryKey(handle: bigint, key: bigint, primaryKey: string): void {
+export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
   const obj = getIdbCursor(self);
   obj.continuePrimaryKey(handle, key, primaryKey);
 }
@@ -355,7 +355,7 @@ function getIdbRequest(handle: bigint): IDBRequest {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): number | undefined {
+export function resultVal(handle: bigint): string {
   const obj = getIdbRequest(self);
   return obj.resultVal(handle);
 }

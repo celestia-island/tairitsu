@@ -45,7 +45,7 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint | undefined, protocols: string): bigint {
+export function connect(url: string, protocols: string): bigint {
   const obj = getWs(self);
   return obj.connect(url, protocols);
 }
@@ -77,7 +77,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.extensions(handle);
 }
@@ -85,7 +85,7 @@ export function extensions(handle: bigint): string {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): string {
+export function protocol(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.protocol(handle);
 }
@@ -95,14 +95,14 @@ export function protocol(handle: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: bigint | undefined, reason: string): void {
+export function close(handle: bigint, code: number, reason: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getWs(self);
   const promise = obj.close(handle, code, reason)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {

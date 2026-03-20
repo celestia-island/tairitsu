@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type FileReaderHandle = number | undefined;
+export type FileReaderHandle = bigint;
 
 /** Handle table for FileReader instances */
 const _fileReaderhandles = new Map<bigint, FileReader>();
@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string | undefined } {
   return obj.newFileReader();
 }
 
@@ -54,14 +54,14 @@ export function newFileReader(): { ok: true; value: bigint } | { ok: false; erro
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(handle: bigint): void {
+export function abort(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getFileReader(self);
   const promise = obj.abort(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -126,7 +126,7 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): bigint {
+export function length(handle: bigint): number {
   const obj = getFileList(self);
   return obj.length(handle);
 }

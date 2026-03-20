@@ -320,7 +320,7 @@ export function getVisibilityState(self: bigint): bigint {
 /**
  * `get-focused()` operation.
  */
-export function getFocused(self: bigint): bigint {
+export function getFocused(self: bigint): boolean {
   const obj = getWindowClient(self);
   return obj.focused;
 }
@@ -372,7 +372,7 @@ function getClients(handle: bigint): Clients {
 /**
  * `match-all()` operation.
  */
-export function ClientsMatchAll(self: bigint, options: bigint | undefined): bigint {
+export function ClientsMatchAll(self: bigint, options: bigint | undefined): string {
   const obj = getClients(self);
   return obj.matchAll(options);
 }
@@ -472,7 +472,7 @@ function getFetchEvent(handle: bigint): FetchEvent {
 /**
  * `get-request()` operation.
  */
-export function getRequest(self: bigint): bigint {
+export function getRequest(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.request;
 }
@@ -548,7 +548,7 @@ function getExtendableMessageEvent(handle: bigint): ExtendableMessageEvent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): bigint {
+export function getData(self: bigint): string {
   const obj = getExtendableMessageEvent(self);
   return obj.data;
 }
@@ -556,7 +556,7 @@ export function getData(self: bigint): bigint {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): bigint {
+export function getOrigin(self: bigint): string {
   const obj = getExtendableMessageEvent(self);
   return obj.origin;
 }
@@ -580,7 +580,7 @@ export function getSource(self: bigint): bigint | undefined {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): bigint | undefined {
+export function getPorts(self: bigint): (bigint)[] {
   const obj = getExtendableMessageEvent(self);
   return obj.ports;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): Cache {
 /**
  * `match-all()` operation.
  */
-export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -624,7 +624,7 @@ export function add(self: bigint, request: bigint): bigint {
 /**
  * `add-all()` operation.
  */
-export function addAll(self: bigint, requests: (bigint)[]): bigint {
+export function addAll(self: bigint, requests: bigint): bigint {
   const obj = getCache(self);
   return obj.addAll(requests);
 }
