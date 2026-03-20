@@ -32,7 +32,7 @@ function getUrl(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: boolean): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   const obj = getUrl(self);
   return obj.parse(url, base) ?? undefined;
 }
@@ -40,7 +40,7 @@ export function parse(url: string, base: boolean): bigint | undefined {
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: bigint, base: bigint | undefined): boolean {
+export function canParse(url: string, base: string): boolean {
   const obj = getUrl(self);
   return obj.canParse(url, base);
 }
@@ -48,7 +48,7 @@ export function canParse(url: bigint, base: bigint | undefined): boolean {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): number {
+export function getHref(self: bigint): bigint {
   const obj = getUrl(self);
   return obj.href;
 }
@@ -72,7 +72,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): bigint {
+export function getProtocol(self: bigint): string {
   const obj = getUrl(self);
   return obj.protocol;
 }
@@ -88,7 +88,7 @@ export function setProtocol(self: bigint, value: string): void {
 /**
  * `get-username()` operation.
  */
-export function getUsername(self: bigint): string {
+export function getUsername(self: bigint): number {
   const obj = getUrl(self);
   return obj.username;
 }
@@ -96,7 +96,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: bigint): void {
+export function setUsername(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.username = value;
 }
@@ -112,7 +112,7 @@ export function getPassword(self: bigint): string {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: string): void {
+export function setPassword(self: bigint, value: boolean): void {
   const obj = getUrl(self);
   obj.password = value;
 }
@@ -128,7 +128,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: bigint): void {
   const obj = getUrl(self);
   obj.host = value;
 }
@@ -168,7 +168,7 @@ export function setPort(self: bigint, value: string): void {
 /**
  * `get-pathname()` operation.
  */
-export function getPathname(self: bigint): string {
+export function getPathname(self: bigint): boolean {
   const obj = getUrl(self);
   return obj.pathname;
 }
@@ -216,7 +216,7 @@ export function getHash(self: bigint): string {
 /**
  * `set-hash()` operation.
  */
-export function setHash(self: bigint, value: string): void {
+export function setHash(self: bigint, value: bigint): void {
   const obj = getUrl(self);
   obj.hash = value;
 }

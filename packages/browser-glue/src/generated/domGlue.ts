@@ -1720,7 +1720,7 @@ export function splitText(self: bigint, offset: number): bigint {
 /**
  * `get-whole-text()` operation.
  */
-export function getWholeText(self: bigint): number {
+export function getWholeText(self: bigint): string {
   const obj = getText(self);
   return obj.wholeText;
 }
@@ -2036,7 +2036,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
 /**
  * `accept-node()` operation.
  */
-export function acceptNode(self: bigint, node: bigint): number {
+export function acceptNode(self: bigint, node: bigint | undefined): number {
   const obj = getNodeFilter(self);
   return obj.acceptNode(node);
 }
@@ -2196,7 +2196,7 @@ export function getBooleanValue(self: bigint): boolean {
 /**
  * `get-single-node-value()` operation.
  */
-export function getSingleNodeValue(self: bigint): bigint | undefined | undefined {
+export function getSingleNodeValue(self: bigint): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.singleNodeValue ?? undefined;
 }
@@ -2220,7 +2220,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): bigint {
+export function iterateNext(self: bigint): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2228,7 +2228,7 @@ export function iterateNext(self: bigint): bigint {
 /**
  * `snapshot-item()` operation.
  */
-export function snapshotItem(self: bigint, index: number): bigint | undefined {
+export function snapshotItem(self: bigint, index: string): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.snapshotItem(index) ?? undefined;
 }
@@ -2395,7 +2395,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
+export function getParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): bigint {
   const obj = getXsltProcessor(self);
   return obj.parameter;
 }
@@ -2403,7 +2403,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `remove-parameter()` operation.
  */
-export function removeParameter(self: bigint, namespaceUri: bigint | undefined, localName: bigint): void {
+export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
   const obj = getXsltProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }

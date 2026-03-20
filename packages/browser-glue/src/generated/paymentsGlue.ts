@@ -45,7 +45,7 @@ function getPaymentRequest(handle: bigint): PaymentRequest {
 /**
  * `show()` operation.
  */
-export function show(self: bigint, detailsPromise: bigint | undefined): bigint {
+export function show(self: bigint, detailsPromise: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.show(detailsPromise);
 }
@@ -55,7 +55,7 @@ export function show(self: bigint, detailsPromise: bigint | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(self: bigint): string {
+export function abort(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPaymentRequest(self);
   const promise = obj.abort()
@@ -80,7 +80,7 @@ export function abort(self: bigint): string {
  * Poll an async `abort()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollAbort(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollAbort(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -279,7 +279,7 @@ export function complete(self: bigint, result: bigint | undefined, details: bigi
 /**
  * `retry()` operation.
  */
-export function retry(self: bigint, errorFields: bigint | undefined): bigint {
+export function retry(self: bigint, errorFields: string | undefined): bigint {
   const obj = getPaymentResponse(self);
   return obj.retry(errorFields);
 }

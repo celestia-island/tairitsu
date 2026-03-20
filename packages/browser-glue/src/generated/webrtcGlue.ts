@@ -206,14 +206,14 @@ export function setConfiguration(self: bigint, configuration: bigint | undefined
  *
  * Async operation: returns request ID, poll with `RtcPeerConnectionPollClose()`
  */
-export function RtcPeerConnectionClose(self: bigint): void {
+export function RtcPeerConnectionClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRtcPeerConnection(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -1628,14 +1628,14 @@ export function setOnclose(self: bigint, value: bigint): void {
  *
  * Async operation: returns request ID, poll with `RtcDataChannelPollClose()`
  */
-export function RtcDataChannelClose(self: bigint): void {
+export function RtcDataChannelClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRtcDataChannel(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
