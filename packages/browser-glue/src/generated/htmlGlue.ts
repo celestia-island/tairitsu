@@ -11745,8 +11745,7 @@ function getOrigin(handle: bigint): Origin {
  */
 export function from(value: string): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getOrigin(self);
-  const promise = obj.from(value)
+  const promise = Origin.from(value)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {

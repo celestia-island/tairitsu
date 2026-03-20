@@ -96,8 +96,7 @@ export function pending(handle: bigint): boolean {
  */
 export function cancel(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getAnimation(self);
-  const promise = obj.cancel(handle)
+  const promise = Animation.cancel(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -151,7 +150,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: boolean): void {
   return Animation.updatePlaybackRate(handle, playbackRate);
 }
 
@@ -169,8 +168,7 @@ export function reverse(handle: bigint): void {
  */
 export function persist(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getAnimation(self);
-  const promise = obj.persist(handle)
+  const promise = Animation.persist(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {

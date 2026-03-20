@@ -53,21 +53,21 @@ function getUrl(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: bigint): bigint | undefined {
+export function parse(url: string, base: number): bigint | undefined {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: bigint | undefined): string | undefined {
+export function canParse(url: string, base: string | undefined): boolean {
   return URL.canParse(url, base);
 }
 
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): bigint {
+export function getHref(self: bigint): number {
   const obj = getUrl(self);
   return obj.href;
 }
@@ -83,7 +83,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: bigint): bigint | undefined {
   const obj = getUrl(self);
   return obj.origin;
 }
@@ -147,7 +147,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: EventHandlerRecord): void {
+export function setHost(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.host = value;
 }
@@ -163,7 +163,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: string): void {
+export function setHostname(self: bigint, value: boolean): void {
   const obj = getUrl(self);
   obj.hostname = value;
 }
@@ -171,7 +171,7 @@ export function setHostname(self: bigint, value: string): void {
 /**
  * `get-port()` operation.
  */
-export function getPort(self: bigint): string {
+export function getPort(self: bigint): boolean {
   const obj = getUrl(self);
   return obj.port;
 }
@@ -195,7 +195,7 @@ export function getPathname(self: bigint): string {
 /**
  * `set-pathname()` operation.
  */
-export function setPathname(self: bigint, value: string): void {
+export function setPathname(self: bigint, value: number): void {
   const obj = getUrl(self);
   obj.pathname = value;
 }
@@ -227,7 +227,7 @@ export function getSearchParams(self: bigint): bigint {
 /**
  * `get-hash()` operation.
  */
-export function getHash(self: bigint): EventHandlerRecord {
+export function getHash(self: bigint): string {
   const obj = getUrl(self);
   return obj.hash;
 }
@@ -271,7 +271,7 @@ function getUrlSearchParams(handle: bigint): URLSearchParams {
 /**
  * `get-size()` operation.
  */
-export function getSize(self: bigint): number {
+export function getSize(self: bigint): boolean {
   const obj = getUrlSearchParams(self);
   return obj.size;
 }
@@ -349,7 +349,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: string, value: string): void {
+export function _set(self: bigint, name: string, value: EventHandlerRecord): void {
   const obj = getUrlSearchParams(self);
   obj.set(name, value);
 }

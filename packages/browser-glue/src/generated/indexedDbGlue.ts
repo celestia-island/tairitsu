@@ -53,7 +53,7 @@ function getIdbFactory(handle: bigint): IdbFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: boolean): number {
   return IdbFactory.cmp(handle, first, second);
 }
 
@@ -125,8 +125,7 @@ export function commit(handle: bigint): void {
  */
 export function abort(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
-  const obj = getIdbTx(self);
-  const promise = obj.abort(handle)
+  const promise = IDBTransaction.abort(handle)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -355,7 +354,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string {
+export function IdbRequestSource(handle: bigint): string | undefined {
   return IDBRequest.source(handle);
 }
 

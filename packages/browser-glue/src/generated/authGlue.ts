@@ -68,9 +68,39 @@ export function getType(self: bigint): string {
 
 /**
  * `is-conditional-mediation-available()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollIsConditionalMediationAvailable()`
  */
 export function isConditionalMediationAvailable(): bigint {
-  return Credential.isConditionalMediationAvailable();
+  const requestId = _nextAsyncHandle++;
+  const promise = Credential.isConditionalMediationAvailable()
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `isConditionalMediationAvailable()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollIsConditionalMediationAvailable(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -360,6 +390,7 @@ export default {
   getId,
   getType,
   isConditionalMediationAvailable,
+  pollIsConditionalMediationAvailable,
   getName,
   getIconUrl,
   _get,
