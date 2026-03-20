@@ -243,7 +243,7 @@ export function getId(handle: bigint): string {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: number): void {
+export function setId(handle: bigint, value: string): void {
   const obj = lookupAnimation(handle);
   obj.id = value;
 }
@@ -267,7 +267,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): string {
+export function pending(handle: bigint): EventHandlerRecord {
   const obj = lookupAnimation(handle);
   return obj.pending();
 }
@@ -307,7 +307,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: bigint): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
   const obj = lookupAnimation(handle);
   obj.updatePlaybackRate(playbackRate);
 }

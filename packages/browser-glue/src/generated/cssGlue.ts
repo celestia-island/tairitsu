@@ -423,11 +423,11 @@ function lookupAttr(handle: bigint): Attr {
 }
 
 /** Lookup an optional attr value by handle. */
-function lookupOptionAttr(handle: bigint | undefined): Attr | undefined {
+function lookupOptionAttr(handle: bigint | undefined): Attr | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _attrHandles.get(handle);
+  return _attrHandles.get(handle) ?? null;
 }
 
 /** Lookup a bar-prop value by handle. */
@@ -440,11 +440,11 @@ function lookupBarProp(handle: bigint): BarProp {
 }
 
 /** Lookup an optional bar-prop value by handle. */
-function lookupOptionBarProp(handle: bigint | undefined): BarProp | undefined {
+function lookupOptionBarProp(handle: bigint | undefined): BarProp | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _barPropHandles.get(handle);
+  return _barPropHandles.get(handle) ?? null;
 }
 
 /** Lookup a boolean value by handle. */
@@ -457,11 +457,11 @@ function lookupBoolean(handle: bigint): boolean {
 }
 
 /** Lookup an optional boolean value by handle. */
-function lookupOptionBoolean(handle: bigint | undefined): boolean | undefined {
+function lookupOptionBoolean(handle: bigint | undefined): boolean | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _booleanHandles.get(handle);
+  return _booleanHandles.get(handle) ?? null;
 }
 
 /** Lookup a comment value by handle. */
@@ -474,11 +474,11 @@ function lookupComment(handle: bigint): Comment {
 }
 
 /** Lookup an optional comment value by handle. */
-function lookupOptionComment(handle: bigint | undefined): Comment | undefined {
+function lookupOptionComment(handle: bigint | undefined): Comment | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _commentHandles.get(handle);
+  return _commentHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-keyframe-rule value by handle. */
@@ -491,11 +491,11 @@ function lookupCssKeyframeRule(handle: bigint): CSSKeyframeRule {
 }
 
 /** Lookup an optional css-keyframe-rule value by handle. */
-function lookupOptionCssKeyframeRule(handle: bigint | undefined): CSSKeyframeRule | undefined {
+function lookupOptionCssKeyframeRule(handle: bigint | undefined): CSSKeyframeRule | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssKeyframeRuleHandles.get(handle);
+  return _cssKeyframeRuleHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-rule value by handle. */
@@ -508,11 +508,11 @@ function lookupCssRule(handle: bigint): CSSRule {
 }
 
 /** Lookup an optional css-rule value by handle. */
-function lookupOptionCssRule(handle: bigint | undefined): CSSRule | undefined {
+function lookupOptionCssRule(handle: bigint | undefined): CSSRule | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssRuleHandles.get(handle);
+  return _cssRuleHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-rule-list value by handle. */
@@ -525,11 +525,11 @@ function lookupCssRuleList(handle: bigint): CSSRuleList {
 }
 
 /** Lookup an optional css-rule-list value by handle. */
-function lookupOptionCssRuleList(handle: bigint | undefined): CSSRuleList | undefined {
+function lookupOptionCssRuleList(handle: bigint | undefined): CSSRuleList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssRuleListHandles.get(handle);
+  return _cssRuleListHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-style-declaration value by handle. */
@@ -542,11 +542,11 @@ function lookupCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
 }
 
 /** Lookup an optional css-style-declaration value by handle. */
-function lookupOptionCssStyleDeclaration(handle: bigint | undefined): CSSStyleDeclaration | undefined {
+function lookupOptionCssStyleDeclaration(handle: bigint | undefined): CSSStyleDeclaration | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssStyleDeclarationHandles.get(handle);
+  return _cssStyleDeclarationHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-style-sheet value by handle. */
@@ -559,11 +559,11 @@ function lookupCssStyleSheet(handle: bigint): CSSStyleSheet {
 }
 
 /** Lookup an optional css-style-sheet value by handle. */
-function lookupOptionCssStyleSheet(handle: bigint | undefined): CSSStyleSheet | undefined {
+function lookupOptionCssStyleSheet(handle: bigint | undefined): CSSStyleSheet | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssStyleSheetHandles.get(handle);
+  return _cssStyleSheetHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-style-sheet-list value by handle. */
@@ -576,11 +576,11 @@ function lookupCssStyleSheetList(handle: bigint): CSSStyleSheet[] {
 }
 
 /** Lookup an optional css-style-sheet-list value by handle. */
-function lookupOptionCssStyleSheetList(handle: bigint | undefined): CSSStyleSheet[] | undefined {
+function lookupOptionCssStyleSheetList(handle: bigint | undefined): CSSStyleSheet[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _cssStyleSheetListHandles.get(handle);
+  return _cssStyleSheetListHandles.get(handle) ?? null;
 }
 
 /** Lookup a custom-element-registry value by handle. */
@@ -593,11 +593,11 @@ function lookupCustomElementRegistry(handle: bigint): CustomElementRegistry {
 }
 
 /** Lookup an optional custom-element-registry value by handle. */
-function lookupOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | undefined {
+function lookupOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _customElementRegistryHandles.get(handle);
+  return _customElementRegistryHandles.get(handle) ?? null;
 }
 
 /** Lookup a document value by handle. */
@@ -610,11 +610,11 @@ function lookupDocument(handle: bigint): Document {
 }
 
 /** Lookup an optional document value by handle. */
-function lookupOptionDocument(handle: bigint | undefined): Document | undefined {
+function lookupOptionDocument(handle: bigint | undefined): Document | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentHandles.get(handle);
+  return _documentHandles.get(handle) ?? null;
 }
 
 /** Lookup a document-fragment value by handle. */
@@ -627,11 +627,11 @@ function lookupDocumentFragment(handle: bigint): DocumentFragment {
 }
 
 /** Lookup an optional document-fragment value by handle. */
-function lookupOptionDocumentFragment(handle: bigint | undefined): DocumentFragment | undefined {
+function lookupOptionDocumentFragment(handle: bigint | undefined): DocumentFragment | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentFragmentHandles.get(handle);
+  return _documentFragmentHandles.get(handle) ?? null;
 }
 
 /** Lookup a document-type value by handle. */
@@ -644,11 +644,11 @@ function lookupDocumentType(handle: bigint): DocumentType {
 }
 
 /** Lookup an optional document-type value by handle. */
-function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentTypeHandles.get(handle);
+  return _documentTypeHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-implementation value by handle. */
@@ -661,11 +661,11 @@ function lookupDomImplementation(handle: bigint): DOMImplementation {
 }
 
 /** Lookup an optional dom-implementation value by handle. */
-function lookupOptionDomImplementation(handle: bigint | undefined): DOMImplementation | undefined {
+function lookupOptionDomImplementation(handle: bigint | undefined): DOMImplementation | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _domImplementationHandles.get(handle);
+  return _domImplementationHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-rect value by handle. */
@@ -678,11 +678,11 @@ function lookupDomRect(handle: bigint): DOMRect {
 }
 
 /** Lookup an optional dom-rect value by handle. */
-function lookupOptionDomRect(handle: bigint | undefined): DOMRect | undefined {
+function lookupOptionDomRect(handle: bigint | undefined): DOMRect | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _domRectHandles.get(handle);
+  return _domRectHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-rect-list value by handle. */
@@ -695,11 +695,11 @@ function lookupDomRectList(handle: bigint): DOMRectList {
 }
 
 /** Lookup an optional dom-rect-list value by handle. */
-function lookupOptionDomRectList(handle: bigint | undefined): DOMRectList | undefined {
+function lookupOptionDomRectList(handle: bigint | undefined): DOMRectList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _domRectListHandles.get(handle);
+  return _domRectListHandles.get(handle) ?? null;
 }
 
 /** Lookup a dom-token-list value by handle. */
@@ -712,11 +712,11 @@ function lookupDomTokenList(handle: bigint): DOMTokenList {
 }
 
 /** Lookup an optional dom-token-list value by handle. */
-function lookupOptionDomTokenList(handle: bigint | undefined): DOMTokenList | undefined {
+function lookupOptionDomTokenList(handle: bigint | undefined): DOMTokenList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _domTokenListHandles.get(handle);
+  return _domTokenListHandles.get(handle) ?? null;
 }
 
 /** Lookup a element value by handle. */
@@ -729,11 +729,11 @@ function lookupElement(handle: bigint): Element {
 }
 
 /** Lookup an optional element value by handle. */
-function lookupOptionElement(handle: bigint | undefined): Element | undefined {
+function lookupOptionElement(handle: bigint | undefined): Element | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementHandles.get(handle);
+  return _elementHandles.get(handle) ?? null;
 }
 
 /** Lookup a element-internals value by handle. */
@@ -746,11 +746,11 @@ function lookupElementInternals(handle: bigint): ElementInternals {
 }
 
 /** Lookup an optional element-internals value by handle. */
-function lookupOptionElementInternals(handle: bigint | undefined): ElementInternals | undefined {
+function lookupOptionElementInternals(handle: bigint | undefined): ElementInternals | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementInternalsHandles.get(handle);
+  return _elementInternalsHandles.get(handle) ?? null;
 }
 
 /** Lookup a element-list value by handle. */
@@ -763,11 +763,11 @@ function lookupElementList(handle: bigint): Element[] {
 }
 
 /** Lookup an optional element-list value by handle. */
-function lookupOptionElementList(handle: bigint | undefined): Element[] | undefined {
+function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementListHandles.get(handle);
+  return _elementListHandles.get(handle) ?? null;
 }
 
 /** Lookup a event value by handle. */
@@ -780,11 +780,11 @@ function lookupEvent(handle: bigint): Event {
 }
 
 /** Lookup an optional event value by handle. */
-function lookupOptionEvent(handle: bigint | undefined): Event | undefined {
+function lookupOptionEvent(handle: bigint | undefined): Event | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _eventHandles.get(handle);
+  return _eventHandles.get(handle) ?? null;
 }
 
 /** Lookup a external value by handle. */
@@ -797,11 +797,11 @@ function lookupExternal(handle: bigint): External {
 }
 
 /** Lookup an optional external value by handle. */
-function lookupOptionExternal(handle: bigint | undefined): External | undefined {
+function lookupOptionExternal(handle: bigint | undefined): External | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _externalHandles.get(handle);
+  return _externalHandles.get(handle) ?? null;
 }
 
 /** Lookup a history value by handle. */
@@ -814,11 +814,11 @@ function lookupHistory(handle: bigint): History {
 }
 
 /** Lookup an optional history value by handle. */
-function lookupOptionHistory(handle: bigint | undefined): History | undefined {
+function lookupOptionHistory(handle: bigint | undefined): History | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _historyHandles.get(handle);
+  return _historyHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-collection value by handle. */
@@ -831,11 +831,11 @@ function lookupHtmlCollection(handle: bigint): HTMLCollection {
 }
 
 /** Lookup an optional html-collection value by handle. */
-function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | undefined {
+function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlCollectionHandles.get(handle);
+  return _htmlCollectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-element value by handle. */
@@ -848,11 +848,11 @@ function lookupHtmlElement(handle: bigint): HTMLElement {
 }
 
 /** Lookup an optional html-element value by handle. */
-function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | undefined {
+function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlElementHandles.get(handle);
+  return _htmlElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a location value by handle. */
@@ -865,11 +865,11 @@ function lookupLocation(handle: bigint): Location {
 }
 
 /** Lookup an optional location value by handle. */
-function lookupOptionLocation(handle: bigint | undefined): Location | undefined {
+function lookupOptionLocation(handle: bigint | undefined): Location | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _locationHandles.get(handle);
+  return _locationHandles.get(handle) ?? null;
 }
 
 /** Lookup a media-list value by handle. */
@@ -882,11 +882,11 @@ function lookupMediaList(handle: bigint): MediaList {
 }
 
 /** Lookup an optional media-list value by handle. */
-function lookupOptionMediaList(handle: bigint | undefined): MediaList | undefined {
+function lookupOptionMediaList(handle: bigint | undefined): MediaList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _mediaListHandles.get(handle);
+  return _mediaListHandles.get(handle) ?? null;
 }
 
 /** Lookup a named-node-map value by handle. */
@@ -899,11 +899,11 @@ function lookupNamedNodeMap(handle: bigint): NamedNodeMap {
 }
 
 /** Lookup an optional named-node-map value by handle. */
-function lookupOptionNamedNodeMap(handle: bigint | undefined): NamedNodeMap | undefined {
+function lookupOptionNamedNodeMap(handle: bigint | undefined): NamedNodeMap | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _namedNodeMapHandles.get(handle);
+  return _namedNodeMapHandles.get(handle) ?? null;
 }
 
 /** Lookup a navigator value by handle. */
@@ -916,11 +916,11 @@ function lookupNavigator(handle: bigint): Navigator {
 }
 
 /** Lookup an optional navigator value by handle. */
-function lookupOptionNavigator(handle: bigint | undefined): Navigator | undefined {
+function lookupOptionNavigator(handle: bigint | undefined): Navigator | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _navigatorHandles.get(handle);
+  return _navigatorHandles.get(handle) ?? null;
 }
 
 /** Lookup a node value by handle. */
@@ -933,11 +933,11 @@ function lookupNode(handle: bigint): Node {
 }
 
 /** Lookup an optional node value by handle. */
-function lookupOptionNode(handle: bigint | undefined): Node | undefined {
+function lookupOptionNode(handle: bigint | undefined): Node | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeHandles.get(handle);
+  return _nodeHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-iterator value by handle. */
@@ -950,11 +950,11 @@ function lookupNodeIterator(handle: bigint): NodeIterator {
 }
 
 /** Lookup an optional node-iterator value by handle. */
-function lookupOptionNodeIterator(handle: bigint | undefined): NodeIterator | undefined {
+function lookupOptionNodeIterator(handle: bigint | undefined): NodeIterator | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeIteratorHandles.get(handle);
+  return _nodeIteratorHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-list value by handle. */
@@ -967,11 +967,11 @@ function lookupNodeList(handle: bigint): NodeList {
 }
 
 /** Lookup an optional node-list value by handle. */
-function lookupOptionNodeList(handle: bigint | undefined): NodeList | undefined {
+function lookupOptionNodeList(handle: bigint | undefined): NodeList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeListHandles.get(handle);
+  return _nodeListHandles.get(handle) ?? null;
 }
 
 /** Lookup a number value by handle. */
@@ -984,11 +984,11 @@ function lookupNumber(handle: bigint): number {
 }
 
 /** Lookup an optional number value by handle. */
-function lookupOptionNumber(handle: bigint | undefined): number | undefined {
+function lookupOptionNumber(handle: bigint | undefined): number | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _numberHandles.get(handle);
+  return _numberHandles.get(handle) ?? null;
 }
 
 /** Lookup a processing-instruction value by handle. */
@@ -1001,11 +1001,11 @@ function lookupProcessingInstruction(handle: bigint): ProcessingInstruction {
 }
 
 /** Lookup an optional processing-instruction value by handle. */
-function lookupOptionProcessingInstruction(handle: bigint | undefined): ProcessingInstruction | undefined {
+function lookupOptionProcessingInstruction(handle: bigint | undefined): ProcessingInstruction | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _processingInstructionHandles.get(handle);
+  return _processingInstructionHandles.get(handle) ?? null;
 }
 
 /** Lookup a promise-void value by handle. */
@@ -1018,11 +1018,11 @@ function lookupPromiseVoid(handle: bigint): Promise<void> {
 }
 
 /** Lookup an optional promise-void value by handle. */
-function lookupOptionPromiseVoid(handle: bigint | undefined): Promise<void> | undefined {
+function lookupOptionPromiseVoid(handle: bigint | undefined): Promise<void> | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _promiseVoidHandles.get(handle);
+  return _promiseVoidHandles.get(handle) ?? null;
 }
 
 /** Lookup a screen value by handle. */
@@ -1035,11 +1035,11 @@ function lookupScreen(handle: bigint): Screen {
 }
 
 /** Lookup an optional screen value by handle. */
-function lookupOptionScreen(handle: bigint | undefined): Screen | undefined {
+function lookupOptionScreen(handle: bigint | undefined): Screen | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _screenHandles.get(handle);
+  return _screenHandles.get(handle) ?? null;
 }
 
 /** Lookup a screen-orientation value by handle. */
@@ -1052,11 +1052,11 @@ function lookupScreenOrientation(handle: bigint): ScreenOrientation {
 }
 
 /** Lookup an optional screen-orientation value by handle. */
-function lookupOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | undefined {
+function lookupOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _screenOrientationHandles.get(handle);
+  return _screenOrientationHandles.get(handle) ?? null;
 }
 
 /** Lookup a shadow-root value by handle. */
@@ -1069,11 +1069,11 @@ function lookupShadowRoot(handle: bigint): ShadowRoot {
 }
 
 /** Lookup an optional shadow-root value by handle. */
-function lookupOptionShadowRoot(handle: bigint | undefined): ShadowRoot | undefined {
+function lookupOptionShadowRoot(handle: bigint | undefined): ShadowRoot | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _shadowRootHandles.get(handle);
+  return _shadowRootHandles.get(handle) ?? null;
 }
 
 /** Lookup a speech-synthesis value by handle. */
@@ -1086,11 +1086,11 @@ function lookupSpeechSynthesis(handle: bigint): SpeechSynthesis {
 }
 
 /** Lookup an optional speech-synthesis value by handle. */
-function lookupOptionSpeechSynthesis(handle: bigint | undefined): SpeechSynthesis | undefined {
+function lookupOptionSpeechSynthesis(handle: bigint | undefined): SpeechSynthesis | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _speechSynthesisHandles.get(handle);
+  return _speechSynthesisHandles.get(handle) ?? null;
 }
 
 /** Lookup a string value by handle. */
@@ -1103,11 +1103,11 @@ function lookupString(handle: bigint): string {
 }
 
 /** Lookup an optional string value by handle. */
-function lookupOptionString(handle: bigint | undefined): string | undefined {
+function lookupOptionString(handle: bigint | undefined): string | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _stringHandles.get(handle);
+  return _stringHandles.get(handle) ?? null;
 }
 
 /** Lookup a string-list value by handle. */
@@ -1120,11 +1120,11 @@ function lookupStringList(handle: bigint): string[] {
 }
 
 /** Lookup an optional string-list value by handle. */
-function lookupOptionStringList(handle: bigint | undefined): string[] | undefined {
+function lookupOptionStringList(handle: bigint | undefined): string[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _stringListHandles.get(handle);
+  return _stringListHandles.get(handle) ?? null;
 }
 
 /** Lookup a style-sheet-list value by handle. */
@@ -1137,11 +1137,11 @@ function lookupStyleSheetList(handle: bigint): StyleSheetList {
 }
 
 /** Lookup an optional style-sheet-list value by handle. */
-function lookupOptionStyleSheetList(handle: bigint | undefined): StyleSheetList | undefined {
+function lookupOptionStyleSheetList(handle: bigint | undefined): StyleSheetList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _styleSheetListHandles.get(handle);
+  return _styleSheetListHandles.get(handle) ?? null;
 }
 
 /** Lookup a text value by handle. */
@@ -1154,11 +1154,11 @@ function lookupText(handle: bigint): Text {
 }
 
 /** Lookup an optional text value by handle. */
-function lookupOptionText(handle: bigint | undefined): Text | undefined {
+function lookupOptionText(handle: bigint | undefined): Text | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _textHandles.get(handle);
+  return _textHandles.get(handle) ?? null;
 }
 
 /** Lookup a tree-walker value by handle. */
@@ -1171,11 +1171,11 @@ function lookupTreeWalker(handle: bigint): TreeWalker {
 }
 
 /** Lookup an optional tree-walker value by handle. */
-function lookupOptionTreeWalker(handle: bigint | undefined): TreeWalker | undefined {
+function lookupOptionTreeWalker(handle: bigint | undefined): TreeWalker | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _treeWalkerHandles.get(handle);
+  return _treeWalkerHandles.get(handle) ?? null;
 }
 
 /** Lookup a visual-viewport value by handle. */
@@ -1188,11 +1188,11 @@ function lookupVisualViewport(handle: bigint): VisualViewport {
 }
 
 /** Lookup an optional visual-viewport value by handle. */
-function lookupOptionVisualViewport(handle: bigint | undefined): VisualViewport | undefined {
+function lookupOptionVisualViewport(handle: bigint | undefined): VisualViewport | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _visualViewportHandles.get(handle);
+  return _visualViewportHandles.get(handle) ?? null;
 }
 
 /** Lookup a void value by handle. */
@@ -1205,11 +1205,11 @@ function lookupVoid(handle: bigint): void {
 }
 
 /** Lookup an optional void value by handle. */
-function lookupOptionVoid(handle: bigint | undefined): void | undefined {
+function lookupOptionVoid(handle: bigint | undefined): void | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _voidHandles.get(handle);
+  return _voidHandles.get(handle) ?? null;
 }
 
 /** Lookup a window value by handle. */
@@ -1222,11 +1222,11 @@ function lookupWindow(handle: bigint): Window {
 }
 
 /** Lookup an optional window value by handle. */
-function lookupOptionWindow(handle: bigint | undefined): Window | undefined {
+function lookupOptionWindow(handle: bigint | undefined): Window | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _windowHandles.get(handle);
+  return _windowHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -3687,7 +3687,7 @@ function getGlobalWindow(): Window {
  * `match-media()` operation.
  */
 export function matchMedia(query: string): bigint {
-  const result = window.matchMedia();
+  const result = window.matchMedia(query);
   const handle = _nextMediaQueryList++;
   _mediaQueryListhandles.set(handle, result);
   return handle;
@@ -3717,28 +3717,28 @@ export function getVisualViewport(): bigint | undefined {
  * `move-to()` operation.
  */
 export function moveTo(x: number, y: number): void {
-  window.moveTo(y);
+  window.moveTo(x, y);
 }
 
 /**
  * `move-by()` operation.
  */
 export function moveBy(x: number, y: number): void {
-  window.moveBy(y);
+  window.moveBy(x, y);
 }
 
 /**
  * `resize-to()` operation.
  */
 export function resizeTo(width: number, height: number): void {
-  window.resizeTo(height);
+  window.resizeTo(width, height);
 }
 
 /**
  * `resize-by()` operation.
  */
 export function resizeBy(x: number, y: number): void {
-  window.resizeBy(y);
+  window.resizeBy(x, y);
 }
 
 /**
@@ -3787,7 +3787,7 @@ export function getPageYOffset(): number {
  * `scroll()` operation.
  */
 export function WindowScroll(options: bigint | undefined): bigint {
-  const result = window.scroll();
+  const result = window.scroll(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
   return handle;
@@ -3797,7 +3797,7 @@ export function WindowScroll(options: bigint | undefined): bigint {
  * `scroll-to()` operation.
  */
 export function WindowScrollTo(options: bigint | undefined): bigint {
-  const result = window.scrollTo();
+  const result = window.scrollTo(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
   return handle;
@@ -3807,7 +3807,7 @@ export function WindowScrollTo(options: bigint | undefined): bigint {
  * `scroll-by()` operation.
  */
 export function WindowScrollBy(options: bigint | undefined): bigint {
-  const result = window.scrollBy();
+  const result = window.scrollBy(options);
   const handle = _nextVoid++;
   _voidHandles.set(handle, result);
   return handle;
@@ -3866,7 +3866,7 @@ export function getDevicePixelRatio(): number {
  * `get-computed-style()` operation.
  */
 export function getComputedStyle(elt: bigint, pseudoElt: string | undefined): bigint {
-  const result = window.getComputedStyle(pseudoElt);
+  const result = window.getComputedStyle(elt, pseudoElt);
   const handle = _nextCssStyleDeclaration++;
   _cssStyleDeclarationHandles.set(handle, result);
   return handle;
@@ -3886,7 +3886,7 @@ export function getEvent(): bigint {
  * `fetch-later()` operation.
  */
 export function fetchLater(input: bigint, init: bigint | undefined): bigint {
-  return (window as any).fetchLater(init);
+  return (window as any).fetchLater(input, init);
 }
 
 /**
@@ -3960,7 +3960,7 @@ export function getHistory(): bigint {
  * `get-navigation()` operation.
  */
 export function getNavigation(): bigint {
-  return window.navigation;
+  return window.navigator;
 }
 
 /**
@@ -4150,7 +4150,7 @@ export function getFrameElement(): bigint | undefined {
  * `open()` operation.
  */
 export function WindowOpen(url: string | undefined, target: string | undefined, features: string | undefined): bigint | undefined {
-  const result = window.open(target, features);
+  const result = window.open(url, target, features);
   const handle = _nextWindow++;
   _windowHandles.set(handle, result);
   return handle;
@@ -4160,7 +4160,7 @@ export function WindowOpen(url: string | undefined, target: string | undefined, 
  * `object()` operation.
  */
 export function WindowObject(name: string): void {
-  window.object();
+  (window as any).object(name);
 }
 
 /**
@@ -4201,7 +4201,7 @@ export function alert(): void {
  * `confirm()` operation.
  */
 export function confirm(message: string | undefined): bigint {
-  const result = window.confirm();
+  const result = window.confirm(message);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -4211,7 +4211,7 @@ export function confirm(message: string | undefined): bigint {
  * `prompt()` operation.
  */
 export function prompt(message: string | undefined, _default: string | undefined): bigint | undefined {
-  const result = window.prompt(_default);
+  const result = window.prompt(message, _default);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
   return handle;
@@ -4228,7 +4228,7 @@ export function print(): void {
  * `post-message()` operation.
  */
 export function postMessage(message: string, targetOrigin: string, transfer: (bigint)[] | undefined): void {
-  window.postMessage(targetOrigin, transfer);
+  window.postMessage(message, targetOrigin, transfer);
 }
 
 /**
@@ -4452,7 +4452,7 @@ function getGlobalDocument(): Document {
  * `element-from-point()` operation.
  */
 export function elementFromPoint(x: number, y: number): bigint | undefined {
-  const result = document.elementFromPoint(y);
+  const result = document.elementFromPoint(x, y);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
   return handle;
@@ -4462,7 +4462,7 @@ export function elementFromPoint(x: number, y: number): bigint | undefined {
  * `elements-from-point()` operation.
  */
 export function elementsFromPoint(x: number, y: number): bigint {
-  const result = document.elementsFromPoint(y);
+  const result = document.elementsFromPoint(x, y);
   const handle = _nextElementList++;
   _elementListHandles.set(handle, result);
   return handle;
@@ -4472,7 +4472,7 @@ export function elementsFromPoint(x: number, y: number): bigint {
  * `caret-position-from-point()` operation.
  */
 export function caretPositionFromPoint(x: number, y: number, options: bigint | undefined): bigint | undefined {
-  const result = document.caretPositionFromPoint(y, options);
+  const result = document.caretPositionFromPoint(x, y, options);
   const handle = _nextCaretPosition++;
   _caretPositionhandles.set(handle, result);
   return handle;
@@ -4502,7 +4502,7 @@ export function getImplementation(): bigint {
  * `get-url()` operation.
  */
 export function getUrl(): string {
-  return document.url;
+  return document.URL;
 }
 
 /**
@@ -4571,7 +4571,7 @@ export function getDocumentElement(): bigint | undefined {
  * `get-elements-by-tag-name()` operation.
  */
 export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
-  const result = document.getElementsByTagName();
+  const result = document.getElementsByTagName(qualifiedName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -4581,7 +4581,7 @@ export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  const result = document.getElementsByTagNameNS(localName);
+  const result = document.getElementsByTagNameNS(namespace, localName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -4591,7 +4591,7 @@ export function DocumentGetElementsByTagNameNs(namespace: string | undefined, lo
  * `get-elements-by-class-name()` operation.
  */
 export function DocumentGetElementsByClassName(classNames: string): bigint {
-  const result = document.getElementsByClassName();
+  const result = document.getElementsByClassName(classNames);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, result);
   return handle;
@@ -4601,7 +4601,7 @@ export function DocumentGetElementsByClassName(classNames: string): bigint {
  * `create-element()` operation.
  */
 export function createElement(localName: string, options: string | undefined): bigint {
-  const result = document.createElement(options);
+  const result = document.createElement(localName, options);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
   return handle;
@@ -4611,7 +4611,7 @@ export function createElement(localName: string, options: string | undefined): b
  * `create-element-ns()` operation.
  */
 export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  const result = document.createElementNS(qualifiedName, options);
+  const result = document.createElementNS(namespace, qualifiedName, options);
   const handle = _nextElement++;
   _elementHandles.set(handle, result);
   return handle;
@@ -4631,7 +4631,7 @@ export function createDocumentFragment(): bigint {
  * `create-text-node()` operation.
  */
 export function createTextNode(data: string): bigint {
-  const result = document.createTextNode();
+  const result = document.createTextNode(data);
   const handle = _nextText++;
   _textHandles.set(handle, result);
   return handle;
@@ -4641,14 +4641,14 @@ export function createTextNode(data: string): bigint {
  * `create-cdata-section()` operation.
  */
 export function createCdataSection(data: string): bigint {
-  return document.createCDATASection();
+  return document.createCDATASection(data);
 }
 
 /**
  * `create-comment()` operation.
  */
 export function createComment(data: string): bigint {
-  const result = document.createComment();
+  const result = document.createComment(data);
   const handle = _nextComment++;
   _commentHandles.set(handle, result);
   return handle;
@@ -4658,7 +4658,7 @@ export function createComment(data: string): bigint {
  * `create-processing-instruction()` operation.
  */
 export function createProcessingInstruction(target: string, data: string): bigint {
-  const result = document.createProcessingInstruction(data);
+  const result = document.createProcessingInstruction(target, data);
   const handle = _nextProcessingInstruction++;
   _processingInstructionHandles.set(handle, result);
   return handle;
@@ -4668,7 +4668,7 @@ export function createProcessingInstruction(target: string, data: string): bigin
  * `import-node()` operation.
  */
 export function importNode(node: bigint, options: boolean | undefined): bigint {
-  const result = document.importNode(options);
+  const result = document.importNode(node, options);
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
   return handle;
@@ -4678,7 +4678,7 @@ export function importNode(node: bigint, options: boolean | undefined): bigint {
  * `adopt-node()` operation.
  */
 export function adoptNode(node: bigint): bigint {
-  const result = document.adoptNode();
+  const result = document.adoptNode(node);
   const handle = _nextNode++;
   _nodeHandles.set(handle, result);
   return handle;
@@ -4688,7 +4688,7 @@ export function adoptNode(node: bigint): bigint {
  * `create-attribute()` operation.
  */
 export function createAttribute(localName: string): bigint {
-  const result = document.createAttribute();
+  const result = document.createAttribute(localName);
   const handle = _nextAttr++;
   _attrHandles.set(handle, result);
   return handle;
@@ -4698,7 +4698,7 @@ export function createAttribute(localName: string): bigint {
  * `create-attribute-ns()` operation.
  */
 export function createAttributeNs(namespace: string | undefined, qualifiedName: string): bigint {
-  const result = document.createAttributeNS(qualifiedName);
+  const result = document.createAttributeNS(namespace, qualifiedName);
   const handle = _nextAttr++;
   _attrHandles.set(handle, result);
   return handle;
@@ -4708,7 +4708,7 @@ export function createAttributeNs(namespace: string | undefined, qualifiedName: 
  * `create-event()` operation.
  */
 export function createEvent(_interface: string): bigint {
-  const result = document.createEvent();
+  const result = document.createEvent(_interface);
   const handle = _nextEvent++;
   _eventHandles.set(handle, result);
   return handle;
@@ -4728,7 +4728,7 @@ export function createRange(): bigint {
  * `create-node-iterator()` operation.
  */
 export function createNodeIterator(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const result = document.createNodeIterator(whatToShow, filter);
+  const result = document.createNodeIterator(root, whatToShow, filter);
   const handle = _nextNodeIterator++;
   _nodeIteratorHandles.set(handle, result);
   return handle;
@@ -4738,7 +4738,7 @@ export function createNodeIterator(root: bigint, whatToShow: number | undefined,
  * `create-tree-walker()` operation.
  */
 export function createTreeWalker(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const result = document.createTreeWalker(whatToShow, filter);
+  const result = document.createTreeWalker(root, whatToShow, filter);
   const handle = _nextTreeWalker++;
   _treeWalkerHandles.set(handle, result);
   return handle;
@@ -4881,7 +4881,7 @@ export function getCookie(): bigint {
  * `set-cookie()` operation.
  */
 export function setCookie(value: string): void {
-  document.cookie = value;
+  document.getSetCookie = value;
 }
 
 /**
@@ -4908,7 +4908,7 @@ export function getReadyState(): bigint {
  * `object()` operation.
  */
 export function DocumentObject(name: string): void {
-  (document as any).object();
+  (document as any).object(name);
 }
 
 /**
@@ -5036,7 +5036,7 @@ export function getScripts(): bigint {
  * `get-elements-by-name()` operation.
  */
 export function getElementsByName(elementName: string): bigint {
-  const result = document.getElementsByName();
+  const result = document.getElementsByName(elementName);
   const handle = _nextNodeList++;
   _nodeListHandles.set(handle, result);
   return handle;
@@ -5056,7 +5056,7 @@ export function getCurrentScript(): bigint | undefined {
  * `open()` operation.
  */
 export function DocumentOpen(unused1: string | undefined, unused2: string | undefined): bigint {
-  const result = document.open(unused2);
+  const result = document.open(unused1, unused2);
   const handle = _nextDocument++;
   _documentHandles.set(handle, result);
   return handle;
@@ -5073,14 +5073,14 @@ export function DocumentClose(): void {
  * `write()` operation.
  */
 export function write(text: (bigint)[]): void {
-  document.write();
+  document.write(text);
 }
 
 /**
  * `writeln()` operation.
  */
 export function writeln(text: (bigint)[]): void {
-  document.writeln();
+  document.writeln(text);
 }
 
 /**
@@ -5121,7 +5121,7 @@ export function setDesignMode(value: string): void {
  * `exec-command()` operation.
  */
 export function execCommand(commandId: string, showUi: boolean | undefined, value: string | undefined): bigint {
-  const result = document.execCommand(showUi, value);
+  const result = document.execCommand(commandId, showUi, value);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -5131,7 +5131,7 @@ export function execCommand(commandId: string, showUi: boolean | undefined, valu
  * `query-command-enabled()` operation.
  */
 export function queryCommandEnabled(commandId: string): bigint {
-  const result = document.queryCommandEnabled();
+  const result = document.queryCommandEnabled(commandId);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -5141,7 +5141,7 @@ export function queryCommandEnabled(commandId: string): bigint {
  * `query-command-indeterm()` operation.
  */
 export function queryCommandIndeterm(commandId: string): bigint {
-  const result = document.queryCommandIndeterm();
+  const result = document.queryCommandIndeterm(commandId);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -5151,7 +5151,7 @@ export function queryCommandIndeterm(commandId: string): bigint {
  * `query-command-state()` operation.
  */
 export function queryCommandState(commandId: string): bigint {
-  const result = document.queryCommandState();
+  const result = document.queryCommandState(commandId);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -5161,7 +5161,7 @@ export function queryCommandState(commandId: string): bigint {
  * `query-command-supported()` operation.
  */
 export function queryCommandSupported(commandId: string): bigint {
-  const result = document.queryCommandSupported();
+  const result = document.queryCommandSupported(commandId);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, result);
   return handle;
@@ -5171,7 +5171,7 @@ export function queryCommandSupported(commandId: string): bigint {
  * `query-command-value()` operation.
  */
 export function queryCommandValue(commandId: string): bigint {
-  const result = document.queryCommandValue();
+  const result = document.queryCommandValue(commandId);
   const handle = _nextString++;
   _stringHandles.set(handle, result);
   return handle;
@@ -5188,7 +5188,12 @@ export function DocumentGetHidden(): boolean {
  * `get-visibility-state()` operation.
  */
 export function getVisibilityState(): bigint {
-  return document.visibilityState;
+  const value = document.visibilityState;
+  switch (value) {
+    case 'visible': return 0n;
+    case 'hidden': return 1n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -5806,7 +5811,7 @@ export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined
  */
 export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  return obj.setAttributeNodeNs(attr) ?? undefined;
+  return obj.setAttributeNodeNS(attr) ?? undefined;
 }
 
 /**
@@ -6010,7 +6015,7 @@ export function ElementSetOnfullscreenerror(self: bigint, value: EventHandlerRec
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
   const obj = lookupElement(self);
-  obj.setHtmlUnsafe(html);
+  obj.setHTMLUnsafe(html);
 }
 
 /**
@@ -6026,7 +6031,11 @@ export function getHtml(self: bigint, options: bigint | undefined): string {
  */
 export function getInnerHtml(self: bigint): bigint {
   const obj = lookupElement(self);
-  return obj.innerHTML;
+  const value = obj.innerHTML;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -6034,7 +6043,11 @@ export function getInnerHtml(self: bigint): bigint {
  */
 export function setInnerHtml(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
-  obj.innerHTML = value;
+  const value = value;
+  let enumValue: HTMLString;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.innerHTML = enumValue;
 }
 
 /**
@@ -6042,7 +6055,11 @@ export function setInnerHtml(self: bigint, value: bigint): void {
  */
 export function getOuterHtml(self: bigint): bigint {
   const obj = lookupElement(self);
-  return obj.outerHTML;
+  const value = obj.outerHTML;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -6050,7 +6067,11 @@ export function getOuterHtml(self: bigint): bigint {
  */
 export function setOuterHtml(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
-  obj.outerHTML = value;
+  const value = value;
+  let enumValue: HTMLString;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.outerHTML = enumValue;
 }
 
 /**
@@ -7506,7 +7527,7 @@ export function VisualViewportSetOnscroll(self: bigint, value: EventHandlerRecor
  */
 export function VisualViewportGetOnscrollend(self: bigint): EventHandlerRecord {
   const obj = lookupVisualViewport(self);
-  return obj.onscrollend;
+  return (obj as any).onscrollend;
 }
 
 /**
@@ -7514,7 +7535,7 @@ export function VisualViewportGetOnscrollend(self: bigint): EventHandlerRecord {
  */
 export function VisualViewportSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupVisualViewport(self);
-  obj.onscrollend = value;
+  (obj as any).onscrollend = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -7540,7 +7561,11 @@ export function getMediaText(self: bigint): bigint {
  */
 export function setMediaText(self: bigint, value: bigint): void {
   const obj = lookupMediaList(self);
-  obj.mediaText = value;
+  const value = value;
+  let enumValue: MediaText;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.mediaText = enumValue;
 }
 
 /**

@@ -282,11 +282,11 @@ function lookupAbortSignal(handle: bigint): AbortSignal {
 }
 
 /** Lookup an optional abort-signal value by handle. */
-function lookupOptionAbortSignal(handle: bigint | undefined): AbortSignal | undefined {
+function lookupOptionAbortSignal(handle: bigint | undefined): AbortSignal | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _abortSignalHandles.get(handle);
+  return _abortSignalHandles.get(handle) ?? null;
 }
 
 /** Lookup a attr value by handle. */
@@ -299,11 +299,11 @@ function lookupAttr(handle: bigint): Attr {
 }
 
 /** Lookup an optional attr value by handle. */
-function lookupOptionAttr(handle: bigint | undefined): Attr | undefined {
+function lookupOptionAttr(handle: bigint | undefined): Attr | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _attrHandles.get(handle);
+  return _attrHandles.get(handle) ?? null;
 }
 
 /** Lookup a document value by handle. */
@@ -316,11 +316,11 @@ function lookupDocument(handle: bigint): Document {
 }
 
 /** Lookup an optional document value by handle. */
-function lookupOptionDocument(handle: bigint | undefined): Document | undefined {
+function lookupOptionDocument(handle: bigint | undefined): Document | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentHandles.get(handle);
+  return _documentHandles.get(handle) ?? null;
 }
 
 /** Lookup a document-type value by handle. */
@@ -333,11 +333,11 @@ function lookupDocumentType(handle: bigint): DocumentType {
 }
 
 /** Lookup an optional document-type value by handle. */
-function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | undefined {
+function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentTypeHandles.get(handle);
+  return _documentTypeHandles.get(handle) ?? null;
 }
 
 /** Lookup a element value by handle. */
@@ -350,11 +350,11 @@ function lookupElement(handle: bigint): Element {
 }
 
 /** Lookup an optional element value by handle. */
-function lookupOptionElement(handle: bigint | undefined): Element | undefined {
+function lookupOptionElement(handle: bigint | undefined): Element | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementHandles.get(handle);
+  return _elementHandles.get(handle) ?? null;
 }
 
 /** Lookup a event-target value by handle. */
@@ -367,11 +367,11 @@ function lookupEventTarget(handle: bigint): EventTarget {
 }
 
 /** Lookup an optional event-target value by handle. */
-function lookupOptionEventTarget(handle: bigint | undefined): EventTarget | undefined {
+function lookupOptionEventTarget(handle: bigint | undefined): EventTarget | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _eventTargetHandles.get(handle);
+  return _eventTargetHandles.get(handle) ?? null;
 }
 
 /** Lookup a event-target-list value by handle. */
@@ -384,11 +384,11 @@ function lookupEventTargetList(handle: bigint): EventTarget[] {
 }
 
 /** Lookup an optional event-target-list value by handle. */
-function lookupOptionEventTargetList(handle: bigint | undefined): EventTarget[] | undefined {
+function lookupOptionEventTargetList(handle: bigint | undefined): EventTarget[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _eventTargetListHandles.get(handle);
+  return _eventTargetListHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-collection value by handle. */
@@ -401,11 +401,11 @@ function lookupHtmlCollection(handle: bigint): HTMLCollection {
 }
 
 /** Lookup an optional html-collection value by handle. */
-function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | undefined {
+function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlCollectionHandles.get(handle);
+  return _htmlCollectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a mutation-record-list value by handle. */
@@ -418,11 +418,11 @@ function lookupMutationRecordList(handle: bigint): MutationRecord[] {
 }
 
 /** Lookup an optional mutation-record-list value by handle. */
-function lookupOptionMutationRecordList(handle: bigint | undefined): MutationRecord[] | undefined {
+function lookupOptionMutationRecordList(handle: bigint | undefined): MutationRecord[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _mutationRecordListHandles.get(handle);
+  return _mutationRecordListHandles.get(handle) ?? null;
 }
 
 /** Lookup a node value by handle. */
@@ -435,11 +435,11 @@ function lookupNode(handle: bigint): Node {
 }
 
 /** Lookup an optional node value by handle. */
-function lookupOptionNode(handle: bigint | undefined): Node | undefined {
+function lookupOptionNode(handle: bigint | undefined): Node | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeHandles.get(handle);
+  return _nodeHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-filter value by handle. */
@@ -452,11 +452,11 @@ function lookupNodeFilter(handle: bigint): NodeFilter {
 }
 
 /** Lookup an optional node-filter value by handle. */
-function lookupOptionNodeFilter(handle: bigint | undefined): NodeFilter | undefined {
+function lookupOptionNodeFilter(handle: bigint | undefined): NodeFilter | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeFilterHandles.get(handle);
+  return _nodeFilterHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-list value by handle. */
@@ -469,11 +469,11 @@ function lookupNodeList(handle: bigint): NodeList {
 }
 
 /** Lookup an optional node-list value by handle. */
-function lookupOptionNodeList(handle: bigint | undefined): NodeList | undefined {
+function lookupOptionNodeList(handle: bigint | undefined): NodeList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeListHandles.get(handle);
+  return _nodeListHandles.get(handle) ?? null;
 }
 
 /** Lookup a number value by handle. */
@@ -486,11 +486,11 @@ function lookupNumber(handle: bigint): number {
 }
 
 /** Lookup an optional number value by handle. */
-function lookupOptionNumber(handle: bigint | undefined): number | undefined {
+function lookupOptionNumber(handle: bigint | undefined): number | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _numberHandles.get(handle);
+  return _numberHandles.get(handle) ?? null;
 }
 
 /** Lookup a string value by handle. */
@@ -503,11 +503,11 @@ function lookupString(handle: bigint): string {
 }
 
 /** Lookup an optional string value by handle. */
-function lookupOptionString(handle: bigint | undefined): string | undefined {
+function lookupOptionString(handle: bigint | undefined): string | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _stringHandles.get(handle);
+  return _stringHandles.get(handle) ?? null;
 }
 
 /** Lookup a xpath-ns-resolver value by handle. */
@@ -520,11 +520,11 @@ function lookupXPathNsResolver(handle: bigint): XPathNSResolver {
 }
 
 /** Lookup an optional xpath-ns-resolver value by handle. */
-function lookupOptionXPathNsResolver(handle: bigint | undefined): XPathNSResolver | undefined {
+function lookupOptionXPathNsResolver(handle: bigint | undefined): XPathNSResolver | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _xpathNsResolverHandles.get(handle);
+  return _xpathNsResolverHandles.get(handle) ?? null;
 }
 
 /** Lookup a xpath-result value by handle. */
@@ -537,11 +537,11 @@ function lookupXPathResult(handle: bigint): XPathResult {
 }
 
 /** Lookup an optional xpath-result value by handle. */
-function lookupOptionXPathResult(handle: bigint | undefined): XPathResult | undefined {
+function lookupOptionXPathResult(handle: bigint | undefined): XPathResult | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _xpathResultHandles.get(handle);
+  return _xpathResultHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1876,7 +1876,12 @@ export function getDelegatesFocus(self: bigint): boolean {
  */
 export function getSlotAssignment(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
-  return obj.slotAssignment;
+  const value = obj.slotAssignment;
+  switch (value) {
+    case 'manual': return 0n;
+    case 'named': return 1n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -1927,7 +1932,7 @@ export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
   const obj = lookupShadowRoot(self);
-  obj.setHtmlUnsafe(html);
+  obj.setHTMLUnsafe(html);
 }
 
 /**
@@ -1951,7 +1956,11 @@ export function getInnerHtml(self: bigint): bigint {
  */
 export function setInnerHtml(self: bigint, value: bigint): void {
   const obj = lookupShadowRoot(self);
-  obj.innerHTML = value;
+  const value = value;
+  let enumValue: HTMLString;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.innerHTML = enumValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -1997,7 +2006,7 @@ export function NamedNodeMapItem(self: bigint, index: number): bigint | undefine
  */
 export function getNamedItem(self: bigint, qualifiedName: string): bigint | undefined {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.namedItem(qualifiedName);
+  const result = obj.getNamedItem(qualifiedName);
   if (result === null) return undefined;
   const handle = _nextAttr++;
   _attrHandles.set(handle, result);
@@ -2021,7 +2030,7 @@ export function getNamedItemNs(self: bigint, namespace: string | undefined, loca
  */
 export function setNamedItem(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupNamedNodeMap(self);
-  obj.namedItem = attr;
+  obj.getNamedItem = attr;
 }
 
 /**
@@ -2637,7 +2646,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): boolean {
+export function DomTokenListContains(self: bigint, token: bigint): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2669,7 +2678,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): boolean {
+export function replace(self: bigint, token: string, newToken: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token, newToken);
 }
@@ -2677,7 +2686,7 @@ export function replace(self: bigint, token: string, newToken: string): boolean 
 /**
  * `supports()` operation.
  */
-export function supports(self: bigint, token: string): boolean {
+export function supports(self: bigint, token: string): EventHandlerRecord {
   const obj = lookupDOMTokenList(self);
   return obj.supports(token);
 }
@@ -2687,7 +2696,11 @@ export function supports(self: bigint, token: string): boolean {
  */
 export function DomTokenListGetValue(self: bigint): bigint {
   const obj = lookupDOMTokenList(self);
-  return obj.value;
+  const value = obj.value;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -2695,7 +2708,11 @@ export function DomTokenListGetValue(self: bigint): bigint {
  */
 export function DomTokenListSetValue(self: bigint, value: bigint): void {
   const obj = lookupDOMTokenList(self);
-  obj.value = value;
+  const value = value;
+  let enumValue: DOMTokenListValue;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.value = enumValue;
 }
 
 // ---------------------------------------------------------------------------

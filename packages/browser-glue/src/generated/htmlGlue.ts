@@ -315,11 +315,11 @@ function lookupAny(handle: bigint): any {
 }
 
 /** Lookup an optional any value by handle. */
-function lookupOptionAny(handle: bigint | undefined): any | undefined {
+function lookupOptionAny(handle: bigint | undefined): any | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _anyHandles.get(handle);
+  return _anyHandles.get(handle) ?? null;
 }
 
 /** Lookup a data-transfer value by handle. */
@@ -332,11 +332,11 @@ function lookupDataTransfer(handle: bigint): DataTransfer {
 }
 
 /** Lookup an optional data-transfer value by handle. */
-function lookupOptionDataTransfer(handle: bigint | undefined): DataTransfer | undefined {
+function lookupOptionDataTransfer(handle: bigint | undefined): DataTransfer | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _dataTransferHandles.get(handle);
+  return _dataTransferHandles.get(handle) ?? null;
 }
 
 /** Lookup a document value by handle. */
@@ -349,11 +349,11 @@ function lookupDocument(handle: bigint): Document {
 }
 
 /** Lookup an optional document value by handle. */
-function lookupOptionDocument(handle: bigint | undefined): Document | undefined {
+function lookupOptionDocument(handle: bigint | undefined): Document | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _documentHandles.get(handle);
+  return _documentHandles.get(handle) ?? null;
 }
 
 /** Lookup a element-list value by handle. */
@@ -366,11 +366,11 @@ function lookupElementList(handle: bigint): Element[] {
 }
 
 /** Lookup an optional element-list value by handle. */
-function lookupOptionElementList(handle: bigint | undefined): Element[] | undefined {
+function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _elementListHandles.get(handle);
+  return _elementListHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-collection value by handle. */
@@ -383,11 +383,11 @@ function lookupHtmlCollection(handle: bigint): HTMLCollection {
 }
 
 /** Lookup an optional html-collection value by handle. */
-function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | undefined {
+function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlCollectionHandles.get(handle);
+  return _htmlCollectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-element value by handle. */
@@ -400,11 +400,11 @@ function lookupHtmlElement(handle: bigint): HTMLElement {
 }
 
 /** Lookup an optional html-element value by handle. */
-function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | undefined {
+function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlElementHandles.get(handle);
+  return _htmlElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-form-element value by handle. */
@@ -417,11 +417,11 @@ function lookupHtmlFormElement(handle: bigint): HTMLFormElement {
 }
 
 /** Lookup an optional html-form-element value by handle. */
-function lookupOptionHtmlFormElement(handle: bigint | undefined): HTMLFormElement | undefined {
+function lookupOptionHtmlFormElement(handle: bigint | undefined): HTMLFormElement | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlFormElementHandles.get(handle);
+  return _htmlFormElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-options-collection value by handle. */
@@ -434,11 +434,11 @@ function lookupHtmlOptionsCollection(handle: bigint): HTMLOptionsCollection {
 }
 
 /** Lookup an optional html-options-collection value by handle. */
-function lookupOptionHtmlOptionsCollection(handle: bigint | undefined): HTMLOptionsCollection | undefined {
+function lookupOptionHtmlOptionsCollection(handle: bigint | undefined): HTMLOptionsCollection | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlOptionsCollectionHandles.get(handle);
+  return _htmlOptionsCollectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-table-caption-element value by handle. */
@@ -451,11 +451,11 @@ function lookupHtmlTableCaptionElement(handle: bigint): HTMLTableCaptionElement 
 }
 
 /** Lookup an optional html-table-caption-element value by handle. */
-function lookupOptionHtmlTableCaptionElement(handle: bigint | undefined): HTMLTableCaptionElement | undefined {
+function lookupOptionHtmlTableCaptionElement(handle: bigint | undefined): HTMLTableCaptionElement | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlTableCaptionElementHandles.get(handle);
+  return _htmlTableCaptionElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a html-table-section-element value by handle. */
@@ -468,11 +468,11 @@ function lookupHtmlTableSectionElement(handle: bigint): HTMLTableSectionElement 
 }
 
 /** Lookup an optional html-table-section-element value by handle. */
-function lookupOptionHtmlTableSectionElement(handle: bigint | undefined): HTMLTableSectionElement | undefined {
+function lookupOptionHtmlTableSectionElement(handle: bigint | undefined): HTMLTableSectionElement | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _htmlTableSectionElementHandles.get(handle);
+  return _htmlTableSectionElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a media-error value by handle. */
@@ -485,11 +485,11 @@ function lookupMediaError(handle: bigint): MediaError {
 }
 
 /** Lookup an optional media-error value by handle. */
-function lookupOptionMediaError(handle: bigint | undefined): MediaError | undefined {
+function lookupOptionMediaError(handle: bigint | undefined): MediaError | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _mediaErrorHandles.get(handle);
+  return _mediaErrorHandles.get(handle) ?? null;
 }
 
 /** Lookup a media-provider value by handle. */
@@ -502,11 +502,11 @@ function lookupMediaProvider(handle: bigint): MediaProvider {
 }
 
 /** Lookup an optional media-provider value by handle. */
-function lookupOptionMediaProvider(handle: bigint | undefined): MediaProvider | undefined {
+function lookupOptionMediaProvider(handle: bigint | undefined): MediaProvider | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _mediaProviderHandles.get(handle);
+  return _mediaProviderHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-list value by handle. */
@@ -519,11 +519,11 @@ function lookupNodeList(handle: bigint): NodeList {
 }
 
 /** Lookup an optional node-list value by handle. */
-function lookupOptionNodeList(handle: bigint | undefined): NodeList | undefined {
+function lookupOptionNodeList(handle: bigint | undefined): NodeList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _nodeListHandles.get(handle);
+  return _nodeListHandles.get(handle) ?? null;
 }
 
 /** Lookup a number value by handle. */
@@ -536,11 +536,11 @@ function lookupNumber(handle: bigint): number {
 }
 
 /** Lookup an optional number value by handle. */
-function lookupOptionNumber(handle: bigint | undefined): number | undefined {
+function lookupOptionNumber(handle: bigint | undefined): number | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _numberHandles.get(handle);
+  return _numberHandles.get(handle) ?? null;
 }
 
 /** Lookup a string value by handle. */
@@ -553,11 +553,11 @@ function lookupString(handle: bigint): string {
 }
 
 /** Lookup an optional string value by handle. */
-function lookupOptionString(handle: bigint | undefined): string | undefined {
+function lookupOptionString(handle: bigint | undefined): string | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _stringHandles.get(handle);
+  return _stringHandles.get(handle) ?? null;
 }
 
 /** Lookup a text-track value by handle. */
@@ -570,11 +570,11 @@ function lookupTextTrack(handle: bigint): TextTrack {
 }
 
 /** Lookup an optional text-track value by handle. */
-function lookupOptionTextTrack(handle: bigint | undefined): TextTrack | undefined {
+function lookupOptionTextTrack(handle: bigint | undefined): TextTrack | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _textTrackHandles.get(handle);
+  return _textTrackHandles.get(handle) ?? null;
 }
 
 /** Lookup a text-track-cue-list value by handle. */
@@ -587,11 +587,11 @@ function lookupTextTrackCueList(handle: bigint): TextTrackCueList {
 }
 
 /** Lookup an optional text-track-cue-list value by handle. */
-function lookupOptionTextTrackCueList(handle: bigint | undefined): TextTrackCueList | undefined {
+function lookupOptionTextTrackCueList(handle: bigint | undefined): TextTrackCueList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _textTrackCueListHandles.get(handle);
+  return _textTrackCueListHandles.get(handle) ?? null;
 }
 
 /** Lookup a text-track-list value by handle. */
@@ -604,11 +604,11 @@ function lookupTextTrackList(handle: bigint): TextTrackList {
 }
 
 /** Lookup an optional text-track-list value by handle. */
-function lookupOptionTextTrackList(handle: bigint | undefined): TextTrackList | undefined {
+function lookupOptionTextTrackList(handle: bigint | undefined): TextTrackList | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _textTrackListHandles.get(handle);
+  return _textTrackListHandles.get(handle) ?? null;
 }
 
 /** Lookup a time-ranges value by handle. */
@@ -621,11 +621,11 @@ function lookupTimeRanges(handle: bigint): TimeRanges {
 }
 
 /** Lookup an optional time-ranges value by handle. */
-function lookupOptionTimeRanges(handle: bigint | undefined): TimeRanges | undefined {
+function lookupOptionTimeRanges(handle: bigint | undefined): TimeRanges | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _timeRangesHandles.get(handle);
+  return _timeRangesHandles.get(handle) ?? null;
 }
 
 /** Lookup a validity-state value by handle. */
@@ -638,11 +638,11 @@ function lookupValidityState(handle: bigint): ValidityState {
 }
 
 /** Lookup an optional validity-state value by handle. */
-function lookupOptionValidityState(handle: bigint | undefined): ValidityState | undefined {
+function lookupOptionValidityState(handle: bigint | undefined): ValidityState | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _validityStateHandles.get(handle);
+  return _validityStateHandles.get(handle) ?? null;
 }
 
 /** Lookup a window value by handle. */
@@ -655,11 +655,11 @@ function lookupWindow(handle: bigint): Window {
 }
 
 /** Lookup an optional window value by handle. */
-function lookupOptionWindow(handle: bigint | undefined): Window | undefined {
+function lookupOptionWindow(handle: bigint | undefined): Window | null {
   if (handle === undefined || handle === 0n) {
-    return undefined;
+    return null;
   }
-  return _windowHandles.get(handle);
+  return _windowHandles.get(handle) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -2760,7 +2760,11 @@ export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
  */
 export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): void {
   const obj = lookupHTMLHyperlinkElementUtils(self);
-  obj.href = value;
+  const value = value;
+  let enumValue: HTMLHyperlinkHref;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.href = enumValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -4909,7 +4913,13 @@ export function getMode(self: bigint): bigint {
  */
 export function setMode(self: bigint, value: bigint): void {
   const obj = lookupTextTrack(self);
-  obj.mode = value;
+  const value = value;
+  let enumValue: TextTrackMode;
+  if (value === 0n) { enumValue = 'disabled'; }
+  if (value === 1n) { enumValue = 'hidden'; }
+  if (value === 2n) { enumValue = 'showing'; }
+  else { enumValue = 'disabled'; }
+  obj.mode = enumValue;
 }
 
 /**
@@ -10171,7 +10181,7 @@ export function translate(self: bigint, x: number, y: number): void {
  */
 export function transform(self: bigint, a: number, b: number, c: number, d: number, e: number, f: number): void {
   const obj = lookupCanvasTransform(self);
-  obj.setTransform(a, b, c, d, e, f);
+  obj.transform(a, b, c, d, e, f);
 }
 
 /**
@@ -10179,7 +10189,10 @@ export function transform(self: bigint, a: number, b: number, c: number, d: numb
  */
 export function getTransform(self: bigint): bigint {
   const obj = lookupCanvasTransform(self);
-  return obj.setTransform;
+  const result = obj.transform();
+  const handle = _nextDomMatrix++;
+  _domMatrixhandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -10289,7 +10302,13 @@ export function setImageSmoothingEnabled(self: bigint, value: boolean): void {
  */
 export function getImageSmoothingQuality(self: bigint): bigint {
   const obj = lookupCanvasImageSmoothing(self);
-  return obj.imageSmoothingQuality;
+  const value = obj.imageSmoothingQuality;
+  switch (value) {
+    case 'low': return 0n;
+    case 'medium': return 1n;
+    case 'high': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10297,7 +10316,13 @@ export function getImageSmoothingQuality(self: bigint): bigint {
  */
 export function setImageSmoothingQuality(self: bigint, value: bigint): void {
   const obj = lookupCanvasImageSmoothing(self);
-  obj.imageSmoothingQuality = value;
+  const value = value;
+  let enumValue: ImageSmoothingQuality;
+  if (value === 0n) { enumValue = 'low'; }
+  if (value === 1n) { enumValue = 'medium'; }
+  if (value === 2n) { enumValue = 'high'; }
+  else { enumValue = 'low'; }
+  obj.imageSmoothingQuality = enumValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -10752,7 +10777,10 @@ export function createImageData(self: bigint, sw: number, sh: number, settings: 
  */
 export function getImageData(self: bigint, sx: number, sy: number, sw: number, sh: number, settings: bigint | undefined): bigint {
   const obj = lookupCanvasImageData(self);
-  return obj.getImageData;
+  const result = obj.getImageData(sx, sy, sw, sh, settings);
+  const handle = _nextImageData++;
+  _imageDatahandles.set(handle, result);
+  return handle;
 }
 
 /**
@@ -10803,7 +10831,13 @@ export function setLineWidth(self: bigint, value: number): void {
  */
 export function getLineCap(self: bigint): bigint {
   const obj = lookupCanvasPathDrawingStyles(self);
-  return obj.lineCap;
+  const value = obj.lineCap;
+  switch (value) {
+    case 'butt': return 0n;
+    case 'round': return 1n;
+    case 'square': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10811,7 +10845,13 @@ export function getLineCap(self: bigint): bigint {
  */
 export function setLineCap(self: bigint, value: bigint): void {
   const obj = lookupCanvasPathDrawingStyles(self);
-  obj.lineCap = value;
+  const value = value;
+  let enumValue: CanvasLineCap;
+  if (value === 0n) { enumValue = 'butt'; }
+  if (value === 1n) { enumValue = 'round'; }
+  if (value === 2n) { enumValue = 'square'; }
+  else { enumValue = 'butt'; }
+  obj.lineCap = enumValue;
 }
 
 /**
@@ -10819,7 +10859,13 @@ export function setLineCap(self: bigint, value: bigint): void {
  */
 export function getLineJoin(self: bigint): bigint {
   const obj = lookupCanvasPathDrawingStyles(self);
-  return obj.lineJoin;
+  const value = obj.lineJoin;
+  switch (value) {
+    case 'round': return 0n;
+    case 'bevel': return 1n;
+    case 'miter': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10827,7 +10873,13 @@ export function getLineJoin(self: bigint): bigint {
  */
 export function setLineJoin(self: bigint, value: bigint): void {
   const obj = lookupCanvasPathDrawingStyles(self);
-  obj.lineJoin = value;
+  const value = value;
+  let enumValue: CanvasLineJoin;
+  if (value === 0n) { enumValue = 'round'; }
+  if (value === 1n) { enumValue = 'bevel'; }
+  if (value === 2n) { enumValue = 'miter'; }
+  else { enumValue = 'round'; }
+  obj.lineJoin = enumValue;
 }
 
 /**
@@ -10934,7 +10986,15 @@ export function setFont(self: bigint, value: string): void {
  */
 export function getTextAlign(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.textAlign;
+  const value = obj.textAlign;
+  switch (value) {
+    case 'left': return 0n;
+    case 'right': return 1n;
+    case 'center': return 2n;
+    case 'start': return 3n;
+    case 'end': return 4n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10942,7 +11002,15 @@ export function getTextAlign(self: bigint): bigint {
  */
 export function setTextAlign(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.textAlign = value;
+  const value = value;
+  let enumValue: CanvasTextAlign;
+  if (value === 0n) { enumValue = 'left'; }
+  if (value === 1n) { enumValue = 'right'; }
+  if (value === 2n) { enumValue = 'center'; }
+  if (value === 3n) { enumValue = 'start'; }
+  if (value === 4n) { enumValue = 'end'; }
+  else { enumValue = 'left'; }
+  obj.textAlign = enumValue;
 }
 
 /**
@@ -10950,7 +11018,16 @@ export function setTextAlign(self: bigint, value: bigint): void {
  */
 export function getTextBaseline(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.textBaseline;
+  const value = obj.textBaseline;
+  switch (value) {
+    case 'top': return 0n;
+    case 'hanging': return 1n;
+    case 'middle': return 2n;
+    case 'alphabetic': return 3n;
+    case 'ideographic': return 4n;
+    case 'bottom': return 5n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10958,7 +11035,16 @@ export function getTextBaseline(self: bigint): bigint {
  */
 export function setTextBaseline(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.textBaseline = value;
+  const value = value;
+  let enumValue: CanvasTextBaseline;
+  if (value === 0n) { enumValue = 'top'; }
+  if (value === 1n) { enumValue = 'hanging'; }
+  if (value === 2n) { enumValue = 'middle'; }
+  if (value === 3n) { enumValue = 'alphabetic'; }
+  if (value === 4n) { enumValue = 'ideographic'; }
+  if (value === 5n) { enumValue = 'bottom'; }
+  else { enumValue = 'top'; }
+  obj.textBaseline = enumValue;
 }
 
 /**
@@ -10966,7 +11052,13 @@ export function setTextBaseline(self: bigint, value: bigint): void {
  */
 export function CanvasTextDrawingStylesGetDirection(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.direction;
+  const value = obj.direction;
+  switch (value) {
+    case 'ltr': return 0n;
+    case 'rtl': return 1n;
+    case 'inherit': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -10974,7 +11066,13 @@ export function CanvasTextDrawingStylesGetDirection(self: bigint): bigint {
  */
 export function CanvasTextDrawingStylesSetDirection(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.direction = value;
+  const value = value;
+  let enumValue: CanvasDirection;
+  if (value === 0n) { enumValue = 'ltr'; }
+  if (value === 1n) { enumValue = 'rtl'; }
+  if (value === 2n) { enumValue = 'inherit'; }
+  else { enumValue = 'ltr'; }
+  obj.direction = enumValue;
 }
 
 /**
@@ -10998,7 +11096,13 @@ export function setLetterSpacing(self: bigint, value: string): void {
  */
 export function getFontKerning(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.fontKerning;
+  const value = obj.fontKerning;
+  switch (value) {
+    case 'auto': return 0n;
+    case 'normal': return 1n;
+    case 'none': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -11006,7 +11110,13 @@ export function getFontKerning(self: bigint): bigint {
  */
 export function setFontKerning(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.fontKerning = value;
+  const value = value;
+  let enumValue: CanvasFontKerning;
+  if (value === 0n) { enumValue = 'auto'; }
+  if (value === 1n) { enumValue = 'normal'; }
+  if (value === 2n) { enumValue = 'none'; }
+  else { enumValue = 'auto'; }
+  obj.fontKerning = enumValue;
 }
 
 /**
@@ -11014,7 +11124,11 @@ export function setFontKerning(self: bigint, value: bigint): void {
  */
 export function getFontStretch(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.fontStretch;
+  const value = obj.fontStretch;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -11022,7 +11136,11 @@ export function getFontStretch(self: bigint): bigint {
  */
 export function setFontStretch(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.fontStretch = value;
+  const value = value;
+  let enumValue: CanvasFontStretch;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.fontStretch = enumValue;
 }
 
 /**
@@ -11030,7 +11148,11 @@ export function setFontStretch(self: bigint, value: bigint): void {
  */
 export function getFontVariantCaps(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.fontVariantCaps;
+  const value = obj.fontVariantCaps;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -11038,7 +11160,11 @@ export function getFontVariantCaps(self: bigint): bigint {
  */
 export function setFontVariantCaps(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.fontVariantCaps = value;
+  const value = value;
+  let enumValue: CanvasFontVariantCaps;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.fontVariantCaps = enumValue;
 }
 
 /**
@@ -11046,7 +11172,14 @@ export function setFontVariantCaps(self: bigint, value: bigint): void {
  */
 export function getTextRendering(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
-  return obj.textRendering;
+  const value = obj.textRendering;
+  switch (value) {
+    case 'auto': return 0n;
+    case 'optimizeSpeed': return 1n;
+    case 'optimizeLegibility': return 2n;
+    case 'geometricPrecision': return 3n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -11054,7 +11187,14 @@ export function getTextRendering(self: bigint): bigint {
  */
 export function setTextRendering(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
-  obj.textRendering = value;
+  const value = value;
+  let enumValue: CanvasTextRendering;
+  if (value === 0n) { enumValue = 'auto'; }
+  if (value === 1n) { enumValue = 'optimizeSpeed'; }
+  if (value === 2n) { enumValue = 'optimizeLegibility'; }
+  if (value === 3n) { enumValue = 'geometricPrecision'; }
+  else { enumValue = 'auto'; }
+  obj.textRendering = enumValue;
 }
 
 /**
@@ -11427,7 +11567,7 @@ function lookupOffscreenCanvas(handle: bigint): OffscreenCanvas {
  */
 export function OffscreenCanvasGetWidth(self: bigint): bigint {
   const obj = lookupOffscreenCanvas(self);
-  return obj.width;
+  return BigInt(obj.width);
 }
 
 /**
@@ -11443,7 +11583,7 @@ export function OffscreenCanvasSetWidth(self: bigint, value: bigint): void {
  */
 export function OffscreenCanvasGetHeight(self: bigint): bigint {
   const obj = lookupOffscreenCanvas(self);
-  return obj.height;
+  return BigInt(obj.height);
 }
 
 /**
@@ -12140,7 +12280,7 @@ export function setDragImage(self: bigint, image: bigint, x: number, y: number):
  */
 export function getTypes(self: bigint): (string)[] {
   const obj = lookupDataTransfer(self);
-  return obj.type;
+  return obj.types;
 }
 
 /**
@@ -12497,7 +12637,11 @@ function lookupLocation(handle: bigint): Location {
  */
 export function LocationGetHref(self: bigint): bigint {
   const obj = lookupLocation(self);
-  return obj.href;
+  const value = obj.href;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -12505,7 +12649,11 @@ export function LocationGetHref(self: bigint): bigint {
  */
 export function LocationSetHref(self: bigint, value: bigint): void {
   const obj = lookupLocation(self);
-  obj.href = value;
+  const value = value;
+  let enumValue: LocationHref;
+  if (value === 0n) { enumValue = ''; }
+  else { enumValue = ''; }
+  obj.href = enumValue;
 }
 
 /**
@@ -12692,7 +12840,12 @@ export function HistoryGetLength(self: bigint): number {
  */
 export function getScrollRestoration(self: bigint): bigint {
   const obj = lookupHistory(self);
-  return obj.scrollRestoration;
+  const value = obj.scrollRestoration;
+  switch (value) {
+    case 'auto': return 0n;
+    case 'manual': return 1n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -12700,7 +12853,12 @@ export function getScrollRestoration(self: bigint): bigint {
  */
 export function setScrollRestoration(self: bigint, value: bigint): void {
   const obj = lookupHistory(self);
-  obj.scrollRestoration = value;
+  const value = value;
+  let enumValue: ScrollRestoration;
+  if (value === 0n) { enumValue = 'auto'; }
+  if (value === 1n) { enumValue = 'manual'; }
+  else { enumValue = 'auto'; }
+  obj.scrollRestoration = enumValue;
 }
 
 /**
@@ -12978,7 +13136,7 @@ export function NavigationHistoryEntryGetId(self: bigint): string {
  */
 export function NavigationHistoryEntryGetIndex(self: bigint): bigint {
   const obj = lookupNavigationHistoryEntry(self);
-  return obj.index;
+  return BigInt(obj.index);
 }
 
 /**
@@ -13112,7 +13270,14 @@ export function getEntry(self: bigint): bigint {
  */
 export function NavigationActivationGetNavigationType(self: bigint): bigint {
   const obj = lookupNavigationActivation(self);
-  return obj.navigationType;
+  const value = obj.navigationType;
+  switch (value) {
+    case 'push': return 0n;
+    case 'replace': return 1n;
+    case 'traverse': return 2n;
+    case 'reload': return 3n;
+    default: return 0n;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -13765,7 +13930,7 @@ function lookupPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
 export function getPromise(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPromiseRejectionEvent(self);
-  const promise = obj.getPromise()
+  const promise = obj.promise()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -14058,7 +14223,7 @@ export function registerProtocolHandler(self: bigint, scheme: string, url: strin
  */
 export function unregisterProtocolHandler(self: bigint, scheme: string, url: string): void {
   const obj = lookupNavigatorContentUtils(self);
-  obj.unregisterProtocolHandler(scheme, url);
+  (obj as any).unregisterProtocolHandler(scheme, url);
 }
 
 // ---------------------------------------------------------------------------
@@ -14407,7 +14572,12 @@ export function getPixelFormat(self: bigint): bigint {
  */
 export function ImageDataGetColorSpace(self: bigint): bigint {
   const obj = lookupImageData(self);
-  return obj.colorSpace;
+  const value = obj.colorSpace;
+  switch (value) {
+    case 'srgb': return 0n;
+    case 'display-p3': return 1n;
+    default: return 0n;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -14788,7 +14958,7 @@ export function MessagePortClose(self: bigint): void {
  */
 export function MessagePortGetOnclose(self: bigint): EventHandlerRecord {
   const obj = lookupMessagePort(self);
-  return obj.onclose;
+  return (obj as any).onclose;
 }
 
 /**
@@ -14796,7 +14966,7 @@ export function MessagePortGetOnclose(self: bigint): EventHandlerRecord {
  */
 export function MessagePortSetOnclose(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupMessagePort(self);
-  obj.onclose = value;
+  (obj as any).onclose = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -15236,7 +15406,7 @@ function lookupNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentH
  */
 export function getHardwareConcurrency(self: bigint): bigint {
   const obj = lookupNavigatorConcurrentHardware(self);
-  return obj.hardwareConcurrency;
+  return BigInt(obj.hardwareConcurrency);
 }
 
 // ---------------------------------------------------------------------------
