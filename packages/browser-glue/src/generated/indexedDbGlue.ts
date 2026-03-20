@@ -45,7 +45,7 @@ function getIdbFactory(handle: bigint): idbfactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string | undefined, second: string): number {
+export function cmp(handle: bigint, first: bigint, second: string): number {
   const obj = getIdbFactory(self);
   return obj.cmp(handle, first, second);
 }
@@ -73,7 +73,7 @@ function getIdbDb(handle: bigint): IDBDatabase {
 /**
  * `name()` operation.
  */
-export function name(handle: bigint): bigint {
+export function name(handle: bigint): number {
   const obj = getIdbDb(self);
   return obj.name(handle);
 }
@@ -157,7 +157,7 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type IdbStoreHandle = string | undefined;
+export type IdbStoreHandle = bigint;
 
 /** Handle table for idbobjectstore instances */
 const _idbStorehandles = new Map<bigint, idbobjectstore>();
@@ -175,7 +175,7 @@ function getIdbStore(handle: bigint): idbobjectstore {
 /**
  * `get-name()` operation.
  */
-export function getName(handle: bigint): string {
+export function getName(handle: bigint): Uint8Array {
   const obj = getIdbStore(self);
   return obj.name;
 }
@@ -183,7 +183,7 @@ export function getName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function setName(handle: bigint, value: Uint8Array): void {
+export function setName(handle: bigint, value: string): void {
   const obj = getIdbStore(self);
   obj.name = value;
 }
@@ -227,7 +227,7 @@ function getIdbIndex(handle: bigint): idbindex {
 /**
  * `get-name()` operation.
  */
-export function getName(handle: boolean): string {
+export function getName(handle: bigint): bigint {
   const obj = getIdbIndex(self);
   return obj.name;
 }
@@ -235,7 +235,7 @@ export function getName(handle: boolean): string {
 /**
  * `set-name()` operation.
  */
-export function setName(handle: bigint, value: bigint): void {
+export function setName(handle: bigint, value: string): void {
   const obj = getIdbIndex(self);
   obj.name = value;
 }
@@ -243,7 +243,7 @@ export function setName(handle: bigint, value: bigint): void {
 /**
  * `key-path()` operation.
  */
-export function keyPath(handle: bigint): string {
+export function keyPath(handle: bigint): bigint {
   const obj = getIdbIndex(self);
   return obj.keyPath(handle);
 }
@@ -251,7 +251,7 @@ export function keyPath(handle: bigint): string {
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): bigint {
+export function multiEntry(handle: bigint): boolean {
   const obj = getIdbIndex(self);
   return obj.multiEntry(handle);
 }
@@ -259,7 +259,7 @@ export function multiEntry(handle: bigint): bigint {
 /**
  * `unique()` operation.
  */
-export function unique(handle: bigint): boolean {
+export function unique(handle: bigint): number | undefined {
   const obj = getIdbIndex(self);
   return obj.unique(handle);
 }
@@ -295,7 +295,7 @@ export function source(handle: bigint): string {
 /**
  * `key()` operation.
  */
-export function key(handle: bigint): string {
+export function key(handle: bigint): bigint {
   const obj = getIdbCursor(self);
   return obj.key(handle);
 }
@@ -303,7 +303,7 @@ export function key(handle: bigint): string {
 /**
  * `primary-key()` operation.
  */
-export function primaryKey(handle: string | undefined): string {
+export function primaryKey(handle: bigint): string {
   const obj = getIdbCursor(self);
   return obj.primaryKey(handle);
 }
@@ -355,7 +355,7 @@ function getIdbRequest(handle: bigint): IDBRequest {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: string): string {
+export function resultVal(handle: bigint): string {
   const obj = getIdbRequest(self);
   return obj.resultVal(handle);
 }

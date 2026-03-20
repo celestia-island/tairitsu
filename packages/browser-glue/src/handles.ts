@@ -12,16 +12,20 @@
 
 interface HandleDiagnosticCallbacks {
   onHandleError?: (error: HandleDiagnosticError) => void;
+  onGCHandle?: (typeName: string, handle: bigint, obj: unknown) => void;
 }
 
 export interface HandleDiagnosticError {
-  kind: "handle-not-found" | "type-mismatch";
+  kind: "handle-not-found" | "type-mismatch" | "type-assertion-failed";
   handle: bigint;
   expectedType: string;
   actualType?: string;
 }
 
+export type GCHandleHook = (typeName: string, handle: bigint, obj: unknown) => void;
+
 let _diagnosticCallbacks: HandleDiagnosticCallbacks = {};
+let _gcHandleHook: GCHandleHook | null = null;
 
 /**
  * Register diagnostic callbacks for handle table operations.
@@ -30,11 +34,28 @@ export function registerHandleDiagnosticCallbacks(callbacks: HandleDiagnosticCal
   _diagnosticCallbacks = { ..._diagnosticCallbacks, ...callbacks };
 }
 
+/**
+ * Set a garbage collection hook that is called when handles are removed.
+ */
+export function setGCHandleHook(hook: GCHandleHook | null): void {
+  _gcHandleHook = hook;
+}
+
 function reportHandleError(error: HandleDiagnosticError): void {
   if (_diagnosticCallbacks.onHandleError) {
     _diagnosticCallbacks.onHandleError(error);
   }
   console.error(`[browser-glue handle-table] ${error.kind}: handle ${error.handle} - ${error.expectedType}`);
+}
+
+function invokeGCHandleHook(typeName: string, handle: bigint, obj: unknown): void {
+  if (_gcHandleHook) {
+    try {
+      _gcHandleHook(typeName, handle, obj);
+    } catch (e) {
+      console.error(`[browser-glue handle-table] GC hook failed:`, e);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -139,14 +160,41 @@ function getOrCreateRegistry<T>(typeName: string): TypeRegistry<T> {
 }
 
 /**
- * Register an object in a type-specific handle table.
+ * Type guard function to verify object type matches expected type name.
+ * Used internally for type-safe handle registration.
+ */
+function isInstanceOfType(obj: unknown, typeName: string): boolean {
+  if (obj === null || obj === undefined) return false;
+  
+  const constructor = (obj as object).constructor;
+  if (!constructor) return false;
+  
+  const objType = constructor.name;
+  return objType === typeName;
+}
+
+/**
+ * Register an object in a type-specific handle table with type safety checks.
  * Returns the assigned handle.
  *
  * @param typeName - Unique type identifier (e.g., "Headers", "StorageManager")
  * @param obj - The object to register
+ * @param strictTypeCheck - If true, performs strict type guard check (default: false)
  * @returns The assigned bigint handle
+ * @throws Error if type check fails when strictTypeCheck is true
  */
-export function registerTypedHandle<T>(typeName: string, obj: T): bigint {
+export function registerTypedHandle<T>(typeName: string, obj: T, strictTypeCheck: boolean = false): bigint {
+  if (strictTypeCheck && !isInstanceOfType(obj, typeName)) {
+    const actualType = (obj as object).constructor?.name ?? "unknown";
+    reportHandleError({
+      kind: "type-assertion-failed",
+      handle: 0n,
+      expectedType: typeName,
+      actualType,
+    });
+    throw new Error(`Type assertion failed: expected ${typeName}, got ${actualType}`);
+  }
+  
   const registry = getOrCreateRegistry<T>(typeName);
   const handle = registry.nextHandle++;
   registry.handles.set(handle, obj);
@@ -186,10 +234,15 @@ export function getTypedHandle<T>(typeName: string, handle: bigint): T {
 /**
  * Remove an object from a type-specific handle table.
  * Returns true if the handle was found and removed.
+ * Triggers GC hook if registered.
  */
 export function unregisterTypedHandle(typeName: string, handle: bigint): boolean {
   const registry = _typeRegistries.get(typeName);
   if (!registry) return false;
+  const obj = registry.handles.get(handle);
+  if (obj !== undefined) {
+    invokeGCHandleHook(typeName, handle, obj);
+  }
   return registry.handles.delete(handle);
 }
 
@@ -212,6 +265,70 @@ export function getGenericHandleStats(): Record<string, { count: number; nextHan
  */
 export function clearAllTypedHandles(): void {
   _typeRegistries.clear();
+}
+
+/**
+ * Batch register multiple objects in a type-specific handle table.
+ * Returns an array of assigned handles in the same order as input.
+ *
+ * @param typeName - Unique type identifier
+ * @param objs - Array of objects to register
+ * @param strictTypeCheck - If true, performs strict type guard check (default: false)
+ * @returns Array of assigned bigint handles
+ */
+export function registerTypedHandleBatch<T>(typeName: string, objs: T[], strictTypeCheck: boolean = false): bigint[] {
+  const registry = getOrCreateRegistry<T>(typeName);
+  const handles: bigint[] = [];
+  
+  for (const obj of objs) {
+    if (strictTypeCheck && !isInstanceOfType(obj, typeName)) {
+      const actualType = (obj as object).constructor?.name ?? "unknown";
+      reportHandleError({
+        kind: "type-assertion-failed",
+        handle: 0n,
+        expectedType: typeName,
+        actualType,
+      });
+      throw new Error(`Type assertion failed in batch: expected ${typeName}, got ${actualType}`);
+    }
+    const handle = registry.nextHandle++;
+    registry.handles.set(handle, obj);
+    handles.push(handle);
+  }
+  
+  return handles;
+}
+
+/**
+ * Batch get multiple objects from a type-specific handle table.
+ * Returns an array of objects in the same order as input handles.
+ * Throws if any handle is not found.
+ *
+ * @param typeName - Unique type identifier
+ * @param handles - Array of bigint handles
+ * @returns Array of registered objects
+ */
+export function getTypedHandleBatch<T>(typeName: string, handles: bigint[]): T[] {
+  const registry = _typeRegistries.get(typeName);
+  if (!registry) {
+    throw new Error(`No handle registry found for type "${typeName}"`);
+  }
+  
+  const result: T[] = [];
+  for (const handle of handles) {
+    const obj = registry.handles.get(handle);
+    if (obj === undefined) {
+      reportHandleError({
+        kind: "handle-not-found",
+        handle,
+        expectedType: typeName,
+      });
+      throw new Error(`${typeName} handle ${handle} not found in batch get`);
+    }
+    result.push(obj as T);
+  }
+  
+  return result;
 }
 
 // ---------------------------------------------------------------------------

@@ -45,7 +45,7 @@ function getClipboardEvent(handle: bigint): clipboardevent {
 /**
  * `get-clipboard-data()` operation.
  */
-export function getClipboardData(self: bigint): bigint {
+export function getClipboardData(self: bigint): bigint | undefined {
   const obj = getClipboardEvent(self);
   return obj.clipboardData ?? undefined;
 }
@@ -73,7 +73,7 @@ function getClipboardChangeEvent(handle: bigint): clipboardchangeevent {
 /**
  * `get-types()` operation.
  */
-export function getTypes(self: bigint): (string)[] {
+export function getTypes(self: bigint): (number)[] {
   const obj = getClipboardChangeEvent(self);
   return obj.types;
 }
@@ -109,7 +109,7 @@ function getClipboardItem(handle: bigint): clipboarditem {
 /**
  * `get-presentation-style()` operation.
  */
-export function getPresentationStyle(self: bigint): bigint {
+export function getPresentationStyle(self: bigint): boolean {
   const obj = getClipboardItem(self);
   return obj.presentationStyle;
 }
@@ -117,7 +117,7 @@ export function getPresentationStyle(self: bigint): bigint {
 /**
  * `get-types()` operation.
  */
-export function getTypes(self: bigint): (string)[] {
+export function getTypes(self: bigint): bigint {
   const obj = getClipboardItem(self);
   return obj.types;
 }
@@ -125,7 +125,7 @@ export function getTypes(self: bigint): (string)[] {
 /**
  * `get-type()` operation.
  */
-export function getType(self: boolean | undefined, type: bigint): bigint {
+export function getType(self: bigint, type: string): bigint | undefined {
   const obj = getClipboardItem(self);
   return obj.type;
 }
@@ -133,7 +133,7 @@ export function getType(self: boolean | undefined, type: bigint): bigint {
 /**
  * `supports()` operation.
  */
-export function supports(type: string): bigint {
+export function supports(type: bigint): bigint | undefined {
   const obj = getClipboardItem(self);
   return obj.supports(type);
 }
@@ -163,7 +163,7 @@ function getClipboard(handle: bigint): clipboard {
  *
  * Async operation: returns request ID, poll with `pollRead()`
  */
-export function read(self: bigint, formats: bigint | undefined): bigint {
+export function read(self: bigint, formats: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getClipboard(self);
   const promise = obj.read(formats)
@@ -209,7 +209,7 @@ export function readText(self: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `pollWrite()`
  */
-export function write(self: number, data: bigint): bigint {
+export function write(self: bigint, data: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getClipboard(self);
   const promise = obj.write(data)
@@ -245,7 +245,7 @@ export function pollWrite(requestId: bigint): { ok: true; value: bigint } | { ok
 /**
  * `write-text()` operation.
  */
-export function writeText(self: boolean, data: bigint): bigint {
+export function writeText(self: bigint, data: string): bigint {
   const obj = getClipboard(self);
   return obj.writeText(data);
 }
@@ -255,7 +255,7 @@ export function writeText(self: boolean, data: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PointerEventHandle = number;
+export type PointerEventHandle = bigint;
 
 /** Handle table for pointerevent instances */
 const _pointerEventhandles = new Map<bigint, pointerevent>();
@@ -281,7 +281,7 @@ export function getPointerId(self: bigint): number {
 /**
  * `get-width()` operation.
  */
-export function getWidth(self: bigint): bigint {
+export function getWidth(self: bigint): number {
   const obj = getPointerEvent(self);
   return obj.width;
 }
@@ -297,7 +297,7 @@ export function getHeight(self: bigint): number {
 /**
  * `get-pressure()` operation.
  */
-export function getPressure(self: bigint): string {
+export function getPressure(self: string): number {
   const obj = getPointerEvent(self);
   return obj.pressure;
 }
@@ -305,7 +305,7 @@ export function getPressure(self: bigint): string {
 /**
  * `get-tangential-pressure()` operation.
  */
-export function getTangentialPressure(self: string | undefined): number {
+export function getTangentialPressure(self: bigint): number {
   const obj = getPointerEvent(self);
   return obj.tangentialPressure;
 }
@@ -313,7 +313,7 @@ export function getTangentialPressure(self: string | undefined): number {
 /**
  * `get-tilt-x()` operation.
  */
-export function getTiltX(self: bigint): number {
+export function getTiltX(self: string): number {
   const obj = getPointerEvent(self);
   return obj.tiltX;
 }
@@ -321,7 +321,7 @@ export function getTiltX(self: bigint): number {
 /**
  * `get-tilt-y()` operation.
  */
-export function getTiltY(self: bigint): number {
+export function getTiltY(self: bigint): bigint {
   const obj = getPointerEvent(self);
   return obj.tiltY;
 }
@@ -337,7 +337,7 @@ export function getTwist(self: bigint): number {
 /**
  * `get-altitude-angle()` operation.
  */
-export function getAltitudeAngle(self: bigint): number {
+export function getAltitudeAngle(self: bigint): bigint {
   const obj = getPointerEvent(self);
   return obj.altitudeAngle;
 }
@@ -345,7 +345,7 @@ export function getAltitudeAngle(self: bigint): number {
 /**
  * `get-azimuth-angle()` operation.
  */
-export function getAzimuthAngle(self: bigint): bigint {
+export function getAzimuthAngle(self: bigint): number {
   const obj = getPointerEvent(self);
   return obj.azimuthAngle;
 }
@@ -361,7 +361,7 @@ export function getPointerType(self: bigint): string {
 /**
  * `get-is-primary()` operation.
  */
-export function getIsPrimary(self: string): boolean {
+export function getIsPrimary(self: boolean): bigint {
   const obj = getPointerEvent(self);
   return obj.isPrimary;
 }
@@ -369,7 +369,7 @@ export function getIsPrimary(self: string): boolean {
 /**
  * `get-persistent-device-id()` operation.
  */
-export function getPersistentDeviceId(self: bigint): bigint {
+export function getPersistentDeviceId(self: bigint): (string)[] {
   const obj = getPointerEvent(self);
   return obj.persistentDeviceId;
 }
@@ -377,7 +377,7 @@ export function getPersistentDeviceId(self: bigint): bigint {
 /**
  * `get-coalesced-events()` operation.
  */
-export function getCoalescedEvents(self: bigint): string {
+export function getCoalescedEvents(self: bigint): (string | undefined)[] {
   const obj = getPointerEvent(self);
   return obj.coalescedEvents;
 }
@@ -385,7 +385,7 @@ export function getCoalescedEvents(self: bigint): string {
 /**
  * `get-predicted-events()` operation.
  */
-export function getPredictedEvents(self: string | undefined): (bigint)[] {
+export function getPredictedEvents(self: string): (bigint)[] {
   const obj = getPointerEvent(self);
   return obj.predictedEvents;
 }
@@ -413,7 +413,7 @@ function getWheelEvent(handle: bigint): wheelevent {
 /**
  * `get-delta-x()` operation.
  */
-export function getDeltaX(self: bigint): string {
+export function getDeltaX(self: bigint): number {
   const obj = getWheelEvent(self);
   return obj.deltaX;
 }
@@ -429,7 +429,7 @@ export function getDeltaY(self: bigint): bigint {
 /**
  * `get-delta-z()` operation.
  */
-export function getDeltaZ(self: bigint): string | undefined {
+export function getDeltaZ(self: string | undefined): string {
   const obj = getWheelEvent(self);
   return obj.deltaZ;
 }
@@ -473,7 +473,7 @@ export function getIdentifier(self: bigint): number {
 /**
  * `get-target()` operation.
  */
-export function getTarget(self: bigint): bigint {
+export function getTarget(self: string): bigint {
   const obj = getTouch(self);
   return obj.target;
 }
@@ -489,7 +489,7 @@ export function getScreenX(self: bigint): bigint {
 /**
  * `get-screen-y()` operation.
  */
-export function getScreenY(self: bigint): bigint | undefined {
+export function getScreenY(self: bigint): number {
   const obj = getTouch(self);
   return obj.screenY;
 }
@@ -513,7 +513,7 @@ export function getClientY(self: bigint): string | undefined {
 /**
  * `get-page-x()` operation.
  */
-export function getPageX(self: bigint | undefined): bigint {
+export function getPageX(self: bigint): number {
   const obj = getTouch(self);
   return obj.pageX;
 }
@@ -521,7 +521,7 @@ export function getPageX(self: bigint | undefined): bigint {
 /**
  * `get-page-y()` operation.
  */
-export function getPageY(self: bigint | undefined): number {
+export function getPageY(self: bigint): number {
   const obj = getTouch(self);
   return obj.pageY;
 }
@@ -529,7 +529,7 @@ export function getPageY(self: bigint | undefined): number {
 /**
  * `get-radius-x()` operation.
  */
-export function getRadiusX(self: bigint): number {
+export function getRadiusX(self: bigint): bigint {
   const obj = getTouch(self);
   return obj.radiusX;
 }
@@ -537,7 +537,7 @@ export function getRadiusX(self: bigint): number {
 /**
  * `get-radius-y()` operation.
  */
-export function getRadiusY(self: bigint): bigint {
+export function getRadiusY(self: bigint): number {
   const obj = getTouch(self);
   return obj.radiusY;
 }
@@ -545,7 +545,7 @@ export function getRadiusY(self: bigint): bigint {
 /**
  * `get-rotation-angle()` operation.
  */
-export function getRotationAngle(self: bigint): bigint {
+export function getRotationAngle(self: bigint): number {
   const obj = getTouch(self);
   return obj.rotationAngle;
 }
@@ -553,7 +553,7 @@ export function getRotationAngle(self: bigint): bigint {
 /**
  * `get-force()` operation.
  */
-export function getForce(self: bigint): number {
+export function getForce(self: bigint): bigint | undefined {
   const obj = getTouch(self);
   return obj.force;
 }
@@ -561,7 +561,7 @@ export function getForce(self: bigint): number {
 /**
  * `get-altitude-angle()` operation.
  */
-export function getAltitudeAngle(self: bigint): string {
+export function getAltitudeAngle(self: bigint): number {
   const obj = getTouch(self);
   return obj.altitudeAngle;
 }
@@ -577,7 +577,7 @@ export function getAzimuthAngle(self: bigint): number {
 /**
  * `get-touch-type()` operation.
  */
-export function getTouchType(self: bigint): string {
+export function getTouchType(self: bigint): bigint {
   const obj = getTouch(self);
   return obj.touchType;
 }
@@ -587,7 +587,7 @@ export function getTouchType(self: bigint): string {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type TouchListHandle = bigint;
+export type TouchListHandle = string | undefined;
 
 /** Handle table for touchlist instances */
 const _touchListhandles = new Map<bigint, touchlist>();
@@ -605,7 +605,7 @@ function getTouchList(handle: bigint): touchlist {
 /**
  * `get-length()` operation.
  */
-export function getLength(self: string): string {
+export function getLength(self: string): bigint {
   const obj = getTouchList(self);
   return obj.length;
 }
@@ -613,7 +613,7 @@ export function getLength(self: string): string {
 /**
  * `item()` operation.
  */
-export function item(self: bigint, index: number): bigint {
+export function item(self: string, index: number): bigint | undefined {
   const obj = getTouchList(self);
   return obj.item(index) ?? undefined;
 }
@@ -641,7 +641,7 @@ function getTouchEvent(handle: bigint): touchevent {
 /**
  * `get-touches()` operation.
  */
-export function getTouches(self: string): bigint {
+export function getTouches(self: bigint): bigint {
   const obj = getTouchEvent(self);
   return obj.touches;
 }
@@ -689,7 +689,7 @@ export function getCtrlKey(self: bigint): boolean {
 /**
  * `get-shift-key()` operation.
  */
-export function getShiftKey(self: bigint): boolean {
+export function getShiftKey(self: bigint): bigint {
   const obj = getTouchEvent(self);
   return obj.shiftKey;
 }
@@ -697,7 +697,7 @@ export function getShiftKey(self: bigint): boolean {
 /**
  * `get-modifier-state()` operation.
  */
-export function getModifierState(self: bigint, keyArg: string): boolean {
+export function getModifierState(self: bigint, keyArg: string): bigint {
   const obj = getTouchEvent(self);
   return obj.modifierState;
 }
@@ -725,7 +725,7 @@ function getUiEvent(handle: bigint): uievent {
 /**
  * `get-view()` operation.
  */
-export function getView(self: bigint): bigint | undefined {
+export function getView(self: bigint): string | undefined {
   const obj = getUiEvent(self);
   return obj.view ?? undefined;
 }
@@ -741,7 +741,7 @@ export function getDetail(self: bigint): number {
 /**
  * `init-ui-event()` operation.
  */
-export function initUiEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: bigint | undefined, viewArg: bigint | undefined, detailArg: number): void {
+export function initUiEvent(self: bigint, typeArg: string, bubblesArg: bigint, cancelableArg: boolean | undefined, viewArg: bigint | undefined, detailArg: number | undefined): void {
   const obj = getUiEvent(self);
   obj.initUiEvent(typeArg, bubblesArg, cancelableArg, viewArg, detailArg);
 }
@@ -777,7 +777,7 @@ function getFocusEvent(handle: bigint): focusevent {
 /**
  * `get-related-target()` operation.
  */
-export function getRelatedTarget(self: bigint): bigint | undefined {
+export function getRelatedTarget(self: bigint): number | undefined {
   const obj = getFocusEvent(self);
   return obj.relatedTarget ?? undefined;
 }
@@ -787,7 +787,7 @@ export function getRelatedTarget(self: bigint): bigint | undefined {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type InputEventHandle = bigint;
+export type InputEventHandle = number;
 
 /** Handle table for inputevent instances */
 const _inputEventhandles = new Map<bigint, inputevent>();
@@ -805,7 +805,7 @@ function getInputEvent(handle: bigint): inputevent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): string | undefined {
+export function getData(self: bigint): number {
   const obj = getInputEvent(self);
   return obj.data ?? undefined;
 }
@@ -813,7 +813,7 @@ export function getData(self: bigint): string | undefined {
 /**
  * `get-is-composing()` operation.
  */
-export function getIsComposing(self: bigint): boolean {
+export function getIsComposing(self: bigint): bigint {
   const obj = getInputEvent(self);
   return obj.isComposing;
 }
@@ -821,7 +821,7 @@ export function getIsComposing(self: bigint): boolean {
 /**
  * `get-input-type()` operation.
  */
-export function getInputType(self: bigint): string {
+export function getInputType(self: string): string {
   const obj = getInputEvent(self);
   return obj.inputType;
 }
@@ -857,7 +857,7 @@ export function getKey(self: bigint): string {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: boolean): string {
+export function getCode(self: bigint): string {
   const obj = getKeyboardEvent(self);
   return obj.code;
 }
@@ -865,7 +865,7 @@ export function getCode(self: boolean): string {
 /**
  * `get-location()` operation.
  */
-export function getLocation(self: bigint): bigint {
+export function getLocation(self: bigint): number {
   const obj = getKeyboardEvent(self);
   return obj.location;
 }
@@ -873,7 +873,7 @@ export function getLocation(self: bigint): bigint {
 /**
  * `get-ctrl-key()` operation.
  */
-export function getCtrlKey(self: boolean): boolean {
+export function getCtrlKey(self: bigint): boolean {
   const obj = getKeyboardEvent(self);
   return obj.ctrlKey;
 }
@@ -881,7 +881,7 @@ export function getCtrlKey(self: boolean): boolean {
 /**
  * `get-shift-key()` operation.
  */
-export function getShiftKey(self: bigint): boolean {
+export function getShiftKey(self: boolean | undefined): boolean {
   const obj = getKeyboardEvent(self);
   return obj.shiftKey;
 }
@@ -897,7 +897,7 @@ export function getAltKey(self: bigint): boolean {
 /**
  * `get-meta-key()` operation.
  */
-export function getMetaKey(self: bigint): boolean {
+export function getMetaKey(self: bigint): string {
   const obj = getKeyboardEvent(self);
   return obj.metaKey;
 }
@@ -913,7 +913,7 @@ export function getRepeat(self: bigint): boolean {
 /**
  * `get-is-composing()` operation.
  */
-export function getIsComposing(self: string): boolean {
+export function getIsComposing(self: bigint): boolean {
   const obj = getKeyboardEvent(self);
   return obj.isComposing;
 }
@@ -921,7 +921,7 @@ export function getIsComposing(self: string): boolean {
 /**
  * `get-modifier-state()` operation.
  */
-export function getModifierState(self: bigint, keyArg: string): boolean {
+export function getModifierState(self: bigint, keyArg: string): bigint {
   const obj = getKeyboardEvent(self);
   return obj.modifierState;
 }
@@ -929,7 +929,7 @@ export function getModifierState(self: bigint, keyArg: string): boolean {
 /**
  * `init-keyboard-event()` operation.
  */
-export function initKeyboardEvent(self: bigint, typeArg: bigint, bubblesArg: boolean | undefined, cancelableArg: bigint | undefined, viewArg: bigint | undefined, keyArg: bigint | undefined, locationArg: number | undefined, ctrlKey: boolean | undefined, altKey: bigint | undefined, shiftKey: boolean | undefined, metaKey: string): void {
+export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: bigint, cancelableArg: boolean | undefined, viewArg: bigint | undefined, keyArg: bigint, locationArg: string, ctrlKey: boolean | undefined, altKey: boolean | undefined, shiftKey: bigint, metaKey: boolean | undefined): void {
   const obj = getKeyboardEvent(self);
   obj.initKeyboardEvent(typeArg, bubblesArg, cancelableArg, viewArg, keyArg, locationArg, ctrlKey, altKey, shiftKey, metaKey);
 }
@@ -937,7 +937,7 @@ export function initKeyboardEvent(self: bigint, typeArg: bigint, bubblesArg: boo
 /**
  * `get-char-code()` operation.
  */
-export function getCharCode(self: number): number {
+export function getCharCode(self: bigint): number {
   const obj = getKeyboardEvent(self);
   return obj.charCode;
 }
@@ -945,7 +945,7 @@ export function getCharCode(self: number): number {
 /**
  * `get-key-code()` operation.
  */
-export function getKeyCode(self: string): number {
+export function getKeyCode(self: bigint): number {
   const obj = getKeyboardEvent(self);
   return obj.keyCode;
 }
@@ -981,7 +981,7 @@ export function getData(self: bigint): string {
 /**
  * `init-composition-event()` operation.
  */
-export function initCompositionEvent(self: bigint, typeArg: string, bubblesArg: string | undefined, cancelableArg: bigint, viewArg: bigint, dataArg: bigint): void {
+export function initCompositionEvent(self: bigint, typeArg: string, bubblesArg: string, cancelableArg: bigint | undefined, viewArg: bigint, dataArg: bigint): void {
   const obj = getCompositionEvent(self);
   obj.initCompositionEvent(typeArg, bubblesArg, cancelableArg, viewArg, dataArg);
 }
@@ -1009,7 +1009,7 @@ function getTextEvent(handle: bigint): textevent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): boolean {
+export function getData(self: bigint): string {
   const obj = getTextEvent(self);
   return obj.data;
 }
@@ -1017,7 +1017,7 @@ export function getData(self: bigint): boolean {
 /**
  * `init-text-event()` operation.
  */
-export function initTextEvent(self: bigint, type: string, bubbles: bigint, cancelable: boolean | undefined, view: string | undefined, data: number | undefined): void {
+export function initTextEvent(self: bigint, type: string, bubbles: bigint, cancelable: bigint, view: string, data: number | undefined): void {
   const obj = getTextEvent(self);
   obj.initTextEvent(type, bubbles, cancelable, view, data);
 }

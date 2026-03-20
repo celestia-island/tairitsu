@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): filereader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): bigint {
   return obj.newFileReader();
 }
 
@@ -54,7 +54,7 @@ export function newFileReader(): { ok: true; value: bigint } | { ok: false; erro
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(handle: number): void {
+export function abort(handle: bigint): void {
   const requestId = _nextAsyncHandle++;
   const obj = getFileReader(self);
   const promise = obj.abort(handle)
@@ -98,7 +98,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): string | undefined {
+export function resultVal(handle: bigint): bigint {
   const obj = getFileReader(self);
   return obj.resultVal(handle) ?? undefined;
 }

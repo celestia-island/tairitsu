@@ -1213,7 +1213,7 @@ export function replaceChild(self: bigint, node: bigint, child: bigint): bigint 
 /**
  * `remove-child()` operation.
  */
-export function removeChild(self: bigint, child: bigint): bigint {
+export function removeChild(self: number, child: bigint): bigint {
   const obj = getNode(self);
   return obj.removeChild(child);
 }
@@ -1248,7 +1248,7 @@ function getDomImplementation(handle: bigint): domimplementation {
 /**
  * `create-document-type()` operation.
  */
-export function createDocumentType(self: bigint, name: bigint, publicId: string, systemId: string): bigint {
+export function createDocumentType(self: bigint, name: string, publicId: bigint, systemId: string): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocumentType(name, publicId, systemId);
 }
@@ -1300,7 +1300,7 @@ function getDocumentType(handle: bigint): documenttype {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): string {
+export function getName(self: bigint): bigint {
   const obj = getDocumentType(self);
   return obj.name;
 }
@@ -1316,7 +1316,7 @@ export function getPublicId(self: bigint): string {
 /**
  * `get-system-id()` operation.
  */
-export function getSystemId(self: bigint): string {
+export function getSystemId(self: bigint): bigint {
   const obj = getDocumentType(self);
   return obj.systemId;
 }
@@ -1376,7 +1376,7 @@ export function getClonable(self: bigint): boolean {
 /**
  * `get-serializable()` operation.
  */
-export function getSerializable(self: bigint): bigint {
+export function getSerializable(self: bigint): boolean {
   const obj = getShadowRoot(self);
   return obj.serializable;
 }
@@ -1712,7 +1712,7 @@ function getText(handle: bigint): text {
 /**
  * `split-text()` operation.
  */
-export function splitText(self: bigint, offset: string): bigint {
+export function splitText(self: bigint, offset: bigint): bigint {
   const obj = getText(self);
   return obj.splitText(offset);
 }
@@ -1720,7 +1720,7 @@ export function splitText(self: bigint, offset: string): bigint {
 /**
  * `get-whole-text()` operation.
  */
-export function getWholeText(self: bigint): string {
+export function getWholeText(self: bigint): bigint {
   const obj = getText(self);
   return obj.wholeText;
 }
@@ -1868,7 +1868,7 @@ export function getWhatToShow(self: bigint): number {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint | undefined {
+export function getFilter(self: bigint | undefined): bigint | undefined {
   const obj = getNodeIterator(self);
   return obj.filter ?? undefined;
 }
@@ -1884,7 +1884,7 @@ export function nextNode(self: bigint): bigint | undefined {
 /**
  * `previous-node()` operation.
  */
-export function previousNode(self: bigint | undefined): bigint | undefined {
+export function previousNode(self: bigint): bigint | undefined | undefined {
   const obj = getNodeIterator(self);
   return obj.previousNode() ?? undefined;
 }
@@ -1928,7 +1928,7 @@ export function getRoot(self: bigint): bigint {
 /**
  * `get-what-to-show()` operation.
  */
-export function getWhatToShow(self: bigint): bigint {
+export function getWhatToShow(self: bigint): number {
   const obj = getTreeWalker(self);
   return obj.whatToShow;
 }
@@ -1968,7 +1968,7 @@ export function parentNode(self: bigint): bigint {
 /**
  * `first-child()` operation.
  */
-export function firstChild(self: number): bigint | undefined {
+export function firstChild(self: Uint8Array): number | undefined {
   const obj = getTreeWalker(self);
   return obj.firstChild() ?? undefined;
 }
