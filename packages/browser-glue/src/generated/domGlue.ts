@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Synthetic handle tables for primitive/utility types
@@ -576,9 +591,9 @@ export function EventGetType(self: bigint): string {
  */
 export function EventGetTarget(self: bigint): bigint | undefined {
   const obj = lookupEvent(self);
-  const result = obj.target;
+  const _callResult = obj.target;
   const handle = _nextEventTarget++;
-  _eventTargetHandles.set(handle, result);
+  _eventTargetHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -587,9 +602,9 @@ export function EventGetTarget(self: bigint): bigint | undefined {
  */
 export function getSrcElement(self: bigint): bigint | undefined {
   const obj = lookupEvent(self);
-  const result = obj.srcElement;
+  const _callResult = obj.srcElement;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -598,9 +613,9 @@ export function getSrcElement(self: bigint): bigint | undefined {
  */
 export function getCurrentTarget(self: bigint): bigint | undefined {
   const obj = lookupEvent(self);
-  const result = obj.currentTarget;
+  const _callResult = obj.currentTarget;
   const handle = _nextEventTarget++;
-  _eventTargetHandles.set(handle, result);
+  _eventTargetHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -609,9 +624,9 @@ export function getCurrentTarget(self: bigint): bigint | undefined {
  */
 export function composedPath(self: bigint): bigint {
   const obj = lookupEvent(self);
-  const result = obj.composedPath();
+  const _callResult = obj.composedPath();
   const handle = _nextEventTargetList++;
-  _eventTargetListHandles.set(handle, result);
+  _eventTargetListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -852,9 +867,9 @@ function lookupAbortController(handle: bigint): AbortController {
  */
 export function getSignal(self: bigint): bigint {
   const obj = lookupAbortController(self);
-  const result = obj.signal;
+  const _callResult = obj.signal;
   const handle = _nextAbortSignal++;
-  _abortSignalHandles.set(handle, result);
+  _abortSignalHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -877,9 +892,9 @@ export type AbortSignalHandle = bigint;
  * `abort()` operation.
  */
 export function AbortSignalAbort(reason: string | undefined): bigint {
-  const result = AbortSignal.abort(reason);
+  const _callResult = AbortSignal.abort(reason);
   const handle = _nextAbortSignal++;
-  _abortSignalHandles.set(handle, result);
+  _abortSignalHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -887,9 +902,9 @@ export function AbortSignalAbort(reason: string | undefined): bigint {
  * `timeout()` operation.
  */
 export function timeout(milliseconds: bigint): bigint {
-  const result = AbortSignal.timeout(milliseconds);
+  const _callResult = AbortSignal.timeout(milliseconds);
   const handle = _nextAbortSignal++;
-  _abortSignalHandles.set(handle, result);
+  _abortSignalHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -897,9 +912,9 @@ export function timeout(milliseconds: bigint): bigint {
  * `any()` operation.
  */
 export function any(signals: (bigint)[]): bigint {
-  const result = AbortSignal.any(signals);
+  const _callResult = AbortSignal.any(signals);
   const handle = _nextAbortSignal++;
-  _abortSignalHandles.set(handle, result);
+  _abortSignalHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -967,10 +982,10 @@ function lookupNonElementParentNode(handle: bigint): NonElementParentNode {
  */
 export function getElementById(self: bigint, elementId: string): bigint | undefined {
   const obj = lookupNonElementParentNode(self);
-  const result = obj.getElementById(elementId);
-  if (result === null) return undefined;
+  const _callResult = obj.getElementById(elementId);
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -998,9 +1013,9 @@ function lookupParentNode(handle: bigint): ParentNode {
  */
 export function getChildren(self: bigint): bigint {
   const obj = lookupParentNode(self);
-  const result = obj.children;
+  const _callResult = obj.children;
   const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, result);
+  _htmlCollectionHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1025,9 +1040,9 @@ export function getLastElementChild(self: bigint): bigint | undefined {
  */
 export function getChildElementCount(self: bigint): bigint {
   const obj = lookupParentNode(self);
-  const result = obj.childElementCount;
+  const _callResult = obj.childElementCount;
   const handle = _nextNumber++;
-  _numberHandles.set(handle, result);
+  _numberHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1068,9 +1083,9 @@ export function moveBefore(self: bigint, node: bigint, child: bigint | undefined
  */
 export function querySelector(self: bigint, selectors: string): bigint | undefined {
   const obj = lookupParentNode(self);
-  const result = obj.querySelector(selectors);
+  const _callResult = obj.querySelector(selectors);
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1079,9 +1094,9 @@ export function querySelector(self: bigint, selectors: string): bigint | undefin
  */
 export function querySelectorAll(self: bigint, selectors: string): bigint {
   const obj = lookupParentNode(self);
-  const result = obj.querySelectorAll(selectors);
+  const _callResult = obj.querySelectorAll(selectors);
   const handle = _nextNodeList++;
-  _nodeListHandles.set(handle, result);
+  _nodeListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1109,9 +1124,9 @@ function lookupNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNod
  */
 export function getPreviousElementSibling(self: bigint): bigint | undefined {
   const obj = lookupNonDocumentTypeChildNode(self);
-  const result = obj.previousElementSibling;
+  const _callResult = obj.previousElementSibling;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1120,9 +1135,9 @@ export function getPreviousElementSibling(self: bigint): bigint | undefined {
  */
 export function getNextElementSibling(self: bigint): bigint | undefined {
   const obj = lookupNonDocumentTypeChildNode(self);
-  const result = obj.nextElementSibling;
+  const _callResult = obj.nextElementSibling;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1216,9 +1231,9 @@ export type NodeListHandle = bigint;
  */
 export function NodeListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupNodeList(self);
-  const result = obj.item(index);
+  const _callResult = obj.item(index);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1262,9 +1277,9 @@ export function HtmlCollectionGetLength(self: bigint): number {
  */
 export function HtmlCollectionItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupHTMLCollection(self);
-  const result = obj.item(index);
+  const _callResult = obj.item(index);
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1273,9 +1288,9 @@ export function HtmlCollectionItem(self: bigint, index: number): bigint | undefi
  */
 export function namedItem(self: bigint, name: string): bigint | undefined {
   const obj = lookupHTMLCollection(self);
-  const result = obj.namedItem(name);
+  const _callResult = obj.namedItem(name);
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1319,9 +1334,9 @@ export function disconnect(self: bigint): void {
  */
 export function takeRecords(self: bigint): bigint {
   const obj = lookupMutationObserver(self);
-  const result = obj.takeRecords();
+  const _callResult = obj.takeRecords();
   const handle = _nextMutationRecordList++;
-  _mutationRecordListHandles.set(handle, result);
+  _mutationRecordListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1357,9 +1372,9 @@ export function MutationRecordGetType(self: bigint): string {
  */
 export function MutationRecordGetTarget(self: bigint): bigint {
   const obj = lookupMutationRecord(self);
-  const result = obj.target;
+  const _callResult = obj.target;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1368,9 +1383,9 @@ export function MutationRecordGetTarget(self: bigint): bigint {
  */
 export function getAddedNodes(self: bigint): bigint {
   const obj = lookupMutationRecord(self);
-  const result = obj.addedNodes;
+  const _callResult = obj.addedNodes;
   const handle = _nextNodeList++;
-  _nodeListHandles.set(handle, result);
+  _nodeListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1379,9 +1394,9 @@ export function getAddedNodes(self: bigint): bigint {
  */
 export function getRemovedNodes(self: bigint): bigint {
   const obj = lookupMutationRecord(self);
-  const result = obj.removedNodes;
+  const _callResult = obj.removedNodes;
   const handle = _nextNodeList++;
-  _nodeListHandles.set(handle, result);
+  _nodeListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1390,9 +1405,9 @@ export function getRemovedNodes(self: bigint): bigint {
  */
 export function MutationRecordGetPreviousSibling(self: bigint): bigint | undefined {
   const obj = lookupMutationRecord(self);
-  const result = obj.previousSibling;
+  const _callResult = obj.previousSibling;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1401,9 +1416,9 @@ export function MutationRecordGetPreviousSibling(self: bigint): bigint | undefin
  */
 export function MutationRecordGetNextSibling(self: bigint): bigint | undefined {
   const obj = lookupMutationRecord(self);
-  const result = obj.nextSibling;
+  const _callResult = obj.nextSibling;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1475,9 +1490,9 @@ export function getIsConnected(self: bigint): boolean {
  */
 export function getOwnerDocument(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.ownerDocument;
+  const _callResult = obj.ownerDocument;
   const handle = _nextDocument++;
-  _documentHandles.set(handle, result);
+  _documentHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1486,9 +1501,9 @@ export function getOwnerDocument(self: bigint): bigint | undefined {
  */
 export function getRootNode(self: bigint, options: bigint | undefined): bigint {
   const obj = lookupNode(self);
-  const result = (obj as any).rootNode(options);
+  const _callResult = (obj as any).rootNode(options);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1497,9 +1512,9 @@ export function getRootNode(self: bigint, options: bigint | undefined): bigint {
  */
 export function getParentNode(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.parentNode;
+  const _callResult = obj.parentNode;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1508,9 +1523,9 @@ export function getParentNode(self: bigint): bigint | undefined {
  */
 export function getParentElement(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.parentElement;
+  const _callResult = obj.parentElement;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1527,9 +1542,9 @@ export function hasChildNodes(self: bigint): boolean {
  */
 export function getChildNodes(self: bigint): bigint {
   const obj = lookupNode(self);
-  const result = obj.childNodes;
+  const _callResult = obj.childNodes;
   const handle = _nextNodeList++;
-  _nodeListHandles.set(handle, result);
+  _nodeListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1538,9 +1553,9 @@ export function getChildNodes(self: bigint): bigint {
  */
 export function getFirstChild(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.firstChild;
+  const _callResult = obj.firstChild;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1549,9 +1564,9 @@ export function getFirstChild(self: bigint): bigint | undefined {
  */
 export function getLastChild(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.lastChild;
+  const _callResult = obj.lastChild;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1560,9 +1575,9 @@ export function getLastChild(self: bigint): bigint | undefined {
  */
 export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.previousSibling;
+  const _callResult = obj.previousSibling;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1571,9 +1586,9 @@ export function NodeGetPreviousSibling(self: bigint): bigint | undefined {
  */
 export function NodeGetNextSibling(self: bigint): bigint | undefined {
   const obj = lookupNode(self);
-  const result = obj.nextSibling;
+  const _callResult = obj.nextSibling;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1622,9 +1637,9 @@ export function normalize(self: bigint): void {
  */
 export function cloneNode(self: bigint, subtree: boolean | undefined): bigint {
   const obj = lookupNode(self);
-  const result = obj.cloneNode(subtree);
+  const _callResult = obj.cloneNode(subtree);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1689,9 +1704,9 @@ export function isDefaultNamespace(self: bigint, namespace: string | undefined):
  */
 export function insertBefore(self: bigint, node: bigint, child: bigint | undefined): bigint {
   const obj = lookupNode(self);
-  const result = obj.insertBefore(node, child);
+  const _callResult = obj.insertBefore(node, child);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1700,9 +1715,9 @@ export function insertBefore(self: bigint, node: bigint, child: bigint | undefin
  */
 export function appendChild(self: bigint, node: bigint): bigint {
   const obj = lookupNode(self);
-  const result = obj.appendChild(node);
+  const _callResult = obj.appendChild(node);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1711,9 +1726,9 @@ export function appendChild(self: bigint, node: bigint): bigint {
  */
 export function replaceChild(self: bigint, node: bigint, child: bigint): bigint {
   const obj = lookupNode(self);
-  const result = obj.replaceChild(node, child);
+  const _callResult = obj.replaceChild(node, child);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1722,9 +1737,9 @@ export function replaceChild(self: bigint, node: bigint, child: bigint): bigint 
  */
 export function removeChild(self: bigint, child: bigint): bigint {
   const obj = lookupNode(self);
-  const result = obj.removeChild(child);
+  const _callResult = obj.removeChild(child);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1758,9 +1773,9 @@ function lookupDOMImplementation(handle: bigint): DOMImplementation {
  */
 export function createDocumentType(self: bigint, name: string, publicId: string, systemId: string): bigint {
   const obj = lookupDOMImplementation(self);
-  const result = obj.createDocumentType(name, publicId, systemId);
+  const _callResult = obj.createDocumentType(name, publicId, systemId);
   const handle = _nextDocumentType++;
-  _documentTypeHandles.set(handle, result);
+  _documentTypeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1769,9 +1784,9 @@ export function createDocumentType(self: bigint, name: string, publicId: string,
  */
 export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
   const obj = lookupDOMImplementation(self);
-  const result = obj.createDocument(namespace, qualifiedName, doctype);
+  const _callResult = obj.createDocument(namespace, qualifiedName, doctype);
   const handle = _nextDocument++;
-  _documentHandles.set(handle, result);
+  _documentHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1803,9 +1818,9 @@ export type DocumentTypeHandle = bigint;
  */
 export function DocumentTypeGetName(self: bigint): bigint {
   const obj = lookupDocumentType(self);
-  const result = obj.name;
+  const _callResult = obj.name;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1814,9 +1829,9 @@ export function DocumentTypeGetName(self: bigint): bigint {
  */
 export function getPublicId(self: bigint): bigint {
   const obj = lookupDocumentType(self);
-  const result = obj.publicId;
+  const _callResult = obj.publicId;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1825,9 +1840,9 @@ export function getPublicId(self: bigint): bigint {
  */
 export function getSystemId(self: bigint): bigint {
   const obj = lookupDocumentType(self);
-  const result = obj.systemId;
+  const _callResult = obj.systemId;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1905,9 +1920,9 @@ export function getSerializable(self: bigint): boolean {
  */
 export function getHost(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
-  const result = obj.host;
+  const _callResult = obj.host;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1956,9 +1971,9 @@ export function getInnerHtml(self: bigint): bigint {
  */
 export function setInnerHtml(self: bigint, value: bigint): void {
   const obj = lookupShadowRoot(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: HTMLString;
-  if (value === 0n) { enumValue = ''; }
+  if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
   obj.innerHTML = enumValue;
 }
@@ -1995,9 +2010,9 @@ export function NamedNodeMapGetLength(self: bigint): number {
  */
 export function NamedNodeMapItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.item(index);
+  const _callResult = obj.item(index);
   const handle = _nextAttr++;
-  _attrHandles.set(handle, result);
+  _attrHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2006,10 +2021,10 @@ export function NamedNodeMapItem(self: bigint, index: number): bigint | undefine
  */
 export function getNamedItem(self: bigint, qualifiedName: string): bigint | undefined {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.getNamedItem(qualifiedName);
-  if (result === null) return undefined;
+  const _callResult = obj.getNamedItem(qualifiedName);
+  if (_callResult === null) return undefined;
   const handle = _nextAttr++;
-  _attrHandles.set(handle, result);
+  _attrHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2018,10 +2033,10 @@ export function getNamedItem(self: bigint, qualifiedName: string): bigint | unde
  */
 export function getNamedItemNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.getNamedItemNS(namespace, localName);
-  if (result === null) return undefined;
+  const _callResult = obj.getNamedItemNS(namespace, localName);
+  if (_callResult === null) return undefined;
   const handle = _nextAttr++;
-  _attrHandles.set(handle, result);
+  _attrHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2046,9 +2061,9 @@ export function setNamedItemNs(self: bigint, attr: bigint): bigint | undefined {
  */
 export function removeNamedItem(self: bigint, qualifiedName: string): bigint {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.removeNamedItem(qualifiedName);
+  const _callResult = obj.removeNamedItem(qualifiedName);
   const handle = _nextAttr++;
-  _attrHandles.set(handle, result);
+  _attrHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2057,9 +2072,9 @@ export function removeNamedItem(self: bigint, qualifiedName: string): bigint {
  */
 export function removeNamedItemNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupNamedNodeMap(self);
-  const result = obj.removeNamedItemNS(namespace, localName);
+  const _callResult = obj.removeNamedItemNS(namespace, localName);
   const handle = _nextAttr++;
-  _attrHandles.set(handle, result);
+  _attrHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2123,9 +2138,9 @@ export function AttrSetValue(self: bigint, value: string): void {
  */
 export function getOwnerElement(self: bigint): bigint | undefined {
   const obj = lookupAttr(self);
-  const result = obj.ownerElement;
+  const _callResult = obj.ownerElement;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2306,9 +2321,9 @@ function lookupAbstractRange(handle: bigint): AbstractRange {
  */
 export function getStartContainer(self: bigint): bigint {
   const obj = lookupAbstractRange(self);
-  const result = obj.startContainer;
+  const _callResult = obj.startContainer;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2325,9 +2340,9 @@ export function getStartOffset(self: bigint): number {
  */
 export function getEndContainer(self: bigint): bigint {
   const obj = lookupAbstractRange(self);
-  const result = obj.endContainer;
+  const _callResult = obj.endContainer;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2371,9 +2386,9 @@ function lookupNodeIterator(handle: bigint): NodeIterator {
  */
 export function NodeIteratorGetRoot(self: bigint): bigint {
   const obj = lookupNodeIterator(self);
-  const result = obj.root;
+  const _callResult = obj.root;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2382,9 +2397,9 @@ export function NodeIteratorGetRoot(self: bigint): bigint {
  */
 export function getReferenceNode(self: bigint): bigint {
   const obj = lookupNodeIterator(self);
-  const result = obj.referenceNode;
+  const _callResult = obj.referenceNode;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2409,9 +2424,9 @@ export function NodeIteratorGetWhatToShow(self: bigint): number {
  */
 export function NodeIteratorGetFilter(self: bigint): bigint | undefined {
   const obj = lookupNodeIterator(self);
-  const result = obj.filter;
+  const _callResult = obj.filter;
   const handle = _nextNodeFilter++;
-  _nodeFilterHandles.set(handle, result);
+  _nodeFilterHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2420,9 +2435,9 @@ export function NodeIteratorGetFilter(self: bigint): bigint | undefined {
  */
 export function NodeIteratorNextNode(self: bigint): bigint | undefined {
   const obj = lookupNodeIterator(self);
-  const result = obj.nextNode();
+  const _callResult = obj.nextNode();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2431,9 +2446,9 @@ export function NodeIteratorNextNode(self: bigint): bigint | undefined {
  */
 export function NodeIteratorPreviousNode(self: bigint): bigint | undefined {
   const obj = lookupNodeIterator(self);
-  const result = obj.previousNode();
+  const _callResult = obj.previousNode();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2469,9 +2484,9 @@ function lookupTreeWalker(handle: bigint): TreeWalker {
  */
 export function TreeWalkerGetRoot(self: bigint): bigint {
   const obj = lookupTreeWalker(self);
-  const result = obj.root;
+  const _callResult = obj.root;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2488,9 +2503,9 @@ export function TreeWalkerGetWhatToShow(self: bigint): number {
  */
 export function TreeWalkerGetFilter(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.filter;
+  const _callResult = obj.filter;
   const handle = _nextNodeFilter++;
-  _nodeFilterHandles.set(handle, result);
+  _nodeFilterHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2499,9 +2514,9 @@ export function TreeWalkerGetFilter(self: bigint): bigint | undefined {
  */
 export function getCurrentNode(self: bigint): bigint {
   const obj = lookupTreeWalker(self);
-  const result = obj.currentNode;
+  const _callResult = obj.currentNode;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2518,9 +2533,9 @@ export function setCurrentNode(self: bigint, value: bigint): void {
  */
 export function parentNode(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.parentNode();
+  const _callResult = obj.parentNode();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2529,9 +2544,9 @@ export function parentNode(self: bigint): bigint | undefined {
  */
 export function firstChild(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.firstChild();
+  const _callResult = obj.firstChild();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2540,9 +2555,9 @@ export function firstChild(self: bigint): bigint | undefined {
  */
 export function lastChild(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.lastChild();
+  const _callResult = obj.lastChild();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2551,9 +2566,9 @@ export function lastChild(self: bigint): bigint | undefined {
  */
 export function previousSibling(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.previousSibling();
+  const _callResult = obj.previousSibling();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2562,9 +2577,9 @@ export function previousSibling(self: bigint): bigint | undefined {
  */
 export function nextSibling(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.nextSibling();
+  const _callResult = obj.nextSibling();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2573,9 +2588,9 @@ export function nextSibling(self: bigint): bigint | undefined {
  */
 export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.previousNode();
+  const _callResult = obj.previousNode();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2584,9 +2599,9 @@ export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
  */
 export function TreeWalkerNextNode(self: bigint): bigint | undefined {
   const obj = lookupTreeWalker(self);
-  const result = obj.nextNode();
+  const _callResult = obj.nextNode();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2637,16 +2652,16 @@ export function DomTokenListGetLength(self: bigint): number {
  */
 export function DomTokenListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupDOMTokenList(self);
-  const result = obj.item(index);
+  const _callResult = obj.item(index);
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: bigint): boolean {
+export function DomTokenListContains(self: bigint, token: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2678,7 +2693,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): bigint {
+export function replace(self: bigint, token: string, newToken: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token, newToken);
 }
@@ -2686,7 +2701,7 @@ export function replace(self: bigint, token: string, newToken: string): bigint {
 /**
  * `supports()` operation.
  */
-export function supports(self: bigint, token: string): EventHandlerRecord {
+export function supports(self: bigint, token: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.supports(token);
 }
@@ -2708,9 +2723,9 @@ export function DomTokenListGetValue(self: bigint): bigint {
  */
 export function DomTokenListSetValue(self: bigint, value: bigint): void {
   const obj = lookupDOMTokenList(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: DOMTokenListValue;
-  if (value === 0n) { enumValue = ''; }
+  if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
   obj.value = enumValue;
 }
@@ -2759,9 +2774,9 @@ export function getBooleanValue(self: bigint): boolean {
  */
 export function getSingleNodeValue(self: bigint): bigint | undefined {
   const obj = lookupXPathResult(self);
-  const result = obj.singleNodeValue;
+  const _callResult = obj.singleNodeValue;
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2786,9 +2801,9 @@ export function getSnapshotLength(self: bigint): number {
  */
 export function iterateNext(self: bigint): bigint | undefined {
   const obj = lookupXPathResult(self);
-  const result = obj.iterateNext();
+  const _callResult = obj.iterateNext();
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2797,9 +2812,9 @@ export function iterateNext(self: bigint): bigint | undefined {
  */
 export function snapshotItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupXPathResult(self);
-  const result = obj.snapshotItem(index);
+  const _callResult = obj.snapshotItem(index);
   const handle = _nextNode++;
-  _nodeHandles.set(handle, result);
+  _nodeHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2895,9 +2910,9 @@ export function createExpression(self: bigint, expression: string, resolver: big
  */
 export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
   const obj = lookupXPathEvaluatorBase(self);
-  const result = obj.createNSResolver(nodeResolver);
+  const _callResult = obj.createNSResolver(nodeResolver);
   const handle = _nextXPathNsResolver++;
-  _xpathNsResolverHandles.set(handle, result);
+  _xpathNsResolverHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2906,9 +2921,9 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
  */
 export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathEvaluatorBase(self);
-  const result = obj.evaluate(expression, contextNode, resolver, type, result);
+  const _callResult = obj.evaluate(expression, contextNode, resolver, type, result);
   const handle = _nextXPathResult++;
-  _xpathResultHandles.set(handle, result);
+  _xpathResultHandles.set(handle, _callResult);
   return handle;
 }
 

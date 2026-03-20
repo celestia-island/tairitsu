@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // WIT interface: url
@@ -222,14 +237,14 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): boolean {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: boolean | undefined): bigint {
+export function canParse(url: string, base: string): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
@@ -250,9 +265,9 @@ export function getHref(self: bigint): bigint {
  */
 export function setHref(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: URLHref;
-  if (value === 0n) { enumValue = ''; }
+  if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
   obj.href = enumValue;
 }
@@ -260,7 +275,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): EventHandlerRecord {
+export function getOrigin(self: bigint): string {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -276,7 +291,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `set-protocol()` operation.
  */
-export function setProtocol(self: bigint, value: bigint): void {
+export function setProtocol(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.protocol = value;
 }
@@ -404,7 +419,7 @@ export function getSearchParams(self: bigint): bigint {
 /**
  * `get-hash()` operation.
  */
-export function getHash(self: bigint): string {
+export function getHash(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.hash;
 }
@@ -471,7 +486,7 @@ export function _delete(self: bigint, name: string, value: string | undefined): 
 /**
  * `get()` operation.
  */
-export function _get(self: bigint, name: string): string | undefined {
+export function _get(self: bigint, name: string): EventHandlerRecord {
   const obj = lookupURLSearchParams(self);
   return obj.get(name) ?? undefined;
 }

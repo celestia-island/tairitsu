@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Synthetic handle tables for primitive/utility types
@@ -295,9 +310,9 @@ function lookupIntersectionObserver(handle: bigint): IntersectionObserver {
  */
 export function getRoot(self: bigint): bigint | undefined {
   const obj = lookupIntersectionObserver(self);
-  const result = obj.root;
+  const _callResult = obj.root;
   const handle = _nextElement++;
-  _elementHandles.set(handle, result);
+  _elementHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -312,7 +327,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): boolean {
+export function getScrollMargin(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).scrollMargin;
 }
@@ -322,16 +337,16 @@ export function getScrollMargin(self: bigint): boolean {
  */
 export function getThresholds(self: bigint): bigint {
   const obj = lookupIntersectionObserver(self);
-  const result = obj.thresholds;
+  const _callResult = obj.thresholds;
   const handle = _nextNumberList++;
-  _numberListHandles.set(handle, result);
+  _numberListHandles.set(handle, _callResult);
   return handle;
 }
 
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): number {
+export function getDelay(self: bigint): (bigint)[] {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -347,7 +362,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: string): void {
+export function IntersectionObserverObserve(self: bigint, target: boolean): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(target);
 }
@@ -371,7 +386,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): (EventHandlerRecord)[] {
   const obj = lookupIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -398,7 +413,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): number {
+export function getTime(self: bigint): EventHandlerRecord {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -408,9 +423,9 @@ export function getTime(self: bigint): number {
  */
 export function getRootBounds(self: bigint): bigint | undefined {
   const obj = lookupIntersectionObserverEntry(self);
-  const result = obj.rootBounds;
+  const _callResult = obj.rootBounds;
   const handle = _nextDomRectReadOnly++;
-  _domRectReadOnlyHandles.set(handle, result);
+  _domRectReadOnlyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -419,9 +434,9 @@ export function getRootBounds(self: bigint): bigint | undefined {
  */
 export function getBoundingClientRect(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
-  const result = obj.boundingClientRect();
+  const _callResult = (obj as any).boundingClientRect();
   const handle = _nextDomRectReadOnly++;
-  _domRectReadOnlyHandles.set(handle, result);
+  _domRectReadOnlyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -430,9 +445,9 @@ export function getBoundingClientRect(self: bigint): bigint {
  */
 export function getIntersectionRect(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
-  const result = obj.intersectionRect;
+  const _callResult = obj.intersectionRect;
   const handle = _nextDomRectReadOnly++;
-  _domRectReadOnlyHandles.set(handle, result);
+  _domRectReadOnlyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -490,7 +505,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: boolean, options: boolean): void {
   const obj = lookupResizeObserver(self);
   obj.observe(target, options);
 }
@@ -543,9 +558,9 @@ export function ResizeObserverEntryGetTarget(self: bigint): bigint {
  */
 export function getContentRect(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
-  const result = obj.contentRect;
+  const _callResult = obj.contentRect;
   const handle = _nextDomRectReadOnly++;
-  _domRectReadOnlyHandles.set(handle, result);
+  _domRectReadOnlyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -595,7 +610,7 @@ function lookupResizeObserverSize(handle: bigint): ResizeObserverSize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: bigint): string {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }

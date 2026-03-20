@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -264,21 +279,21 @@ function lookupModule(handle: bigint): WebAssembly.Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (bigint)[] {
+export function exports(moduleObject: bigint): (EventHandlerRecord)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (string)[] {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
+export function customSections(moduleObject: number, sectionName: string): (string)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -306,9 +321,9 @@ function lookupInstance(handle: bigint): Instance {
  */
 export function getExports(self: bigint): bigint {
   const obj = lookupInstance(self);
-  const result = (obj as any).exports;
+  const _callResult = (obj as any).exports;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -350,7 +365,7 @@ export function toFixedLengthBuffer(self: bigint): Uint8Array {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): string {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -395,7 +410,7 @@ export function TableGrow(self: bigint, delta: bigint, value: string | undefined
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, index: number): bigint {
+export function _get(self: bigint, index: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupTable(self);
   const promise = (obj as any).get(index)
@@ -431,7 +446,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: EventHandlerRecord): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -476,9 +491,9 @@ export function valueOf(self: bigint): string {
  */
 export function getValue(self: bigint): bigint {
   const obj = lookupGlobal(self);
-  const result = (obj as any).value;
+  const _callResult = (obj as any).value;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -512,7 +527,7 @@ function lookupException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): EventHandlerRecord {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }

@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // WIT interface: service-worker-registration
@@ -224,7 +239,7 @@ function lookupSwReg(handle: bigint): ServiceWorkerRegistration {
  */
 export function scope(handle: bigint): string {
   const obj = lookupSwReg(handle);
-  return obj.scope();
+  return (obj as any).scope();
 }
 
 // ---------------------------------------------------------------------------
@@ -251,13 +266,13 @@ function lookupSw(handle: bigint): ServiceWorker {
  */
 export function scriptUrl(handle: bigint): string {
   const obj = lookupSw(handle);
-  return obj.scriptURL();
+  return (obj as any).scriptURL();
 }
 
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
+export function postMessage(handle: bigint, message: bigint, transfer: (Uint8Array)[]): void {
   const obj = lookupSw(handle);
   obj.postMessage(message, transfer);
 }

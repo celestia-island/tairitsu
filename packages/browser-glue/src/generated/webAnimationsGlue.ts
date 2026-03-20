@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -269,7 +284,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
  */
 export function pending(handle: bigint): EventHandlerRecord {
   const obj = lookupAnimation(handle);
-  return obj.pending();
+  return (obj as any).pending();
 }
 
 /**

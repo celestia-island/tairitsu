@@ -3018,6 +3018,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "mutation-observer": ("MutationObserver", "mutationObserverHandles", "MutationObserver"),
     "performance": ("Performance", "performanceHandles", "Performance"),
     "request": ("Request", "requestHandles", "Request"),
+    "dom-matrix": ("DOMMatrix", "domMatrixhandles", "DomMatrix"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -3090,6 +3091,11 @@ CUSTOM_TYPE_DEFINITIONS = {
     "Table": "typeof WebAssembly.Table",
     "Global": "typeof WebAssembly.Global",
     "Exception": "any",
+    "HTMLString": "string",
+    "MediaText": "string",
+    "HTMLHyperlinkHref": "string",
+    "LocationHref": "string",
+    "URLHref": "string",
 }
 
 # Type name casing corrections for TypeScript DOM types
@@ -3680,6 +3686,61 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("permissions", "getQuery"),
     # URLSearchParams
     ("url-search-params", "all"),
+    # ImageDecoder
+    ("image-decoder", "completed"),
+    # CSSKeyframesRule
+    ("css-keyframes-rule", "KEYFRAME_RULE"),
+    # ReadableStreamGenericReader
+    ("readable-stream-generic-reader", "closed"),
+    # WritableStreamDefaultWriter
+    ("writable-stream-default-writer", "closed"),
+    ("writable-stream-default-writer", "ready"),
+    # FileReader
+    ("file-reader", "readyState"),
+    ("file-reader", "result"),
+    # FileList
+    ("file-list", "length"),
+    # DOMStringMap
+    ("dom-string-map", "domString"),
+    ("dom-string-map", "undefined"),
+    # PromiseRejectionEvent
+    ("promise-rejection-event", "promise"),
+    # IDBDatabase
+    ("idb-database", "name"),
+    ("idb-database", "version"),
+    # IDBIndex
+    ("idb-index", "keyPath"),
+    ("idb-index", "multiEntry"),
+    ("idb-index", "unique"),
+    # IDBObjectStore
+    ("idb-object-store", "keyPath"),
+    ("idb-object-store", "autoIncrement"),
+    # IDBRequest
+    ("idb-request", "source"),
+    # IDBCursor
+    ("idb-cursor", "key"),
+    ("idb-cursor", "primaryKey"),
+    ("idb-cursor", "source"),
+    # MediaSession
+    ("media-session", "metadata"),
+    # IntersectionObserverEntry
+    ("intersection-observer-entry", "boundingClientRect"),
+    # ServiceWorkerRegistration
+    ("service-worker-registration", "scope"),
+    # ServiceWorker
+    ("service-worker", "scriptURL"),
+    # Animation
+    ("animation", "pending"),
+    # RTCDTMFSender
+    ("rtcdtmf-sender", "canInsertDTMF"),
+    # WebSocket
+    ("web-socket", "url"),
+    ("web-socket", "readyState"),
+    ("web-socket", "bufferedAmount"),
+    ("web-socket", "extensions"),
+    ("web-socket", "protocol"),
+    # ServiceWorkerContainer
+    ("service-worker-container", "controller"),
 }
 
 # JavaScript/TypeScript reserved keywords

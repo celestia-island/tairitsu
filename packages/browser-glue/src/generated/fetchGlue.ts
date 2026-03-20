@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -357,7 +372,7 @@ export type HeadersHandle = bigint;
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: bigint | undefined, value: string): void {
+export function HeadersAppend(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
   obj.append(name, value);
 }
@@ -375,16 +390,16 @@ export function HeadersDelete(self: bigint, name: string): void {
  */
 export function HeadersGet(self: bigint, name: string): bigint | undefined {
   const obj = lookupHeaders(self);
-  const result = obj.get(name);
+  const _callResult = obj.get(name);
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): bigint {
+export function getSetCookie(self: bigint): (string)[] {
   const obj = lookupHeaders(self);
   return obj.getSetCookie();
 }
@@ -392,7 +407,7 @@ export function getSetCookie(self: bigint): bigint {
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: bigint): boolean {
+export function HeadersHas(self: bigint, name: string): boolean {
   const obj = lookupHeaders(self);
   return obj.has(name);
 }
@@ -400,7 +415,7 @@ export function HeadersHas(self: bigint, name: bigint): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupHeaders(self);
   obj.set(name, value);
 }
@@ -427,7 +442,7 @@ function lookupBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined {
+export function getBody(self: bigint): bigint {
   const obj = lookupBody(self);
   return obj.body ?? undefined;
 }
@@ -546,12 +561,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -584,12 +599,12 @@ export function formData(self: bigint): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -698,7 +713,7 @@ export function getMethod(self: bigint): string {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): string {
+export function RequestGetUrl(self: bigint): bigint {
   const obj = lookupRequest(self);
   return obj.url;
 }
@@ -722,7 +737,7 @@ export function getDestination(self: bigint): bigint {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint): EventHandlerRecord {
+export function getReferrer(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.referrer;
 }
@@ -799,7 +814,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): string {
+export function getKeepalive(self: bigint): boolean {
   const obj = lookupRequest(self);
   return obj.keepalive;
 }
@@ -807,7 +822,7 @@ export function getKeepalive(self: bigint): string {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): boolean {
+export function getIsReloadNavigation(self: bigint): EventHandlerRecord {
   const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
@@ -825,9 +840,9 @@ export function getIsHistoryNavigation(self: bigint): bigint {
  */
 export function RequestGetSignal(self: bigint): bigint {
   const obj = lookupRequest(self);
-  const result = obj.signal;
+  const _callResult = obj.signal;
   const handle = _nextAbortSignal++;
-  _abortSignalHandles.set(handle, result);
+  _abortSignalHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -880,14 +895,14 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): string {
+export function redirect(url: string, status: number | undefined): bigint {
   return Response.redirect(url, status);
 }
 
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: bigint | undefined): bigint {
+export function ResponseJson(data: string, init: string): bigint {
   return Response.json(data, init);
 }
 
@@ -911,7 +926,7 @@ export function getType(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function ResponseGetUrl(self: bigint): bigint {
+export function ResponseGetUrl(self: bigint): string {
   const obj = lookupResponse(self);
   return obj.url;
 }
@@ -927,7 +942,7 @@ export function getRedirected(self: bigint): boolean {
 /**
  * `get-status()` operation.
  */
-export function ResponseGetStatus(self: bigint): bigint | undefined {
+export function ResponseGetStatus(self: bigint): number {
   const obj = lookupResponse(self);
   return obj.status;
 }
@@ -935,7 +950,7 @@ export function ResponseGetStatus(self: bigint): bigint | undefined {
 /**
  * `get-ok()` operation.
  */
-export function getOk(self: bigint): bigint {
+export function getOk(self: bigint): boolean {
   const obj = lookupResponse(self);
   return obj.ok;
 }
@@ -953,9 +968,9 @@ export function ResponseGetStatusText(self: bigint): string {
  */
 export function ResponseGetHeaders(self: bigint): bigint {
   const obj = lookupResponse(self);
-  const result = obj.headers;
+  const _callResult = obj.headers;
   const handle = _nextHeaders++;
-  _headersHandles.set(handle, result);
+  _headersHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1049,7 +1064,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-is-secure-context()` operation.
  */
-export function getIsSecureContext(self: bigint): boolean {
+export function getIsSecureContext(self: bigint): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.isSecureContext;
 }
@@ -1210,7 +1225,7 @@ function lookupFetchLaterResult(handle: bigint): FetchLaterResult {
 /**
  * `get-activated()` operation.
  */
-export function getActivated(self: bigint): bigint {
+export function getActivated(self: bigint): boolean {
   const obj = lookupFetchLaterResult(self);
   return obj.activated;
 }
@@ -1237,7 +1252,7 @@ function lookupReadableStream(handle: bigint): ReadableStream {
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: string): bigint {
+export function from(asyncIterable: Uint8Array | undefined): Uint8Array {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 
@@ -1292,9 +1307,9 @@ export function ReadableStreamPollCancel(requestId: bigint): { ok: true; value: 
  */
 export function getReader(self: bigint, options: bigint | undefined): bigint {
   const obj = lookupReadableStream(self);
-  const result = (obj as any).reader;
+  const _callResult = (obj as any).reader;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1349,9 +1364,9 @@ export function pollPipeTo(requestId: bigint): { ok: true; value: bigint } | { o
  */
 export function tee(self: bigint): bigint {
   const obj = lookupReadableStream(self);
-  const result = obj.tee();
+  const _callResult = obj.tee();
   const handle = _nextReadableStreamPair++;
-  _readableStreamPairHandles.set(handle, result);
+  _readableStreamPairHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1382,7 +1397,7 @@ function lookupReadableStreamGenericReader(handle: bigint): ReadableStreamGeneri
 export function ReadableStreamGenericReaderGetClosed(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStreamGenericReader(self);
-  const promise = obj.closed()
+  const promise = (obj as any).closed()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1841,9 +1856,9 @@ export function WritableStreamPollClose(requestId: bigint): { ok: true; value: b
  */
 export function getWriter(self: bigint): bigint {
   const obj = lookupWritableStream(self);
-  const result = (obj as any).writer;
+  const _callResult = (obj as any).writer;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1874,7 +1889,7 @@ function lookupWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaul
 export function WritableStreamDefaultWriterGetClosed(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWritableStreamDefaultWriter(self);
-  const promise = obj.closed()
+  const promise = (obj as any).closed()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1917,7 +1932,7 @@ export function WritableStreamDefaultWriterGetDesiredSize(self: bigint): number 
  */
 export function getReady(self: bigint): bigint {
   const obj = lookupWritableStreamDefaultWriter(self);
-  return obj.ready();
+  return (obj as any).ready();
 }
 
 /**
@@ -2495,9 +2510,9 @@ export function setWithCredentials(self: bigint, value: boolean): void {
  */
 export function getUpload(self: bigint): bigint {
   const obj = lookupXMLHttpRequest(self);
-  const result = obj.upload;
+  const _callResult = obj.upload;
   const handle = _nextXmlHttpRequestUpload++;
-  _xmlHttpRequestUploadHandles.set(handle, result);
+  _xmlHttpRequestUploadHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2587,14 +2602,14 @@ export function getResponseType(self: bigint): bigint {
  */
 export function setResponseType(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequest(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: XMLHttpRequestResponseType;
-  if (value === 0n) { enumValue = ''; }
-  if (value === 1n) { enumValue = 'arraybuffer'; }
-  if (value === 2n) { enumValue = 'blob'; }
-  if (value === 3n) { enumValue = 'document'; }
-  if (value === 4n) { enumValue = 'json'; }
-  if (value === 5n) { enumValue = 'text'; }
+  if (_enumInput === 0n) { enumValue = ''; }
+  if (_enumInput === 1n) { enumValue = 'arraybuffer'; }
+  if (_enumInput === 2n) { enumValue = 'blob'; }
+  if (_enumInput === 3n) { enumValue = 'document'; }
+  if (_enumInput === 4n) { enumValue = 'json'; }
+  if (_enumInput === 5n) { enumValue = 'text'; }
   else { enumValue = ''; }
   obj.responseType = enumValue;
 }
@@ -2663,9 +2678,9 @@ export function FormDataDelete(self: bigint, name: string): void {
  */
 export function FormDataGet(self: bigint, name: string): bigint | undefined {
   const obj = lookupFormData(self);
-  const result = obj.get(name);
+  const _callResult = obj.get(name);
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 

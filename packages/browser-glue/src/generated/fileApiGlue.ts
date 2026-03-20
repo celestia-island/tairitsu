@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // WIT interface: file-reader
@@ -222,7 +237,7 @@ function lookupFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): bigint {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -237,9 +252,9 @@ export function abort(handle: bigint): void {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): string {
+export function readyState(handle: bigint): number {
   const obj = lookupFileReader(handle);
-  return obj.readyState();
+  return (obj as any).readyState();
 }
 
 /**
@@ -247,7 +262,7 @@ export function readyState(handle: bigint): string {
  */
 export function resultVal(handle: bigint): bigint | undefined {
   const obj = lookupFileReader(handle);
-  return obj.result() ?? undefined;
+  return (obj as any).result() ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -272,9 +287,9 @@ function lookupFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): bigint {
   const obj = lookupFileList(handle);
-  return obj.length();
+  return (obj as any).length();
 }
 
 // ---------------------------------------------------------------------------
