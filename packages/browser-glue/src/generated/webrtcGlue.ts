@@ -355,8 +355,7 @@ export function setOnconnectionstatechange(self: bigint, value: bigint): void {
  * `generate-certificate()` operation.
  */
 export function generateCertificate(keygenAlgorithm: bigint): bigint {
-  const obj = getRtcPeerConnection(self);
-  return obj.generateCertificate(keygenAlgorithm);
+  return RTCPeerConnection.generateCertificate(keygenAlgorithm);
 }
 
 /**

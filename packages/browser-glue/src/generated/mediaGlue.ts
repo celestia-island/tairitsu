@@ -1128,8 +1128,7 @@ export function requestData(self: bigint): void {
  * `is-type-supported()` operation.
  */
 export function isTypeSupported(type: string): boolean {
-  const obj = getMediaRecorder(self);
-  return obj.isTypeSupported(type);
+  return MediaRecorder.isTypeSupported(type);
 }
 
 // ---------------------------------------------------------------------------
@@ -1386,16 +1385,14 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
  * `available()` operation.
  */
 export function available(options: bigint): bigint {
-  const obj = getSpeechRecognition(self);
-  return obj.available(options);
+  return SpeechRecognition.available(options);
 }
 
 /**
  * `install()` operation.
  */
 export function install(options: bigint): bigint {
-  const obj = getSpeechRecognition(self);
-  return obj.install(options);
+  return SpeechRecognition.install(options);
 }
 
 /**

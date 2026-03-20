@@ -53,8 +53,7 @@ export function getPermission(): bigint {
  * `request-permission()` operation.
  */
 export function requestPermission(deprecatedCallback: bigint | undefined): bigint {
-  const obj = getNotification(self);
-  return obj.requestPermission(deprecatedCallback);
+  return Notification.requestPermission(deprecatedCallback);
 }
 
 /**
@@ -99,7 +98,7 @@ export function setOnshow(self: bigint, value: bigint): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): bigint {
+export function getOnerror(self: bigint): string {
   const obj = getNotification(self);
   return obj.onerror;
 }
@@ -123,7 +122,7 @@ export function getOnclose(self: bigint): bigint {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: bigint, value: number): void {
+export function setOnclose(self: bigint, value: bigint): void {
   const obj = getNotification(self);
   obj.onclose = value;
 }
@@ -131,7 +130,7 @@ export function setOnclose(self: bigint, value: number): void {
 /**
  * `get-title()` operation.
  */
-export function getTitle(self: bigint): string {
+export function getTitle(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.title;
 }
@@ -139,7 +138,7 @@ export function getTitle(self: bigint): string {
 /**
  * `get-dir()` operation.
  */
-export function getDir(self: bigint): string {
+export function getDir(self: bigint): bigint {
   const obj = getNotification(self);
   return obj.dir;
 }
@@ -179,7 +178,7 @@ export function getTag(self: bigint): string {
 /**
  * `get-image()` operation.
  */
-export function getImage(self: bigint): boolean {
+export function getImage(self: bigint): string {
   const obj = getNotification(self);
   return obj.image;
 }
@@ -227,7 +226,7 @@ export function getRenotify(self: bigint): boolean {
 /**
  * `get-silent()` operation.
  */
-export function getSilent(self: bigint): (bigint)[] {
+export function getSilent(self: bigint): boolean | undefined {
   const obj = getNotification(self);
   return obj.silent ?? undefined;
 }
@@ -251,7 +250,7 @@ export function getData(self: bigint): string {
 /**
  * `get-actions()` operation.
  */
-export function getActions(self: bigint): (bigint)[] {
+export function getActions(self: bigint): string {
   const obj = getNotification(self);
   return obj.actions;
 }
@@ -317,7 +316,7 @@ function getServiceWorkerRegistration(handle: bigint): ServiceWorkerRegistration
 /**
  * `show-notification()` operation.
  */
-export function showNotification(self: bigint, title: number, options: bigint | undefined): bigint {
+export function showNotification(self: bigint, title: bigint, options: number): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.showNotification(title, options);
 }
@@ -341,7 +340,7 @@ export function getInstalling(self: bigint): number | undefined {
 /**
  * `get-waiting()` operation.
  */
-export function getWaiting(self: bigint): number | undefined {
+export function getWaiting(self: bigint): bigint | undefined {
   const obj = getServiceWorkerRegistration(self);
   return obj.waiting ?? undefined;
 }
@@ -357,7 +356,7 @@ export function getActive(self: bigint): bigint | undefined {
 /**
  * `get-navigation-preload()` operation.
  */
-export function getNavigationPreload(self: bigint): number {
+export function getNavigationPreload(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.navigationPreload;
 }
@@ -365,7 +364,7 @@ export function getNavigationPreload(self: bigint): number {
 /**
  * `get-scope()` operation.
  */
-export function getScope(self: bigint): string {
+export function getScope(self: bigint): bigint {
   const obj = getServiceWorkerRegistration(self);
   return obj.scope;
 }
@@ -441,7 +440,7 @@ export function getNotification(self: bigint): bigint {
 /**
  * `get-action()` operation.
  */
-export function getAction(self: bigint): string {
+export function getAction(self: bigint): bigint | undefined {
   const obj = getNotificationEvent(self);
   return obj.action;
 }
@@ -469,7 +468,7 @@ function getServiceWorkerGlobalScope(handle: bigint): ServiceWorkerGlobalScope {
 /**
  * `get-onnotificationclick()` operation.
  */
-export function getOnnotificationclick(self: bigint): bigint {
+export function getOnnotificationclick(self: bigint): (bigint)[] {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onnotificationclick;
 }
@@ -517,7 +516,7 @@ export function getRegistration(self: bigint): bigint {
 /**
  * `get-service-worker()` operation.
  */
-export function getServiceWorker(self: bigint): bigint {
+export function getServiceWorker(self: bigint): string {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.serviceWorker;
 }
@@ -525,7 +524,7 @@ export function getServiceWorker(self: bigint): bigint {
 /**
  * `skip-waiting()` operation.
  */
-export function skipWaiting(self: bigint): string {
+export function skipWaiting(self: bigint): bigint {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.skipWaiting();
 }
@@ -581,7 +580,7 @@ export function setOnfetch(self: bigint, value: bigint): void {
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): bigint {
+export function getOnmessage(self: bigint): string {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onmessage;
 }
@@ -589,7 +588,7 @@ export function getOnmessage(self: bigint): bigint {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: bigint): void {
+export function setOnmessage(self: bigint, value: number): void {
   const obj = getServiceWorkerGlobalScope(self);
   obj.onmessage = value;
 }
@@ -597,7 +596,7 @@ export function setOnmessage(self: bigint, value: bigint): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): bigint {
+export function getOnmessageerror(self: bigint): string {
   const obj = getServiceWorkerGlobalScope(self);
   return obj.onmessageerror;
 }
@@ -605,7 +604,7 @@ export function getOnmessageerror(self: bigint): bigint {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: bigint): void {
+export function setOnmessageerror(self: bigint, value: string): void {
   const obj = getServiceWorkerGlobalScope(self);
   obj.onmessageerror = value;
 }

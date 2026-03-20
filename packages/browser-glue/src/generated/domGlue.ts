@@ -438,16 +438,14 @@ export function AbortSignalPollAbort(requestId: bigint): { ok: true; value: bigi
  * `timeout()` operation.
  */
 export function timeout(milliseconds: bigint): bigint {
-  const obj = getAbortSignal(self);
-  return obj.timeout(milliseconds);
+  return AbortSignal.timeout(milliseconds);
 }
 
 /**
  * `any()` operation.
  */
 export function any(signals: (bigint)[]): bigint {
-  const obj = getAbortSignal(self);
-  return obj.any(signals);
+  return AbortSignal.any(signals);
 }
 
 /**
@@ -1748,7 +1746,7 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
 /**
  * `get-target()` operation.
  */
-export function ProcessingInstructionGetTarget(self: bigint): string {
+export function ProcessingInstructionGetTarget(self: bigint): bigint {
   const obj = getProcessingInstruction(self);
   return obj.target;
 }
@@ -1876,7 +1874,7 @@ export function NodeIteratorGetFilter(self: bigint): bigint | undefined {
 /**
  * `next-node()` operation.
  */
-export function NodeIteratorNextNode(self: bigint): bigint {
+export function NodeIteratorNextNode(self: bigint): bigint | undefined {
   const obj = getNodeIterator(self);
   return obj.nextNode() ?? undefined;
 }
@@ -2036,7 +2034,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
 /**
  * `accept-node()` operation.
  */
-export function acceptNode(self: bigint, node: bigint | undefined): number {
+export function acceptNode(self: bigint, node: bigint): number {
   const obj = getNodeFilter(self);
   return obj.acceptNode(node);
 }
@@ -2204,7 +2202,7 @@ export function getSingleNodeValue(self: bigint): bigint | undefined {
 /**
  * `get-invalid-iterator-state()` operation.
  */
-export function getInvalidIteratorState(self: bigint): boolean {
+export function getInvalidIteratorState(self: bigint): bigint {
   const obj = getXPathResult(self);
   return obj.invalidIteratorState;
 }
@@ -2220,7 +2218,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): bigint | undefined {
+export function iterateNext(self: bigint): bigint {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2228,7 +2226,7 @@ export function iterateNext(self: bigint): bigint | undefined {
 /**
  * `snapshot-item()` operation.
  */
-export function snapshotItem(self: bigint, index: string): bigint | undefined {
+export function snapshotItem(self: bigint, index: number): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.snapshotItem(index) ?? undefined;
 }
@@ -2395,7 +2393,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): bigint {
+export function getParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): string {
   const obj = getXsltProcessor(self);
   return obj.parameter;
 }
@@ -2403,7 +2401,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: bigi
 /**
  * `remove-parameter()` operation.
  */
-export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
+export function removeParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): void {
   const obj = getXsltProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }

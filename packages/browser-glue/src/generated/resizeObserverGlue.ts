@@ -33,8 +33,7 @@ function getRo(handle: bigint): ResizeObserver {
  * `observe()` operation.
  */
 export function observe(handle: bigint): void {
-  const obj = getRo(self);
-  obj.observe(handle);
+  return ResizeObserver.observe(handle);
 }
 
 // ---------------------------------------------------------------------------

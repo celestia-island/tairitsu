@@ -45,9 +45,8 @@ function getIdbFactory(handle: bigint): IdbFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
-  const obj = getIdbFactory(self);
-  return obj.cmp(handle, first, second);
+export function cmp(handle: bigint, first: number, second: string): number {
+  return IdbFactory.cmp(handle, first, second);
 }
 
 // ---------------------------------------------------------------------------
@@ -74,16 +73,14 @@ function getIdbDb(handle: bigint): IDBDatabase {
  * `name()` operation.
  */
 export function name(handle: bigint): string {
-  const obj = getIdbDb(self);
-  return obj.name(handle);
+  return IDBDatabase.name(handle);
 }
 
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): string | undefined {
-  const obj = getIdbDb(self);
-  return obj.version(handle);
+export function version(handle: bigint): bigint {
+  return IDBDatabase.version(handle);
 }
 
 // ---------------------------------------------------------------------------
@@ -110,8 +107,7 @@ function getIdbTx(handle: bigint): IDBTransaction {
  * `commit()` operation.
  */
 export function commit(handle: bigint): void {
-  const obj = getIdbTx(self);
-  obj.commit(handle);
+  return IDBTransaction.commit(handle);
 }
 
 /**
@@ -175,7 +171,7 @@ function getIdbStore(handle: bigint): IdbObjectStore {
 /**
  * `get-name()` operation.
  */
-export function IdbObjectStoreGetName(handle: bigint): Uint8Array {
+export function IdbObjectStoreGetName(handle: bigint): string {
   const obj = getIdbStore(self);
   return obj.name;
 }
@@ -192,16 +188,14 @@ export function IdbObjectStoreSetName(handle: bigint, value: string): void {
  * `key-path()` operation.
  */
 export function IdbObjectStoreKeyPath(handle: bigint): string {
-  const obj = getIdbStore(self);
-  return obj.keyPath(handle);
+  return IdbObjectStore.keyPath(handle);
 }
 
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): string | undefined {
-  const obj = getIdbStore(self);
-  return obj.autoIncrement(handle);
+export function autoIncrement(handle: bigint): bigint {
+  return IdbObjectStore.autoIncrement(handle);
 }
 
 // ---------------------------------------------------------------------------
@@ -243,25 +237,22 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
 /**
  * `key-path()` operation.
  */
-export function IdbIndexKeyPath(handle: bigint): number {
-  const obj = getIdbIndex(self);
-  return obj.keyPath(handle);
+export function IdbIndexKeyPath(handle: bigint): string {
+  return IdbIndex.keyPath(handle);
 }
 
 /**
  * `multi-entry()` operation.
  */
 export function multiEntry(handle: bigint): boolean {
-  const obj = getIdbIndex(self);
-  return obj.multiEntry(handle);
+  return IdbIndex.multiEntry(handle);
 }
 
 /**
  * `unique()` operation.
  */
 export function unique(handle: bigint): boolean {
-  const obj = getIdbIndex(self);
-  return obj.unique(handle);
+  return IdbIndex.unique(handle);
 }
 
 // ---------------------------------------------------------------------------
@@ -288,48 +279,42 @@ function getIdbCursor(handle: bigint): IdbCursor {
  * `source()` operation.
  */
 export function IdbCursorSource(handle: bigint): string {
-  const obj = getIdbCursor(self);
-  return obj.source(handle);
+  return IdbCursor.source(handle);
 }
 
 /**
  * `key()` operation.
  */
-export function key(handle: bigint): string | undefined {
-  const obj = getIdbCursor(self);
-  return obj.key(handle);
+export function key(handle: bigint): string {
+  return IdbCursor.key(handle);
 }
 
 /**
  * `primary-key()` operation.
  */
 export function primaryKey(handle: bigint): string {
-  const obj = getIdbCursor(self);
-  return obj.primaryKey(handle);
+  return IdbCursor.primaryKey(handle);
 }
 
 /**
  * `advance()` operation.
  */
 export function advance(handle: bigint, count: number): void {
-  const obj = getIdbCursor(self);
-  obj.advance(handle, count);
+  return IdbCursor.advance(handle, count);
 }
 
 /**
  * `continue()` operation.
  */
 export function _continue(handle: bigint, key: string): void {
-  const obj = getIdbCursor(self);
-  obj._continue(handle, key);
+  return IdbCursor._continue(handle, key);
 }
 
 /**
  * `continue-primary-key()` operation.
  */
 export function continuePrimaryKey(handle: bigint, key: string, primaryKey: string): void {
-  const obj = getIdbCursor(self);
-  obj.continuePrimaryKey(handle, key, primaryKey);
+  return IdbCursor.continuePrimaryKey(handle, key, primaryKey);
 }
 
 // ---------------------------------------------------------------------------
@@ -356,16 +341,14 @@ function getIdbRequest(handle: bigint): IDBRequest {
  * `result-val()` operation.
  */
 export function resultVal(handle: bigint): string {
-  const obj = getIdbRequest(self);
-  return obj.resultVal(handle);
+  return IDBRequest.resultVal(handle);
 }
 
 /**
  * `source()` operation.
  */
 export function IdbRequestSource(handle: bigint): string | undefined {
-  const obj = getIdbRequest(self);
-  return obj.source(handle) ?? undefined;
+  return IDBRequest.source(handle);
 }
 
 // ---------------------------------------------------------------------------

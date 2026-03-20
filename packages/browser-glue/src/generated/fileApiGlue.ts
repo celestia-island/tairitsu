@@ -45,8 +45,8 @@ function getFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string | undefined } {
-  return obj.newFileReader();
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+  return FileReader.newFileReader();
 }
 
 /**
@@ -91,16 +91,14 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
  * `ready-state()` operation.
  */
 export function readyState(handle: bigint): number {
-  const obj = getFileReader(self);
-  return obj.readyState(handle);
+  return FileReader.readyState(handle);
 }
 
 /**
  * `result-val()` operation.
  */
 export function resultVal(handle: bigint): string | undefined {
-  const obj = getFileReader(self);
-  return obj.resultVal(handle) ?? undefined;
+  return FileReader.resultVal(handle);
 }
 
 // ---------------------------------------------------------------------------
@@ -126,9 +124,8 @@ function getFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
-  const obj = getFileList(self);
-  return obj.length(handle);
+export function length(handle: bigint): bigint {
+  return FileList.length(handle);
 }
 
 // ---------------------------------------------------------------------------

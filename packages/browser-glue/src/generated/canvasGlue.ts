@@ -178,8 +178,7 @@ export function AudioDecoderPollClose(requestId: bigint): { ok: true } | { ok: f
  * `is-config-supported()` operation.
  */
 export function AudioDecoderIsConfigSupported(config: bigint): bigint {
-  const obj = getAudioDecoder(self);
-  return obj.isConfigSupported(config);
+  return AudioDecoder.isConfigSupported(config);
 }
 
 // ---------------------------------------------------------------------------
@@ -338,8 +337,7 @@ export function VideoDecoderPollClose(requestId: bigint): { ok: true } | { ok: f
  * `is-config-supported()` operation.
  */
 export function VideoDecoderIsConfigSupported(config: bigint): bigint {
-  const obj = getVideoDecoder(self);
-  return obj.isConfigSupported(config);
+  return VideoDecoder.isConfigSupported(config);
 }
 
 // ---------------------------------------------------------------------------
@@ -498,8 +496,7 @@ export function AudioEncoderPollClose(requestId: bigint): { ok: true } | { ok: f
  * `is-config-supported()` operation.
  */
 export function AudioEncoderIsConfigSupported(config: bigint): bigint {
-  const obj = getAudioEncoder(self);
-  return obj.isConfigSupported(config);
+  return AudioEncoder.isConfigSupported(config);
 }
 
 // ---------------------------------------------------------------------------
@@ -658,8 +655,7 @@ export function VideoEncoderPollClose(requestId: bigint): { ok: true } | { ok: f
  * `is-config-supported()` operation.
  */
 export function VideoEncoderIsConfigSupported(config: bigint): bigint {
-  const obj = getVideoEncoder(self);
-  return obj.isConfigSupported(config);
+  return VideoEncoder.isConfigSupported(config);
 }
 
 // ---------------------------------------------------------------------------
@@ -1328,8 +1324,7 @@ export function ImageDecoderPollClose(requestId: bigint): { ok: true } | { ok: f
  * `is-type-supported()` operation.
  */
 export function isTypeSupported(type: string): bigint {
-  const obj = getImageDecoder(self);
-  return obj.isTypeSupported(type);
+  return ImageDecoder.isTypeSupported(type);
 }
 
 // ---------------------------------------------------------------------------

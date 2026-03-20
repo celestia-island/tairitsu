@@ -33,8 +33,7 @@ function getSwReg(handle: bigint): ServiceWorkerRegistration {
  * `scope()` operation.
  */
 export function scope(handle: bigint): string {
-  const obj = getSwReg(self);
-  return obj.scope(handle);
+  return ServiceWorkerRegistration.scope(handle);
 }
 
 // ---------------------------------------------------------------------------
@@ -60,17 +59,15 @@ function getSw(handle: bigint): ServiceWorker {
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): string {
-  const obj = getSw(self);
-  return obj.scriptUrl(handle);
+export function scriptUrl(handle: bigint): bigint {
+  return ServiceWorker.scriptUrl(handle);
 }
 
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: ((bigint)[])[]): void {
-  const obj = getSw(self);
-  obj.postMessage(handle, message, transfer);
+export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
+  return ServiceWorker.postMessage(handle, message, transfer);
 }
 
 // ---------------------------------------------------------------------------

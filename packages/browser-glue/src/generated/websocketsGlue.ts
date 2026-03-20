@@ -45,49 +45,43 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): bigint {
-  const obj = getWs(self);
-  return obj.connect(url, protocols);
+export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+  return WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
 export function url(handle: bigint): string {
-  const obj = getWs(self);
-  return obj.url(handle);
+  return WebSocket.url(handle);
 }
 
 /**
  * `ready-state()` operation.
  */
 export function readyState(handle: bigint): number {
-  const obj = getWs(self);
-  return obj.readyState(handle);
+  return WebSocket.readyState(handle);
 }
 
 /**
  * `buffered-amount()` operation.
  */
 export function bufferedAmount(handle: bigint): bigint {
-  const obj = getWs(self);
-  return obj.bufferedAmount(handle);
+  return WebSocket.bufferedAmount(handle);
 }
 
 /**
  * `extensions()` operation.
  */
 export function extensions(handle: bigint): bigint {
-  const obj = getWs(self);
-  return obj.extensions(handle);
+  return WebSocket.extensions(handle);
 }
 
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): bigint {
-  const obj = getWs(self);
-  return obj.protocol(handle);
+export function protocol(handle: bigint): string {
+  return WebSocket.protocol(handle);
 }
 
 /**
@@ -132,8 +126,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
  * `send()` operation.
  */
 export function send(handle: bigint, data: string): void {
-  const obj = getWs(self);
-  obj.send(handle, data);
+  return WebSocket.send(handle, data);
 }
 
 // ---------------------------------------------------------------------------
