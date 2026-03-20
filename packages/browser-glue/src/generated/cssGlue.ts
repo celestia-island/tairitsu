@@ -2775,13 +2775,13 @@ export function setStatus(value: string): void {
  *
  * Async operation: returns request ID, poll with `WindowPollClose()`
  */
-export function WindowClose(): void {
+export function WindowClose(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = window.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -3637,13 +3637,13 @@ export function DocumentOpen(unused1: string | undefined, unused2: string | unde
  *
  * Async operation: returns request ID, poll with `DocumentPollClose()`
  */
-export function DocumentClose(): void {
+export function DocumentClose(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = document.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -3674,13 +3674,13 @@ export function DocumentPollClose(requestId: bigint): { ok: true } | { ok: false
  *
  * Async operation: returns request ID, poll with `pollWrite()`
  */
-export function write(text: (bigint)[]): void {
+export function write(text: (bigint)[]): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = document.write(text)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {

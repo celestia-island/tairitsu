@@ -343,6 +343,11 @@ class BrowserGlueGenerator:
         is_async = self._is_async_function(wit_name, func, interface.name)
         is_static = func.is_static
 
+        # For async functions, return type is always bigint (request ID)
+        if is_async:
+            ts_return = "bigint"
+            return_is_void = False
+
         # Determine browser API mapping
         browser_method = ts_name
         browser_attr = ""
@@ -790,7 +795,7 @@ class BrowserGlueGenerator:
         else:
             lines.append(f"  return {obj_ref}.{func.browser_method}({args});")
 
-    def _render_poll_function(self, lines: List[str], func: GeneratedFunction, 
+    def _render_poll_function(self, lines: List[str], func: GeneratedFunction,
                              iface: GeneratedInterface, function_namespace: dict) -> None:
         """Render poll function for async operations."""
         # Get the namespaced poll function name
@@ -803,10 +808,13 @@ class BrowserGlueGenerator:
         lines.append(" * Returns undefined if still pending, or the result if complete.")
         lines.append(" */")
 
-        result_type = "{ ok: true"
-        if not func.return_is_void:
-            result_type += f"; value: {func.ts_return_inner}"
-        result_type += " } | { ok: false; error: string } | undefined"
+        # For async functions, the result type depends on the original return type
+        # If original was void, poll result is just { ok: true } | { ok: false }
+        # If original had a value, poll result includes that value
+        if func.return_is_void or not func.ts_return_inner:
+            result_type = "{ ok: true } | { ok: false; error: string } | undefined"
+        else:
+            result_type = f"{{ ok: true; value: {func.ts_return_inner} }} | {{ ok: false; error: string }} | undefined"
 
         lines.append(f"export function {exported_poll_name}(requestId: bigint): {result_type} {{")
         lines.append("  const entry = _asyncHandles.get(requestId);")
