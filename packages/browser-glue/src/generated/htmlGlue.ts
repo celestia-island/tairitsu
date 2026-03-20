@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -4171,17 +4174,24 @@ export function HtmlMediaElementSetCrossOrigin(self: bigint, value: string | und
 /**
  * `get-network-state()` operation.
  */
-export function getNetworkState(self: bigint): number {
+export function getNetworkState(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.networkState;
+  return BigInt(obj.networkState);
 }
 
 /**
  * `get-preload()` operation.
  */
-export function getPreload(self: bigint): string {
+export function getPreload(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.preload;
+  const value = obj.preload;
+  switch (value) {
+    case '': return 0n;
+    case 'none': return 1n;
+    case 'metadata': return 2n;
+    case 'auto': return 3n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -4222,9 +4232,9 @@ export function canPlayType(self: bigint, type: string): bigint {
 /**
  * `get-ready-state()` operation.
  */
-export function HtmlMediaElementGetReadyState(self: bigint): number {
+export function HtmlMediaElementGetReadyState(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
-  return obj.readyState;
+  return BigInt(obj.readyState);
 }
 
 /**
@@ -5135,7 +5145,11 @@ export function textTrackCue(self: bigint, index: number): void {
  */
 export function getCueById(self: bigint, id: string): bigint | undefined {
   const obj = lookupTextTrackCueList(self);
-  return (obj as any).cueById ?? undefined;
+  const _callResult = (obj as any).cueById;
+  if (_callResult === null) return undefined;
+  const handle = _nextTextTrackCue++;
+  _textTrackCuehandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7549,7 +7563,7 @@ export function HtmlInputElementSelect(self: bigint): void {
 export function HtmlInputElementGetSelectionStart(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
   const value = obj.selectionStart;
-  return value !== undefined ? BigInt(value) : undefined;
+  return value != null ? BigInt(value) : undefined;
 }
 
 /**
@@ -7566,7 +7580,7 @@ export function HtmlInputElementSetSelectionStart(self: bigint, value: number | 
 export function HtmlInputElementGetSelectionEnd(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
   const value = obj.selectionEnd;
-  return value !== undefined ? BigInt(value) : undefined;
+  return value != null ? BigInt(value) : undefined;
 }
 
 /**
@@ -12422,7 +12436,10 @@ export function setEffectAllowed(self: bigint, value: string): void {
  */
 export function getItems(self: bigint): bigint {
   const obj = lookupDataTransfer(self);
-  return obj.items;
+  const _callResult = obj.items;
+  const handle = _nextDataTransferItemList++;
+  _dataTransferItemListhandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -12436,9 +12453,13 @@ export function setDragImage(self: bigint, image: bigint, x: number, y: number):
 /**
  * `get-types()` operation.
  */
-export function getTypes(self: bigint): (string)[] {
+export function getTypes(self: bigint): bigint {
   const obj = lookupDataTransfer(self);
-  return obj.types;
+  const value = obj.types;
+  switch (value) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -12470,7 +12491,10 @@ export function clearData(self: bigint, format: string | undefined): void {
  */
 export function DataTransferGetFiles(self: bigint): bigint {
   const obj = lookupDataTransfer(self);
-  return obj.files;
+  const _callResult = obj.files;
+  const handle = _nextFileList++;
+  _fileListhandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14151,7 +14175,10 @@ function lookupDOMParser(handle: bigint): DOMParser {
  */
 export function parseFromString(self: bigint, string: bigint, type: bigint): bigint {
   const obj = lookupDOMParser(self);
-  return obj.parseFromString(string, type);
+  const _callResult = obj.parseFromString(string, type);
+  const handle = _nextDocument++;
+  _documentHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -14320,7 +14347,7 @@ export function NavigatorLanguageGetLanguage(self: bigint): string {
  */
 export function getLanguages(self: bigint): (string)[] {
   const obj = lookupNavigatorLanguage(self);
-  return obj.languages;
+  return [...obj.languages];
 }
 
 // ---------------------------------------------------------------------------
@@ -14873,7 +14900,14 @@ export function MessageEventGetSource(self: bigint): bigint | undefined {
  */
 export function getPorts(self: bigint): (bigint)[] {
   const obj = lookupMessageEvent(self);
-  return obj.ports;
+  const _arr = obj.ports;
+  const _handles: bigint[] = [];
+  for (const item of _arr) {
+    const handle = _nextMessagePort++;
+    _messagePortHandles.set(handle, item);
+    _handles.push(handle);
+  }
+  return _handles;
 }
 
 /**

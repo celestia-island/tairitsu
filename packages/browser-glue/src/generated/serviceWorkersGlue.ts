@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -237,7 +240,7 @@ function lookupSwReg(handle: bigint): ServiceWorkerRegistration {
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): number {
+export function scope(handle: bigint): string {
   const obj = lookupSwReg(handle);
   return (obj as any).scope();
 }
@@ -272,7 +275,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (bigint)[]): void {
+export function postMessage(handle: bigint, message: bigint, transfer: (Uint8Array)[]): void {
   const obj = lookupSw(handle);
   obj.postMessage(message, transfer);
 }

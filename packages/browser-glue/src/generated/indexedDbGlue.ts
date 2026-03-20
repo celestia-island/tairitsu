@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -342,7 +345,7 @@ export function IdbObjectStoreGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbObjectStoreSetName(handle: bigint, value: boolean): void {
+export function IdbObjectStoreSetName(handle: bigint, value: string): void {
   const obj = lookupIdbStore(handle);
   obj.name = value;
 }
@@ -393,7 +396,7 @@ export function IdbIndexGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbIndexSetName(handle: bigint, value: bigint): void {
+export function IdbIndexSetName(handle: bigint, value: string): void {
   const obj = lookupIDBIndex(handle);
   obj.name = value;
 }
@@ -417,7 +420,7 @@ export function multiEntry(handle: bigint): boolean {
 /**
  * `unique()` operation.
  */
-export function unique(handle: bigint): string {
+export function unique(handle: bigint): boolean {
   const obj = lookupIDBIndex(handle);
   return (obj as any).unique();
 }

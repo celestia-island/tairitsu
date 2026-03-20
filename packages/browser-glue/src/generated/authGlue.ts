@@ -13,6 +13,9 @@
 // Custom type definitions
 // ---------------------------------------------------------------------------
 
+/** Type definition for DOMTokenListValue */
+export type DOMTokenListValue = string;
+
 /** Type definition for EventHandlerRecord */
 export type EventHandlerRecord = any;
 
@@ -365,7 +368,7 @@ function lookupCredentialsContainer(handle: bigint): CredentialsContainer {
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, options: CredentialRequestOptions | undefined): bigint {
+export function _get(self: bigint, options: any): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCredentialsContainer(self);
   const promise = obj.get(options)
@@ -441,7 +444,7 @@ export function pollStore(requestId: bigint): { ok: true; value: bigint } | { ok
  *
  * Async operation: returns request ID, poll with `pollCreate()`
  */
-export function create(self: bigint, options: CredentialCreationOptions | undefined): bigint {
+export function create(self: bigint, options: any): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCredentialsContainer(self);
   const promise = obj.create(options)
