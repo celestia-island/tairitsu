@@ -32,21 +32,21 @@ function getModule(handle: bigint): Module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): bigint {
+export function exports(moduleObject: bigint): (bigint)[] {
   return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): ((bigint)[])[] {
+export function imports(moduleObject: bigint): bigint {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): string {
+export function customSections(moduleObject: bigint, sectionName: number): (Uint8Array)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 

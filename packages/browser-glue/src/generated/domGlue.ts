@@ -2034,7 +2034,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
 /**
  * `accept-node()` operation.
  */
-export function acceptNode(self: bigint, node: bigint): number {
+export function acceptNode(self: bigint, node: bigint): string {
   const obj = getNodeFilter(self);
   return obj.acceptNode(node);
 }
@@ -2202,7 +2202,7 @@ export function getSingleNodeValue(self: bigint): bigint | undefined {
 /**
  * `get-invalid-iterator-state()` operation.
  */
-export function getInvalidIteratorState(self: bigint): bigint {
+export function getInvalidIteratorState(self: bigint): boolean {
   const obj = getXPathResult(self);
   return obj.invalidIteratorState;
 }
@@ -2210,7 +2210,7 @@ export function getInvalidIteratorState(self: bigint): bigint {
 /**
  * `get-snapshot-length()` operation.
  */
-export function getSnapshotLength(self: bigint): number {
+export function getSnapshotLength(self: bigint): string {
   const obj = getXPathResult(self);
   return obj.snapshotLength;
 }
@@ -2218,7 +2218,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): bigint {
+export function iterateNext(self: bigint): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2393,7 +2393,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): string {
+export function getParameter(self: bigint, namespaceUri: string, localName: bigint): string {
   const obj = getXsltProcessor(self);
   return obj.parameter;
 }
@@ -2401,7 +2401,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: bigi
 /**
  * `remove-parameter()` operation.
  */
-export function removeParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): void {
+export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
   const obj = getXsltProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }

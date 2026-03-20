@@ -45,7 +45,7 @@ function getWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): bigint {
   return WebSocket.connect(url, protocols);
 }
 
@@ -59,7 +59,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): bigint | undefined {
   return WebSocket.readyState(handle);
 }
 

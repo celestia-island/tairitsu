@@ -102,499 +102,499 @@ interface global-event-handlers {
     type global-event-handlers-handle = u64;
 
     /// `onanimationstart` attribute — getter.
-    get-onanimationstart: func(self: global-event-handlers-handle) -> u64;
+    get-onanimationstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onanimationstart` attribute — setter.
-    set-onanimationstart: func(self: global-event-handlers-handle, value: u64);
+    set-onanimationstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onanimationiteration` attribute — getter.
-    get-onanimationiteration: func(self: global-event-handlers-handle) -> u64;
+    get-onanimationiteration: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onanimationiteration` attribute — setter.
-    set-onanimationiteration: func(self: global-event-handlers-handle, value: u64);
+    set-onanimationiteration: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onanimationend` attribute — getter.
-    get-onanimationend: func(self: global-event-handlers-handle) -> u64;
+    get-onanimationend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onanimationend` attribute — setter.
-    set-onanimationend: func(self: global-event-handlers-handle, value: u64);
+    set-onanimationend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onanimationcancel` attribute — getter.
-    get-onanimationcancel: func(self: global-event-handlers-handle) -> u64;
+    get-onanimationcancel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onanimationcancel` attribute — setter.
-    set-onanimationcancel: func(self: global-event-handlers-handle, value: u64);
+    set-onanimationcancel: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontransitionrun` attribute — getter.
-    get-ontransitionrun: func(self: global-event-handlers-handle) -> u64;
+    get-ontransitionrun: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontransitionrun` attribute — setter.
-    set-ontransitionrun: func(self: global-event-handlers-handle, value: u64);
+    set-ontransitionrun: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontransitionstart` attribute — getter.
-    get-ontransitionstart: func(self: global-event-handlers-handle) -> u64;
+    get-ontransitionstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontransitionstart` attribute — setter.
-    set-ontransitionstart: func(self: global-event-handlers-handle, value: u64);
+    set-ontransitionstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontransitionend` attribute — getter.
-    get-ontransitionend: func(self: global-event-handlers-handle) -> u64;
+    get-ontransitionend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontransitionend` attribute — setter.
-    set-ontransitionend: func(self: global-event-handlers-handle, value: u64);
+    set-ontransitionend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontransitioncancel` attribute — getter.
-    get-ontransitioncancel: func(self: global-event-handlers-handle) -> u64;
+    get-ontransitioncancel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontransitioncancel` attribute — setter.
-    set-ontransitioncancel: func(self: global-event-handlers-handle, value: u64);
+    set-ontransitioncancel: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onabort` attribute — getter.
-    get-onabort: func(self: global-event-handlers-handle) -> u64;
+    get-onabort: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onabort` attribute — setter.
-    set-onabort: func(self: global-event-handlers-handle, value: u64);
+    set-onabort: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onauxclick` attribute — getter.
-    get-onauxclick: func(self: global-event-handlers-handle) -> u64;
+    get-onauxclick: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onauxclick` attribute — setter.
-    set-onauxclick: func(self: global-event-handlers-handle, value: u64);
+    set-onauxclick: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onbeforeinput` attribute — getter.
-    get-onbeforeinput: func(self: global-event-handlers-handle) -> u64;
+    get-onbeforeinput: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onbeforeinput` attribute — setter.
-    set-onbeforeinput: func(self: global-event-handlers-handle, value: u64);
+    set-onbeforeinput: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onbeforematch` attribute — getter.
-    get-onbeforematch: func(self: global-event-handlers-handle) -> u64;
+    get-onbeforematch: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onbeforematch` attribute — setter.
-    set-onbeforematch: func(self: global-event-handlers-handle, value: u64);
+    set-onbeforematch: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onbeforetoggle` attribute — getter.
-    get-onbeforetoggle: func(self: global-event-handlers-handle) -> u64;
+    get-onbeforetoggle: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onbeforetoggle` attribute — setter.
-    set-onbeforetoggle: func(self: global-event-handlers-handle, value: u64);
+    set-onbeforetoggle: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onblur` attribute — getter.
-    get-onblur: func(self: global-event-handlers-handle) -> u64;
+    get-onblur: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onblur` attribute — setter.
-    set-onblur: func(self: global-event-handlers-handle, value: u64);
+    set-onblur: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncancel` attribute — getter.
-    get-oncancel: func(self: global-event-handlers-handle) -> u64;
+    get-oncancel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncancel` attribute — setter.
-    set-oncancel: func(self: global-event-handlers-handle, value: u64);
+    set-oncancel: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncanplay` attribute — getter.
-    get-oncanplay: func(self: global-event-handlers-handle) -> u64;
+    get-oncanplay: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncanplay` attribute — setter.
-    set-oncanplay: func(self: global-event-handlers-handle, value: u64);
+    set-oncanplay: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncanplaythrough` attribute — getter.
-    get-oncanplaythrough: func(self: global-event-handlers-handle) -> u64;
+    get-oncanplaythrough: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncanplaythrough` attribute — setter.
-    set-oncanplaythrough: func(self: global-event-handlers-handle, value: u64);
+    set-oncanplaythrough: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: global-event-handlers-handle) -> u64;
+    get-onchange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: global-event-handlers-handle, value: u64);
+    set-onchange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onclick` attribute — getter.
-    get-onclick: func(self: global-event-handlers-handle) -> u64;
+    get-onclick: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onclick` attribute — setter.
-    set-onclick: func(self: global-event-handlers-handle, value: u64);
+    set-onclick: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: global-event-handlers-handle) -> u64;
+    get-onclose: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: global-event-handlers-handle, value: u64);
+    set-onclose: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncommand` attribute — getter.
-    get-oncommand: func(self: global-event-handlers-handle) -> u64;
+    get-oncommand: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncommand` attribute — setter.
-    set-oncommand: func(self: global-event-handlers-handle, value: u64);
+    set-oncommand: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncontextlost` attribute — getter.
-    get-oncontextlost: func(self: global-event-handlers-handle) -> u64;
+    get-oncontextlost: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncontextlost` attribute — setter.
-    set-oncontextlost: func(self: global-event-handlers-handle, value: u64);
+    set-oncontextlost: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncontextmenu` attribute — getter.
-    get-oncontextmenu: func(self: global-event-handlers-handle) -> u64;
+    get-oncontextmenu: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncontextmenu` attribute — setter.
-    set-oncontextmenu: func(self: global-event-handlers-handle, value: u64);
+    set-oncontextmenu: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncontextrestored` attribute — getter.
-    get-oncontextrestored: func(self: global-event-handlers-handle) -> u64;
+    get-oncontextrestored: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncontextrestored` attribute — setter.
-    set-oncontextrestored: func(self: global-event-handlers-handle, value: u64);
+    set-oncontextrestored: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncopy` attribute — getter.
-    get-oncopy: func(self: global-event-handlers-handle) -> u64;
+    get-oncopy: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncopy` attribute — setter.
-    set-oncopy: func(self: global-event-handlers-handle, value: u64);
+    set-oncopy: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncuechange` attribute — getter.
-    get-oncuechange: func(self: global-event-handlers-handle) -> u64;
+    get-oncuechange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncuechange` attribute — setter.
-    set-oncuechange: func(self: global-event-handlers-handle, value: u64);
+    set-oncuechange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oncut` attribute — getter.
-    get-oncut: func(self: global-event-handlers-handle) -> u64;
+    get-oncut: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oncut` attribute — setter.
-    set-oncut: func(self: global-event-handlers-handle, value: u64);
+    set-oncut: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondblclick` attribute — getter.
-    get-ondblclick: func(self: global-event-handlers-handle) -> u64;
+    get-ondblclick: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondblclick` attribute — setter.
-    set-ondblclick: func(self: global-event-handlers-handle, value: u64);
+    set-ondblclick: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondrag` attribute — getter.
-    get-ondrag: func(self: global-event-handlers-handle) -> u64;
+    get-ondrag: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondrag` attribute — setter.
-    set-ondrag: func(self: global-event-handlers-handle, value: u64);
+    set-ondrag: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondragend` attribute — getter.
-    get-ondragend: func(self: global-event-handlers-handle) -> u64;
+    get-ondragend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondragend` attribute — setter.
-    set-ondragend: func(self: global-event-handlers-handle, value: u64);
+    set-ondragend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondragenter` attribute — getter.
-    get-ondragenter: func(self: global-event-handlers-handle) -> u64;
+    get-ondragenter: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondragenter` attribute — setter.
-    set-ondragenter: func(self: global-event-handlers-handle, value: u64);
+    set-ondragenter: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondragleave` attribute — getter.
-    get-ondragleave: func(self: global-event-handlers-handle) -> u64;
+    get-ondragleave: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondragleave` attribute — setter.
-    set-ondragleave: func(self: global-event-handlers-handle, value: u64);
+    set-ondragleave: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondragover` attribute — getter.
-    get-ondragover: func(self: global-event-handlers-handle) -> u64;
+    get-ondragover: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondragover` attribute — setter.
-    set-ondragover: func(self: global-event-handlers-handle, value: u64);
+    set-ondragover: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondragstart` attribute — getter.
-    get-ondragstart: func(self: global-event-handlers-handle) -> u64;
+    get-ondragstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondragstart` attribute — setter.
-    set-ondragstart: func(self: global-event-handlers-handle, value: u64);
+    set-ondragstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondrop` attribute — getter.
-    get-ondrop: func(self: global-event-handlers-handle) -> u64;
+    get-ondrop: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondrop` attribute — setter.
-    set-ondrop: func(self: global-event-handlers-handle, value: u64);
+    set-ondrop: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ondurationchange` attribute — getter.
-    get-ondurationchange: func(self: global-event-handlers-handle) -> u64;
+    get-ondurationchange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ondurationchange` attribute — setter.
-    set-ondurationchange: func(self: global-event-handlers-handle, value: u64);
+    set-ondurationchange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onemptied` attribute — getter.
-    get-onemptied: func(self: global-event-handlers-handle) -> u64;
+    get-onemptied: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onemptied` attribute — setter.
-    set-onemptied: func(self: global-event-handlers-handle, value: u64);
+    set-onemptied: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onended` attribute — getter.
-    get-onended: func(self: global-event-handlers-handle) -> u64;
+    get-onended: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onended` attribute — setter.
-    set-onended: func(self: global-event-handlers-handle, value: u64);
+    set-onended: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: global-event-handlers-handle) -> u64;
+    get-onerror: func(self: global-event-handlers-handle) -> on-error-event-handler-record;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: global-event-handlers-handle, value: u64);
+    set-onerror: func(self: global-event-handlers-handle, value: on-error-event-handler-record);
 
     /// `onfocus` attribute — getter.
-    get-onfocus: func(self: global-event-handlers-handle) -> u64;
+    get-onfocus: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onfocus` attribute — setter.
-    set-onfocus: func(self: global-event-handlers-handle, value: u64);
+    set-onfocus: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onformdata` attribute — getter.
-    get-onformdata: func(self: global-event-handlers-handle) -> u64;
+    get-onformdata: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onformdata` attribute — setter.
-    set-onformdata: func(self: global-event-handlers-handle, value: u64);
+    set-onformdata: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oninput` attribute — getter.
-    get-oninput: func(self: global-event-handlers-handle) -> u64;
+    get-oninput: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oninput` attribute — setter.
-    set-oninput: func(self: global-event-handlers-handle, value: u64);
+    set-oninput: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `oninvalid` attribute — getter.
-    get-oninvalid: func(self: global-event-handlers-handle) -> u64;
+    get-oninvalid: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `oninvalid` attribute — setter.
-    set-oninvalid: func(self: global-event-handlers-handle, value: u64);
+    set-oninvalid: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onkeydown` attribute — getter.
-    get-onkeydown: func(self: global-event-handlers-handle) -> u64;
+    get-onkeydown: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onkeydown` attribute — setter.
-    set-onkeydown: func(self: global-event-handlers-handle, value: u64);
+    set-onkeydown: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onkeypress` attribute — getter.
-    get-onkeypress: func(self: global-event-handlers-handle) -> u64;
+    get-onkeypress: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onkeypress` attribute — setter.
-    set-onkeypress: func(self: global-event-handlers-handle, value: u64);
+    set-onkeypress: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onkeyup` attribute — getter.
-    get-onkeyup: func(self: global-event-handlers-handle) -> u64;
+    get-onkeyup: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onkeyup` attribute — setter.
-    set-onkeyup: func(self: global-event-handlers-handle, value: u64);
+    set-onkeyup: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onload` attribute — getter.
-    get-onload: func(self: global-event-handlers-handle) -> u64;
+    get-onload: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onload` attribute — setter.
-    set-onload: func(self: global-event-handlers-handle, value: u64);
+    set-onload: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onloadeddata` attribute — getter.
-    get-onloadeddata: func(self: global-event-handlers-handle) -> u64;
+    get-onloadeddata: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onloadeddata` attribute — setter.
-    set-onloadeddata: func(self: global-event-handlers-handle, value: u64);
+    set-onloadeddata: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onloadedmetadata` attribute — getter.
-    get-onloadedmetadata: func(self: global-event-handlers-handle) -> u64;
+    get-onloadedmetadata: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onloadedmetadata` attribute — setter.
-    set-onloadedmetadata: func(self: global-event-handlers-handle, value: u64);
+    set-onloadedmetadata: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onloadstart` attribute — getter.
-    get-onloadstart: func(self: global-event-handlers-handle) -> u64;
+    get-onloadstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onloadstart` attribute — setter.
-    set-onloadstart: func(self: global-event-handlers-handle, value: u64);
+    set-onloadstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmousedown` attribute — getter.
-    get-onmousedown: func(self: global-event-handlers-handle) -> u64;
+    get-onmousedown: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmousedown` attribute — setter.
-    set-onmousedown: func(self: global-event-handlers-handle, value: u64);
+    set-onmousedown: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmouseenter` attribute — getter.
-    get-onmouseenter: func(self: global-event-handlers-handle) -> u64;
+    get-onmouseenter: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmouseenter` attribute — setter.
-    set-onmouseenter: func(self: global-event-handlers-handle, value: u64);
+    set-onmouseenter: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmouseleave` attribute — getter.
-    get-onmouseleave: func(self: global-event-handlers-handle) -> u64;
+    get-onmouseleave: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmouseleave` attribute — setter.
-    set-onmouseleave: func(self: global-event-handlers-handle, value: u64);
+    set-onmouseleave: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmousemove` attribute — getter.
-    get-onmousemove: func(self: global-event-handlers-handle) -> u64;
+    get-onmousemove: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmousemove` attribute — setter.
-    set-onmousemove: func(self: global-event-handlers-handle, value: u64);
+    set-onmousemove: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmouseout` attribute — getter.
-    get-onmouseout: func(self: global-event-handlers-handle) -> u64;
+    get-onmouseout: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmouseout` attribute — setter.
-    set-onmouseout: func(self: global-event-handlers-handle, value: u64);
+    set-onmouseout: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmouseover` attribute — getter.
-    get-onmouseover: func(self: global-event-handlers-handle) -> u64;
+    get-onmouseover: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmouseover` attribute — setter.
-    set-onmouseover: func(self: global-event-handlers-handle, value: u64);
+    set-onmouseover: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onmouseup` attribute — getter.
-    get-onmouseup: func(self: global-event-handlers-handle) -> u64;
+    get-onmouseup: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onmouseup` attribute — setter.
-    set-onmouseup: func(self: global-event-handlers-handle, value: u64);
+    set-onmouseup: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpaste` attribute — getter.
-    get-onpaste: func(self: global-event-handlers-handle) -> u64;
+    get-onpaste: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpaste` attribute — setter.
-    set-onpaste: func(self: global-event-handlers-handle, value: u64);
+    set-onpaste: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpause` attribute — getter.
-    get-onpause: func(self: global-event-handlers-handle) -> u64;
+    get-onpause: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpause` attribute — setter.
-    set-onpause: func(self: global-event-handlers-handle, value: u64);
+    set-onpause: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onplay` attribute — getter.
-    get-onplay: func(self: global-event-handlers-handle) -> u64;
+    get-onplay: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onplay` attribute — setter.
-    set-onplay: func(self: global-event-handlers-handle, value: u64);
+    set-onplay: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onplaying` attribute — getter.
-    get-onplaying: func(self: global-event-handlers-handle) -> u64;
+    get-onplaying: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onplaying` attribute — setter.
-    set-onplaying: func(self: global-event-handlers-handle, value: u64);
+    set-onplaying: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onprogress` attribute — getter.
-    get-onprogress: func(self: global-event-handlers-handle) -> u64;
+    get-onprogress: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onprogress` attribute — setter.
-    set-onprogress: func(self: global-event-handlers-handle, value: u64);
+    set-onprogress: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onratechange` attribute — getter.
-    get-onratechange: func(self: global-event-handlers-handle) -> u64;
+    get-onratechange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onratechange` attribute — setter.
-    set-onratechange: func(self: global-event-handlers-handle, value: u64);
+    set-onratechange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onreset` attribute — getter.
-    get-onreset: func(self: global-event-handlers-handle) -> u64;
+    get-onreset: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onreset` attribute — setter.
-    set-onreset: func(self: global-event-handlers-handle, value: u64);
+    set-onreset: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onresize` attribute — getter.
-    get-onresize: func(self: global-event-handlers-handle) -> u64;
+    get-onresize: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onresize` attribute — setter.
-    set-onresize: func(self: global-event-handlers-handle, value: u64);
+    set-onresize: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onscroll` attribute — getter.
-    get-onscroll: func(self: global-event-handlers-handle) -> u64;
+    get-onscroll: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onscroll` attribute — setter.
-    set-onscroll: func(self: global-event-handlers-handle, value: u64);
+    set-onscroll: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onscrollend` attribute — getter.
-    get-onscrollend: func(self: global-event-handlers-handle) -> u64;
+    get-onscrollend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onscrollend` attribute — setter.
-    set-onscrollend: func(self: global-event-handlers-handle, value: u64);
+    set-onscrollend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onsecuritypolicyviolation` attribute — getter.
-    get-onsecuritypolicyviolation: func(self: global-event-handlers-handle) -> u64;
+    get-onsecuritypolicyviolation: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onsecuritypolicyviolation` attribute — setter.
-    set-onsecuritypolicyviolation: func(self: global-event-handlers-handle, value: u64);
+    set-onsecuritypolicyviolation: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onseeked` attribute — getter.
-    get-onseeked: func(self: global-event-handlers-handle) -> u64;
+    get-onseeked: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onseeked` attribute — setter.
-    set-onseeked: func(self: global-event-handlers-handle, value: u64);
+    set-onseeked: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onseeking` attribute — getter.
-    get-onseeking: func(self: global-event-handlers-handle) -> u64;
+    get-onseeking: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onseeking` attribute — setter.
-    set-onseeking: func(self: global-event-handlers-handle, value: u64);
+    set-onseeking: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onselect` attribute — getter.
-    get-onselect: func(self: global-event-handlers-handle) -> u64;
+    get-onselect: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onselect` attribute — setter.
-    set-onselect: func(self: global-event-handlers-handle, value: u64);
+    set-onselect: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onslotchange` attribute — getter.
-    get-onslotchange: func(self: global-event-handlers-handle) -> u64;
+    get-onslotchange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onslotchange` attribute — setter.
-    set-onslotchange: func(self: global-event-handlers-handle, value: u64);
+    set-onslotchange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onstalled` attribute — getter.
-    get-onstalled: func(self: global-event-handlers-handle) -> u64;
+    get-onstalled: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onstalled` attribute — setter.
-    set-onstalled: func(self: global-event-handlers-handle, value: u64);
+    set-onstalled: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onsubmit` attribute — getter.
-    get-onsubmit: func(self: global-event-handlers-handle) -> u64;
+    get-onsubmit: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onsubmit` attribute — setter.
-    set-onsubmit: func(self: global-event-handlers-handle, value: u64);
+    set-onsubmit: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onsuspend` attribute — getter.
-    get-onsuspend: func(self: global-event-handlers-handle) -> u64;
+    get-onsuspend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onsuspend` attribute — setter.
-    set-onsuspend: func(self: global-event-handlers-handle, value: u64);
+    set-onsuspend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontimeupdate` attribute — getter.
-    get-ontimeupdate: func(self: global-event-handlers-handle) -> u64;
+    get-ontimeupdate: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontimeupdate` attribute — setter.
-    set-ontimeupdate: func(self: global-event-handlers-handle, value: u64);
+    set-ontimeupdate: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontoggle` attribute — getter.
-    get-ontoggle: func(self: global-event-handlers-handle) -> u64;
+    get-ontoggle: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontoggle` attribute — setter.
-    set-ontoggle: func(self: global-event-handlers-handle, value: u64);
+    set-ontoggle: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onvolumechange` attribute — getter.
-    get-onvolumechange: func(self: global-event-handlers-handle) -> u64;
+    get-onvolumechange: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onvolumechange` attribute — setter.
-    set-onvolumechange: func(self: global-event-handlers-handle, value: u64);
+    set-onvolumechange: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwaiting` attribute — getter.
-    get-onwaiting: func(self: global-event-handlers-handle) -> u64;
+    get-onwaiting: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwaiting` attribute — setter.
-    set-onwaiting: func(self: global-event-handlers-handle, value: u64);
+    set-onwaiting: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwebkitanimationend` attribute — getter.
-    get-onwebkitanimationend: func(self: global-event-handlers-handle) -> u64;
+    get-onwebkitanimationend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwebkitanimationend` attribute — setter.
-    set-onwebkitanimationend: func(self: global-event-handlers-handle, value: u64);
+    set-onwebkitanimationend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwebkitanimationiteration` attribute — getter.
-    get-onwebkitanimationiteration: func(self: global-event-handlers-handle) -> u64;
+    get-onwebkitanimationiteration: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwebkitanimationiteration` attribute — setter.
-    set-onwebkitanimationiteration: func(self: global-event-handlers-handle, value: u64);
+    set-onwebkitanimationiteration: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwebkitanimationstart` attribute — getter.
-    get-onwebkitanimationstart: func(self: global-event-handlers-handle) -> u64;
+    get-onwebkitanimationstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwebkitanimationstart` attribute — setter.
-    set-onwebkitanimationstart: func(self: global-event-handlers-handle, value: u64);
+    set-onwebkitanimationstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwebkittransitionend` attribute — getter.
-    get-onwebkittransitionend: func(self: global-event-handlers-handle) -> u64;
+    get-onwebkittransitionend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwebkittransitionend` attribute — setter.
-    set-onwebkittransitionend: func(self: global-event-handlers-handle, value: u64);
+    set-onwebkittransitionend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onwheel` attribute — getter.
-    get-onwheel: func(self: global-event-handlers-handle) -> u64;
+    get-onwheel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onwheel` attribute — setter.
-    set-onwheel: func(self: global-event-handlers-handle, value: u64);
+    set-onwheel: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerover` attribute — getter.
-    get-onpointerover: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerover: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerover` attribute — setter.
-    set-onpointerover: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerover: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerenter` attribute — getter.
-    get-onpointerenter: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerenter: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerenter` attribute — setter.
-    set-onpointerenter: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerenter: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerdown` attribute — getter.
-    get-onpointerdown: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerdown: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerdown` attribute — setter.
-    set-onpointerdown: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerdown: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointermove` attribute — getter.
-    get-onpointermove: func(self: global-event-handlers-handle) -> u64;
+    get-onpointermove: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointermove` attribute — setter.
-    set-onpointermove: func(self: global-event-handlers-handle, value: u64);
+    set-onpointermove: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerrawupdate` attribute — getter.
-    get-onpointerrawupdate: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerrawupdate: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerrawupdate` attribute — setter.
-    set-onpointerrawupdate: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerrawupdate: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerup` attribute — getter.
-    get-onpointerup: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerup: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerup` attribute — setter.
-    set-onpointerup: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerup: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointercancel` attribute — getter.
-    get-onpointercancel: func(self: global-event-handlers-handle) -> u64;
+    get-onpointercancel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointercancel` attribute — setter.
-    set-onpointercancel: func(self: global-event-handlers-handle, value: u64);
+    set-onpointercancel: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerout` attribute — getter.
-    get-onpointerout: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerout: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerout` attribute — setter.
-    set-onpointerout: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerout: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onpointerleave` attribute — getter.
-    get-onpointerleave: func(self: global-event-handlers-handle) -> u64;
+    get-onpointerleave: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onpointerleave` attribute — setter.
-    set-onpointerleave: func(self: global-event-handlers-handle, value: u64);
+    set-onpointerleave: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ongotpointercapture` attribute — getter.
-    get-ongotpointercapture: func(self: global-event-handlers-handle) -> u64;
+    get-ongotpointercapture: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ongotpointercapture` attribute — setter.
-    set-ongotpointercapture: func(self: global-event-handlers-handle, value: u64);
+    set-ongotpointercapture: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `onlostpointercapture` attribute — getter.
-    get-onlostpointercapture: func(self: global-event-handlers-handle) -> u64;
+    get-onlostpointercapture: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `onlostpointercapture` attribute — setter.
-    set-onlostpointercapture: func(self: global-event-handlers-handle, value: u64);
+    set-onlostpointercapture: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontouchstart` attribute — getter.
-    get-ontouchstart: func(self: global-event-handlers-handle) -> u64;
+    get-ontouchstart: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontouchstart` attribute — setter.
-    set-ontouchstart: func(self: global-event-handlers-handle, value: u64);
+    set-ontouchstart: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontouchend` attribute — getter.
-    get-ontouchend: func(self: global-event-handlers-handle) -> u64;
+    get-ontouchend: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontouchend` attribute — setter.
-    set-ontouchend: func(self: global-event-handlers-handle, value: u64);
+    set-ontouchend: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontouchmove` attribute — getter.
-    get-ontouchmove: func(self: global-event-handlers-handle) -> u64;
+    get-ontouchmove: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontouchmove` attribute — setter.
-    set-ontouchmove: func(self: global-event-handlers-handle, value: u64);
+    set-ontouchmove: func(self: global-event-handlers-handle, value: event-handler-record);
 
     /// `ontouchcancel` attribute — getter.
-    get-ontouchcancel: func(self: global-event-handlers-handle) -> u64;
+    get-ontouchcancel: func(self: global-event-handlers-handle) -> event-handler-record;
     /// `ontouchcancel` attribute — setter.
-    set-ontouchcancel: func(self: global-event-handlers-handle, value: u64);
+    set-ontouchcancel: func(self: global-event-handlers-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `CSSConditionRule`
@@ -1039,9 +1039,9 @@ interface media-query-list {
     remove-listener: func(self: media-query-list-handle, callback: option<u64>);
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: media-query-list-handle) -> u64;
+    get-onchange: func(self: media-query-list-handle) -> event-handler-record;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: media-query-list-handle, value: u64);
+    set-onchange: func(self: media-query-list-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `MediaQueryListEvent`
@@ -1198,14 +1198,14 @@ interface document {
     exit-fullscreen: func(self: document-handle) -> u64;
 
     /// `onfullscreenchange` attribute — getter.
-    get-onfullscreenchange: func(self: document-handle) -> u64;
+    get-onfullscreenchange: func(self: document-handle) -> event-handler-record;
     /// `onfullscreenchange` attribute — setter.
-    set-onfullscreenchange: func(self: document-handle, value: u64);
+    set-onfullscreenchange: func(self: document-handle, value: event-handler-record);
 
     /// `onfullscreenerror` attribute — getter.
-    get-onfullscreenerror: func(self: document-handle) -> u64;
+    get-onfullscreenerror: func(self: document-handle) -> event-handler-record;
     /// `onfullscreenerror` attribute — setter.
-    set-onfullscreenerror: func(self: document-handle, value: u64);
+    set-onfullscreenerror: func(self: document-handle, value: event-handler-record);
 
     /// `parseHTMLUnsafe()` operation.
     parse-html-unsafe: func(html: u64) -> u64;
@@ -1325,14 +1325,14 @@ interface document {
     get-visibility-state: func(self: document-handle) -> u64;
 
     /// `onreadystatechange` attribute — getter.
-    get-onreadystatechange: func(self: document-handle) -> u64;
+    get-onreadystatechange: func(self: document-handle) -> event-handler-record;
     /// `onreadystatechange` attribute — setter.
-    set-onreadystatechange: func(self: document-handle, value: u64);
+    set-onreadystatechange: func(self: document-handle, value: event-handler-record);
 
     /// `onvisibilitychange` attribute — getter.
-    get-onvisibilitychange: func(self: document-handle) -> u64;
+    get-onvisibilitychange: func(self: document-handle) -> event-handler-record;
     /// `onvisibilitychange` attribute — setter.
-    set-onvisibilitychange: func(self: document-handle, value: u64);
+    set-onvisibilitychange: func(self: document-handle, value: event-handler-record);
 
     /// `fgColor` attribute — getter.
     get-fg-color: func(self: document-handle) -> string;
@@ -1570,14 +1570,14 @@ interface element {
     request-fullscreen: func(self: element-handle, options: option<u64>) -> u64;
 
     /// `onfullscreenchange` attribute — getter.
-    get-onfullscreenchange: func(self: element-handle) -> u64;
+    get-onfullscreenchange: func(self: element-handle) -> event-handler-record;
     /// `onfullscreenchange` attribute — setter.
-    set-onfullscreenchange: func(self: element-handle, value: u64);
+    set-onfullscreenchange: func(self: element-handle, value: event-handler-record);
 
     /// `onfullscreenerror` attribute — getter.
-    get-onfullscreenerror: func(self: element-handle) -> u64;
+    get-onfullscreenerror: func(self: element-handle) -> event-handler-record;
     /// `onfullscreenerror` attribute — setter.
-    set-onfullscreenerror: func(self: element-handle, value: u64);
+    set-onfullscreenerror: func(self: element-handle, value: event-handler-record);
 
     /// `setHTMLUnsafe()` operation.
     set-html-unsafe: func(self: element-handle, html: u64);
@@ -2061,19 +2061,19 @@ interface visual-viewport {
     get-scale: func(self: visual-viewport-handle) -> f64;
 
     /// `onresize` attribute — getter.
-    get-onresize: func(self: visual-viewport-handle) -> u64;
+    get-onresize: func(self: visual-viewport-handle) -> event-handler-record;
     /// `onresize` attribute — setter.
-    set-onresize: func(self: visual-viewport-handle, value: u64);
+    set-onresize: func(self: visual-viewport-handle, value: event-handler-record);
 
     /// `onscroll` attribute — getter.
-    get-onscroll: func(self: visual-viewport-handle) -> u64;
+    get-onscroll: func(self: visual-viewport-handle) -> event-handler-record;
     /// `onscroll` attribute — setter.
-    set-onscroll: func(self: visual-viewport-handle, value: u64);
+    set-onscroll: func(self: visual-viewport-handle, value: event-handler-record);
 
     /// `onscrollend` attribute — getter.
-    get-onscrollend: func(self: visual-viewport-handle) -> u64;
+    get-onscrollend: func(self: visual-viewport-handle) -> event-handler-record;
     /// `onscrollend` attribute — setter.
-    set-onscrollend: func(self: visual-viewport-handle, value: u64);
+    set-onscrollend: func(self: visual-viewport-handle, value: event-handler-record);
 }
 
 /// WebIDL interface: `MediaList`

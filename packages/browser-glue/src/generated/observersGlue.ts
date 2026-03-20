@@ -32,7 +32,7 @@ function getIntersectionObserver(handle: bigint): IntersectionObserver {
 /**
  * `get-root()` operation.
  */
-export function getRoot(self: bigint): bigint | undefined {
+export function getRoot(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.root ?? undefined;
 }
@@ -40,7 +40,7 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): string {
+export function getRootMargin(self: bigint): number {
   const obj = getIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -72,7 +72,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): boolean {
+export function getTrackVisibility(self: bigint): bigint {
   const obj = getIntersectionObserver(self);
   return obj.trackVisibility;
 }
@@ -104,7 +104,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): (bigint)[] {
+export function takeRecords(self: bigint): (string)[] {
   const obj = getIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -132,7 +132,7 @@ function getIntersectionObserverEntry(handle: bigint): IntersectionObserverEntry
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): number {
+export function getTime(self: bigint): boolean {
   const obj = getIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -140,7 +140,7 @@ export function getTime(self: bigint): number {
 /**
  * `get-root-bounds()` operation.
  */
-export function getRootBounds(self: bigint): boolean {
+export function getRootBounds(self: bigint): bigint | undefined {
   const obj = getIntersectionObserverEntry(self);
   return obj.rootBounds ?? undefined;
 }

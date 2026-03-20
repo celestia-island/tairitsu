@@ -45,7 +45,7 @@ function getWebSocket(handle: bigint): WebSocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): bigint {
+export function getUrl(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.url;
 }
@@ -53,7 +53,7 @@ export function getUrl(self: bigint): bigint {
 /**
  * `get-ready-state()` operation.
  */
-export function getReadyState(self: bigint): number {
+export function getReadyState(self: bigint): bigint | undefined {
   const obj = getWebSocket(self);
   return obj.readyState;
 }
@@ -77,7 +77,7 @@ export function getOnopen(self: bigint): bigint {
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: bigint | undefined): void {
+export function setOnopen(self: bigint, value: string): void {
   const obj = getWebSocket(self);
   obj.onopen = value;
 }
@@ -85,7 +85,7 @@ export function setOnopen(self: bigint, value: bigint | undefined): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): string | undefined {
+export function getOnerror(self: bigint): number {
   const obj = getWebSocket(self);
   return obj.onerror;
 }
@@ -117,7 +117,7 @@ export function setOnclose(self: bigint, value: bigint): void {
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): bigint | undefined {
+export function getExtensions(self: bigint): string {
   const obj = getWebSocket(self);
   return obj.extensions;
 }
@@ -135,7 +135,7 @@ export function getProtocol(self: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(self: bigint, code: number | undefined, reason: bigint): bigint {
+export function close(self: bigint, code: number | undefined, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getWebSocket(self);
   const promise = obj.close(code, reason)
@@ -195,7 +195,7 @@ export function getBinaryType(self: bigint): bigint {
 /**
  * `set-binary-type()` operation.
  */
-export function setBinaryType(self: bigint, value: bigint): void {
+export function setBinaryType(self: bigint, value: string): void {
   const obj = getWebSocket(self);
   obj.binaryType = value;
 }

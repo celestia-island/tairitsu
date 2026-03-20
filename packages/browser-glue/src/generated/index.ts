@@ -10,70 +10,16 @@
  *
  * ## Package layout
  *
- * - `./auth` — `tairitsu-browser:auth` (5 interfaces)
- * - `./canvas` — `tairitsu-browser:canvas` (20 interfaces)
- * - `./crypto` — `tairitsu-browser:crypto` (3 interfaces)
  * - `./css` — `tairitsu-browser:css` (44 interfaces)
- * - `./device` — `tairitsu-browser:device` (12 interfaces)
- * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
- * - `./events` — `tairitsu-browser:events` (15 interfaces)
- * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
- * - `./file-api` — `tairitsu-browser:file-api` (2 interfaces)
- * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
- * - `./html` — `tairitsu-browser:html` (1 interfaces)
- * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
- * - `./media` — `tairitsu-browser:media` (29 interfaces)
- * - `./notifications` — `tairitsu-browser:notifications` (4 interfaces)
- * - `./observers` — `tairitsu-browser:observers` (5 interfaces)
- * - `./payments` — `tairitsu-browser:payments` (4 interfaces)
- * - `./performance` — `tairitsu-browser:performance` (11 interfaces)
- * - `./permissions` — `tairitsu-browser:permissions` (2 interfaces)
- * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
- * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
- * - `./storage` — `tairitsu-browser:storage` (2 interfaces)
- * - `./url` — `tairitsu-browser:url` (2 interfaces)
- * - `./wasm` — `tairitsu-browser:wasm` (6 interfaces)
- * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
- * - `./webrtc` — `tairitsu-browser:webrtc` (20 interfaces)
- * - `./websocket` — `tairitsu-browser:websocket` (2 interfaces)
- * - `./websockets` — `tairitsu-browser:websockets` (1 interfaces)
- * - `./workers` — `tairitsu-browser:workers` (12 interfaces)
  */
 
 // Re-export all generated modules
-export * as auth from "./authGlue";
-export * as canvas from "./canvasGlue";
-export * as crypto from "./cryptoGlue";
 export * as css from "./cssGlue";
-export * as device from "./deviceGlue";
-export * as dom from "./domGlue";
-export * as events from "./eventsGlue";
-export * as fetch from "./fetchGlue";
-export * as fileApi from "./fileApiGlue";
-export * as geolocation from "./geolocationGlue";
-export * as html from "./htmlGlue";
-export * as indexedDb from "./indexedDbGlue";
-export * as media from "./mediaGlue";
-export * as notifications from "./notificationsGlue";
-export * as observers from "./observersGlue";
-export * as payments from "./paymentsGlue";
-export * as performance from "./performanceGlue";
-export * as permissions from "./permissionsGlue";
-export * as resizeObserver from "./resizeObserverGlue";
-export * as serviceWorkers from "./serviceWorkersGlue";
-export * as storage from "./storageGlue";
-export * as url from "./urlGlue";
-export * as wasm from "./wasmGlue";
-export * as webAnimations from "./webAnimationsGlue";
-export * as webrtc from "./webrtcGlue";
-export * as websocket from "./websocketGlue";
-export * as websockets from "./websocketsGlue";
-export * as workers from "./workersGlue";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 28,
-  totalInterfaces: 273,
-  totalFunctions: 2496,
-  generatedAt: "2026-03-20T12:27:51.796251",
+  totalDomains: 1,
+  totalInterfaces: 44,
+  totalFunctions: 765,
+  generatedAt: "2026-03-20T13:20:21.224868",
 };

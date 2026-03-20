@@ -336,7 +336,7 @@ export function getAncestorOrigins(self: bigint): (string)[] {
 /**
  * `focus()` operation.
  */
-export function focus(self: bigint): string {
+export function focus(self: bigint): bigint {
   const obj = getWindowClient(self);
   return obj.focus();
 }
@@ -344,7 +344,7 @@ export function focus(self: bigint): string {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: string): bigint {
+export function navigate(self: bigint, url: string): string {
   const obj = getWindowClient(self);
   return obj.navigate(url);
 }
@@ -580,7 +580,7 @@ export function getSource(self: bigint): bigint | undefined {
 /**
  * `get-ports()` operation.
  */
-export function getPorts(self: bigint): (bigint)[] {
+export function getPorts(self: bigint): bigint {
   const obj = getExtendableMessageEvent(self);
   return obj.ports;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): Cache {
 /**
  * `match-all()` operation.
  */
-export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: bigint | undefined, options: bigint | undefined | undefined): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -648,7 +648,7 @@ export function CacheDelete(self: bigint, request: bigint, options: bigint | und
 /**
  * `keys()` operation.
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint): bigint {
+export function CacheKeys(self: bigint, request: bigint, options: bigint | undefined): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
