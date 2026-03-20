@@ -75,7 +75,7 @@ function getStorageManager(handle: bigint): StorageManager {
  *
  * Async operation: returns request ID, poll with `pollPersisted()`
  */
-export function persisted(self: bigint): bigint {
+export function persisted(self: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getStorageManager(self);
   const promise = obj.persisted()

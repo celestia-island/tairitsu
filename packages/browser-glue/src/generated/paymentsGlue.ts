@@ -27,17 +27,17 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type PaymentRequestHandle = bigint;
+export type PaymentRequestHandle = number;
 
-/** Handle table for paymentrequest instances */
-const _paymentRequesthandles = new Map<bigint, paymentrequest>();
+/** Handle table for PaymentRequest instances */
+const _paymentRequesthandles = new Map<bigint, PaymentRequest>();
 let _nextPaymentRequest = 1n;
 
-/** Get a paymentrequest by handle, throwing if not found. */
-function getPaymentRequest(handle: bigint): paymentrequest {
+/** Get a PaymentRequest by handle, throwing if not found. */
+function getPaymentRequest(handle: bigint): PaymentRequest {
   const obj = _paymentRequesthandles.get(handle);
   if (!obj) {
-    throw new Error(`paymentrequest handle ${handle} not found`);
+    throw new Error(`PaymentRequest handle ${handle} not found`);
   }
   return obj;
 }
@@ -45,7 +45,7 @@ function getPaymentRequest(handle: bigint): paymentrequest {
 /**
  * `show()` operation.
  */
-export function show(self: bigint, detailsPromise: bigint): bigint {
+export function show(self: bigint, detailsPromise: bigint | undefined): bigint {
   const obj = getPaymentRequest(self);
   return obj.show(detailsPromise);
 }
@@ -55,7 +55,7 @@ export function show(self: bigint, detailsPromise: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `pollAbort()`
  */
-export function abort(self: bigint): bigint {
+export function abort(self: number): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getPaymentRequest(self);
   const promise = obj.abort()
@@ -91,7 +91,7 @@ export function pollAbort(requestId: bigint): { ok: true; value: bigint } | { ok
 /**
  * `can-make-payment()` operation.
  */
-export function canMakePayment(self: string): bigint {
+export function canMakePayment(self: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.canMakePayment();
 }
@@ -107,7 +107,7 @@ export function getId(self: bigint): string {
 /**
  * `get-shipping-address()` operation.
  */
-export function getShippingAddress(self: bigint): bigint {
+export function getShippingAddress(self: string): number | undefined {
   const obj = getPaymentRequest(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -115,7 +115,7 @@ export function getShippingAddress(self: bigint): bigint {
 /**
  * `get-shipping-option()` operation.
  */
-export function getShippingOption(self: bigint): bigint | undefined {
+export function getShippingOption(self: bigint): string {
   const obj = getPaymentRequest(self);
   return obj.shippingOption ?? undefined;
 }
@@ -123,7 +123,7 @@ export function getShippingOption(self: bigint): bigint | undefined {
 /**
  * `get-shipping-type()` operation.
  */
-export function getShippingType(self: bigint): number {
+export function getShippingType(self: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.shippingType ?? undefined;
 }
@@ -131,7 +131,7 @@ export function getShippingType(self: bigint): number {
 /**
  * `get-onshippingaddresschange()` operation.
  */
-export function getOnshippingaddresschange(self: number | undefined): bigint {
+export function getOnshippingaddresschange(self: bigint): bigint {
   const obj = getPaymentRequest(self);
   return obj.onshippingaddresschange;
 }
@@ -163,7 +163,7 @@ export function setOnshippingoptionchange(self: bigint, value: bigint): void {
 /**
  * `get-onpaymentmethodchange()` operation.
  */
-export function getOnpaymentmethodchange(self: bigint): bigint {
+export function getOnpaymentmethodchange(self: bigint): string {
   const obj = getPaymentRequest(self);
   return obj.onpaymentmethodchange;
 }
@@ -171,7 +171,7 @@ export function getOnpaymentmethodchange(self: bigint): bigint {
 /**
  * `set-onpaymentmethodchange()` operation.
  */
-export function setOnpaymentmethodchange(self: bigint, value: bigint): void {
+export function setOnpaymentmethodchange(self: string, value: string): void {
   const obj = getPaymentRequest(self);
   obj.onpaymentmethodchange = value;
 }
@@ -183,15 +183,15 @@ export function setOnpaymentmethodchange(self: bigint, value: bigint): void {
 /** Type alias */
 export type PaymentResponseHandle = bigint;
 
-/** Handle table for paymentresponse instances */
-const _paymentResponsehandles = new Map<bigint, paymentresponse>();
+/** Handle table for PaymentResponse instances */
+const _paymentResponsehandles = new Map<bigint, PaymentResponse>();
 let _nextPaymentResponse = 1n;
 
-/** Get a paymentresponse by handle, throwing if not found. */
-function getPaymentResponse(handle: bigint): paymentresponse {
+/** Get a PaymentResponse by handle, throwing if not found. */
+function getPaymentResponse(handle: bigint): PaymentResponse {
   const obj = _paymentResponsehandles.get(handle);
   if (!obj) {
-    throw new Error(`paymentresponse handle ${handle} not found`);
+    throw new Error(`PaymentResponse handle ${handle} not found`);
   }
   return obj;
 }
@@ -207,7 +207,7 @@ export function toJson(self: string): bigint {
 /**
  * `get-request-id()` operation.
  */
-export function getRequestId(self: bigint): bigint {
+export function getRequestId(self: bigint): string {
   const obj = getPaymentResponse(self);
   return obj.requestId;
 }
@@ -231,7 +231,7 @@ export function getDetails(self: bigint): bigint {
 /**
  * `get-shipping-address()` operation.
  */
-export function getShippingAddress(self: bigint): string {
+export function getShippingAddress(self: bigint): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.shippingAddress ?? undefined;
 }
@@ -239,7 +239,7 @@ export function getShippingAddress(self: bigint): string {
 /**
  * `get-shipping-option()` operation.
  */
-export function getShippingOption(self: bigint): string | undefined {
+export function getShippingOption(self: bigint): bigint | undefined {
   const obj = getPaymentResponse(self);
   return obj.shippingOption ?? undefined;
 }
@@ -263,7 +263,7 @@ export function getPayerEmail(self: bigint): string | undefined {
 /**
  * `get-payer-phone()` operation.
  */
-export function getPayerPhone(self: bigint): bigint | undefined {
+export function getPayerPhone(self: bigint): string | undefined {
   const obj = getPaymentResponse(self);
   return obj.payerPhone ?? undefined;
 }
@@ -271,7 +271,7 @@ export function getPayerPhone(self: bigint): bigint | undefined {
 /**
  * `complete()` operation.
  */
-export function complete(self: bigint, result: bigint | undefined, details: string): bigint {
+export function complete(self: bigint, result: bigint | undefined, details: bigint | undefined): bigint {
   const obj = getPaymentResponse(self);
   return obj.complete(result, details);
 }
@@ -307,15 +307,15 @@ export function setOnpayerdetailchange(self: bigint, value: bigint): void {
 /** Type alias */
 export type PaymentMethodChangeEventHandle = bigint;
 
-/** Handle table for paymentmethodchangeevent instances */
-const _paymentMethodChangeEventhandles = new Map<bigint, paymentmethodchangeevent>();
+/** Handle table for PaymentMethodChangeEvent instances */
+const _paymentMethodChangeEventhandles = new Map<bigint, PaymentMethodChangeEvent>();
 let _nextPaymentMethodChangeEvent = 1n;
 
-/** Get a paymentmethodchangeevent by handle, throwing if not found. */
-function getPaymentMethodChangeEvent(handle: bigint): paymentmethodchangeevent {
+/** Get a PaymentMethodChangeEvent by handle, throwing if not found. */
+function getPaymentMethodChangeEvent(handle: bigint): PaymentMethodChangeEvent {
   const obj = _paymentMethodChangeEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`paymentmethodchangeevent handle ${handle} not found`);
+    throw new Error(`PaymentMethodChangeEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -343,15 +343,15 @@ export function getMethodDetails(self: bigint): bigint | undefined {
 /** Type alias */
 export type PaymentRequestUpdateEventHandle = bigint;
 
-/** Handle table for paymentrequestupdateevent instances */
-const _paymentRequestUpdateEventhandles = new Map<bigint, paymentrequestupdateevent>();
+/** Handle table for PaymentRequestUpdateEvent instances */
+const _paymentRequestUpdateEventhandles = new Map<bigint, PaymentRequestUpdateEvent>();
 let _nextPaymentRequestUpdateEvent = 1n;
 
-/** Get a paymentrequestupdateevent by handle, throwing if not found. */
-function getPaymentRequestUpdateEvent(handle: bigint): paymentrequestupdateevent {
+/** Get a PaymentRequestUpdateEvent by handle, throwing if not found. */
+function getPaymentRequestUpdateEvent(handle: bigint): PaymentRequestUpdateEvent {
   const obj = _paymentRequestUpdateEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`paymentrequestupdateevent handle ${handle} not found`);
+    throw new Error(`PaymentRequestUpdateEvent handle ${handle} not found`);
   }
   return obj;
 }

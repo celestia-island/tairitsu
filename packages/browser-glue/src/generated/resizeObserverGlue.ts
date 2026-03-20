@@ -14,17 +14,17 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type RoHandle = bigint;
+export type RoHandle = string;
 
-/** Handle table for resizeobserver instances */
-const _roHandles = new Map<bigint, resizeobserver>();
+/** Handle table for ResizeObserver instances */
+const _roHandles = new Map<bigint, ResizeObserver>();
 let _nextRo = 1n;
 
-/** Get a resizeobserver by handle, throwing if not found. */
-function getRo(handle: bigint): resizeobserver {
+/** Get a ResizeObserver by handle, throwing if not found. */
+function getRo(handle: bigint): ResizeObserver {
   const obj = _roHandles.get(handle);
   if (!obj) {
-    throw new Error(`resizeobserver handle ${handle} not found`);
+    throw new Error(`ResizeObserver handle ${handle} not found`);
   }
   return obj;
 }

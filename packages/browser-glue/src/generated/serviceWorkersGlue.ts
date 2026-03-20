@@ -16,15 +16,15 @@
 /** Type alias */
 export type SwRegHandle = bigint;
 
-/** Handle table for serviceworkerregistration instances */
-const _swReghandles = new Map<bigint, serviceworkerregistration>();
+/** Handle table for ServiceWorkerRegistration instances */
+const _swReghandles = new Map<bigint, ServiceWorkerRegistration>();
 let _nextSwReg = 1n;
 
-/** Get a serviceworkerregistration by handle, throwing if not found. */
-function getSwReg(handle: bigint): serviceworkerregistration {
+/** Get a ServiceWorkerRegistration by handle, throwing if not found. */
+function getSwReg(handle: bigint): ServiceWorkerRegistration {
   const obj = _swReghandles.get(handle);
   if (!obj) {
-    throw new Error(`serviceworkerregistration handle ${handle} not found`);
+    throw new Error(`ServiceWorkerRegistration handle ${handle} not found`);
   }
   return obj;
 }
@@ -32,7 +32,7 @@ function getSwReg(handle: bigint): serviceworkerregistration {
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): bigint {
+export function scope(handle: bigint): string {
   const obj = getSwReg(self);
   return obj.scope(handle);
 }
@@ -42,7 +42,7 @@ export function scope(handle: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type SwHandle = bigint;
+export type SwHandle = number;
 
 /** Handle table for ServiceWorker instances */
 const _swHandles = new Map<bigint, ServiceWorker>();
@@ -68,7 +68,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: ((bigint)[])[]): void {
+export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
   const obj = getSw(self);
   obj.postMessage(handle, message, transfer);
 }

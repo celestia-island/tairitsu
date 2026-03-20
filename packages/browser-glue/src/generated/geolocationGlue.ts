@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type GeoHandle = bigint;
+export type GeoHandle = boolean;
 
 /** Handle table for Geolocation instances */
 const _geoHandles = new Map<bigint, Geolocation>();

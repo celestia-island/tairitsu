@@ -29,15 +29,15 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type WebSocketHandle = bigint;
 
-/** Handle table for websocket instances */
-const _webSockethandles = new Map<bigint, websocket>();
+/** Handle table for WebSocket instances */
+const _webSockethandles = new Map<bigint, WebSocket>();
 let _nextWebSocket = 1n;
 
-/** Get a websocket by handle, throwing if not found. */
-function getWebSocket(handle: bigint): websocket {
+/** Get a WebSocket by handle, throwing if not found. */
+function getWebSocket(handle: bigint): WebSocket {
   const obj = _webSockethandles.get(handle);
   if (!obj) {
-    throw new Error(`websocket handle ${handle} not found`);
+    throw new Error(`WebSocket handle ${handle} not found`);
   }
   return obj;
 }
@@ -45,7 +45,7 @@ function getWebSocket(handle: bigint): websocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): string | undefined {
+export function getUrl(self: bigint | undefined): string {
   const obj = getWebSocket(self);
   return obj.url;
 }
@@ -53,7 +53,7 @@ export function getUrl(self: bigint): string | undefined {
 /**
  * `get-ready-state()` operation.
  */
-export function getReadyState(self: bigint): number {
+export function getReadyState(self: bigint): string | undefined {
   const obj = getWebSocket(self);
   return obj.readyState;
 }
@@ -69,7 +69,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): string | undefined {
+export function getOnopen(self: number): bigint {
   const obj = getWebSocket(self);
   return obj.onopen;
 }
@@ -77,7 +77,7 @@ export function getOnopen(self: bigint): string | undefined {
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: bigint): void {
+export function setOnopen(self: bigint, value: string): void {
   const obj = getWebSocket(self);
   obj.onopen = value;
 }
@@ -109,7 +109,7 @@ export function getOnclose(self: bigint): bigint {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: string, value: bigint): void {
+export function setOnclose(self: bigint, value: bigint): void {
   const obj = getWebSocket(self);
   obj.onclose = value;
 }
@@ -125,7 +125,7 @@ export function getExtensions(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): string {
+export function getProtocol(self: bigint): bigint | undefined {
   const obj = getWebSocket(self);
   return obj.protocol;
 }
@@ -135,7 +135,7 @@ export function getProtocol(self: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(self: bigint, code: number | undefined, reason: bigint | undefined): void {
+export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWebSocket(self);
   const promise = obj.close(code, reason)
@@ -179,7 +179,7 @@ export function getOnmessage(self: bigint): bigint {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: bigint): void {
+export function setOnmessage(self: bigint, value: string): void {
   const obj = getWebSocket(self);
   obj.onmessage = value;
 }
@@ -187,7 +187,7 @@ export function setOnmessage(self: bigint, value: bigint): void {
 /**
  * `get-binary-type()` operation.
  */
-export function getBinaryType(self: bigint): bigint | undefined {
+export function getBinaryType(self: bigint): number | undefined {
   const obj = getWebSocket(self);
   return obj.binaryType;
 }
@@ -203,7 +203,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: (string)[]): void {
+export function send(self: bigint, data: Uint8Array): void {
   const obj = getWebSocket(self);
   obj.send(data);
 }
@@ -215,15 +215,15 @@ export function send(self: bigint, data: (string)[]): void {
 /** Type alias */
 export type CloseEventHandle = bigint;
 
-/** Handle table for closeevent instances */
-const _closeEventhandles = new Map<bigint, closeevent>();
+/** Handle table for CloseEvent instances */
+const _closeEventhandles = new Map<bigint, CloseEvent>();
 let _nextCloseEvent = 1n;
 
-/** Get a closeevent by handle, throwing if not found. */
-function getCloseEvent(handle: bigint): closeevent {
+/** Get a CloseEvent by handle, throwing if not found. */
+function getCloseEvent(handle: bigint): CloseEvent {
   const obj = _closeEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`closeevent handle ${handle} not found`);
+    throw new Error(`CloseEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -231,7 +231,7 @@ function getCloseEvent(handle: bigint): closeevent {
 /**
  * `get-was-clean()` operation.
  */
-export function getWasClean(self: bigint): bigint {
+export function getWasClean(self: bigint): string {
   const obj = getCloseEvent(self);
   return obj.wasClean;
 }

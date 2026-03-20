@@ -27,17 +27,17 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type WsHandle = bigint;
+export type WsHandle = string;
 
-/** Handle table for websocket instances */
-const _wsHandles = new Map<bigint, websocket>();
+/** Handle table for WebSocket instances */
+const _wsHandles = new Map<bigint, WebSocket>();
 let _nextWs = 1n;
 
-/** Get a websocket by handle, throwing if not found. */
-function getWs(handle: bigint): websocket {
+/** Get a WebSocket by handle, throwing if not found. */
+function getWs(handle: bigint): WebSocket {
   const obj = _wsHandles.get(handle);
   if (!obj) {
-    throw new Error(`websocket handle ${handle} not found`);
+    throw new Error(`WebSocket handle ${handle} not found`);
   }
   return obj;
 }
@@ -45,7 +45,7 @@ function getWs(handle: bigint): websocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: bigint): { ok: true; value: (string)[] } | { ok: false; error: string } {
+export function connect(url: string, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
   const obj = getWs(self);
   return obj.connect(url, protocols);
 }
@@ -53,7 +53,7 @@ export function connect(url: bigint, protocols: bigint): { ok: true; value: (str
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): string {
+export function url(handle: bigint): bigint {
   const obj = getWs(self);
   return obj.url(handle);
 }
@@ -77,7 +77,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint | undefined): string {
   const obj = getWs(self);
   return obj.extensions(handle);
 }
@@ -95,7 +95,7 @@ export function protocol(handle: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: number, reason: string): void {
+export function close(handle: bigint, code: string, reason: string): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWs(self);
   const promise = obj.close(handle, code, reason)
@@ -131,7 +131,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: bigint | undefined): void {
+export function send(handle: bigint, data: bigint): void {
   const obj = getWs(self);
   obj.send(handle, data);
 }

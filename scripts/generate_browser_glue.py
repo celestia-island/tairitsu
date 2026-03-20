@@ -94,6 +94,21 @@ INTERFACE_TO_BROWSER_CLASS: Dict[str, str] = {
     "event": "Event",
     "event-target": "EventTarget",
 
+    # Device / Navigator
+    "navigator": "Navigator",
+    "battery-manager": "BatteryManager",
+    "gamepad": "Gamepad",
+    "gamepad-button": "GamepadButton",
+    "gamepad-haptic-actuator": "GamepadHapticActuator",
+    "geolocation-coordinates": "GeolocationCoordinates",
+    "geolocation-position": "GeolocationPosition",
+    "geolocation-position-error": "GeolocationPositionError",
+    "screen-orientation": "ScreenOrientation",
+    "media-capabilities": "MediaCapabilities",
+    "media-devices": "MediaDevices",
+    "media-session": "MediaSession",
+    "media-stream": "MediaStream",
+
     # Canvas
     "canvas-rendering-context": "CanvasRenderingContext2D",
     "webgl-rendering-context": "WebGLRenderingContext",
@@ -132,6 +147,13 @@ INTERFACE_TO_BROWSER_CLASS: Dict[str, str] = {
 
     # WebRTC
     "rtc-peer-connection": "RTCPeerConnection",
+}
+
+# Known global singleton objects (not instantiated, use global reference)
+GLOBAL_SINGLETONS = {
+    "window": "window",
+    "document": "document",
+    "navigator": "navigator",
 }
 
 # Known async operation patterns (return Promises in browser)
@@ -342,6 +364,7 @@ class BrowserGlueGenerator:
         handle_type = None
         handle_var = ""
         handle_pascal = ""
+        is_global_singleton = wit_name in GLOBAL_SINGLETONS
 
         # Find handle type alias
         for ta in iface.type_aliases:
@@ -351,8 +374,8 @@ class BrowserGlueGenerator:
                 handle_pascal = kebab_to_pascal(ta.name.replace("-handle", ""))
                 break
 
-        # Map to browser class
-        browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, wit_name.replace("-", ""))
+        # Map to browser class (fallback to PascalCase if not explicitly mapped)
+        browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, kebab_to_pascal(wit_name))
 
         # Generate type aliases
         type_aliases: List[GeneratedTypeAlias] = []
@@ -481,31 +504,46 @@ class BrowserGlueGenerator:
                     lines.append(f"export type {ta.ts_name} = {ta.ts_type};")
                     lines.append("")
 
-            # Handle table
+             # Handle table (skip for global singletons like navigator, window, document)
             if iface.handle_type:
-                lines.append(f"/** Handle table for {iface.browser_class} instances */")
-                lines.append(f"const _{iface.handle_var} = new Map<bigint, {iface.browser_class}>();")
-                lines.append(f"let _next{iface.handle_pascal} = 1n;")
-                lines.append("")
-
-                if iface.create_function:
-                    lines.append(f"/** Register a new {iface.browser_class} and return its handle. */")
-                    lines.append(f"function register{iface.handle_pascal}(obj: {iface.browser_class}): bigint {{")
-                    lines.append(f"  const handle = _next{iface.handle_pascal}++;")
-                    lines.append(f"  _{iface.handle_var}.set(handle, obj);")
-                    lines.append("  return handle;")
+                is_singleton = iface.wit_name in GLOBAL_SINGLETONS
+                
+                if is_singleton:
+                    # For global singletons, use a fixed handle and direct access
+                    global_ref = GLOBAL_SINGLETONS[iface.wit_name]
+                    lines.append(f"/** Handle for global singleton {iface.browser_class} (fixed to 0n). */")
+                    lines.append(f"const _{iface.handle_pascal}_HANDLE = 0n;")
+                    lines.append("")
+                    lines.append(f"/** Get the global {iface.browser_class} object. */")
+                    lines.append(f"function get{iface.handle_pascal}(): {iface.browser_class} {{")
+                    lines.append(f"  return {global_ref};")
                     lines.append("}")
                     lines.append("")
+                else:
+                    # Normal object instantiation with handle table
+                    lines.append(f"/** Handle table for {iface.browser_class} instances */")
+                    lines.append(f"const _{iface.handle_var} = new Map<bigint, {iface.browser_class}>();")
+                    lines.append(f"let _next{iface.handle_pascal} = 1n;")
+                    lines.append("")
 
-                lines.append(f"/** Get a {iface.browser_class} by handle, throwing if not found. */")
-                lines.append(f"function get{iface.handle_pascal}(handle: bigint): {iface.browser_class} {{")
-                lines.append(f"  const obj = _{iface.handle_var}.get(handle);")
-                lines.append("  if (!obj) {")
-                lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
-                lines.append("  }")
-                lines.append("  return obj;")
-                lines.append("}")
-                lines.append("")
+                    if iface.create_function:
+                        lines.append(f"/** Register a new {iface.browser_class} and return its handle. */")
+                        lines.append(f"function register{iface.handle_pascal}(obj: {iface.browser_class}): bigint {{")
+                        lines.append(f"  const handle = _next{iface.handle_pascal}++;")
+                        lines.append(f"  _{iface.handle_var}.set(handle, obj);")
+                        lines.append("  return handle;")
+                        lines.append("}")
+                        lines.append("")
+
+                    lines.append(f"/** Get a {iface.browser_class} by handle, throwing if not found. */")
+                    lines.append(f"function get{iface.handle_pascal}(handle: bigint): {iface.browser_class} {{")
+                    lines.append(f"  const obj = _{iface.handle_var}.get(handle);")
+                    lines.append("  if (!obj) {")
+                    lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
+                    lines.append("  }")
+                    lines.append("  return obj;")
+                    lines.append("}")
+                    lines.append("")
 
             # Functions
             for func in iface.functions:

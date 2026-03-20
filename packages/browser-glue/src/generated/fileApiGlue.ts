@@ -29,15 +29,15 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 /** Type alias */
 export type FileReaderHandle = bigint;
 
-/** Handle table for filereader instances */
-const _fileReaderhandles = new Map<bigint, filereader>();
+/** Handle table for FileReader instances */
+const _fileReaderhandles = new Map<bigint, FileReader>();
 let _nextFileReader = 1n;
 
-/** Get a filereader by handle, throwing if not found. */
-function getFileReader(handle: bigint): filereader {
+/** Get a FileReader by handle, throwing if not found. */
+function getFileReader(handle: bigint): FileReader {
   const obj = _fileReaderhandles.get(handle);
   if (!obj) {
-    throw new Error(`filereader handle ${handle} not found`);
+    throw new Error(`FileReader handle ${handle} not found`);
   }
   return obj;
 }
@@ -45,7 +45,7 @@ function getFileReader(handle: bigint): filereader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): bigint {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
   return obj.newFileReader();
 }
 
@@ -98,7 +98,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): bigint {
+export function resultVal(handle: bigint): bigint | undefined {
   const obj = getFileReader(self);
   return obj.resultVal(handle) ?? undefined;
 }
@@ -110,15 +110,15 @@ export function resultVal(handle: bigint): bigint {
 /** Type alias */
 export type FileListHandle = bigint;
 
-/** Handle table for filelist instances */
-const _fileListhandles = new Map<bigint, filelist>();
+/** Handle table for FileList instances */
+const _fileListhandles = new Map<bigint, FileList>();
 let _nextFileList = 1n;
 
-/** Get a filelist by handle, throwing if not found. */
-function getFileList(handle: bigint): filelist {
+/** Get a FileList by handle, throwing if not found. */
+function getFileList(handle: bigint): FileList {
   const obj = _fileListhandles.get(handle);
   if (!obj) {
-    throw new Error(`filelist handle ${handle} not found`);
+    throw new Error(`FileList handle ${handle} not found`);
   }
   return obj;
 }

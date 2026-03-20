@@ -209,15 +209,15 @@ export function initEvent(self: bigint, type: string, bubbles: boolean | undefin
 /** Type alias */
 export type CustomEventHandle = bigint;
 
-/** Handle table for customevent instances */
-const _customEventhandles = new Map<bigint, customevent>();
+/** Handle table for CustomEvent instances */
+const _customEventhandles = new Map<bigint, CustomEvent>();
 let _nextCustomEvent = 1n;
 
-/** Get a customevent by handle, throwing if not found. */
-function getCustomEvent(handle: bigint): customevent {
+/** Get a CustomEvent by handle, throwing if not found. */
+function getCustomEvent(handle: bigint): CustomEvent {
   const obj = _customEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`customevent handle ${handle} not found`);
+    throw new Error(`CustomEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -289,15 +289,15 @@ export function dispatchEvent(self: bigint, event: bigint): boolean {
 /** Type alias */
 export type EventListenerHandle = bigint;
 
-/** Handle table for eventlistener instances */
-const _eventListenerhandles = new Map<bigint, eventlistener>();
+/** Handle table for EventListener instances */
+const _eventListenerhandles = new Map<bigint, EventListener>();
 let _nextEventListener = 1n;
 
-/** Get a eventlistener by handle, throwing if not found. */
-function getEventListener(handle: bigint): eventlistener {
+/** Get a EventListener by handle, throwing if not found. */
+function getEventListener(handle: bigint): EventListener {
   const obj = _eventListenerhandles.get(handle);
   if (!obj) {
-    throw new Error(`eventlistener handle ${handle} not found`);
+    throw new Error(`EventListener handle ${handle} not found`);
   }
   return obj;
 }
@@ -317,15 +317,15 @@ export function handleEvent(self: bigint, event: bigint): void {
 /** Type alias */
 export type AbortControllerHandle = bigint;
 
-/** Handle table for abortcontroller instances */
-const _abortControllerhandles = new Map<bigint, abortcontroller>();
+/** Handle table for AbortController instances */
+const _abortControllerhandles = new Map<bigint, AbortController>();
 let _nextAbortController = 1n;
 
-/** Get a abortcontroller by handle, throwing if not found. */
-function getAbortController(handle: bigint): abortcontroller {
+/** Get a AbortController by handle, throwing if not found. */
+function getAbortController(handle: bigint): AbortController {
   const obj = _abortControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`abortcontroller handle ${handle} not found`);
+    throw new Error(`AbortController handle ${handle} not found`);
   }
   return obj;
 }
@@ -383,15 +383,15 @@ export function pollAbort(requestId: bigint): { ok: true } | { ok: false; error:
 /** Type alias */
 export type AbortSignalHandle = bigint;
 
-/** Handle table for abortsignal instances */
-const _abortSignalhandles = new Map<bigint, abortsignal>();
+/** Handle table for AbortSignal instances */
+const _abortSignalhandles = new Map<bigint, AbortSignal>();
 let _nextAbortSignal = 1n;
 
-/** Get a abortsignal by handle, throwing if not found. */
-function getAbortSignal(handle: bigint): abortsignal {
+/** Get a AbortSignal by handle, throwing if not found. */
+function getAbortSignal(handle: bigint): AbortSignal {
   const obj = _abortSignalhandles.get(handle);
   if (!obj) {
-    throw new Error(`abortsignal handle ${handle} not found`);
+    throw new Error(`AbortSignal handle ${handle} not found`);
   }
   return obj;
 }
@@ -497,15 +497,15 @@ export function setOnabort(self: bigint, value: bigint): void {
 /** Type alias */
 export type NonElementParentNodeHandle = bigint;
 
-/** Handle table for nonelementparentnode instances */
-const _nonElementParentNodehandles = new Map<bigint, nonelementparentnode>();
+/** Handle table for NonElementParentNode instances */
+const _nonElementParentNodehandles = new Map<bigint, NonElementParentNode>();
 let _nextNonElementParentNode = 1n;
 
-/** Get a nonelementparentnode by handle, throwing if not found. */
-function getNonElementParentNode(handle: bigint): nonelementparentnode {
+/** Get a NonElementParentNode by handle, throwing if not found. */
+function getNonElementParentNode(handle: bigint): NonElementParentNode {
   const obj = _nonElementParentNodehandles.get(handle);
   if (!obj) {
-    throw new Error(`nonelementparentnode handle ${handle} not found`);
+    throw new Error(`NonElementParentNode handle ${handle} not found`);
   }
   return obj;
 }
@@ -525,15 +525,15 @@ export function getElementById(self: bigint, elementId: string): bigint | undefi
 /** Type alias */
 export type ParentNodeHandle = bigint;
 
-/** Handle table for parentnode instances */
-const _parentNodehandles = new Map<bigint, parentnode>();
+/** Handle table for ParentNode instances */
+const _parentNodehandles = new Map<bigint, ParentNode>();
 let _nextParentNode = 1n;
 
-/** Get a parentnode by handle, throwing if not found. */
-function getParentNode(handle: bigint): parentnode {
+/** Get a ParentNode by handle, throwing if not found. */
+function getParentNode(handle: bigint): ParentNode {
   const obj = _parentNodehandles.get(handle);
   if (!obj) {
-    throw new Error(`parentnode handle ${handle} not found`);
+    throw new Error(`ParentNode handle ${handle} not found`);
   }
   return obj;
 }
@@ -625,15 +625,15 @@ export function querySelectorAll(self: bigint, selectors: string): bigint {
 /** Type alias */
 export type NonDocumentTypeChildNodeHandle = bigint;
 
-/** Handle table for nondocumenttypechildnode instances */
-const _nonDocumentTypeChildNodehandles = new Map<bigint, nondocumenttypechildnode>();
+/** Handle table for NonDocumentTypeChildNode instances */
+const _nonDocumentTypeChildNodehandles = new Map<bigint, NonDocumentTypeChildNode>();
 let _nextNonDocumentTypeChildNode = 1n;
 
-/** Get a nondocumenttypechildnode by handle, throwing if not found. */
-function getNonDocumentTypeChildNode(handle: bigint): nondocumenttypechildnode {
+/** Get a NonDocumentTypeChildNode by handle, throwing if not found. */
+function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
   const obj = _nonDocumentTypeChildNodehandles.get(handle);
   if (!obj) {
-    throw new Error(`nondocumenttypechildnode handle ${handle} not found`);
+    throw new Error(`NonDocumentTypeChildNode handle ${handle} not found`);
   }
   return obj;
 }
@@ -661,15 +661,15 @@ export function getNextElementSibling(self: bigint): bigint | undefined {
 /** Type alias */
 export type ChildNodeHandle = bigint;
 
-/** Handle table for childnode instances */
-const _childNodehandles = new Map<bigint, childnode>();
+/** Handle table for ChildNode instances */
+const _childNodehandles = new Map<bigint, ChildNode>();
 let _nextChildNode = 1n;
 
-/** Get a childnode by handle, throwing if not found. */
-function getChildNode(handle: bigint): childnode {
+/** Get a ChildNode by handle, throwing if not found. */
+function getChildNode(handle: bigint): ChildNode {
   const obj = _childNodehandles.get(handle);
   if (!obj) {
-    throw new Error(`childnode handle ${handle} not found`);
+    throw new Error(`ChildNode handle ${handle} not found`);
   }
   return obj;
 }
@@ -713,15 +713,15 @@ export function remove(self: bigint): void {
 /** Type alias */
 export type SlottableHandle = bigint;
 
-/** Handle table for slottable instances */
-const _slottableHandles = new Map<bigint, slottable>();
+/** Handle table for Slottable instances */
+const _slottableHandles = new Map<bigint, Slottable>();
 let _nextSlottable = 1n;
 
-/** Get a slottable by handle, throwing if not found. */
-function getSlottable(handle: bigint): slottable {
+/** Get a Slottable by handle, throwing if not found. */
+function getSlottable(handle: bigint): Slottable {
   const obj = _slottableHandles.get(handle);
   if (!obj) {
-    throw new Error(`slottable handle ${handle} not found`);
+    throw new Error(`Slottable handle ${handle} not found`);
   }
   return obj;
 }
@@ -741,15 +741,15 @@ export function getAssignedSlot(self: bigint): bigint | undefined {
 /** Type alias */
 export type NodeListHandle = bigint;
 
-/** Handle table for nodelist instances */
-const _nodeListhandles = new Map<bigint, nodelist>();
+/** Handle table for NodeList instances */
+const _nodeListhandles = new Map<bigint, NodeList>();
 let _nextNodeList = 1n;
 
-/** Get a nodelist by handle, throwing if not found. */
-function getNodeList(handle: bigint): nodelist {
+/** Get a NodeList by handle, throwing if not found. */
+function getNodeList(handle: bigint): NodeList {
   const obj = _nodeListhandles.get(handle);
   if (!obj) {
-    throw new Error(`nodelist handle ${handle} not found`);
+    throw new Error(`NodeList handle ${handle} not found`);
   }
   return obj;
 }
@@ -777,15 +777,15 @@ export function getLength(self: bigint): number {
 /** Type alias */
 export type HtmlCollectionHandle = bigint;
 
-/** Handle table for htmlcollection instances */
-const _htmlCollectionhandles = new Map<bigint, htmlcollection>();
+/** Handle table for HtmlCollection instances */
+const _htmlCollectionhandles = new Map<bigint, HtmlCollection>();
 let _nextHtmlCollection = 1n;
 
-/** Get a htmlcollection by handle, throwing if not found. */
-function getHtmlCollection(handle: bigint): htmlcollection {
+/** Get a HtmlCollection by handle, throwing if not found. */
+function getHtmlCollection(handle: bigint): HtmlCollection {
   const obj = _htmlCollectionhandles.get(handle);
   if (!obj) {
-    throw new Error(`htmlcollection handle ${handle} not found`);
+    throw new Error(`HtmlCollection handle ${handle} not found`);
   }
   return obj;
 }
@@ -821,15 +821,15 @@ export function namedItem(self: bigint, name: string): bigint | undefined {
 /** Type alias */
 export type MutationObserverHandle = bigint;
 
-/** Handle table for mutationobserver instances */
-const _mutationObserverhandles = new Map<bigint, mutationobserver>();
+/** Handle table for MutationObserver instances */
+const _mutationObserverhandles = new Map<bigint, MutationObserver>();
 let _nextMutationObserver = 1n;
 
-/** Get a mutationobserver by handle, throwing if not found. */
-function getMutationObserver(handle: bigint): mutationobserver {
+/** Get a MutationObserver by handle, throwing if not found. */
+function getMutationObserver(handle: bigint): MutationObserver {
   const obj = _mutationObserverhandles.get(handle);
   if (!obj) {
-    throw new Error(`mutationobserver handle ${handle} not found`);
+    throw new Error(`MutationObserver handle ${handle} not found`);
   }
   return obj;
 }
@@ -865,15 +865,15 @@ export function takeRecords(self: bigint): (bigint)[] {
 /** Type alias */
 export type MutationRecordHandle = bigint;
 
-/** Handle table for mutationrecord instances */
-const _mutationRecordhandles = new Map<bigint, mutationrecord>();
+/** Handle table for MutationRecord instances */
+const _mutationRecordhandles = new Map<bigint, MutationRecord>();
 let _nextMutationRecord = 1n;
 
-/** Get a mutationrecord by handle, throwing if not found. */
-function getMutationRecord(handle: bigint): mutationrecord {
+/** Get a MutationRecord by handle, throwing if not found. */
+function getMutationRecord(handle: bigint): MutationRecord {
   const obj = _mutationRecordhandles.get(handle);
   if (!obj) {
-    throw new Error(`mutationrecord handle ${handle} not found`);
+    throw new Error(`MutationRecord handle ${handle} not found`);
   }
   return obj;
 }
@@ -1213,7 +1213,7 @@ export function replaceChild(self: bigint, node: bigint, child: bigint): bigint 
 /**
  * `remove-child()` operation.
  */
-export function removeChild(self: number, child: bigint): bigint {
+export function removeChild(self: bigint, child: bigint): bigint {
   const obj = getNode(self);
   return obj.removeChild(child);
 }
@@ -1225,22 +1225,22 @@ export function removeChild(self: number, child: bigint): bigint {
 /** Type alias */
 export type DomImplementationHandle = bigint;
 
-/** Handle table for domimplementation instances */
-const _domImplementationhandles = new Map<bigint, domimplementation>();
+/** Handle table for DomImplementation instances */
+const _domImplementationhandles = new Map<bigint, DomImplementation>();
 let _nextDomImplementation = 1n;
 
-/** Register a new domimplementation and return its handle. */
-function registerDomImplementation(obj: domimplementation): bigint {
+/** Register a new DomImplementation and return its handle. */
+function registerDomImplementation(obj: DomImplementation): bigint {
   const handle = _nextDomImplementation++;
   _domImplementationhandles.set(handle, obj);
   return handle;
 }
 
-/** Get a domimplementation by handle, throwing if not found. */
-function getDomImplementation(handle: bigint): domimplementation {
+/** Get a DomImplementation by handle, throwing if not found. */
+function getDomImplementation(handle: bigint): DomImplementation {
   const obj = _domImplementationhandles.get(handle);
   if (!obj) {
-    throw new Error(`domimplementation handle ${handle} not found`);
+    throw new Error(`DomImplementation handle ${handle} not found`);
   }
   return obj;
 }
@@ -1256,7 +1256,7 @@ export function createDocumentType(self: bigint, name: string, publicId: bigint,
 /**
  * `create-document()` operation.
  */
-export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint | undefined): bigint {
+export function createDocument(self: bigint, namespace: string | undefined, qualifiedName: string, doctype: bigint): bigint {
   const obj = getDomImplementation(self);
   return obj.createDocument(namespace, qualifiedName, doctype);
 }
@@ -1264,7 +1264,7 @@ export function createDocument(self: bigint, namespace: string | undefined, qual
 /**
  * `create-html-document()` operation.
  */
-export function createHtmlDocument(self: bigint, title: string | undefined): bigint {
+export function createHtmlDocument(self: bigint, title: bigint | undefined): bigint {
   const obj = getDomImplementation(self);
   return obj.createHtmlDocument(title);
 }
@@ -1272,7 +1272,7 @@ export function createHtmlDocument(self: bigint, title: string | undefined): big
 /**
  * `has-feature()` operation.
  */
-export function hasFeature(self: bigint): boolean {
+export function hasFeature(self: bigint): bigint {
   const obj = getDomImplementation(self);
   return obj.hasFeature();
 }
@@ -1284,15 +1284,15 @@ export function hasFeature(self: bigint): boolean {
 /** Type alias */
 export type DocumentTypeHandle = bigint;
 
-/** Handle table for documenttype instances */
-const _documentTypehandles = new Map<bigint, documenttype>();
+/** Handle table for DocumentType instances */
+const _documentTypehandles = new Map<bigint, DocumentType>();
 let _nextDocumentType = 1n;
 
-/** Get a documenttype by handle, throwing if not found. */
-function getDocumentType(handle: bigint): documenttype {
+/** Get a DocumentType by handle, throwing if not found. */
+function getDocumentType(handle: bigint): DocumentType {
   const obj = _documentTypehandles.get(handle);
   if (!obj) {
-    throw new Error(`documenttype handle ${handle} not found`);
+    throw new Error(`DocumentType handle ${handle} not found`);
   }
   return obj;
 }
@@ -1300,7 +1300,7 @@ function getDocumentType(handle: bigint): documenttype {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): bigint {
+export function getName(self: bigint): string {
   const obj = getDocumentType(self);
   return obj.name;
 }
@@ -1328,15 +1328,15 @@ export function getSystemId(self: bigint): bigint {
 /** Type alias */
 export type ShadowRootHandle = bigint;
 
-/** Handle table for shadowroot instances */
-const _shadowRoothandles = new Map<bigint, shadowroot>();
+/** Handle table for ShadowRoot instances */
+const _shadowRoothandles = new Map<bigint, ShadowRoot>();
 let _nextShadowRoot = 1n;
 
-/** Get a shadowroot by handle, throwing if not found. */
-function getShadowRoot(handle: bigint): shadowroot {
+/** Get a ShadowRoot by handle, throwing if not found. */
+function getShadowRoot(handle: bigint): ShadowRoot {
   const obj = _shadowRoothandles.get(handle);
   if (!obj) {
-    throw new Error(`shadowroot handle ${handle} not found`);
+    throw new Error(`ShadowRoot handle ${handle} not found`);
   }
   return obj;
 }
@@ -1352,7 +1352,7 @@ export function getMode(self: bigint): bigint {
 /**
  * `get-delegates-focus()` operation.
  */
-export function getDelegatesFocus(self: bigint): bigint {
+export function getDelegatesFocus(self: bigint): boolean {
   const obj = getShadowRoot(self);
   return obj.delegatesFocus;
 }
@@ -1444,15 +1444,15 @@ export function setInnerHtml(self: bigint, value: bigint): void {
 /** Type alias */
 export type NamedNodeMapHandle = bigint;
 
-/** Handle table for namednodemap instances */
-const _namedNodeMaphandles = new Map<bigint, namednodemap>();
+/** Handle table for NamedNodeMap instances */
+const _namedNodeMaphandles = new Map<bigint, NamedNodeMap>();
 let _nextNamedNodeMap = 1n;
 
-/** Get a namednodemap by handle, throwing if not found. */
-function getNamedNodeMap(handle: bigint): namednodemap {
+/** Get a NamedNodeMap by handle, throwing if not found. */
+function getNamedNodeMap(handle: bigint): NamedNodeMap {
   const obj = _namedNodeMaphandles.get(handle);
   if (!obj) {
-    throw new Error(`namednodemap handle ${handle} not found`);
+    throw new Error(`NamedNodeMap handle ${handle} not found`);
   }
   return obj;
 }
@@ -1528,15 +1528,15 @@ export function removeNamedItemNs(self: bigint, namespace: string | undefined, l
 /** Type alias */
 export type AttrHandle = bigint;
 
-/** Handle table for attr instances */
-const _attrHandles = new Map<bigint, attr>();
+/** Handle table for Attr instances */
+const _attrHandles = new Map<bigint, Attr>();
 let _nextAttr = 1n;
 
-/** Get a attr by handle, throwing if not found. */
-function getAttr(handle: bigint): attr {
+/** Get a Attr by handle, throwing if not found. */
+function getAttr(handle: bigint): Attr {
   const obj = _attrHandles.get(handle);
   if (!obj) {
-    throw new Error(`attr handle ${handle} not found`);
+    throw new Error(`Attr handle ${handle} not found`);
   }
   return obj;
 }
@@ -1612,15 +1612,15 @@ export function getSpecified(self: bigint): boolean {
 /** Type alias */
 export type CharacterDataHandle = bigint;
 
-/** Handle table for characterdata instances */
-const _characterDatahandles = new Map<bigint, characterdata>();
+/** Handle table for CharacterData instances */
+const _characterDatahandles = new Map<bigint, CharacterData>();
 let _nextCharacterData = 1n;
 
-/** Get a characterdata by handle, throwing if not found. */
-function getCharacterData(handle: bigint): characterdata {
+/** Get a CharacterData by handle, throwing if not found. */
+function getCharacterData(handle: bigint): CharacterData {
   const obj = _characterDatahandles.get(handle);
   if (!obj) {
-    throw new Error(`characterdata handle ${handle} not found`);
+    throw new Error(`CharacterData handle ${handle} not found`);
   }
   return obj;
 }
@@ -1696,15 +1696,15 @@ export function replaceData(self: bigint, offset: number, count: number, data: s
 /** Type alias */
 export type TextHandle = bigint;
 
-/** Handle table for text instances */
-const _textHandles = new Map<bigint, text>();
+/** Handle table for Text instances */
+const _textHandles = new Map<bigint, Text>();
 let _nextText = 1n;
 
-/** Get a text by handle, throwing if not found. */
-function getText(handle: bigint): text {
+/** Get a Text by handle, throwing if not found. */
+function getText(handle: bigint): Text {
   const obj = _textHandles.get(handle);
   if (!obj) {
-    throw new Error(`text handle ${handle} not found`);
+    throw new Error(`Text handle ${handle} not found`);
   }
   return obj;
 }
@@ -1712,7 +1712,7 @@ function getText(handle: bigint): text {
 /**
  * `split-text()` operation.
  */
-export function splitText(self: bigint, offset: bigint): bigint {
+export function splitText(self: bigint, offset: number): bigint {
   const obj = getText(self);
   return obj.splitText(offset);
 }
@@ -1720,7 +1720,7 @@ export function splitText(self: bigint, offset: bigint): bigint {
 /**
  * `get-whole-text()` operation.
  */
-export function getWholeText(self: bigint): bigint {
+export function getWholeText(self: bigint): string {
   const obj = getText(self);
   return obj.wholeText;
 }
@@ -1732,15 +1732,15 @@ export function getWholeText(self: bigint): bigint {
 /** Type alias */
 export type ProcessingInstructionHandle = bigint;
 
-/** Handle table for processinginstruction instances */
-const _processingInstructionhandles = new Map<bigint, processinginstruction>();
+/** Handle table for ProcessingInstruction instances */
+const _processingInstructionhandles = new Map<bigint, ProcessingInstruction>();
 let _nextProcessingInstruction = 1n;
 
-/** Get a processinginstruction by handle, throwing if not found. */
-function getProcessingInstruction(handle: bigint): processinginstruction {
+/** Get a ProcessingInstruction by handle, throwing if not found. */
+function getProcessingInstruction(handle: bigint): ProcessingInstruction {
   const obj = _processingInstructionhandles.get(handle);
   if (!obj) {
-    throw new Error(`processinginstruction handle ${handle} not found`);
+    throw new Error(`ProcessingInstruction handle ${handle} not found`);
   }
   return obj;
 }
@@ -1760,15 +1760,15 @@ export function getTarget(self: bigint): string {
 /** Type alias */
 export type AbstractRangeHandle = bigint;
 
-/** Handle table for abstractrange instances */
-const _abstractRangehandles = new Map<bigint, abstractrange>();
+/** Handle table for AbstractRange instances */
+const _abstractRangehandles = new Map<bigint, AbstractRange>();
 let _nextAbstractRange = 1n;
 
-/** Get a abstractrange by handle, throwing if not found. */
-function getAbstractRange(handle: bigint): abstractrange {
+/** Get a AbstractRange by handle, throwing if not found. */
+function getAbstractRange(handle: bigint): AbstractRange {
   const obj = _abstractRangehandles.get(handle);
   if (!obj) {
-    throw new Error(`abstractrange handle ${handle} not found`);
+    throw new Error(`AbstractRange handle ${handle} not found`);
   }
   return obj;
 }
@@ -1820,15 +1820,15 @@ export function getCollapsed(self: bigint): boolean {
 /** Type alias */
 export type NodeIteratorHandle = bigint;
 
-/** Handle table for nodeiterator instances */
-const _nodeIteratorhandles = new Map<bigint, nodeiterator>();
+/** Handle table for NodeIterator instances */
+const _nodeIteratorhandles = new Map<bigint, NodeIterator>();
 let _nextNodeIterator = 1n;
 
-/** Get a nodeiterator by handle, throwing if not found. */
-function getNodeIterator(handle: bigint): nodeiterator {
+/** Get a NodeIterator by handle, throwing if not found. */
+function getNodeIterator(handle: bigint): NodeIterator {
   const obj = _nodeIteratorhandles.get(handle);
   if (!obj) {
-    throw new Error(`nodeiterator handle ${handle} not found`);
+    throw new Error(`NodeIterator handle ${handle} not found`);
   }
   return obj;
 }
@@ -1844,7 +1844,7 @@ export function getRoot(self: bigint): bigint {
 /**
  * `get-reference-node()` operation.
  */
-export function getReferenceNode(self: bigint): bigint {
+export function getReferenceNode(self: bigint | undefined): bigint {
   const obj = getNodeIterator(self);
   return obj.referenceNode;
 }
@@ -1868,7 +1868,7 @@ export function getWhatToShow(self: bigint): number {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint | undefined): bigint | undefined {
+export function getFilter(self: bigint): bigint {
   const obj = getNodeIterator(self);
   return obj.filter ?? undefined;
 }
@@ -1876,7 +1876,7 @@ export function getFilter(self: bigint | undefined): bigint | undefined {
 /**
  * `next-node()` operation.
  */
-export function nextNode(self: bigint): bigint | undefined {
+export function nextNode(self: bigint): bigint {
   const obj = getNodeIterator(self);
   return obj.nextNode() ?? undefined;
 }
@@ -1892,7 +1892,7 @@ export function previousNode(self: bigint): bigint | undefined | undefined {
 /**
  * `detach()` operation.
  */
-export function detach(self: bigint): void {
+export function detach(self: bigint | undefined): void {
   const obj = getNodeIterator(self);
   obj.detach();
 }
@@ -1904,15 +1904,15 @@ export function detach(self: bigint): void {
 /** Type alias */
 export type TreeWalkerHandle = bigint;
 
-/** Handle table for treewalker instances */
-const _treeWalkerhandles = new Map<bigint, treewalker>();
+/** Handle table for TreeWalker instances */
+const _treeWalkerhandles = new Map<bigint, TreeWalker>();
 let _nextTreeWalker = 1n;
 
-/** Get a treewalker by handle, throwing if not found. */
-function getTreeWalker(handle: bigint): treewalker {
+/** Get a TreeWalker by handle, throwing if not found. */
+function getTreeWalker(handle: bigint): TreeWalker {
   const obj = _treeWalkerhandles.get(handle);
   if (!obj) {
-    throw new Error(`treewalker handle ${handle} not found`);
+    throw new Error(`TreeWalker handle ${handle} not found`);
   }
   return obj;
 }
@@ -1928,7 +1928,7 @@ export function getRoot(self: bigint): bigint {
 /**
  * `get-what-to-show()` operation.
  */
-export function getWhatToShow(self: bigint): number {
+export function getWhatToShow(self: bigint | undefined): bigint {
   const obj = getTreeWalker(self);
   return obj.whatToShow;
 }
@@ -1936,7 +1936,7 @@ export function getWhatToShow(self: bigint): number {
 /**
  * `get-filter()` operation.
  */
-export function getFilter(self: bigint): bigint | undefined {
+export function getFilter(self: bigint | undefined): bigint {
   const obj = getTreeWalker(self);
   return obj.filter ?? undefined;
 }
@@ -1960,7 +1960,7 @@ export function setCurrentNode(self: bigint, value: bigint): void {
 /**
  * `parent-node()` operation.
  */
-export function parentNode(self: bigint): bigint {
+export function parentNode(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.parentNode() ?? undefined;
 }
@@ -1968,7 +1968,7 @@ export function parentNode(self: bigint): bigint {
 /**
  * `first-child()` operation.
  */
-export function firstChild(self: Uint8Array): number | undefined {
+export function firstChild(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.firstChild() ?? undefined;
 }
@@ -1976,7 +1976,7 @@ export function firstChild(self: Uint8Array): number | undefined {
 /**
  * `last-child()` operation.
  */
-export function lastChild(self: bigint): bigint | undefined {
+export function lastChild(self: number): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.lastChild() ?? undefined;
 }
@@ -2020,15 +2020,15 @@ export function nextNode(self: bigint): bigint | undefined {
 /** Type alias */
 export type NodeFilterHandle = bigint;
 
-/** Handle table for nodefilter instances */
-const _nodeFilterhandles = new Map<bigint, nodefilter>();
+/** Handle table for NodeFilter instances */
+const _nodeFilterhandles = new Map<bigint, NodeFilter>();
 let _nextNodeFilter = 1n;
 
-/** Get a nodefilter by handle, throwing if not found. */
-function getNodeFilter(handle: bigint): nodefilter {
+/** Get a NodeFilter by handle, throwing if not found. */
+function getNodeFilter(handle: bigint): NodeFilter {
   const obj = _nodeFilterhandles.get(handle);
   if (!obj) {
-    throw new Error(`nodefilter handle ${handle} not found`);
+    throw new Error(`NodeFilter handle ${handle} not found`);
   }
   return obj;
 }
@@ -2048,15 +2048,15 @@ export function acceptNode(self: bigint, node: bigint): number {
 /** Type alias */
 export type DomTokenListHandle = bigint;
 
-/** Handle table for domtokenlist instances */
-const _domTokenListhandles = new Map<bigint, domtokenlist>();
+/** Handle table for DomTokenList instances */
+const _domTokenListhandles = new Map<bigint, DomTokenList>();
 let _nextDomTokenList = 1n;
 
-/** Get a domtokenlist by handle, throwing if not found. */
-function getDomTokenList(handle: bigint): domtokenlist {
+/** Get a DomTokenList by handle, throwing if not found. */
+function getDomTokenList(handle: bigint): DomTokenList {
   const obj = _domTokenListhandles.get(handle);
   if (!obj) {
-    throw new Error(`domtokenlist handle ${handle} not found`);
+    throw new Error(`DomTokenList handle ${handle} not found`);
   }
   return obj;
 }
@@ -2148,15 +2148,15 @@ export function setValue(self: bigint, value: bigint): void {
 /** Type alias */
 export type XPathResultHandle = bigint;
 
-/** Handle table for xpathresult instances */
-const _xPathResulthandles = new Map<bigint, xpathresult>();
+/** Handle table for XPathResult instances */
+const _xPathResulthandles = new Map<bigint, XPathResult>();
 let _nextXPathResult = 1n;
 
-/** Get a xpathresult by handle, throwing if not found. */
-function getXPathResult(handle: bigint): xpathresult {
+/** Get a XPathResult by handle, throwing if not found. */
+function getXPathResult(handle: bigint): XPathResult {
   const obj = _xPathResulthandles.get(handle);
   if (!obj) {
-    throw new Error(`xpathresult handle ${handle} not found`);
+    throw new Error(`XPathResult handle ${handle} not found`);
   }
   return obj;
 }
@@ -2240,15 +2240,15 @@ export function snapshotItem(self: bigint, index: number): bigint | undefined {
 /** Type alias */
 export type XPathExpressionHandle = bigint;
 
-/** Handle table for xpathexpression instances */
-const _xPathExpressionhandles = new Map<bigint, xpathexpression>();
+/** Handle table for XPathExpression instances */
+const _xPathExpressionhandles = new Map<bigint, XPathExpression>();
 let _nextXPathExpression = 1n;
 
-/** Get a xpathexpression by handle, throwing if not found. */
-function getXPathExpression(handle: bigint): xpathexpression {
+/** Get a XPathExpression by handle, throwing if not found. */
+function getXPathExpression(handle: bigint): XPathExpression {
   const obj = _xPathExpressionhandles.get(handle);
   if (!obj) {
-    throw new Error(`xpathexpression handle ${handle} not found`);
+    throw new Error(`XPathExpression handle ${handle} not found`);
   }
   return obj;
 }
@@ -2268,15 +2268,15 @@ export function evaluate(self: bigint, contextNode: bigint, type: number | undef
 /** Type alias */
 export type XPathNsResolverHandle = bigint;
 
-/** Handle table for xpathnsresolver instances */
-const _xPathNsResolverhandles = new Map<bigint, xpathnsresolver>();
+/** Handle table for XPathNsResolver instances */
+const _xPathNsResolverhandles = new Map<bigint, XPathNsResolver>();
 let _nextXPathNsResolver = 1n;
 
-/** Get a xpathnsresolver by handle, throwing if not found. */
-function getXPathNsResolver(handle: bigint): xpathnsresolver {
+/** Get a XPathNsResolver by handle, throwing if not found. */
+function getXPathNsResolver(handle: bigint): XPathNsResolver {
   const obj = _xPathNsResolverhandles.get(handle);
   if (!obj) {
-    throw new Error(`xpathnsresolver handle ${handle} not found`);
+    throw new Error(`XPathNsResolver handle ${handle} not found`);
   }
   return obj;
 }
@@ -2296,22 +2296,22 @@ export function lookupNamespaceUri(self: bigint, prefix: string | undefined): st
 /** Type alias */
 export type XPathEvaluatorBaseHandle = bigint;
 
-/** Handle table for xpathevaluatorbase instances */
-const _xPathEvaluatorBasehandles = new Map<bigint, xpathevaluatorbase>();
+/** Handle table for XPathEvaluatorBase instances */
+const _xPathEvaluatorBasehandles = new Map<bigint, XPathEvaluatorBase>();
 let _nextXPathEvaluatorBase = 1n;
 
-/** Register a new xpathevaluatorbase and return its handle. */
-function registerXPathEvaluatorBase(obj: xpathevaluatorbase): bigint {
+/** Register a new XPathEvaluatorBase and return its handle. */
+function registerXPathEvaluatorBase(obj: XPathEvaluatorBase): bigint {
   const handle = _nextXPathEvaluatorBase++;
   _xPathEvaluatorBasehandles.set(handle, obj);
   return handle;
 }
 
-/** Get a xpathevaluatorbase by handle, throwing if not found. */
-function getXPathEvaluatorBase(handle: bigint): xpathevaluatorbase {
+/** Get a XPathEvaluatorBase by handle, throwing if not found. */
+function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
   const obj = _xPathEvaluatorBasehandles.get(handle);
   if (!obj) {
-    throw new Error(`xpathevaluatorbase handle ${handle} not found`);
+    throw new Error(`XPathEvaluatorBase handle ${handle} not found`);
   }
   return obj;
 }
@@ -2347,15 +2347,15 @@ export function evaluate(self: bigint, expression: string, contextNode: bigint, 
 /** Type alias */
 export type XsltProcessorHandle = bigint;
 
-/** Handle table for xsltprocessor instances */
-const _xsltProcessorhandles = new Map<bigint, xsltprocessor>();
+/** Handle table for XsltProcessor instances */
+const _xsltProcessorhandles = new Map<bigint, XsltProcessor>();
 let _nextXsltProcessor = 1n;
 
-/** Get a xsltprocessor by handle, throwing if not found. */
-function getXsltProcessor(handle: bigint): xsltprocessor {
+/** Get a XsltProcessor by handle, throwing if not found. */
+function getXsltProcessor(handle: bigint): XsltProcessor {
   const obj = _xsltProcessorhandles.get(handle);
   if (!obj) {
-    throw new Error(`xsltprocessor handle ${handle} not found`);
+    throw new Error(`XsltProcessor handle ${handle} not found`);
   }
   return obj;
 }

@@ -32,7 +32,7 @@ function getServiceWorker(handle: bigint): ServiceWorker {
 /**
  * `get-script-url()` operation.
  */
-export function getScriptUrl(self: bigint): bigint {
+export function getScriptUrl(self: bigint): string {
   const obj = getServiceWorker(self);
   return obj.scriptUrl;
 }
@@ -40,7 +40,7 @@ export function getScriptUrl(self: bigint): bigint {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): bigint {
+export function getState(self: bigint): bigint | undefined {
   const obj = getServiceWorker(self);
   return obj.state;
 }
@@ -48,7 +48,7 @@ export function getState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function postMessage(self: bigint, message: bigint, transfer: bigint): void {
+export function postMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = getServiceWorker(self);
   obj.postMessage(message, transfer);
 }
@@ -64,7 +64,7 @@ export function getOnstatechange(self: bigint): bigint {
 /**
  * `set-onstatechange()` operation.
  */
-export function setOnstatechange(self: bigint, value: bigint): void {
+export function setOnstatechange(self: bigint, value: bigint | undefined): void {
   const obj = getServiceWorker(self);
   obj.onstatechange = value;
 }
@@ -76,15 +76,15 @@ export function setOnstatechange(self: bigint, value: bigint): void {
 /** Type alias */
 export type ServiceWorkerContainerHandle = bigint;
 
-/** Handle table for serviceworkercontainer instances */
-const _serviceWorkerContainerhandles = new Map<bigint, serviceworkercontainer>();
+/** Handle table for ServiceWorkerContainer instances */
+const _serviceWorkerContainerhandles = new Map<bigint, ServiceWorkerContainer>();
 let _nextServiceWorkerContainer = 1n;
 
-/** Get a serviceworkercontainer by handle, throwing if not found. */
-function getServiceWorkerContainer(handle: bigint): serviceworkercontainer {
+/** Get a ServiceWorkerContainer by handle, throwing if not found. */
+function getServiceWorkerContainer(handle: bigint): ServiceWorkerContainer {
   const obj = _serviceWorkerContainerhandles.get(handle);
   if (!obj) {
-    throw new Error(`serviceworkercontainer handle ${handle} not found`);
+    throw new Error(`ServiceWorkerContainer handle ${handle} not found`);
   }
   return obj;
 }
@@ -184,15 +184,15 @@ export function setOnmessageerror(self: bigint, value: bigint): void {
 /** Type alias */
 export type NavigationPreloadManagerHandle = bigint;
 
-/** Handle table for navigationpreloadmanager instances */
-const _navigationPreloadManagerhandles = new Map<bigint, navigationpreloadmanager>();
+/** Handle table for NavigationPreloadManager instances */
+const _navigationPreloadManagerhandles = new Map<bigint, NavigationPreloadManager>();
 let _nextNavigationPreloadManager = 1n;
 
-/** Get a navigationpreloadmanager by handle, throwing if not found. */
-function getNavigationPreloadManager(handle: bigint): navigationpreloadmanager {
+/** Get a NavigationPreloadManager by handle, throwing if not found. */
+function getNavigationPreloadManager(handle: bigint): NavigationPreloadManager {
   const obj = _navigationPreloadManagerhandles.get(handle);
   if (!obj) {
-    throw new Error(`navigationpreloadmanager handle ${handle} not found`);
+    throw new Error(`NavigationPreloadManager handle ${handle} not found`);
   }
   return obj;
 }
@@ -208,7 +208,7 @@ export function enable(self: bigint): bigint {
 /**
  * `disable()` operation.
  */
-export function disable(self: bigint): bigint | undefined {
+export function disable(self: bigint): bigint {
   const obj = getNavigationPreloadManager(self);
   return obj.disable();
 }
@@ -236,15 +236,15 @@ export function getState(self: bigint): bigint {
 /** Type alias */
 export type ClientHandle = bigint;
 
-/** Handle table for client instances */
-const _clientHandles = new Map<bigint, client>();
+/** Handle table for Client instances */
+const _clientHandles = new Map<bigint, Client>();
 let _nextClient = 1n;
 
-/** Get a client by handle, throwing if not found. */
-function getClient(handle: bigint): client {
+/** Get a Client by handle, throwing if not found. */
+function getClient(handle: bigint): Client {
   const obj = _clientHandles.get(handle);
   if (!obj) {
-    throw new Error(`client handle ${handle} not found`);
+    throw new Error(`Client handle ${handle} not found`);
   }
   return obj;
 }
@@ -252,7 +252,7 @@ function getClient(handle: bigint): client {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): string {
+export function getUrl(self: bigint): bigint {
   const obj = getClient(self);
   return obj.url;
 }
@@ -268,7 +268,7 @@ export function getFrameType(self: bigint): bigint {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): string {
+export function getId(self: bigint): bigint {
   const obj = getClient(self);
   return obj.id;
 }
@@ -276,7 +276,7 @@ export function getId(self: bigint): string {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): number {
+export function getType(self: bigint): bigint {
   const obj = getClient(self);
   return obj.type;
 }
@@ -294,17 +294,17 @@ export function postMessage(self: bigint, message: string, transfer: (bigint)[])
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type WindowClientHandle = (string)[] | undefined;
+export type WindowClientHandle = bigint;
 
-/** Handle table for windowclient instances */
-const _windowClienthandles = new Map<bigint, windowclient>();
+/** Handle table for WindowClient instances */
+const _windowClienthandles = new Map<bigint, WindowClient>();
 let _nextWindowClient = 1n;
 
-/** Get a windowclient by handle, throwing if not found. */
-function getWindowClient(handle: bigint): windowclient {
+/** Get a WindowClient by handle, throwing if not found. */
+function getWindowClient(handle: bigint): WindowClient {
   const obj = _windowClienthandles.get(handle);
   if (!obj) {
-    throw new Error(`windowclient handle ${handle} not found`);
+    throw new Error(`WindowClient handle ${handle} not found`);
   }
   return obj;
 }
@@ -320,7 +320,7 @@ export function getVisibilityState(self: bigint): bigint {
 /**
  * `get-focused()` operation.
  */
-export function getFocused(self: bigint): bigint | undefined {
+export function getFocused(self: bigint): bigint {
   const obj = getWindowClient(self);
   return obj.focused;
 }
@@ -328,7 +328,7 @@ export function getFocused(self: bigint): bigint | undefined {
 /**
  * `get-ancestor-origins()` operation.
  */
-export function getAncestorOrigins(self: bigint): (bigint)[] {
+export function getAncestorOrigins(self: bigint): bigint {
   const obj = getWindowClient(self);
   return obj.ancestorOrigins;
 }
@@ -344,7 +344,7 @@ export function focus(self: bigint): bigint {
 /**
  * `navigate()` operation.
  */
-export function navigate(self: bigint, url: bigint): bigint {
+export function navigate(self: bigint, url: string): bigint {
   const obj = getWindowClient(self);
   return obj.navigate(url);
 }
@@ -356,15 +356,15 @@ export function navigate(self: bigint, url: bigint): bigint {
 /** Type alias */
 export type ClientsHandle = bigint;
 
-/** Handle table for clients instances */
-const _clientsHandles = new Map<bigint, clients>();
+/** Handle table for Clients instances */
+const _clientsHandles = new Map<bigint, Clients>();
 let _nextClients = 1n;
 
-/** Get a clients by handle, throwing if not found. */
-function getClients(handle: bigint): clients {
+/** Get a Clients by handle, throwing if not found. */
+function getClients(handle: bigint): Clients {
   const obj = _clientsHandles.get(handle);
   if (!obj) {
-    throw new Error(`clients handle ${handle} not found`);
+    throw new Error(`Clients handle ${handle} not found`);
   }
   return obj;
 }
@@ -380,7 +380,7 @@ export function matchAll(self: bigint, options: bigint | undefined): bigint {
 /**
  * `open-window()` operation.
  */
-export function openWindow(self: bigint, url: string): bigint {
+export function openWindow(self: bigint, url: bigint): bigint {
   const obj = getClients(self);
   return obj.openWindow(url);
 }
@@ -388,7 +388,7 @@ export function openWindow(self: bigint, url: string): bigint {
 /**
  * `claim()` operation.
  */
-export function claim(self: bigint): bigint {
+export function claim(self: bigint): string {
   const obj = getClients(self);
   return obj.claim();
 }
@@ -400,15 +400,15 @@ export function claim(self: bigint): bigint {
 /** Type alias */
 export type ExtendableEventHandle = bigint;
 
-/** Handle table for extendableevent instances */
-const _extendableEventhandles = new Map<bigint, extendableevent>();
+/** Handle table for ExtendableEvent instances */
+const _extendableEventhandles = new Map<bigint, ExtendableEvent>();
 let _nextExtendableEvent = 1n;
 
-/** Get a extendableevent by handle, throwing if not found. */
-function getExtendableEvent(handle: bigint): extendableevent {
+/** Get a ExtendableEvent by handle, throwing if not found. */
+function getExtendableEvent(handle: bigint): ExtendableEvent {
   const obj = _extendableEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`extendableevent handle ${handle} not found`);
+    throw new Error(`ExtendableEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -416,7 +416,7 @@ function getExtendableEvent(handle: bigint): extendableevent {
 /**
  * `wait-until()` operation.
  */
-export function waitUntil(self: string, f: bigint): void {
+export function waitUntil(self: bigint, f: bigint): void {
   const obj = getExtendableEvent(self);
   obj.waitUntil(f);
 }
@@ -428,15 +428,15 @@ export function waitUntil(self: string, f: bigint): void {
 /** Type alias */
 export type InstallEventHandle = bigint;
 
-/** Handle table for installevent instances */
-const _installEventhandles = new Map<bigint, installevent>();
+/** Handle table for InstallEvent instances */
+const _installEventhandles = new Map<bigint, InstallEvent>();
 let _nextInstallEvent = 1n;
 
-/** Get a installevent by handle, throwing if not found. */
-function getInstallEvent(handle: bigint): installevent {
+/** Get a InstallEvent by handle, throwing if not found. */
+function getInstallEvent(handle: bigint): InstallEvent {
   const obj = _installEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`installevent handle ${handle} not found`);
+    throw new Error(`InstallEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -454,17 +454,17 @@ export function addRoutes(self: bigint, rules: bigint): bigint {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type FetchEventHandle = bigint;
+export type FetchEventHandle = boolean;
 
-/** Handle table for fetchevent instances */
-const _fetchEventhandles = new Map<bigint, fetchevent>();
+/** Handle table for FetchEvent instances */
+const _fetchEventhandles = new Map<bigint, FetchEvent>();
 let _nextFetchEvent = 1n;
 
-/** Get a fetchevent by handle, throwing if not found. */
-function getFetchEvent(handle: bigint): fetchevent {
+/** Get a FetchEvent by handle, throwing if not found. */
+function getFetchEvent(handle: bigint): FetchEvent {
   const obj = _fetchEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`fetchevent handle ${handle} not found`);
+    throw new Error(`FetchEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -480,7 +480,7 @@ export function getRequest(self: bigint): bigint {
 /**
  * `get-preload-response()` operation.
  */
-export function getPreloadResponse(self: bigint): boolean {
+export function getPreloadResponse(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.preloadResponse;
 }
@@ -488,7 +488,7 @@ export function getPreloadResponse(self: bigint): boolean {
 /**
  * `get-client-id()` operation.
  */
-export function getClientId(self: bigint): number {
+export function getClientId(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.clientId;
 }
@@ -496,7 +496,7 @@ export function getClientId(self: bigint): number {
 /**
  * `get-resulting-client-id()` operation.
  */
-export function getResultingClientId(self: bigint): bigint {
+export function getResultingClientId(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.resultingClientId;
 }
@@ -504,7 +504,7 @@ export function getResultingClientId(self: bigint): bigint {
 /**
  * `get-replaces-client-id()` operation.
  */
-export function getReplacesClientId(self: bigint): bigint {
+export function getReplacesClientId(self: bigint): string {
   const obj = getFetchEvent(self);
   return obj.replacesClientId;
 }
@@ -512,7 +512,7 @@ export function getReplacesClientId(self: bigint): bigint {
 /**
  * `get-handled()` operation.
  */
-export function getHandled(self: number): number {
+export function getHandled(self: bigint): bigint {
   const obj = getFetchEvent(self);
   return obj.handled;
 }
@@ -532,15 +532,15 @@ export function respondWith(self: bigint, r: bigint): void {
 /** Type alias */
 export type ExtendableMessageEventHandle = bigint;
 
-/** Handle table for extendablemessageevent instances */
-const _extendableMessageEventhandles = new Map<bigint, extendablemessageevent>();
+/** Handle table for ExtendableMessageEvent instances */
+const _extendableMessageEventhandles = new Map<bigint, ExtendableMessageEvent>();
 let _nextExtendableMessageEvent = 1n;
 
-/** Get a extendablemessageevent by handle, throwing if not found. */
-function getExtendableMessageEvent(handle: bigint): extendablemessageevent {
+/** Get a ExtendableMessageEvent by handle, throwing if not found. */
+function getExtendableMessageEvent(handle: bigint): ExtendableMessageEvent {
   const obj = _extendableMessageEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`extendablemessageevent handle ${handle} not found`);
+    throw new Error(`ExtendableMessageEvent handle ${handle} not found`);
   }
   return obj;
 }
@@ -548,7 +548,7 @@ function getExtendableMessageEvent(handle: bigint): extendablemessageevent {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): bigint | undefined {
+export function getData(self: bigint): string {
   const obj = getExtendableMessageEvent(self);
   return obj.data;
 }
@@ -556,7 +556,7 @@ export function getData(self: bigint): bigint | undefined {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): bigint {
+export function getOrigin(self: bigint): number {
   const obj = getExtendableMessageEvent(self);
   return obj.origin;
 }
@@ -572,7 +572,7 @@ export function getLastEventId(self: bigint): bigint {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: number): bigint | undefined {
+export function getSource(self: bigint): bigint | undefined {
   const obj = getExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -592,15 +592,15 @@ export function getPorts(self: bigint): (bigint)[] {
 /** Type alias */
 export type CacheHandle = bigint;
 
-/** Handle table for cache instances */
-const _cacheHandles = new Map<bigint, cache>();
+/** Handle table for Cache instances */
+const _cacheHandles = new Map<bigint, Cache>();
 let _nextCache = 1n;
 
-/** Get a cache by handle, throwing if not found. */
-function getCache(handle: bigint): cache {
+/** Get a Cache by handle, throwing if not found. */
+function getCache(handle: bigint): Cache {
   const obj = _cacheHandles.get(handle);
   if (!obj) {
-    throw new Error(`cache handle ${handle} not found`);
+    throw new Error(`Cache handle ${handle} not found`);
   }
   return obj;
 }
@@ -608,7 +608,7 @@ function getCache(handle: bigint): cache {
 /**
  * `match-all()` operation.
  */
-export function matchAll(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function matchAll(self: bigint, request: bigint, options: boolean): bigint {
   const obj = getCache(self);
   return obj.matchAll(request, options);
 }
@@ -616,7 +616,7 @@ export function matchAll(self: bigint, request: bigint | undefined, options: big
 /**
  * `add()` operation.
  */
-export function add(self: bigint, request: bigint): bigint | undefined {
+export function add(self: bigint, request: bigint): bigint {
   const obj = getCache(self);
   return obj.add(request);
 }
@@ -624,7 +624,7 @@ export function add(self: bigint, request: bigint): bigint | undefined {
 /**
  * `add-all()` operation.
  */
-export function addAll(self: bigint, requests: bigint): bigint {
+export function addAll(self: boolean, requests: bigint): bigint {
   const obj = getCache(self);
   return obj.addAll(requests);
 }
@@ -632,7 +632,7 @@ export function addAll(self: bigint, requests: bigint): bigint {
 /**
  * `put()` operation.
  */
-export function put(self: boolean, request: bigint, response: boolean): bigint {
+export function put(self: bigint, request: bigint, response: number): bigint {
   const obj = getCache(self);
   return obj.put(request, response);
 }
@@ -640,7 +640,7 @@ export function put(self: boolean, request: bigint, response: boolean): bigint {
 /**
  * `delete()` operation.
  */
-export function _delete(self: boolean | undefined, request: bigint, options: bigint): bigint {
+export function _delete(self: bigint, request: bigint, options: boolean): bigint {
   const obj = getCache(self);
   return obj._delete(request, options);
 }
@@ -648,7 +648,7 @@ export function _delete(self: boolean | undefined, request: bigint, options: big
 /**
  * `keys()` operation.
  */
-export function keys(self: bigint, request: bigint, options: bigint | undefined | undefined): bigint {
+export function keys(self: bigint, request: bigint | undefined, options: bigint): bigint {
   const obj = getCache(self);
   return obj.keys(request, options);
 }
@@ -660,15 +660,15 @@ export function keys(self: bigint, request: bigint, options: bigint | undefined 
 /** Type alias */
 export type CacheStorageHandle = bigint;
 
-/** Handle table for cachestorage instances */
-const _cacheStoragehandles = new Map<bigint, cachestorage>();
+/** Handle table for CacheStorage instances */
+const _cacheStoragehandles = new Map<bigint, CacheStorage>();
 let _nextCacheStorage = 1n;
 
-/** Get a cachestorage by handle, throwing if not found. */
-function getCacheStorage(handle: bigint): cachestorage {
+/** Get a CacheStorage by handle, throwing if not found. */
+function getCacheStorage(handle: bigint): CacheStorage {
   const obj = _cacheStoragehandles.get(handle);
   if (!obj) {
-    throw new Error(`cachestorage handle ${handle} not found`);
+    throw new Error(`CacheStorage handle ${handle} not found`);
   }
   return obj;
 }
@@ -684,7 +684,7 @@ export function has(self: bigint, cacheName: string): bigint {
 /**
  * `open()` operation.
  */
-export function open(self: bigint, cacheName: bigint): bigint {
+export function open(self: bigint, cacheName: string): bigint {
   const obj = getCacheStorage(self);
   return obj.open(cacheName);
 }
@@ -692,7 +692,7 @@ export function open(self: bigint, cacheName: bigint): bigint {
 /**
  * `delete()` operation.
  */
-export function _delete(self: number, cacheName: Uint8Array): bigint {
+export function _delete(self: bigint, cacheName: bigint): bigint {
   const obj = getCacheStorage(self);
   return obj._delete(cacheName);
 }
@@ -700,7 +700,7 @@ export function _delete(self: number, cacheName: Uint8Array): bigint {
 /**
  * `keys()` operation.
  */
-export function keys(self: string): bigint {
+export function keys(self: Uint8Array): bigint {
   const obj = getCacheStorage(self);
   return obj.keys();
 }

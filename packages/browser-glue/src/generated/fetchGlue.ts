@@ -27,7 +27,7 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type HeadersHandle = bigint;
+export type HeadersHandle = (bigint)[] | undefined;
 
 /** Handle table for Headers instances */
 const _headersHandles = new Map<bigint, Headers>();
@@ -45,7 +45,7 @@ function getHeaders(handle: bigint): Headers {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: string, value: string): void {
+export function append(self: bigint, name: string, value: bigint): void {
   const obj = getHeaders(self);
   obj.append(name, value);
 }
@@ -53,7 +53,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: number): void {
+export function _delete(self: bigint, name: string): void {
   const obj = getHeaders(self);
   obj._delete(name);
 }
@@ -61,7 +61,7 @@ export function _delete(self: bigint, name: number): void {
 /**
  * `get()` operation.
  */
-export function _get(self: string, name: string): string | undefined {
+export function _get(self: bigint, name: bigint): number | undefined {
   const obj = getHeaders(self);
   return obj._get(name) ?? undefined;
 }
@@ -69,7 +69,7 @@ export function _get(self: string, name: string): string | undefined {
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): (bigint)[] {
+export function getSetCookie(self: boolean): bigint {
   const obj = getHeaders(self);
   return obj.setCookie;
 }
@@ -77,7 +77,7 @@ export function getSetCookie(self: bigint): (bigint)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: bigint): bigint | undefined {
+export function has(self: boolean, name: string): boolean {
   const obj = getHeaders(self);
   return obj.has(name);
 }
@@ -85,7 +85,7 @@ export function has(self: bigint, name: bigint): bigint | undefined {
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: bigint, value: string): void {
+export function _set(self: bigint, name: string, value: string): void {
   const obj = getHeaders(self);
   obj._set(name, value);
 }
@@ -113,7 +113,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined {
+export function getBody(self: string): bigint {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -121,7 +121,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
+export function getBodyUsed(self: bigint): bigint | undefined {
   const obj = getBody(self);
   return obj.bodyUsed;
 }
@@ -169,7 +169,7 @@ export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `pollBlob()`
  */
-export function blob(self: bigint): (bigint)[] {
+export function blob(self: bigint): boolean {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.blob()
@@ -194,7 +194,7 @@ export function blob(self: bigint): (bigint)[] {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: (bigint)[] } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -207,7 +207,7 @@ export function pollBlob(requestId: bigint): { ok: true; value: (bigint)[] } | {
  *
  * Async operation: returns request ID, poll with `pollBytes()`
  */
-export function bytes(self: bigint): string | undefined {
+export function bytes(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.bytes()
@@ -232,7 +232,7 @@ export function bytes(self: bigint): string | undefined {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -283,7 +283,7 @@ export function pollFormData(requestId: bigint): { ok: true; value: bigint } | {
  *
  * Async operation: returns request ID, poll with `pollJson()`
  */
-export function json(self: (bigint)[]): bigint {
+export function json(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.json()
@@ -321,7 +321,7 @@ export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok:
  *
  * Async operation: returns request ID, poll with `pollText()`
  */
-export function text(self: number): string | undefined {
+export function text(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getBody(self);
   const promise = obj.text()
@@ -346,7 +346,7 @@ export function text(self: number): string | undefined {
  * Poll an async `text()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollText(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -393,7 +393,7 @@ export function getUrl(self: bigint): string {
 /**
  * `get-headers()` operation.
  */
-export function getHeaders(self: bigint): bigint {
+export function getHeaders(self: bigint): string {
   const obj = getRequest(self);
   return obj.headers;
 }
@@ -417,7 +417,7 @@ export function getReferrer(self: bigint): string {
 /**
  * `get-referrer-policy()` operation.
  */
-export function getReferrerPolicy(self: bigint): string {
+export function getReferrerPolicy(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.referrerPolicy;
 }
@@ -465,7 +465,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): boolean {
+export function getKeepalive(self: bigint): bigint {
   const obj = getRequest(self);
   return obj.keepalive;
 }
@@ -489,7 +489,7 @@ export function getIsHistoryNavigation(self: bigint): boolean {
 /**
  * `get-signal()` operation.
  */
-export function getSignal(self: bigint): bigint {
+export function getSignal(self: string): string {
   const obj = getRequest(self);
   return obj.signal;
 }
@@ -497,7 +497,7 @@ export function getSignal(self: bigint): bigint {
 /**
  * `get-duplex()` operation.
  */
-export function getDuplex(self: bigint): bigint {
+export function getDuplex(self: string): bigint {
   const obj = getRequest(self);
   return obj.duplex;
 }
@@ -507,7 +507,7 @@ export function getDuplex(self: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `pollClone()`
  */
-export function clone(self: bigint): bigint {
+export function clone(self: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getRequest(self);
   const promise = obj.clone()
@@ -570,7 +570,7 @@ export function error(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: bigint): string {
+export function redirect(url: string, status: number | undefined): bigint {
   const obj = getResponse(self);
   return obj.redirect(url, status);
 }
@@ -580,7 +580,7 @@ export function redirect(url: string, status: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollJson()`
  */
-export function json(data: string, init: string | undefined): bigint {
+export function json(data: string, init: bigint): string {
   const requestId = _nextAsyncHandle++;
   const obj = getResponse(self);
   const promise = obj.json(data, init)
@@ -605,7 +605,7 @@ export function json(data: string, init: string | undefined): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollJson(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -632,7 +632,7 @@ export function getUrl(self: bigint): string {
 /**
  * `get-redirected()` operation.
  */
-export function getRedirected(self: bigint): boolean {
+export function getRedirected(self: bigint): bigint | undefined {
   const obj = getResponse(self);
   return obj.redirected;
 }
@@ -640,7 +640,7 @@ export function getRedirected(self: bigint): boolean {
 /**
  * `get-status()` operation.
  */
-export function getStatus(self: bigint): number {
+export function getStatus(self: bigint): bigint {
   const obj = getResponse(self);
   return obj.status;
 }
@@ -714,22 +714,22 @@ export function pollClone(requestId: bigint): { ok: true; value: bigint } | { ok
 /** Type alias */
 export type WindowOrWorkerGlobalScopeHandle = bigint;
 
-/** Handle table for windoworworkerglobalscope instances */
-const _windowOrWorkerGlobalScopehandles = new Map<bigint, windoworworkerglobalscope>();
+/** Handle table for WindowOrWorkerGlobalScope instances */
+const _windowOrWorkerGlobalScopehandles = new Map<bigint, WindowOrWorkerGlobalScope>();
 let _nextWindowOrWorkerGlobalScope = 1n;
 
-/** Register a new windoworworkerglobalscope and return its handle. */
-function registerWindowOrWorkerGlobalScope(obj: windoworworkerglobalscope): bigint {
+/** Register a new WindowOrWorkerGlobalScope and return its handle. */
+function registerWindowOrWorkerGlobalScope(obj: WindowOrWorkerGlobalScope): bigint {
   const handle = _nextWindowOrWorkerGlobalScope++;
   _windowOrWorkerGlobalScopehandles.set(handle, obj);
   return handle;
 }
 
-/** Get a windoworworkerglobalscope by handle, throwing if not found. */
-function getWindowOrWorkerGlobalScope(handle: bigint): windoworworkerglobalscope {
+/** Get a WindowOrWorkerGlobalScope by handle, throwing if not found. */
+function getWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
   const obj = _windowOrWorkerGlobalScopehandles.get(handle);
   if (!obj) {
-    throw new Error(`windoworworkerglobalscope handle ${handle} not found`);
+    throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
   }
   return obj;
 }
@@ -937,15 +937,15 @@ export function getCrypto(self: bigint): bigint {
 /** Type alias */
 export type FetchLaterResultHandle = bigint;
 
-/** Handle table for fetchlaterresult instances */
-const _fetchLaterResulthandles = new Map<bigint, fetchlaterresult>();
+/** Handle table for FetchLaterResult instances */
+const _fetchLaterResulthandles = new Map<bigint, FetchLaterResult>();
 let _nextFetchLaterResult = 1n;
 
-/** Get a fetchlaterresult by handle, throwing if not found. */
-function getFetchLaterResult(handle: bigint): fetchlaterresult {
+/** Get a FetchLaterResult by handle, throwing if not found. */
+function getFetchLaterResult(handle: bigint): FetchLaterResult {
   const obj = _fetchLaterResulthandles.get(handle);
   if (!obj) {
-    throw new Error(`fetchlaterresult handle ${handle} not found`);
+    throw new Error(`FetchLaterResult handle ${handle} not found`);
   }
   return obj;
 }
@@ -1161,15 +1161,15 @@ export function tee(self: bigint): (bigint)[] {
 /** Type alias */
 export type ReadableStreamGenericReaderHandle = bigint;
 
-/** Handle table for readablestreamgenericreader instances */
-const _readableStreamGenericReaderhandles = new Map<bigint, readablestreamgenericreader>();
+/** Handle table for ReadableStreamGenericReader instances */
+const _readableStreamGenericReaderhandles = new Map<bigint, ReadableStreamGenericReader>();
 let _nextReadableStreamGenericReader = 1n;
 
-/** Get a readablestreamgenericreader by handle, throwing if not found. */
-function getReadableStreamGenericReader(handle: bigint): readablestreamgenericreader {
+/** Get a ReadableStreamGenericReader by handle, throwing if not found. */
+function getReadableStreamGenericReader(handle: bigint): ReadableStreamGenericReader {
   const obj = _readableStreamGenericReaderhandles.get(handle);
   if (!obj) {
-    throw new Error(`readablestreamgenericreader handle ${handle} not found`);
+    throw new Error(`ReadableStreamGenericReader handle ${handle} not found`);
   }
   return obj;
 }
@@ -1227,15 +1227,15 @@ export function pollCancel(requestId: bigint): { ok: true; value: bigint } | { o
 /** Type alias */
 export type ReadableStreamDefaultReaderHandle = bigint;
 
-/** Handle table for readablestreamdefaultreader instances */
-const _readableStreamDefaultReaderhandles = new Map<bigint, readablestreamdefaultreader>();
+/** Handle table for ReadableStreamDefaultReader instances */
+const _readableStreamDefaultReaderhandles = new Map<bigint, ReadableStreamDefaultReader>();
 let _nextReadableStreamDefaultReader = 1n;
 
-/** Get a readablestreamdefaultreader by handle, throwing if not found. */
-function getReadableStreamDefaultReader(handle: bigint): readablestreamdefaultreader {
+/** Get a ReadableStreamDefaultReader by handle, throwing if not found. */
+function getReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaultReader {
   const obj = _readableStreamDefaultReaderhandles.get(handle);
   if (!obj) {
-    throw new Error(`readablestreamdefaultreader handle ${handle} not found`);
+    throw new Error(`ReadableStreamDefaultReader handle ${handle} not found`);
   }
   return obj;
 }
@@ -1293,15 +1293,15 @@ export function releaseLock(self: bigint): void {
 /** Type alias */
 export type ReadableStreamByobReaderHandle = bigint;
 
-/** Handle table for readablestreambyobreader instances */
-const _readableStreamByobReaderhandles = new Map<bigint, readablestreambyobreader>();
+/** Handle table for ReadableStreamByobReader instances */
+const _readableStreamByobReaderhandles = new Map<bigint, ReadableStreamByobReader>();
 let _nextReadableStreamByobReader = 1n;
 
-/** Get a readablestreambyobreader by handle, throwing if not found. */
-function getReadableStreamByobReader(handle: bigint): readablestreambyobreader {
+/** Get a ReadableStreamByobReader by handle, throwing if not found. */
+function getReadableStreamByobReader(handle: bigint): ReadableStreamByobReader {
   const obj = _readableStreamByobReaderhandles.get(handle);
   if (!obj) {
-    throw new Error(`readablestreambyobreader handle ${handle} not found`);
+    throw new Error(`ReadableStreamByobReader handle ${handle} not found`);
   }
   return obj;
 }
@@ -1359,15 +1359,15 @@ export function releaseLock(self: bigint): void {
 /** Type alias */
 export type ReadableStreamDefaultControllerHandle = bigint;
 
-/** Handle table for readablestreamdefaultcontroller instances */
-const _readableStreamDefaultControllerhandles = new Map<bigint, readablestreamdefaultcontroller>();
+/** Handle table for ReadableStreamDefaultController instances */
+const _readableStreamDefaultControllerhandles = new Map<bigint, ReadableStreamDefaultController>();
 let _nextReadableStreamDefaultController = 1n;
 
-/** Get a readablestreamdefaultcontroller by handle, throwing if not found. */
-function getReadableStreamDefaultController(handle: bigint): readablestreamdefaultcontroller {
+/** Get a ReadableStreamDefaultController by handle, throwing if not found. */
+function getReadableStreamDefaultController(handle: bigint): ReadableStreamDefaultController {
   const obj = _readableStreamDefaultControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`readablestreamdefaultcontroller handle ${handle} not found`);
+    throw new Error(`ReadableStreamDefaultController handle ${handle} not found`);
   }
   return obj;
 }
@@ -1441,15 +1441,15 @@ export function error(self: bigint, e: string | undefined): void {
 /** Type alias */
 export type ReadableByteStreamControllerHandle = bigint;
 
-/** Handle table for readablebytestreamcontroller instances */
-const _readableByteStreamControllerhandles = new Map<bigint, readablebytestreamcontroller>();
+/** Handle table for ReadableByteStreamController instances */
+const _readableByteStreamControllerhandles = new Map<bigint, ReadableByteStreamController>();
 let _nextReadableByteStreamController = 1n;
 
-/** Get a readablebytestreamcontroller by handle, throwing if not found. */
-function getReadableByteStreamController(handle: bigint): readablebytestreamcontroller {
+/** Get a ReadableByteStreamController by handle, throwing if not found. */
+function getReadableByteStreamController(handle: bigint): ReadableByteStreamController {
   const obj = _readableByteStreamControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`readablebytestreamcontroller handle ${handle} not found`);
+    throw new Error(`ReadableByteStreamController handle ${handle} not found`);
   }
   return obj;
 }
@@ -1531,15 +1531,15 @@ export function error(self: bigint, e: string | undefined): void {
 /** Type alias */
 export type ReadableStreamByobRequestHandle = bigint;
 
-/** Handle table for readablestreambyobrequest instances */
-const _readableStreamByobRequesthandles = new Map<bigint, readablestreambyobrequest>();
+/** Handle table for ReadableStreamByobRequest instances */
+const _readableStreamByobRequesthandles = new Map<bigint, ReadableStreamByobRequest>();
 let _nextReadableStreamByobRequest = 1n;
 
-/** Get a readablestreambyobrequest by handle, throwing if not found. */
-function getReadableStreamByobRequest(handle: bigint): readablestreambyobrequest {
+/** Get a ReadableStreamByobRequest by handle, throwing if not found. */
+function getReadableStreamByobRequest(handle: bigint): ReadableStreamByobRequest {
   const obj = _readableStreamByobRequesthandles.get(handle);
   if (!obj) {
-    throw new Error(`readablestreambyobrequest handle ${handle} not found`);
+    throw new Error(`ReadableStreamByobRequest handle ${handle} not found`);
   }
   return obj;
 }
@@ -1717,15 +1717,15 @@ export function getWriter(self: bigint): bigint {
 /** Type alias */
 export type WritableStreamDefaultWriterHandle = bigint;
 
-/** Handle table for writablestreamdefaultwriter instances */
-const _writableStreamDefaultWriterhandles = new Map<bigint, writablestreamdefaultwriter>();
+/** Handle table for WritableStreamDefaultWriter instances */
+const _writableStreamDefaultWriterhandles = new Map<bigint, WritableStreamDefaultWriter>();
 let _nextWritableStreamDefaultWriter = 1n;
 
-/** Get a writablestreamdefaultwriter by handle, throwing if not found. */
-function getWritableStreamDefaultWriter(handle: bigint): writablestreamdefaultwriter {
+/** Get a WritableStreamDefaultWriter by handle, throwing if not found. */
+function getWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaultWriter {
   const obj = _writableStreamDefaultWriterhandles.get(handle);
   if (!obj) {
-    throw new Error(`writablestreamdefaultwriter handle ${handle} not found`);
+    throw new Error(`WritableStreamDefaultWriter handle ${handle} not found`);
   }
   return obj;
 }
@@ -1883,15 +1883,15 @@ export function pollWrite(requestId: bigint): { ok: true; value: bigint } | { ok
 /** Type alias */
 export type WritableStreamDefaultControllerHandle = bigint;
 
-/** Handle table for writablestreamdefaultcontroller instances */
-const _writableStreamDefaultControllerhandles = new Map<bigint, writablestreamdefaultcontroller>();
+/** Handle table for WritableStreamDefaultController instances */
+const _writableStreamDefaultControllerhandles = new Map<bigint, WritableStreamDefaultController>();
 let _nextWritableStreamDefaultController = 1n;
 
-/** Get a writablestreamdefaultcontroller by handle, throwing if not found. */
-function getWritableStreamDefaultController(handle: bigint): writablestreamdefaultcontroller {
+/** Get a WritableStreamDefaultController by handle, throwing if not found. */
+function getWritableStreamDefaultController(handle: bigint): WritableStreamDefaultController {
   const obj = _writableStreamDefaultControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`writablestreamdefaultcontroller handle ${handle} not found`);
+    throw new Error(`WritableStreamDefaultController handle ${handle} not found`);
   }
   return obj;
 }
@@ -1955,15 +1955,15 @@ export function getWritable(self: bigint): bigint {
 /** Type alias */
 export type TransformStreamDefaultControllerHandle = bigint;
 
-/** Handle table for transformstreamdefaultcontroller instances */
-const _transformStreamDefaultControllerhandles = new Map<bigint, transformstreamdefaultcontroller>();
+/** Handle table for TransformStreamDefaultController instances */
+const _transformStreamDefaultControllerhandles = new Map<bigint, TransformStreamDefaultController>();
 let _nextTransformStreamDefaultController = 1n;
 
-/** Get a transformstreamdefaultcontroller by handle, throwing if not found. */
-function getTransformStreamDefaultController(handle: bigint): transformstreamdefaultcontroller {
+/** Get a TransformStreamDefaultController by handle, throwing if not found. */
+function getTransformStreamDefaultController(handle: bigint): TransformStreamDefaultController {
   const obj = _transformStreamDefaultControllerhandles.get(handle);
   if (!obj) {
-    throw new Error(`transformstreamdefaultcontroller handle ${handle} not found`);
+    throw new Error(`TransformStreamDefaultController handle ${handle} not found`);
   }
   return obj;
 }
@@ -2007,15 +2007,15 @@ export function terminate(self: bigint): void {
 /** Type alias */
 export type ByteLengthQueuingStrategyHandle = bigint;
 
-/** Handle table for bytelengthqueuingstrategy instances */
-const _byteLengthQueuingStrategyhandles = new Map<bigint, bytelengthqueuingstrategy>();
+/** Handle table for ByteLengthQueuingStrategy instances */
+const _byteLengthQueuingStrategyhandles = new Map<bigint, ByteLengthQueuingStrategy>();
 let _nextByteLengthQueuingStrategy = 1n;
 
-/** Get a bytelengthqueuingstrategy by handle, throwing if not found. */
-function getByteLengthQueuingStrategy(handle: bigint): bytelengthqueuingstrategy {
+/** Get a ByteLengthQueuingStrategy by handle, throwing if not found. */
+function getByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrategy {
   const obj = _byteLengthQueuingStrategyhandles.get(handle);
   if (!obj) {
-    throw new Error(`bytelengthqueuingstrategy handle ${handle} not found`);
+    throw new Error(`ByteLengthQueuingStrategy handle ${handle} not found`);
   }
   return obj;
 }
@@ -2043,15 +2043,15 @@ export function getSize(self: bigint): bigint {
 /** Type alias */
 export type CountQueuingStrategyHandle = bigint;
 
-/** Handle table for countqueuingstrategy instances */
-const _countQueuingStrategyhandles = new Map<bigint, countqueuingstrategy>();
+/** Handle table for CountQueuingStrategy instances */
+const _countQueuingStrategyhandles = new Map<bigint, CountQueuingStrategy>();
 let _nextCountQueuingStrategy = 1n;
 
-/** Get a countqueuingstrategy by handle, throwing if not found. */
-function getCountQueuingStrategy(handle: bigint): countqueuingstrategy {
+/** Get a CountQueuingStrategy by handle, throwing if not found. */
+function getCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
   const obj = _countQueuingStrategyhandles.get(handle);
   if (!obj) {
-    throw new Error(`countqueuingstrategy handle ${handle} not found`);
+    throw new Error(`CountQueuingStrategy handle ${handle} not found`);
   }
   return obj;
 }
@@ -2079,15 +2079,15 @@ export function getSize(self: bigint): bigint {
 /** Type alias */
 export type GenericTransformStreamHandle = bigint;
 
-/** Handle table for generictransformstream instances */
-const _genericTransformStreamhandles = new Map<bigint, generictransformstream>();
+/** Handle table for GenericTransformStream instances */
+const _genericTransformStreamhandles = new Map<bigint, GenericTransformStream>();
 let _nextGenericTransformStream = 1n;
 
-/** Get a generictransformstream by handle, throwing if not found. */
-function getGenericTransformStream(handle: bigint): generictransformstream {
+/** Get a GenericTransformStream by handle, throwing if not found. */
+function getGenericTransformStream(handle: bigint): GenericTransformStream {
   const obj = _genericTransformStreamhandles.get(handle);
   if (!obj) {
-    throw new Error(`generictransformstream handle ${handle} not found`);
+    throw new Error(`GenericTransformStream handle ${handle} not found`);
   }
   return obj;
 }
@@ -2115,15 +2115,15 @@ export function getWritable(self: bigint): bigint {
 /** Type alias */
 export type XmlHttpRequestEventTargetHandle = bigint;
 
-/** Handle table for xmlhttprequesteventtarget instances */
-const _xmlHttpRequestEventTargethandles = new Map<bigint, xmlhttprequesteventtarget>();
+/** Handle table for XmlHttpRequestEventTarget instances */
+const _xmlHttpRequestEventTargethandles = new Map<bigint, XmlHttpRequestEventTarget>();
 let _nextXmlHttpRequestEventTarget = 1n;
 
-/** Get a xmlhttprequesteventtarget by handle, throwing if not found. */
-function getXmlHttpRequestEventTarget(handle: bigint): xmlhttprequesteventtarget {
+/** Get a XmlHttpRequestEventTarget by handle, throwing if not found. */
+function getXmlHttpRequestEventTarget(handle: bigint): XmlHttpRequestEventTarget {
   const obj = _xmlHttpRequestEventTargethandles.get(handle);
   if (!obj) {
-    throw new Error(`xmlhttprequesteventtarget handle ${handle} not found`);
+    throw new Error(`XmlHttpRequestEventTarget handle ${handle} not found`);
   }
   return obj;
 }
@@ -2247,15 +2247,15 @@ export function setOnloadend(self: bigint, value: bigint): void {
 /** Type alias */
 export type XmlHttpRequestHandle = bigint;
 
-/** Handle table for xmlhttprequest instances */
-const _xmlHttpRequesthandles = new Map<bigint, xmlhttprequest>();
+/** Handle table for XmlHttpRequest instances */
+const _xmlHttpRequesthandles = new Map<bigint, XmlHttpRequest>();
 let _nextXmlHttpRequest = 1n;
 
-/** Get a xmlhttprequest by handle, throwing if not found. */
-function getXmlHttpRequest(handle: bigint): xmlhttprequest {
+/** Get a XmlHttpRequest by handle, throwing if not found. */
+function getXmlHttpRequest(handle: bigint): XmlHttpRequest {
   const obj = _xmlHttpRequesthandles.get(handle);
   if (!obj) {
-    throw new Error(`xmlhttprequest handle ${handle} not found`);
+    throw new Error(`XmlHttpRequest handle ${handle} not found`);
   }
   return obj;
 }
@@ -2481,15 +2481,15 @@ export function getResponseXml(self: bigint): bigint | undefined {
 /** Type alias */
 export type FormDataHandle = bigint;
 
-/** Handle table for formdata instances */
-const _formDatahandles = new Map<bigint, formdata>();
+/** Handle table for FormData instances */
+const _formDatahandles = new Map<bigint, FormData>();
 let _nextFormData = 1n;
 
-/** Get a formdata by handle, throwing if not found. */
-function getFormData(handle: bigint): formdata {
+/** Get a FormData by handle, throwing if not found. */
+function getFormData(handle: bigint): FormData {
   const obj = _formDatahandles.get(handle);
   if (!obj) {
-    throw new Error(`formdata handle ${handle} not found`);
+    throw new Error(`FormData handle ${handle} not found`);
   }
   return obj;
 }
@@ -2549,15 +2549,15 @@ export function _set(self: bigint, name: string, value: string): void {
 /** Type alias */
 export type ProgressEventHandle = bigint;
 
-/** Handle table for progressevent instances */
-const _progressEventhandles = new Map<bigint, progressevent>();
+/** Handle table for ProgressEvent instances */
+const _progressEventhandles = new Map<bigint, ProgressEvent>();
 let _nextProgressEvent = 1n;
 
-/** Get a progressevent by handle, throwing if not found. */
-function getProgressEvent(handle: bigint): progressevent {
+/** Get a ProgressEvent by handle, throwing if not found. */
+function getProgressEvent(handle: bigint): ProgressEvent {
   const obj = _progressEventhandles.get(handle);
   if (!obj) {
-    throw new Error(`progressevent handle ${handle} not found`);
+    throw new Error(`ProgressEvent handle ${handle} not found`);
   }
   return obj;
 }

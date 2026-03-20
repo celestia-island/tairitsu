@@ -40,7 +40,7 @@ export function getSubtle(self: bigint): bigint {
 /**
  * `get-random-values()` operation.
  */
-export function getRandomValues(self: bigint, array: Uint8Array): bigint | undefined {
+export function getRandomValues(self: bigint, array: Uint8Array): Uint8Array {
   const obj = getCrypto(self);
   return obj.randomValues;
 }
@@ -48,7 +48,7 @@ export function getRandomValues(self: bigint, array: Uint8Array): bigint | undef
 /**
  * `random-uuid()` operation.
  */
-export function randomUuid(self: bigint): string {
+export function randomUuid(self: bigint): bigint {
   const obj = getCrypto(self);
   return obj.randomUuid();
 }
@@ -76,7 +76,7 @@ function getCryptoKey(handle: bigint): CryptoKey {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): bigint | undefined {
+export function getType(self: string): bigint {
   const obj = getCryptoKey(self);
   return obj.type;
 }
@@ -92,7 +92,7 @@ export function getExtractable(self: bigint): boolean {
 /**
  * `get-algorithm()` operation.
  */
-export function getAlgorithm(self: boolean): bigint {
+export function getAlgorithm(self: bigint): bigint {
   const obj = getCryptoKey(self);
   return obj.algorithm;
 }
@@ -128,7 +128,7 @@ function getSubtleCrypto(handle: bigint): SubtleCrypto {
 /**
  * `encrypt()` operation.
  */
-export function encrypt(self: bigint, algorithm: bigint, key: string, data: bigint): bigint {
+export function encrypt(self: bigint, algorithm: bigint, key: bigint, data: Uint8Array): bigint {
   const obj = getSubtleCrypto(self);
   return obj.encrypt(algorithm, key, data);
 }
@@ -136,7 +136,7 @@ export function encrypt(self: bigint, algorithm: bigint, key: string, data: bigi
 /**
  * `decrypt()` operation.
  */
-export function decrypt(self: bigint, algorithm: bigint, key: bigint, data: bigint): bigint {
+export function decrypt(self: bigint, algorithm: bigint, key: bigint, data: (bigint)[]): bigint {
   const obj = getSubtleCrypto(self);
   return obj.decrypt(algorithm, key, data);
 }
@@ -144,7 +144,7 @@ export function decrypt(self: bigint, algorithm: bigint, key: bigint, data: bigi
 /**
  * `sign()` operation.
  */
-export function sign(self: bigint, algorithm: bigint, key: bigint, data: bigint): bigint | undefined {
+export function sign(self: bigint, algorithm: bigint, key: bigint, data: Uint8Array): bigint {
   const obj = getSubtleCrypto(self);
   return obj.sign(algorithm, key, data);
 }
@@ -152,7 +152,7 @@ export function sign(self: bigint, algorithm: bigint, key: bigint, data: bigint)
 /**
  * `verify()` operation.
  */
-export function verify(self: bigint, algorithm: bigint, key: bigint, signature: Uint8Array, data: bigint): string {
+export function verify(self: bigint, algorithm: bigint, key: bigint, signature: Uint8Array, data: bigint): bigint {
   const obj = getSubtleCrypto(self);
   return obj.verify(algorithm, key, signature, data);
 }
@@ -184,7 +184,7 @@ export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, len
 /**
  * `import-key()` operation.
  */
-export function importKey(self: bigint, format: bigint, keyData: (bigint)[], algorithm: bigint, extractable: number, keyUsages: (bigint)[]): bigint {
+export function importKey(self: bigint, format: bigint, keyData: (bigint)[], algorithm: bigint, extractable: boolean, keyUsages: (bigint)[]): bigint {
   const obj = getSubtleCrypto(self);
   return obj.importKey(format, keyData, algorithm, extractable, keyUsages);
 }
@@ -200,7 +200,7 @@ export function wrapKey(self: bigint, format: bigint | undefined, key: bigint, w
 /**
  * `unwrap-key()` operation.
  */
-export function unwrapKey(self: bigint, format: bigint, wrappedKey: Uint8Array, unwrappingKey: bigint, unwrapAlgorithm: number, unwrappedKeyAlgorithm: bigint, extractable: boolean, keyUsages: (bigint)[]): bigint {
+export function unwrapKey(self: bigint, format: (string)[] | undefined, wrappedKey: (string)[], unwrappingKey: bigint, unwrapAlgorithm: bigint, unwrappedKeyAlgorithm: bigint, extractable: bigint, keyUsages: (string)[]): bigint {
   const obj = getSubtleCrypto(self);
   return obj.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgorithm, unwrappedKeyAlgorithm, extractable, keyUsages);
 }
