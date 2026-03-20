@@ -49,7 +49,6 @@ function getCredential(handle: bigint): Credential {
   }
   return obj;
 }
-
 /**
  * `get-id()` operation.
  */
@@ -122,7 +121,6 @@ function getCredentialUserData(handle: bigint): any {
   }
   return obj;
 }
-
 /**
  * `get-name()` operation.
  */
@@ -156,7 +154,6 @@ function registerCredentialsContainer(obj: CredentialsContainer): bigint {
   _credentialsContainerhandles.set(handle, obj);
   return handle;
 }
-
 /** Get a CredentialsContainer by handle, throwing if not found. */
 function getCredentialsContainer(handle: bigint): CredentialsContainer {
   const obj = _credentialsContainerhandles.get(handle);
@@ -165,7 +162,6 @@ function getCredentialsContainer(handle: bigint): CredentialsContainer {
   }
   return obj;
 }
-
 /**
  * `get()` operation.
  *
@@ -337,7 +333,6 @@ function getPasswordCredential(handle: bigint): any {
   }
   return obj;
 }
-
 /**
  * `get-password()` operation.
  */
@@ -365,7 +360,6 @@ function getFederatedCredential(handle: bigint): any {
   }
   return obj;
 }
-
 /**
  * `get-provider()` operation.
  */

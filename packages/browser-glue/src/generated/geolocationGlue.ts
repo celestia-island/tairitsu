@@ -36,7 +36,6 @@ function getGeo(handle: bigint): Geolocation {
   }
   return obj;
 }
-
 /**
  * `get-current-position()` operation.
  */

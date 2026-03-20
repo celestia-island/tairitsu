@@ -49,7 +49,6 @@ function getPermissions(handle: bigint): Permissions {
   }
   return obj;
 }
-
 /**
  * `query()` operation.
  *
@@ -107,7 +106,6 @@ function getPermissionStatus(handle: bigint): PermissionStatus {
   }
   return obj;
 }
-
 /**
  * `get-state()` operation.
  */
@@ -119,7 +117,7 @@ export function getState(self: bigint): bigint {
 /**
  * `get-name()` operation.
  */
-export function getName(self: bigint): bigint {
+export function getName(self: bigint): string {
   const obj = getPermissionStatus(self);
   return obj.name;
 }
@@ -127,7 +125,7 @@ export function getName(self: bigint): bigint {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): string {
   const obj = getPermissionStatus(self);
   return obj.onchange;
 }
@@ -135,7 +133,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchange(self: bigint, value: string): void {
   const obj = getPermissionStatus(self);
   obj.onchange = value;
 }

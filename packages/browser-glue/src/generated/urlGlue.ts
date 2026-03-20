@@ -49,11 +49,10 @@ function getURL(handle: bigint): URL {
   }
   return obj;
 }
-
 /**
  * `parse()` operation.
  */
-export function parse(url: bigint, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
@@ -75,7 +74,7 @@ export function getHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: bigint): void {
+export function setHref(self: bigint, value: string): void {
   const obj = getURL(self);
   obj.href = value;
 }
@@ -123,7 +122,7 @@ export function setUsername(self: bigint, value: string): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): string {
+export function getPassword(self: bigint): bigint {
   const obj = getURL(self);
   return obj.password;
 }
@@ -131,7 +130,7 @@ export function getPassword(self: bigint): string {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: string): void {
+export function setPassword(self: bigint, value: bigint): void {
   const obj = getURL(self);
   obj.password = value;
 }
@@ -163,7 +162,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: string): void {
+export function setHostname(self: bigint, value: bigint): void {
   const obj = getURL(self);
   obj.hostname = value;
 }
@@ -179,7 +178,7 @@ export function getPort(self: bigint): string {
 /**
  * `set-port()` operation.
  */
-export function setPort(self: bigint, value: string): void {
+export function setPort(self: bigint, value: number): void {
   const obj = getURL(self);
   obj.port = value;
 }
@@ -219,7 +218,7 @@ export function setSearch(self: bigint, value: string): void {
 /**
  * `get-search-params()` operation.
  */
-export function getSearchParams(self: bigint): string {
+export function getSearchParams(self: bigint): bigint {
   const obj = getURL(self);
   return obj.searchParams;
 }
@@ -267,7 +266,6 @@ function getURLSearchParams(handle: bigint): URLSearchParams {
   }
   return obj;
 }
-
 /**
  * `get-size()` operation.
  */
