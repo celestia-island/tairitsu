@@ -53,7 +53,7 @@ function getAnimation(handle: bigint): Animation {
  * `get-id()` operation.
  */
 export function getId(handle: bigint): string {
-  const obj = getAnimation(self);
+  const obj = getAnimation(handle);
   return obj.id;
 }
 
@@ -61,7 +61,7 @@ export function getId(handle: bigint): string {
  * `set-id()` operation.
  */
 export function setId(handle: bigint, value: string): void {
-  const obj = getAnimation(self);
+  const obj = getAnimation(handle);
   obj.id = value;
 }
 
@@ -69,15 +69,15 @@ export function setId(handle: bigint, value: string): void {
  * `get-playback-rate()` operation.
  */
 export function getPlaybackRate(handle: bigint): number {
-  const obj = getAnimation(self);
+  const obj = getAnimation(handle);
   return obj.playbackRate;
 }
 
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: bigint): void {
-  const obj = getAnimation(self);
+export function setPlaybackRate(handle: bigint, value: number): void {
+  const obj = getAnimation(handle);
   obj.playbackRate = value;
 }
 
@@ -139,7 +139,6 @@ export function persist(handle: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Animation.persist(handle)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }

@@ -4480,7 +4480,6 @@ export function TimeRangesStart(self: bigint, index: number): bigint {
   const obj = getTimeRanges(self);
   const promise = obj.start(index)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -8776,7 +8775,6 @@ export function HtmlDialogElementClose(self: bigint, returnValue: string | undef
   const obj = getHTMLDialogElement(self);
   const promise = obj.close(returnValue)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -10035,7 +10033,7 @@ export function createImageData(self: bigint, sw: number, sh: number, settings: 
 /**
  * `get-image-data()` operation.
  */
-export function getImageData(self: bigint, sx: number, sy: number, sw: number, sh: number, settings: bigint | undefined): bigint {
+export function CanvasImageDataGetImageData(self: bigint, sx: number, sy: number, sw: number, sh: number, settings: bigint | undefined): bigint {
   const obj = getCanvasImageData(self);
   return obj.imageData;
 }
@@ -11264,7 +11262,6 @@ export function CloseWatcherClose(self: bigint): bigint {
   const obj = getCloseWatcher(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -11571,7 +11568,7 @@ function getDragEvent(handle: bigint): DragEvent {
 /**
  * `get-data-transfer()` operation.
  */
-export function getDataTransfer(self: bigint): bigint | undefined {
+export function DragEventGetDataTransfer(self: bigint): bigint | undefined {
   const obj = getDragEvent(self);
   return obj.dataTransfer ?? undefined;
 }
@@ -11655,7 +11652,6 @@ export function from(value: string): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Origin.from(value)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -13686,7 +13682,6 @@ export function ImageBitmapClose(self: bigint): bigint {
   const obj = getImageBitmap(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -13917,7 +13912,6 @@ export function EventSourceClose(self: bigint): bigint {
   const obj = getEventSource(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -14068,7 +14062,6 @@ export function MessagePortStart(self: bigint): bigint {
   const obj = getMessagePort(self);
   const promise = obj.start()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -14106,7 +14099,6 @@ export function MessagePortClose(self: bigint): bigint {
   const obj = getMessagePort(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -14195,7 +14187,6 @@ export function BroadcastChannelClose(self: bigint): bigint {
   const obj = getBroadcastChannel(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -14285,7 +14276,7 @@ export function getSelf(self: bigint): bigint {
 /**
  * `get-location()` operation.
  */
-export function getLocation(self: bigint): bigint {
+export function WorkerGlobalScopeGetLocation(self: bigint): bigint {
   const obj = getWorkerGlobalScope(self);
   return obj.location;
 }
@@ -14447,7 +14438,6 @@ export function DedicatedWorkerGlobalScopeClose(self: bigint): bigint {
   const obj = getDedicatedWorkerGlobalScope(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -14512,7 +14502,6 @@ export function SharedWorkerGlobalScopeClose(self: bigint): bigint {
   const obj = getSharedWorkerGlobalScope(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -15242,7 +15231,6 @@ export function HtmlMarqueeElementStart(self: bigint): bigint {
   const obj = getHTMLMarqueeElement(self);
   const promise = obj.start()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -15280,7 +15268,6 @@ export function stop(self: bigint): bigint {
   const obj = getHTMLMarqueeElement(self);
   const promise = obj.stop()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -16764,7 +16751,7 @@ export default {
   measureText,
   drawImage,
   createImageData,
-  getImageData,
+  CanvasImageDataGetImageData,
   putImageData,
   getLineWidth,
   setLineWidth,
@@ -16901,7 +16888,7 @@ export default {
   DataTransferItemGetType,
   getAsString,
   getAsFile,
-  getDataTransfer,
+  DragEventGetDataTransfer,
   getPopoverTargetElement,
   setPopoverTargetElement,
   getPopoverTargetAction,
@@ -17117,7 +17104,7 @@ export default {
   BroadcastChannelGetOnmessageerror,
   BroadcastChannelSetOnmessageerror,
   getSelf,
-  getLocation,
+  WorkerGlobalScopeGetLocation,
   getNavigator,
   importScripts,
   WorkerGlobalScopeGetOnerror,

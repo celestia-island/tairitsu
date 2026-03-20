@@ -62,21 +62,21 @@ export function getClipboard(): bigint {
 /**
  * `get-credentials()` operation.
  */
-export function getCredentials(): bigint | undefined {
+export function getCredentials(): bigint {
   return navigator.credentials;
 }
 
 /**
  * `get-gamepads()` operation.
  */
-export function getGamepads(): (bigint | undefined)[] {
+export function getGamepads(): bigint {
   return navigator.gamepads;
 }
 
 /**
  * `get-geolocation()` operation.
  */
-export function getGeolocation(): bigint {
+export function NavigatorGetGeolocation(): bigint {
   return navigator.geolocation;
 }
 
@@ -158,7 +158,7 @@ function getBatteryManager(handle: bigint): BatteryManager {
 /**
  * `get-charging()` operation.
  */
-export function getCharging(self: bigint): bigint {
+export function getCharging(self: bigint): boolean {
   const obj = getBatteryManager(self);
   return obj.charging;
 }
@@ -174,7 +174,7 @@ export function getChargingTime(self: bigint): number {
 /**
  * `get-discharging-time()` operation.
  */
-export function getDischargingTime(self: bigint): number {
+export function getDischargingTime(self: bigint): string {
   const obj = getBatteryManager(self);
   return obj.dischargingTime;
 }
@@ -214,7 +214,7 @@ export function getOnchargingtimechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchargingtimechange()` operation.
  */
-export function setOnchargingtimechange(self: bigint, value: number): void {
+export function setOnchargingtimechange(self: bigint, value: EventHandlerRecord): void {
   const obj = getBatteryManager(self);
   obj.onchargingtimechange = value;
 }
@@ -329,7 +329,7 @@ export function getButtons(self: bigint): (bigint)[] {
 /**
  * `get-touches()` operation.
  */
-export function getTouches(self: bigint): string {
+export function getTouches(self: bigint): bigint | undefined {
   const obj = getGamepad(self);
   return obj.touches;
 }
@@ -337,7 +337,7 @@ export function getTouches(self: bigint): string {
 /**
  * `get-vibration-actuator()` operation.
  */
-export function getVibrationActuator(self: bigint): bigint {
+export function getVibrationActuator(self: bigint): string {
   const obj = getGamepad(self);
   return obj.vibrationActuator;
 }
@@ -364,7 +364,7 @@ function getGamepadButton(handle: bigint): GamepadButton {
 /**
  * `get-pressed()` operation.
  */
-export function getPressed(self: bigint): boolean {
+export function getPressed(self: bigint): bigint {
   const obj = getGamepadButton(self);
   return obj.pressed;
 }
@@ -372,7 +372,7 @@ export function getPressed(self: bigint): boolean {
 /**
  * `get-touched()` operation.
  */
-export function getTouched(self: bigint): boolean {
+export function getTouched(self: bigint): bigint {
   const obj = getGamepadButton(self);
   return obj.touched;
 }
@@ -380,7 +380,7 @@ export function getTouched(self: bigint): boolean {
 /**
  * `get-value()` operation.
  */
-export function getValue(self: bigint): string | undefined {
+export function getValue(self: bigint): bigint {
   const obj = getGamepadButton(self);
   return obj.value;
 }
@@ -415,7 +415,7 @@ export function getEffects(self: bigint): (bigint)[] {
 /**
  * `play-effect()` operation.
  */
-export function playEffect(self: bigint, type: bigint, params: boolean | undefined): bigint {
+export function playEffect(self: bigint, type: bigint, params: bigint | undefined): bigint {
   const obj = getGamepadHapticActuator(self);
   return obj.playEffect(type, params);
 }
@@ -450,7 +450,7 @@ function getGamepadEvent(handle: bigint): GamepadEvent {
 /**
  * `get-gamepad()` operation.
  */
-export function getGamepad(self: bigint): string | undefined {
+export function GamepadEventGetGamepad(self: bigint): bigint {
   const obj = getGamepadEvent(self);
   return obj.gamepad;
 }
@@ -485,7 +485,7 @@ export function getOngamepadconnected(self: bigint): EventHandlerRecord {
 /**
  * `set-ongamepadconnected()` operation.
  */
-export function setOngamepadconnected(self: bigint, value: bigint): void {
+export function setOngamepadconnected(self: bigint, value: EventHandlerRecord): void {
   const obj = getWindowEventrs(self);
   obj.ongamepadconnected = value;
 }
@@ -493,7 +493,7 @@ export function setOngamepadconnected(self: bigint, value: bigint): void {
 /**
  * `get-ongamepaddisconnected()` operation.
  */
-export function getOngamepaddisconnected(self: bigint): EventHandlerRecord {
+export function getOngamepaddisconnected(self: bigint): bigint {
   const obj = getWindowEventrs(self);
   return obj.ongamepaddisconnected;
 }
@@ -525,7 +525,7 @@ export function setOnafterprint(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onbeforeprint()` operation.
  */
-export function getOnbeforeprint(self: bigint): boolean {
+export function getOnbeforeprint(self: bigint): EventHandlerRecord {
   const obj = getWindowEventrs(self);
   return obj.onbeforeprint;
 }
@@ -589,7 +589,7 @@ export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): vo
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): number {
+export function getOnmessage(self: bigint): EventHandlerRecord {
   const obj = getWindowEventrs(self);
   return obj.onmessage;
 }
@@ -709,7 +709,7 @@ export function getOnpageswap(self: bigint): EventHandlerRecord {
 /**
  * `set-onpageswap()` operation.
  */
-export function setOnpageswap(self: bigint, value: EventHandlerRecord): void {
+export function setOnpageswap(self: bigint, value: number): void {
   const obj = getWindowEventrs(self);
   obj.onpageswap = value;
 }
@@ -741,7 +741,7 @@ export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
 /**
  * `set-onrejectionhandled()` operation.
  */
-export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): void {
+export function setOnrejectionhandled(self: bigint, value: bigint): void {
   const obj = getWindowEventrs(self);
   obj.onrejectionhandled = value;
 }
@@ -749,7 +749,7 @@ export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onstorage()` operation.
  */
-export function getOnstorage(self: bigint): number {
+export function getOnstorage(self: bigint): EventHandlerRecord {
   const obj = getWindowEventrs(self);
   return obj.onstorage;
 }
@@ -765,7 +765,7 @@ export function setOnstorage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onunhandledrejection()` operation.
  */
-export function getOnunhandledrejection(self: bigint): bigint | undefined {
+export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
   const obj = getWindowEventrs(self);
   return obj.onunhandledrejection;
 }
@@ -816,7 +816,7 @@ function getGeolocation(handle: bigint): Geolocation {
 /**
  * `get-current-position()` operation.
  */
-export function getCurrentPosition(self: bigint, successCallback: bigint, errorCallback: string, options: bigint | undefined): void {
+export function getCurrentPosition(self: bigint, successCallback: bigint, errorCallback: bigint | undefined, options: string | undefined): void {
   const obj = getGeolocation(self);
   return obj.currentPosition;
 }
@@ -824,7 +824,7 @@ export function getCurrentPosition(self: bigint, successCallback: bigint, errorC
 /**
  * `watch-position()` operation.
  */
-export function watchPosition(self: bigint, successCallback: bigint, errorCallback: bigint | undefined, options: bigint | undefined): bigint {
+export function watchPosition(self: bigint, successCallback: bigint, errorCallback: string, options: bigint | undefined): number {
   const obj = getGeolocation(self);
   return obj.watchPosition(successCallback, errorCallback, options);
 }
@@ -832,7 +832,7 @@ export function watchPosition(self: bigint, successCallback: bigint, errorCallba
 /**
  * `clear-watch()` operation.
  */
-export function clearWatch(self: bigint, watchId: bigint): void {
+export function clearWatch(self: bigint, watchId: bigint | undefined): void {
   const obj = getGeolocation(self);
   obj.clearWatch(watchId);
 }
@@ -902,7 +902,7 @@ function getGeolocationCoordinates(handle: bigint): GeolocationCoordinates {
 /**
  * `get-accuracy()` operation.
  */
-export function getAccuracy(self: bigint): bigint {
+export function getAccuracy(self: bigint): number {
   const obj = getGeolocationCoordinates(self);
   return obj.accuracy;
 }
@@ -918,7 +918,7 @@ export function getLatitude(self: bigint): number {
 /**
  * `get-longitude()` operation.
  */
-export function getLongitude(self: bigint): bigint {
+export function getLongitude(self: bigint): string {
   const obj = getGeolocationCoordinates(self);
   return obj.longitude;
 }
@@ -926,7 +926,7 @@ export function getLongitude(self: bigint): bigint {
 /**
  * `get-altitude()` operation.
  */
-export function getAltitude(self: bigint): number | undefined {
+export function getAltitude(self: bigint): bigint {
   const obj = getGeolocationCoordinates(self);
   return obj.altitude ?? undefined;
 }
@@ -942,7 +942,7 @@ export function getAltitudeAccuracy(self: bigint): number | undefined {
 /**
  * `get-heading()` operation.
  */
-export function getHeading(self: bigint): number | undefined {
+export function getHeading(self: bigint): string | undefined {
   const obj = getGeolocationCoordinates(self);
   return obj.heading ?? undefined;
 }
@@ -985,7 +985,7 @@ function getGeolocationPositionError(handle: bigint): GeolocationPositionError {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): number {
+export function getCode(self: bigint): boolean | undefined {
   const obj = getGeolocationPositionError(self);
   return obj.code;
 }
@@ -1027,7 +1027,6 @@ export function lock(self: bigint, orientation: bigint): bigint {
   const obj = getScreenOrientation(self);
   const promise = obj.lock(orientation)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1065,7 +1064,6 @@ export function unlock(self: bigint): bigint {
   const obj = getScreenOrientation(self);
   const promise = obj.unlock()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1112,7 +1110,7 @@ export function getAngle(self: bigint): number {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): bigint {
   const obj = getScreenOrientation(self);
   return obj.onchange;
 }
@@ -1120,7 +1118,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: number | undefined): void {
+export function setOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = getScreenOrientation(self);
   obj.onchange = value;
 }
@@ -1134,7 +1132,7 @@ export default {
   getClipboard,
   getCredentials,
   getGamepads,
-  getGeolocation,
+  NavigatorGetGeolocation,
   getUserActivation,
   getMediaCapabilities,
   getMediaDevices,
@@ -1170,7 +1168,7 @@ export default {
   getEffects,
   playEffect,
   reset,
-  getGamepad,
+  GamepadEventGetGamepad,
   getOngamepadconnected,
   setOngamepadconnected,
   getOngamepaddisconnected,

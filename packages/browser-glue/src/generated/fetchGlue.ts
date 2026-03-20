@@ -75,7 +75,6 @@ export function HeadersGet(self: bigint, name: string): bigint {
   const obj = getHeaders(self);
   const promise = obj.get(name)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -149,7 +148,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined {
+export function BodyGetBody(self: bigint): bigint | undefined {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -172,7 +171,6 @@ export function arrayBuffer(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.arrayBuffer()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -210,7 +208,6 @@ export function blob(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.blob()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -248,7 +245,6 @@ export function bytes(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.bytes()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -286,7 +282,6 @@ export function formData(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.formData()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -324,7 +319,6 @@ export function BodyJson(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.json()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -362,7 +356,6 @@ export function text(self: bigint): bigint {
   const obj = getBody(self);
   const promise = obj.text()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -587,7 +580,6 @@ export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Response.json(data, init)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -714,7 +706,6 @@ export function fetch(self: bigint, input: bigint, init: bigint | undefined): bi
   const obj = getWindowOrWorkerGlobalScope(self);
   const promise = obj.fetch(input, init)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -848,7 +839,6 @@ export function createImageBitmap(self: bigint, image: bigint, options: bigint |
   const obj = getWindowOrWorkerGlobalScope(self);
   const promise = obj.createImageBitmap(image, options)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -955,7 +945,6 @@ export function from(asyncIterable: string): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = ReadableStream.from(asyncIterable)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1017,7 +1006,6 @@ export function pipeThrough(self: bigint, transform: bigint, options: bigint | u
   const obj = getReadableStream(self);
   const promise = obj.pipeThrough(transform, options)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1055,7 +1043,6 @@ export function pipeTo(self: bigint, destination: bigint, options: bigint | unde
   const obj = getReadableStream(self);
   const promise = obj.pipeTo(destination, options)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1233,7 +1220,6 @@ export function ReadableStreamDefaultControllerClose(self: bigint): bigint {
   const obj = getReadableStreamDefaultController(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1322,7 +1308,6 @@ export function ReadableByteStreamControllerClose(self: bigint): bigint {
   const obj = getReadableByteStreamController(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1403,7 +1388,6 @@ export function respond(self: bigint, bytesWritten: bigint): bigint {
   const obj = getReadableStreamBYOBRequest(self);
   const promise = obj.respond(bytesWritten)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1476,7 +1460,6 @@ export function WritableStreamAbort(self: bigint, reason: string | undefined): b
   const obj = getWritableStream(self);
   const promise = obj.abort(reason)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1514,7 +1497,6 @@ export function WritableStreamClose(self: bigint): bigint {
   const obj = getWritableStream(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1603,7 +1585,6 @@ export function WritableStreamDefaultWriterAbort(self: bigint, reason: string | 
   const obj = getWritableStreamDefaultWriter(self);
   const promise = obj.abort(reason)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1641,7 +1622,6 @@ export function WritableStreamDefaultWriterClose(self: bigint): bigint {
   const obj = getWritableStreamDefaultWriter(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -2159,7 +2139,6 @@ export function XmlHttpRequestAbort(self: bigint): bigint {
   const obj = getXMLHttpRequest(self);
   const promise = obj.abort()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -2254,7 +2233,7 @@ export function setResponseType(self: bigint, value: bigint): void {
 /**
  * `get-response()` operation.
  */
-export function getResponse(self: bigint): string {
+export function XmlHttpRequestGetResponse(self: bigint): string {
   const obj = getXMLHttpRequest(self);
   return obj.response;
 }
@@ -2320,7 +2299,6 @@ export function FormDataGet(self: bigint, name: string): bigint {
   const obj = getFormData(self);
   const promise = obj.get(name)
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -2427,7 +2405,7 @@ export default {
   getSetCookie,
   HeadersHas,
   HeadersSet,
-  getBody,
+  BodyGetBody,
   getBodyUsed,
   arrayBuffer,
   pollArrayBuffer,
@@ -2585,7 +2563,7 @@ export default {
   overrideMimeType,
   getResponseType,
   setResponseType,
-  getResponse,
+  XmlHttpRequestGetResponse,
   getResponseText,
   getResponseXml,
   FormDataAppend,

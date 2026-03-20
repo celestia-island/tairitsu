@@ -82,7 +82,7 @@ function getCryptoKey(handle: bigint): CryptoKey {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): number {
+export function getType(self: bigint): bigint {
   const obj = getCryptoKey(self);
   return obj.type;
 }
@@ -98,7 +98,7 @@ export function getExtractable(self: bigint): boolean {
 /**
  * `get-algorithm()` operation.
  */
-export function getAlgorithm(self: bigint): bigint {
+export function getAlgorithm(self: bigint): boolean {
   const obj = getCryptoKey(self);
   return obj.algorithm;
 }
@@ -133,7 +133,7 @@ function getSubtleCrypto(handle: bigint): SubtleCrypto {
 /**
  * `encrypt()` operation.
  */
-export function encrypt(self: bigint, algorithm: bigint, key: bigint, data: Uint8Array): bigint {
+export function encrypt(self: bigint, algorithm: bigint, key: bigint, data: string): bigint {
   const obj = getSubtleCrypto(self);
   return obj.encrypt(algorithm, key, data);
 }
@@ -157,7 +157,7 @@ export function sign(self: bigint, algorithm: bigint, key: bigint, data: Uint8Ar
 /**
  * `verify()` operation.
  */
-export function verify(self: bigint, algorithm: bigint, key: bigint, signature: Uint8Array, data: Uint8Array): bigint {
+export function verify(self: bigint, algorithm: string, key: bigint, signature: Uint8Array, data: Uint8Array): bigint {
   const obj = getSubtleCrypto(self);
   return obj.verify(algorithm, key, signature, data);
 }
@@ -181,7 +181,7 @@ export function deriveKey(self: bigint, algorithm: bigint, baseKey: bigint, deri
 /**
  * `derive-bits()` operation.
  */
-export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, length: number | undefined): bigint {
+export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, length: bigint): bigint {
   const obj = getSubtleCrypto(self);
   return obj.deriveBits(algorithm, baseKey, length);
 }
@@ -189,7 +189,7 @@ export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, len
 /**
  * `import-key()` operation.
  */
-export function importKey(self: bigint, format: bigint, keyData: Uint8Array, algorithm: bigint, extractable: boolean, keyUsages: bigint): bigint {
+export function importKey(self: bigint, format: bigint, keyData: bigint, algorithm: bigint, extractable: boolean, keyUsages: (bigint)[]): bigint {
   const obj = getSubtleCrypto(self);
   return obj.importKey(format, keyData, algorithm, extractable, keyUsages);
 }
@@ -205,7 +205,7 @@ export function wrapKey(self: bigint, format: bigint, key: bigint, wrappingKey: 
 /**
  * `unwrap-key()` operation.
  */
-export function unwrapKey(self: bigint, format: bigint, wrappedKey: (bigint)[], unwrappingKey: bigint, unwrapAlgorithm: bigint, unwrappedKeyAlgorithm: bigint, extractable: boolean, keyUsages: bigint): bigint {
+export function unwrapKey(self: bigint, format: bigint, wrappedKey: Uint8Array, unwrappingKey: bigint, unwrapAlgorithm: bigint, unwrappedKeyAlgorithm: bigint, extractable: boolean, keyUsages: (bigint)[]): bigint {
   const obj = getSubtleCrypto(self);
   return obj.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgorithm, unwrappedKeyAlgorithm, extractable, keyUsages);
 }

@@ -100,7 +100,7 @@ export function AudioDecoderConfigure(self: bigint, config: AudioDecoderConfig):
  */
 export function AudioDecoderDecode(self: bigint, chunk: bigint): void {
   const obj = getAudioDecoder(self);
-  obj.decode(chunk);
+  obj.decode(getCanvas(chunk));
 }
 
 /**
@@ -113,7 +113,6 @@ export function AudioDecoderFlush(self: bigint): bigint {
   const obj = getAudioDecoder(self);
   const promise = obj.flush()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -159,7 +158,6 @@ export function AudioDecoderClose(self: bigint): bigint {
   const obj = getAudioDecoder(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -264,7 +262,7 @@ export function VideoDecoderConfigure(self: bigint, config: VideoDecoderConfig):
  */
 export function VideoDecoderDecode(self: bigint, chunk: bigint): void {
   const obj = getVideoDecoder(self);
-  obj.decode(chunk);
+  obj.decode(getCanvas(chunk));
 }
 
 /**
@@ -277,7 +275,6 @@ export function VideoDecoderFlush(self: bigint): bigint {
   const obj = getVideoDecoder(self);
   const promise = obj.flush()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -323,7 +320,6 @@ export function VideoDecoderClose(self: bigint): bigint {
   const obj = getVideoDecoder(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -428,7 +424,7 @@ export function AudioEncoderConfigure(self: bigint, config: AudioEncoderConfig):
  */
 export function AudioEncoderEncode(self: bigint, data: bigint): void {
   const obj = getAudioEncoder(self);
-  obj.encode(data);
+  obj.encode(getCanvas(data));
 }
 
 /**
@@ -441,7 +437,6 @@ export function AudioEncoderFlush(self: bigint): bigint {
   const obj = getAudioEncoder(self);
   const promise = obj.flush()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -487,7 +482,6 @@ export function AudioEncoderClose(self: bigint): bigint {
   const obj = getAudioEncoder(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -590,9 +584,9 @@ export function VideoEncoderConfigure(self: bigint, config: VideoEncoderConfig):
 /**
  * `encode()` operation.
  */
-export function VideoEncoderEncode(self: bigint, frame: bigint, options: VideoEncoderEncodeOptions): void {
+export function VideoEncoderEncode(self: bigint, frame: bigint, options: bigint): void {
   const obj = getVideoEncoder(self);
-  obj.encode(frame, options);
+  obj.encode(getCanvas(frame), getCanvas(options));
 }
 
 /**
@@ -605,7 +599,6 @@ export function VideoEncoderFlush(self: bigint): bigint {
   const obj = getVideoEncoder(self);
   const promise = obj.flush()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -651,7 +644,6 @@ export function VideoEncoderClose(self: bigint): bigint {
   const obj = getVideoEncoder(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -905,7 +897,6 @@ export function AudioDataClose(self: bigint): bigint {
   const obj = getAudioData(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1090,7 +1081,6 @@ export function VideoFrameClose(self: bigint): bigint {
   const obj = getVideoFrame(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -1254,7 +1244,6 @@ export function ImageDecoderClose(self: bigint): bigint {
   const obj = getImageDecoder(self);
   const promise = obj.close()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
@@ -2027,7 +2016,6 @@ export function WebGlRenderingContextBaseFlush(self: bigint): bigint {
   const obj = getWebGLRenderingContextBase(self);
   const promise = obj.flush()
     .then((result) => {
-      const entry = _asyncHandles.get(requestId);
       if (entry) {
         entry.result = { ok: true, value: result };
       }
