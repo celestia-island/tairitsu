@@ -32,7 +32,7 @@ function getSwReg(handle: bigint): serviceworkerregistration {
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): string {
+export function scope(handle: bigint): bigint {
   const obj = getSwReg(self);
   return obj.scope(handle);
 }
@@ -42,7 +42,7 @@ export function scope(handle: bigint): string {
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type SwHandle = number;
+export type SwHandle = bigint;
 
 /** Handle table for ServiceWorker instances */
 const _swHandles = new Map<bigint, ServiceWorker>();

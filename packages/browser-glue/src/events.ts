@@ -352,3 +352,394 @@ export function getListenerCount(): number {
 export function getActiveEventCount(): number {
   return _activeEvents.size;
 }
+
+// ---------------------------------------------------------------------------
+// Event delegation
+// ---------------------------------------------------------------------------
+
+interface DelegatedListenerEntry extends ListenerEntry {
+  selector: string;
+}
+
+const _delegatedListeners = new Map<bigint, DelegatedListenerEntry>();
+
+/**
+ * Add an event listener with delegation to a parent element.
+ * Events matching the selector will trigger the handler on the actual target.
+ *
+ * @param target - Parent element handle to attach the listener to
+ * @param eventType - Event type to listen for
+ * @param selector - CSS selector to match the actual target
+ * @param useCapture - Whether to use capture phase
+ * @returns Listener ID for later removal
+ */
+export function addDelegatedEventListener(
+  target: bigint,
+  eventType: string,
+  selector: string,
+  useCapture: boolean,
+): bigint {
+  const listenerId = _nextListenerId++;
+
+  let domTarget: EventTarget;
+  try {
+    domTarget = getEventTarget(target);
+  } catch (e) {
+    reportError({
+      kind: "invalid-handle",
+      message: `Invalid node handle ${target} when adding delegated event listener`,
+      context: { eventType, selector, listenerId, error: e instanceof Error ? e.message : String(e) },
+    });
+    throw e;
+  }
+
+  const handler = (ev: Event) => {
+    const actualTarget = ev.target;
+    if (!(actualTarget instanceof Element)) return;
+
+    if (actualTarget.matches(selector)) {
+      const eventHandle = registerEvent(ev);
+      let dispatchSuccess = false;
+
+      try {
+        if (ev instanceof MouseEvent) {
+          if (_onMouseEvent) {
+            _onMouseEvent(listenerId, eventHandle, {
+              clientX: ev.clientX,
+              clientY: ev.clientY,
+              offsetX: ev.offsetX,
+              offsetY: ev.offsetY,
+              button: ev.button,
+              buttons: ev.buttons,
+              ctrlKey: ev.ctrlKey,
+              shiftKey: ev.shiftKey,
+              altKey: ev.altKey,
+              metaKey: ev.metaKey,
+            });
+            dispatchSuccess = true;
+          }
+        } else if (ev instanceof KeyboardEvent) {
+          if (_onKeyboardEvent) {
+            _onKeyboardEvent(listenerId, eventHandle, {
+              key: ev.key,
+              code: ev.code,
+              keyCode: ev.keyCode,
+              ctrlKey: ev.ctrlKey,
+              shiftKey: ev.shiftKey,
+              altKey: ev.altKey,
+              metaKey: ev.metaKey,
+              repeat: ev.repeat,
+            });
+            dispatchSuccess = true;
+          }
+        } else if (ev instanceof FocusEvent) {
+          if (_onFocusEvent) {
+            const rel = ev.relatedTarget as Node | null;
+            _onFocusEvent(listenerId, eventHandle, {
+              relatedTarget: rel ? registerNode(rel) : undefined,
+            });
+            dispatchSuccess = true;
+          }
+        } else if (ev instanceof InputEvent) {
+          if (_onInputEvent) {
+            _onInputEvent(listenerId, eventHandle, {
+              data: ev.data ?? undefined,
+              inputType: ev.inputType,
+            });
+            dispatchSuccess = true;
+          }
+        } else if (_onGenericEvent) {
+          _onGenericEvent(listenerId, eventHandle, ev.type);
+          dispatchSuccess = true;
+        }
+      } catch (e) {
+        reportError({
+          kind: "dispatch-error",
+          message: `Error during delegated event dispatch for '${eventType}'`,
+          context: {
+            listenerId,
+            selector,
+            eventType: ev.type,
+            error: e instanceof Error ? e.message : String(e),
+          },
+        });
+      } finally {
+        cleanupEventHandle(eventHandle);
+        reportEventDispatch({ eventType, listenerId, success: dispatchSuccess });
+      }
+    }
+  };
+
+  domTarget.addEventListener(eventType, handler, useCapture);
+  _delegatedListeners.set(listenerId, { target: domTarget, eventType, handler, selector });
+
+  return listenerId;
+}
+
+/**
+ * Remove a delegated event listener.
+ *
+ * @param listenerId - Listener ID returned by addDelegatedEventListener
+ */
+export function removeDelegatedEventListener(listenerId: bigint): void {
+  const entry = _delegatedListeners.get(listenerId);
+  if (!entry) {
+    reportWarning(`Attempted to remove non-existent delegated listener ${listenerId}`);
+    return;
+  }
+  entry.target.removeEventListener(entry.eventType, entry.handler);
+  _delegatedListeners.delete(listenerId);
+}
+
+// ---------------------------------------------------------------------------
+// Debounce and throttle utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a debounced callback that delays execution until after the specified delay
+ * has passed since the last invocation.
+ *
+ * @param callback - Function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function and a cancel function
+ */
+export function createDebouncedCallback<T extends (...args: unknown[]) => void>(
+  callback: T,
+  delay: number,
+): { fn: (...args: Parameters<T>) => void; cancel: () => void } {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = (...args: Parameters<T>) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      callback(...args);
+      timeoutId = null;
+    }, delay);
+  };
+
+  const cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  return { fn: debounced, cancel };
+}
+
+/**
+ * Create a throttled callback that limits execution to at most once per specified delay.
+ *
+ * @param callback - Function to throttle
+ * @param delay - Minimum delay between invocations in milliseconds
+ * @returns Throttled function and a cancel function
+ */
+export function createThrottledCallback<T extends (...args: unknown[]) => void>(
+  callback: T,
+  delay: number,
+): { fn: (...args: Parameters<T>) => void; cancel: () => void } {
+  let lastCallTime = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let pendingArgs: Parameters<T> | null = null;
+
+  const throttled = (...args: Parameters<T>) => {
+    const now = Date.now();
+    const timeSinceLastCall = now - lastCallTime;
+
+    if (timeSinceLastCall >= delay) {
+      lastCallTime = now;
+      callback(...args);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+        pendingArgs = null;
+      }
+    } else {
+      pendingArgs = args;
+      if (timeoutId === null) {
+        timeoutId = setTimeout(() => {
+          if (pendingArgs !== null) {
+            lastCallTime = Date.now();
+            callback(...pendingArgs);
+            pendingArgs = null;
+          }
+          timeoutId = null;
+        }, delay - timeSinceLastCall);
+      }
+    }
+  };
+
+  const cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    pendingArgs = null;
+  };
+
+  return { fn: throttled, cancel };
+}
+
+// ---------------------------------------------------------------------------
+// One-time event listeners
+// ---------------------------------------------------------------------------
+
+interface OneTimeListenerEntry {
+  target: EventTarget;
+  eventType: string;
+  handler: EventListener;
+  signal: AbortSignal | null;
+}
+
+const _oneTimeListeners = new Map<bigint, OneTimeListenerEntry>();
+
+/**
+ * Add an event listener that automatically removes itself after being triggered once.
+ *
+ * @param target - Target element handle
+ * @param eventType - Event type to listen for
+ * @param useCapture - Whether to use capture phase
+ * @param signal - Optional AbortSignal for manual cancellation
+ * @returns Listener ID for manual removal
+ */
+export function addOneTimeEventListener(
+  target: bigint,
+  eventType: string,
+  useCapture: boolean,
+  signal: AbortSignal | null = null,
+): bigint {
+  const listenerId = _nextListenerId++;
+
+  let domTarget: EventTarget;
+  try {
+    domTarget = getEventTarget(target);
+  } catch (e) {
+    reportError({
+      kind: "invalid-handle",
+      message: `Invalid node handle ${target} when adding one-time event listener`,
+      context: { eventType, listenerId, error: e instanceof Error ? e.message : String(e) },
+    });
+    throw e;
+  }
+
+  let hasTriggered = false;
+  let cleanupRegistered = false;
+
+  const cleanup = () => {
+    if (cleanupRegistered) return;
+    cleanupRegistered = true;
+    domTarget.removeEventListener(eventType, handler, useCapture);
+    _oneTimeListeners.delete(listenerId);
+    if (signal) {
+      signal.removeEventListener("abort", cleanup);
+    }
+  };
+
+  const handler = (ev: Event) => {
+    if (hasTriggered) return;
+    hasTriggered = true;
+
+    const eventHandle = registerEvent(ev);
+    let dispatchSuccess = false;
+
+    try {
+      if (ev instanceof MouseEvent) {
+        if (_onMouseEvent) {
+          _onMouseEvent(listenerId, eventHandle, {
+            clientX: ev.clientX,
+            clientY: ev.clientY,
+            offsetX: ev.offsetX,
+            offsetY: ev.offsetY,
+            button: ev.button,
+            buttons: ev.buttons,
+            ctrlKey: ev.ctrlKey,
+            shiftKey: ev.shiftKey,
+            altKey: ev.altKey,
+            metaKey: ev.metaKey,
+          });
+          dispatchSuccess = true;
+        }
+      } else if (ev instanceof KeyboardEvent) {
+        if (_onKeyboardEvent) {
+          _onKeyboardEvent(listenerId, eventHandle, {
+            key: ev.key,
+            code: ev.code,
+            keyCode: ev.keyCode,
+            ctrlKey: ev.ctrlKey,
+            shiftKey: ev.shiftKey,
+            altKey: ev.altKey,
+            metaKey: ev.metaKey,
+            repeat: ev.repeat,
+          });
+          dispatchSuccess = true;
+        }
+      } else if (ev instanceof FocusEvent) {
+        if (_onFocusEvent) {
+          const rel = ev.relatedTarget as Node | null;
+          _onFocusEvent(listenerId, eventHandle, {
+            relatedTarget: rel ? registerNode(rel) : undefined,
+          });
+          dispatchSuccess = true;
+        }
+      } else if (ev instanceof InputEvent) {
+        if (_onInputEvent) {
+          _onInputEvent(listenerId, eventHandle, {
+            data: ev.data ?? undefined,
+            inputType: ev.inputType,
+          });
+          dispatchSuccess = true;
+        }
+      } else if (_onGenericEvent) {
+        _onGenericEvent(listenerId, eventHandle, ev.type);
+        dispatchSuccess = true;
+      }
+    } catch (e) {
+      reportError({
+        kind: "dispatch-error",
+        message: `Error during one-time event dispatch for '${eventType}'`,
+        context: {
+          listenerId,
+          eventType: ev.type,
+          error: e instanceof Error ? e.message : String(e),
+        },
+      });
+    } finally {
+      cleanupEventHandle(eventHandle);
+      reportEventDispatch({ eventType, listenerId, success: dispatchSuccess });
+      cleanup();
+    }
+  };
+
+  domTarget.addEventListener(eventType, handler, useCapture);
+  _oneTimeListeners.set(listenerId, { target: domTarget, eventType, handler, signal });
+
+  if (signal) {
+    if (signal.aborted) {
+      cleanup();
+      return listenerId;
+    }
+    signal.addEventListener("abort", cleanup);
+  }
+
+  return listenerId;
+}
+
+/**
+ * Manually remove a one-time event listener before it triggers.
+ *
+ * @param listenerId - Listener ID returned by addOneTimeEventListener
+ */
+export function removeOneTimeEventListener(listenerId: bigint): void {
+  const entry = _oneTimeListeners.get(listenerId);
+  if (!entry) {
+    reportWarning(`Attempted to remove non-existent one-time listener ${listenerId}`);
+    return;
+  }
+  entry.target.removeEventListener(entry.eventType, entry.handler);
+  _oneTimeListeners.delete(listenerId);
+  if (entry.signal) {
+    entry.signal.removeEventListener("abort", () => {});
+  }
+}

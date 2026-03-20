@@ -40,6 +40,9 @@ export * from "./http";
 export * from "./canvas";
 export * from "./handles";
 
+// Async utilities
+export * from "./async";
+
 // Auto-generated Phase A modules
 export * from "./generated/index";
 

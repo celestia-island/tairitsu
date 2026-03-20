@@ -45,7 +45,7 @@ function getWs(handle: bigint): websocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: bigint, protocols: bigint): { ok: true; value: number } | { ok: false; error: number } {
+export function connect(url: bigint, protocols: bigint): { ok: true; value: (string)[] } | { ok: false; error: string } {
   const obj = getWs(self);
   return obj.connect(url, protocols);
 }
@@ -61,7 +61,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint {
+export function readyState(handle: bigint): number {
   const obj = getWs(self);
   return obj.readyState(handle);
 }
@@ -77,7 +77,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): bigint {
+export function extensions(handle: bigint): string {
   const obj = getWs(self);
   return obj.extensions(handle);
 }
@@ -85,7 +85,7 @@ export function extensions(handle: bigint): bigint {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: string): string {
+export function protocol(handle: bigint): string {
   const obj = getWs(self);
   return obj.protocol(handle);
 }
@@ -95,7 +95,7 @@ export function protocol(handle: string): string {
  *
  * Async operation: returns request ID, poll with `pollClose()`
  */
-export function close(handle: bigint, code: bigint, reason: string): void {
+export function close(handle: bigint, code: number, reason: string): void {
   const requestId = _nextAsyncHandle++;
   const obj = getWs(self);
   const promise = obj.close(handle, code, reason)
@@ -131,7 +131,7 @@ export function pollClose(requestId: bigint): { ok: true } | { ok: false; error:
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string): void {
+export function send(handle: bigint, data: bigint | undefined): void {
   const obj = getWs(self);
   obj.send(handle, data);
 }

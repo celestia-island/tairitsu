@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type ModuleHandle = bigint;
+export type ModuleHandle = string;
 
 /** Handle table for module instances */
 const _moduleHandles = new Map<bigint, module>();
@@ -32,7 +32,7 @@ function getModule(handle: bigint): module {
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): string {
+export function exports(moduleObject: string): bigint {
   const obj = getModule(self);
   return obj.exports(moduleObject);
 }
@@ -40,7 +40,7 @@ export function exports(moduleObject: bigint): string {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): number {
+export function imports(moduleObject: string): (bigint)[] {
   const obj = getModule(self);
   return obj.imports(moduleObject);
 }
@@ -48,7 +48,7 @@ export function imports(moduleObject: bigint): number {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: string | undefined, sectionName: string | undefined): bigint {
+export function customSections(moduleObject: bigint, sectionName: string | undefined): (bigint)[] {
   const obj = getModule(self);
   return obj.customSections(moduleObject, sectionName);
 }
@@ -58,7 +58,7 @@ export function customSections(moduleObject: string | undefined, sectionName: st
 // ---------------------------------------------------------------------------
 
 /** Type alias */
-export type InstanceHandle = string | undefined;
+export type InstanceHandle = bigint;
 
 /** Handle table for instance instances */
 const _instanceHandles = new Map<bigint, instance>();
@@ -76,7 +76,7 @@ function getInstance(handle: bigint): instance {
 /**
  * `get-exports()` operation.
  */
-export function getExports(self: bigint): string {
+export function getExports(self: bigint): bigint {
   const obj = getInstance(self);
   return obj.exports;
 }
@@ -104,7 +104,7 @@ function getMemory(handle: bigint): memory {
 /**
  * `grow()` operation.
  */
-export function grow(self: bigint, delta: string): string | undefined {
+export function grow(self: bigint, delta: bigint): bigint {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -112,7 +112,7 @@ export function grow(self: bigint, delta: string): string | undefined {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): (string)[] {
+export function toFixedLengthBuffer(self: bigint): string {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }

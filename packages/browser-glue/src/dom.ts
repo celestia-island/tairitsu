@@ -8,6 +8,8 @@
 
 import { getElement, getNode, registerNode } from "./handles";
 
+const _selectorCache = new WeakMap<Document, Map<string, Element | null>>();
+
 // ---------------------------------------------------------------------------
 // Diagnostic support
 // ---------------------------------------------------------------------------
@@ -353,4 +355,191 @@ export function removeStyleProperty(node: bigint, property: string): void {
  */
 export function registerExternalNode(node: Node): bigint {
   return registerNode(node);
+}
+
+// ---------------------------------------------------------------------------
+// Batch DOM operations
+// ---------------------------------------------------------------------------
+
+/**
+ * Batch append multiple children to a parent element.
+ * Uses DocumentFragment for optimal performance.
+ *
+ * @param parentHandle - Handle of the parent element
+ * @param childHandles - Array of child node handles to append
+ */
+export function batchAppendChildren(parentHandle: bigint, childHandles: bigint[]): void {
+  try {
+    const parent = getNode(parentHandle);
+    if (childHandles.length === 0) return;
+    
+    const fragment = document.createDocumentFragment();
+    for (const childHandle of childHandles) {
+      fragment.appendChild(getNode(childHandle));
+    }
+    parent.appendChild(fragment);
+  } catch (e) {
+    reportError({
+      kind: "operation-failed",
+      operation: "batchAppendChildren",
+      message: e instanceof Error ? e.message : String(e),
+      context: { parentHandle, childCount: childHandles.length },
+    });
+    throw e;
+  }
+}
+
+/**
+ * Batch set multiple attributes on an element.
+ *
+ * @param elementHandle - Handle of the element
+ * @param attributes - Object with attribute names and values
+ */
+export function batchSetAttributes(elementHandle: bigint, attributes: Record<string, string>): void {
+  try {
+    const element = getElement(elementHandle);
+    for (const [name, value] of Object.entries(attributes)) {
+      element.setAttribute(name, value);
+    }
+  } catch (e) {
+    reportError({
+      kind: "operation-failed",
+      operation: "batchSetAttributes",
+      message: e instanceof Error ? e.message : String(e),
+      context: { elementHandle, attributeCount: Object.keys(attributes).length },
+    });
+    throw e;
+  }
+}
+
+/**
+ * Batch remove multiple children from a parent element.
+ *
+ * @param parentHandle - Handle of the parent element
+ * @param childHandles - Array of child node handles to remove
+ */
+export function batchRemoveChildren(parentHandle: bigint, childHandles: bigint[]): void {
+  try {
+    const parent = getNode(parentHandle);
+    for (const childHandle of childHandles) {
+      const child = getNode(childHandle);
+      if (child.parentNode === parent) {
+        parent.removeChild(child);
+      }
+    }
+  } catch (e) {
+    reportError({
+      kind: "operation-failed",
+      operation: "batchRemoveChildren",
+      message: e instanceof Error ? e.message : String(e),
+      context: { parentHandle, childCount: childHandles.length },
+    });
+    throw e;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Template string support
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a template string and substitute variables.
+ * Supports ${variable} syntax for variable interpolation.
+ *
+ * @param template - Template string with ${} placeholders
+ * @param variables - Object with variable names and values
+ * @returns Processed string with variables substituted
+ */
+function parseTemplate(template: string, variables: Record<string, string>): string {
+  return template.replace(/\$\{(\w+)\}/g, (_, key) => {
+    return variables[key] ?? "";
+  });
+}
+
+/**
+ * Create an element from an HTML-like template string.
+ * Supports variable interpolation with ${variable} syntax and attribute binding.
+ *
+ * Example: `<div class="${cls}">${content}</div>`
+ *
+ * @param template - HTML template string
+ * @param variables - Object with variable names and values for interpolation
+ * @returns Handle of the created element
+ */
+export function createElementFromTemplate(template: string, variables: Record<string, string> = {}): bigint {
+  try {
+    const processedTemplate = parseTemplate(template, variables);
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = processedTemplate.trim();
+    
+    if (tempDiv.firstChild === null) {
+      throw new Error("Template produced no elements");
+    }
+    
+    if (tempDiv.childNodes.length > 1) {
+      reportWarning("Template produced multiple elements, returning only the first");
+    }
+    
+    const element = tempDiv.firstChild;
+    return registerNode(element as Node);
+  } catch (e) {
+    reportError({
+      kind: "operation-failed",
+      operation: "createElementFromTemplate",
+      message: e instanceof Error ? e.message : String(e),
+      context: { templateLength: template.length, variableCount: Object.keys(variables).length },
+    });
+    throw e;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Selector caching
+// ---------------------------------------------------------------------------
+
+/**
+ * Query an element with selector caching using WeakMap.
+ * Cache is automatically cleared when document is garbage collected.
+ *
+ * @param selector - CSS selector string
+ * @param doc - Document to query (defaults to current document)
+ * @returns Handle of the found element, or undefined if not found
+ */
+export function queryCached(selector: string, doc: Document = document): bigint | undefined {
+  try {
+    let cache = _selectorCache.get(doc);
+    if (!cache) {
+      cache = new Map();
+      _selectorCache.set(doc, cache);
+    }
+    
+    let element = cache.get(selector);
+    if (element === undefined) {
+      element = doc.querySelector(selector);
+      cache.set(selector, element);
+    }
+    
+    if (!element) return undefined;
+    return registerNode(element);
+  } catch (e) {
+    reportError({
+      kind: "operation-failed",
+      operation: "queryCached",
+      message: e instanceof Error ? e.message : String(e),
+      context: { selector },
+    });
+    return undefined;
+  }
+}
+
+/**
+ * Clear the selector cache for a specific document.
+ *
+ * @param doc - Document to clear cache for (defaults to current document)
+ */
+export function clearSelectorCache(doc: Document = document): void {
+  const cache = _selectorCache.get(doc);
+  if (cache) {
+    cache.clear();
+  }
 }
