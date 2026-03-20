@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // WIT interface: web-socket
@@ -222,24 +237,24 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): bigint {
+export function connect(url: bigint, protocols: EventHandlerRecord): { ok: true; value: boolean } | { ok: false; error: bigint } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): string {
+export function url(handle: bigint): bigint {
   const obj = lookupWs(handle);
-  return obj.url();
+  return (obj as any).url();
 }
 
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
-  return obj.readyState();
+  return (obj as any).readyState();
 }
 
 /**
@@ -247,7 +262,7 @@ export function readyState(handle: bigint): number {
  */
 export function bufferedAmount(handle: bigint): bigint {
   const obj = lookupWs(handle);
-  return obj.bufferedAmount();
+  return (obj as any).bufferedAmount();
 }
 
 /**
@@ -255,7 +270,7 @@ export function bufferedAmount(handle: bigint): bigint {
  */
 export function extensions(handle: bigint): string {
   const obj = lookupWs(handle);
-  return obj.extensions();
+  return (obj as any).extensions();
 }
 
 /**
@@ -263,13 +278,13 @@ export function extensions(handle: bigint): string {
  */
 export function protocol(handle: bigint): string {
   const obj = lookupWs(handle);
-  return obj.protocol();
+  return (obj as any).protocol();
 }
 
 /**
  * `close()` operation.
  */
-export function close(handle: bigint, code: number, reason: string): void {
+export function close(handle: bigint, code: bigint, reason: string): void {
   const obj = lookupWs(handle);
   obj.close(code, reason);
 }
@@ -277,7 +292,7 @@ export function close(handle: bigint, code: number, reason: string): void {
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string): void {
+export function send(handle: bigint, data: bigint): void {
   const obj = lookupWs(handle);
   obj.send(data);
 }

@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -336,7 +351,7 @@ export function getPermission(): bigint {
  *
  * Async operation: returns request ID, poll with `pollRequestPermission()`
  */
-export function requestPermission(deprecatedCallback: string): bigint {
+export function requestPermission(deprecatedCallback: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Notification.requestPermission(deprecatedCallback)
     .then((result: unknown) => {
@@ -360,25 +375,25 @@ export function requestPermission(deprecatedCallback: string): bigint {
  * Poll an async `requestPermission()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollRequestPermission(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollRequestPermission(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `get-max-actions()` operation.
  */
-export function getMaxActions(): string {
+export function getMaxActions(): bigint | undefined {
   return (Notification as any).maxActions;
 }
 
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: bigint): string {
+export function getOnclick(self: bigint): number {
   const obj = lookupNotification(self);
   return obj.onclick;
 }
@@ -394,7 +409,7 @@ export function setOnclick(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onshow()` operation.
  */
-export function getOnshow(self: bigint): bigint {
+export function getOnshow(self: bigint): EventHandlerRecord {
   const obj = lookupNotification(self);
   return obj.onshow;
 }
@@ -418,7 +433,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: number): void {
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupNotification(self);
   obj.onerror = value;
 }
@@ -434,7 +449,7 @@ export function getOnclose(self: bigint): EventHandlerRecord {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: bigint, value: bigint): void {
+export function setOnclose(self: bigint, value: string): void {
   const obj = lookupNotification(self);
   obj.onclose = value;
 }
@@ -450,7 +465,7 @@ export function getTitle(self: bigint): string {
 /**
  * `get-dir()` operation.
  */
-export function getDir(self: bigint): bigint {
+export function getDir(self: bigint): string {
   const obj = lookupNotification(self);
   return obj.dir;
 }
@@ -460,9 +475,9 @@ export function getDir(self: bigint): bigint {
  */
 export function getLang(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.lang;
+  const _callResult = obj.lang;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -471,9 +486,9 @@ export function getLang(self: bigint): bigint {
  */
 export function getBody(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.body;
+  const _callResult = obj.body;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -490,9 +505,9 @@ export function getNavigate(self: bigint): string {
  */
 export function getTag(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.tag;
+  const _callResult = obj.tag;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -501,9 +516,9 @@ export function getTag(self: bigint): bigint {
  */
 export function getImage(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = (obj as any).image;
+  const _callResult = (obj as any).image;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -512,9 +527,9 @@ export function getImage(self: bigint): bigint {
  */
 export function getIcon(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.icon;
+  const _callResult = obj.icon;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -523,9 +538,9 @@ export function getIcon(self: bigint): bigint {
  */
 export function getBadge(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.badge;
+  const _callResult = obj.badge;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -534,9 +549,9 @@ export function getBadge(self: bigint): bigint {
  */
 export function getVibrate(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = (obj as any).vibrate;
+  const _callResult = (obj as any).vibrate;
   const handle = _nextNumberList++;
-  _numberListHandles.set(handle, result);
+  _numberListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -545,9 +560,9 @@ export function getVibrate(self: bigint): bigint {
  */
 export function getTimestamp(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = (obj as any).timestamp;
+  const _callResult = (obj as any).timestamp;
   const handle = _nextNumber++;
-  _numberHandles.set(handle, result);
+  _numberHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -556,9 +571,9 @@ export function getTimestamp(self: bigint): bigint {
  */
 export function getRenotify(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = (obj as any).renotify;
+  const _callResult = (obj as any).renotify;
   const handle = _nextBoolean++;
-  _booleanHandles.set(handle, result);
+  _booleanHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -567,9 +582,9 @@ export function getRenotify(self: bigint): bigint {
  */
 export function getSilent(self: bigint): bigint | undefined {
   const obj = lookupNotification(self);
-  const result = obj.silent;
+  const _callResult = obj.silent;
   const handle = _nextBoolean++;
-  _booleanHandles.set(handle, result);
+  _booleanHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -578,9 +593,9 @@ export function getSilent(self: bigint): bigint | undefined {
  */
 export function getRequireInteraction(self: bigint): bigint {
   const obj = lookupNotification(self);
-  const result = obj.requireInteraction;
+  const _callResult = obj.requireInteraction;
   const handle = _nextBoolean++;
-  _booleanHandles.set(handle, result);
+  _booleanHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -632,7 +647,7 @@ function lookupServiceWorkerRegistration(handle: bigint): ServiceWorkerRegistrat
  *
  * Async operation: returns request ID, poll with `pollShowNotification()`
  */
-export function showNotification(self: bigint, title: string, options: bigint | undefined): bigint {
+export function showNotification(self: bigint, title: string, options: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerRegistration(self);
   const promise = obj.showNotification(title, options)
@@ -670,7 +685,7 @@ export function pollShowNotification(requestId: bigint): { ok: true; value: bigi
  *
  * Async operation: returns request ID, poll with `pollGetNotifications()`
  */
-export function getNotifications(self: bigint, filter: number | undefined): bigint {
+export function getNotifications(self: bigint, filter: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerRegistration(self);
   const promise = obj.getNotifications(filter)
@@ -706,7 +721,7 @@ export function pollGetNotifications(requestId: bigint): { ok: true; value: bigi
 /**
  * `get-installing()` operation.
  */
-export function getInstalling(self: bigint): bigint | undefined {
+export function getInstalling(self: bigint): boolean {
   const obj = lookupServiceWorkerRegistration(self);
   return obj.installing ?? undefined;
 }
@@ -714,7 +729,7 @@ export function getInstalling(self: bigint): bigint | undefined {
 /**
  * `get-waiting()` operation.
  */
-export function getWaiting(self: bigint): bigint | undefined {
+export function getWaiting(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerRegistration(self);
   return obj.waiting ?? undefined;
 }
@@ -722,7 +737,7 @@ export function getWaiting(self: bigint): bigint | undefined {
 /**
  * `get-active()` operation.
  */
-export function getActive(self: bigint): number {
+export function getActive(self: bigint): bigint {
   const obj = lookupServiceWorkerRegistration(self);
   return obj.active ?? undefined;
 }
@@ -738,9 +753,9 @@ export function getNavigationPreload(self: bigint): bigint {
 /**
  * `get-scope()` operation.
  */
-export function getScope(self: bigint): number {
+export function getScope(self: bigint): string {
   const obj = lookupServiceWorkerRegistration(self);
-  return obj.scope;
+  return (obj as any).scope;
 }
 
 /**
@@ -781,12 +796,12 @@ export function update(self: bigint): bigint {
  * Poll an async `update()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollUpdate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollUpdate(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -819,18 +834,18 @@ export function unregister(self: bigint): bigint {
  * Poll an async `unregister()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollUnregister(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollUnregister(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
  * `get-onupdatefound()` operation.
  */
-export function getOnupdatefound(self: bigint): bigint {
+export function getOnupdatefound(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerRegistration(self);
   return obj.onupdatefound;
 }
@@ -838,7 +853,7 @@ export function getOnupdatefound(self: bigint): bigint {
 /**
  * `set-onupdatefound()` operation.
  */
-export function setOnupdatefound(self: bigint, value: EventHandlerRecord): void {
+export function setOnupdatefound(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerRegistration(self);
   obj.onupdatefound = value;
 }
@@ -865,7 +880,7 @@ function lookupNotificationEvent(handle: bigint): NotificationEvent {
 /**
  * `get-notification()` operation.
  */
-export function getNotification(self: bigint): string {
+export function getNotification(self: bigint): bigint {
   const obj = lookupNotificationEvent(self);
   return (obj as any).notification;
 }
@@ -948,7 +963,7 @@ export function getRegistration(self: bigint): bigint {
 /**
  * `get-service-worker()` operation.
  */
-export function getServiceWorker(self: bigint): string {
+export function getServiceWorker(self: bigint): bigint {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.serviceWorker;
 }
@@ -996,7 +1011,7 @@ export function setOnactivate(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onfetch()` operation.
  */
-export function getOnfetch(self: bigint): string {
+export function getOnfetch(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.onfetch;
 }
@@ -1020,7 +1035,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: string): void {
+export function setOnmessage(self: bigint, value: number): void {
   const obj = lookupServiceWorkerGlobalScope(self);
   obj.onmessage = value;
 }
@@ -1028,7 +1043,7 @@ export function setOnmessage(self: bigint, value: string): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): number {
+export function getOnmessageerror(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.onmessageerror;
 }

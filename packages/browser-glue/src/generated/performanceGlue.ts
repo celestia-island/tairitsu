@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Synthetic handle tables for primitive/utility types
@@ -288,7 +303,7 @@ export function getTimeOrigin(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function PerformanceToJson(self: bigint): string {
+export function PerformanceToJson(self: bigint): bigint {
   const obj = lookupPerformance(self);
   return obj.toJSON();
 }
@@ -304,7 +319,7 @@ export function getTiming(self: bigint): bigint {
 /**
  * `get-navigation()` operation.
  */
-export function getNavigation(self: bigint): string {
+export function getNavigation(self: bigint): bigint {
   const obj = lookupPerformance(self);
   return obj.navigation;
 }
@@ -314,9 +329,9 @@ export function getNavigation(self: bigint): string {
  */
 export function PerformanceGetEntries(self: bigint): bigint {
   const obj = lookupPerformance(self);
-  const result = (obj as any).entries();
+  const _callResult = (obj as any).entries();
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -325,9 +340,9 @@ export function PerformanceGetEntries(self: bigint): bigint {
  */
 export function PerformanceGetEntriesByType(self: bigint, type: string): bigint {
   const obj = lookupPerformance(self);
-  const result = obj.getEntriesByType(type);
+  const _callResult = obj.getEntriesByType(type);
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -336,9 +351,9 @@ export function PerformanceGetEntriesByType(self: bigint, type: string): bigint 
  */
 export function PerformanceGetEntriesByName(self: bigint, name: string, type: string | undefined): bigint {
   const obj = lookupPerformance(self);
-  const result = obj.getEntriesByName(name, type);
+  const _callResult = obj.getEntriesByName(name, type);
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -353,7 +368,7 @@ export function clearResourceTimings(self: bigint): void {
 /**
  * `set-resource-timing-buffer-size()` operation.
  */
-export function setResourceTimingBufferSize(self: bigint, maxSize: number): void {
+export function setResourceTimingBufferSize(self: bigint, maxSize: bigint): void {
   const obj = lookupPerformance(self);
   obj.setResourceTimingBufferSize(maxSize);
 }
@@ -369,7 +384,7 @@ export function getOnresourcetimingbufferfull(self: bigint): EventHandlerRecord 
 /**
  * `set-onresourcetimingbufferfull()` operation.
  */
-export function setOnresourcetimingbufferfull(self: bigint, value: string): void {
+export function setOnresourcetimingbufferfull(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupPerformance(self);
   obj.onresourcetimingbufferfull = value;
 }
@@ -377,7 +392,7 @@ export function setOnresourcetimingbufferfull(self: bigint, value: string): void
 /**
  * `mark()` operation.
  */
-export function mark(self: bigint, markName: string, markOptions: string): bigint {
+export function mark(self: bigint, markName: string, markOptions: string | undefined): bigint {
   const obj = lookupPerformance(self);
   return obj.mark(markName, markOptions);
 }
@@ -393,7 +408,7 @@ export function clearMarks(self: bigint, markName: string | undefined): void {
 /**
  * `measure()` operation.
  */
-export function measure(self: bigint, measureName: string, startOrMeasureOptions: string | undefined, endMark: string): bigint {
+export function measure(self: bigint, measureName: string, startOrMeasureOptions: string, endMark: string | undefined): bigint {
   const obj = lookupPerformance(self);
   return obj.measure(measureName, startOrMeasureOptions, endMark);
 }
@@ -401,7 +416,7 @@ export function measure(self: bigint, measureName: string, startOrMeasureOptions
 /**
  * `clear-measures()` operation.
  */
-export function clearMeasures(self: bigint, measureName: string): void {
+export function clearMeasures(self: bigint, measureName: string | undefined): void {
   const obj = lookupPerformance(self);
   obj.clearMeasures(measureName);
 }
@@ -516,7 +531,7 @@ export function getCriticalChRestart(self: bigint): number {
 /**
  * `get-not-restored-reasons()` operation.
  */
-export function getNotRestoredReasons(self: bigint): bigint | undefined {
+export function getNotRestoredReasons(self: bigint): string | undefined {
   const obj = lookupPerformanceNavigationTiming(self);
   return (obj as any).notRestoredReasons ?? undefined;
 }
@@ -524,7 +539,7 @@ export function getNotRestoredReasons(self: bigint): bigint | undefined {
 /**
  * `get-confidence()` operation.
  */
-export function getConfidence(self: bigint): boolean {
+export function getConfidence(self: bigint): bigint {
   const obj = lookupPerformanceNavigationTiming(self);
   return (obj as any).confidence;
 }
@@ -561,9 +576,9 @@ function lookupPerformanceTimingConfidence(handle: bigint): PerformanceTimingCon
  */
 export function getRandomizedTriggerRate(self: bigint): bigint {
   const obj = lookupPerformanceTimingConfidence(self);
-  const result = obj.randomizedTriggerRate;
+  const _callResult = obj.randomizedTriggerRate;
   const handle = _nextNumber++;
-  _numberHandles.set(handle, result);
+  _numberHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -891,7 +906,7 @@ export function getNavigationId(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function PerformanceEntryToJson(self: bigint): string {
+export function PerformanceEntryToJson(self: bigint): bigint {
   const obj = lookupPerformanceEntry(self);
   return obj.toJSON();
 }
@@ -918,7 +933,7 @@ function lookupPerformanceObserver(handle: bigint): PerformanceObserver {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, options: string): void {
+export function observe(self: bigint, options: bigint | undefined): void {
   const obj = lookupPerformanceObserver(self);
   obj.observe(options);
 }
@@ -1043,7 +1058,7 @@ export function getWorkerStart(self: bigint): number {
 /**
  * `get-redirect-start()` operation.
  */
-export function PerformanceResourceTimingGetRedirectStart(self: bigint): bigint {
+export function PerformanceResourceTimingGetRedirectStart(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.redirectStart;
 }
@@ -1067,7 +1082,7 @@ export function PerformanceResourceTimingGetFetchStart(self: bigint): number {
 /**
  * `get-domain-lookup-start()` operation.
  */
-export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): string {
+export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.domainLookupStart;
 }
@@ -1083,7 +1098,7 @@ export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): numbe
 /**
  * `get-connect-start()` operation.
  */
-export function PerformanceResourceTimingGetConnectStart(self: bigint): number {
+export function PerformanceResourceTimingGetConnectStart(self: bigint): string {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.connectStart;
 }
@@ -1091,7 +1106,7 @@ export function PerformanceResourceTimingGetConnectStart(self: bigint): number {
 /**
  * `get-connect-end()` operation.
  */
-export function PerformanceResourceTimingGetConnectEnd(self: bigint): (number)[] {
+export function PerformanceResourceTimingGetConnectEnd(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.connectEnd;
 }
@@ -1107,7 +1122,7 @@ export function PerformanceResourceTimingGetSecureConnectionStart(self: bigint):
 /**
  * `get-request-start()` operation.
  */
-export function PerformanceResourceTimingGetRequestStart(self: bigint): string {
+export function PerformanceResourceTimingGetRequestStart(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.requestStart;
 }
@@ -1155,7 +1170,7 @@ export function getWorkerRouterEvaluationStart(self: bigint): number {
 /**
  * `get-worker-cache-lookup-start()` operation.
  */
-export function getWorkerCacheLookupStart(self: bigint): number {
+export function getWorkerCacheLookupStart(self: bigint): bigint {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).workerCacheLookupStart;
 }
@@ -1211,7 +1226,7 @@ export function getResponseStatus(self: bigint): number {
 /**
  * `get-render-blocking-status()` operation.
  */
-export function getRenderBlockingStatus(self: bigint): bigint | undefined {
+export function getRenderBlockingStatus(self: bigint): string {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).renderBlockingStatus;
 }
@@ -1235,7 +1250,7 @@ export function getContentEncoding(self: bigint): string {
 /**
  * `to-json()` operation.
  */
-export function PerformanceResourceTimingToJson(self: bigint): boolean {
+export function PerformanceResourceTimingToJson(self: bigint): bigint {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.toJSON();
 }

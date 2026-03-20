@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // WIT interface: idb-factory
@@ -222,7 +237,7 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): string {
   const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -251,7 +266,7 @@ function lookupIdbDb(handle: bigint): IDBDatabase {
  */
 export function name(handle: bigint): string {
   const obj = lookupIdbDb(handle);
-  return obj.name();
+  return (obj as any).name();
 }
 
 /**
@@ -259,7 +274,7 @@ export function name(handle: bigint): string {
  */
 export function version(handle: bigint): bigint {
   const obj = lookupIdbDb(handle);
-  return obj.version();
+  return (obj as any).version();
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +352,7 @@ export function IdbObjectStoreSetName(handle: bigint, value: string): void {
  */
 export function IdbObjectStoreKeyPath(handle: bigint): string {
   const obj = lookupIdbStore(handle);
-  return obj.keyPath();
+  return (obj as any).keyPath();
 }
 
 /**
@@ -345,7 +360,7 @@ export function IdbObjectStoreKeyPath(handle: bigint): string {
  */
 export function autoIncrement(handle: bigint): boolean {
   const obj = lookupIdbStore(handle);
-  return obj.autoIncrement();
+  return (obj as any).autoIncrement();
 }
 
 // ---------------------------------------------------------------------------
@@ -388,15 +403,15 @@ export function IdbIndexSetName(handle: bigint, value: string): void {
  */
 export function IdbIndexKeyPath(handle: bigint): string {
   const obj = lookupIDBIndex(handle);
-  return obj.keyPath();
+  return (obj as any).keyPath();
 }
 
 /**
  * `multi-entry()` operation.
  */
-export function multiEntry(handle: bigint): string {
+export function multiEntry(handle: bigint): boolean {
   const obj = lookupIDBIndex(handle);
-  return obj.multiEntry();
+  return (obj as any).multiEntry();
 }
 
 /**
@@ -404,7 +419,7 @@ export function multiEntry(handle: bigint): string {
  */
 export function unique(handle: bigint): boolean {
   const obj = lookupIDBIndex(handle);
-  return obj.unique();
+  return (obj as any).unique();
 }
 
 // ---------------------------------------------------------------------------
@@ -431,7 +446,7 @@ function lookupIDBCursor(handle: bigint): IDBCursor {
  */
 export function IdbCursorSource(handle: bigint): string {
   const obj = lookupIDBCursor(handle);
-  return obj.source();
+  return (obj as any).source();
 }
 
 /**
@@ -439,7 +454,7 @@ export function IdbCursorSource(handle: bigint): string {
  */
 export function key(handle: bigint): string {
   const obj = lookupIDBCursor(handle);
-  return obj.key();
+  return (obj as any).key();
 }
 
 /**
@@ -447,7 +462,7 @@ export function key(handle: bigint): string {
  */
 export function primaryKey(handle: bigint): string {
   const obj = lookupIDBCursor(handle);
-  return obj.primaryKey();
+  return (obj as any).primaryKey();
 }
 
 /**
@@ -506,7 +521,7 @@ export function resultVal(handle: bigint): string {
  */
 export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = lookupIDBRequest(handle);
-  return obj.source() ?? undefined;
+  return (obj as any).source() ?? undefined;
 }
 
 // ---------------------------------------------------------------------------

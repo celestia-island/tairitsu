@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -235,7 +250,7 @@ function lookupNavigatorStorage(handle: bigint): NavigatorStorage {
 /**
  * `get-storage()` operation.
  */
-export function getStorage(self: bigint): bigint {
+export function getStorage(self: bigint): boolean {
   const obj = lookupNavigatorStorage(self);
   return obj.storage;
 }
@@ -365,12 +380,12 @@ export function estimate(self: bigint): bigint {
  * Poll an async `estimate()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollEstimate(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollEstimate(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------

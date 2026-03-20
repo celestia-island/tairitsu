@@ -377,16 +377,16 @@ class CodeGenerator:
             if handle_key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
-                lines.append(f"  const result = {obj_ref_with_assertion}.{method_name}({args});")
+                lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
                 if func.return_is_optional:
-                    lines.append(f"  if (result === null) return undefined;")
+                    lines.append(f"  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
-                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
             elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
                 if func.return_is_optional:
-                    lines.append(f"  const result = {obj_ref_with_assertion}.{method_name}({args});")
-                    lines.append(f"  return result !== null ? BigInt(result) : undefined;")
+                    lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
+                    lines.append(f"  return _callResult !== null ? BigInt(_callResult) : undefined;")
                 else:
                     lines.append(f"  return BigInt({obj_ref_with_assertion}.{method_name}({args}));")
             elif func.return_is_optional:
@@ -398,9 +398,9 @@ class CodeGenerator:
         elif handle_key in HANDLE_RETURNING_FUNCTIONS:
             target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.wit_name, kebab_to_camel(func.wit_name))]
             target_var, target_pascal = self._get_handle_info(target_iface)
-            lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_attr};")
+            lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_attr};")
             lines.append(f"  const handle = _next{target_pascal}++;")
-            lines.append(f"  _{target_var}.set(handle, result);")
+            lines.append(f"  _{target_var}.set(handle, _callResult);")
             lines.append("  return handle;")
         else:
             enum_key = (iface.wit_name, prop_name)
@@ -450,18 +450,18 @@ class CodeGenerator:
             if func.return_is_void:
                 lines.append(f"  {obj_ref_with_assertion}.{func.browser_method}({args});")
             elif func.return_is_optional:
-                result = f"{obj_ref_with_assertion}.{func.browser_method}({args})"
+                _result_expr = f"{obj_ref_with_assertion}.{func.browser_method}({args})"
                 key = (iface.wit_name, kebab_to_camel(func.wit_name))
                 if key in HANDLE_RETURNING_FUNCTIONS:
                     target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                     target_var, target_pascal = self._get_handle_info(target_iface)
-                    lines.append(f"  const result = {result};")
-                    lines.append(f"  if (result === null) return undefined;")
+                    lines.append(f"  const _callResult = {_result_expr};")
+                    lines.append(f"  if (_callResult === null) return undefined;")
                     lines.append(f"  const handle = _next{target_pascal}++;")
-                    lines.append(f"  _{target_var}.set(handle, result);")
+                    lines.append(f"  _{target_var}.set(handle, _callResult);")
                     lines.append("  return handle;")
                 else:
-                    lines.append(f"  return {result} ?? undefined;")
+                    lines.append(f"  return {_result_expr} ?? undefined;")
             else:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")
         elif func.params:
@@ -474,10 +474,10 @@ class CodeGenerator:
                 enum_name = ENUM_SETTER_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
                 # Generate reverse mapping (int -> string)
-                lines.append(f"  const value = {value_param};")
+                lines.append(f"  const _enumInput = {value_param};")
                 lines.append(f"  let enumValue: {enum_name};")
                 for enum_str, enum_int in enum_values.items():
-                    lines.append(f"  if (value === {enum_int}n) {{ enumValue = '{enum_str}'; }}")
+                    lines.append(f"  if (_enumInput === {enum_int}n) {{ enumValue = '{enum_str}'; }}")
                 lines.append(f"  else {{ enumValue = '{list(enum_values.keys())[0]}'; }}")
                 value_expr = "enumValue"
             elif func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
@@ -497,9 +497,9 @@ class CodeGenerator:
             elif func.return_is_handle and handle_key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
-                lines.append(f"  const result = {class_ref}.{func.browser_method}({args});")
+                lines.append(f"  const _callResult = {class_ref}.{func.browser_method}({args});")
                 lines.append(f"  const handle = _next{target_pascal}++;")
-                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
             else:
                 lines.append(f"  return {class_ref}.{func.browser_method}({args});")
@@ -534,9 +534,9 @@ class CodeGenerator:
             if key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
-                lines.append(f"  const result = {obj_ref_with_assertion}.{func.browser_method}({args});")
+                lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_method}({args});")
                 lines.append(f"  const handle = _next{target_pascal}++;")
-                lines.append(f"  _{target_var}.set(handle, result);")
+                lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
             else:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args});")

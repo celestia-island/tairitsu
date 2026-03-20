@@ -199,6 +199,21 @@ export type Global = typeof WebAssembly.Global;
 /** Type definition for Exception */
 export type Exception = any;
 
+/** Type definition for HTMLString */
+export type HTMLString = string;
+
+/** Type definition for MediaText */
+export type MediaText = string;
+
+/** Type definition for HTMLHyperlinkHref */
+export type HTMLHyperlinkHref = string;
+
+/** Type definition for LocationHref */
+export type LocationHref = string;
+
+/** Type definition for URLHref */
+export type URLHref = string;
+
 
 // ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
@@ -1442,9 +1457,9 @@ export function AudioDataCopyTo(self: bigint, destination: bigint, options: Audi
  */
 export function AudioDataClone(self: bigint): bigint {
   const obj = lookupAudioData(self);
-  const result = obj.clone();
+  const _callResult = obj.clone();
   const handle = _nextAudioData++;
-  _audioDatahandles.set(handle, result);
+  _audioDatahandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1513,9 +1528,9 @@ export function getCodedHeight(self: bigint): bigint {
  */
 export function getCodedRect(self: bigint): bigint | undefined {
   const obj = lookupVideoFrame(self);
-  const result = obj.codedRect;
+  const _callResult = obj.codedRect;
   const handle = _nextDomRect++;
-  _domRectHandles.set(handle, result);
+  _domRectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1524,9 +1539,9 @@ export function getCodedRect(self: bigint): bigint | undefined {
  */
 export function getVisibleRect(self: bigint): bigint | undefined {
   const obj = lookupVideoFrame(self);
-  const result = obj.visibleRect;
+  const _callResult = obj.visibleRect;
   const handle = _nextDomRect++;
-  _domRectHandles.set(handle, result);
+  _domRectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1584,9 +1599,9 @@ export function VideoFrameGetTimestamp(self: bigint): bigint {
  */
 export function getColorSpace(self: bigint): bigint {
   const obj = lookupVideoFrame(self);
-  const result = obj.colorSpace;
+  const _callResult = obj.colorSpace;
   const handle = _nextVideoColorSpace++;
-  _videoColorSpacehandles.set(handle, result);
+  _videoColorSpacehandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1649,9 +1664,9 @@ export function pollCopyTo(requestId: bigint): { ok: true; value: bigint } | { o
  */
 export function VideoFrameClone(self: bigint): bigint {
   const obj = lookupVideoFrame(self);
-  const result = obj.clone();
+  const _callResult = obj.clone();
   const handle = _nextVideoFrame++;
-  _videoFramehandles.set(handle, result);
+  _videoFramehandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1737,9 +1752,9 @@ export function getFullRange(self: bigint): boolean | undefined {
  */
 export function toJson(self: bigint): bigint {
   const obj = lookupVideoColorSpace(self);
-  const result = obj.toJSON();
+  const _callResult = obj.toJSON();
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1767,9 +1782,9 @@ function lookupImageDecoder(handle: bigint): ImageDecoder {
  */
 export function ImageDecoderGetType(self: bigint): bigint {
   const obj = lookupImageDecoder(self);
-  const result = obj.type;
+  const _callResult = obj.type;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1789,7 +1804,7 @@ export function getComplete(self: bigint): boolean {
 export function getCompleted(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupImageDecoder(self);
-  const promise = obj.completed()
+  const promise = (obj as any).completed()
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1824,9 +1839,9 @@ export function pollGetCompleted(requestId: bigint): { ok: true; value: bigint }
  */
 export function getTracks(self: bigint): bigint {
   const obj = lookupImageDecoder(self);
-  const result = obj.tracks;
+  const _callResult = obj.tracks;
   const handle = _nextImageTrackList++;
-  _imageTrackListHandles.set(handle, result);
+  _imageTrackListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -1995,9 +2010,9 @@ export function getSelectedIndex(self: bigint): number {
  */
 export function getSelectedTrack(self: bigint): bigint | undefined {
   const obj = lookupImageTrackList(self);
-  const result = obj.selectedTrack;
+  const _callResult = obj.selectedTrack;
   const handle = _nextImageTrack++;
-  _imageTrackHandles.set(handle, result);
+  _imageTrackHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2199,9 +2214,9 @@ function lookupWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextB
  */
 export function getCanvas(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.canvas;
+  const _callResult = obj.canvas;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2247,10 +2262,10 @@ export function getDrawingBufferColorSpace(self: bigint): bigint {
  */
 export function setDrawingBufferColorSpace(self: bigint, value: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: PredefinedColorSpace;
-  if (value === 0n) { enumValue = 'srgb'; }
-  if (value === 1n) { enumValue = 'display-p3'; }
+  if (_enumInput === 0n) { enumValue = 'srgb'; }
+  if (_enumInput === 1n) { enumValue = 'display-p3'; }
   else { enumValue = 'srgb'; }
   obj.drawingBufferColorSpace = enumValue;
 }
@@ -2273,10 +2288,10 @@ export function getUnpackColorSpace(self: bigint): bigint {
  */
 export function setUnpackColorSpace(self: bigint, value: bigint): void {
   const obj = lookupWebGLRenderingContextBase(self);
-  const value = value;
+  const _enumInput = value;
   let enumValue: PredefinedColorSpace;
-  if (value === 0n) { enumValue = 'srgb'; }
-  if (value === 1n) { enumValue = 'display-p3'; }
+  if (_enumInput === 0n) { enumValue = 'srgb'; }
+  if (_enumInput === 1n) { enumValue = 'display-p3'; }
   else { enumValue = 'srgb'; }
   obj.unpackColorSpace = enumValue;
 }
@@ -2286,10 +2301,10 @@ export function setUnpackColorSpace(self: bigint, value: bigint): void {
  */
 export function getContextAttributes(self: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getContextAttributes();
-  if (result === null) return undefined;
+  const _callResult = obj.getContextAttributes();
+  if (_callResult === null) return undefined;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2306,10 +2321,10 @@ export function isContextLost(self: bigint): boolean {
  */
 export function getSupportedExtensions(self: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getSupportedExtensions();
-  if (result === null) return undefined;
+  const _callResult = obj.getSupportedExtensions();
+  if (_callResult === null) return undefined;
   const handle = _nextStringList++;
-  _stringListHandles.set(handle, result);
+  _stringListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2318,10 +2333,10 @@ export function getSupportedExtensions(self: bigint): bigint | undefined {
  */
 export function getExtension(self: bigint, name: string): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getExtension(name);
-  if (result === null) return undefined;
+  const _callResult = obj.getExtension(name);
+  if (_callResult === null) return undefined;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2506,9 +2521,9 @@ export function copyTexSubImage2D(self: bigint, target: bigint, level: bigint, x
  */
 export function createBuffer(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createBuffer();
+  const _callResult = obj.createBuffer();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2517,9 +2532,9 @@ export function createBuffer(self: bigint): bigint {
  */
 export function createFramebuffer(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createFramebuffer();
+  const _callResult = obj.createFramebuffer();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2528,9 +2543,9 @@ export function createFramebuffer(self: bigint): bigint {
  */
 export function createProgram(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createProgram();
+  const _callResult = obj.createProgram();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2539,9 +2554,9 @@ export function createProgram(self: bigint): bigint {
  */
 export function createRenderbuffer(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createRenderbuffer();
+  const _callResult = obj.createRenderbuffer();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2550,9 +2565,9 @@ export function createRenderbuffer(self: bigint): bigint {
  */
 export function createShader(self: bigint, type: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createShader(Number(type));
+  const _callResult = obj.createShader(Number(type));
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2561,9 +2576,9 @@ export function createShader(self: bigint, type: bigint): bigint | undefined {
  */
 export function createTexture(self: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.createTexture();
+  const _callResult = obj.createTexture();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2756,10 +2771,10 @@ export function generateMipmap(self: bigint, target: bigint): void {
  */
 export function getActiveAttrib(self: bigint, program: bigint, index: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getActiveAttrib(lookupWebGlObject(program), Number(index));
-  if (result === null) return undefined;
+  const _callResult = obj.getActiveAttrib(lookupWebGlObject(program), Number(index));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlActiveInfo++;
-  _webGlActiveInfoHandles.set(handle, result);
+  _webGlActiveInfoHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2768,10 +2783,10 @@ export function getActiveAttrib(self: bigint, program: bigint, index: bigint): b
  */
 export function getActiveUniform(self: bigint, program: bigint, index: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getActiveUniform(lookupWebGlObject(program), Number(index));
-  if (result === null) return undefined;
+  const _callResult = obj.getActiveUniform(lookupWebGlObject(program), Number(index));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlActiveInfo++;
-  _webGlActiveInfoHandles.set(handle, result);
+  _webGlActiveInfoHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2780,10 +2795,10 @@ export function getActiveUniform(self: bigint, program: bigint, index: bigint): 
  */
 export function getAttachedShaders(self: bigint, program: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getAttachedShaders(lookupWebGlObject(program));
-  if (result === null) return undefined;
+  const _callResult = obj.getAttachedShaders(lookupWebGlObject(program));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlShaderList++;
-  _webGlShaderListHandles.set(handle, result);
+  _webGlShaderListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2800,9 +2815,9 @@ export function getAttribLocation(self: bigint, program: bigint, name: string): 
  */
 export function getBufferParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getBufferParameter(Number(target), Number(pname));
+  const _callResult = obj.getBufferParameter(Number(target), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2811,9 +2826,9 @@ export function getBufferParameter(self: bigint, target: bigint, pname: bigint):
  */
 export function getParameter(self: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getParameter(Number(pname));
+  const _callResult = obj.getParameter(Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2830,9 +2845,9 @@ export function getError(self: bigint): bigint {
  */
 export function getFramebufferAttachmentParameter(self: bigint, target: bigint, attachment: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getFramebufferAttachmentParameter(Number(target), Number(attachment), Number(pname));
+  const _callResult = obj.getFramebufferAttachmentParameter(Number(target), Number(attachment), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2841,9 +2856,9 @@ export function getFramebufferAttachmentParameter(self: bigint, target: bigint, 
  */
 export function getProgramParameter(self: bigint, program: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getProgramParameter(lookupWebGlObject(program), Number(pname));
+  const _callResult = obj.getProgramParameter(lookupWebGlObject(program), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2860,9 +2875,9 @@ export function getProgramInfoLog(self: bigint, program: bigint): string | undef
  */
 export function getRenderbufferParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getRenderbufferParameter(Number(target), Number(pname));
+  const _callResult = obj.getRenderbufferParameter(Number(target), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2871,9 +2886,9 @@ export function getRenderbufferParameter(self: bigint, target: bigint, pname: bi
  */
 export function getShaderParameter(self: bigint, shader: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getShaderParameter(lookupWebGlObject(shader), Number(pname));
+  const _callResult = obj.getShaderParameter(lookupWebGlObject(shader), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2882,10 +2897,10 @@ export function getShaderParameter(self: bigint, shader: bigint, pname: bigint):
  */
 export function getShaderPrecisionFormat(self: bigint, shadertype: bigint, precisiontype: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getShaderPrecisionFormat(Number(shadertype), Number(precisiontype));
-  if (result === null) return undefined;
+  const _callResult = obj.getShaderPrecisionFormat(Number(shadertype), Number(precisiontype));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlShaderPrecisionFormat++;
-  _webGlShaderPrecisionFormatHandles.set(handle, result);
+  _webGlShaderPrecisionFormatHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2910,9 +2925,9 @@ export function getShaderSource(self: bigint, shader: bigint): string | undefine
  */
 export function getTexParameter(self: bigint, target: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getTexParameter(Number(target), Number(pname));
+  const _callResult = obj.getTexParameter(Number(target), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2921,9 +2936,9 @@ export function getTexParameter(self: bigint, target: bigint, pname: bigint): bi
  */
 export function getUniform(self: bigint, program: bigint, location: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getUniform(program, Number(location));
+  const _callResult = obj.getUniform(program, Number(location));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2932,10 +2947,10 @@ export function getUniform(self: bigint, program: bigint, location: bigint): big
  */
 export function getUniformLocation(self: bigint, program: bigint, name: string): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getUniformLocation(lookupWebGlObject(program), name);
-  if (result === null) return undefined;
+  const _callResult = obj.getUniformLocation(lookupWebGlObject(program), name);
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlUniformLocation++;
-  _webGlUniformLocationHandles.set(handle, result);
+  _webGlUniformLocationHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2944,9 +2959,9 @@ export function getUniformLocation(self: bigint, program: bigint, name: string):
  */
 export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getVertexAttrib(Number(index), Number(pname));
+  const _callResult = obj.getVertexAttrib(Number(index), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2955,9 +2970,9 @@ export function getVertexAttrib(self: bigint, index: bigint, pname: bigint): big
  */
 export function getVertexAttribOffset(self: bigint, index: bigint, pname: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
-  const result = obj.getVertexAttribOffset(Number(index), Number(pname));
+  const _callResult = obj.getVertexAttribOffset(Number(index), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3589,9 +3604,9 @@ export function readBuffer(self: bigint, src: bigint): void {
  */
 export function getInternalformatParameter(self: bigint, target: bigint, internalformat: bigint, pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getInternalformatParameter(Number(target), Number(internalformat), Number(pname));
+  const _callResult = obj.getInternalformatParameter(Number(target), Number(internalformat), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3664,9 +3679,9 @@ export function compressedTexSubImage3D(self: bigint, target: bigint, level: big
  */
 export function getFragDataLocation(self: bigint, program: bigint, name: string): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getFragDataLocation(lookupWebGlObject(program), name);
+  const _callResult = obj.getFragDataLocation(lookupWebGlObject(program), name);
   const handle = _nextNumber++;
-  _numberHandles.set(handle, result);
+  _numberHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3899,9 +3914,9 @@ export function clearBufferfi(self: bigint, buffer: bigint, drawbuffer: bigint, 
  */
 export function createQuery(self: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.createQuery();
+  const _callResult = obj.createQuery();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3942,10 +3957,10 @@ export function endQuery(self: bigint, target: bigint): void {
  */
 export function getQuery(self: bigint, target: bigint, pname: bigint): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getQuery(Number(target), Number(pname));
-  if (result === null) return undefined;
+  const _callResult = obj.getQuery(Number(target), Number(pname));
+  if (_callResult === null) return undefined;
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3954,9 +3969,9 @@ export function getQuery(self: bigint, target: bigint, pname: bigint): bigint | 
  */
 export function getQueryParameter(self: bigint, query: bigint, pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getQueryParameter(lookupOptionWebGlObject(query), Number(pname));
+  const _callResult = obj.getQueryParameter(lookupOptionWebGlObject(query), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -3965,9 +3980,9 @@ export function getQueryParameter(self: bigint, query: bigint, pname: bigint): b
  */
 export function createSampler(self: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.createSampler();
+  const _callResult = obj.createSampler();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4016,9 +4031,9 @@ export function samplerParameterf(self: bigint, sampler: bigint, pname: bigint, 
  */
 export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getSamplerParameter(lookupWebGlObject(sampler), Number(pname));
+  const _callResult = obj.getSamplerParameter(lookupWebGlObject(sampler), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4027,9 +4042,9 @@ export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint
  */
 export function fenceSync(self: bigint, condition: bigint, flags: bigint): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.fenceSync(Number(condition), Number(flags));
+  const _callResult = obj.fenceSync(Number(condition), Number(flags));
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4070,9 +4085,9 @@ export function waitSync(self: bigint, sync: bigint, flags: bigint, timeout: big
  */
 export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getSyncParameter(lookupWebGlObject(sync), Number(pname));
+  const _callResult = obj.getSyncParameter(lookupWebGlObject(sync), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4081,9 +4096,9 @@ export function getSyncParameter(self: bigint, sync: bigint, pname: bigint): big
  */
 export function createTransformFeedback(self: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.createTransformFeedback();
+  const _callResult = obj.createTransformFeedback();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4140,10 +4155,10 @@ export function transformFeedbackVaryings(self: bigint, program: bigint, varying
  */
 export function getTransformFeedbackVarying(self: bigint, program: bigint, index: bigint): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getTransformFeedbackVarying(lookupWebGlObject(program), Number(index));
-  if (result === null) return undefined;
+  const _callResult = obj.getTransformFeedbackVarying(lookupWebGlObject(program), Number(index));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlActiveInfo++;
-  _webGlActiveInfoHandles.set(handle, result);
+  _webGlActiveInfoHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4184,9 +4199,9 @@ export function bindBufferRange(self: bigint, target: bigint, index: bigint, buf
  */
 export function getIndexedParameter(self: bigint, target: bigint, index: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getIndexedParameter(Number(target), Number(index));
+  const _callResult = obj.getIndexedParameter(Number(target), Number(index));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4195,10 +4210,10 @@ export function getIndexedParameter(self: bigint, target: bigint, index: bigint)
  */
 export function getUniformIndices(self: bigint, program: bigint, uniformNames: (string)[]): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getUniformIndices(lookupWebGlObject(program), uniformNames);
-  if (result === null) return undefined;
+  const _callResult = obj.getUniformIndices(lookupWebGlObject(program), uniformNames);
+  if (_callResult === null) return undefined;
   const handle = _nextNumberList++;
-  _numberListHandles.set(handle, result);
+  _numberListHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4207,9 +4222,9 @@ export function getUniformIndices(self: bigint, program: bigint, uniformNames: (
  */
 export function getActiveUniforms(self: bigint, program: bigint, uniformIndices: (bigint)[], pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getActiveUniforms(lookupWebGlObject(program), uniformIndices, pname);
+  const _callResult = obj.getActiveUniforms(lookupWebGlObject(program), uniformIndices, pname);
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4218,9 +4233,9 @@ export function getActiveUniforms(self: bigint, program: bigint, uniformIndices:
  */
 export function getUniformBlockIndex(self: bigint, program: bigint, uniformBlockName: string): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getUniformBlockIndex(lookupWebGlObject(program), uniformBlockName);
+  const _callResult = obj.getUniformBlockIndex(lookupWebGlObject(program), uniformBlockName);
   const handle = _nextNumber++;
-  _numberHandles.set(handle, result);
+  _numberHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4229,9 +4244,9 @@ export function getUniformBlockIndex(self: bigint, program: bigint, uniformBlock
  */
 export function getActiveUniformBlockParameter(self: bigint, program: bigint, uniformBlockIndex: bigint, pname: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getActiveUniformBlockParameter(lookupWebGlObject(program), Number(uniformBlockIndex), Number(pname));
+  const _callResult = obj.getActiveUniformBlockParameter(lookupWebGlObject(program), Number(uniformBlockIndex), Number(pname));
   const handle = _nextAny++;
-  _anyHandles.set(handle, result);
+  _anyHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4240,10 +4255,10 @@ export function getActiveUniformBlockParameter(self: bigint, program: bigint, un
  */
 export function getActiveUniformBlockName(self: bigint, program: bigint, uniformBlockIndex: bigint): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.getActiveUniformBlockName(lookupWebGlObject(program), Number(uniformBlockIndex));
-  if (result === null) return undefined;
+  const _callResult = obj.getActiveUniformBlockName(lookupWebGlObject(program), Number(uniformBlockIndex));
+  if (_callResult === null) return undefined;
   const handle = _nextString++;
-  _stringHandles.set(handle, result);
+  _stringHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4260,9 +4275,9 @@ export function uniformBlockBinding(self: bigint, program: bigint, uniformBlockI
  */
 export function createVertexArray(self: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
-  const result = obj.createVertexArray();
+  const _callResult = obj.createVertexArray();
   const handle = _nextWebGlObject++;
-  _webGlObjectHandles.set(handle, result);
+  _webGlObjectHandles.set(handle, _callResult);
   return handle;
 }
 
