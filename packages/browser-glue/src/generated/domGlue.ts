@@ -40,7 +40,7 @@ function getEvent(handle: bigint): Event {
     throw new Error(`Event handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -220,7 +220,7 @@ function getCustomEvent(handle: bigint): CustomEvent {
     throw new Error(`CustomEvent handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-detail()` operation.
@@ -256,7 +256,7 @@ function getEventTarget(handle: bigint): EventTarget {
     throw new Error(`EventTarget handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `add-event-listener()` operation.
@@ -300,7 +300,7 @@ function getEventListener(handle: bigint): EventListener {
     throw new Error(`EventListener handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `handle-event()` operation.
@@ -328,7 +328,7 @@ function getAbortController(handle: bigint): AbortController {
     throw new Error(`AbortController handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-signal()` operation.
@@ -394,7 +394,7 @@ function getAbortSignal(handle: bigint): AbortSignal {
     throw new Error(`AbortSignal handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `abort()` operation.
@@ -506,7 +506,7 @@ function getNonElementParentNode(handle: bigint): NonElementParentNode {
     throw new Error(`NonElementParentNode handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-element-by-id()` operation.
@@ -534,7 +534,7 @@ function getParentNode(handle: bigint): ParentNode {
     throw new Error(`ParentNode handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-children()` operation.
@@ -634,7 +634,7 @@ function getNonDocumentTypeChildNode(handle: bigint): NonDocumentTypeChildNode {
     throw new Error(`NonDocumentTypeChildNode handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-previous-element-sibling()` operation.
@@ -670,7 +670,7 @@ function getChildNode(handle: bigint): ChildNode {
     throw new Error(`ChildNode handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `before()` operation.
@@ -722,7 +722,7 @@ function getSlottable(handle: bigint): Slottable {
     throw new Error(`Slottable handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-assigned-slot()` operation.
@@ -750,7 +750,7 @@ function getNodeList(handle: bigint): NodeList {
     throw new Error(`NodeList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `item()` operation.
@@ -786,7 +786,7 @@ function getHtmlCollection(handle: bigint): HtmlCollection {
     throw new Error(`HtmlCollection handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -830,7 +830,7 @@ function getMutationObserver(handle: bigint): MutationObserver {
     throw new Error(`MutationObserver handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `observe()` operation.
@@ -874,7 +874,7 @@ function getMutationRecord(handle: bigint): MutationRecord {
     throw new Error(`MutationRecord handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-type()` operation.
@@ -966,7 +966,7 @@ function getNode(handle: bigint): Node {
     throw new Error(`Node handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-node-type()` operation.
@@ -1232,7 +1232,7 @@ function registerDomImplementation(obj: DomImplementation): bigint {
   const handle = _nextDomImplementation++;
   _domImplementationhandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a DomImplementation by handle, throwing if not found. */
 function getDomImplementation(handle: bigint): DomImplementation {
@@ -1241,7 +1241,7 @@ function getDomImplementation(handle: bigint): DomImplementation {
     throw new Error(`DomImplementation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `create-document-type()` operation.
@@ -1293,7 +1293,7 @@ function getDocumentType(handle: bigint): DocumentType {
     throw new Error(`DocumentType handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-name()` operation.
@@ -1337,7 +1337,7 @@ function getShadowRoot(handle: bigint): ShadowRoot {
     throw new Error(`ShadowRoot handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-mode()` operation.
@@ -1453,7 +1453,7 @@ function getNamedNodeMap(handle: bigint): NamedNodeMap {
     throw new Error(`NamedNodeMap handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -1537,7 +1537,7 @@ function getAttr(handle: bigint): Attr {
     throw new Error(`Attr handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-namespace-uri()` operation.
@@ -1621,7 +1621,7 @@ function getCharacterData(handle: bigint): CharacterData {
     throw new Error(`CharacterData handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-data()` operation.
@@ -1705,7 +1705,7 @@ function getText(handle: bigint): Text {
     throw new Error(`Text handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `split-text()` operation.
@@ -1741,7 +1741,7 @@ function getProcessingInstruction(handle: bigint): ProcessingInstruction {
     throw new Error(`ProcessingInstruction handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-target()` operation.
@@ -1769,7 +1769,7 @@ function getAbstractRange(handle: bigint): AbstractRange {
     throw new Error(`AbstractRange handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-start-container()` operation.
@@ -1829,7 +1829,7 @@ function getNodeIterator(handle: bigint): NodeIterator {
     throw new Error(`NodeIterator handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-root()` operation.
@@ -1913,7 +1913,7 @@ function getTreeWalker(handle: bigint): TreeWalker {
     throw new Error(`TreeWalker handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-root()` operation.
@@ -1990,7 +1990,7 @@ export function previousSibling(self: bigint): bigint | undefined {
 /**
  * `next-sibling()` operation.
  */
-export function nextSibling(self: bigint): bigint | undefined {
+export function nextSibling(self: bigint): bigint {
   const obj = getTreeWalker(self);
   return obj.nextSibling() ?? undefined;
 }
@@ -1998,7 +1998,7 @@ export function nextSibling(self: bigint): bigint | undefined {
 /**
  * `previous-node()` operation.
  */
-export function TreeWalkerPreviousNode(self: bigint): bigint {
+export function TreeWalkerPreviousNode(self: bigint): bigint | undefined {
   const obj = getTreeWalker(self);
   return obj.previousNode() ?? undefined;
 }
@@ -2029,7 +2029,7 @@ function getNodeFilter(handle: bigint): NodeFilter {
     throw new Error(`NodeFilter handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `accept-node()` operation.
@@ -2057,7 +2057,7 @@ function getDomTokenList(handle: bigint): DomTokenList {
     throw new Error(`DomTokenList handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-length()` operation.
@@ -2070,7 +2070,7 @@ export function DomTokenListGetLength(self: bigint): number {
 /**
  * `item()` operation.
  */
-export function DomTokenListItem(self: bigint, index: bigint): string | undefined {
+export function DomTokenListItem(self: bigint, index: number): string | undefined {
   const obj = getDomTokenList(self);
   return obj.item(index) ?? undefined;
 }
@@ -2157,7 +2157,7 @@ function getXPathResult(handle: bigint): XPathResult {
     throw new Error(`XPathResult handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-result-type()` operation.
@@ -2249,7 +2249,7 @@ function getXPathExpression(handle: bigint): XPathExpression {
     throw new Error(`XPathExpression handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `evaluate()` operation.
@@ -2277,7 +2277,7 @@ function getXPathNsResolver(handle: bigint): XPathNsResolver {
     throw new Error(`XPathNsResolver handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `lookup-namespace-uri()` operation.
@@ -2303,7 +2303,7 @@ function registerXPathEvaluatorBase(obj: XPathEvaluatorBase): bigint {
   const handle = _nextXPathEvaluatorBase++;
   _xPathEvaluatorBasehandles.set(handle, obj);
   return handle;
-}
+
 
 /** Get a XPathEvaluatorBase by handle, throwing if not found. */
 function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
@@ -2312,7 +2312,7 @@ function getXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
     throw new Error(`XPathEvaluatorBase handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `create-expression()` operation.
@@ -2333,7 +2333,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: string, resolver: bigint | undefined, type: bigint, result: bigint | undefined): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint): bigint {
   const obj = getXPathEvaluatorBase(self);
   return obj.evaluate(expression, contextNode, resolver, type, result);
 }
@@ -2356,7 +2356,7 @@ function getXsltProcessor(handle: bigint): XsltProcessor {
     throw new Error(`XsltProcessor handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `import-stylesheet()` operation.
@@ -2369,7 +2369,7 @@ export function importStylesheet(self: bigint, style: bigint): void {
 /**
  * `transform-to-fragment()` operation.
  */
-export function transformToFragment(self: bigint, source: string, output: string): bigint {
+export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
   const obj = getXsltProcessor(self);
   return obj.transformToFragment(source, output);
 }
@@ -2377,7 +2377,7 @@ export function transformToFragment(self: bigint, source: string, output: string
 /**
  * `transform-to-document()` operation.
  */
-export function transformToDocument(self: bigint, source: bigint): bigint {
+export function transformToDocument(self: bigint, source: string): bigint {
   const obj = getXsltProcessor(self);
   return obj.transformToDocument(source);
 }

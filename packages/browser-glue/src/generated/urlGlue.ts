@@ -10,6 +10,19 @@
  */
 
 // ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
+
+// ---------------------------------------------------------------------------
 // WIT interface: url
 // ---------------------------------------------------------------------------
 
@@ -27,7 +40,7 @@ function getUrl(handle: bigint): URL {
     throw new Error(`URL handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `parse()` operation.
@@ -110,7 +123,7 @@ export function getPassword(self: bigint): string {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: bigint | undefined): void {
+export function setPassword(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.password = value;
 }
@@ -126,7 +139,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: number): void {
   const obj = getUrl(self);
   obj.host = value;
 }
@@ -190,7 +203,7 @@ export function getSearch(self: bigint): string {
 /**
  * `set-search()` operation.
  */
-export function setSearch(self: bigint, value: string): void {
+export function setSearch(self: bigint, value: number): void {
   const obj = getUrl(self);
   obj.search = value;
 }
@@ -214,7 +227,7 @@ export function getHash(self: bigint): string {
 /**
  * `set-hash()` operation.
  */
-export function setHash(self: bigint, value: EventHandlerRecord): void {
+export function setHash(self: bigint, value: string): void {
   const obj = getUrl(self);
   obj.hash = value;
 }
@@ -245,7 +258,7 @@ function getUrlSearchParams(handle: bigint): URLSearchParams {
     throw new Error(`URLSearchParams handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-size()` operation.
@@ -266,17 +279,47 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string | undefined): void {
+export function _delete(self: bigint, name: string, value: string): void {
   const obj = getUrlSearchParams(self);
-  obj._delete(name, value);
+  obj.delete(name, value);
 }
 
 /**
  * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, name: string): string | undefined {
+export function _get(self: bigint, name: string): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getUrlSearchParams(self);
-  return obj._get(name) ?? undefined;
+  const promise = obj.get(name)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollGet(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
@@ -300,7 +343,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
  */
 export function _set(self: bigint, name: string, value: string): void {
   const obj = getUrlSearchParams(self);
-  obj._set(name, value);
+  obj.set(name, value);
 }
 
 /**
@@ -345,6 +388,7 @@ export default {
   append,
   _delete,
   _get,
+  pollGet,
   getAll,
   has,
   _set,

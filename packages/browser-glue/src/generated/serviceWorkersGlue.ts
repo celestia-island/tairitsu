@@ -27,7 +27,7 @@ function getSwReg(handle: bigint): ServiceWorkerRegistration {
     throw new Error(`ServiceWorkerRegistration handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `scope()` operation.
@@ -54,19 +54,19 @@ function getSw(handle: bigint): ServiceWorker {
     throw new Error(`ServiceWorker handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): bigint | undefined {
+export function scriptUrl(handle: bigint): string {
   return ServiceWorker.scriptUrl(handle);
 }
 
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
+export function postMessage(handle: bigint, message: string, transfer: ((bigint)[])[]): void {
   return ServiceWorker.postMessage(handle, message, transfer);
 }
 

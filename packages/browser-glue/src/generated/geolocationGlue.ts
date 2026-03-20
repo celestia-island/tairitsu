@@ -27,7 +27,7 @@ function getGeo(handle: bigint): Geolocation {
     throw new Error(`Geolocation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-current-position()` operation.

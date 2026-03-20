@@ -40,12 +40,12 @@ function getAnimation(handle: bigint): Animation {
     throw new Error(`Animation handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): bigint {
+export function getId(handle: bigint): string {
   const obj = getAnimation(self);
   return obj.id;
 }
@@ -53,7 +53,7 @@ export function getId(handle: bigint): bigint {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: boolean): void {
+export function setId(handle: bigint, value: string): void {
   const obj = getAnimation(self);
   obj.id = value;
 }
@@ -61,7 +61,7 @@ export function setId(handle: bigint, value: boolean): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): number {
+export function getPlaybackRate(handle: bigint): bigint {
   const obj = getAnimation(self);
   return obj.playbackRate;
 }
@@ -69,7 +69,7 @@ export function getPlaybackRate(handle: bigint): number {
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: number): void {
+export function setPlaybackRate(handle: bigint, value: string): void {
   const obj = getAnimation(self);
   obj.playbackRate = value;
 }

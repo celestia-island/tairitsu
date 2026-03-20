@@ -10,6 +10,19 @@
  */
 
 // ---------------------------------------------------------------------------
+// Async handle table for Promise-based operations
+// ---------------------------------------------------------------------------
+
+let _nextAsyncHandle = 1n;
+
+interface AsyncHandle<T> {
+  promise: Promise<T>;
+  result: { ok: true; value: T } | { ok: false; error: string } | null;
+}
+
+const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
+
+// ---------------------------------------------------------------------------
 // WIT interface: module
 // ---------------------------------------------------------------------------
 
@@ -27,26 +40,26 @@ function getModule(handle: bigint): Module {
     throw new Error(`Module handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (bigint)[] {
+export function exports(moduleObject: string): (bigint)[] {
   return Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
+export function imports(moduleObject: bigint): EventHandlerRecord {
   return Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
+export function customSections(moduleObject: string, sectionName: string): (EventHandlerRecord)[] {
   return Module.customSections(moduleObject, sectionName);
 }
 
@@ -68,7 +81,7 @@ function getInstance(handle: bigint): Instance {
     throw new Error(`Instance handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-exports()` operation.
@@ -96,12 +109,12 @@ function getMemory(handle: bigint): Memory {
     throw new Error(`Memory handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): string {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -109,7 +122,7 @@ export function MemoryGrow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): (string)[] {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -117,7 +130,7 @@ export function toFixedLengthBuffer(self: bigint): (string)[] {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): bigint {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.toResizableBuffer();
 }
@@ -125,7 +138,7 @@ export function toResizableBuffer(self: bigint): bigint {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): number {
+export function getBuffer(self: bigint): (boolean)[] {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -148,30 +161,60 @@ function getTable(handle: bigint): Table {
     throw new Error(`Table handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: bigint | undefined): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
 
 /**
  * `get()` operation.
+ *
+ * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, index: bigint): string {
+export function _get(self: bigint, index: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
   const obj = getTable(self);
-  return obj._get(index);
+  const promise = obj.get(index)
+    .then((result) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `_get()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result ?? undefined;
 }
 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: number | undefined): void {
+export function _set(self: bigint, index: bigint, value: string | undefined): void {
   const obj = getTable(self);
-  obj._set(index, value);
+  obj.set(index, value);
 }
 
 /**
@@ -200,12 +243,12 @@ function getGlobal(handle: bigint): Global {
     throw new Error(`Global handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `value-of()` operation.
  */
-export function valueOf(self: bigint): bigint {
+export function valueOf(self: bigint): string {
   const obj = getGlobal(self);
   return obj.valueOf();
 }
@@ -213,7 +256,7 @@ export function valueOf(self: bigint): bigint {
 /**
  * `get-value()` operation.
  */
-export function getValue(self: bigint): bigint | undefined {
+export function getValue(self: bigint): string {
   const obj = getGlobal(self);
   return obj.value;
 }
@@ -221,7 +264,7 @@ export function getValue(self: bigint): bigint | undefined {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: bigint): void {
+export function setValue(self: bigint, value: string): void {
   const obj = getGlobal(self);
   obj.value = value;
 }
@@ -244,7 +287,7 @@ function getException(handle: bigint): Exception {
     throw new Error(`Exception handle ${handle} not found`);
   }
   return obj;
-}
+
 
 /**
  * `get-arg()` operation.
@@ -257,7 +300,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): boolean {
+export function is(self: bigint, exceptionTag: bigint): bigint {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }
@@ -285,6 +328,7 @@ export default {
   getBuffer,
   TableGrow,
   _get,
+  pollGet,
   _set,
   getLength,
   valueOf,
