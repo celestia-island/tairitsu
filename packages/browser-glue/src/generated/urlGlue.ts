@@ -222,7 +222,7 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): boolean {
   return URL.parse(url, base);
 }
 
@@ -236,7 +236,7 @@ export function canParse(url: string, base: string | undefined): bigint {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): bigint {
+export function getHref(self: bigint): boolean {
   const obj = lookupURL(self);
   return obj.href;
 }
@@ -252,7 +252,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): boolean {
+export function getOrigin(self: bigint): string {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -268,7 +268,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `set-protocol()` operation.
  */
-export function setProtocol(self: bigint, value: string): void {
+export function setProtocol(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.protocol = value;
 }
@@ -284,7 +284,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: string): void {
+export function setUsername(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.username = value;
 }
@@ -316,7 +316,7 @@ export function getHost(self: bigint): string {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.host = value;
 }
@@ -356,7 +356,7 @@ export function setPort(self: bigint, value: string): void {
 /**
  * `get-pathname()` operation.
  */
-export function getPathname(self: bigint): string {
+export function getPathname(self: bigint): number {
   const obj = lookupURL(self);
   return obj.pathname;
 }
@@ -447,7 +447,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: number, value: bigint): void {
+export function append(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name, value);
 }
@@ -455,7 +455,7 @@ export function append(self: bigint, name: number, value: bigint): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string | undefined): void {
+export function _delete(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -479,7 +479,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: string, value: string | undefined): boolean {
+export function has(self: bigint, name: string, value: EventHandlerRecord): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value);
 }

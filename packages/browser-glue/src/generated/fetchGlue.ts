@@ -400,7 +400,7 @@ export function HeadersHas(self: bigint, name: string): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
+export function HeadersSet(self: bigint, name: bigint, value: string): void {
   const obj = lookupHeaders(self);
   obj.set(name, value);
 }
@@ -427,7 +427,7 @@ function lookupBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): bigint | undefined | undefined {
+export function getBody(self: bigint): bigint | undefined {
   const obj = lookupBody(self);
   return obj.body ?? undefined;
 }
@@ -435,7 +435,7 @@ export function getBody(self: bigint): bigint | undefined | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
+export function getBodyUsed(self: bigint): string | undefined {
   const obj = lookupBody(self);
   return obj.bodyUsed;
 }
@@ -508,12 +508,12 @@ export function blob(self: bigint): bigint {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -546,12 +546,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -690,7 +690,7 @@ function lookupRequest(handle: bigint): Request {
 /**
  * `get-method()` operation.
  */
-export function getMethod(self: bigint): bigint {
+export function getMethod(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.method;
 }
@@ -714,7 +714,7 @@ export function RequestGetHeaders(self: bigint): bigint {
 /**
  * `get-destination()` operation.
  */
-export function getDestination(self: bigint): bigint {
+export function getDestination(self: bigint): (bigint)[] {
   const obj = lookupRequest(self);
   return obj.destination;
 }
@@ -738,7 +738,7 @@ export function getReferrerPolicy(self: bigint): bigint {
 /**
  * `get-mode()` operation.
  */
-export function getMode(self: bigint): bigint {
+export function getMode(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.mode;
 }
@@ -778,7 +778,7 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): boolean {
+export function getKeepalive(self: bigint): EventHandlerRecord {
   const obj = lookupRequest(self);
   return obj.keepalive;
 }
@@ -855,14 +855,14 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): bigint {
+export function redirect(url: string, status: number | undefined): number {
   return Response.redirect(url, status);
 }
 
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: number | undefined): bigint {
+export function ResponseJson(data: number, init: bigint | undefined): bigint {
   return Response.json(data, init);
 }
 
@@ -1055,7 +1055,7 @@ export function atob(self: bigint, data: string): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint | undefined, timeout: Uint8Array | undefined, _arguments: (string)[]): number {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   (obj as any).timeout = _arguments;
 }
@@ -1063,7 +1063,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: bigint | undefined | undefined): void {
+export function clearTimeout(self: bigint, id: bigint | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(id);
 }
@@ -1203,7 +1203,7 @@ function lookupReadableStream(handle: bigint): ReadableStream {
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: Uint8Array): bigint {
+export function from(asyncIterable: Uint8Array | undefined): number {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 

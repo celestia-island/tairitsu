@@ -257,7 +257,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: number, transfer: bigint): void {
+export function postMessage(handle: bigint, message: string, transfer: (string)[]): void {
   const obj = lookupSw(handle);
   obj.postMessage(message, transfer);
 }

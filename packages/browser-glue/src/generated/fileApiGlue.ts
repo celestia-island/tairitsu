@@ -222,7 +222,7 @@ function lookupFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: number | undefined } | { ok: false; error: number } {
+export function newFileReader(): number {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -272,7 +272,7 @@ function lookupFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): boolean {
   const obj = lookupFileList(handle);
   return obj.length();
 }
