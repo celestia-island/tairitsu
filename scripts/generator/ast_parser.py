@@ -24,8 +24,10 @@ from .config import (
     HANDLE_RETURNING_FUNCTIONS,
     JS_RESERVED_WORDS,
     ASYNC_PATTERNS,
+    ASYNC_METHOD_OVERRIDES,
     GETTER_BUT_ACTUALLY_METHOD,
     ENUM_PROPERTIES,
+    NUMBER_TO_BIGINT_PROPERTIES,
 )
 from .models import (
     GeneratedParam, GeneratedFunction, GeneratedTypeAlias,
@@ -96,9 +98,14 @@ class WitParser:
             
             wit_type_str = wit_type_to_string(p.type_)
             
+            is_first_handle_param = (i == 0 and (isinstance(p.type_, WitHandle) or wit_type_str.endswith("-handle")))
+            
             if is_global_singleton and i == 0 and p.name == "self":
                 skip_first_param = True
                 continue
+            
+            if is_first_handle_param:
+                skip_first_param = True
             
             params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal))
 
@@ -136,7 +143,12 @@ class WitParser:
         is_getter_but_method = is_getter and wit_name[4:] in GETTER_BUT_ACTUALLY_METHOD
         
         has_self_param = any(p.name == "self" for p in func.params)
-        is_static = func.is_static or (not has_self_param and not is_global_singleton)
+        first_param_is_handle = (
+            func.params and 
+            (isinstance(func.params[0].type_, WitHandle) or 
+             wit_type_to_string(func.params[0].type_).endswith("-handle"))
+        )
+        is_static = func.is_static or (not has_self_param and not first_param_is_handle and not is_global_singleton)
   
         if is_async:
             ts_return_inner_original = ts_return_inner
@@ -160,12 +172,13 @@ class WitParser:
                 ts_return = "bigint"
                 return_is_void = False
 
+        browser_attr = ""
         if is_getter:
             attr_name = wit_name[4:]
-            browser_attr = kebab_to_camel(attr_name)
+            browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
         elif is_setter:
             attr_name = wit_name[4:]
-            browser_attr = kebab_to_camel(attr_name)
+            browser_attr = BROWSER_API_NAME_MAPPINGS.get(attr_name, kebab_to_camel(attr_name))
             if params:
                 value_param = params[-1].name
 
@@ -298,10 +311,13 @@ class WitParser:
         if wit_name.startswith("get-") or wit_name.startswith("set-"):
             return False
 
+        # Check for interface-specific overrides first
+        key = (iface_name, wit_name)
+        if key in ASYNC_METHOD_OVERRIDES:
+            return ASYNC_METHOD_OVERRIDES[key]
+
         wit_lower = wit_name.lower()
         for pattern in ASYNC_PATTERNS:
-            if wit_lower == pattern:
-                return True
             if wit_lower == pattern:
                 return True
 
