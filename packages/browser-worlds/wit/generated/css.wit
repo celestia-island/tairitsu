@@ -10,6 +10,112 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:css@0.2.0;
 
+/// Event handler function handle
+type event-handler-handle = u64;
+
+/// Event handler record type
+type event-handler-record = record {
+    onabort: option<event-handler-handle>;
+    onafterprint: option<event-handler-handle>;
+    onanimationcancel: option<event-handler-handle>;
+    onanimationend: option<event-handler-handle>;
+    onanimationiteration: option<event-handler-handle>;
+    onanimationstart: option<event-handler-handle>;
+    onauxclick: option<event-handler-handle>;
+    onbeforeinput: option<event-handler-handle>;
+    onbeforematch: option<event-handler-handle>;
+    onbeforetoggle: option<event-handler-handle>;
+    onbeforeunload: option<event-handler-handle>;
+    onblur: option<event-handler-handle>;
+    oncancel: option<event-handler-handle>;
+    oncanplay: option<event-handler-handle>;
+    oncanplaythrough: option<event-handler-handle>;
+    onchange: option<event-handler-handle>;
+    onclick: option<event-handler-handle>;
+    onclose: option<event-handler-handle>;
+    oncontextlost: option<event-handler-handle>;
+    oncontextmenu: option<event-handler-handle>;
+    oncontextrestored: option<event-handler-handle>;
+    oncopy: option<event-handler-handle>;
+    oncuechange: option<event-handler-handle>;
+    oncut: option<event-handler-handle>;
+    ondblclick: option<event-handler-handle>;
+    ondrag: option<event-handler-handle>;
+    ondragend: option<event-handler-handle>;
+    ondragenter: option<event-handler-handle>;
+    ondragleave: option<event-handler-handle>;
+    ondragover: option<event-handler-handle>;
+    ondragstart: option<event-handler-handle>;
+    ondrop: option<event-handler-handle>;
+    ondurationchange: option<event-handler-handle>;
+    onemptied: option<event-handler-handle>;
+    onended: option<event-handler-handle>;
+    onerror: option<event-handler-handle>;
+    onfocus: option<event-handler-handle>;
+    onformdata: option<event-handler-handle>;
+    onfullscreenchange: option<event-handler-handle>;
+    onfullscreenerror: option<event-handler-handle>;
+    ongotpointercapture: option<event-handler-handle>;
+    oninput: option<event-handler-handle>;
+    oninvalid: option<event-handler-handle>;
+    onkeydown: option<event-handler-handle>;
+    onkeypress: option<event-handler-handle>;
+    onkeyup: option<event-handler-handle>;
+    onload: option<event-handler-handle>;
+    onloadeddata: option<event-handler-handle>;
+    onloadedmetadata: option<event-handler-handle>;
+    onloadstart: option<event-handler-handle>;
+    onlostpointercapture: option<event-handler-handle>;
+    onmousedown: option<event-handler-handle>;
+    onmouseenter: option<event-handler-handle>;
+    onmouseleave: option<event-handler-handle>;
+    onmousemove: option<event-handler-handle>;
+    onmouseout: option<event-handler-handle>;
+    onmouseover: option<event-handler-handle>;
+    onmouseup: option<event-handler-handle>;
+    onpaste: option<event-handler-handle>;
+    onpause: option<event-handler-handle>;
+    onplay: option<event-handler-handle>;
+    onplaying: option<event-handler-handle>;
+    onpointerdown: option<event-handler-handle>;
+    onpointerenter: option<event-handler-handle>;
+    onpointerleave: option<event-handler-handle>;
+    onpointermove: option<event-handler-handle>;
+    onpointerout: option<event-handler-handle>;
+    onpointerrawupdate: option<event-handler-handle>;
+    onpointerup: option<event-handler-handle>;
+    onpointercancel: option<event-handler-handle>;
+    onprogress: option<event-handler-handle>;
+    onratechange: option<event-handler-handle>;
+    onreadystatechange: option<event-handler-handle>;
+    onreset: option<event-handler-handle>;
+    onresize: option<event-handler-handle>;
+    onscroll: option<event-handler-handle>;
+    onscrollend: option<event-handler-handle>;
+    onsecuritypolicyviolation: option<event-handler-handle>;
+    onseeked: option<event-handler-handle>;
+    onseeking: option<event-handler-handle>;
+    onselect: option<event-handler-handle>;
+    onslotchange: option<event-handler-handle>;
+    onstalled: option<event-handler-handle>;
+    onsubmit: option<event-handler-handle>;
+    onsuspend: option<event-handler-handle>;
+    ontimeupdate: option<event-handler-handle>;
+    ontoggle: option<event-handler-handle>;
+    onvolumechange: option<event-handler-handle>;
+    onwaiting: option<event-handler-handle>;
+    onwebkitanimationend: option<event-handler-handle>;
+    onwebkitanimationiteration: option<event-handler-handle>;
+    onwebkitanimationstart: option<event-handler-handle>;
+    onwebkittransitionend: option<event-handler-handle>;
+    onwheel: option<event-handler-handle>;
+    onpointerover: option<event-handler-handle>;
+    ontouchstart: option<event-handler-handle>;
+    ontouchend: option<event-handler-handle>;
+    ontouchmove: option<event-handler-handle>;
+    ontouchcancel: option<event-handler-handle>;
+}
+
 /// WebIDL interface: `AnimationEvent`
 /// Inherits: `Event`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/css-animations.idl
