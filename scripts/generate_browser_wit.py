@@ -172,11 +172,12 @@ WEBIDL_TO_WIT: Dict[str, str] = {
     "CSSOMString": "string",
     "DOMHighResTimeStamp": "f64",
     "DOMTimeStamp": "u64",
-    # Callback/function types → opaque handle
-    "EventHandler": "u64",
-    "OnErrorEventHandler": "u64",
-    "OnBeforeUnloadEventHandler": "u64",
-    "VoidFunction": "u64",
+    # Event handler types - use record type with function signatures
+    "EventHandler": "event-handler-record",
+    "OnErrorEventHandler": "on-error-event-handler-record",
+    "OnBeforeUnloadEventHandler": "on-before-unload-event-handler-record",
+    "VoidFunction": "void-function-record",
+    # Callback/function types that are handles (async callbacks, etc.)
     "Function": "u64",
     "MutationCallback": "u64",
     "IntersectionObserverCallback": "u64",
