@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +37,9 @@ from type_mapper import (
     TypeScriptTypeMapper, JavaScriptMarshaler,
     is_async_function, generate_result_type
 )
+
+# Import from wit_parser
+from wit_parser import WitHandle
 
 
 # ---------------------------------------------------------------------------
@@ -208,8 +212,13 @@ class GeneratedFunction:
     browser_class: str = ""
     self_param: str = "self"
     value_param: str = "value"
-    has_explicit_poll: bool = False  # If True, don't generate auto-poll function
+    has_explicit_poll: bool = False
+    is_global_singleton: bool = False
+    skip_first_param: bool = False
     docs: List[str] = field(default_factory=list)
+    
+    # Runtime-only fields (not in dataclass init)
+    exported_name: str = ""
 
 
 @dataclass
@@ -279,26 +288,40 @@ class BrowserGlueGenerator:
         if ts_name in self.JS_RESERVED_WORDS:
             ts_name = f"_{ts_name}"
         pascal_name = kebab_to_pascal(wit_name)
+        
+        # Check if this interface is a global singleton (navigator, window, document)
+        is_global_singleton = interface.name in GLOBAL_SINGLETONS
 
         # Process parameters
         params: List[GeneratedParam] = []
         self_param = "self"
         browser_args_list: List[str] = []
+        skip_first_param = False  # For global singletons, skip self parameter
 
         for i, p in enumerate(func.params):
             param_name = kebab_to_camel(p.name)
             # Escape reserved words by prefixing with underscore
             if param_name in self.JS_RESERVED_WORDS:
                 param_name = f"_{param_name}"
-            ts_type = self.type_mapper.map_type(p.type_)
+            
+            # Fix: Ensure all handle types are bigint, not other types
+            if isinstance(p.type_, WitHandle):
+                ts_type = "bigint"
+            else:
+                ts_type = self.type_mapper.map_type(p.type_)
             wit_type_str = wit_type_to_string(p.type_)
 
+            # For global singletons, skip the 'self' parameter in the generated function
+            if is_global_singleton and i == 0 and p.name == "self":
+                skip_first_param = True
+                continue
+            
             params.append(GeneratedParam(param_name, ts_type, wit_type_str))
 
             # First param is often 'self' for instance methods
             if i == 0 and p.name == "self":
                 self_param = param_name
-            else:
+            elif not (i == 0 and is_global_singleton):
                 browser_args_list.append(param_name)
 
         # Determine return type
@@ -324,6 +347,10 @@ class BrowserGlueGenerator:
         browser_method = ts_name
         browser_attr = ""
         browser_args = ", ".join(browser_args_list)
+        
+        # For global singletons, browser class access is different
+        if is_global_singleton:
+            browser_class = GLOBAL_SINGLETONS[interface.name]  # e.g., "navigator"
 
         if is_getter:
             # get-foo → obj.foo
@@ -352,8 +379,10 @@ class BrowserGlueGenerator:
             browser_method=browser_method,
             browser_attr=browser_attr,
             browser_args=browser_args,
-            browser_class=browser_class if is_static else "",
+            browser_class=browser_class if is_static or is_global_singleton else "",
             self_param=self_param,
+            is_global_singleton=is_global_singleton,
+            skip_first_param=skip_first_param,
             docs=func.docs,
         )
 
@@ -472,6 +501,44 @@ class BrowserGlueGenerator:
         lines.append(" */")
         lines.append("")
 
+        # Collect all function names to detect duplicates across interfaces
+        all_function_names = []
+        for iface in domain.interfaces:
+            for func in iface.functions:
+                all_function_names.append(func.ts_name)
+                # Also track poll function names
+                if func.is_async and not func.has_explicit_poll:
+                    all_function_names.append(f"poll{func.pascal_name}")
+        
+        # Find duplicate function names
+        from collections import Counter
+        name_counts = Counter(all_function_names)
+        duplicate_names = {name for name, count in name_counts.items() if count > 1}
+        
+        # Create a map to namespace duplicate functions
+        # For each (interface, function) pair, determine the exported name
+        function_namespace = {}
+        for iface in domain.interfaces:
+            for func in iface.functions:
+                # Regular function name
+                if func.ts_name in duplicate_names:
+                    # Prefix with interface name (e.g., audioDecoderGetState)
+                    exported_name = f"{iface.name}{func.pascal_name}"
+                else:
+                    exported_name = func.ts_name
+                # Store with a unique key combining interface and function name
+                function_namespace[(iface.name, func.ts_name)] = exported_name
+                
+                # Poll function name
+                if func.is_async and not func.has_explicit_poll:
+                    poll_name = f"poll{func.pascal_name}"
+                    if poll_name in duplicate_names:
+                        # Use pattern: {Interface}Poll{Function} (e.g., AudioEncoderPollFlush)
+                        exported_poll_name = f"{iface.name}Poll{func.pascal_name}"
+                    else:
+                        exported_poll_name = poll_name
+                    function_namespace[(iface.name, poll_name)] = exported_poll_name
+
         # Check for async functions
         has_async = any(f.is_async for iface in domain.interfaces for f in iface.functions)
 
@@ -547,7 +614,7 @@ class BrowserGlueGenerator:
 
             # Functions
             for func in iface.functions:
-                self._render_function(lines, func, iface, has_async)
+                self._render_function(lines, func, iface, has_async, function_namespace)
 
         # Export default object
         lines.append("// ---------------------------------------------------------------------------")
@@ -558,9 +625,12 @@ class BrowserGlueGenerator:
         exports = []
         for iface in domain.interfaces:
             for func in iface.functions:
-                exports.append(f"  {func.ts_name}")
+                exported_name = function_namespace.get((iface.name, func.ts_name), func.ts_name)
+                exports.append(f"  {exported_name}")
                 if func.is_async and not func.has_explicit_poll:
-                    exports.append(f"  poll{func.pascal_name}")
+                    poll_key = (iface.name, f"poll{func.pascal_name}")
+                    exported_poll_name = function_namespace.get(poll_key, f"poll{func.pascal_name}")
+                    exports.append(f"  {exported_poll_name}")
         lines.append(",\n".join(exports))
         lines.append("};")
         lines.append("")
@@ -568,22 +638,31 @@ class BrowserGlueGenerator:
         return "\n".join(lines)
 
     def _render_function(self, lines: List[str], func: GeneratedFunction,
-                         iface: GeneratedInterface, has_async_table: bool) -> None:
+                         iface: GeneratedInterface, has_async_table: bool, 
+                         function_namespace: dict) -> None:
         """Render a single function."""
+
+        # Get the namespaced function name using (interface, function) as key
+        exported_name = function_namespace.get((iface.name, func.ts_name), func.ts_name)
+        
+        # Get the poll function name for documentation
+        poll_name = None
+        if func.is_async and not func.has_explicit_poll:
+            poll_name = function_namespace.get((iface.name, f"poll{func.pascal_name}"), f"poll{func.pascal_name}")
 
         # Documentation
         docs = func.docs[0] if func.docs else f"`{func.wit_name}()` operation."
         lines.append("/**")
         lines.append(f" * {docs}")
-        if func.is_async:
+        if func.is_async and poll_name:
             lines.append(" *")
             lines.append(" * Async operation: returns request ID, poll with " +
-                        f"`poll{func.pascal_name}()`")
+                        f"`{poll_name}()`")
         lines.append(" */")
 
         # Function signature
         params_str = ", ".join(f"{p.name}: {p.ts_type}" for p in func.params)
-        lines.append(f"export function {func.ts_name}({params_str}): {func.ts_return} {{")
+        lines.append(f"export function {exported_name}({params_str}): {func.ts_return} {{")
 
         # Function body
         if func.is_async:
@@ -602,28 +681,35 @@ class BrowserGlueGenerator:
 
         # Poll function for async operations (only if no explicit poll function exists)
         if func.is_async and not func.has_explicit_poll:
-            self._render_poll_function(lines, func)
+            self._render_poll_function(lines, func, iface, function_namespace)
             lines.append("")
 
     def _render_async_body(self, lines: List[str], func: GeneratedFunction,
-                          iface: GeneratedInterface) -> None:
+                           iface: GeneratedInterface) -> None:
         """Render async function body."""
         lines.append("  const requestId = _nextAsyncHandle++;")
-        if iface.handle_type and func.params:
+        
+        # For global singletons, use the global reference directly
+        if func.is_global_singleton:
+            obj_ref = func.browser_class  # e.g., "navigator"
+            args = func.browser_args if func.browser_args else ""
+            lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
+        elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
-        else:
-            lines.append("  // No handle lookup needed")
-
-        obj_ref = "obj" if iface.handle_type else ""
-        args = func.browser_args if func.browser_args else ""
-
-        if obj_ref:
+            obj_ref = "obj"
+            args = func.browser_args if func.browser_args else ""
             lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
         else:
-            # Static or global async function
-            lines.append(f"  const promise = {func.browser_class}.{func.browser_method}({args})"
-                        if func.browser_class else
-                        f"  // TODO: Implement async operation {func.wit_name}")
+            lines.append("  // No handle lookup needed")
+            obj_ref = "" if func.is_global_singleton else "obj"
+            args = func.browser_args if func.browser_args else ""
+            if obj_ref:
+                lines.append(f"  const promise = {obj_ref}.{func.browser_method}({args})")
+            else:
+                # Static or global async function
+                lines.append(f"  const promise = {func.browser_class}.{func.browser_method}({args})"
+                            if func.browser_class else
+                            f"  // TODO: Implement async operation {func.wit_name}")
 
         lines.append("    .then((result) => {")
         lines.append("      const entry = _asyncHandles.get(requestId);")
@@ -647,21 +733,33 @@ class BrowserGlueGenerator:
     def _render_getter_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
         """Render getter function body."""
-        if iface.handle_type and func.params:
+        if func.is_global_singleton:
+            obj_ref = func.browser_class
+        elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
-        if func.return_is_optional:
-            lines.append(f"  return obj.{func.browser_attr} ?? undefined;")
+            obj_ref = "obj"
         else:
-            lines.append(f"  return obj.{func.browser_attr};")
+            obj_ref = "obj"
+        
+        if func.return_is_optional:
+            lines.append(f"  return {obj_ref}.{func.browser_attr} ?? undefined;")
+        else:
+            lines.append(f"  return {obj_ref}.{func.browser_attr};")
 
     def _render_setter_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
         """Render setter function body."""
-        if iface.handle_type and func.params:
+        if func.is_global_singleton:
+            obj_ref = func.browser_class
+        elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
+            obj_ref = "obj"
+        else:
+            obj_ref = "obj"
+        
         if func.params:
             value_param = func.params[-1].name
-            lines.append(f"  obj.{func.browser_attr} = {value_param};")
+            lines.append(f"  {obj_ref}.{func.browser_attr} = {value_param};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction,
                            iface: GeneratedInterface) -> None:
@@ -673,12 +771,16 @@ class BrowserGlueGenerator:
             lines.append(f"  throw new Error('Static operation not implemented: {func.wit_name}');")
 
     def _render_method_body(self, lines: List[str], func: GeneratedFunction,
-                           iface: GeneratedInterface) -> None:
+                            iface: GeneratedInterface) -> None:
         """Render instance method body."""
-        if iface.handle_type and func.params:
+        if func.is_global_singleton:
+            obj_ref = func.browser_class
+        elif iface.handle_type and func.params:
             lines.append(f"  const obj = get{iface.handle_pascal}({func.self_param});")
-
-        obj_ref = "obj" if iface.handle_type else ""
+            obj_ref = "obj"
+        else:
+            obj_ref = "" if func.is_global_singleton else "obj"
+        
         args = func.browser_args
 
         if func.return_is_void:
@@ -688,8 +790,14 @@ class BrowserGlueGenerator:
         else:
             lines.append(f"  return {obj_ref}.{func.browser_method}({args});")
 
-    def _render_poll_function(self, lines: List[str], func: GeneratedFunction) -> None:
+    def _render_poll_function(self, lines: List[str], func: GeneratedFunction, 
+                             iface: GeneratedInterface, function_namespace: dict) -> None:
         """Render poll function for async operations."""
+        # Get the namespaced poll function name
+        # Poll functions follow pattern poll{PascalName}
+        poll_ts_name = f"poll{func.pascal_name}"
+        exported_poll_name = function_namespace.get((iface.name, poll_ts_name), poll_ts_name)
+
         lines.append("/**")
         lines.append(f" * Poll an async `{func.ts_name}()` operation.")
         lines.append(" * Returns undefined if still pending, or the result if complete.")
@@ -700,7 +808,7 @@ class BrowserGlueGenerator:
             result_type += f"; value: {func.ts_return_inner}"
         result_type += " } | { ok: false; error: string } | undefined"
 
-        lines.append(f"export function poll{func.pascal_name}(requestId: bigint): {result_type} {{")
+        lines.append(f"export function {exported_poll_name}(requestId: bigint): {result_type} {{")
         lines.append("  const entry = _asyncHandles.get(requestId);")
         lines.append("  if (!entry) {")
         lines.append("    return { ok: false, error: `Unknown request ID ${requestId}` };")
