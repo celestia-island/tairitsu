@@ -343,14 +343,14 @@ export function getSignal(self: bigint): bigint {
  *
  * Async operation: returns request ID, poll with `AbortControllerPollAbort()`
  */
-export function AbortControllerAbort(self: bigint, reason: string | undefined): void {
+export function AbortControllerAbort(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAbortController(self);
   const promise = obj.abort(reason)
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -1720,7 +1720,7 @@ export function splitText(self: bigint, offset: number): bigint {
 /**
  * `get-whole-text()` operation.
  */
-export function getWholeText(self: bigint): string {
+export function getWholeText(self: bigint): number {
   const obj = getText(self);
   return obj.wholeText;
 }
@@ -1852,7 +1852,7 @@ export function getReferenceNode(self: bigint): bigint {
 /**
  * `get-pointer-before-reference-node()` operation.
  */
-export function getPointerBeforeReferenceNode(self: bigint): bigint {
+export function getPointerBeforeReferenceNode(self: bigint): boolean {
   const obj = getNodeIterator(self);
   return obj.pointerBeforeReferenceNode;
 }
@@ -2196,7 +2196,7 @@ export function getBooleanValue(self: bigint): boolean {
 /**
  * `get-single-node-value()` operation.
  */
-export function getSingleNodeValue(self: bigint): bigint | undefined {
+export function getSingleNodeValue(self: bigint): bigint | undefined | undefined {
   const obj = getXPathResult(self);
   return obj.singleNodeValue ?? undefined;
 }
@@ -2204,7 +2204,7 @@ export function getSingleNodeValue(self: bigint): bigint | undefined {
 /**
  * `get-invalid-iterator-state()` operation.
  */
-export function getInvalidIteratorState(self: bigint): bigint {
+export function getInvalidIteratorState(self: bigint): boolean {
   const obj = getXPathResult(self);
   return obj.invalidIteratorState;
 }
@@ -2220,7 +2220,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): bigint | undefined {
+export function iterateNext(self: bigint): bigint {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2395,7 +2395,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: bigint | undefined): bigint {
+export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
   const obj = getXsltProcessor(self);
   return obj.parameter;
 }
@@ -2403,7 +2403,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: bigi
 /**
  * `remove-parameter()` operation.
  */
-export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
+export function removeParameter(self: bigint, namespaceUri: bigint | undefined, localName: bigint): void {
   const obj = getXsltProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }

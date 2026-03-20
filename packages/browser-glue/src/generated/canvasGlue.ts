@@ -141,14 +141,14 @@ export function AudioDecoderReset(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `AudioDecoderPollClose()`
  */
-export function AudioDecoderClose(self: bigint): void {
+export function AudioDecoderClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAudioDecoder(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -301,14 +301,14 @@ export function VideoDecoderReset(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `VideoDecoderPollClose()`
  */
-export function VideoDecoderClose(self: bigint): void {
+export function VideoDecoderClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getVideoDecoder(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -461,14 +461,14 @@ export function AudioEncoderReset(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `AudioEncoderPollClose()`
  */
-export function AudioEncoderClose(self: bigint): void {
+export function AudioEncoderClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAudioEncoder(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -621,14 +621,14 @@ export function VideoEncoderReset(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `VideoEncoderPollClose()`
  */
-export function VideoEncoderClose(self: bigint): void {
+export function VideoEncoderClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getVideoEncoder(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -909,14 +909,14 @@ export function AudioDataPollClone(requestId: bigint): { ok: true; value: bigint
  *
  * Async operation: returns request ID, poll with `AudioDataPollClose()`
  */
-export function AudioDataClose(self: bigint): void {
+export function AudioDataClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getAudioData(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -1125,14 +1125,14 @@ export function VideoFramePollClone(requestId: bigint): { ok: true; value: bigin
  *
  * Async operation: returns request ID, poll with `VideoFramePollClose()`
  */
-export function VideoFrameClose(self: bigint): void {
+export function VideoFrameClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getVideoFrame(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -1291,14 +1291,14 @@ export function ImageDecoderReset(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `ImageDecoderPollClose()`
  */
-export function ImageDecoderClose(self: bigint): void {
+export function ImageDecoderClose(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getImageDecoder(self);
   const promise = obj.close()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
@@ -2072,14 +2072,14 @@ export function finish(self: bigint): void {
  *
  * Async operation: returns request ID, poll with `WebGlRenderingContextBasePollFlush()`
  */
-export function WebGlRenderingContextBaseFlush(self: bigint): void {
+export function WebGlRenderingContextBaseFlush(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getWebGlRenderingContextBase(self);
   const promise = obj.flush()
     .then((result) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
-        entry.result = { ok: true };
+        entry.result = { ok: true, value: result };
       }
     })
     .catch((err: Error) => {
