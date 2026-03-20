@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -45,7 +53,7 @@ function getAnimation(handle: bigint): Animation {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): EventHandlerRecord {
+export function getId(handle: bigint): string {
   const obj = getAnimation(self);
   return obj.id;
 }

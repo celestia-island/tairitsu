@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 

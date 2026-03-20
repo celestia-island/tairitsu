@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -52,7 +60,7 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
+export function imports(moduleObject: boolean): (bigint)[] {
   return Module.imports(moduleObject);
 }
 
@@ -114,7 +122,7 @@ function getMemory(handle: bigint): Memory {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): EventHandlerRecord {
   const obj = getMemory(self);
   return obj.grow(delta);
 }
@@ -122,7 +130,7 @@ export function MemoryGrow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): (bigint)[] {
+export function toFixedLengthBuffer(self: bigint): (string)[] {
   const obj = getMemory(self);
   return obj.toFixedLengthBuffer();
 }
@@ -130,7 +138,7 @@ export function toFixedLengthBuffer(self: bigint): (bigint)[] {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): Uint8Array {
+export function toResizableBuffer(self: bigint): bigint | undefined {
   const obj = getMemory(self);
   return obj.toResizableBuffer();
 }
@@ -138,7 +146,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): (EventHandlerRecord)[] {
+export function getBuffer(self: bigint): Uint8Array {
   const obj = getMemory(self);
   return obj.buffer;
 }
@@ -166,7 +174,7 @@ function getTable(handle: bigint): Table {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: EventHandlerRecord | undefined): bigint {
   const obj = getTable(self);
   return obj.grow(delta, value);
 }
@@ -212,7 +220,7 @@ export function pollGet(requestId: bigint): { ok: true; value: string } | { ok: 
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: string, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: string): void {
   const obj = getTable(self);
   obj.set(index, value);
 }
@@ -248,7 +256,7 @@ function getGlobal(handle: bigint): Global {
 /**
  * `value-of()` operation.
  */
-export function valueOf(self: bigint): string {
+export function valueOf(self: bigint): bigint {
   const obj = getGlobal(self);
   return obj.valueOf();
 }
@@ -292,7 +300,7 @@ function getException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): bigint {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = getException(self);
   return obj.arg;
 }
@@ -300,7 +308,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): bigin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): bigint | undefined {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = getException(self);
   return obj.is(exceptionTag);
 }
@@ -308,7 +316,7 @@ export function is(self: bigint, exceptionTag: bigint): bigint | undefined {
 /**
  * `get-stack()` operation.
  */
-export function getStack(self: bigint): string {
+export function getStack(self: bigint): bigint {
   const obj = getException(self);
   return obj.stack;
 }

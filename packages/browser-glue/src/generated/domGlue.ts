@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -2218,7 +2226,7 @@ export function getSnapshotLength(self: bigint): number {
 /**
  * `iterate-next()` operation.
  */
-export function iterateNext(self: bigint): number | undefined {
+export function iterateNext(self: bigint): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.iterateNext() ?? undefined;
 }
@@ -2226,7 +2234,7 @@ export function iterateNext(self: bigint): number | undefined {
 /**
  * `snapshot-item()` operation.
  */
-export function snapshotItem(self: bigint, index: number): EventHandlerRecord {
+export function snapshotItem(self: bigint, index: number): bigint | undefined {
   const obj = getXPathResult(self);
   return obj.snapshotItem(index) ?? undefined;
 }

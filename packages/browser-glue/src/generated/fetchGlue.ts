@@ -10,6 +10,14 @@
  */
 
 // ---------------------------------------------------------------------------
+// Custom type definitions
+// ---------------------------------------------------------------------------
+
+/** Type definition for EventHandlerRecord */
+export type EventHandlerRecord = { [key: string]: ((...args: any[]) => void) | null | undefined; };;
+
+
+// ---------------------------------------------------------------------------
 // Async handle table for Promise-based operations
 // ---------------------------------------------------------------------------
 
@@ -45,7 +53,7 @@ function getHeaders(handle: bigint): Headers {
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: boolean, value: string): void {
+export function HeadersAppend(self: bigint, name: string, value: string): void {
   const obj = getHeaders(self);
   obj.append(name, value);
 }
@@ -53,7 +61,7 @@ export function HeadersAppend(self: bigint, name: boolean, value: string): void 
 /**
  * `delete()` operation.
  */
-export function HeadersDelete(self: bigint, name: bigint): void {
+export function HeadersDelete(self: bigint, name: number): void {
   const obj = getHeaders(self);
   obj.delete(name);
 }
@@ -63,7 +71,7 @@ export function HeadersDelete(self: bigint, name: bigint): void {
  *
  * Async operation: returns request ID, poll with `HeadersPollGet()`
  */
-export function HeadersGet(self: bigint, name: string): bigint {
+export function HeadersGet(self: bigint, name: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getHeaders(self);
   const promise = obj.get(name)
@@ -88,7 +96,7 @@ export function HeadersGet(self: bigint, name: string): bigint {
  * Poll an async `_get()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function HeadersPollGet(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function HeadersPollGet(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -99,7 +107,7 @@ export function HeadersPollGet(requestId: bigint): { ok: true; value: bigint } |
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): bigint {
+export function getSetCookie(self: bigint): (string)[] {
   const obj = getHeaders(self);
   return obj.setCookie;
 }
@@ -107,7 +115,7 @@ export function getSetCookie(self: bigint): bigint {
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: string): boolean {
+export function HeadersHas(self: bigint, name: bigint): boolean {
   const obj = getHeaders(self);
   return obj.has(name);
 }
@@ -115,7 +123,7 @@ export function HeadersHas(self: bigint, name: string): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: EventHandlerRecord): void {
   const obj = getHeaders(self);
   obj.set(name, value);
 }
@@ -143,7 +151,7 @@ function getBody(handle: bigint): Body {
 /**
  * `get-body()` operation.
  */
-export function getBody(self: bigint): EventHandlerRecord {
+export function getBody(self: bigint): bigint | undefined {
   const obj = getBody(self);
   return obj.body ?? undefined;
 }
@@ -151,7 +159,7 @@ export function getBody(self: bigint): EventHandlerRecord {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): boolean {
+export function getBodyUsed(self: bigint): EventHandlerRecord {
   const obj = getBody(self);
   return obj.bodyUsed;
 }
@@ -186,7 +194,7 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -300,7 +308,7 @@ export function formData(self: bigint): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: (bigint)[] } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -338,7 +346,7 @@ export function BodyJson(self: bigint): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function BodyPollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function BodyPollJson(requestId: bigint): { ok: true; value: (bigint)[] } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -423,7 +431,7 @@ export function RequestGetUrl(self: bigint): string {
 /**
  * `get-headers()` operation.
  */
-export function RequestGetHeaders(self: bigint): bigint {
+export function RequestGetHeaders(self: bigint): string {
   const obj = getRequest(self);
   return obj.headers;
 }
@@ -439,7 +447,7 @@ export function getDestination(self: bigint): bigint {
 /**
  * `get-referrer()` operation.
  */
-export function getReferrer(self: bigint): string {
+export function getReferrer(self: bigint): EventHandlerRecord {
   const obj = getRequest(self);
   return obj.referrer;
 }
@@ -609,7 +617,7 @@ export function redirect(url: string, status: bigint | undefined): bigint {
  *
  * Async operation: returns request ID, poll with `ResponsePollJson()`
  */
-export function ResponseJson(data: string, init: bigint): bigint {
+export function ResponseJson(data: string, init: number): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getResponse(self);
   const promise = obj.json(data, init)
@@ -1142,7 +1150,7 @@ export function pollPipeThrough(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `pollPipeTo()`
  */
-export function pipeTo(self: bigint, destination: bigint, options: bigint | undefined): bigint {
+export function pipeTo(self: bigint, destination: bigint, options: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = getReadableStream(self);
   const promise = obj.pipeTo(destination, options)
@@ -1167,7 +1175,7 @@ export function pipeTo(self: bigint, destination: bigint, options: bigint | unde
  * Poll an async `pipeTo()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPipeTo(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollPipeTo(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1178,7 +1186,7 @@ export function pollPipeTo(requestId: bigint): { ok: true; value: string } | { o
 /**
  * `tee()` operation.
  */
-export function tee(self: bigint): (bigint)[] {
+export function tee(self: bigint): bigint {
   const obj = getReadableStream(self);
   return obj.tee();
 }
@@ -1299,7 +1307,7 @@ export function ReadableStreamDefaultReaderRead(self: bigint): bigint {
  * Poll an async `read()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ReadableStreamDefaultReaderPollRead(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function ReadableStreamDefaultReaderPollRead(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1548,7 +1556,7 @@ export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: Uint8Ar
 /**
  * `error()` operation.
  */
-export function ReadableByteStreamControllerError(self: bigint, e: string | undefined): void {
+export function ReadableByteStreamControllerError(self: bigint, e: bigint): void {
   const obj = getReadableByteStreamController(self);
   obj.error(e);
 }
@@ -1576,7 +1584,7 @@ function getReadableStreamByobRequest(handle: bigint): ReadableStreamByobRequest
 /**
  * `get-view()` operation.
  */
-export function getView(self: bigint): number | undefined {
+export function getView(self: bigint): Uint8Array | undefined {
   const obj = getReadableStreamByobRequest(self);
   return obj.view ?? undefined;
 }
