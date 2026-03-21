@@ -310,7 +310,7 @@ export function getHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: bigint): void {
+export function setHref(self: bigint, value: string): void {
   const obj = lookupURL(self);
   const _enumInput = value;
   let enumValue: URLHref | '';
@@ -322,7 +322,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: bigint): boolean {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -350,7 +350,7 @@ export function setProtocol(self: bigint, value: string): void {
 /**
  * `get-username()` operation.
  */
-export function getUsername(self: bigint): string {
+export function getUsername(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.username;
 }
@@ -394,7 +394,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: bigint | undefined): void {
+export function setHost(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.host = value as any;
 }
@@ -497,7 +497,7 @@ export function setHash(self: bigint, value: string): void {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): EventHandlerRecord {
+export function toJson(self: bigint): string {
   const obj = lookupURL(self);
   return obj.toJSON();
 }
@@ -548,7 +548,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: bigint, value: string | undefined): void {
+export function _delete(self: bigint, name: string, value: bigint): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name as any, value as any);
 }

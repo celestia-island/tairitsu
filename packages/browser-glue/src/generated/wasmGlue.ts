@@ -307,7 +307,7 @@ export function imports(moduleObject: bigint): string {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: number): (string)[] {
+export function customSections(moduleObject: bigint, sectionName: string): string {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -403,7 +403,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): Uint8Array {
+export function getBuffer(self: bigint): (bigint)[] {
   const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
@@ -438,7 +438,7 @@ function lookupOptionTable(handle: bigint | undefined): Table | null {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: EventHandlerRecord | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
   const obj = lookupTable(self);
   return (obj as any).grow(delta, value);
 }
@@ -484,7 +484,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: number): void {
+export function _set(self: bigint, index: number, value: string | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -581,7 +581,7 @@ function lookupOptionException(handle: bigint | undefined): Exception | null {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: EventHandlerRecord, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -589,7 +589,7 @@ export function getArg(self: bigint, exceptionTag: EventHandlerRecord, index: nu
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): boolean {
+export function is(self: bigint, exceptionTag: bigint): EventHandlerRecord {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }

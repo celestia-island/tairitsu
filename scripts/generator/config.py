@@ -5619,6 +5619,7 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("speech-recognition-result", "get-is-final"): True,
     # SpeechSynthesisVoice
     ("speech-synthesis-voice", "get-default"): True,
+    ("speech-synthesis-voice", "get-local-service"): True,
     # CloseEvent
     ("close-event", "get-was-clean"): True,
     # CryptoKey

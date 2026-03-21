@@ -251,7 +251,7 @@ function lookupOptionWebSocket(handle: bigint | undefined): WebSocket | null {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): bigint {
+export function getUrl(self: bigint): string {
   const obj = lookupWebSocket(self);
   return (obj as any).url;
 }
@@ -275,7 +275,7 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): EventHandlerRecord {
+export function getOnopen(self: bigint): bigint {
   const obj = lookupWebSocket(self);
   return (obj as any).onopen;
 }
@@ -283,7 +283,7 @@ export function getOnopen(self: bigint): EventHandlerRecord {
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: bigint | undefined): void {
+export function setOnopen(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
   (obj as any).onopen = value as any;
 }
@@ -299,7 +299,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnerror(self: bigint, value: string | undefined): void {
   const obj = lookupWebSocket(self);
   (obj as any).onerror = value as any;
 }
@@ -331,7 +331,7 @@ export function getExtensions(self: bigint): EventHandlerRecord {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): bigint | undefined {
+export function getProtocol(self: bigint): EventHandlerRecord {
   const obj = lookupWebSocket(self);
   return (obj as any).protocol;
 }
@@ -339,7 +339,7 @@ export function getProtocol(self: bigint): bigint | undefined {
 /**
  * `close()` operation.
  */
-export function close(self: bigint, code: number | undefined, reason: number | undefined): void {
+export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
   const obj = lookupWebSocket(self);
   obj.close(Number(code), reason as any);
 }
@@ -347,7 +347,7 @@ export function close(self: bigint, code: number | undefined, reason: number | u
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): string {
+export function getOnmessage(self: bigint): EventHandlerRecord {
   const obj = lookupWebSocket(self);
   return (obj as any).onmessage;
 }
@@ -355,7 +355,7 @@ export function getOnmessage(self: bigint): string {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: string): void {
+export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
   (obj as any).onmessage = value as any;
 }
@@ -384,7 +384,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: Uint8Array): void {
+export function send(self: bigint, data: string): void {
   const obj = lookupWebSocket(self);
   obj.send(data);
 }
@@ -435,7 +435,7 @@ export function getCode(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: bigint): EventHandlerRecord | undefined {
   const obj = lookupCloseEvent(self);
   return obj.reason;
 }

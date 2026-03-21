@@ -3070,7 +3070,7 @@ function lookupOptionXPathResult(handle: bigint | undefined): XPathResult | null
 /**
  * `get-result-type()` operation.
  */
-export function getResultType(self: bigint): number {
+export function getResultType(self: bigint): string {
   const obj = lookupXPathResult(self);
   return obj.resultType;
 }
@@ -3282,7 +3282,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathEvaluatorBase(self);
   const _callResult = obj.evaluate(expression, lookupNode(contextNode), resolver as any, type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;

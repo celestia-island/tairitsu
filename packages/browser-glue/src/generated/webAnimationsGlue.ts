@@ -280,7 +280,7 @@ export function setId(handle: bigint, value: Uint8Array): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): Uint8Array {
+export function getPlaybackRate(handle: bigint): (bigint)[] {
   const obj = lookupAnimation(handle);
   return (obj as any).playbackRate;
 }
