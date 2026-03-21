@@ -449,6 +449,12 @@ class CodeGenerator:
                     lines.append(f"  return _callResult !== null ? BigInt(_callResult) : undefined;")
                 else:
                     lines.append(f"  return BigInt({obj_ref_with_assertion}.{method_name}({args}));")
+            elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
+                if func.return_is_optional:
+                    lines.append(f"  const _callResult = {obj_ref_with_assertion}.{method_name}({args});")
+                    lines.append(f"  return _callResult != null ? (_callResult ? 1n : 0n) : undefined;")
+                else:
+                    lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ? 1n : 0n;")
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{method_name}({args}) ?? undefined;")
             elif func.return_is_void:
@@ -698,6 +704,7 @@ class CodeGenerator:
         elif (iface.wit_name, func.wit_name) in BOOLEAN_TO_BIGINT_PROPERTIES:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
         elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
+            lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
             lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         elif func.return_is_handle:
             key = (iface.wit_name, kebab_to_camel(func.wit_name))

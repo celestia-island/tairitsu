@@ -444,7 +444,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: bigint): void {
+export function IntersectionObserverObserve(self: bigint, target: string): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(lookupElement(target));
 }
@@ -452,7 +452,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
+export function IntersectionObserverUnobserve(self: bigint, target: boolean): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(lookupOptionElement(target) as any);
 }
@@ -548,7 +548,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): boolean {
+export function getIsIntersecting(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -556,7 +556,7 @@ export function getIsIntersecting(self: bigint): boolean {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): bigint {
+export function getIsVisible(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -564,7 +564,7 @@ export function getIsVisible(self: bigint): bigint {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): number {
+export function getIntersectionRatio(self: bigint): EventHandlerRecord {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -610,7 +610,7 @@ function lookupOptionResizeObserver(handle: bigint | undefined): ResizeObserver 
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: boolean): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   (obj as any).observe(lookupElement(target), options as any);
 }
@@ -743,7 +743,7 @@ function lookupOptionResizeObserverSize(handle: bigint | undefined): ResizeObser
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: bigint): string {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }
@@ -751,7 +751,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): boolean {
+export function getBlockSize(self: bigint): number {
   const obj = lookupResizeObserverSize(self);
   return obj.blockSize;
 }

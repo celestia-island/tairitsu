@@ -2951,9 +2951,9 @@ function lookupOptionDOMTokenList(handle: bigint | undefined): DOMTokenList | nu
 /**
  * `get-length()` operation.
  */
-export function DomTokenListGetLength(self: bigint): bigint {
+export function DomTokenListGetLength(self: bigint): number {
   const obj = lookupDOMTokenList(self);
-  return BigInt(obj.length);
+  return obj.length;
 }
 
 /**
@@ -3003,7 +3003,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): EventHandlerRecord {
+export function replace(self: bigint, token: string, newToken: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token as any, newToken as any);
 }
@@ -3070,7 +3070,7 @@ function lookupOptionXPathResult(handle: bigint | undefined): XPathResult | null
 /**
  * `get-result-type()` operation.
  */
-export function getResultType(self: bigint): EventHandlerRecord {
+export function getResultType(self: bigint): number {
   const obj = lookupXPathResult(self);
   return obj.resultType;
 }
@@ -3183,7 +3183,7 @@ function lookupOptionXPathExpression(handle: bigint | undefined): XPathExpressio
  */
 export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathExpression(self);
-  const _callResult = obj.evaluate(lookupNode(contextNode), type, lookupOptionXpathResult(result));
+  const _callResult = obj.evaluate(lookupNode(contextNode), Number(type), lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
   _xpathResultHandles.set(handle, _callResult);
   return handle;
