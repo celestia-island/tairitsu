@@ -8093,7 +8093,7 @@ export function getAdoptedStyleSheets(self: bigint): bigint {
  */
 export function setAdoptedStyleSheets(self: bigint, value: (bigint)[]): void {
   const obj = lookupDocumentOrShadowRoot(self);
-  obj.adoptedStyleSheets = value;
+  obj.adoptedStyleSheets = Array.from(value).map((h: bigint) => lookupCssStyleSheet(h));
 }
 
 /**
@@ -8741,7 +8741,11 @@ export function removeProperty(self: bigint, property: string): bigint {
  */
 export function CssStyleDeclarationGetParentRule(self: bigint): bigint | undefined {
   const obj = lookupCSSStyleDeclaration(self);
-  return obj.parentRule ?? undefined;
+  const _callResult = obj.parentRule;
+  if (_callResult === null) return undefined;
+  const handle = _nextCssRule++;
+  _cssRuleHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------

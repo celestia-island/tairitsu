@@ -525,7 +525,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string | undefined {
+export function IdbRequestSource(handle: bigint): boolean | undefined {
   const obj = lookupIDBRequest(handle);
   return (obj as any).source() ?? undefined;
 }

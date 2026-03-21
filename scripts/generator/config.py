@@ -2364,6 +2364,17 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("image-data", "getData"): "image-data-array",
     # OffscreenCanvas transferToImageBitmap returns ImageBitmap
     ("offscreen-canvas", "transferToImageBitmap"): "image-bitmap",
+    # RTCPeerConnectionIceEvent getCandidate returns RTCIceCandidate | undefined
+    ("rtc-peer-connection-ice-event", "getCandidate"): "rtc-ice-candidate",
+    # URL parse returns URL | null
+    ("url", "parse"): "url",
+    # ExtendableMessageEvent getSource returns MessageEventSource | undefined
+    ("extendable-message-event", "getSource"): "message-event-source",
+    # PerformanceObserverEntryList getEntriesByType/getEntriesByName return PerformanceEntryList
+    ("performance-observer-entry-list", "getEntriesByType"): "performance-entry-list",
+    ("performance-observer-entry-list", "getEntriesByName"): "performance-entry-list",
+    # CSSStyleDeclaration getParentRule returns CSSRule | undefined
+    ("css-style-declaration", "getParentRule"): "css-rule",
 }
 
 
@@ -4170,6 +4181,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("rtc-peer-connection", "set-ontrack", "value"): "event-handler",
     ("rtc-data-channel", "set-onopen", "value"): "event-handler",
     ("rtc-data-channel", "set-onclose", "value"): "event-handler",
+    ("rtc-data-channel", "set-onclosing", "value"): "event-handler",
     ("rtc-data-channel", "set-onerror", "value"): "event-handler",
     ("rtc-data-channel", "set-onmessage", "value"): "event-handler",
     ("rtc-data-channel", "set-onbufferedamountlow", "value"): "event-handler",
@@ -4209,12 +4221,37 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("speech-synthesis-utterance", "set-onresume", "value"): "event-handler",
     ("speech-synthesis-utterance", "set-onmark", "value"): "event-handler",
     ("speech-synthesis-utterance", "set-onboundary", "value"): "event-handler",
+    # MediaDevices event handlers
+    ("media-devices", "set-ondevicechange", "value"): "event-handler",
+    # RTCDtlsTransport event handlers (onerror already has type assertion)
+    ("rtc-dtls-transport", "set-onerror", "value"): "event-handler",
+    # ServiceWorkerContainer event handlers
+    ("service-worker-container", "set-onmessage", "value"): "event-handler",
+    ("service-worker-container", "set-onmessageerror", "value"): "event-handler",
+    ("service-worker-container", "set-oncontrollerchange", "value"): "event-handler",
+    # ServiceWorkerRegistration event handlers
+    ("service-worker-registration", "set-onupdatefound", "value"): "event-handler",
+    # PaymentRequest event handlers
+    ("payment-request", "set-onshippingaddresschange", "value"): "event-handler",
+    ("payment-request", "set-onshippingoptionchange", "value"): "event-handler",
+    ("payment-request", "set-onpaymentmethodchange", "value"): "event-handler",
+    # Performance event handlers
+    ("performance", "set-onresourcetimingbufferfull", "value"): "event-handler",
+    # Notification event handlers
+    ("notification", "set-onclick", "value"): "event-handler",
+    ("notification", "set-onshow", "value"): "event-handler",
+    ("notification", "set-onerror", "value"): "event-handler",
+    ("notification", "set-onclose", "value"): "event-handler",
+    # WindowEventHandlers event handlers
+    ("window-event-handlers", "set-onpagereveal", "value"): "event-handler",
     # SpeechSynthesisUtterance voice handle conversion
     ("speech-synthesis-utterance", "set-voice", "value"): "optional-handle:speech-synthesis-voice",
     # MediaSession playbackState enum setter
     ("media-session", "set-playback-state", "value"): "enum-string",
     # MediaMetadata artwork handle array setter
     ("media-metadata", "set-artwork", "value"): "handle-array:media-image",
+    # DocumentOrShadowRoot adoptedStyleSheets handle array setter
+    ("document-or-shadow-root", "set-adopted-style-sheets", "value"): "handle-array:css-style-sheet",
     # RTCRtpReceiver jitter buffer target
     ("rtc-rtp-receiver", "set-jitter-buffer-target", "value"): "number-or-null",
     # Document body setter
@@ -5186,51 +5223,51 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("web-gl2-rendering-context-base", "is-transform-feedback"): True,
     ("web-gl2-rendering-context-base", "is-vertex-array"): True,
     # AbortSignal
-    ("abort-signal", "aborted"): True,
+    ("abort-signal", "get-aborted"): True,
     # URL
     ("url", "can-parse"): True,
     # Event
-    ("event", "bubbles"): True,
-    ("event", "returnValue"): True,
-    ("event", "composed"): True,
-    ("event", "cancelBubble"): True,
-    ("event", "isTrusted"): True,
+    ("event", "get-bubbles"): True,
+    ("event", "get-return-value"): True,
+    ("event", "get-composed"): True,
+    ("event", "get-cancel-bubble"): True,
+    ("event", "get-is-trusted"): True,
     # Notification
-    ("notification", "requireInteraction"): True,
+    ("notification", "get-require-interaction"): True,
     # PointerEvent
-    ("pointer-event", "isPrimary"): True,
+    ("pointer-event", "get-is-primary"): True,
     # SpeechSynthesis
-    ("speech-synthesis", "pending"): True,
+    ("speech-synthesis", "get-pending"): True,
     # Navigator
     ("navigator", "vibrate"): True,
     # SpeechRecognitionResult
-    ("speech-recognition-result", "isFinal"): True,
+    ("speech-recognition-result", "get-is-final"): True,
     # SpeechSynthesisVoice
-    ("speech-synthesis-voice", "default"): True,
+    ("speech-synthesis-voice", "get-default"): True,
     # CloseEvent
-    ("close-event", "wasClean"): True,
+    ("close-event", "get-was-clean"): True,
     # CryptoKey
-    ("crypto-key", "extractable"): True,
+    ("crypto-key", "get-extractable"): True,
     # Gamepad
-    ("gamepad", "connected"): True,
+    ("gamepad", "get-connected"): True,
     # GamepadButton
-    ("gamepad-button", "pressed"): True,
-    ("gamepad-button", "touched"): True,
+    ("gamepad-button", "get-pressed"): True,
+    ("gamepad-button", "get-touched"): True,
     # XMLHttpRequest
-    ("xml-http-request", "withCredentials"): True,
+    ("xml-http-request", "get-with-credentials"): True,
     # Request
-    ("request", "isHistoryNavigation"): True,
+    ("request", "get-is-history-navigation"): True,
     # Body - bodyUsed returns boolean
-    ("body", "bodyUsed"): True,
+    ("body", "get-body-used"): True,
     # TouchEvent
-    ("touch-event", "metaKey"): True,
+    ("touch-event", "get-meta-key"): True,
     # Response
-    ("response", "ok"): True,
+    ("response", "get-ok"): True,
     # Event getBubbles/getCancelable/getComposed/getIsTrusted
-    ("event", "bubbles"): True,
-    ("event", "cancelable"): True,
-    ("event", "composed"): True,
-    ("event", "isTrusted"): True,
+    ("event", "get-bubbles"): True,
+    ("event", "get-cancelable"): True,
+    ("event", "get-composed"): True,
+    ("event", "get-is-trusted"): True,
     # Clipboard has types method returns boolean
     ("clipboard-item", "has-type"): True,
     # DOMTokenList contains returns boolean
@@ -5238,13 +5275,13 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     # DOMTokenList supports returns boolean
     ("dom-token-list", "supports"): True,
     # TouchEvent getAltKey/getCtrlKey/getShiftKey return boolean
-    ("touch-event", "altKey"): True,
-    ("touch-event", "ctrlKey"): True,
-    ("touch-event", "shiftKey"): True,
+    ("touch-event", "get-alt-key"): True,
+    ("touch-event", "get-ctrl-key"): True,
+    ("touch-event", "get-shift-key"): True,
     # WebRTC boolean to bigint
-    ("rtc-peer-connection", "canTrickleIceCandidates"): True,
-    ("rtc-data-channel", "ordered"): True,
-    ("rtc-data-channel", "negotiated"): True,
+    ("rtc-peer-connection", "get-can-trickle-ice-candidates"): True,
+    ("rtc-data-channel", "get-ordered"): True,
+    ("rtc-data-channel", "get-negotiated"): True,
 }
 
 # Getters that return optional types in DOM but non-optional in WIT
@@ -5519,11 +5556,15 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("rtc-data-channel", "maxPacketLifeTime"): True,
     ("rtc-data-channel", "maxRetransmits"): True,
     ("rtc-data-channel", "id"): True,
+    ("rtc-data-channel", "bufferedAmount"): True,
     ("rtc-rtp-receiver", "jitterBufferTarget"): True,
     ("rtc-error", "sdpLineNumber"): True,
     ("rtc-error", "sctpCauseCode"): True,
     ("rtc-error", "receivedAlert"): True,
     ("rtc-error", "sentAlert"): True,
+    # SpeechRecognition
+    ("speech-recognition-alternative", "confidence"): True,
+    ("speech-recognition-result", "length"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -5957,6 +5998,12 @@ SYNTHETIC_HANDLE_TYPES = {
     "rtc-rtp-receiver-list": ("RTCRtpReceiver[]", "rtcRtpReceiverListHandles", "RtcRtpReceiverList"),
     "rtc-rtp-transceiver-list": ("RTCRtpTransceiver[]", "rtcRtpTransceiverListHandles", "RtcRtpTransceiverList"),
     "rtc-rtp-sender-list": ("RTCRtpSender[]", "rtcRtpSenderListHandles", "RtcRtpSenderList"),
+    # MediaImage type
+    "media-image": ("MediaImage", "mediaImageHandles", "MediaImage"),
+    # MediaImage list type
+    "media-image-list": ("MediaImage[]", "mediaImageListHandles", "MediaImageList"),
+    # PerformanceEntryList type
+    "performance-entry-list": ("PerformanceEntryList", "performanceEntryListHandles", "PerformanceEntryList"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -6809,6 +6856,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     # Event handlers - need type assertion for bigint ↔ function conversion
     ("window-event-handlers", "ongamepadconnected"),
     ("window-event-handlers", "ongamepaddisconnected"),
+    ("window-event-handlers", "onpagereveal"),
     ("window-event-handlers", "onafterprint"),
     ("window-event-handlers", "onbeforeprint"),
     ("window-event-handlers", "onbeforeunload"),
@@ -6940,6 +6988,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("rtc-peer-connection", "ontrack"),
     ("rtc-data-channel", "onopen"),
     ("rtc-data-channel", "onclose"),
+    ("rtc-data-channel", "onclosing"),
     ("rtc-data-channel", "onerror"),
     ("rtc-data-channel", "onmessage"),
     ("rtc-data-channel", "onbufferedamountlow"),
@@ -6967,6 +7016,34 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("speech-synthesis-utterance", "onresume"),
     ("speech-synthesis-utterance", "onmark"),
     ("speech-synthesis-utterance", "onboundary"),
+    # MediaDevices event handlers
+    ("media-devices", "ondevicechange"),
+    # RTCDtlsTransport event handlers
+    ("rtc-dtls-transport", "onstatechange"),
+    ("rtc-dtls-transport", "onerror"),
+    # RTCIceTransport event handlers
+    ("rtc-ice-transport", "onstatechange"),
+    ("rtc-ice-transport", "ongatheringstatechange"),
+    ("rtc-ice-transport", "onselectedcandidatepairchange"),
+    # RTCSctpTransport event handlers
+    ("rtc-sctp-transport", "onstatechange"),
+    # ServiceWorkerContainer event handlers
+    ("service-worker-container", "onmessage"),
+    ("service-worker-container", "onmessageerror"),
+    ("service-worker-container", "oncontrollerchange"),
+    # ServiceWorkerRegistration event handlers
+    ("service-worker-registration", "onupdatefound"),
+    # PaymentRequest event handlers
+    ("payment-request", "onshippingaddresschange"),
+    ("payment-request", "onshippingoptionchange"),
+    ("payment-request", "onpaymentmethodchange"),
+    # Performance event handlers
+    ("performance", "onresourcetimingbufferfull"),
+    # Notification event handlers
+    ("notification", "onclick"),
+    ("notification", "onshow"),
+    ("notification", "onerror"),
+    ("notification", "onclose"),
     # MouseEvent getModifierState - method not property
     ("mouse-event", "getModifierState"),
     # getType methods - missing from TypeScript DOM types
@@ -6979,6 +7056,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("css-rule", "type"),
     ("style-sheet", "type"),
     ("screen-orientation", "type"),
+    ("screen-orientation", "onchange"),
     ("event", "type"),
     ("mutation-record", "type"),
     ("response", "type"),
@@ -7021,6 +7099,12 @@ READONLY_ARRAY_PROPERTIES = {
     ("gamepad", "buttons"),
     # Location ancestorOrigins returns DOMStringList
     ("location", "ancestorOrigins"),
+    # IntersectionObserver thresholds is readonly
+    ("intersection-observer", "thresholds"),
+    # ResizeObserverEntry box sizes are readonly arrays
+    ("resize-observer-entry", "borderBoxSize"),
+    ("resize-observer-entry", "contentBoxSize"),
+    ("resize-observer-entry", "devicePixelContentBoxSize"),
 }
 
 # Properties that return arrays of objects that need handle conversion
@@ -7044,6 +7128,8 @@ HANDLE_RETURNING_ARRAY_PROPERTIES = {
     ("rtc-peer-connection", "getTransceivers"): ("rtc-rtp-transceiver-list", "rtc-rtp-transceiver"),
     ("rtc-peer-connection", "getSenders"): ("rtc-rtp-sender-list", "rtc-rtp-sender"),
     ("rtc-certificate", "getFingerprints"): ("any", "any"),
+    # DocumentOrShadowRoot getAdoptedStyleSheets returns CSSStyleSheet[]
+    ("document-or-shadow-root", "getAdoptedStyleSheets"): ("css-style-sheet-list", "css-style-sheet"),
 }
 
 # JavaScript/TypeScript reserved keywords

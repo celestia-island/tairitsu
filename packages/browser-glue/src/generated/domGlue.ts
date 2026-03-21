@@ -772,9 +772,9 @@ export function stopPropagation(self: bigint): void {
 /**
  * `get-cancel-bubble()` operation.
  */
-export function getCancelBubble(self: bigint): boolean {
+export function getCancelBubble(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.cancelBubble;
+  return obj.cancelBubble ? 1n : 0n;
 }
 
 /**
@@ -796,25 +796,25 @@ export function stopImmediatePropagation(self: bigint): void {
 /**
  * `get-bubbles()` operation.
  */
-export function getBubbles(self: bigint): boolean {
+export function getBubbles(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.bubbles;
+  return obj.bubbles ? 1n : 0n;
 }
 
 /**
  * `get-cancelable()` operation.
  */
-export function getCancelable(self: bigint): boolean {
+export function getCancelable(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.cancelable;
+  return obj.cancelable ? 1n : 0n;
 }
 
 /**
  * `get-return-value()` operation.
  */
-export function getReturnValue(self: bigint): boolean {
+export function getReturnValue(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.returnValue;
+  return obj.returnValue ? 1n : 0n;
 }
 
 /**
@@ -844,17 +844,17 @@ export function getDefaultPrevented(self: bigint): boolean {
 /**
  * `get-composed()` operation.
  */
-export function getComposed(self: bigint): boolean {
+export function getComposed(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.composed;
+  return obj.composed ? 1n : 0n;
 }
 
 /**
  * `get-is-trusted()` operation.
  */
-export function getIsTrusted(self: bigint): boolean {
+export function getIsTrusted(self: bigint): bigint {
   const obj = lookupEvent(self);
-  return obj.isTrusted;
+  return obj.isTrusted ? 1n : 0n;
 }
 
 /**
@@ -1032,9 +1032,9 @@ export function any(signals: (bigint)[]): bigint {
 /**
  * `get-aborted()` operation.
  */
-export function getAborted(self: bigint): boolean {
+export function getAborted(self: bigint): bigint {
   const obj = lookupAbortSignal(self);
-  return obj.aborted;
+  return obj.aborted ? 1n : 0n;
 }
 
 /**
@@ -2827,7 +2827,7 @@ export function DomTokenListContains(self: bigint, token: string): bigint {
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: (string)[]): void {
+export function add(self: bigint, tokens: bigint): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -3013,7 +3013,7 @@ function lookupXPathExpression(handle: bigint): XPathExpression {
 /**
  * `evaluate()` operation.
  */
-export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: EventHandlerRecord): bigint {
+export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathExpression(self);
   const _callResult = obj.evaluate(lookupNode(contextNode), type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
@@ -3076,7 +3076,7 @@ function lookupXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
 /**
  * `create-expression()` operation.
  */
-export function createExpression(self: bigint, expression: bigint, resolver: bigint | undefined): bigint {
+export function createExpression(self: bigint, expression: string, resolver: bigint | undefined): bigint {
   const obj = lookupXPathEvaluatorBase(self);
   const _callResult = obj.createExpression(expression, resolver as any);
   const handle = _nextXpathExpression++;
@@ -3136,7 +3136,7 @@ export function importStylesheet(self: bigint, style: bigint): void {
 /**
  * `transform-to-fragment()` operation.
  */
-export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
+export function transformToFragment(self: bigint, source: bigint, output: string): bigint {
   const obj = lookupXSLTProcessor(self);
   const _callResult = obj.transformToFragment(lookupNode(source), lookupDocument(output));
   const handle = _nextDocumentFragment++;
@@ -3174,7 +3174,7 @@ export function getParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `remove-parameter()` operation.
  */
-export function removeParameter(self: bigint, namespaceUri: string, localName: string): void {
+export function removeParameter(self: bigint, namespaceUri: string | undefined, localName: string): void {
   const obj = lookupXSLTProcessor(self);
   obj.removeParameter(namespaceUri, localName);
 }

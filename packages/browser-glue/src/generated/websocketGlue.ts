@@ -291,7 +291,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: string): void {
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
   (obj as any).onerror = value as any;
 }
@@ -307,7 +307,7 @@ export function getOnclose(self: bigint): EventHandlerRecord {
 /**
  * `set-onclose()` operation.
  */
-export function setOnclose(self: bigint, value: string | undefined): void {
+export function setOnclose(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
   (obj as any).onclose = value as any;
 }
@@ -315,7 +315,7 @@ export function setOnclose(self: bigint, value: string | undefined): void {
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): boolean {
+export function getExtensions(self: bigint): bigint | undefined {
   const obj = lookupWebSocket(self);
   return (obj as any).extensions;
 }
@@ -331,7 +331,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `close()` operation.
  */
-export function close(self: bigint, code: number | undefined, reason: string | undefined): void {
+export function close(self: bigint, code: EventHandlerRecord, reason: EventHandlerRecord | undefined): void {
   const obj = lookupWebSocket(self);
   obj.close(code, reason);
 }
@@ -376,7 +376,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: Uint8Array): void {
+export function send(self: bigint, data: string): void {
   const obj = lookupWebSocket(self);
   obj.send(data);
 }
@@ -403,9 +403,9 @@ function lookupCloseEvent(handle: bigint): CloseEvent {
 /**
  * `get-was-clean()` operation.
  */
-export function getWasClean(self: bigint): boolean {
+export function getWasClean(self: bigint): bigint {
   const obj = lookupCloseEvent(self);
-  return obj.wasClean;
+  return obj.wasClean ? 1n : 0n;
 }
 
 /**
@@ -419,7 +419,7 @@ export function getCode(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: bigint): string | undefined {
   const obj = lookupCloseEvent(self);
   return obj.reason;
 }

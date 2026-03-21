@@ -386,7 +386,7 @@ export function getScrollMargin(self: bigint): string {
  */
 export function getThresholds(self: bigint): bigint {
   const obj = lookupIntersectionObserver(self);
-  const _callResult = obj.thresholds;
+  const _callResult = [...obj.thresholds];
   const handle = _nextNumberList++;
   _numberListHandles.set(handle, _callResult);
   return handle;
@@ -395,7 +395,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): number {
+export function getDelay(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -419,7 +419,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
+export function IntersectionObserverUnobserve(self: bigint, target: string): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(lookupElement(target));
 }
@@ -465,7 +465,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): number {
+export function getTime(self: bigint): string {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -507,7 +507,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): EventHandlerRecord {
+export function getIsIntersecting(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -515,7 +515,7 @@ export function getIsIntersecting(self: bigint): EventHandlerRecord {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): EventHandlerRecord {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -561,7 +561,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: EventHandlerRecord): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   (obj as any).observe(lookupElement(target), options as any);
 }
@@ -569,7 +569,7 @@ export function ResizeObserverObserve(self: bigint, target: bigint, options: Eve
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: number): void {
+export function ResizeObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -628,7 +628,7 @@ export function getContentRect(self: bigint): bigint {
  */
 export function getBorderBoxSize(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
-  const _callResult = obj.borderBoxSize;
+  const _callResult = [...obj.borderBoxSize];
   const handle = _nextResizeObserverSizeList++;
   _resizeObserverSizeListhandles.set(handle, _callResult);
   return handle;
@@ -639,7 +639,7 @@ export function getBorderBoxSize(self: bigint): bigint {
  */
 export function getContentBoxSize(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
-  const _callResult = obj.contentBoxSize;
+  const _callResult = [...obj.contentBoxSize];
   const handle = _nextResizeObserverSizeList++;
   _resizeObserverSizeListhandles.set(handle, _callResult);
   return handle;
@@ -650,7 +650,7 @@ export function getContentBoxSize(self: bigint): bigint {
  */
 export function getDevicePixelContentBoxSize(self: bigint): bigint {
   const obj = lookupResizeObserverEntry(self);
-  const _callResult = obj.devicePixelContentBoxSize;
+  const _callResult = [...obj.devicePixelContentBoxSize];
   const handle = _nextResizeObserverSize++;
   _resizeObserverSizehandles.set(handle, _callResult);
   return handle;
@@ -686,7 +686,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): bigint {
+export function getBlockSize(self: bigint): string {
   const obj = lookupResizeObserverSize(self);
   return obj.blockSize;
 }
