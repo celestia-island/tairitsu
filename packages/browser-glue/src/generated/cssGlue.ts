@@ -1480,7 +1480,7 @@ export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
  */
 export function CssRuleGetType(self: bigint): number {
   const obj = lookupCSSRule(self);
-  return obj.type;
+  return obj.getType();
 }
 
 // ---------------------------------------------------------------------------
@@ -1643,7 +1643,7 @@ function lookupGlobalEventrs(handle: bigint): GlobalEventHandlers {
  */
 export function getOnanimationstart(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onanimationstart;
+  return (obj as any).onanimationstart;
 }
 
 /**
@@ -1651,7 +1651,7 @@ export function getOnanimationstart(self: bigint): EventHandlerRecord {
  */
 export function setOnanimationstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onanimationstart = value;
+  (obj as any).onanimationstart = value;
 }
 
 /**
@@ -1659,7 +1659,7 @@ export function setOnanimationstart(self: bigint, value: EventHandlerRecord): vo
  */
 export function getOnanimationiteration(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onanimationiteration;
+  return (obj as any).onanimationiteration;
 }
 
 /**
@@ -1667,7 +1667,7 @@ export function getOnanimationiteration(self: bigint): EventHandlerRecord {
  */
 export function setOnanimationiteration(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onanimationiteration = value;
+  (obj as any).onanimationiteration = value;
 }
 
 /**
@@ -1675,7 +1675,7 @@ export function setOnanimationiteration(self: bigint, value: EventHandlerRecord)
  */
 export function getOnanimationend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onanimationend;
+  return (obj as any).onanimationend;
 }
 
 /**
@@ -1683,7 +1683,7 @@ export function getOnanimationend(self: bigint): EventHandlerRecord {
  */
 export function setOnanimationend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onanimationend = value;
+  (obj as any).onanimationend = value;
 }
 
 /**
@@ -1691,7 +1691,7 @@ export function setOnanimationend(self: bigint, value: EventHandlerRecord): void
  */
 export function getOnanimationcancel(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onanimationcancel;
+  return (obj as any).onanimationcancel;
 }
 
 /**
@@ -1699,7 +1699,7 @@ export function getOnanimationcancel(self: bigint): EventHandlerRecord {
  */
 export function setOnanimationcancel(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onanimationcancel = value;
+  (obj as any).onanimationcancel = value;
 }
 
 /**
@@ -1707,7 +1707,7 @@ export function setOnanimationcancel(self: bigint, value: EventHandlerRecord): v
  */
 export function getOntransitionrun(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontransitionrun;
+  return (obj as any).ontransitionrun;
 }
 
 /**
@@ -1715,7 +1715,7 @@ export function getOntransitionrun(self: bigint): EventHandlerRecord {
  */
 export function setOntransitionrun(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontransitionrun = value;
+  (obj as any).ontransitionrun = value;
 }
 
 /**
@@ -1723,7 +1723,7 @@ export function setOntransitionrun(self: bigint, value: EventHandlerRecord): voi
  */
 export function getOntransitionstart(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontransitionstart;
+  return (obj as any).ontransitionstart;
 }
 
 /**
@@ -1731,7 +1731,7 @@ export function getOntransitionstart(self: bigint): EventHandlerRecord {
  */
 export function setOntransitionstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontransitionstart = value;
+  (obj as any).ontransitionstart = value;
 }
 
 /**
@@ -1739,7 +1739,7 @@ export function setOntransitionstart(self: bigint, value: EventHandlerRecord): v
  */
 export function getOntransitionend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontransitionend;
+  return (obj as any).ontransitionend;
 }
 
 /**
@@ -1747,7 +1747,7 @@ export function getOntransitionend(self: bigint): EventHandlerRecord {
  */
 export function setOntransitionend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontransitionend = value;
+  (obj as any).ontransitionend = value;
 }
 
 /**
@@ -1755,7 +1755,7 @@ export function setOntransitionend(self: bigint, value: EventHandlerRecord): voi
  */
 export function getOntransitioncancel(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontransitioncancel;
+  return (obj as any).ontransitioncancel;
 }
 
 /**
@@ -1763,7 +1763,7 @@ export function getOntransitioncancel(self: bigint): EventHandlerRecord {
  */
 export function setOntransitioncancel(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontransitioncancel = value;
+  (obj as any).ontransitioncancel = value;
 }
 
 /**
@@ -1771,7 +1771,7 @@ export function setOntransitioncancel(self: bigint, value: EventHandlerRecord): 
  */
 export function getOnabort(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onabort;
+  return (obj as any).onabort;
 }
 
 /**
@@ -1779,7 +1779,7 @@ export function getOnabort(self: bigint): EventHandlerRecord {
  */
 export function setOnabort(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onabort = value;
+  (obj as any).onabort = value;
 }
 
 /**
@@ -1787,7 +1787,7 @@ export function setOnabort(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnauxclick(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onauxclick;
+  return (obj as any).onauxclick;
 }
 
 /**
@@ -1795,7 +1795,7 @@ export function getOnauxclick(self: bigint): EventHandlerRecord {
  */
 export function setOnauxclick(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onauxclick = value;
+  (obj as any).onauxclick = value;
 }
 
 /**
@@ -1851,7 +1851,7 @@ export function setOnbeforetoggle(self: bigint, value: EventHandlerRecord): void
  */
 export function getOnblur(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onblur;
+  return (obj as any).onblur;
 }
 
 /**
@@ -1859,7 +1859,7 @@ export function getOnblur(self: bigint): EventHandlerRecord {
  */
 export function setOnblur(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onblur = value;
+  (obj as any).onblur = value as any;
 }
 
 /**
@@ -1867,7 +1867,7 @@ export function setOnblur(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncancel(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncancel;
+  return (obj as any).oncancel;
 }
 
 /**
@@ -1875,7 +1875,7 @@ export function getOncancel(self: bigint): EventHandlerRecord {
  */
 export function setOncancel(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncancel = value;
+  (obj as any).oncancel = value;
 }
 
 /**
@@ -1883,7 +1883,7 @@ export function setOncancel(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncanplay(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncanplay;
+  return (obj as any).oncanplay;
 }
 
 /**
@@ -1891,7 +1891,7 @@ export function getOncanplay(self: bigint): EventHandlerRecord {
  */
 export function setOncanplay(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncanplay = value;
+  (obj as any).oncanplay = value;
 }
 
 /**
@@ -1899,7 +1899,7 @@ export function setOncanplay(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncanplaythrough(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncanplaythrough;
+  return (obj as any).oncanplaythrough;
 }
 
 /**
@@ -1907,7 +1907,7 @@ export function getOncanplaythrough(self: bigint): EventHandlerRecord {
  */
 export function setOncanplaythrough(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncanplaythrough = value;
+  (obj as any).oncanplaythrough = value;
 }
 
 /**
@@ -1915,7 +1915,7 @@ export function setOncanplaythrough(self: bigint, value: EventHandlerRecord): vo
  */
 export function GlobalEventHandlersGetOnchange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onchange;
+  return (obj as any).onchange;
 }
 
 /**
@@ -1923,7 +1923,7 @@ export function GlobalEventHandlersGetOnchange(self: bigint): EventHandlerRecord
  */
 export function GlobalEventHandlersSetOnchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onchange = value;
+  (obj as any).onchange = value as any;
 }
 
 /**
@@ -1931,7 +1931,7 @@ export function GlobalEventHandlersSetOnchange(self: bigint, value: EventHandler
  */
 export function getOnclick(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onclick;
+  return (obj as any).onclick;
 }
 
 /**
@@ -1939,7 +1939,7 @@ export function getOnclick(self: bigint): EventHandlerRecord {
  */
 export function setOnclick(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onclick = value;
+  (obj as any).onclick = value as any;
 }
 
 /**
@@ -1947,7 +1947,7 @@ export function setOnclick(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnclose(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onclose;
+  return (obj as any).onclose;
 }
 
 /**
@@ -1955,7 +1955,7 @@ export function getOnclose(self: bigint): EventHandlerRecord {
  */
 export function setOnclose(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onclose = value;
+  (obj as any).onclose = value;
 }
 
 /**
@@ -1979,7 +1979,7 @@ export function setOncommand(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncontextlost(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncontextlost;
+  return (obj as any).oncontextlost;
 }
 
 /**
@@ -1987,7 +1987,7 @@ export function getOncontextlost(self: bigint): EventHandlerRecord {
  */
 export function setOncontextlost(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncontextlost = value;
+  (obj as any).oncontextlost = value;
 }
 
 /**
@@ -1995,7 +1995,7 @@ export function setOncontextlost(self: bigint, value: EventHandlerRecord): void 
  */
 export function getOncontextmenu(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncontextmenu;
+  return (obj as any).oncontextmenu;
 }
 
 /**
@@ -2003,7 +2003,7 @@ export function getOncontextmenu(self: bigint): EventHandlerRecord {
  */
 export function setOncontextmenu(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncontextmenu = value;
+  (obj as any).oncontextmenu = value;
 }
 
 /**
@@ -2011,7 +2011,7 @@ export function setOncontextmenu(self: bigint, value: EventHandlerRecord): void 
  */
 export function getOncontextrestored(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncontextrestored;
+  return (obj as any).oncontextrestored;
 }
 
 /**
@@ -2019,7 +2019,7 @@ export function getOncontextrestored(self: bigint): EventHandlerRecord {
  */
 export function setOncontextrestored(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncontextrestored = value;
+  (obj as any).oncontextrestored = value;
 }
 
 /**
@@ -2027,7 +2027,7 @@ export function setOncontextrestored(self: bigint, value: EventHandlerRecord): v
  */
 export function getOncopy(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncopy;
+  return (obj as any).oncopy;
 }
 
 /**
@@ -2035,7 +2035,7 @@ export function getOncopy(self: bigint): EventHandlerRecord {
  */
 export function setOncopy(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncopy = value;
+  (obj as any).oncopy = value;
 }
 
 /**
@@ -2043,7 +2043,7 @@ export function setOncopy(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncuechange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncuechange;
+  return (obj as any).oncuechange;
 }
 
 /**
@@ -2051,7 +2051,7 @@ export function getOncuechange(self: bigint): EventHandlerRecord {
  */
 export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncuechange = value;
+  (obj as any).oncuechange = value;
 }
 
 /**
@@ -2059,7 +2059,7 @@ export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOncut(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oncut;
+  return (obj as any).oncut;
 }
 
 /**
@@ -2067,7 +2067,7 @@ export function getOncut(self: bigint): EventHandlerRecord {
  */
 export function setOncut(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oncut = value;
+  (obj as any).oncut = value;
 }
 
 /**
@@ -2075,7 +2075,7 @@ export function setOncut(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndblclick(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondblclick;
+  return (obj as any).ondblclick;
 }
 
 /**
@@ -2083,7 +2083,7 @@ export function getOndblclick(self: bigint): EventHandlerRecord {
  */
 export function setOndblclick(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondblclick = value;
+  (obj as any).ondblclick = value as any;
 }
 
 /**
@@ -2091,7 +2091,7 @@ export function setOndblclick(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndrag(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondrag;
+  return (obj as any).ondrag;
 }
 
 /**
@@ -2099,7 +2099,7 @@ export function getOndrag(self: bigint): EventHandlerRecord {
  */
 export function setOndrag(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondrag = value;
+  (obj as any).ondrag = value;
 }
 
 /**
@@ -2107,7 +2107,7 @@ export function setOndrag(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndragend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondragend;
+  return (obj as any).ondragend;
 }
 
 /**
@@ -2115,7 +2115,7 @@ export function getOndragend(self: bigint): EventHandlerRecord {
  */
 export function setOndragend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondragend = value;
+  (obj as any).ondragend = value;
 }
 
 /**
@@ -2123,7 +2123,7 @@ export function setOndragend(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndragenter(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondragenter;
+  return (obj as any).ondragenter;
 }
 
 /**
@@ -2131,7 +2131,7 @@ export function getOndragenter(self: bigint): EventHandlerRecord {
  */
 export function setOndragenter(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondragenter = value;
+  (obj as any).ondragenter = value;
 }
 
 /**
@@ -2139,7 +2139,7 @@ export function setOndragenter(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndragleave(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondragleave;
+  return (obj as any).ondragleave;
 }
 
 /**
@@ -2147,7 +2147,7 @@ export function getOndragleave(self: bigint): EventHandlerRecord {
  */
 export function setOndragleave(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondragleave = value;
+  (obj as any).ondragleave = value;
 }
 
 /**
@@ -2155,7 +2155,7 @@ export function setOndragleave(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndragover(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondragover;
+  return (obj as any).ondragover;
 }
 
 /**
@@ -2163,7 +2163,7 @@ export function getOndragover(self: bigint): EventHandlerRecord {
  */
 export function setOndragover(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondragover = value;
+  (obj as any).ondragover = value;
 }
 
 /**
@@ -2171,7 +2171,7 @@ export function setOndragover(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndragstart(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondragstart;
+  return (obj as any).ondragstart;
 }
 
 /**
@@ -2179,7 +2179,7 @@ export function getOndragstart(self: bigint): EventHandlerRecord {
  */
 export function setOndragstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondragstart = value;
+  (obj as any).ondragstart = value;
 }
 
 /**
@@ -2187,7 +2187,7 @@ export function setOndragstart(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndrop(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondrop;
+  return (obj as any).ondrop;
 }
 
 /**
@@ -2195,7 +2195,7 @@ export function getOndrop(self: bigint): EventHandlerRecord {
  */
 export function setOndrop(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondrop = value;
+  (obj as any).ondrop = value;
 }
 
 /**
@@ -2203,7 +2203,7 @@ export function setOndrop(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOndurationchange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ondurationchange;
+  return (obj as any).ondurationchange;
 }
 
 /**
@@ -2211,7 +2211,7 @@ export function getOndurationchange(self: bigint): EventHandlerRecord {
  */
 export function setOndurationchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ondurationchange = value;
+  (obj as any).ondurationchange = value;
 }
 
 /**
@@ -2219,7 +2219,7 @@ export function setOndurationchange(self: bigint, value: EventHandlerRecord): vo
  */
 export function getOnemptied(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onemptied;
+  return (obj as any).onemptied;
 }
 
 /**
@@ -2227,7 +2227,7 @@ export function getOnemptied(self: bigint): EventHandlerRecord {
  */
 export function setOnemptied(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onemptied = value;
+  (obj as any).onemptied = value;
 }
 
 /**
@@ -2235,7 +2235,7 @@ export function setOnemptied(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnended(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onended;
+  return (obj as any).onended;
 }
 
 /**
@@ -2243,7 +2243,7 @@ export function getOnended(self: bigint): EventHandlerRecord {
  */
 export function setOnended(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onended = value;
+  (obj as any).onended = value;
 }
 
 /**
@@ -2251,7 +2251,7 @@ export function setOnended(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnerror(self: bigint): OnErrorEventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onerror;
+  return (obj as any).onerror;
 }
 
 /**
@@ -2259,7 +2259,7 @@ export function getOnerror(self: bigint): OnErrorEventHandlerRecord {
  */
 export function setOnerror(self: bigint, value: OnErrorEventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onerror = value;
+  (obj as any).onerror = value;
 }
 
 /**
@@ -2267,7 +2267,7 @@ export function setOnerror(self: bigint, value: OnErrorEventHandlerRecord): void
  */
 export function getOnfocus(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onfocus;
+  return (obj as any).onfocus;
 }
 
 /**
@@ -2275,7 +2275,7 @@ export function getOnfocus(self: bigint): EventHandlerRecord {
  */
 export function setOnfocus(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onfocus = value;
+  (obj as any).onfocus = value as any;
 }
 
 /**
@@ -2283,7 +2283,7 @@ export function setOnfocus(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnformdata(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onformdata;
+  return (obj as any).onformdata;
 }
 
 /**
@@ -2291,7 +2291,7 @@ export function getOnformdata(self: bigint): EventHandlerRecord {
  */
 export function setOnformdata(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onformdata = value;
+  (obj as any).onformdata = value;
 }
 
 /**
@@ -2299,7 +2299,7 @@ export function setOnformdata(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOninput(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oninput;
+  return (obj as any).oninput;
 }
 
 /**
@@ -2307,7 +2307,7 @@ export function getOninput(self: bigint): EventHandlerRecord {
  */
 export function setOninput(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oninput = value;
+  (obj as any).oninput = value as any;
 }
 
 /**
@@ -2315,7 +2315,7 @@ export function setOninput(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOninvalid(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.oninvalid;
+  return (obj as any).oninvalid;
 }
 
 /**
@@ -2323,7 +2323,7 @@ export function getOninvalid(self: bigint): EventHandlerRecord {
  */
 export function setOninvalid(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.oninvalid = value;
+  (obj as any).oninvalid = value;
 }
 
 /**
@@ -2331,7 +2331,7 @@ export function setOninvalid(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnkeydown(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onkeydown;
+  return (obj as any).onkeydown;
 }
 
 /**
@@ -2339,7 +2339,7 @@ export function getOnkeydown(self: bigint): EventHandlerRecord {
  */
 export function setOnkeydown(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onkeydown = value;
+  (obj as any).onkeydown = value as any;
 }
 
 /**
@@ -2347,7 +2347,7 @@ export function setOnkeydown(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnkeypress(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onkeypress;
+  return (obj as any).onkeypress;
 }
 
 /**
@@ -2355,7 +2355,7 @@ export function getOnkeypress(self: bigint): EventHandlerRecord {
  */
 export function setOnkeypress(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onkeypress = value;
+  (obj as any).onkeypress = value;
 }
 
 /**
@@ -2363,7 +2363,7 @@ export function setOnkeypress(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnkeyup(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onkeyup;
+  return (obj as any).onkeyup;
 }
 
 /**
@@ -2371,7 +2371,7 @@ export function getOnkeyup(self: bigint): EventHandlerRecord {
  */
 export function setOnkeyup(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onkeyup = value;
+  (obj as any).onkeyup = value as any;
 }
 
 /**
@@ -2379,7 +2379,7 @@ export function setOnkeyup(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnload(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onload;
+  return (obj as any).onload;
 }
 
 /**
@@ -2387,7 +2387,7 @@ export function getOnload(self: bigint): EventHandlerRecord {
  */
 export function setOnload(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onload = value;
+  (obj as any).onload = value;
 }
 
 /**
@@ -2395,7 +2395,7 @@ export function setOnload(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnloadeddata(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onloadeddata;
+  return (obj as any).onloadeddata;
 }
 
 /**
@@ -2403,7 +2403,7 @@ export function getOnloadeddata(self: bigint): EventHandlerRecord {
  */
 export function setOnloadeddata(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onloadeddata = value;
+  (obj as any).onloadeddata = value;
 }
 
 /**
@@ -2411,7 +2411,7 @@ export function setOnloadeddata(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnloadedmetadata(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onloadedmetadata;
+  return (obj as any).onloadedmetadata;
 }
 
 /**
@@ -2419,7 +2419,7 @@ export function getOnloadedmetadata(self: bigint): EventHandlerRecord {
  */
 export function setOnloadedmetadata(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onloadedmetadata = value;
+  (obj as any).onloadedmetadata = value;
 }
 
 /**
@@ -2427,7 +2427,7 @@ export function setOnloadedmetadata(self: bigint, value: EventHandlerRecord): vo
  */
 export function getOnloadstart(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onloadstart;
+  return (obj as any).onloadstart;
 }
 
 /**
@@ -2435,7 +2435,7 @@ export function getOnloadstart(self: bigint): EventHandlerRecord {
  */
 export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onloadstart = value;
+  (obj as any).onloadstart = value;
 }
 
 /**
@@ -2443,7 +2443,7 @@ export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmousedown(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmousedown;
+  return (obj as any).onmousedown;
 }
 
 /**
@@ -2451,7 +2451,7 @@ export function getOnmousedown(self: bigint): EventHandlerRecord {
  */
 export function setOnmousedown(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmousedown = value;
+  (obj as any).onmousedown = value as any;
 }
 
 /**
@@ -2459,7 +2459,7 @@ export function setOnmousedown(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmouseenter(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmouseenter;
+  return (obj as any).onmouseenter;
 }
 
 /**
@@ -2467,7 +2467,7 @@ export function getOnmouseenter(self: bigint): EventHandlerRecord {
  */
 export function setOnmouseenter(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmouseenter = value;
+  (obj as any).onmouseenter = value;
 }
 
 /**
@@ -2475,7 +2475,7 @@ export function setOnmouseenter(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmouseleave(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmouseleave;
+  return (obj as any).onmouseleave;
 }
 
 /**
@@ -2483,7 +2483,7 @@ export function getOnmouseleave(self: bigint): EventHandlerRecord {
  */
 export function setOnmouseleave(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmouseleave = value;
+  (obj as any).onmouseleave = value;
 }
 
 /**
@@ -2491,7 +2491,7 @@ export function setOnmouseleave(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmousemove(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmousemove;
+  return (obj as any).onmousemove;
 }
 
 /**
@@ -2499,7 +2499,7 @@ export function getOnmousemove(self: bigint): EventHandlerRecord {
  */
 export function setOnmousemove(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmousemove = value;
+  (obj as any).onmousemove = value as any;
 }
 
 /**
@@ -2507,7 +2507,7 @@ export function setOnmousemove(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmouseout(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmouseout;
+  return (obj as any).onmouseout;
 }
 
 /**
@@ -2515,7 +2515,7 @@ export function getOnmouseout(self: bigint): EventHandlerRecord {
  */
 export function setOnmouseout(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmouseout = value;
+  (obj as any).onmouseout = value as any;
 }
 
 /**
@@ -2523,7 +2523,7 @@ export function setOnmouseout(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmouseover(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmouseover;
+  return (obj as any).onmouseover;
 }
 
 /**
@@ -2531,7 +2531,7 @@ export function getOnmouseover(self: bigint): EventHandlerRecord {
  */
 export function setOnmouseover(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmouseover = value;
+  (obj as any).onmouseover = value as any;
 }
 
 /**
@@ -2539,7 +2539,7 @@ export function setOnmouseover(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnmouseup(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onmouseup;
+  return (obj as any).onmouseup;
 }
 
 /**
@@ -2547,7 +2547,7 @@ export function getOnmouseup(self: bigint): EventHandlerRecord {
  */
 export function setOnmouseup(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onmouseup = value;
+  (obj as any).onmouseup = value as any;
 }
 
 /**
@@ -2555,7 +2555,7 @@ export function setOnmouseup(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnpaste(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpaste;
+  return (obj as any).onpaste;
 }
 
 /**
@@ -2563,7 +2563,7 @@ export function getOnpaste(self: bigint): EventHandlerRecord {
  */
 export function setOnpaste(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpaste = value;
+  (obj as any).onpaste = value;
 }
 
 /**
@@ -2571,7 +2571,7 @@ export function setOnpaste(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnpause(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpause;
+  return (obj as any).onpause;
 }
 
 /**
@@ -2579,7 +2579,7 @@ export function getOnpause(self: bigint): EventHandlerRecord {
  */
 export function setOnpause(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpause = value;
+  (obj as any).onpause = value;
 }
 
 /**
@@ -2587,7 +2587,7 @@ export function setOnpause(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnplay(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onplay;
+  return (obj as any).onplay;
 }
 
 /**
@@ -2595,7 +2595,7 @@ export function getOnplay(self: bigint): EventHandlerRecord {
  */
 export function setOnplay(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onplay = value;
+  (obj as any).onplay = value;
 }
 
 /**
@@ -2603,7 +2603,7 @@ export function setOnplay(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnplaying(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onplaying;
+  return (obj as any).onplaying;
 }
 
 /**
@@ -2611,7 +2611,7 @@ export function getOnplaying(self: bigint): EventHandlerRecord {
  */
 export function setOnplaying(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onplaying = value;
+  (obj as any).onplaying = value;
 }
 
 /**
@@ -2619,7 +2619,7 @@ export function setOnplaying(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnprogress(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onprogress;
+  return (obj as any).onprogress;
 }
 
 /**
@@ -2627,7 +2627,7 @@ export function getOnprogress(self: bigint): EventHandlerRecord {
  */
 export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onprogress = value;
+  (obj as any).onprogress = value;
 }
 
 /**
@@ -2635,7 +2635,7 @@ export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnratechange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onratechange;
+  return (obj as any).onratechange;
 }
 
 /**
@@ -2643,7 +2643,7 @@ export function getOnratechange(self: bigint): EventHandlerRecord {
  */
 export function setOnratechange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onratechange = value;
+  (obj as any).onratechange = value;
 }
 
 /**
@@ -2651,7 +2651,7 @@ export function setOnratechange(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnreset(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onreset;
+  return (obj as any).onreset;
 }
 
 /**
@@ -2659,7 +2659,7 @@ export function getOnreset(self: bigint): EventHandlerRecord {
  */
 export function setOnreset(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onreset = value;
+  (obj as any).onreset = value as any;
 }
 
 /**
@@ -2667,7 +2667,7 @@ export function setOnreset(self: bigint, value: EventHandlerRecord): void {
  */
 export function GlobalEventHandlersGetOnresize(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onresize;
+  return (obj as any).onresize;
 }
 
 /**
@@ -2675,7 +2675,7 @@ export function GlobalEventHandlersGetOnresize(self: bigint): EventHandlerRecord
  */
 export function GlobalEventHandlersSetOnresize(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onresize = value;
+  (obj as any).onresize = value;
 }
 
 /**
@@ -2683,7 +2683,7 @@ export function GlobalEventHandlersSetOnresize(self: bigint, value: EventHandler
  */
 export function GlobalEventHandlersGetOnscroll(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onscroll;
+  return (obj as any).onscroll;
 }
 
 /**
@@ -2691,7 +2691,7 @@ export function GlobalEventHandlersGetOnscroll(self: bigint): EventHandlerRecord
  */
 export function GlobalEventHandlersSetOnscroll(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onscroll = value;
+  (obj as any).onscroll = value;
 }
 
 /**
@@ -2699,7 +2699,7 @@ export function GlobalEventHandlersSetOnscroll(self: bigint, value: EventHandler
  */
 export function GlobalEventHandlersGetOnscrollend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onscrollend;
+  return (obj as any).onscrollend;
 }
 
 /**
@@ -2707,7 +2707,7 @@ export function GlobalEventHandlersGetOnscrollend(self: bigint): EventHandlerRec
  */
 export function GlobalEventHandlersSetOnscrollend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onscrollend = value;
+  (obj as any).onscrollend = value;
 }
 
 /**
@@ -2715,7 +2715,7 @@ export function GlobalEventHandlersSetOnscrollend(self: bigint, value: EventHand
  */
 export function getOnsecuritypolicyviolation(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onsecuritypolicyviolation;
+  return (obj as any).onsecuritypolicyviolation;
 }
 
 /**
@@ -2723,7 +2723,7 @@ export function getOnsecuritypolicyviolation(self: bigint): EventHandlerRecord {
  */
 export function setOnsecuritypolicyviolation(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onsecuritypolicyviolation = value;
+  (obj as any).onsecuritypolicyviolation = value;
 }
 
 /**
@@ -2731,7 +2731,7 @@ export function setOnsecuritypolicyviolation(self: bigint, value: EventHandlerRe
  */
 export function getOnseeked(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onseeked;
+  return (obj as any).onseeked;
 }
 
 /**
@@ -2739,7 +2739,7 @@ export function getOnseeked(self: bigint): EventHandlerRecord {
  */
 export function setOnseeked(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onseeked = value;
+  (obj as any).onseeked = value;
 }
 
 /**
@@ -2747,7 +2747,7 @@ export function setOnseeked(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnseeking(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onseeking;
+  return (obj as any).onseeking;
 }
 
 /**
@@ -2755,7 +2755,7 @@ export function getOnseeking(self: bigint): EventHandlerRecord {
  */
 export function setOnseeking(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onseeking = value;
+  (obj as any).onseeking = value;
 }
 
 /**
@@ -2763,7 +2763,7 @@ export function setOnseeking(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnselect(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onselect;
+  return (obj as any).onselect;
 }
 
 /**
@@ -2771,7 +2771,7 @@ export function getOnselect(self: bigint): EventHandlerRecord {
  */
 export function setOnselect(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onselect = value;
+  (obj as any).onselect = value;
 }
 
 /**
@@ -2779,7 +2779,7 @@ export function setOnselect(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnslotchange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onslotchange;
+  return (obj as any).onslotchange;
 }
 
 /**
@@ -2787,7 +2787,7 @@ export function getOnslotchange(self: bigint): EventHandlerRecord {
  */
 export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onslotchange = value;
+  (obj as any).onslotchange = value;
 }
 
 /**
@@ -2795,7 +2795,7 @@ export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnstalled(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onstalled;
+  return (obj as any).onstalled;
 }
 
 /**
@@ -2803,7 +2803,7 @@ export function getOnstalled(self: bigint): EventHandlerRecord {
  */
 export function setOnstalled(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onstalled = value;
+  (obj as any).onstalled = value;
 }
 
 /**
@@ -2811,7 +2811,7 @@ export function setOnstalled(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnsubmit(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onsubmit;
+  return (obj as any).onsubmit;
 }
 
 /**
@@ -2819,7 +2819,7 @@ export function getOnsubmit(self: bigint): EventHandlerRecord {
  */
 export function setOnsubmit(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onsubmit = value;
+  (obj as any).onsubmit = value as any;
 }
 
 /**
@@ -2827,7 +2827,7 @@ export function setOnsubmit(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnsuspend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onsuspend;
+  return (obj as any).onsuspend;
 }
 
 /**
@@ -2835,7 +2835,7 @@ export function getOnsuspend(self: bigint): EventHandlerRecord {
  */
 export function setOnsuspend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onsuspend = value;
+  (obj as any).onsuspend = value;
 }
 
 /**
@@ -2843,7 +2843,7 @@ export function setOnsuspend(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOntimeupdate(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontimeupdate;
+  return (obj as any).ontimeupdate;
 }
 
 /**
@@ -2851,7 +2851,7 @@ export function getOntimeupdate(self: bigint): EventHandlerRecord {
  */
 export function setOntimeupdate(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontimeupdate = value;
+  (obj as any).ontimeupdate = value;
 }
 
 /**
@@ -2859,7 +2859,7 @@ export function setOntimeupdate(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOntoggle(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ontoggle;
+  return (obj as any).ontoggle;
 }
 
 /**
@@ -2867,7 +2867,7 @@ export function getOntoggle(self: bigint): EventHandlerRecord {
  */
 export function setOntoggle(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ontoggle = value;
+  (obj as any).ontoggle = value;
 }
 
 /**
@@ -2875,7 +2875,7 @@ export function setOntoggle(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnvolumechange(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onvolumechange;
+  return (obj as any).onvolumechange;
 }
 
 /**
@@ -2883,7 +2883,7 @@ export function getOnvolumechange(self: bigint): EventHandlerRecord {
  */
 export function setOnvolumechange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onvolumechange = value;
+  (obj as any).onvolumechange = value;
 }
 
 /**
@@ -2891,7 +2891,7 @@ export function setOnvolumechange(self: bigint, value: EventHandlerRecord): void
  */
 export function getOnwaiting(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwaiting;
+  return (obj as any).onwaiting;
 }
 
 /**
@@ -2899,7 +2899,7 @@ export function getOnwaiting(self: bigint): EventHandlerRecord {
  */
 export function setOnwaiting(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwaiting = value;
+  (obj as any).onwaiting = value;
 }
 
 /**
@@ -2907,7 +2907,7 @@ export function setOnwaiting(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnwebkitanimationend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwebkitanimationend;
+  return (obj as any).onwebkitanimationend;
 }
 
 /**
@@ -2915,7 +2915,7 @@ export function getOnwebkitanimationend(self: bigint): EventHandlerRecord {
  */
 export function setOnwebkitanimationend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwebkitanimationend = value;
+  (obj as any).onwebkitanimationend = value;
 }
 
 /**
@@ -2923,7 +2923,7 @@ export function setOnwebkitanimationend(self: bigint, value: EventHandlerRecord)
  */
 export function getOnwebkitanimationiteration(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwebkitanimationiteration;
+  return (obj as any).onwebkitanimationiteration;
 }
 
 /**
@@ -2931,7 +2931,7 @@ export function getOnwebkitanimationiteration(self: bigint): EventHandlerRecord 
  */
 export function setOnwebkitanimationiteration(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwebkitanimationiteration = value;
+  (obj as any).onwebkitanimationiteration = value;
 }
 
 /**
@@ -2939,7 +2939,7 @@ export function setOnwebkitanimationiteration(self: bigint, value: EventHandlerR
  */
 export function getOnwebkitanimationstart(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwebkitanimationstart;
+  return (obj as any).onwebkitanimationstart;
 }
 
 /**
@@ -2947,7 +2947,7 @@ export function getOnwebkitanimationstart(self: bigint): EventHandlerRecord {
  */
 export function setOnwebkitanimationstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwebkitanimationstart = value;
+  (obj as any).onwebkitanimationstart = value;
 }
 
 /**
@@ -2955,7 +2955,7 @@ export function setOnwebkitanimationstart(self: bigint, value: EventHandlerRecor
  */
 export function getOnwebkittransitionend(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwebkittransitionend;
+  return (obj as any).onwebkittransitionend;
 }
 
 /**
@@ -2963,7 +2963,7 @@ export function getOnwebkittransitionend(self: bigint): EventHandlerRecord {
  */
 export function setOnwebkittransitionend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwebkittransitionend = value;
+  (obj as any).onwebkittransitionend = value;
 }
 
 /**
@@ -2971,7 +2971,7 @@ export function setOnwebkittransitionend(self: bigint, value: EventHandlerRecord
  */
 export function getOnwheel(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onwheel;
+  return (obj as any).onwheel;
 }
 
 /**
@@ -2979,7 +2979,7 @@ export function getOnwheel(self: bigint): EventHandlerRecord {
  */
 export function setOnwheel(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onwheel = value;
+  (obj as any).onwheel = value;
 }
 
 /**
@@ -2987,7 +2987,7 @@ export function setOnwheel(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnpointerover(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerover;
+  return (obj as any).onpointerover;
 }
 
 /**
@@ -2995,7 +2995,7 @@ export function getOnpointerover(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerover(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerover = value;
+  (obj as any).onpointerover = value;
 }
 
 /**
@@ -3003,7 +3003,7 @@ export function setOnpointerover(self: bigint, value: EventHandlerRecord): void 
  */
 export function getOnpointerenter(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerenter;
+  return (obj as any).onpointerenter;
 }
 
 /**
@@ -3011,7 +3011,7 @@ export function getOnpointerenter(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerenter(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerenter = value;
+  (obj as any).onpointerenter = value;
 }
 
 /**
@@ -3019,7 +3019,7 @@ export function setOnpointerenter(self: bigint, value: EventHandlerRecord): void
  */
 export function getOnpointerdown(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerdown;
+  return (obj as any).onpointerdown;
 }
 
 /**
@@ -3027,7 +3027,7 @@ export function getOnpointerdown(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerdown(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerdown = value;
+  (obj as any).onpointerdown = value;
 }
 
 /**
@@ -3035,7 +3035,7 @@ export function setOnpointerdown(self: bigint, value: EventHandlerRecord): void 
  */
 export function getOnpointermove(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointermove;
+  return (obj as any).onpointermove;
 }
 
 /**
@@ -3043,7 +3043,7 @@ export function getOnpointermove(self: bigint): EventHandlerRecord {
  */
 export function setOnpointermove(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointermove = value;
+  (obj as any).onpointermove = value;
 }
 
 /**
@@ -3067,7 +3067,7 @@ export function setOnpointerrawupdate(self: bigint, value: EventHandlerRecord): 
  */
 export function getOnpointerup(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerup;
+  return (obj as any).onpointerup;
 }
 
 /**
@@ -3075,7 +3075,7 @@ export function getOnpointerup(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerup(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerup = value;
+  (obj as any).onpointerup = value;
 }
 
 /**
@@ -3083,7 +3083,7 @@ export function setOnpointerup(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnpointercancel(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointercancel;
+  return (obj as any).onpointercancel;
 }
 
 /**
@@ -3091,7 +3091,7 @@ export function getOnpointercancel(self: bigint): EventHandlerRecord {
  */
 export function setOnpointercancel(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointercancel = value;
+  (obj as any).onpointercancel = value;
 }
 
 /**
@@ -3099,7 +3099,7 @@ export function setOnpointercancel(self: bigint, value: EventHandlerRecord): voi
  */
 export function getOnpointerout(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerout;
+  return (obj as any).onpointerout;
 }
 
 /**
@@ -3107,7 +3107,7 @@ export function getOnpointerout(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerout(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerout = value;
+  (obj as any).onpointerout = value;
 }
 
 /**
@@ -3115,7 +3115,7 @@ export function setOnpointerout(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnpointerleave(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onpointerleave;
+  return (obj as any).onpointerleave;
 }
 
 /**
@@ -3123,7 +3123,7 @@ export function getOnpointerleave(self: bigint): EventHandlerRecord {
  */
 export function setOnpointerleave(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onpointerleave = value;
+  (obj as any).onpointerleave = value;
 }
 
 /**
@@ -3131,7 +3131,7 @@ export function setOnpointerleave(self: bigint, value: EventHandlerRecord): void
  */
 export function getOngotpointercapture(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.ongotpointercapture;
+  return (obj as any).ongotpointercapture;
 }
 
 /**
@@ -3139,7 +3139,7 @@ export function getOngotpointercapture(self: bigint): EventHandlerRecord {
  */
 export function setOngotpointercapture(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.ongotpointercapture = value;
+  (obj as any).ongotpointercapture = value;
 }
 
 /**
@@ -3147,7 +3147,7 @@ export function setOngotpointercapture(self: bigint, value: EventHandlerRecord):
  */
 export function getOnlostpointercapture(self: bigint): EventHandlerRecord {
   const obj = lookupGlobalEventrs(self);
-  return obj.onlostpointercapture;
+  return (obj as any).onlostpointercapture;
 }
 
 /**
@@ -3155,7 +3155,7 @@ export function getOnlostpointercapture(self: bigint): EventHandlerRecord {
  */
 export function setOnlostpointercapture(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupGlobalEventrs(self);
-  obj.onlostpointercapture = value;
+  (obj as any).onlostpointercapture = value;
 }
 
 /**
@@ -4742,7 +4742,7 @@ export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
  * `get-elements-by-tag-name-ns()` operation.
  */
 export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  const _callResult = (document as any).getElementsByTagNameNS(namespace, localName as any);
+  const _callResult = (document as any).getElementsByTagNameNs(namespace, localName as any);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, _callResult);
   return handle;
@@ -5125,7 +5125,7 @@ export function getBody(): bigint | undefined {
  * `set-body()` operation.
  */
 export function setBody(value: bigint | undefined): void {
-  document.body = value;
+  document.body = lookupOptionHtmlElement(value) as any;
 }
 
 /**
@@ -5897,7 +5897,7 @@ export function setAttribute(self: bigint, qualifiedName: string, value: bigint)
  */
 export function setAttributeNs(self: bigint, namespace: string | undefined, qualifiedName: string, value: bigint): void {
   const obj = lookupElement(self);
-  obj.setAttributeNS(namespace, qualifiedName, value as any);
+  obj.setAttributeNS(namespace as any, qualifiedName, value as any);
 }
 
 /**
@@ -5913,7 +5913,7 @@ export function removeAttribute(self: bigint, qualifiedName: string): void {
  */
 export function removeAttributeNs(self: bigint, namespace: string | undefined, localName: string): void {
   const obj = lookupElement(self);
-  obj.removeAttributeNS(namespace, localName);
+  obj.removeAttributeNS(namespace as any, localName);
 }
 
 /**
@@ -5943,7 +5943,7 @@ export function hasAttribute(self: bigint, qualifiedName: string): bigint {
  */
 export function hasAttributeNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
-  const _callResult = obj.hasAttributeNS(namespace, localName);
+  const _callResult = obj.hasAttributeNS(namespace as any, localName);
   const handle = _nextBoolean++;
   _booleanHandles.set(handle, _callResult);
   return handle;
@@ -5966,7 +5966,7 @@ export function getAttributeNode(self: bigint, qualifiedName: string): bigint | 
  */
 export function getAttributeNodeNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
   const obj = lookupElement(self);
-  const _callResult = obj.getAttributeNodeNS(namespace, localName);
+  const _callResult = obj.getAttributeNodeNS(namespace as any, localName);
   if (_callResult === null) return undefined;
   const handle = _nextAttr++;
   _attrHandles.set(handle, _callResult);
@@ -6089,7 +6089,7 @@ export function ElementGetElementsByTagName(self: bigint, qualifiedName: string)
  */
 export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
-  const _callResult = (obj as any).getElementsByTagNameNS(namespace, localName);
+  const _callResult = (obj as any).getElementsByTagNameNs(namespace, localName);
   const handle = _nextHtmlCollection++;
   _htmlCollectionHandles.set(handle, _callResult);
   return handle;
@@ -6209,7 +6209,7 @@ export function setHtmlUnsafe(self: bigint, html: bigint): void {
  */
 export function getHtml(self: bigint, options: bigint | undefined): string {
   const obj = lookupElement(self);
-  return (obj as any).html(options);
+  return (obj as any).getHtml(options);
 }
 
 /**
@@ -6218,7 +6218,7 @@ export function getHtml(self: bigint, options: bigint | undefined): string {
 export function getInnerHtml(self: bigint): bigint {
   const obj = lookupElement(self);
   const value = obj.innerHTML;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -6230,10 +6230,10 @@ export function getInnerHtml(self: bigint): bigint {
 export function setInnerHtml(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
   const _enumInput = value;
-  let enumValue: HTMLString;
+  let enumValue: HTMLString | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.innerHTML = enumValue;
+  obj.innerHTML = enumValue as any;
 }
 
 /**
@@ -6242,7 +6242,7 @@ export function setInnerHtml(self: bigint, value: bigint): void {
 export function getOuterHtml(self: bigint): bigint {
   const obj = lookupElement(self);
   const value = obj.outerHTML;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -6254,10 +6254,10 @@ export function getOuterHtml(self: bigint): bigint {
 export function setOuterHtml(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
   const _enumInput = value;
-  let enumValue: HTMLString;
+  let enumValue: HTMLString | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.outerHTML = enumValue;
+  obj.outerHTML = enumValue as any;
 }
 
 /**
@@ -6376,7 +6376,7 @@ export function HtmlElementGetTitle(self: bigint): string {
  */
 export function HtmlElementSetTitle(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.title = value;
+  obj.title = value ?? null;
 }
 
 /**
@@ -6392,7 +6392,7 @@ export function getLang(self: bigint): string {
  */
 export function setLang(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.lang = value;
+  obj.lang = value ?? null;
 }
 
 /**
@@ -6408,7 +6408,7 @@ export function getTranslate(self: bigint): boolean {
  */
 export function setTranslate(self: bigint, value: boolean): void {
   const obj = lookupHTMLElement(self);
-  obj.translate = value;
+  obj.translate = value ?? null;
 }
 
 /**
@@ -6424,7 +6424,7 @@ export function HtmlElementGetDir(self: bigint): string {
  */
 export function HtmlElementSetDir(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.dir = value;
+  obj.dir = value ?? null;
 }
 
 /**
@@ -6440,7 +6440,7 @@ export function HtmlElementGetHidden(self: bigint): boolean | undefined {
  */
 export function setHidden(self: bigint, value: boolean | undefined): void {
   const obj = lookupHTMLElement(self);
-  obj.hidden = value;
+  obj.hidden = value ?? false;
 }
 
 /**
@@ -6480,7 +6480,7 @@ export function getAccessKey(self: bigint): string {
  */
 export function setAccessKey(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.accessKey = value;
+  obj.accessKey = value ?? null;
 }
 
 /**
@@ -6552,7 +6552,7 @@ export function getAutocapitalize(self: bigint): string {
  */
 export function setAutocapitalize(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.autocapitalize = value;
+  obj.autocapitalize = value ?? null;
 }
 
 /**
@@ -6584,7 +6584,7 @@ export function getInnerText(self: bigint): string {
  */
 export function setInnerText(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.innerText = value;
+  obj.innerText = value ?? null;
 }
 
 /**
@@ -6600,7 +6600,7 @@ export function getOuterText(self: bigint): string {
  */
 export function setOuterText(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
-  obj.outerText = value;
+  obj.outerText = value ?? null;
 }
 
 /**
@@ -6651,7 +6651,7 @@ export function getPopover(self: bigint): string | undefined {
  */
 export function setPopover(self: bigint, value: string | undefined): void {
   const obj = lookupHTMLElement(self);
-  obj.popover = value;
+  obj.popover = value ?? null;
 }
 
 /**
@@ -6750,7 +6750,7 @@ export function HtmlImageElementGetSrc(self: bigint): string {
  */
 export function HtmlImageElementSetSrc(self: bigint, value: string): void {
   const obj = lookupHTMLImageElement(self);
-  obj.src = value;
+  obj.src = value ?? null;
 }
 
 /**
@@ -6798,7 +6798,7 @@ export function getCrossOrigin(self: bigint): string | undefined {
  */
 export function setCrossOrigin(self: bigint, value: string | undefined): void {
   const obj = lookupHTMLImageElement(self);
-  obj.crossOrigin = value;
+  obj.crossOrigin = value ?? null;
 }
 
 /**
@@ -6938,7 +6938,7 @@ export function getDecoding(self: bigint): string {
  */
 export function setDecoding(self: bigint, value: string): void {
   const obj = lookupHTMLImageElement(self);
-  obj.decoding = value;
+  obj.decoding = value as any;
 }
 
 /**
@@ -6954,7 +6954,7 @@ export function getLoading(self: bigint): string {
  */
 export function setLoading(self: bigint, value: string): void {
   const obj = lookupHTMLImageElement(self);
-  obj.loading = value;
+  obj.loading = value as any;
 }
 
 /**
@@ -6970,7 +6970,7 @@ export function getFetchPriority(self: bigint): string {
  */
 export function setFetchPriority(self: bigint, value: string): void {
   const obj = lookupHTMLImageElement(self);
-  obj.fetchPriority = value;
+  obj.fetchPriority = value as any;
 }
 
 /**
@@ -7523,7 +7523,7 @@ export function getRelatedTarget(self: bigint): bigint | undefined {
  */
 export function getModifierState(self: bigint, keyArg: string): boolean {
   const obj = lookupMouseEvent(self);
-  return obj.getModifierState;
+  return (obj as any).getModifierState;
 }
 
 /**
@@ -7741,10 +7741,10 @@ export function getMediaText(self: bigint): bigint {
 export function setMediaText(self: bigint, value: bigint): void {
   const obj = lookupMediaList(self);
   const _enumInput = value;
-  let enumValue: MediaText;
+  let enumValue: MediaText | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.mediaText = enumValue;
+  obj.mediaText = enumValue as any;
 }
 
 /**
@@ -7810,7 +7810,7 @@ function lookupStyleSheet(handle: bigint): StyleSheet {
  */
 export function StyleSheetGetType(self: bigint): string {
   const obj = lookupStyleSheet(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -8719,7 +8719,7 @@ export function getPropertyPriority(self: bigint, property: string): bigint {
  */
 export function setProperty(self: bigint, property: string, value: string, priority: string | undefined): void {
   const obj = lookupCSSStyleDeclaration(self);
-  (obj as any).property = priority;
+  (obj as any).property = priority as any;
 }
 
 /**

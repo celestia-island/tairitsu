@@ -296,7 +296,7 @@ export function imports(moduleObject: bigint): (bigint)[] {
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): string {
+export function customSections(moduleObject: bigint, sectionName: string): bigint {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -360,7 +360,7 @@ export function MemoryGrow(self: bigint, delta: boolean): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): bigint {
+export function toFixedLengthBuffer(self: bigint): bigint | undefined {
   const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -368,7 +368,7 @@ export function toFixedLengthBuffer(self: bigint): bigint {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): Uint8Array {
+export function toResizableBuffer(self: bigint): (string)[] {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -449,7 +449,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: EventHandlerRecord, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: string | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -530,7 +530,7 @@ function lookupException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): boolean {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -546,7 +546,7 @@ export function is(self: bigint, exceptionTag: bigint): boolean {
 /**
  * `get-stack()` operation.
  */
-export function getStack(self: bigint): EventHandlerRecord {
+export function getStack(self: bigint): string {
   const obj = lookupException(self);
   return obj.stack;
 }

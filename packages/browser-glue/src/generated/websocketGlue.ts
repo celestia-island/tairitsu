@@ -240,7 +240,7 @@ function lookupWebSocket(handle: bigint): WebSocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): bigint | undefined {
+export function getUrl(self: bigint): string {
   const obj = lookupWebSocket(self);
   return (obj as any).url;
 }
@@ -264,17 +264,17 @@ export function getBufferedAmount(self: bigint): bigint {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): EventHandlerRecord {
+export function getOnopen(self: bigint): bigint {
   const obj = lookupWebSocket(self);
-  return obj.onopen;
+  return (obj as any).onopen;
 }
 
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: EventHandlerRecord): void {
+export function setOnopen(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  obj.onopen = value;
+  (obj as any).onopen = value as any;
 }
 
 /**
@@ -282,15 +282,15 @@ export function setOnopen(self: bigint, value: EventHandlerRecord): void {
  */
 export function getOnerror(self: bigint): EventHandlerRecord {
   const obj = lookupWebSocket(self);
-  return obj.onerror;
+  return (obj as any).onerror;
 }
 
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: string): void {
+export function setOnerror(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
-  obj.onerror = value;
+  (obj as any).onerror = value as any;
 }
 
 /**
@@ -298,7 +298,7 @@ export function setOnerror(self: bigint, value: string): void {
  */
 export function getOnclose(self: bigint): EventHandlerRecord {
   const obj = lookupWebSocket(self);
-  return obj.onclose;
+  return (obj as any).onclose;
 }
 
 /**
@@ -306,13 +306,13 @@ export function getOnclose(self: bigint): EventHandlerRecord {
  */
 export function setOnclose(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
-  obj.onclose = value;
+  (obj as any).onclose = value as any;
 }
 
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): string | undefined {
+export function getExtensions(self: bigint): bigint {
   const obj = lookupWebSocket(self);
   return (obj as any).extensions;
 }
@@ -328,7 +328,7 @@ export function getProtocol(self: bigint): string {
 /**
  * `close()` operation.
  */
-export function close(self: bigint, code: number | undefined, reason: EventHandlerRecord): void {
+export function close(self: bigint, code: number | undefined, reason: EventHandlerRecord | undefined): void {
   const obj = lookupWebSocket(self);
   obj.close(code, reason);
 }
@@ -336,9 +336,9 @@ export function close(self: bigint, code: number | undefined, reason: EventHandl
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): bigint | undefined {
   const obj = lookupWebSocket(self);
-  return obj.onmessage;
+  return (obj as any).onmessage;
 }
 
 /**
@@ -346,7 +346,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
  */
 export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
-  obj.onmessage = value;
+  (obj as any).onmessage = value as any;
 }
 
 /**
@@ -365,15 +365,15 @@ export function getBinaryType(self: bigint): bigint {
 /**
  * `set-binary-type()` operation.
  */
-export function setBinaryType(self: bigint, value: number): void {
+export function setBinaryType(self: bigint, value: bigint): void {
   const obj = lookupWebSocket(self);
-  obj.binaryType = value;
+  obj.binaryType = value as any;
 }
 
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: bigint): void {
+export function send(self: bigint, data: Uint8Array): void {
   const obj = lookupWebSocket(self);
   obj.send(data);
 }
@@ -416,7 +416,7 @@ export function getCode(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): number | undefined {
+export function getReason(self: bigint): string {
   const obj = lookupCloseEvent(self);
   return obj.reason;
 }

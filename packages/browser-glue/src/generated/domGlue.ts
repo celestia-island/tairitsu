@@ -700,7 +700,7 @@ export type EventHandle = bigint;
  */
 export function EventGetType(self: bigint): string {
   const obj = lookupEvent(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -1490,7 +1490,7 @@ function lookupMutationRecord(handle: bigint): MutationRecord {
  */
 export function MutationRecordGetType(self: bigint): string {
   const obj = lookupMutationRecord(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -1630,7 +1630,7 @@ export function getOwnerDocument(self: bigint): bigint | undefined {
  */
 export function getRootNode(self: bigint, options: bigint | undefined): bigint {
   const obj = lookupNode(self);
-  const _callResult = (obj as any).rootNode(options);
+  const _callResult = (obj as any).getRootNode(options);
   const handle = _nextNode++;
   _nodeHandles.set(handle, _callResult);
   return handle;
@@ -1740,7 +1740,7 @@ export function getNodeValue(self: bigint): string | undefined {
  */
 export function setNodeValue(self: bigint, value: string | undefined): void {
   const obj = lookupNode(self);
-  obj.nodeValue = value;
+  obj.nodeValue = value ?? null;
 }
 
 /**
@@ -1756,7 +1756,7 @@ export function getTextContent(self: bigint): string | undefined {
  */
 export function setTextContent(self: bigint, value: string | undefined): void {
   const obj = lookupNode(self);
-  obj.textContent = value;
+  obj.textContent = value ?? null;
 }
 
 /**
@@ -2085,7 +2085,7 @@ export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
  */
 export function setHtmlUnsafe(self: bigint, html: bigint): void {
   const obj = lookupShadowRoot(self);
-  obj.setHTMLUnsafe(html as any);
+  obj.setHTMLUnsafe = html as any;
 }
 
 /**
@@ -2093,7 +2093,7 @@ export function setHtmlUnsafe(self: bigint, html: bigint): void {
  */
 export function getHtml(self: bigint, options: bigint | undefined): string {
   const obj = lookupShadowRoot(self);
-  return (obj as any).html(options);
+  return (obj as any).getHtml(options);
 }
 
 /**
@@ -2102,7 +2102,7 @@ export function getHtml(self: bigint, options: bigint | undefined): string {
 export function getInnerHtml(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
   const value = obj.innerHTML;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -2114,10 +2114,10 @@ export function getInnerHtml(self: bigint): bigint {
 export function setInnerHtml(self: bigint, value: bigint): void {
   const obj = lookupShadowRoot(self);
   const _enumInput = value;
-  let enumValue: HTMLString;
+  let enumValue: HTMLString | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.innerHTML = enumValue;
+  obj.innerHTML = enumValue as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -2824,7 +2824,7 @@ export function DomTokenListContains(self: bigint, token: string): bigint {
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: bigint): void {
+export function add(self: bigint, tokens: (string)[]): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -2867,7 +2867,7 @@ export function supports(self: bigint, token: string): bigint {
 export function DomTokenListGetValue(self: bigint): bigint {
   const obj = lookupDOMTokenList(self);
   const value = obj.value;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -2879,10 +2879,10 @@ export function DomTokenListGetValue(self: bigint): bigint {
 export function DomTokenListSetValue(self: bigint, value: bigint): void {
   const obj = lookupDOMTokenList(self);
   const _enumInput = value;
-  let enumValue: DOMTokenListValue;
+  let enumValue: DOMTokenListValue | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.value = enumValue;
+  obj.value = enumValue as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -3010,7 +3010,7 @@ function lookupXPathExpression(handle: bigint): XPathExpression {
 /**
  * `evaluate()` operation.
  */
-export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: EventHandlerRecord, result: bigint | undefined): bigint {
   const obj = lookupXPathExpression(self);
   const _callResult = obj.evaluate(lookupNode(contextNode), type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
@@ -3163,9 +3163,9 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: string, localName: bigint): string {
+export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
   const obj = lookupXSLTProcessor(self);
-  return obj.getParameter(namespaceUri, localName);
+  return obj.getParameter(namespaceUri, localName as any);
 }
 
 /**

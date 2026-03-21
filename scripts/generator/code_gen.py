@@ -156,6 +156,8 @@ class CodeGenerator:
                                 needed_synthetic_types.add("buffer-source")
                             elif conversion_type == "event-listener":
                                 needed_synthetic_types.add("event-listener")
+                            elif conversion_type == "node-array":
+                                needed_synthetic_types.add("node")
 
         generated_helpers = set()
         
@@ -390,7 +392,7 @@ class CodeGenerator:
         handle_key = (iface.wit_name, kebab_to_camel(func.wit_name))
         
         if func.is_getter_but_method:
-            method_name = func.browser_attr
+            method_name = func.browser_method
             args = self._get_converted_browser_args(func, iface, skip_self=True)
             enum_key = (iface.wit_name, prop_name)
             if handle_key in HANDLE_RETURNING_FUNCTIONS:
@@ -406,7 +408,9 @@ class CodeGenerator:
                 enum_name = ENUM_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
                 lines.append(f"  const value = {obj_ref_with_assertion}.{method_name}({args});")
-                lines.append(f"  switch (value) {{")
+                first_value = list(enum_values.keys())[0] if enum_values else ""
+                switch_expr = "(value as any)" if first_value == "" else "value"
+                lines.append(f"  switch ({switch_expr}) {{")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"    case '{enum_str}': return {enum_int}n;")
                 lines.append(f"    default: return 0n;")
@@ -441,7 +445,9 @@ class CodeGenerator:
                 enum_name = ENUM_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
                 lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_attr};")
-                lines.append(f"  switch (value) {{")
+                first_value = list(enum_values.keys())[0] if enum_values else ""
+                switch_expr = "(value as any)" if first_value == "" else "value"
+                lines.append(f"  switch ({switch_expr}) {{")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"    case '{enum_str}': return {enum_int}n;")
                 lines.append(f"    default: return 0n;")
@@ -528,6 +534,33 @@ class CodeGenerator:
             value_param = func.params[-1].name
             value_expr = value_param
             
+            # Check config for parameter conversion
+            param_key = (iface.wit_name, func.wit_name, func.params[-1].wit_name)
+            if param_key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
+                conversion_type = PARAMETER_BIGINT_TO_NUMBER_ALIAS[param_key]
+                if isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:"):
+                    target_type = conversion_type[16:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    value_expr = f"lookupOption{target_pascal}({value_param})"
+                elif isinstance(conversion_type, str) and conversion_type.startswith("optional-handle-strict:"):
+                    target_type = conversion_type[23:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    value_expr = f"lookupOption{target_pascal}({value_param}) as any"
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:"):
+                    target_type = conversion_type[7:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    value_expr = f"lookup{target_pascal}({value_param})"
+                elif conversion_type == "string-or-null":
+                    value_expr = f"{value_param} ?? null"
+                elif conversion_type == "number-or-null":
+                    value_expr = f"{value_param} ?? null"
+                elif conversion_type == "boolean-or-false":
+                    value_expr = f"{value_param} ?? false"
+                elif conversion_type in ("enum-string", "event-handler"):
+                    value_expr = f"{value_param} as any"
+                elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
+                    value_expr = f"{value_param} as any"
+            
             # Check if this is an enum setter
             enum_key = (iface.wit_name, prop_name)
             if enum_key in ENUM_SETTER_PROPERTIES:
@@ -535,13 +568,26 @@ class CodeGenerator:
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
                 # Generate reverse mapping (int -> string)
                 lines.append(f"  const _enumInput = {value_param};")
-                lines.append(f"  let enumValue: {enum_name};")
+                first_value = list(enum_values.keys())[0]
+                # Check if first enum value is empty string - needs type assertion
+                needs_type_assertion = first_value == ""
+                if needs_type_assertion:
+                    lines.append(f"  let enumValue: {enum_name} | '';")
+                else:
+                    lines.append(f"  let enumValue: {enum_name};")
                 for enum_str, enum_int in enum_values.items():
                     lines.append(f"  if (_enumInput === {enum_int}n) {{ enumValue = '{enum_str}'; }}")
-                lines.append(f"  else {{ enumValue = '{list(enum_values.keys())[0]}'; }}")
-                value_expr = "enumValue"
+                lines.append(f"  else {{ enumValue = '{first_value}'; }}")
+                if needs_type_assertion:
+                    value_expr = "enumValue as any"
+                else:
+                    value_expr = "enumValue"
             elif func.params[-1].needs_handle_lookup and func.params[-1].target_handle_pascal:
-                value_expr = f"lookup{func.params[-1].target_handle_pascal}({value_param})"
+                # Check if it's optional
+                if func.params[-1].ts_type.endswith("| undefined"):
+                    value_expr = f"lookupOption{func.params[-1].target_handle_pascal}({value_param})"
+                else:
+                    value_expr = f"lookup{func.params[-1].target_handle_pascal}({value_param})"
             lines.append(f"  {obj_ref_with_assertion}.{func.browser_attr} = {value_expr};")
 
     def _render_static_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
@@ -592,7 +638,9 @@ class CodeGenerator:
             enum_name = ENUM_PROPERTIES[enum_key]
             enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
             lines.append(f"  const value = {obj_ref_with_assertion}.{func.browser_method}({args});")
-            lines.append(f"  switch (value) {{")
+            first_value = list(enum_values.keys())[0] if enum_values else ""
+            switch_expr = "(value as any)" if first_value == "" else "value"
+            lines.append(f"  switch ({switch_expr}) {{")
             for enum_str, enum_int in enum_values.items():
                 lines.append(f"    case '{enum_str}': return {enum_int}n;")
             lines.append(f"    default: return 0n;")

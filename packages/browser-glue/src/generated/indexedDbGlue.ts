@@ -361,7 +361,7 @@ export function IdbObjectStoreKeyPath(handle: bigint): string {
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): boolean {
+export function autoIncrement(handle: bigint): string {
   const obj = lookupIdbStore(handle);
   return (obj as any).autoIncrement();
 }
@@ -522,7 +522,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string {
+export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = lookupIDBRequest(handle);
   return (obj as any).source() ?? undefined;
 }

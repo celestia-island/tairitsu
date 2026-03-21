@@ -267,7 +267,7 @@ function lookupSw(handle: bigint): ServiceWorker {
 /**
  * `script-url()` operation.
  */
-export function scriptUrl(handle: bigint): bigint {
+export function scriptUrl(handle: bigint): string {
   const obj = lookupSw(handle);
   return (obj as any).scriptURL();
 }
@@ -275,9 +275,9 @@ export function scriptUrl(handle: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: bigint): void {
+export function postMessage(handle: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupSw(handle);
-  obj.postMessage(message, transfer);
+  obj.postMessage(message as any, transfer as any);
 }
 
 // ---------------------------------------------------------------------------

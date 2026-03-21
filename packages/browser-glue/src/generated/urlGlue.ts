@@ -240,14 +240,14 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: EventHandlerRecord, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: string | undefined): bigint {
+export function canParse(url: EventHandlerRecord, base: string | undefined): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
@@ -257,7 +257,7 @@ export function canParse(url: string, base: string | undefined): bigint {
 export function getHref(self: bigint): bigint {
   const obj = lookupURL(self);
   const value = obj.href;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -269,10 +269,10 @@ export function getHref(self: bigint): bigint {
 export function setHref(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   const _enumInput = value;
-  let enumValue: URLHref;
+  let enumValue: URLHref | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.href = enumValue;
+  obj.href = enumValue as any;
 }
 
 /**
@@ -337,7 +337,7 @@ export function setPassword(self: bigint, value: string): void {
 export function getHost(self: bigint): bigint {
   const obj = lookupURL(self);
   const value = obj.host;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -346,7 +346,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: number): void {
+export function setHost(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.host = value;
 }
@@ -354,7 +354,7 @@ export function setHost(self: bigint, value: number): void {
 /**
  * `get-hostname()` operation.
  */
-export function getHostname(self: bigint): bigint | undefined {
+export function getHostname(self: bigint): number {
   const obj = lookupURL(self);
   return obj.hostname;
 }
@@ -394,7 +394,7 @@ export function getPathname(self: bigint): string {
 /**
  * `set-pathname()` operation.
  */
-export function setPathname(self: bigint, value: EventHandlerRecord): void {
+export function setPathname(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.pathname = value;
 }
@@ -426,7 +426,7 @@ export function getSearchParams(self: bigint): bigint {
 /**
  * `get-hash()` operation.
  */
-export function getHash(self: bigint): boolean {
+export function getHash(self: bigint): string {
   const obj = lookupURL(self);
   return obj.hash;
 }
@@ -442,7 +442,7 @@ export function setHash(self: bigint, value: string): void {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): number {
+export function toJson(self: bigint): string {
   const obj = lookupURL(self);
   return obj.toJSON();
 }
@@ -469,7 +469,7 @@ function lookupURLSearchParams(handle: bigint): URLSearchParams {
 /**
  * `get-size()` operation.
  */
-export function getSize(self: bigint): EventHandlerRecord {
+export function getSize(self: bigint): number {
   const obj = lookupURLSearchParams(self);
   return obj.size;
 }
@@ -485,7 +485,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: EventHandlerRecord, value: string | undefined): void {
+export function _delete(self: bigint, name: string, value: EventHandlerRecord | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -509,7 +509,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: string, value: bigint | undefined): boolean {
+export function has(self: bigint, name: bigint | undefined, value: bigint | undefined): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value);
 }

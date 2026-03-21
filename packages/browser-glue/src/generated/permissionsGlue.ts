@@ -356,7 +356,7 @@ export function getState(self: bigint): bigint {
 export function getName(self: bigint): bigint {
   const obj = lookupPermissionStatus(self);
   const value = obj.name;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
