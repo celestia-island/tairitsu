@@ -12259,7 +12259,7 @@ function lookupPath2D(handle: bigint): Path2D {
  */
 export function addPath(self: bigint, path: bigint, transform: bigint | undefined): void {
   const obj = lookupPath2D(self);
-  obj.addPath(path, transform);
+  obj.addPath(lookupPath2D(path), lookupOptionDomMatrix(transform));
 }
 
 // ---------------------------------------------------------------------------

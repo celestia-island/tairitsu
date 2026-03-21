@@ -239,10 +239,6 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 const _messagePortHandles = new Map<bigint, MessagePort>();
 let _nextMessagePort = 1n;
 
-/** Handle table for response values */
-const _responseHandles = new Map<bigint, Response>();
-let _nextResponse = 1n;
-
 /** Handle table for service-worker values */
 const _serviceWorkerhandles = new Map<bigint, ServiceWorker>();
 let _nextServiceWorker = 1n;
@@ -266,23 +262,6 @@ function lookupOptionMessagePort(handle: bigint | undefined): MessagePort | null
     return null;
   }
   return _messagePortHandles.get(handle) ?? null;
-}
-
-/** Lookup a response value by handle. */
-function lookupResponse(handle: bigint): Response {
-  const obj = _responseHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`response handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional response value by handle. */
-function lookupOptionResponse(handle: bigint | undefined): Response | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _responseHandles.get(handle) ?? null;
 }
 
 /** Lookup a service-worker value by handle. */
@@ -336,7 +315,7 @@ export function ServiceWorkerGetState(self: bigint): bigint {
 /**
  * `post-message()` operation.
  */
-export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: string): void {
+export function ServiceWorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupServiceWorker(self);
   obj.postMessage(message as any, transfer as any);
 }
@@ -344,7 +323,7 @@ export function ServiceWorkerPostMessage(self: bigint, message: string, transfer
 /**
  * `get-onstatechange()` operation.
  */
-export function getOnstatechange(self: bigint): string {
+export function getOnstatechange(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorker(self);
   return (obj as any).onstatechange;
 }
@@ -434,7 +413,7 @@ export function pollGetReady(requestId: bigint): { ok: true } | { ok: false; err
 export function register(self: bigint, scriptUrl: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerContainer(self);
-  const promise = obj.register(scriptUrl as any, options as any)
+  const promise = obj.register(scriptUrl, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -529,7 +508,7 @@ export function setOncontrollerchange(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): bigint | undefined {
+export function getOnmessage(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerContainer(self);
   return obj.onmessage;
 }
@@ -537,7 +516,7 @@ export function getOnmessage(self: bigint): bigint | undefined {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessage(self: bigint, value: (bigint)[]): void {
   const obj = lookupServiceWorkerContainer(self);
   obj.onmessage = value;
 }
@@ -545,7 +524,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): boolean {
+export function getOnmessageerror(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerContainer(self);
   return obj.onmessageerror;
 }
@@ -553,7 +532,7 @@ export function getOnmessageerror(self: bigint): boolean {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerContainer(self);
   obj.onmessageerror = value;
 }
@@ -721,12 +700,12 @@ export function NavigationPreloadManagerGetState(self: bigint): bigint {
  * Poll an async `getState()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollGetState(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollGetState(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -751,7 +730,7 @@ function lookupClient(handle: bigint): Client {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): number | undefined {
+export function getUrl(self: bigint): string | undefined {
   const obj = lookupClient(self);
   return obj.url;
 }
@@ -775,7 +754,7 @@ export function getId(self: bigint): string {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): number {
+export function getType(self: bigint): bigint {
   const obj = lookupClient(self);
   return obj.getType();
 }
@@ -818,7 +797,7 @@ export function getVisibilityState(self: bigint): bigint {
 /**
  * `get-focused()` operation.
  */
-export function getFocused(self: bigint): bigint | undefined {
+export function getFocused(self: bigint): boolean {
   const obj = lookupWindowClient(self);
   return obj.focused;
 }
@@ -826,7 +805,7 @@ export function getFocused(self: bigint): bigint | undefined {
 /**
  * `get-ancestor-origins()` operation.
  */
-export function getAncestorOrigins(self: bigint): (string)[] {
+export function getAncestorOrigins(self: bigint): (boolean)[] {
   const obj = lookupWindowClient(self);
   return obj.ancestorOrigins;
 }
@@ -869,7 +848,7 @@ function lookupClients(handle: bigint): Clients {
 /**
  * `match-all()` operation.
  */
-export function ClientsMatchAll(self: bigint, options: bigint | undefined): bigint {
+export function ClientsMatchAll(self: bigint, options: bigint | undefined): number {
   const obj = lookupClients(self);
   return obj.matchAll(options);
 }
@@ -939,7 +918,7 @@ function lookupInstallEvent(handle: bigint): InstallEvent {
 /**
  * `add-routes()` operation.
  */
-export function addRoutes(self: bigint, rules: number): bigint {
+export function addRoutes(self: bigint, rules: bigint): bigint {
   const obj = lookupInstallEvent(self);
   return (obj as any).addRoutes(rules);
 }
@@ -1006,7 +985,7 @@ export function getReplacesClientId(self: bigint): string {
 /**
  * `get-handled()` operation.
  */
-export function getHandled(self: bigint): bigint {
+export function getHandled(self: bigint): string {
   const obj = lookupFetchEvent(self);
   return (obj as any).handled;
 }
@@ -1057,7 +1036,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-last-event-id()` operation.
  */
-export function getLastEventId(self: bigint): bigint {
+export function getLastEventId(self: bigint): string {
   const obj = lookupExtendableMessageEvent(self);
   return obj.lastEventId;
 }
@@ -1065,7 +1044,7 @@ export function getLastEventId(self: bigint): bigint {
 /**
  * `get-source()` operation.
  */
-export function getSource(self: bigint): bigint | undefined {
+export function getSource(self: bigint): number | undefined {
   const obj = lookupExtendableMessageEvent(self);
   return obj.source ?? undefined;
 }
@@ -1109,10 +1088,10 @@ function lookupCache(handle: bigint): Cache {
  *
  * Async operation: returns request ID, poll with `pollMatchAll()`
  */
-export function CacheMatchAll(self: bigint, request: string, options: bigint | undefined): bigint {
+export function CacheMatchAll(self: bigint, request: number | undefined, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
-  const promise = obj.matchAll(request as any, options as any)
+  const promise = obj.matchAll(request, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1150,7 +1129,7 @@ export function pollMatchAll(requestId: bigint): { ok: true; value: bigint } | {
 export function add(self: bigint, request: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
-  const promise = obj.add(request as any)
+  const promise = obj.add(request)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1226,7 +1205,7 @@ export function pollAddAll(requestId: bigint): { ok: true; value: bigint } | { o
 export function put(self: bigint, request: number, response: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
-  const promise = obj.put(request as any, lookupResponse(response))
+  const promise = obj.put(request, response)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1248,12 +1227,12 @@ export function put(self: bigint, request: number, response: bigint): bigint {
  * Poll an async `put()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPut(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollPut(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1264,7 +1243,7 @@ export function pollPut(requestId: bigint): { ok: true; value: number } | { ok: 
 export function CacheDelete(self: bigint, request: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
-  const promise = obj.delete(request as any, options as any)
+  const promise = obj.delete(request, options)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1299,10 +1278,10 @@ export function CachePollDelete(requestId: bigint): { ok: true; value: bigint } 
  *
  * Async operation: returns request ID, poll with `CachePollKeys()`
  */
-export function CacheKeys(self: bigint, request: bigint | undefined, options: bigint | undefined): bigint {
+export function CacheKeys(self: bigint, request: string | undefined, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCache(self);
-  const promise = obj.keys(request, options)
+  const promise = obj.keys(request as any, options as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1324,12 +1303,12 @@ export function CacheKeys(self: bigint, request: bigint | undefined, options: bi
  * Poll an async `keys()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function CachePollKeys(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function CachePollKeys(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -1356,10 +1335,10 @@ function lookupCacheStorage(handle: bigint): CacheStorage {
  *
  * Async operation: returns request ID, poll with `pollHas()`
  */
-export function has(self: bigint, cacheName: number): bigint {
+export function has(self: bigint, cacheName: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCacheStorage(self);
-  const promise = obj.has(cacheName)
+  const promise = obj.has(cacheName as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1381,12 +1360,12 @@ export function has(self: bigint, cacheName: number): bigint {
  * Poll an async `has()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollHas(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollHas(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1397,7 +1376,7 @@ export function pollHas(requestId: bigint): { ok: true; value: number } | { ok: 
 export function open(self: bigint, cacheName: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCacheStorage(self);
-  const promise = obj.open(cacheName)
+  const promise = obj.open(cacheName as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1432,10 +1411,10 @@ export function pollOpen(requestId: bigint): { ok: true; value: bigint } | { ok:
  *
  * Async operation: returns request ID, poll with `CacheStoragePollDelete()`
  */
-export function CacheStorageDelete(self: bigint, cacheName: number): bigint {
+export function CacheStorageDelete(self: bigint, cacheName: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupCacheStorage(self);
-  const promise = obj.delete(cacheName)
+  const promise = obj.delete(cacheName as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -1495,12 +1474,12 @@ export function CacheStorageKeys(self: bigint): bigint {
  * Poll an async `keys()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function CacheStoragePollKeys(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function CacheStoragePollKeys(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------

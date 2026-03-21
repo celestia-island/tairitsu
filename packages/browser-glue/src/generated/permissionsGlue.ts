@@ -284,7 +284,7 @@ function lookupPermissions(handle: bigint): Permissions {
  *
  * Async operation: returns request ID, poll with `pollQuery()`
  */
-export function query(self: bigint, permissionDesc: bigint): bigint {
+export function query(self: bigint, permissionDesc: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupPermissions(self);
   const promise = (obj as any).getQuery(permissionDesc)

@@ -2796,7 +2796,7 @@ function lookupDOMTokenList(handle: bigint): DOMTokenList {
 /**
  * `get-length()` operation.
  */
-export function DomTokenListGetLength(self: bigint): bigint {
+export function DomTokenListGetLength(self: bigint): number {
   const obj = lookupDOMTokenList(self);
   return obj.length;
 }
@@ -2848,7 +2848,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: EventHandlerRecord): boolean {
+export function replace(self: bigint, token: string, newToken: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token as any, newToken as any);
 }
@@ -3040,7 +3040,7 @@ function lookupXPathNSResolver(handle: bigint): XPathNSResolver {
 /**
  * `lookup-namespace-uri()` operation.
  */
-export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string {
+export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
   const obj = lookupXPathNSResolver(self);
   return (obj as any).lookupNamespaceURI(prefix) ?? undefined;
 }

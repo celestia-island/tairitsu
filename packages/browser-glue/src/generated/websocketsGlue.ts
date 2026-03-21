@@ -240,14 +240,14 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: string): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } {
+export function connect(url: string, protocols: bigint | undefined): { ok: true; value: bigint } | { ok: false; error: EventHandlerRecord } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
 /**
  * `url()` operation.
  */
-export function url(handle: bigint): bigint {
+export function url(handle: bigint): string {
   const obj = lookupWs(handle);
   return (obj as any).url();
 }
@@ -255,7 +255,7 @@ export function url(handle: bigint): bigint {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): bigint | undefined {
+export function readyState(handle: bigint): number {
   const obj = lookupWs(handle);
   return (obj as any).readyState();
 }
@@ -263,7 +263,7 @@ export function readyState(handle: bigint): bigint | undefined {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint {
+export function bufferedAmount(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
   return (obj as any).bufferedAmount();
 }
@@ -271,7 +271,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): string {
+export function extensions(handle: bigint): (string)[] {
   const obj = lookupWs(handle);
   return (obj as any).extensions();
 }
@@ -279,7 +279,7 @@ export function extensions(handle: bigint): string {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): string {
+export function protocol(handle: bigint): number {
   const obj = lookupWs(handle);
   return (obj as any).protocol();
 }
@@ -289,7 +289,7 @@ export function protocol(handle: bigint): string {
  */
 export function close(handle: bigint, code: number, reason: string): void {
   const obj = lookupWs(handle);
-  obj.close(code, reason as any);
+  obj.close(code, reason);
 }
 
 /**
@@ -297,7 +297,7 @@ export function close(handle: bigint, code: number, reason: string): void {
  */
 export function send(handle: bigint, data: string): void {
   const obj = lookupWs(handle);
-  obj.send(data as any);
+  obj.send(data);
 }
 
 // ---------------------------------------------------------------------------

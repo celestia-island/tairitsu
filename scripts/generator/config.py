@@ -3860,8 +3860,8 @@ PARAMETER_BIGINT_TO_NUMBER = {
     # CanvasUserInterface drawFocusIfNeeded - element needs handle lookup
     ("canvas-user-interface", "draw-focus-if-needed", "element"): "handle:element",
     # Path2D addPath - path and transform need handle lookup
-    ("path-2-d", "add-path", "path"): "handle:path-2-d",
-    ("path-2-d", "add-path", "transform"): "optional-handle:dom-matrix",
+    ("path2-d", "add-path", "path"): "handle:path2-d",
+    ("path2-d", "add-path", "transform"): "optional-handle:dom-matrix",
     # DOMParser parseFromString - string and type need string conversion
     ("dom-parser", "parse-from-string", "string"): "string",
     ("dom-parser", "parse-from-string", "type"): "string",
@@ -4101,22 +4101,55 @@ PARAMETER_BIGINT_TO_NUMBER = {
     # Properties that return readonly arrays that need spreading
     ("data-transfer", "types"): "readonly-array",
     ("clipboard-item", "types"): "readonly-array",
-    ("performance", "entryList"): "readonly-array"
-    ("navigator-language", "languages"): "readonly array"
-    ("performance-observer", "supportedEntryTypes"): "readonly array"
-    ("gamepad", "axes"): "readonly array"
-    ("gamepad", "buttons"): "readonly array"
+    ("performance", "entryList"): "readonly-array",
+    ("navigator-language", "languages"): "readonly-array",
+    ("performance-observer", "supportedEntryTypes"): "readonly-array",
+    ("gamepad", "axes"): "readonly-array",
+    ("gamepad", "buttons"): "readonly-array",
     # Location ancestorOrigins
-    ("location", "ancestorOrigins"): "readonly array"
-
+    ("location", "ancestorOrigins"): "readonly-array",
     # IntersectionObserverEntry root
-    ("intersection-observer-entry", "rootBounds"): "readonly array"
+    ("intersection-observer-entry", "rootBounds"): "readonly-array",
     # ResizeObserverEntry borderBoxSize/contentBoxSize/devicePixelContentBoxSize
-    ("resize-observer-entry", "devicePixelContentBoxSize"): "readonly array"
-    ("resize-observer-size-list", "borderBoxSize/contentBoxSize/devicePixelContentBoxSize"): "readonly array"
+    ("resize-observer-entry", "devicePixelContentBoxSize"): "readonly-array",
+    ("resize-observer-size-list", "borderBoxSize/contentBoxSize/devicePixelContentBoxSize"): "readonly-array",
 
     # RTCSctpTransport.transport - wrong handle table
     ("rtc-sctp-transport", "getTransport"): "rtc-dtls-transport",
+}
+    # Window clearInterval/clearTimeout - id needs number conversion
+    ("window-or-worker-global-scope", "clear-interval", "id"): True,
+    ("window-or-worker-global-scope", "clear-timeout", "id"): True,
+    # URLSearchParams.has - value needs string conversion
+    ("url-search-params", "has", "value"): "string",
+    # URL.canParse - base needs string conversion
+    ("url", "can-parse", "base"): "string-or-url",
+    # RTCDTMFSender.insertDTMF - duration/interToneGap need number conversion
+    ("rtc-dtmf-sender", "insert-dtmf", "duration"): True,
+    ("rtc-dtmf-sender", "insert-dtmf", "inter-tone-gap"): True,
+    # Cache.keys - request needs any (RequestInfo)
+    ("cache", "keys", "request"): "any",
+    ("cache", "keys", "options"): "any",
+    # CacheStorage.has/delete/open - cacheName needs string conversion
+    ("cache-storage", "has", "cache-name"): "string",
+    ("cache-storage", "delete", "cache-name"): "string",
+    ("cache-storage", "open", "cache-name"): "string",
+    ("cache-storage", "match", "request"): "any",
+    ("cache-storage", "match", "options"): "any",
+    # IDBCursor.continue - key needs any
+    ("idb-cursor", "continue", "key"): "any",
+    # IntersectionObserver root - can be Document, need cast
+    ("intersection-observer", "get-root", "root"): "any",
+    # StyleSheet ownerNode - can be ProcessingInstruction, need cast
+    ("style-sheet", "get-owner-node", "owner-node"): "any",
+    # Document currentScript - HTMLOrSVGScriptElement, need cast
+    ("document", "get-current-script", "script"): "any",
+    # Event srcElement - EventTarget, need cast to Element
+    ("event", "get-src-element", "src-element"): "any",
+    # Window event - Event | undefined
+    ("window", "get-event", "event"): "any",
+    # TextEvent initTextEvent - view param needs optional window handle
+    ("text-event", "init-text-event", "view"): "optional-handle:window",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
