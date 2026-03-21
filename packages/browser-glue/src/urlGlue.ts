@@ -301,7 +301,7 @@ export function canParse(url: string, base: string | undefined): bigint {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): bigint {
+export function getHref(self: bigint): string {
   const obj = lookupURL(self);
   return obj.href;
 }
@@ -309,7 +309,7 @@ export function getHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: bigint): void {
+export function setHref(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.href = value;
 }

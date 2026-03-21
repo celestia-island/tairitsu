@@ -758,9 +758,9 @@ interface dom-token-list {
     supports: func(self: dom-token-list-handle, token: string) -> bool;
 
     /// `value` attribute — getter.
-    get-value: func(self: dom-token-list-handle) -> u64;
+    get-value: func(self: dom-token-list-handle) -> string;
     /// `value` attribute — setter.
-    set-value: func(self: dom-token-list-handle, value: u64);
+    set-value: func(self: dom-token-list-handle, value: string);
 }
 
 /// WebIDL interface: `XPathResult`
