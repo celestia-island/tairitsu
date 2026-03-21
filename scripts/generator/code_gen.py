@@ -822,6 +822,11 @@ class CodeGenerator:
         for domain in domains:
             lines.append(f"export * as {domain.export_name} from \"./{domain.export_name}Glue\";")
 
+        # Add manual modules (not generated from WIT)
+        lines.append("")
+        lines.append("// Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)")
+        lines.append("export * as console from \"./consoleGlue\";")
+
         lines.append("")
         lines.append("// Statistics")
         lines.append(f"export const GLUE_STATS = {{")
