@@ -4,9 +4,7 @@
 
 Refactor the browser-glue and WIT bindings system to ensure Rust code can properly call TypeScript glue implementations at runtime through jco transpiled imports.
 
-## Current State
-
-### Completed
+## Completed ✅
 
 1. **WIT Generation**
    - `scripts/generate_browser_wit.py` generates `browser-full.wit` automatically
@@ -27,28 +25,28 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
    - Added event handler synthetic type and lookup logic
    - Fixed ENUM_SETTER_PROPERTIES for string-type parameters
 
-4. **Interface Wrappers**
-   - `scripts/generate_interface_wrappers.py` creates interface-level wrappers
-   - Generated: `document.js`, `node.js`, `window.js`, `event-target.js`
+4. **Manual Interface Implementations**
+   - `consoleGlue.ts`: log, warn, error
+   - `styleGlue.ts`: setStyleProperty, getStyleProperty, removeStyleProperty
+   - `eventTargetGlue.ts`: addEventListener, removeEventListener, preventDefault, stopPropagation
 
-5. **Packager**
+5. **Interface Wrappers**
+   - `scripts/generate_interface_wrappers.py` creates interface-level wrappers
+   - Generated: document.js, node.js, window.js, console.js, style.js, event-target.js
+
+6. **Packager**
    - Import Map updated to: `"tairitsu-browser:full/": "./browser-glue/"`
 
-### Remaining Tasks
+## Remaining Tasks
 
 1. **Rust Code Updates**
    - Update `packages/web/src/wit_platform.rs` for new WIT
    - Function names changed (e.g., `body()` -> `get_body()`)
    - Module locations changed (e.g., `node::set_attribute` -> `element::set_attribute`)
 
-2. **Interface Wrapper Completion**
-   - Add `console.js` and `style.js` wrappers
-   - Regenerate after browser-glue build
-
-3. **End-to-End Testing**
-   - Build browser-glue
+2. **End-to-End Testing**
    - Build WASM component
-   - Run dev server
+   - Run packager dev server
    - Verify browser calls work
 
 ## Architecture
@@ -63,10 +61,8 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
 │                           ↓                                  │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ browser-glue/*.js (SWC compiled)                    │    │
-│  │ - document.js → cssGlue.js, domGlue.js              │    │
-│  │ - node.js → domGlue.js                              │    │
-│  │ - window.js → htmlGlue.js                           │    │
-│  │ - console.js → deviceGlue.js                        │    │
+│  │ - document.js, node.js, window.js                  │    │
+│  │ - console.js, style.js, event-target.js            │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                            ↑ WIT imports
@@ -75,8 +71,8 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ Rust wit-bindgen bindings                           │    │
 │  │ bindings::tairitsu_browser::full::document::*       │    │
-│  │ bindings::tairitsu_browser::full::node::*           │    │
 │  │ bindings::tairitsu_browser::full::console::*        │    │
+│  │ bindings::tairitsu_browser::full::style::*          │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
