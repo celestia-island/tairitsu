@@ -264,7 +264,7 @@ export function getId(handle: bigint): number {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: EventHandlerRecord): void {
+export function setId(handle: bigint, value: (EventHandlerRecord)[]): void {
   const obj = lookupAnimation(handle);
   obj.id = value;
 }
@@ -272,7 +272,7 @@ export function setId(handle: bigint, value: EventHandlerRecord): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): number {
+export function getPlaybackRate(handle: bigint): Uint8Array {
   const obj = lookupAnimation(handle);
   return obj.playbackRate;
 }

@@ -445,7 +445,11 @@ class CodeGenerator:
         elif handle_key in HANDLE_RETURNING_FUNCTIONS:
             target_iface = HANDLE_RETURNING_FUNCTIONS[(iface.wit_name, kebab_to_camel(func.wit_name))]
             target_var, target_pascal = self._get_handle_info(target_iface)
-            lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_attr};")
+            readonly_array_key = (iface.wit_name, prop_name)
+            if readonly_array_key in READONLY_ARRAY_PROPERTIES:
+                lines.append(f"  const _callResult = [...{obj_ref_with_assertion}.{func.browser_attr}];")
+            else:
+                lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_attr};")
             if func.return_is_optional:
                 lines.append(f"  if (_callResult === null) return undefined;")
             lines.append(f"  const handle = _next{target_pascal}++;")
@@ -585,6 +589,10 @@ class CodeGenerator:
                     value_expr = f"{value_param} as any"
                 elif conversion_type == True:
                     value_expr = f"Number({value_param})"
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle-array:"):
+                    target_type = conversion_type[13:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    value_expr = f"Array.from({value_param}).map((h: bigint) => lookup{target_pascal}(h))"
             
             # Check if this is an enum setter
             enum_key = (iface.wit_name, prop_name)
