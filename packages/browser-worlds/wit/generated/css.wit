@@ -768,7 +768,7 @@ interface css-font-feature-values-map {
     type css-font-feature-values-map-handle = u64;
 
     /// `set()` operation.
-    set: func(self: css-font-feature-values-map-handle, feature-value-name: string, values: u32);
+    set: func(self: css-font-feature-values-map-handle, feature-value-name: string, values: f64);
 }
 
 /// WebIDL interface: `CSSFontPaletteValuesRule`
@@ -1211,7 +1211,7 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: u64) -> u64;
+    parse-html-unsafe: func(html: string) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;
@@ -1287,10 +1287,10 @@ interface document {
     close: func();
 
     /// `write()` operation.
-    write: func(text: list<u64>);
+    write: func(text: list<string>);
 
     /// `writeln()` operation.
-    writeln: func(text: list<u64>);
+    writeln: func(text: list<string>);
 
     /// `defaultView` attribute — getter.
     get-default-view: func() -> option<u64>;
@@ -1501,10 +1501,10 @@ interface element {
     get-attribute-ns: func(self: element-handle, namespace: option<string>, local-name: string) -> option<string>;
 
     /// `setAttribute()` operation.
-    set-attribute: func(self: element-handle, qualified-name: string, value: u64);
+    set-attribute: func(self: element-handle, qualified-name: string, value: string);
 
     /// `setAttributeNS()` operation.
-    set-attribute-ns: func(self: element-handle, namespace: option<string>, qualified-name: string, value: u64);
+    set-attribute-ns: func(self: element-handle, namespace: option<string>, qualified-name: string, value: string);
 
     /// `removeAttribute()` operation.
     remove-attribute: func(self: element-handle, qualified-name: string);
@@ -1583,23 +1583,23 @@ interface element {
     set-onfullscreenerror: func(self: element-handle, value: u64);
 
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: element-handle, html: u64);
+    set-html-unsafe: func(self: element-handle, html: string);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
 
     /// `innerHTML` attribute — getter.
-    get-inner-html: func(self: element-handle) -> u64;
+    get-inner-html: func(self: element-handle) -> string;
     /// `innerHTML` attribute — setter.
-    set-inner-html: func(self: element-handle, value: u64);
+    set-inner-html: func(self: element-handle, value: string);
 
     /// `outerHTML` attribute — getter.
-    get-outer-html: func(self: element-handle) -> u64;
+    get-outer-html: func(self: element-handle) -> string;
     /// `outerHTML` attribute — setter.
-    set-outer-html: func(self: element-handle, value: u64);
+    set-outer-html: func(self: element-handle, value: string);
 
     /// `insertAdjacentHTML()` operation.
-    insert-adjacent-html: func(self: element-handle, position: string, %string: u64);
+    insert-adjacent-html: func(self: element-handle, position: string, %string: string);
 
     /// `setPointerCapture()` operation.
     set-pointer-capture: func(self: element-handle, pointer-id: s32);
@@ -1721,7 +1721,7 @@ interface html-element {
     hide-popover: func(self: html-element-handle);
 
     /// `togglePopover()` operation.
-    toggle-popover: func(self: html-element-handle, options: option<u64>) -> bool;
+    toggle-popover: func(self: html-element-handle, options: option<bool>) -> bool;
 
     /// `popover` attribute — getter.
     get-popover: func(self: html-element-handle) -> option<string>;
@@ -1943,7 +1943,7 @@ interface range {
     intersects-node: func(self: range-handle, node: u64) -> bool;
 
     /// `createContextualFragment()` operation.
-    create-contextual-fragment: func(self: range-handle, %string: u64) -> u64;
+    create-contextual-fragment: func(self: range-handle, %string: string) -> u64;
 }
 
 /// WebIDL interface: `MouseEvent`

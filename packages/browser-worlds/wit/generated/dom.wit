@@ -96,10 +96,10 @@ interface event-target {
     type event-target-handle = u64;
 
     /// `addEventListener()` operation.
-    add-event-listener: func(self: event-target-handle, %type: string, callback: option<u64>, options: option<u64>);
+    add-event-listener: func(self: event-target-handle, %type: string, callback: option<u64>, options: option<bool>);
 
     /// `removeEventListener()` operation.
-    remove-event-listener: func(self: event-target-handle, %type: string, callback: option<u64>, options: option<u64>);
+    remove-event-listener: func(self: event-target-handle, %type: string, callback: option<u64>, options: option<bool>);
 
     /// `dispatchEvent()` operation.
     dispatch-event: func(self: event-target-handle, event: u64) -> bool;
@@ -188,13 +188,13 @@ interface parent-node {
     get-child-element-count: func(self: parent-node-handle) -> u32;
 
     /// `prepend()` operation.
-    prepend: func(self: parent-node-handle, nodes: list<u64>);
+    prepend: func(self: parent-node-handle, nodes: list<string>);
 
     /// `append()` operation.
-    append: func(self: parent-node-handle, nodes: list<u64>);
+    append: func(self: parent-node-handle, nodes: list<string>);
 
     /// `replaceChildren()` operation.
-    replace-children: func(self: parent-node-handle, nodes: list<u64>);
+    replace-children: func(self: parent-node-handle, nodes: list<string>);
 
     /// `moveBefore()` operation.
     move-before: func(self: parent-node-handle, node: u64, child: option<u64>);
@@ -226,13 +226,13 @@ interface child-node {
     type child-node-handle = u64;
 
     /// `before()` operation.
-    before: func(self: child-node-handle, nodes: list<u64>);
+    before: func(self: child-node-handle, nodes: list<string>);
 
     /// `after()` operation.
-    after: func(self: child-node-handle, nodes: list<u64>);
+    after: func(self: child-node-handle, nodes: list<string>);
 
     /// `replaceWith()` operation.
-    replace-with: func(self: child-node-handle, nodes: list<u64>);
+    replace-with: func(self: child-node-handle, nodes: list<string>);
 
     /// `remove()` operation.
     remove: func(self: child-node-handle);
@@ -493,15 +493,15 @@ interface shadow-root {
     set-onslotchange: func(self: shadow-root-handle, value: u64);
 
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: shadow-root-handle, html: u64);
+    set-html-unsafe: func(self: shadow-root-handle, html: string);
 
     /// `getHTML()` operation.
     get-html: func(self: shadow-root-handle, options: option<u64>) -> string;
 
     /// `innerHTML` attribute — getter.
-    get-inner-html: func(self: shadow-root-handle) -> u64;
+    get-inner-html: func(self: shadow-root-handle) -> string;
     /// `innerHTML` attribute — setter.
-    set-inner-html: func(self: shadow-root-handle, value: u64);
+    set-inner-html: func(self: shadow-root-handle, value: string);
 }
 
 /// WebIDL interface: `NamedNodeMap`

@@ -2132,7 +2132,7 @@ interface css-font-feature-values-map {
     type css-font-feature-values-map-handle = u64;
 
     /// `set()` operation.
-    set: func(self: css-font-feature-values-map-handle, feature-value-name: string, values: u32);
+    set: func(self: css-font-feature-values-map-handle, feature-value-name: string, values: f64);
 }
 
 interface css-font-palette-values-rule {
@@ -2554,7 +2554,7 @@ interface document {
     set-onfullscreenerror: func(value: u64);
 
     /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: u64) -> u64;
+    parse-html-unsafe: func(html: string) -> u64;
 
     /// `location` attribute — getter.
     get-location: func() -> option<u64>;
@@ -2630,10 +2630,10 @@ interface document {
     close: func();
 
     /// `write()` operation.
-    write: func(text: list<u64>);
+    write: func(text: list<string>);
 
     /// `writeln()` operation.
-    writeln: func(text: list<u64>);
+    writeln: func(text: list<string>);
 
     /// `defaultView` attribute — getter.
     get-default-view: func() -> option<u64>;
@@ -2840,10 +2840,10 @@ interface element {
     get-attribute-ns: func(self: element-handle, namespace: option<string>, local-name: string) -> option<string>;
 
     /// `setAttribute()` operation.
-    set-attribute: func(self: element-handle, qualified-name: string, value: u64);
+    set-attribute: func(self: element-handle, qualified-name: string, value: string);
 
     /// `setAttributeNS()` operation.
-    set-attribute-ns: func(self: element-handle, namespace: option<string>, qualified-name: string, value: u64);
+    set-attribute-ns: func(self: element-handle, namespace: option<string>, qualified-name: string, value: string);
 
     /// `removeAttribute()` operation.
     remove-attribute: func(self: element-handle, qualified-name: string);
@@ -2922,23 +2922,23 @@ interface element {
     set-onfullscreenerror: func(self: element-handle, value: u64);
 
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: element-handle, html: u64);
+    set-html-unsafe: func(self: element-handle, html: string);
 
     /// `getHTML()` operation.
     get-html: func(self: element-handle, options: option<u64>) -> string;
 
     /// `innerHTML` attribute — getter.
-    get-inner-html: func(self: element-handle) -> u64;
+    get-inner-html: func(self: element-handle) -> string;
     /// `innerHTML` attribute — setter.
-    set-inner-html: func(self: element-handle, value: u64);
+    set-inner-html: func(self: element-handle, value: string);
 
     /// `outerHTML` attribute — getter.
-    get-outer-html: func(self: element-handle) -> u64;
+    get-outer-html: func(self: element-handle) -> string;
     /// `outerHTML` attribute — setter.
-    set-outer-html: func(self: element-handle, value: u64);
+    set-outer-html: func(self: element-handle, value: string);
 
     /// `insertAdjacentHTML()` operation.
-    insert-adjacent-html: func(self: element-handle, position: string, %string: u64);
+    insert-adjacent-html: func(self: element-handle, position: string, %string: string);
 
     /// `setPointerCapture()` operation.
     set-pointer-capture: func(self: element-handle, pointer-id: s32);
@@ -3058,7 +3058,7 @@ interface html-element {
     hide-popover: func(self: html-element-handle);
 
     /// `togglePopover()` operation.
-    toggle-popover: func(self: html-element-handle, options: option<u64>) -> bool;
+    toggle-popover: func(self: html-element-handle, options: option<bool>) -> bool;
 
     /// `popover` attribute — getter.
     get-popover: func(self: html-element-handle) -> option<string>;
@@ -3276,7 +3276,7 @@ interface range {
     intersects-node: func(self: range-handle, node: u64) -> bool;
 
     /// `createContextualFragment()` operation.
-    create-contextual-fragment: func(self: range-handle, %string: u64) -> u64;
+    create-contextual-fragment: func(self: range-handle, %string: string) -> u64;
 }
 
 interface mouse-event {
@@ -4210,13 +4210,13 @@ interface parent-node {
     get-child-element-count: func(self: parent-node-handle) -> u32;
 
     /// `prepend()` operation.
-    prepend: func(self: parent-node-handle, nodes: list<u64>);
+    prepend: func(self: parent-node-handle, nodes: list<string>);
 
     /// `append()` operation.
-    append: func(self: parent-node-handle, nodes: list<u64>);
+    append: func(self: parent-node-handle, nodes: list<string>);
 
     /// `replaceChildren()` operation.
-    replace-children: func(self: parent-node-handle, nodes: list<u64>);
+    replace-children: func(self: parent-node-handle, nodes: list<string>);
 
     /// `moveBefore()` operation.
     move-before: func(self: parent-node-handle, node: u64, child: option<u64>);
@@ -4244,13 +4244,13 @@ interface child-node {
     type child-node-handle = u64;
 
     /// `before()` operation.
-    before: func(self: child-node-handle, nodes: list<u64>);
+    before: func(self: child-node-handle, nodes: list<string>);
 
     /// `after()` operation.
-    after: func(self: child-node-handle, nodes: list<u64>);
+    after: func(self: child-node-handle, nodes: list<string>);
 
     /// `replaceWith()` operation.
-    replace-with: func(self: child-node-handle, nodes: list<u64>);
+    replace-with: func(self: child-node-handle, nodes: list<string>);
 
     /// `remove()` operation.
     remove: func(self: child-node-handle);
@@ -4490,15 +4490,15 @@ interface shadow-root {
     set-onslotchange: func(self: shadow-root-handle, value: u64);
 
     /// `setHTMLUnsafe()` operation.
-    set-html-unsafe: func(self: shadow-root-handle, html: u64);
+    set-html-unsafe: func(self: shadow-root-handle, html: string);
 
     /// `getHTML()` operation.
     get-html: func(self: shadow-root-handle, options: option<u64>) -> string;
 
     /// `innerHTML` attribute — getter.
-    get-inner-html: func(self: shadow-root-handle) -> u64;
+    get-inner-html: func(self: shadow-root-handle) -> string;
     /// `innerHTML` attribute — setter.
-    set-inner-html: func(self: shadow-root-handle, value: u64);
+    set-inner-html: func(self: shadow-root-handle, value: string);
 }
 
 interface named-node-map {
@@ -5809,7 +5809,7 @@ interface html-options-collection {
     undefined: func(self: html-options-collection-handle, index: u32, %option: option<u64>);
 
     /// `add()` operation.
-    add: func(self: html-options-collection-handle, element: u64, before: option<u64>);
+    add: func(self: html-options-collection-handle, element: u64, before: option<f64>);
 
     /// `remove()` operation.
     remove: func(self: html-options-collection-handle, index: s32);
@@ -6477,9 +6477,9 @@ interface htmli-frame-element {
     set-src: func(self: htmli-frame-element-handle, value: string);
 
     /// `srcdoc` attribute — getter.
-    get-srcdoc: func(self: htmli-frame-element-handle) -> u64;
+    get-srcdoc: func(self: htmli-frame-element-handle) -> string;
     /// `srcdoc` attribute — setter.
-    set-srcdoc: func(self: htmli-frame-element-handle, value: u64);
+    set-srcdoc: func(self: htmli-frame-element-handle, value: string);
 
     /// `name` attribute — getter.
     get-name: func(self: htmli-frame-element-handle) -> string;
@@ -8036,7 +8036,7 @@ interface html-select-element {
     named-item: func(self: html-select-element-handle, name: string) -> option<u64>;
 
     /// `add()` operation.
-    add: func(self: html-select-element-handle, element: u64, before: option<u64>);
+    add: func(self: html-select-element-handle, element: u64, before: option<f64>);
 
     /// `remove()` operation.
     remove: func(self: html-select-element-handle);
@@ -9204,7 +9204,7 @@ interface element-internals {
     get-shadow-root: func(self: element-internals-handle) -> option<u64>;
 
     /// `setFormValue()` operation.
-    set-form-value: func(self: element-internals-handle, value: option<u64>, state: option<u64>);
+    set-form-value: func(self: element-internals-handle, value: option<string>, state: option<string>);
 
     /// `form` attribute — getter.
     get-form: func(self: element-internals-handle) -> option<u64>;
@@ -9890,7 +9890,7 @@ interface dom-parser {
     type dom-parser-handle = u64;
 
     /// `parseFromString()` operation.
-    parse-from-string: func(self: dom-parser-handle, %string: u64, %type: u64) -> u64;
+    parse-from-string: func(self: dom-parser-handle, %string: string, %type: u64) -> u64;
 }
 
 interface xml-serializer {
@@ -10248,7 +10248,7 @@ interface worker-global-scope {
     get-navigator: func(self: worker-global-scope-handle) -> u64;
 
     /// `importScripts()` operation.
-    import-scripts: func(self: worker-global-scope-handle, urls: list<u64>);
+    import-scripts: func(self: worker-global-scope-handle, urls: list<string>);
 
     /// `onerror` attribute — getter.
     get-onerror: func(self: worker-global-scope-handle) -> u64;
@@ -12582,7 +12582,7 @@ interface rtc-peer-connection {
     remove-track: func(self: rtc-peer-connection-handle, sender: u64);
 
     /// `addTransceiver()` operation.
-    add-transceiver: func(self: rtc-peer-connection-handle, track-or-kind: u64, init: option<u64>) -> u64;
+    add-transceiver: func(self: rtc-peer-connection-handle, track-or-kind: string, init: option<u64>) -> u64;
 
     /// `ontrack` attribute — getter.
     get-ontrack: func(self: rtc-peer-connection-handle) -> u64;
@@ -13117,7 +13117,7 @@ interface web-socket {
     set-binary-type: func(self: web-socket-handle, value: u64);
 
     /// `send()` operation.
-    send: func(self: web-socket-handle, data: list<u8>);
+    send: func(self: web-socket-handle, data: string);
 }
 
 interface close-event {
@@ -13145,7 +13145,7 @@ interface service-worker-container {
     get-ready: func(self: service-worker-container-handle) -> u64;
 
     /// `register()` operation.
-    register: func(self: service-worker-container-handle, script-url: u64, options: option<u64>) -> u64;
+    register: func(self: service-worker-container-handle, script-url: string, options: option<u64>) -> u64;
 
     /// `getRegistrations()` operation.
     get-registrations: func(self: service-worker-container-handle) -> u64;
