@@ -667,13 +667,12 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         {{
             "imports": {{
                 "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-                "tairitsu-browser:full/node": "./browser-glue/dom-glue.js?v={v}",
-                "tairitsu-browser:full/document": "./browser-glue/dom-glue.js?v={v}",
-                "tairitsu-browser:full/window": "./browser-glue/dom-glue.js?v={v}",
-                "tairitsu-browser:full/style": "./browser-glue/dom-glue.js?v={v}",
-                "tairitsu-browser:full/event-target": "./browser-glue/events-glue.js?v={v}",
-                "tairitsu-browser:full/fetch-api": "./browser-glue/fetch-glue.js?v={v}",
-                "tairitsu-browser:full/canvas2d": "./browser-glue/canvas-glue.js?v={v}"
+                "tairitsu-browser:dom/": "./browser-glue/",
+                "tairitsu-browser:events/": "./browser-glue/",
+                "tairitsu-browser:fetch/": "./browser-glue/",
+                "tairitsu-browser:canvas/": "./browser-glue/",
+                "tairitsu-browser:html/": "./browser-glue/",
+                "tairitsu-browser:css/": "./browser-glue/"
             }}
         }}
         </script>
