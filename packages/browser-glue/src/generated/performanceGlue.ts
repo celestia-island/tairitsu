@@ -358,7 +358,7 @@ export function PerformanceGetEntriesByType(self: bigint, type: string): bigint 
 /**
  * `get-entries-by-name()` operation.
  */
-export function PerformanceGetEntriesByName(self: bigint, name: string, type: string | undefined): bigint {
+export function PerformanceGetEntriesByName(self: bigint, name: string, type: string): bigint {
   const obj = lookupPerformance(self);
   const _callResult = obj.getEntriesByName(name, type);
   const handle = _nextAny++;
@@ -377,7 +377,7 @@ export function clearResourceTimings(self: bigint): void {
 /**
  * `set-resource-timing-buffer-size()` operation.
  */
-export function setResourceTimingBufferSize(self: bigint, maxSize: string): void {
+export function setResourceTimingBufferSize(self: bigint, maxSize: number): void {
   const obj = lookupPerformance(self);
   obj.setResourceTimingBufferSize(maxSize);
 }
@@ -385,7 +385,7 @@ export function setResourceTimingBufferSize(self: bigint, maxSize: string): void
 /**
  * `get-onresourcetimingbufferfull()` operation.
  */
-export function getOnresourcetimingbufferfull(self: bigint): string {
+export function getOnresourcetimingbufferfull(self: bigint): EventHandlerRecord {
   const obj = lookupPerformance(self);
   return obj.onresourcetimingbufferfull;
 }
@@ -403,7 +403,7 @@ export function setOnresourcetimingbufferfull(self: bigint, value: EventHandlerR
  */
 export function mark(self: bigint, markName: string, markOptions: bigint | undefined): bigint {
   const obj = lookupPerformance(self);
-  const _callResult = obj.mark(markName, markOptions);
+  const _callResult = obj.mark(markName, markOptions as any);
   const handle = _nextPerformanceMark++;
   _performanceMarkhandles.set(handle, _callResult);
   return handle;
@@ -420,7 +420,7 @@ export function clearMarks(self: bigint, markName: string | undefined): void {
 /**
  * `measure()` operation.
  */
-export function measure(self: bigint, measureName: string, startOrMeasureOptions: string | undefined, endMark: string | undefined): bigint {
+export function measure(self: bigint, measureName: number, startOrMeasureOptions: string | undefined, endMark: string | undefined): bigint {
   const obj = lookupPerformance(self);
   const _callResult = obj.measure(measureName, startOrMeasureOptions, endMark);
   const handle = _nextPerformanceMeasure++;
@@ -458,7 +458,7 @@ function lookupPerformanceNavigationTiming(handle: bigint): PerformanceNavigatio
 /**
  * `get-unload-event-start()` operation.
  */
-export function PerformanceNavigationTimingGetUnloadEventStart(self: bigint): string {
+export function PerformanceNavigationTimingGetUnloadEventStart(self: bigint): number {
   const obj = lookupPerformanceNavigationTiming(self);
   return obj.unloadEventStart;
 }
@@ -466,7 +466,7 @@ export function PerformanceNavigationTimingGetUnloadEventStart(self: bigint): st
 /**
  * `get-unload-event-end()` operation.
  */
-export function PerformanceNavigationTimingGetUnloadEventEnd(self: bigint): number {
+export function PerformanceNavigationTimingGetUnloadEventEnd(self: bigint): string {
   const obj = lookupPerformanceNavigationTiming(self);
   return obj.unloadEventEnd;
 }
@@ -880,7 +880,7 @@ function lookupPerformanceEntry(handle: bigint): PerformanceEntry {
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): string {
+export function getId(self: bigint): bigint {
   const obj = lookupPerformanceEntry(self);
   return (obj as any).id;
 }
@@ -955,7 +955,7 @@ function lookupPerformanceObserver(handle: bigint): PerformanceObserver {
 /**
  * `observe()` operation.
  */
-export function observe(self: bigint, options: bigint | undefined): void {
+export function observe(self: bigint, options: string): void {
   const obj = lookupPerformanceObserver(self);
   obj.observe(options as any);
 }
@@ -1115,7 +1115,7 @@ export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): num
 /**
  * `get-domain-lookup-end()` operation.
  */
-export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): number {
+export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): string {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.domainLookupEnd;
 }
@@ -1302,7 +1302,7 @@ function lookupPerformanceMark(handle: bigint): PerformanceMark {
 /**
  * `get-detail()` operation.
  */
-export function PerformanceMarkGetDetail(self: bigint): boolean {
+export function PerformanceMarkGetDetail(self: bigint): string {
   const obj = lookupPerformanceMark(self);
   return obj.detail;
 }

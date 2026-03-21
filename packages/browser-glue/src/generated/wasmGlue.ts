@@ -289,14 +289,14 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): string | undefined {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): string {
+export function customSections(moduleObject: bigint, sectionName: number): ((bigint | undefined)[])[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -360,7 +360,7 @@ export function MemoryGrow(self: bigint, delta: bigint): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): string {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -368,7 +368,7 @@ export function toFixedLengthBuffer(self: bigint): string {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): string {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -376,7 +376,7 @@ export function toResizableBuffer(self: bigint): string {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): Uint8Array {
+export function getBuffer(self: bigint): EventHandlerRecord {
   const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
@@ -403,7 +403,7 @@ function lookupTable(handle: bigint): Table {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: bigint | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
   const obj = lookupTable(self);
   return BigInt((obj as any).grow(delta, value));
 }
@@ -413,7 +413,7 @@ export function TableGrow(self: bigint, delta: bigint, value: bigint | undefined
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, index: bigint | undefined): bigint {
+export function _get(self: bigint, index: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupTable(self);
   const promise = (obj as any).get(index)
@@ -530,7 +530,7 @@ function lookupException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: string, index: number): string {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -538,7 +538,7 @@ export function getArg(self: bigint, exceptionTag: string, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): number {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }

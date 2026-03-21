@@ -2856,7 +2856,7 @@ export function replace(self: bigint, token: string, newToken: string): boolean 
 /**
  * `supports()` operation.
  */
-export function supports(self: bigint, token: EventHandlerRecord): bigint {
+export function supports(self: bigint, token: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.supports(token as any) ? 1n : 0n;
 }
@@ -3040,7 +3040,7 @@ function lookupXPathNSResolver(handle: bigint): XPathNSResolver {
 /**
  * `lookup-namespace-uri()` operation.
  */
-export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string): string | undefined {
+export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): EventHandlerRecord | undefined {
   const obj = lookupXPathNSResolver(self);
   return (obj as any).lookupNamespaceURI(prefix) ?? undefined;
 }
@@ -3163,7 +3163,7 @@ export function setParameter(self: bigint, namespaceUri: string, localName: stri
 /**
  * `get-parameter()` operation.
  */
-export function getParameter(self: bigint, namespaceUri: bigint, localName: string): string {
+export function getParameter(self: bigint, namespaceUri: string, localName: string): string {
   const obj = lookupXSLTProcessor(self);
   return obj.getParameter(namespaceUri, localName as any);
 }

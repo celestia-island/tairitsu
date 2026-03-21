@@ -7,8 +7,8 @@ Fix TS2322 type mismatch errors in browser-glue generated code by modifying the 
 ## Progress
 
 - **Initial:** 216 TS2322 errors
-- **Current:** 148 TS2322 errors
-- **Fixed:** 68 errors
+- **Current:** 171 TypeScript errors
+- **Fixed:** 45 errors
 
 ## What Was Done
 
@@ -70,23 +70,35 @@ Added to `SETTER_BUT_ACTUALLY_METHOD`:
 Added to `SETTER_METHOD_NAMES`:
 - All the above with method name `setCustomValidity`
 
-## Remaining Errors (148)
-
-Most remaining errors are **return type mismatches** where the DOM API returns a different type than the WIT definition expects. These require WIT definition changes, not generator config changes.
+## Remaining Errors (171)
 
 ### Error Categories:
 
-1. **DOM returns string, WIT expects bigint (handle)** - 7 errors
-2. **DOM returns number, WIT expects bigint (handle)** - 6 errors
-3. **DOM returns string | undefined, WIT expects string** - 4 errors
-4. **DOM returns number, WIT expects string** - 4 errors
-5. **DOM returns Promise<void>, WIT expects bigint (handle)** - 3 errors
-6. **DOM returns object, WIT expects bigint (handle)** - Various (TextTrack, ViewTransition, Storage, RTCRtpTransceiver, etc.)
+1. **Return type mismatches** - DOM API returns different type than WIT expects
+2. **Parameter type mismatches** - Arguments need conversion
+3. **Handle wrapping needed** - Methods return objects that need handle wrapping
 
 ### Files with Most Errors:
-- `webrtcGlue.ts` (42)
-- `htmlGlue.ts` (42)
-- `mediaGlue.ts` (23)
+- `htmlGlue.ts` (34)
+- `webrtcGlue.ts` (29)
+- `mediaGlue.ts` (22)
+- `eventsGlue.ts` (12)
+
+## Key Config Patterns Needed
+
+1. **HANDLE_RETURNING_FUNCTIONS**: For getters/methods that return objects needing handle wrapping
+   - Key: `(interface_name, method_name)`
+   - Value: target interface name or `"any"`
+
+2. **PARAMETER_BIGINT_TO_NUMBER**: For parameters needing type conversion
+   - Key: `(interface_name, function_name, param_name)`
+   - Value: conversion type (`"handle:X"`, `"enum-string"`, `"any"`, etc.)
+
+3. **GETTER_BUT_ACTUALLY_METHOD**: For WIT getters that are DOM methods
+   - Key: `function_name[4:]` (without "get-" prefix)
+
+4. **SETTER_BUT_ACTUALLY_METHOD**: For WIT setters that are DOM methods
+   - Key: `(interface_name, property_name)`
 
 ## Relevant Files
 
@@ -102,5 +114,5 @@ Most remaining errors are **return type mismatches** where the DOM API returns a
 python3 scripts/generate_browser_glue.py
 
 # Verify
-cd packages/browser-glue && npx tsc --noEmit 2>&1 | grep -c "error TS2322"
+cd packages/browser-glue && npx tsc --noEmit 2>&1 | grep -c "error TS"
 ```
