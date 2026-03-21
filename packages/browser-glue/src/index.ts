@@ -72,11 +72,13 @@ export * as workers from "./workersGlue";
 
 // Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)
 export * as console from "./consoleGlue";
+export * as style from "./styleGlue";
+export { addEventListener, removeEventListener, preventDefault, stopPropagation } from "./eventTargetGlue";
 
 // Statistics
 export const GLUE_STATS = {
   totalDomains: 28,
   totalInterfaces: 454,
   totalFunctions: 3974,
-  generatedAt: "2026-03-22T05:20:57.979700",
+  generatedAt: "2026-03-22T05:22:52.708054",
 };
