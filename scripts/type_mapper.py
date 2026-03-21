@@ -136,14 +136,8 @@ class TypeScriptTypeMapper:
         Returns:
             TypeScript type string
         """
-        # Use cache for complex types
-        type_id = id(wit_type)
-        if type_id in self._cache:
-            return self._cache[type_id]
-
-        result = self._map_type_impl(wit_type)
-        self._cache[type_id] = result
-        return result
+        # Always compute fresh - cache was causing issues with WitPrimitive reuse
+        return self._map_type_impl(wit_type)
 
     def _map_type_impl(self, wit_type: WitType) -> str:
         """Internal implementation of type mapping."""

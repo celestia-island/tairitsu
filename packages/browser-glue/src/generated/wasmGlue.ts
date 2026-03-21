@@ -300,14 +300,14 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): string {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): string {
+export function customSections(moduleObject: bigint, sectionName: string): (Uint8Array)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -379,7 +379,7 @@ function lookupOptionMemory(handle: bigint | undefined): Memory | null {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: boolean): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): bigint {
   const obj = lookupMemory(self);
   return (obj as any).grow(delta);
 }
@@ -403,7 +403,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): (bigint)[] {
+export function getBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
@@ -484,7 +484,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: number, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: string | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -589,7 +589,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): EventHandlerRecord {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }

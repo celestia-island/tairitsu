@@ -264,7 +264,7 @@ function lookupOptionAnimation(handle: bigint | undefined): Animation | null {
 /**
  * `get-id()` operation.
  */
-export function getId(handle: bigint): number {
+export function getId(handle: bigint): string {
   const obj = lookupAnimation(handle);
   return (obj as any).id;
 }
@@ -272,7 +272,7 @@ export function getId(handle: bigint): number {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: Uint8Array): void {
+export function setId(handle: bigint, value: string): void {
   const obj = lookupAnimation(handle);
   (obj as any).id = value;
 }
@@ -280,7 +280,7 @@ export function setId(handle: bigint, value: Uint8Array): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): (bigint)[] {
+export function getPlaybackRate(handle: bigint): number {
   const obj = lookupAnimation(handle);
   return (obj as any).playbackRate;
 }
@@ -296,7 +296,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): bigint {
+export function pending(handle: bigint): boolean {
   const obj = lookupAnimation(handle);
   return (obj as any).pending();
 }

@@ -251,7 +251,7 @@ function lookupOptionFileReader(handle: bigint | undefined): FileReader | null {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: string } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
