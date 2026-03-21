@@ -826,6 +826,8 @@ class CodeGenerator:
         lines.append("")
         lines.append("// Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)")
         lines.append("export * as console from \"./consoleGlue\";")
+        lines.append("export * as style from \"./styleGlue\";")
+        lines.append("export { addEventListener, removeEventListener, preventDefault, stopPropagation } from \"./eventTargetGlue\";")
 
         lines.append("")
         lines.append("// Statistics")
