@@ -44,7 +44,7 @@ class CodeGenerator:
             _, handle_var, handle_pascal = SYNTHETIC_HANDLE_TYPES[target_iface]
             return handle_var, handle_pascal
         else:
-            handle_pascal = kebab_to_pascal(target_iface)
+            handle_pascal = correct_type_casing(kebab_to_pascal(target_iface))
             handle_var = kebab_to_camel(target_iface + "Handles")
             return handle_var, handle_pascal
 
