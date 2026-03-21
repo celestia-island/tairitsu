@@ -280,7 +280,7 @@ function lookupOptionURL(handle: bigint | undefined): URL | null {
 /**
  * `parse()` operation.
  */
-export function parse(url: boolean, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint | undefined {
   const _callResult = URL.parse(url, base as any);
   if (_callResult === null) return undefined;
   const handle = _nextURL++;
@@ -291,7 +291,7 @@ export function parse(url: boolean, base: string | undefined): bigint | undefine
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: string, base: number): bigint {
+export function canParse(url: bigint, base: string | undefined): bigint {
   return URL.canParse(url as any, base as any) ? 1n : 0n;
 }
 
@@ -322,7 +322,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: bigint): number {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -489,7 +489,7 @@ export function getHash(self: bigint): string {
 /**
  * `set-hash()` operation.
  */
-export function setHash(self: bigint, value: bigint): void {
+export function setHash(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.hash = value;
 }
@@ -540,7 +540,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: string, value: bigint): void {
+export function append(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name as any, value);
 }
@@ -564,7 +564,7 @@ export function _get(self: bigint, name: string): string | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): (string)[] {
+export function getAll(self: bigint, name: string): string {
   const obj = lookupURLSearchParams(self);
   return (obj as any).all;
 }
@@ -580,7 +580,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: string, value: EventHandlerRecord): void {
+export function _set(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.set(name as any, value as any);
 }

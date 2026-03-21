@@ -2971,7 +2971,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): bigint {
+export function DomTokenListContains(self: bigint, token: number): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token) ? 1n : 0n;
 }
@@ -2979,7 +2979,7 @@ export function DomTokenListContains(self: bigint, token: string): bigint {
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: (string)[]): void {
+export function add(self: bigint, tokens: EventHandlerRecord): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -3003,7 +3003,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): bigint {
+export function replace(self: bigint, token: string, newToken: string): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token as any, newToken as any);
 }

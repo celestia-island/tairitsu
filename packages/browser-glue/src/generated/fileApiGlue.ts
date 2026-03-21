@@ -251,7 +251,7 @@ function lookupOptionFileReader(handle: bigint | undefined): FileReader | null {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: boolean } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -309,7 +309,7 @@ function lookupOptionFileList(handle: bigint | undefined): FileList | null {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): string {
   const obj = lookupFileList(handle);
   return (obj as any).length();
 }

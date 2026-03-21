@@ -705,7 +705,6 @@ class CodeGenerator:
             lines.append(f"  return {obj_ref_with_assertion}.{func.browser_method}({args}) ? 1n : 0n;")
         elif (iface.wit_name, func.wit_name) in NUMBER_TO_BIGINT_PROPERTIES:
             lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
-            lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         elif func.return_is_handle:
             key = (iface.wit_name, kebab_to_camel(func.wit_name))
             if key in HANDLE_RETURNING_ARRAY_PROPERTIES:

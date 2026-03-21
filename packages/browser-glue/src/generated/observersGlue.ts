@@ -436,7 +436,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): boolean {
+export function getTrackVisibility(self: bigint): bigint | undefined {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -444,7 +444,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: string): void {
+export function IntersectionObserverObserve(self: bigint, target: (bigint)[]): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(lookupElement(target));
 }
@@ -452,7 +452,7 @@ export function IntersectionObserverObserve(self: bigint, target: string): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: boolean): void {
+export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(lookupOptionElement(target) as any);
 }
@@ -548,7 +548,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): bigint {
+export function getIsIntersecting(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -556,7 +556,7 @@ export function getIsIntersecting(self: bigint): bigint {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): EventHandlerRecord {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -564,7 +564,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): EventHandlerRecord {
+export function getIntersectionRatio(self: bigint): number {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
