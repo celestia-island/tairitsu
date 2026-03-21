@@ -428,7 +428,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): boolean {
+export function getDelay(self: bigint): (bigint)[] {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -436,7 +436,7 @@ export function getDelay(self: bigint): boolean {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): boolean {
+export function getTrackVisibility(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -444,7 +444,7 @@ export function getTrackVisibility(self: bigint): boolean {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: bigint): void {
+export function IntersectionObserverObserve(self: bigint, target: boolean): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(lookupElement(target));
 }
@@ -564,7 +564,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): string {
+export function getIntersectionRatio(self: bigint): number {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }

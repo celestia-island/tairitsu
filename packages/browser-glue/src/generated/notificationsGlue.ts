@@ -437,12 +437,12 @@ export function requestPermission(deprecatedCallback: bigint | undefined): bigin
  * Poll an async `requestPermission()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollRequestPermission(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollRequestPermission(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -455,7 +455,7 @@ export function getMaxActions(): number {
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: bigint): EventHandlerRecord {
+export function getOnclick(self: bigint): string {
   const obj = lookupNotification(self);
   return (obj as any).onclick;
 }
@@ -471,7 +471,7 @@ export function setOnclick(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onshow()` operation.
  */
-export function getOnshow(self: bigint): string {
+export function getOnshow(self: bigint): EventHandlerRecord {
   const obj = lookupNotification(self);
   return (obj as any).onshow;
 }
@@ -479,7 +479,7 @@ export function getOnshow(self: bigint): string {
 /**
  * `set-onshow()` operation.
  */
-export function setOnshow(self: bigint, value: number | undefined): void {
+export function setOnshow(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupNotification(self);
   (obj as any).onshow = value as any;
 }
@@ -487,7 +487,7 @@ export function setOnshow(self: bigint, value: number | undefined): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): string {
+export function getOnerror(self: bigint): EventHandlerRecord {
   const obj = lookupNotification(self);
   return (obj as any).onerror;
 }
@@ -503,7 +503,7 @@ export function setOnerror(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onclose()` operation.
  */
-export function getOnclose(self: bigint): boolean {
+export function getOnclose(self: bigint): EventHandlerRecord {
   const obj = lookupNotification(self);
   return (obj as any).onclose;
 }
@@ -567,7 +567,7 @@ export function getBody(self: bigint): bigint {
 /**
  * `get-navigate()` operation.
  */
-export function getNavigate(self: bigint): string {
+export function getNavigate(self: bigint): bigint {
   const obj = lookupNotification(self);
   return (obj as any).navigate;
 }
@@ -683,7 +683,7 @@ export function getData(self: bigint): number {
 /**
  * `get-actions()` operation.
  */
-export function getActions(self: bigint): boolean {
+export function getActions(self: bigint): (bigint)[] {
   const obj = lookupNotification(self);
   return (obj as any).actions;
 }
@@ -728,7 +728,7 @@ function lookupOptionServiceWorkerRegistration(handle: bigint | undefined): Serv
  *
  * Async operation: returns request ID, poll with `pollShowNotification()`
  */
-export function showNotification(self: bigint, title: string, options: string | undefined): bigint {
+export function showNotification(self: bigint, title: string, options: number): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerRegistration(self);
   const promise = obj.showNotification(title as any, options as any)
@@ -998,7 +998,7 @@ export function getNotification(self: bigint): bigint {
 /**
  * `get-action()` operation.
  */
-export function getAction(self: bigint): string {
+export function getAction(self: bigint): boolean {
   const obj = lookupNotificationEvent(self);
   return (obj as any).action;
 }
@@ -1153,7 +1153,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: string): void {
+export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupServiceWorkerGlobalScope(self);
   obj.onmessage = value;
 }
@@ -1161,7 +1161,7 @@ export function setOnmessage(self: bigint, value: string): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): string {
+export function getOnmessageerror(self: bigint): EventHandlerRecord {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.onmessageerror;
 }

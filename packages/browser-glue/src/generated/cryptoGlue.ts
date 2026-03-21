@@ -484,12 +484,12 @@ export function encrypt(self: bigint, algorithm: bigint, key: bigint, data: Uint
  * Poll an async `encrypt()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollEncrypt(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollEncrypt(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -497,7 +497,7 @@ export function pollEncrypt(requestId: bigint): { ok: true; value: number } | { 
  *
  * Async operation: returns request ID, poll with `pollDecrypt()`
  */
-export function decrypt(self: bigint, algorithm: bigint, key: bigint, data: Uint8Array): bigint {
+export function decrypt(self: bigint, algorithm: bigint, key: bigint, data: number): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = obj.decrypt(algorithm as any, lookupCryptoKey(key), data as any)
@@ -535,7 +535,7 @@ export function pollDecrypt(requestId: bigint): { ok: true; value: bigint } | { 
  *
  * Async operation: returns request ID, poll with `pollSign()`
  */
-export function sign(self: bigint, algorithm: bigint, key: bigint, data: bigint): bigint {
+export function sign(self: bigint, algorithm: bigint, key: bigint, data: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = obj.sign(algorithm as any, lookupCryptoKey(key), data as any)
@@ -598,12 +598,12 @@ export function verify(self: bigint, algorithm: bigint, key: bigint, signature: 
  * Poll an async `verify()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollVerify(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollVerify(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
