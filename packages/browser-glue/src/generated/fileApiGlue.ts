@@ -309,7 +309,7 @@ function lookupOptionFileList(handle: bigint | undefined): FileList | null {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): string {
+export function length(handle: bigint): number {
   const obj = lookupFileList(handle);
   return (obj as any).length();
 }

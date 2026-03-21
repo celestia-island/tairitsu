@@ -2399,6 +2399,10 @@ PARAMETER_HANDLE_MAPPING = {
     ("speech-synthesis-utterance", "set-voice", "value"): ("speech-synthesis-voice", "SpeechSynthesisVoice"),
     # SubtleCrypto deriveBits baseKey parameter
     ("subtle-crypto", "derive-bits", "base-key"): ("crypto-key", "CryptoKey"),
+    # KeyboardEvent initKeyboardEvent view parameter
+    ("keyboard-event", "init-keyboard-event", "view-arg"): ("window", "Window"),
+    # CompositionEvent initCompositionEvent view parameter
+    ("composition-event", "init-composition-event", "view-arg"): ("window", "Window"),
 }
 
 # Parameters that are dictionary types (not handles) - should be passed directly as objects
@@ -3521,6 +3525,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("dom-token-list", "replace", "token"): "string",
     ("dom-token-list", "replace", "new-token"): "string",
     ("dom-token-list", "supports", "token"): "string",
+    ("dom-token-list", "contains", "token"): "string",
     # Event listener options
     ("event-target", "add-event-listener", "options"): "event-listener-options",
     ("event-target", "remove-event-listener", "options"): "event-listener-options",
@@ -4034,6 +4039,8 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("performance", "mark", "options"): "any",
     ("performance", "measure", "options"): "any",
     ("performance", "measure", "start-or-options"): "any",
+    # Performance setResourceTimingBufferSize - maxSize needs number conversion
+    ("performance", "set-resource-timing-buffer-size", "max-size"): True,
     # ResizeObserverEntry box sizes - need array spread
     ("resize-observer-entry", "get-border-box-size", "sizes"): "any",
     ("resize-observer-entry", "get-content-box-size", "sizes"): "any",
@@ -4652,6 +4659,21 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("subtle-crypto", "derive-key", "derived-key-type"): "any",
     # XPathExpression evaluate type parameter
     ("x-path-expression", "evaluate", "type"): True,
+    # eventsGlue.ts fixes
+    # Clipboard.writeText - data is bigint but needs string conversion
+    ("clipboard", "write-text", "data"): "string",
+    # KeyboardEvent.getModifierState - keyArg is boolean but needs string conversion
+    ("keyboard-event", "get-modifier-state", "key-arg"): "string",
+    # TextEvent.initTextEvent - data is bigint but needs string conversion
+    ("text-event", "init-text-event", "data"): "string",
+    # SpeechSynthesisUtterance - text needs string conversion
+    ("speech-synthesis-utterance", "set-text", "value"): "string",
+    # CompositionEvent initCompositionEvent - viewArg needs window handle lookup
+    ("composition-event", "init-composition-event", "view-arg"): "optional-handle:window",
+    # URL setUsername - value needs string conversion
+    ("url", "set-username", "value"): "string",
+    # RTCDataChannel bufferedAmountLowThreshold - value needs number conversion
+    ("rtc-data-channel", "set-buffered-amount-low-threshold", "value"): True,
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -4845,7 +4867,7 @@ ENUM_PROPERTIES = {
     # RTCIceCandidate address (string → boolean)
     ("rtc-ice-candidate", "address"): "RTCIceCandidateAddress",
     # PerformanceNavigation redirectCount (number → string)
-    ("performance-navigation", "redirect-count"): "PerformanceRedirectCount",
+    ("performance-navigation", "redirectCount"): "PerformanceRedirectCount",
     # URL protocol (string → bigint)
     ("url", "protocol"): "UrlProtocol",
     # URL toJSON (string → bigint)
@@ -5661,6 +5683,22 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("headers", "has"): True,
     # KeyboardEvent.getModifierState returns boolean
     ("keyboard-event", "get-modifier-state"): True,
+    # KeyboardEvent metaKey returns boolean
+    ("keyboard-event", "get-meta-key"): True,
+    # KeyboardEvent shiftKey returns boolean
+    ("keyboard-event", "get-shift-key"): True,
+    # IntersectionObserverEntry isIntersecting returns boolean
+    ("intersection-observer-entry", "get-is-intersecting"): True,
+    # WindowOrWorkerGlobalScope crossOriginIsolated returns boolean
+    ("window-or-worker-global-scope", "get-cross-origin-isolated"): True,
+    # WindowOrWorkerGlobalScope isSecureContext returns boolean
+    ("window-or-worker-global-scope", "get-is-secure-context"): True,
+    # Request keepalive returns boolean
+    ("request", "get-keepalive"): True,
+    # MediaStream active returns boolean
+    ("media-stream", "get-active"): True,
+    # XPathResult invalidIteratorState returns boolean
+    ("x-path-result", "get-invalid-iterator-state"): True,
 }
 
 # Getters that return optional types in DOM but non-optional in WIT
@@ -5769,6 +5807,8 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("performance-navigation-timing", "domComplete"): True,
     ("performance-navigation-timing", "loadEventStart"): True,
     ("performance-navigation-timing", "loadEventEnd"): True,
+    ("performance-navigation-timing", "unloadEventStart"): True,
+    ("performance-navigation-timing", "unloadEventEnd"): True,
     # Events
     ("event", "eventPhase"): True,
     ("event", "timeStamp"): True,
@@ -5787,6 +5827,10 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("html-media-element", "playbackRate"): True,
     ("html-media-element", "volume"): True,
     ("html-media-element", "defaultPlaybackRate"): True,
+    # SpeechSynthesisUtterance
+    ("speech-synthesis-utterance", "volume"): True,
+    ("speech-synthesis-utterance", "rate"): True,
+    ("speech-synthesis-utterance", "pitch"): True,
     ("html-progress-element", "value"): True,
     ("html-progress-element", "max"): True,
     ("html-meter-element", "value"): True,
@@ -5803,9 +5847,6 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("keyframe-effect", "duration"): True,
     # WebRTC
     ("rtc-peer-connection", "localDescription"): True,
-    # WASM
-    ("memory", "grow"): True,
-    ("table", "grow"): True,
     # Touch
     ("touch", "radiusX"): True,
     ("touch", "radiusY"): True,
@@ -5847,6 +5888,13 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("performance-resource-timing", "transferSize"): True,
     ("performance-resource-timing", "encodedBodySize"): True,
     ("performance-resource-timing", "decodedBodySize"): True,
+    ("performance-resource-timing", "connectStart"): True,
+    ("performance-resource-timing", "workerStart"): True,
+    ("performance-resource-timing", "responseEnd"): True,
+    ("performance-resource-timing", "secureConnectionStart"): True,
+    ("performance-resource-timing", "requestStart"): True,
+    # XPathResult stringValue returns string but WIT expects bigint
+    ("x-path-result", "stringValue"): True,
     # PointerEvent
     ("pointer-event", "pointerId"): True,
     ("pointer-event", "width"): True,
@@ -5956,8 +6004,6 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("readable-byte-stream-controller", "desiredSize"): True,
     # ReadableStreamDefaultController desiredSize
     ("readable-stream-default-controller", "desiredSize"): True,
-    # Performance.now()
-    ("performance", "now"): True,
     # UIEvent - which returns number
     ("ui-event", "which"): True,
     # UIEvent - detail returns number
@@ -5969,10 +6015,12 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # IntersectionObserverEntry - time returns DOMHighResTimeStamp (number)
     ("intersection-observer-entry", "time"): True,
     # ResizeObserverSize - blockSize/inlineSize return number
-    ("resize-observer-size", "block-size"): True,
-    ("resize-observer-size", "inline-size"): True,
+    ("resize-observer-size", "blockSize"): True,
+    ("resize-observer-size", "inlineSize"): True,
     # ReadableStreamDefaultController desiredSize returns number
     ("readable-stream-default-controller", "desired-size"): True,
+    # KeyboardEvent location returns number
+    ("keyboard-event", "location"): True,
 }
 
 # Interface-specific browser attribute name overrides

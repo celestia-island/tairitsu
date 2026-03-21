@@ -844,18 +844,21 @@ class CodeGenerator:
                     else:
                         target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
                     _, target_pascal = self._get_handle_info(target_wit_type)
-                    converted_args.append(f"lookup{target_pascal}({param.name})")
+                    arg_expr = f"BigInt({param.name})" if param.ts_type == "number" else param.name
+                    converted_args.append(f"lookup{target_pascal}({arg_expr})")
                 elif conversion_type == "optional-handle" or (isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:")):
                     if isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:"):
                         target_wit_type = conversion_type[16:]
                     else:
                         target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
                     _, target_pascal = self._get_handle_info(target_wit_type)
-                    converted_args.append(f"lookupOption{target_pascal}({param.name})")
+                    arg_expr = f"BigInt({param.name})" if param.ts_type == "number" else param.name
+                    converted_args.append(f"lookupOption{target_pascal}({arg_expr})")
                 elif isinstance(conversion_type, str) and conversion_type.startswith("optional-handle-strict:"):
                     target_wit_type = conversion_type[23:]
                     _, target_pascal = self._get_handle_info(target_wit_type)
-                    converted_args.append(f"lookupOption{target_pascal}({param.name}) as any")
+                    arg_expr = f"BigInt({param.name})" if param.ts_type == "number" else param.name
+                    converted_args.append(f"lookupOption{target_pascal}({arg_expr}) as any")
                 elif conversion_type == "array":
                     converted_args.append(f"Array.from({param.name}).map(Number)")
                 elif conversion_type == "boolean":

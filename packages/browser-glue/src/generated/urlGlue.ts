@@ -291,7 +291,7 @@ export function parse(url: string, base: string | undefined): bigint | undefined
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: bigint, base: string | undefined): bigint {
+export function canParse(url: string, base: string | undefined): bigint {
   return URL.canParse(url as any, base as any) ? 1n : 0n;
 }
 
@@ -322,7 +322,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): number {
+export function getOrigin(self: bigint): string {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -360,7 +360,7 @@ export function getUsername(self: bigint): string {
  */
 export function setUsername(self: bigint, value: string): void {
   const obj = lookupURL(self);
-  obj.username = value;
+  obj.username = value as any;
 }
 
 /**
@@ -394,7 +394,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: string): void {
+export function setHost(self: bigint, value: bigint | undefined): void {
   const obj = lookupURL(self);
   obj.host = value as any;
 }
@@ -497,7 +497,7 @@ export function setHash(self: bigint, value: string): void {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): string {
+export function toJson(self: bigint): EventHandlerRecord {
   const obj = lookupURL(self);
   return obj.toJSON();
 }
@@ -548,7 +548,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string | undefined): void {
+export function _delete(self: bigint, name: bigint, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name as any, value as any);
 }
@@ -564,7 +564,7 @@ export function _get(self: bigint, name: string): string | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): string {
+export function getAll(self: bigint, name: string): (string)[] {
   const obj = lookupURLSearchParams(self);
   return (obj as any).all;
 }

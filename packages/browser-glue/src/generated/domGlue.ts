@@ -2971,15 +2971,15 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: number): bigint {
+export function DomTokenListContains(self: bigint, token: string): bigint {
   const obj = lookupDOMTokenList(self);
-  return obj.contains(token) ? 1n : 0n;
+  return obj.contains(token as any) ? 1n : 0n;
 }
 
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: EventHandlerRecord): void {
+export function add(self: bigint, tokens: (string)[]): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -3086,9 +3086,9 @@ export function getNumberValue(self: bigint): number {
 /**
  * `get-string-value()` operation.
  */
-export function getStringValue(self: bigint): string {
+export function getStringValue(self: bigint): bigint {
   const obj = lookupXPathResult(self);
-  return obj.stringValue;
+  return BigInt(obj.stringValue);
 }
 
 /**
@@ -3114,9 +3114,9 @@ export function getSingleNodeValue(self: bigint): bigint | undefined {
 /**
  * `get-invalid-iterator-state()` operation.
  */
-export function getInvalidIteratorState(self: bigint): boolean {
+export function getInvalidIteratorState(self: bigint): bigint {
   const obj = lookupXPathResult(self);
-  return obj.invalidIteratorState;
+  return obj.invalidIteratorState ? 1n : 0n;
 }
 
 /**
