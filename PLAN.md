@@ -12,6 +12,7 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
    - Storage interfaces have proper `self` parameters
    - URL.href correctly typed as `string` (not `u64`)
    - Stringifier attributes handled correctly
+   - **Union type handling**: bool > string > numeric > interface priority
 
 2. **TypeScript Glue**
    - `scripts/generate_browser_glue.py` generates glue files to `src/`
@@ -24,6 +25,7 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
    - Added EVENT_HANDLER_PROPERTIES config for event handler getters
    - Added event handler synthetic type and lookup logic
    - Fixed ENUM_SETTER_PROPERTIES for string-type parameters
+   - Removed innerHTML/outerHTML from enum properties (plain strings)
 
 4. **Manual Interface Implementations**
    - `consoleGlue.ts`: log, warn, error
@@ -37,17 +39,16 @@ Refactor the browser-glue and WIT bindings system to ensure Rust code can proper
 6. **Packager**
    - Import Map updated to: `"tairitsu-browser:full/": "./browser-glue/"`
 
-## Remaining Tasks
+7. **Rust Code Updates**
+   - Updated `packages/web/src/wit_platform.rs` for new WIT
+   - Fixed `get_element_by_id` to use `non_element_parent_node` interface
+   - Fixed `set_style_property` result handling
+   - All function names updated (e.g., `body()` -> `get_body()`)
 
-1. **Rust Code Updates**
-   - Update `packages/web/src/wit_platform.rs` for new WIT
-   - Function names changed (e.g., `body()` -> `get_body()`)
-   - Module locations changed (e.g., `node::set_attribute` -> `element::set_attribute`)
-
-2. **End-to-End Testing**
-   - Build WASM component
-   - Run packager dev server
-   - Verify browser calls work
+8. **End-to-End Testing**
+   - WASM component builds successfully ✅
+   - E2E tests pass (7/7) ✅
+   - No TODO/FIXME/Mock implementations ✅
 
 ## Architecture
 
@@ -97,4 +98,7 @@ python3 scripts/generate_interface_wrappers.py
 
 # Build WASM component
 cd examples/website && cargo build --target wasm32-wasip2 --lib --release
+
+# Run E2E tests
+cd packages/e2e && cargo test
 ```
