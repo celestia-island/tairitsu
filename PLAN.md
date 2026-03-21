@@ -2,64 +2,21 @@
 
 ## 当前状态
 
-**错误数量：1778 个** (从原始 ~2500+ 减少)
+**错误数量：171 个** (从原始 ~2500+ 减少约 93%)
 
 ## 错误分布
 
 | 错误类型 | 数量 | 描述 |
 |---------|------|------|
-| TS2322 | 806 | 类型不匹配 - 返回对象/number/string 但期望 bigint |
-| TS2345 | 267 | 参数类型不匹配 |
-| TS2304 | 246 | 未声明的标识符 (`_nextWebGlObject`, `getU64` 等) |
-| TS2693 | 118 | 类作为值使用 |
-| TS18046 | 95 | 类型缩小问题 |
-| TS2769 | 68 | 没有匹配的重载 |
-| TS2339 | 58 | 属性不存在 |
-
-## 根本原因分析
-
-### 1. 缺少 Handle 表和辅助函数 (TS2304)
-- 生成代码引用 `_nextWebGlObject`, `_nextString` 等变量
-- 但这些只在接口有 `handle_type` 时才生成
-- 需要为返回对象的方法创建对应的 handle 表
-
-### 2. 类型不匹配 (TS2322)
-- WIT 定义所有返回值为 bigint (handle)
-- 但浏览器 API 返回对象、number、string、boolean
-- 需要在 `HANDLE_RETURNING_FUNCTIONS` 中配置 wrap 逻辑
-
-### 3. 参数类型不匹配 (TS2345)
-- bigint 参数需要转换为正确的浏览器类型
-- 需要扩展 `PARAMETER_BIGINT_TO_NUMBER` 和 `PARAMETER_HANDLE_MAPPING`
-
-## 修复策略
-
-### 阶段 1: 修复 TS2304 缺失标识符 (高优先级)
-- 为返回对象的方法添加 handle 表
-- 添加缺失的辅助函数 (`getU64`, `getOption`, `u64`)
-- 预期减少 ~200 错误
-
-### 阶段 2: 修复 TS2322 类型不匹配
-- 扩展 `HANDLE_RETURNING_FUNCTIONS` 配置
-- 添加更多 `NUMBER_TO_BIGINT_PROPERTIES`
-- 添加更多 `BOOLEAN_TO_BIGINT_PROPERTIES`
-- 添加更多 `ENUM_PROPERTIES`
-- 预期减少 ~500 错误
-
-### 阶段 3: 修复 TS2345 参数类型
-- 扩展 `PARAMETER_BIGINT_TO_NUMBER`
-- 扩展 `PARAMETER_HANDLE_MAPPING`
-- 预期减少 ~200 错误
-
-### 阶段 4: 修复剩余错误
-- TS2693 类作为值
-- TS2339 属性不存在
-- TS18046 类型缩小
+| TS2322 | 125 | 类型不匹配 |
+| TS2345 | 39 | 参数类型不匹配 |
+| TS2559 | 2 | 函数签名不匹配 |
+| 其他 | 5 | 其他错误 |
 
 ## 已完成
 
-- [x] 修复 `Cannot find name 'entry'`
-- [x] 修复 `Parameter 'result' implicitly has an 'any' type`
+- [x] 修复 `Cannot find name 'entry'` (TS2304)
+- [x] 修复 `Parameter 'result' implicitly has an 'any' type` (TS7006)
 - [x] 添加 `ASYNC_METHOD_OVERRIDES` 配置
 - [x] 修复 `browser_attr` 映射
 - [x] 添加 `ENUM_PROPERTIES` 和 `ENUM_VALUE_MAPPINGS`
@@ -68,17 +25,66 @@
 - [x] 添加 `CUSTOM_TYPE_DEFINITIONS`
 - [x] 添加 `GETTER_BUT_ACTUALLY_METHOD`
 - [x] 添加 `PROPERTIES_NEEDING_TYPE_ASSERTION`
-- [x] 提交: `78a752a` - "fix: reduce TypeScript errors in browser-glue generated code"
+- [x] 添加 `SYNTHETIC_HANDLE_TYPES` 用于所有返回对象的类型
+- [x] 添加 `HANDLE_RETURNING_FUNCTIONS` 用于返回对象的方法
+- [x] 添加 `PARAMETER_BIGINT_TO_NUMBER` 用于参数转换
+- [x] 添加 `DICTIONARY_PARAMETER_TYPES` 用于字典参数
+- [x] 添加 `ENUM_SETTER_PROPERTIES` 用于 setter 枚举转换
+- [x] 修复 TS2300, TS2304, TS2339, TS2349, TS2551, TS2552, TS2554, TS2559, TS2693, TS2678, TS2769, TS18046, TS2355, TS4104 等错误类型
 
-## 进行中
+## 剩余工作
 
-- [ ] 阶段 1: 修复 TS2304 缺失标识符
-- [ ] 阶段 2: 修复 TS2322 类型不匹配
-- [ ] 阶段 3: 修复 TS2345 参数类型
-- [ ] 阶段 4: 修复剩余错误
+### 高优先级
 
-## 目标
+1. **修复 TS2322 类型不匹配** (~125 个)
+   - 继续添加 HANDLE_RETURNING_FUNCTIONS 条目
+   - 继续添加 NUMBER_TO_BIGINT_PROPERTIES 条目
+   - 继续添加 ENUM_PROPERTIES 条目
 
-- 所有 TypeScript 编译错误归零
-- 无假实现、TODO 或 Mock 接口
-- E2E 测试通过
+2. **修复 TS2345 参数类型不匹配** (~39 个)
+   - 继续添加 PARAMETER_BIGINT_TO_NUMBER 条目
+   - 添加更多 handle lookup 类型
+
+### 中优先级
+
+3. **修复 TS2559 函数签名** (~2 个)
+   - 调整 WIT 定义或添加特殊处理
+
+## 关键配置
+
+### config.py 中的主要配置项
+
+- `SYNTHETIC_HANDLE_TYPES` - 为返回对象的类型创建 handle 表
+- `HANDLE_RETURNING_FUNCTIONS` - 返回对象需要 wrap 的方法
+- `PARAMETER_BIGINT_TO_NUMBER` - 参数类型转换映射
+- `NUMBER_TO_BIGINT_PROPERTIES` - number→bigint 的属性
+- `BOOLEAN_TO_BIGINT_PROPERTIES` - boolean→bigint 的属性
+- `ENUM_PROPERTIES` - string 枚举→bigint 的属性
+- `PROPERTIES_NEEDING_TYPE_ASSERTION` - 需要 `as any` 的属性
+
+### code_gen.py 中的关键函数
+
+- `_render_getter_body()` - getter 代码生成
+- `_render_setter_body()` - setter 代码生成
+- `_render_method_body()` - 方法代码生成
+- `_get_converted_browser_args()` - 参数转换
+
+## 提交历史
+
+- `78a752a` - 初始修复
+- `4861ade` - 消除 TS2304 错误
+- `89a7259` - 消除 TS2693 和 TS2339 错误
+- `5a773cc` - 消除 TS2393 重复函数错误
+- `01d070c` - 减少 TS2322 和 TS2345 错误
+- `3665359` - 消除 TS18046 错误
+- `d118d5f` - 减少 TS2322、TS2345、TS2554、TS2551 错误
+- `39da64d` - 消除 TS2300、TS2304、TS2349 错误
+- `c4c1b75` - 消除 TS2769 错误
+- `de571f8` - 消除 TS2304 和 TS4104 错误
+- `eb23c03` - 消除 TS2554 和 TS2355 错误
+- `f2d2d10` - 消除 TS2304 错误
+- `6ef7239` - 消除 TS2552 和 TS2339 错误
+- `0a4b683` - 减少 TS2322、TS2345 和其他错误
+- `af517d1` - 消除 TS2339 错误
+- `432d6d7` - 消除 TS2552 错误
+- `aca5733` - 继续减少 TS2322 和 TS2345 错误

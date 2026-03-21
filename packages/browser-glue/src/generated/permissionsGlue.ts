@@ -365,7 +365,7 @@ export function getName(self: bigint): bigint {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): bigint {
+export function getOnchange(self: bigint): string {
   const obj = lookupPermissionStatus(self);
   return obj.onchange;
 }

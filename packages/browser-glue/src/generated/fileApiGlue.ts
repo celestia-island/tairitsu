@@ -240,7 +240,7 @@ function lookupFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: number } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -263,7 +263,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): string {
+export function resultVal(handle: bigint): string | undefined {
   const obj = lookupFileReader(handle);
   return (obj as any).result() ?? undefined;
 }
@@ -290,7 +290,7 @@ function lookupFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): bigint {
   const obj = lookupFileList(handle);
   return (obj as any).length();
 }
