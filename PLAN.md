@@ -2,35 +2,62 @@
 
 ## 当前状态
 
-**错误数量：171 个** (从原始 ~2500+ 减少约 93%)
+**错误数量：25 个** (从原始 ~2500+ 减少约 99%)
 
-## 错误分布
+## 剩余错误分析
 
-| 错误类型 | 数量 | 描述 |
-|---------|------|------|
-| TS2322 | 125 | 类型不匹配 |
-| TS2345 | 39 | 参数类型不匹配 |
-| TS2559 | 2 | 函数签名不匹配 |
-| 其他 | 5 | 其他错误 |
+剩余 25 个错误大多是 **WIT 定义 Bug**，WIT 文件中定义的类型与实际浏览器 DOM API 类型不匹配：
+
+| 错误类型 | 原因 | 解决方案 |
+|---------|------|---------|
+| string vs number | WIT 定义为 string，DOM 返回 number | 修复 WIT 文件 |
+| string vs bigint | WIT 定义为 bigint，DOM 返回 string | 修复 WIT 文件或添加枚举转换 |
+| boolean vs number | WIT 定义为 boolean，DOM 返回 number | 修复 WIT 文件 |
+| undefined 参数 | 生成器可能错误添加 | 需要调查生成器逻辑 |
 
 ## 已完成
 
-- [x] 修复 `Cannot find name 'entry'` (TS2304)
-- [x] 修复 `Parameter 'result' implicitly has an 'any' type` (TS7006)
-- [x] 添加 `ASYNC_METHOD_OVERRIDES` 配置
-- [x] 修复 `browser_attr` 映射
-- [x] 添加 `ENUM_PROPERTIES` 和 `ENUM_VALUE_MAPPINGS`
-- [x] 添加 `NUMBER_TO_BIGINT_PROPERTIES`
-- [x] 添加 `BOOLEAN_TO_BIGINT_PROPERTIES`
-- [x] 添加 `CUSTOM_TYPE_DEFINITIONS`
-- [x] 添加 `GETTER_BUT_ACTUALLY_METHOD`
-- [x] 添加 `PROPERTIES_NEEDING_TYPE_ASSERTION`
-- [x] 添加 `SYNTHETIC_HANDLE_TYPES` 用于所有返回对象的类型
-- [x] 添加 `HANDLE_RETURNING_FUNCTIONS` 用于返回对象的方法
-- [x] 添加 `PARAMETER_BIGINT_TO_NUMBER` 用于参数转换
-- [x] 添加 `DICTIONARY_PARAMETER_TYPES` 用于字典参数
-- [x] 添加 `ENUM_SETTER_PROPERTIES` 用于 setter 枚举转换
-- [x] 修复 TS2300, TS2304, TS2339, TS2349, TS2551, TS2552, TS2554, TS2559, TS2693, TS2678, TS2769, TS18046, TS2355, TS4104 等错误类型
+### 配置项添加
+- [x] `SYNTHETIC_HANDLE_TYPES` - 为返回对象的类型创建 handle 表
+- [x] `HANDLE_RETURNING_FUNCTIONS` - 返回对象需要 wrap 的方法
+- [x] `HANDLE_RETURNING_ARRAY_PROPERTIES` - 返回对象数组的方法
+- [x] `PARAMETER_BIGINT_TO_NUMBER` - 参数类型转换映射
+- [x] `PARAMETER_HANDLE_MAPPING` - 参数 handle lookup 映射
+- [x] `NUMBER_TO_BIGINT_PROPERTIES` - number→bigint 的属性
+- [x] `BOOLEAN_TO_BIGINT_PROPERTIES` - boolean→bigint 的属性
+- [x] `ENUM_PROPERTIES` - string 枚举→bigint 的属性
+- [x] `ENUM_VALUE_MAPPINGS` - 枚举值映射
+- [x] `ENUM_SETTER_PROPERTIES` - bigint→string 枚举的 setter
+- [x] `PROPERTIES_NEEDING_TYPE_ASSERTION` - 需要 `as any` 的属性
+- [x] `METHODS_NEEDING_TYPE_ASSERTION` - 需要 `as any` 的方法
+- [x] `ASYNC_METHOD_OVERRIDES` - 异步方法标记
+- [x] `GETTER_BUT_ACTUALLY_METHOD` - getter 实际是方法
+- [x] `SETTER_BUT_ACTUALLY_METHOD` - setter 实际是方法
+- [x] `READONLY_ARRAY_PROPERTIES` - 只读数组属性
+- [x] `CUSTOM_TYPE_DEFINITIONS` - 自定义类型定义
+- [x] `DICTIONARY_PARAMETER_TYPES` - 字典参数类型
+- [x] `GETTER_RETURN_COALESCING` - getter 返回值合并
+- [x] `GETTER_HANDLE_NON_NULL_ASSERTION` - getter handle 非空断言
+
+### 代码生成器修复
+- [x] 修复重复 return 语句 (NUMBER_TO_BIGINT_PROPERTIES)
+- [x] 添加 `optional-handle-strict` 转换类型
+- [x] 添加 `boolean-or-false` 转换类型
+- [x] 添加 `spread-handle-array` 转换类型
+- [x] 添加 `handle-array` 转换类型
+- [x] 添加 event-handler 类型处理
+
+### 错误类型修复
+- [x] 修复 TS2304 (Cannot find name)
+- [x] 修复 TS2339 (Property not exist)
+- [x] 修复 TS2345 (Parameter type mismatch)
+- [x] 修复 TS2551 (Method name mismatch)
+- [x] 修复 TS2552 (Cannot find name)
+- [x] 修复 TS2554 (Argument count mismatch)
+- [x] 修复 TS2393 (Duplicate function)
+- [x] 修复 TS2769 (No overload matches)
+- [x] 修复 TS18046 (Type narrowing)
+- [x] 修复 TS2678 (Type comparison)
 
 ## 剩余工作
 
@@ -71,20 +98,5 @@
 
 ## 提交历史
 
-- `78a752a` - 初始修复
-- `4861ade` - 消除 TS2304 错误
-- `89a7259` - 消除 TS2693 和 TS2339 错误
-- `5a773cc` - 消除 TS2393 重复函数错误
-- `01d070c` - 减少 TS2322 和 TS2345 错误
-- `3665359` - 消除 TS18046 错误
-- `d118d5f` - 减少 TS2322、TS2345、TS2554、TS2551 错误
-- `39da64d` - 消除 TS2300、TS2304、TS2349 错误
-- `c4c1b75` - 消除 TS2769 错误
-- `de571f8` - 消除 TS2304 和 TS4104 错误
-- `eb23c03` - 消除 TS2554 和 TS2355 错误
-- `f2d2d10` - 消除 TS2304 错误
-- `6ef7239` - 消除 TS2552 和 TS2339 错误
-- `0a4b683` - 减少 TS2322、TS2345 和其他错误
-- `af517d1` - 消除 TS2339 错误
-- `432d6d7` - 消除 TS2552 错误
-- `aca5733` - 继续减少 TS2322 和 TS2345 错误
+- 28 commits on dev branch
+- Error reduction: ~2500 → 25 (99% reduction)
