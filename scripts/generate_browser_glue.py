@@ -93,13 +93,11 @@ def run_generate(
 
     if not dry_run:
         output_dir.mkdir(parents=True, exist_ok=True)
-        generated_dir = output_dir / "generated"
-        generated_dir.mkdir(parents=True, exist_ok=True)
 
     for gen_domain in generated_domains:
         wit_path = wit_dir / f"{gen_domain.name}.wit"
         content = code_gen.render_module(gen_domain, str(wit_path))
-        dest = output_dir / "generated" / f"{gen_domain.export_name}Glue.ts"
+        dest = output_dir / f"{gen_domain.export_name}Glue.ts"
 
         if dry_run:
             log_info(f"dry-run: {dest.name} ({len(content):,} bytes)")
@@ -111,7 +109,7 @@ def run_generate(
 
     if generated_domains:
         index_content = code_gen.render_index(generated_domains)
-        index_dest = output_dir / "generated" / "index.ts"
+        index_dest = output_dir / "index.ts"
 
         if dry_run:
             log_info(f"dry-run: {index_dest.name} ({len(index_content):,} bytes)")

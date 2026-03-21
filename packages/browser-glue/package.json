@@ -1,7 +1,7 @@
 {
   "name": "@tairitsu/browser-glue",
   "version": "0.1.0",
-  "description": "TypeScript/JavaScript adaptor glue for Tairitsu browser WIT worlds",
+  "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,129 +11,69 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./dom": {
-      "import": "./dist/dom.js",
-      "types": "./dist/dom.d.ts"
-    },
-    "./events": {
-      "import": "./dist/events.js",
-      "types": "./dist/events.d.ts"
-    },
-    "./http": {
-      "import": "./dist/http.js",
-      "types": "./dist/http.d.ts"
-    },
-    "./canvas": {
-      "import": "./dist/canvas.js",
-      "types": "./dist/canvas.d.ts"
-    },
     "./handles": {
       "import": "./dist/handles.js",
       "types": "./dist/handles.d.ts"
     },
-    "./generated": {
-      "import": "./dist/generated-index.js",
-      "types": "./dist/generated-index.d.ts"
+    "./async": {
+      "import": "./dist/async.js",
+      "types": "./dist/async.d.ts"
     },
-    "./generated/auth": {
-      "import": "./dist/generated/authGlue.js",
-      "types": "./dist/generated/authGlue.d.ts"
+    "./dom": {
+      "import": "./dist/domGlue.js",
+      "types": "./dist/domGlue.d.ts"
     },
-    "./generated/crypto": {
-      "import": "./dist/generated/cryptoGlue.js",
-      "types": "./dist/generated/cryptoGlue.d.ts"
+    "./events": {
+      "import": "./dist/eventsGlue.js",
+      "types": "./dist/eventsGlue.d.ts"
     },
-    "./generated/css": {
-      "import": "./dist/generated/cssGlue.js",
-      "types": "./dist/generated/cssGlue.d.ts"
+    "./fetch": {
+      "import": "./dist/fetchGlue.js",
+      "types": "./dist/fetchGlue.d.ts"
     },
-    "./generated/device": {
-      "import": "./dist/generated/deviceGlue.js",
-      "types": "./dist/generated/deviceGlue.d.ts"
+    "./canvas": {
+      "import": "./dist/canvasGlue.js",
+      "types": "./dist/canvasGlue.d.ts"
     },
-    "./generated/file-api": {
-      "import": "./dist/generated/fileApiGlue.js",
-      "types": "./dist/generated/fileApiGlue.d.ts"
+    "./html": {
+      "import": "./dist/htmlGlue.js",
+      "types": "./dist/htmlGlue.d.ts"
     },
-    "./generated/geolocation": {
-      "import": "./dist/generated/geolocationGlue.js",
-      "types": "./dist/generated/geolocationGlue.d.ts"
+    "./css": {
+      "import": "./dist/cssGlue.js",
+      "types": "./dist/cssGlue.d.ts"
     },
-    "./generated/html": {
-      "import": "./dist/generated/htmlGlue.js",
-      "types": "./dist/generated/htmlGlue.d.ts"
+    "./crypto": {
+      "import": "./dist/cryptoGlue.js",
+      "types": "./dist/cryptoGlue.d.ts"
     },
-    "./generated/indexed-db": {
-      "import": "./dist/generated/indexedDbGlue.js",
-      "types": "./dist/generated/indexedDbGlue.d.ts"
+    "./media": {
+      "import": "./dist/mediaGlue.js",
+      "types": "./dist/mediaGlue.d.ts"
     },
-    "./generated/media": {
-      "import": "./dist/generated/mediaGlue.js",
-      "types": "./dist/generated/mediaGlue.d.ts"
+    "./performance": {
+      "import": "./dist/performanceGlue.js",
+      "types": "./dist/performanceGlue.d.ts"
     },
-    "./generated/notifications": {
-      "import": "./dist/generated/notificationsGlue.js",
-      "types": "./dist/generated/notificationsGlue.d.ts"
+    "./storage": {
+      "import": "./dist/storageGlue.js",
+      "types": "./dist/storageGlue.d.ts"
     },
-    "./generated/observers": {
-      "import": "./dist/generated/observersGlue.js",
-      "types": "./dist/generated/observersGlue.d.ts"
+    "./url": {
+      "import": "./dist/urlGlue.js",
+      "types": "./dist/urlGlue.d.ts"
     },
-    "./generated/payments": {
-      "import": "./dist/generated/paymentsGlue.js",
-      "types": "./dist/generated/paymentsGlue.d.ts"
+    "./workers": {
+      "import": "./dist/workersGlue.js",
+      "types": "./dist/workersGlue.d.ts"
     },
-    "./generated/performance": {
-      "import": "./dist/generated/performanceGlue.js",
-      "types": "./dist/generated/performanceGlue.d.ts"
+    "./webrtc": {
+      "import": "./dist/webrtcGlue.js",
+      "types": "./dist/webrtcGlue.d.ts"
     },
-    "./generated/permissions": {
-      "import": "./dist/generated/permissionsGlue.js",
-      "types": "./dist/generated/permissionsGlue.d.ts"
-    },
-    "./generated/resize-observer": {
-      "import": "./dist/generated/resizeObserverGlue.js",
-      "types": "./dist/generated/resizeObserverGlue.d.ts"
-    },
-    "./generated/service-workers": {
-      "import": "./dist/generated/serviceWorkersGlue.js",
-      "types": "./dist/generated/serviceWorkersGlue.d.ts"
-    },
-    "./generated/storage": {
-      "import": "./dist/generated/storageGlue.js",
-      "types": "./dist/generated/storageGlue.d.ts"
-    },
-    "./generated/streams": {
-      "import": "./dist/generated/streamsGlue.js",
-      "types": "./dist/generated/streamsGlue.d.ts"
-    },
-    "./generated/url": {
-      "import": "./dist/generated/urlGlue.js",
-      "types": "./dist/generated/urlGlue.d.ts"
-    },
-    "./generated/wasm": {
-      "import": "./dist/generated/wasmGlue.js",
-      "types": "./dist/generated/wasmGlue.d.ts"
-    },
-    "./generated/web-animations": {
-      "import": "./dist/generated/webAnimationsGlue.js",
-      "types": "./dist/generated/webAnimationsGlue.d.ts"
-    },
-    "./generated/webrtc": {
-      "import": "./dist/generated/webrtcGlue.js",
-      "types": "./dist/generated/webrtcGlue.d.ts"
-    },
-    "./generated/websockets": {
-      "import": "./dist/generated/websocketsGlue.js",
-      "types": "./dist/generated/websocketsGlue.d.ts"
-    },
-    "./generated/websocket": {
-      "import": "./dist/generated/websocketGlue.js",
-      "types": "./dist/generated/websocketGlue.d.ts"
-    },
-    "./generated/workers": {
-      "import": "./dist/generated/workersGlue.js",
-      "types": "./dist/generated/workersGlue.d.ts"
+    "./websocket": {
+      "import": "./dist/websocketGlue.js",
+      "types": "./dist/websocketGlue.d.ts"
     }
   },
   "scripts": {
