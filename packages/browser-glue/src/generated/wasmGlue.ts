@@ -289,14 +289,14 @@ export function exports(moduleObject: bigint): (bigint)[] {
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: EventHandlerRecord): (bigint)[] {
+export function imports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: EventHandlerRecord, sectionName: string): (Uint8Array)[] {
+export function customSections(moduleObject: bigint, sectionName: string): string {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -360,7 +360,7 @@ export function MemoryGrow(self: bigint, delta: boolean): bigint {
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): Uint8Array {
+export function toFixedLengthBuffer(self: bigint): bigint {
   const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -376,7 +376,7 @@ export function toResizableBuffer(self: bigint): Uint8Array {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): Uint8Array {
+export function getBuffer(self: bigint): bigint {
   const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
@@ -449,7 +449,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: number, value: string | undefined): void {
+export function _set(self: bigint, index: EventHandlerRecord, value: string | undefined): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -503,7 +503,7 @@ export function getValue(self: bigint): bigint {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: number): void {
+export function setValue(self: bigint, value: string): void {
   const obj = lookupGlobal(self);
   (obj as any).value = value;
 }
@@ -530,7 +530,7 @@ function lookupException(handle: bigint): Exception {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: bigint, index: number): bigint | undefined {
+export function getArg(self: bigint, exceptionTag: bigint, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -538,7 +538,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): bigin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): string {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }
@@ -546,7 +546,7 @@ export function is(self: bigint, exceptionTag: bigint): string {
 /**
  * `get-stack()` operation.
  */
-export function getStack(self: bigint): string {
+export function getStack(self: bigint): EventHandlerRecord {
   const obj = lookupException(self);
   return obj.stack;
 }

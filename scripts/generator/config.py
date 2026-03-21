@@ -1952,6 +1952,240 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("rtc-sctp-transport", "getTransport"): "rtc-ice-transport",
     # PaymentRequest
     ("payment-response", "getShippingAddress"): "payment-address",
+    # CSSKeyframesRule findRule returns CSSKeyframeRule | null
+    ("css-keyframes-rule", "findRule"): "css-keyframe-rule",
+    # Window getEvent returns Event | undefined
+    ("window", "getEvent"): "event",
+    # Element getAttributeNames returns string[]
+    ("element", "getAttributeNames"): "string-list",
+    # Gamepad getAxes/getButtons
+    ("gamepad", "getAxes"): "float-32-list",
+    ("gamepad", "getButtons"): "gamepad-button-list",
+    # PointerEvent getCoalescedEvents/getPredictedEvents
+    ("pointer-event", "getCoalescedEvents"): "pointer-event-list",
+    ("pointer-event", "getPredictedEvents"): "pointer-event-list",
+    # CSSStyleDeclaration getPropertyPriority returns string
+    ("css-style-declaration", "getPropertyPriority"): "string",
+    # CSSStyleDeclaration item returns string
+    ("css-style-declaration", "item"): "string",
+    # CSSRuleList item returns CSSRule
+    ("css-rule-list", "item"): "css-rule",
+    # Document createEvent returns Event
+    ("document", "createEvent"): "event",
+    # Event initEvent returns void
+    ("event", "composedPath"): "event-target-list",
+
+    # ParentNode firstElementChild/lastElementChild return Element
+    ("parent-node", "getFirstElementChild"): "element",
+    ("parent-node", "getLastElementChild"): "element",
+    # Slottable assignedSlot returns HTMLSlotElement
+    ("slottable", "getAssignedSlot"): "html-slot-element",
+    # HTMLIFrameElement getSVGDocument/getContentDocument return Document
+    ("htmli-frame-element", "getSvgDocument"): "document",
+    ("htmli-frame-element", "getContentDocument"): "document",
+    # HTMLObjectElement getSVGDocument/getContentDocument return Document
+    ("html-object-element", "getSvgDocument"): "document",
+    ("html-object-element", "getContentDocument"): "document",
+    # HTMLEmbedElement getSVGDocument returns Document
+    ("html-embed-element", "getSvgDocument"): "document",
+    # HTMLFrameElement getContentDocument returns Document
+    ("html-frame-element", "getContentDocument"): "document",
+    # HTMLSelectElement item/namedItem return HTMLOptionElement
+    ("html-select-element", "item"): "html-option-element",
+    ("html-select-element", "namedItem"): "html-option-element",
+    # HTMLOptionElement getForm returns HTMLFormElement
+    ("html-option-element", "getForm"): "html-form-element",
+    # HTMLLabelElement getForm returns HTMLFormElement
+    ("html-label-element", "getForm"): "html-form-element",
+    # TextTrackList item/getTextTrack return TextTrack
+    ("text-track-list", "item"): "text-track",
+    ("text-track-list", "getTextTrack"): "text-track",
+    # Event getTarget/getCurrentTarget return EventTarget
+    ("event", "getTarget"): "event-target",
+    ("event", "getCurrentTarget"): "event-target",
+    # FocusEvent getRelatedTarget returns EventTarget
+    ("focus-event", "getRelatedTarget"): "event-target",
+    # MouseEvent getRelatedTarget returns EventTarget
+    ("mouse-event", "getRelatedTarget"): "event-target",
+    # Element setAttributeNodeNS returns Attr
+    ("element", "setAttributeNodeNs"): "attr",
+    # HTMLCanvasElement getCanvas returns HTMLCanvasElement
+    ("canvas-state", "getCanvas"): "any",
+    ("offscreen-canvas-state", "getCanvas"): "any",
+    # CountQueuingStrategy size returns function, need any
+    ("count-queuing-strategy", "getSize"): "any",
+    # ByteLengthQueuingStrategy size returns function, need any
+    ("byte-length-queuing-strategy", "getSize"): "any",
+    # Performance getEntries returns PerformanceEntryList
+    ("performance", "getEntries"): "any",
+    ("performance", "getEntriesByType"): "any",
+    ("performance", "getEntriesByName"): "any",
+    # MediaRecorder getStream returns MediaStream
+    ("media-recorder", "getStream"): "media-stream",
+    # PluginArray item/namedItem return Plugin
+    ("plugin-array", "item"): "plugin",
+    ("plugin-array", "namedItem"): "plugin",
+    # MimeTypeArray item/namedItem return MimeType
+    ("mime-type-array", "item"): "mime-type",
+    ("mime-type-array", "namedItem"): "mime-type",
+    # Plugin item/namedItem return MimeType
+    ("plugin", "item"): "mime-type",
+    ("plugin", "namedItem"): "mime-type",
+    # MessageChannel getPort1/getPort2 return MessagePort
+    ("message-channel", "getPort1"): "message-port",
+    ("message-channel", "getPort2"): "message-port",
+    # Storage getLocalStorage/getSessionStorage return Storage
+    ("window", "getLocalStorage"): "storage",
+    ("window", "getSessionStorage"): "storage",
+    # NavigatorStorage getStorage returns StorageManager
+    ("navigator-storage", "getStorage"): "storage-manager",
+    # HTMLMediaElement getTextTrack returns TextTrack
+    ("html-media-element", "getTextTrack"): "text-track",
+    # HTMLMediaElement addTextTrack returns TextTrack
+    ("html-media-element", "addTextTrack"): "text-track",
+    # HTMLTableElement createCaption/createTHead/createTFoot/createTBody/insertRow
+    ("html-table-element", "createCaption"): "html-table-caption-element",
+    ("html-table-element", "createTHead"): "html-table-section-element",
+    ("html-table-element", "createTFoot"): "html-table-section-element",
+    ("html-table-element", "createTBody"): "html-table-section-element",
+    ("html-table-element", "insertRow"): "html-table-row-element",
+    # HTMLTableSectionElement insertRow returns HTMLTableRowElement
+    ("html-table-section-element", "insertRow"): "html-table-row-element",
+    # HTMLTableRowElement insertCell returns HTMLTableCellElement
+    ("html-table-row-element", "insertCell"): "html-table-cell-element",
+    # DataTransfer getItems/getFiles return handles
+    ("data-transfer", "getItems"): "data-transfer-item-list",
+    ("data-transfer", "getFiles"): "file-list",
+    # DataTransferItemList item returns DataTransferItem
+    ("data-transfer-item-list", "item"): "data-transfer-item",
+    # FileList item returns File
+    ("file-list", "item"): "file",
+    # MediaStream getTrackById returns MediaStreamTrack
+    ("media-stream", "getTrackById"): "media-stream-track",
+    # ViewTransition startViewTransition returns ViewTransition
+    ("document", "startViewTransition"): "view-transition",
+    # IntersectionObserver getRoot returns Element
+    ("intersection-observer", "getRoot"): "element",
+    # ClipboardItem getTypes returns string array as handle
+    ("clipboard-item", "getTypes"): "string-list",
+    # SpeechSynthesis getVoices returns SpeechSynthesisVoiceList
+    ("speech-synthesis", "getVoices"): "speech-synthesis-voice-list",
+    # SpeechSynthesisVoiceList item returns SpeechSynthesisVoice
+    ("speech-synthesis-voice-list", "item"): "speech-synthesis-voice",
+    # RTCRtpSender replaceTrack returns Promise
+    ("rtc-rtp-sender", "replaceTrack"): "promise-void",
+    # HTMLTemplateElement getContent returns DocumentFragment
+    ("html-template-element", "getContent"): "document-fragment",
+    # ResizeObserverEntry getTarget returns Element
+    ("resize-observer-entry", "getTarget"): "element",
+    # SubmitEvent getSubmitter returns HTMLElement
+    ("submit-event", "getSubmitter"): "html-element",
+    # Navigation getCurrentEntry/getActivation/getTransition return handles
+    ("navigation", "getCurrentEntry"): "navigation-history-entry",
+    ("navigation", "getActivation"): "navigation-activation",
+    ("navigation", "getTransition"): "view-transition",
+    # HTMLElement attachInternals returns ElementInternals
+    ("html-element", "attachInternals"): "element-internals",
+    # ClipboardItem getType should return Promise<Blob>
+    ("clipboard-item", "getType"): "promise-any",
+    # OffscreenCanvas transferToImageBitmap returns ImageBitmap
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # HTMLCanvasElement transferControlToOffscreen returns OffscreenCanvas
+    ("html-canvas-element", "transferControlToOffscreen"): "offscreencanvas",
+
+    # CSSRuleList item returns CSSRule
+    ("css-rule-list", "item"): "css-rule",
+    # Event getTarget/getCurrentTarget return EventTarget
+    ("event", "getTarget"): "event-target",
+    ("event", "getCurrentTarget"): "event-target",
+    # FocusEvent getRelatedTarget returns EventTarget
+    ("focus-event", "getRelatedTarget"): "event-target",
+    # MouseEvent getRelatedTarget returns EventTarget
+    ("mouse-event", "getRelatedTarget"): "event-target",
+    # TextTrackList item returns TextTrack
+    ("text-track-list", "item"): "text-track",
+    # TextTrackCueList item/getCueById return TextTrackCue
+    ("text-track-cue-list", "item"): "text-track-cue",
+    ("text-track-cue-list", "getCueById"): "text-track-cue",
+    # FileList item returns File
+    ("file-list", "item"): "file",
+    # MediaStream getTrackById returns MediaStreamTrack
+    ("media-stream", "getTrackById"): "media-stream-track",
+    # ViewTransition startViewTransition returns ViewTransition
+    ("document", "startViewTransition"): "view-transition",
+    # IntersectionObserver getRoot returns Element
+    ("intersection-observer", "getRoot"): "element",
+    # ClipboardItem getTypes returns string array as handle
+    ("clipboard-item", "getTypes"): "string-list",
+    # SpeechSynthesis getVoices returns SpeechSynthesisVoiceList
+    ("speech-synthesis", "getVoices"): "speech-synthesis-voice-list",
+    # SpeechSynthesisVoiceList item returns SpeechSynthesisVoice
+    ("speech-synthesis-voice-list", "item"): "speech-synthesis-voice",
+    # RTCRtpSender replaceTrack returns Promise
+    ("rtc-rtp-sender", "replaceTrack"): "promise-void",
+    # HTMLTemplateElement getContent returns DocumentFragment
+    ("html-template-element", "getContent"): "document-fragment",
+    # ResizeObserverEntry getTarget returns Element
+    ("resize-observer-entry", "getTarget"): "element",
+    # SubmitEvent getSubmitter returns HTMLElement
+    ("submit-event", "getSubmitter"): "html-element",
+    # Navigation getCurrentEntry/getActivation/getTransition return handles
+    ("navigation", "getCurrentEntry"): "navigation-history-entry",
+    ("navigation", "getActivation"): "navigation-activation",
+    ("navigation", "getTransition"): "view-transition",
+    # HTMLElement attachInternals returns ElementInternals
+    ("html-element", "attachInternals"): "element-internals",
+    # ClipboardItem getType should return Promise<Blob>
+    ("clipboard-item", "getType"): "promise-any",
+    # OffscreenCanvas transferToImageBitmap returns ImageBitmap
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # HTMLCanvasElement transferControlToOffscreen returns OffscreenCanvas
+    ("html-canvas-element", "transferControlToOffscreen"): "offscreencanvas",
+    # CSSRuleList item returns CSSRule
+    ("css-rule-list", "item"): "css-rule",
+    # Event getTarget/getCurrentTarget return EventTarget
+    ("event", "getTarget"): "event-target",
+    ("event", "getCurrentTarget"): "event-target",
+    # FocusEvent getRelatedTarget returns EventTarget
+    ("focus-event", "getRelatedTarget"): "event-target",
+    # MouseEvent getRelatedTarget returns EventTarget
+    ("mouse-event", "getRelatedTarget"): "event-target",
+    # HTMLMediaElement getTextTrack returns TextTrack (for multiple track getters)
+    ("html-media-element", "getTextTrack1"): "text-track",
+    ("html-media-element", "getTextTrack2"): "text-track",
+    ("html-media-element", "getTextTrack3"): "text-track",
+    # HTMLMediaElement addTextTrack returns TextTrack
+    ("html-media-element", "addTextTrack"): "text-track",
+    # HTMLInputElement getForm returns HTMLFormElement
+    ("html-input-element", "getForm"): "html-form-element",
+    # HTMLSelectElement getForm returns HTMLFormElement
+    ("html-select-element", "getForm"): "html-form-element",
+    # HTMLTextAreaElement getForm returns HTMLFormElement
+    ("html-text-area-element", "getForm"): "html-form-element",
+    # HTMLButtonElement getForm returns HTMLFormElement
+    ("html-button-element", "getForm"): "html-form-element",
+    # HTMLFieldSetElement getForm returns HTMLFormElement
+    ("html-field-set-element", "getForm"): "html-form-element",
+    # HTMLOutputElement getForm returns HTMLFormElement
+    ("html-output-element", "getForm"): "html-form-element",
+    # HTMLObjectElement getForm returns HTMLFormElement
+    ("html-object-element", "getForm"): "html-form-element",
+    # HTMLCanvasElement getCanvas returns HTMLCanvasElement
+    ("html-canvas-element", "getCanvas"): "html-canvas-element",
+    # CanvasRenderingContext2D getCanvas returns HTMLCanvasElement | OffscreenCanvas
+    ("canvas-rendering-context", "getCanvas"): "any",
+    # OffscreenCanvasRenderingContext2D getCanvas returns OffscreenCanvas
+    ("offscreencanvas-rendering-context", "getCanvas"): "offscreencanvas",
+    # TextTrackList getTrackById returns TextTrack
+    ("text-track-list", "getTrackById"): "text-track",
+    # HTMLInputElement getFiles returns FileList
+    ("html-input-element", "getFiles"): "file-list",
+    # CSSRuleList item returns CSSRule
+    ("css-rule-list", "item"): "css-rule",
+    # CSSGroupingRule getCssRules returns CSSRuleList
+    ("css-grouping-rule", "getCssRules"): "css-rule-list",
+    # CSSStyleSheet getCssRules returns CSSRuleList
+    ("css-style-sheet", "getCssRules"): "css-rule-list",
 }
 
 
@@ -3238,6 +3472,297 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("html-media-element", "add-text-track", "kind"): "enum:TextTrackKind",
     # ShadowRoot methods
     ("shadow-root", "set-html-unsafe", "html"): "string",
+    # TextTrack methods - cue parameter needs handle lookup
+    ("text-track", "add-cue", "cue"): "handle:text-track-cue",
+    ("text-track", "remove-cue", "cue"): "handle:text-track-cue",
+    # HTMLSelectElement methods - element parameter needs handle lookup
+    ("html-select-element", "add", "element"): "handle:html-option-element",
+    ("html-select-element", "add", "before"): "any",
+    # HTMLTableElement methods - index parameter needs Number()
+    ("html-table-element", "insert-row", "index"): True,
+    ("html-table-section-element", "insert-row", "index"): True,
+    ("html-table-row-element", "insert-cell", "index"): True,
+    # Canvas methods - image parameter needs handle lookup
+    ("canvas-fill-stroke-styles", "create-pattern", "image"): "handle:canvas-image-source",
+    # HTMLSlotElement methods
+    ("html-slot-element", "assign", "nodes"): "node-array",
+    # XMLHttpRequest methods
+    ("xml-http-request", "send", "body"): "any",
+    # HTMLElement focus options
+    ("html-element", "focus", "options"): "any",
+    # FormData append - value can be string or blob
+    ("form-data", "append", "value"): "any",
+    ("form-data", "append", "blob-name"): "string",
+    # Canvas drawImage - image needs handle lookup
+    ("canvas-draw-image", "draw-image", "image"): "handle:canvas-image-source",
+    # Canvas createImageData - imagedata parameter needs handle lookup
+    ("canvas-image-data", "put-image-data", "image-data"): "handle:image-data",
+    # Canvas fill/stroke with Path2D
+    ("canvas-draw-path", "fill", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "stroke", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "clip", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "is-point-in-path", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "is-point-in-stroke", "path"): "optional-handle:path-2-d",
+    # EventTarget dispatchEvent
+    ("event-target", "dispatch-event", "event"): "handle:event",
+    # CustomElementRegistry define
+    ("custom-element-registry", "define", "constructor"): "any",
+    # MutationRecord target
+    ("mutation-observer", "observe", "target"): "handle:node",
+    ("mutation-observer", "observe", "options"): "any",
+    # Request body
+    ("request", "new-request", "body"): "any",
+    # OffscreenCanvas convertToBlob
+    ("offscreencanvas", "convert-to-blob", "options"): "any",
+    # ResizeObserver observe
+    ("resize-observer", "observe", "target"): "handle:element",
+    ("resize-observer", "observe", "options"): "any",
+    # IntersectionObserver observe
+    ("intersection-observer", "observe", "target"): "handle:element",
+    # HTMLCanvasElement toBlob callback
+    ("html-canvas-element", "to-blob", "callback"): "any",
+    # HTMLCanvasElement toDataURL
+    ("html-canvas-element", "to-data-url", "type"): "string",
+    ("html-canvas-element", "to-data-url", "quality"): True,
+    # Window requestAnimationFrame
+    ("window", "request-animation-frame", "callback"): "any",
+    # Worklet addModule
+    ("worklet", "add-module", "module-url"): "string",
+    ("worklet", "add-module", "options"): "any",
+    # StorageEvent initStorageEvent
+    ("storage-event", "init-storage-event", "type-arg"): "string",
+    # Event initEvent
+    ("event", "init-event", "type-arg"): "string",
+    # MediaRecorder start
+    ("media-recorder", "start", "timeslice"): True,
+    # Element getAttributeNS - namespace can be undefined, convert to null
+    ("element", "get-attribute-ns", "namespace"): "string-or-null",
+    # Canvas createPattern - image needs handle lookup
+    ("canvas-fill-stroke-styles", "create-pattern", "image"): "handle:canvas-image-source",
+    # Canvas drawImage - image needs handle lookup
+    ("canvas-draw-image", "draw-image", "image"): "handle:canvas-image-source",
+    # Canvas putImageData - imageData needs handle lookup
+    ("canvas-image-data", "put-image-data", "image-data"): "handle:image-data",
+    # TextTrack addCue/removeCue - cue needs handle lookup
+    ("text-track", "add-cue", "cue"): "handle:text-track-cue",
+    ("text-track", "remove-cue", "cue"): "handle:text-track-cue",
+    # HTMLElement focus - options is dictionary
+    ("html-element", "focus", "options"): "any",
+    # HTMLSlotElement assign - nodes array
+    ("html-slot-element", "assign", "nodes"): "node-array",
+    # HTMLSlotElement assignedNodes/assignedElements - options
+    ("html-slot-element", "assigned-nodes", "options"): "any",
+    ("html-slot-element", "assigned-elements", "options"): "any",
+    # Window requestAnimationFrame - callback
+    ("window", "request-animation-frame", "callback"): "any",
+    # Window postMessage
+    ("window", "post-message", "message"): "any",
+    ("window", "post-message", "options"): "any",
+    # MessagePort postMessage
+    ("message-port", "post-message", "message"): "any",
+    ("message-port", "post-message", "transfer"): "any",
+    # URL createObjectURL
+    ("url", "create-object-url", "object"): "any",
+    # Worklet addModule
+    ("worklet", "add-module", "module-url"): "string",
+    ("worklet", "add-module", "options"): "any",
+    # MutationObserver observe
+    ("mutation-observer", "observe", "target"): "handle:node",
+    ("mutation-observer", "observe", "options"): "any",
+    # IntersectionObserver observe
+    ("intersection-observer", "observe", "target"): "handle:element",
+    # MouseEvent initMouseEvent
+    ("mouse-event", "init-mouse-event", "type-arg"): "string",
+    ("mouse-event", "init-mouse-event", "bubbles-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "cancelable-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "view-arg"): "optional-handle:window",
+    ("mouse-event", "init-mouse-event", "detail-arg"): True,
+    ("mouse-event", "init-mouse-event", "screen-x-arg"): True,
+    ("mouse-event", "init-mouse-event", "screen-y-arg"): True,
+    ("mouse-event", "init-mouse-event", "client-x-arg"): True,
+    ("mouse-event", "init-mouse-event", "client-y-arg"): True,
+    ("mouse-event", "init-mouse-event", "ctrl-key-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "alt-key-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "shift-key-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "meta-key-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "button-arg"): True,
+    ("mouse-event", "init-mouse-event", "related-target-arg"): "optional-handle:event-target",
+    # UIEvent initUIEvent
+    ("ui-event", "init-ui-event", "type-arg"): "string",
+    ("ui-event", "init-ui-event", "bubbles-arg"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "cancelable-arg"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "view-arg"): "optional-handle:window",
+    ("ui-event", "init-ui-event", "detail-arg"): True,
+    # MediaSession setActionHandler
+    ("media-session", "set-action-handler", "action"): "any",
+    ("media-session", "set-action-handler", "handler"): "any",
+    # CanvasImageData getImageData settings
+    ("canvas-image-data", "get-image-data", "settings"): "any",
+    # OffscreenCanvas convertToBlob
+    ("offscreencanvas", "convert-to-blob", "options"): "any",
+    # HTMLCanvasElement toDataURL
+    ("html-canvas-element", "to-data-url", "type"): "string",
+    ("html-canvas-element", "to-data-url", "quality"): True,
+    # Request body
+    ("request", "new-request", "body"): "any",
+    # MediaCapabilities
+    ("media-capabilities", "decoding-info", "configuration"): "any",
+    ("media-capabilities", "encoding-info", "configuration"): "any",
+    # MediaDevices
+    ("media-devices", "get-user-media", "constraints"): "any",
+    ("media-devices", "get-display-media", "options"): "any",
+    # MediaStream
+    ("media-stream", "add-track", "track"): "handle:media-stream-track",
+    ("media-stream", "remove-track", "track"): "handle:media-stream-track",
+    # EventTarget dispatchEvent
+    ("event-target", "dispatch-event", "event"): "handle:event",
+    # Document importNode/adoptNode
+    ("document", "import-node", "node"): "handle:node",
+    ("document", "adopt-node", "node"): "handle:node",
+    # Node methods
+    ("node", "append-child", "node"): "handle:node",
+    ("node", "insert-before", "node"): "handle:node",
+    ("node", "replace-child", "node"): "handle:node",
+    ("node", "remove-child", "node"): "handle:node",
+    # Element methods
+    ("element", "set-attribute-node", "attr"): "handle:attr",
+    ("element", "set-attribute-node-ns", "attr"): "handle:attr",
+    ("element", "remove-attribute-node", "attr"): "handle:attr",
+    # Range methods
+    ("range", "set-start", "node"): "handle:node",
+    ("range", "set-end", "node"): "handle:node",
+    ("range", "set-start-before", "node"): "handle:node",
+    ("range", "set-start-after", "node"): "handle:node",
+    ("range", "set-end-before", "node"): "handle:node",
+    ("range", "set-end-after", "node"): "handle:node",
+    ("range", "insert-node", "node"): "handle:node",
+    ("range", "surround-contents", "new-parent"): "handle:node",
+    ("range", "select-node", "node"): "handle:node",
+    ("range", "select-node-contents", "node"): "handle:node",
+    ("range", "compare-boundary-points", "source-range"): "handle:range",
+    # Selection methods
+    ("selection", "add-range", "range"): "handle:range",
+    ("selection", "remove-range", "range"): "handle:range",
+    ("selection", "collapse", "node"): "optional-handle:node",
+    ("selection", "extend", "node"): "handle:node",
+    ("selection", "set-base-and-extent", "anchor-node"): "handle:node",
+    ("selection", "set-base-and-extent", "focus-node"): "handle:node",
+    ("selection", "contains-node", "node"): "handle:node",
+    # Gamepad methods
+    ("gamepad", "get-axes", "axes"): "handle:float-32-list",
+    ("gamepad", "get-buttons", "buttons"): "handle:gamepad-button-list",
+    # Element setAttribute value - needs string conversion
+    ("element", "set-attribute", "value"): "string",
+    ("element", "set-attribute-ns", "value"): "string",
+    # Canvas methods
+    ("canvas-draw-path", "fill", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "stroke", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "clip", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "is-point-in-path", "path"): "optional-handle:path-2-d",
+    ("canvas-draw-path", "is-point-in-stroke", "path"): "optional-handle:path-2-d",
+    ("canvas-image-data", "put-image-data", "image-data"): "handle:image-data",
+    ("canvas-draw-image", "draw-image", "image"): "handle:canvas-image-source",
+    ("canvas-fill-stroke-styles", "create-pattern", "image"): "handle:canvas-image-source",
+    # HTMLCanvasElement
+    ("html-canvas-element", "to-blob", "callback"): "any",
+    ("html-canvas-element", "to-data-url", "type"): "string",
+    # Node methods
+    ("node", "append-child", "node"): "handle:node",
+    ("node", "insert-before", "node"): "handle:node",
+    ("node", "replace-child", "node"): "handle:node",
+    ("node", "remove-child", "node"): "handle:node",
+    # HTMLElement focus
+    ("html-element", "focus", "options"): "any",
+    # HTMLSelectElement add
+    ("html-select-element", "add", "element"): "any",
+    # HTMLSlotElement
+    ("html-slot-element", "assign", "nodes"): "node-array",
+    ("html-slot-element", "assigned-nodes", "options"): "any",
+    ("html-slot-element", "assigned-elements", "options"): "any",
+    # MediaDevices
+    ("media-devices", "get-user-media", "constraints"): "any",
+    ("media-devices", "get-display-media", "options"): "any",
+    # MediaStream
+    ("media-stream", "add-track", "track"): "handle:media-stream-track",
+    ("media-stream", "remove-track", "track"): "handle:media-stream-track",
+    # EventTarget dispatchEvent
+    ("event-target", "dispatch-event", "event"): "handle:event",
+    # MutationObserver observe
+    ("mutation-observer", "observe", "target"): "handle:node",
+    ("mutation-observer", "observe", "options"): "any",
+    # IntersectionObserver observe
+    ("intersection-observer", "observe", "target"): "handle:element",
+    # ResizeObserver observe
+    ("resize-observer", "observe", "target"): "handle:element",
+    ("resize-observer", "observe", "options"): "any",
+    # CustomElementRegistry define
+    ("custom-element-registry", "define", "name"): "string",
+    ("custom-element-registry", "define", "constructor"): "any",
+    ("custom-element-registry", "define", "options"): "any",
+    # TextTrack
+    ("text-track", "add-cue", "cue"): "handle:text-track-cue",
+    ("text-track", "remove-cue", "cue"): "handle:text-track-cue",
+    # MediaSession
+    ("media-session", "set-action-handler", "action"): "any",
+    ("media-session", "set-action-handler", "handler"): "any",
+    # Window requestAnimationFrame
+    ("window", "request-animation-frame", "callback"): "any",
+    # Worklet addModule
+    ("worklet", "add-module", "module-url"): "string",
+    ("worklet", "add-module", "options"): "any",
+    # MediaCapabilities
+    ("media-capabilities", "decoding-info", "configuration"): "any",
+    ("media-capabilities", "encoding-info", "configuration"): "any",
+    # HTMLElement togglePopover
+    ("html-element", "toggle-popover", "force"): "boolean-or-undefined",
+    # Element checkVisibility
+    ("element", "check-visibility", "options"): "any",
+    # Element requestFullscreen
+    ("element", "request-fullscreen", "options"): "any",
+    # MouseEvent initMouseEvent
+    ("mouse-event", "init-mouse-event", "type"): "string",
+    ("mouse-event", "init-mouse-event", "bubbles"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "cancelable"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "view"): "optional-handle:window",
+    ("mouse-event", "init-mouse-event", "detail"): True,
+    ("mouse-event", "init-mouse-event", "screen-x"): True,
+    ("mouse-event", "init-mouse-event", "screen-y"): True,
+    ("mouse-event", "init-mouse-event", "client-x"): True,
+    ("mouse-event", "init-mouse-event", "client-y"): True,
+    ("mouse-event", "init-mouse-event", "ctrl-key"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "alt-key"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "shift-key"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "meta-key"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "button"): True,
+    ("mouse-event", "init-mouse-event", "related-target"): "optional-handle:event-target",
+    # KeyboardEvent initKeyboardEvent
+    ("keyboard-event", "init-keyboard-event", "type"): "string",
+    ("keyboard-event", "init-keyboard-event", "bubbles"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "cancelable"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "view"): "optional-handle:window",
+    ("keyboard-event", "init-keyboard-event", "key"): "string",
+    ("keyboard-event", "init-keyboard-event", "location"): True,
+    ("keyboard-event", "init-keyboard-event", "ctrl-key"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "shift-key"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "alt-key"): "boolean-or-undefined",
+    ("keyboard-event", "init-keyboard-event", "meta-key"): "boolean-or-undefined",
+    # UIEvent initUIEvent
+    ("ui-event", "init-ui-event", "type"): "string",
+    ("ui-event", "init-ui-event", "bubbles"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "cancelable"): "boolean-or-undefined",
+    ("ui-event", "init-ui-event", "view"): "optional-handle:window",
+    ("ui-event", "init-ui-event", "detail"): True,
+    # Event initEvent
+    ("event", "init-event", "type"): "string",
+    ("event", "init-event", "bubbles"): "boolean-or-undefined",
+    ("event", "init-event", "cancelable"): "boolean-or-undefined",
+    # StorageEvent initStorageEvent
+    ("storage-event", "init-storage-event", "type"): "string",
+    ("storage-event", "init-storage-event", "key"): "string-or-null",
+    ("storage-event", "init-storage-event", "old-value"): "string-or-null",
+    ("storage-event", "init-storage-event", "new-value"): "string-or-null",
+    ("storage-event", "init-storage-event", "url"): "string",
+    ("storage-event", "init-storage-event", "storage-area"): "any",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -3372,6 +3897,22 @@ ENUM_PROPERTIES = {
     ("data-transfer", "types"): "DataTransferTypes",
     # ClipboardChangeEvent types
     ("clipboard-change-event", "types"): "ClipboardTypes",
+    # Notification permission
+    ("notification", "get-permission"): "NotificationPermission",
+    # RTCSessionDescription type
+    ("rtc-session-description", "get-type"): "RTCSdpType",
+    # RTCIceCandidate type
+    ("rtc-ice-candidate", "get-type"): "RTCIceCandidateType",
+    # RTCIceCandidate tcpType
+    ("rtc-ice-candidate", "get-tcp-type"): "RTCIceTcpCandidateType",
+    # RTCDataChannel protocol
+    ("rtc-data-channel", "get-protocol"): "DataChannelProtocol",
+    # SpeechSynthesisErrorCode
+    ("speech-synthesis-error-event", "get-error"): "SpeechSynthesisErrorCode",
+    # PointerEvent pointerType
+    ("pointer-event", "get-pointer-type"): "PointerType",
+    # InputEvent inputType
+    ("input-event", "get-input-type"): "InputType",
 }
 
 # Enum value mappings (string → bigint)
@@ -3783,6 +4324,69 @@ ENUM_VALUE_MAPPINGS = {
     "ClipboardTypes": {
         "": 0,
     },
+    # Notification permission
+    "NotificationPermission": {
+        "default": 0,
+        "denied": 1,
+        "granted": 2,
+    },
+    # RTC SDP type
+    "RTCSdpType": {
+        "offer": 0,
+        "pranswer": 1,
+        "answer": 2,
+        "rollback": 3,
+    },
+    # RTC Ice candidate type
+    "RTCIceCandidateType": {
+        "host": 0,
+        "srflx": 1,
+        "prflx": 2,
+        "relay": 3,
+    },
+    # RTC Ice TCP candidate type
+    "RTCIceTcpCandidateType": {
+        "active": 0,
+        "passive": 1,
+        "so": 2,
+    },
+    # DataChannel protocol
+    "DataChannelProtocol": {
+        "": 0,
+    },
+    # SpeechSynthesis error code
+    "SpeechSynthesisErrorCode": {
+        "canceled": 0,
+        "interrupted": 1,
+        "audio-busy": 2,
+        "audio-hardware": 3,
+        "network": 4,
+        "synthesis-unavailable": 5,
+        "synthesis-failed": 6,
+        "language-unavailable": 7,
+        "voice-unavailable": 8,
+        "text-too-long": 9,
+        "invalid-argument": 10,
+    },
+    # PointerType
+    "PointerType": {
+        "mouse": 0,
+        "pen": 1,
+        "touch": 2,
+    },
+    # InputType (partial - most common ones)
+    "InputType": {
+        "insertText": 0,
+        "insertReplacementText": 1,
+        "insertLineBreak": 2,
+        "insertParagraph": 3,
+        "insertFromPaste": 4,
+        "deleteContentBackward": 5,
+        "deleteContentForward": 6,
+        "deleteByCut": 7,
+        "historyUndo": 8,
+        "historyRedo": 9,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -3893,6 +4497,17 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("touch-event", "get-meta-key"): True,
     # Response
     ("response", "ok"): True,
+    # Event getBubbles/getCancelable/getComposed/getIsTrusted
+    ("event", "get-bubbles"): True,
+    ("event", "get-cancelable"): True,
+    ("event", "get-composed"): True,
+    ("event", "get-is-trusted"): True,
+    # Clipboard has types method returns boolean
+    ("clipboard-item", "has-type"): True,
+    # DOMTokenList contains returns boolean
+    ("dom-token-list", "contains"): True,
+    # DOMTokenList supports returns boolean
+    ("dom-token-list", "supports"): True,
 }
 
 # Properties that return number but need to be converted to bigint
@@ -4142,6 +4757,10 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("html-image-element", "naturalHeight"): True,
     ("html-image-element", "width"): True,
     ("html-image-element", "height"): True,
+    # ScreenOrientation angle
+    ("screen-orientation", "angle"): True,
+    # GeolocationPositionError code
+    ("geolocation-position-error", "code"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -4202,6 +4821,10 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "ready", "controller", "metadata", "voices", "voices-and-voice",
     # Canvas methods that are getters in WIT but methods in DOM
     "image-data", "transform",
+    # Methods that return arrays and need to be called as methods
+    "coalesced-events", "predicted-events",
+    # Attribute names method
+    "attribute-names",
 }
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
@@ -4367,9 +4990,9 @@ SYNTHETIC_HANDLE_TYPES = {
     "html-table-caption-element": ("HTMLTableCaptionElement", "htmlTableCaptionElementHandles", "HtmlTableCaptionElement"),
     "html-table-section-element": ("HTMLTableSectionElement", "htmlTableSectionElementHandles", "HtmlTableSectionElement"),
     "html-options-collection": ("HTMLOptionsCollection", "htmlOptionsCollectionHandles", "HtmlOptionsCollection"),
-    "gamepad-button-list": ("GamepadButton[]", "gamepadButtonListHandles", "GamepadButtonList"),
+    "gamepad-button-list": ("readonly GamepadButton[]", "gamepadButtonListHandles", "GamepadButtonList"),
     "gamepad-haptic-actuator-list": ("GamepadHapticActuator[]", "gamepadHapticActuatorListHandles", "GamepadHapticActuatorList"),
-    "float-32-list": ("Float32Array", "float32ListHandles", "Float32List"),
+    "float-32-list": ("readonly number[]", "float32ListHandles", "Float32List"),
     "int-32-list": ("Int32Array", "int32ListHandles", "Int32List"),
     "uint-32-list": ("Uint32Array", "uint32ListHandles", "Uint32List"),
     "dom-string-map": ("DOMStringMap", "domStringMapHandles", "DomStringMap"),
@@ -4417,6 +5040,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "event-listener": ("EventListener", "eventListenerHandles", "EventListener"),
     # Geolocation callbacks
     "position-callback": ("PositionCallback", "positionCallbackHandles", "PositionCallback"),
+    "position-error-callback": ("PositionErrorCallback", "positionErrorCallbackHandles", "PositionErrorCallback"),
     "option-position-error-callback": ("PositionErrorCallback", "optionPositionErrorCallbackHandles", "OptionPositionErrorCallback"),
     # HTML/DOM types
     "offscreen-canvas": ("OffscreenCanvas", "offscreencanvasHandles", "Offscreencanvas"),
@@ -4473,6 +5097,16 @@ SYNTHETIC_HANDLE_TYPES = {
     "media-stream-track": ("MediaStreamTrack", "mediaStreamTrackHandles", "MediaStreamTrack"),
     # queuing-strategy-size
     "queuing-strategy-size": ("any", "queuingStrategySizeHandles", "QueuingStrategySize"),
+    # text-track-cue
+    "text-track-cue": ("TextTrackCue", "textTrackCueHandles", "TextTrackCue"),
+    # path-2-d
+    "path-2-d": ("Path2D", "path2dHandles", "Path2d"),
+    # image-data
+    "image-data": ("ImageData", "imageDataHandles", "ImageData"),
+    # canvas-image-source
+    "canvas-image-source": ("CanvasImageSource", "canvasImageSourceHandles", "CanvasImageSource"),
+    # html-option-or-opt-group
+    "html-option-or-opt-group": ("HTMLOptGroupElement | HTMLOptionElement", "htmlOptionOrOptGroupHandles", "HtmlOptionOrOptGroup"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -5236,6 +5870,91 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("message-event", "initMessageEvent"),
     # Cache - addAll takes RequestInfo[] which is complex
     ("cache", "addAll"),
+    # HTMLSlotElement - assign takes variadic nodes
+    ("html-slot-element", "assign"),
+    # HTMLFormElement - elements returns HTMLFormControlsCollection
+    ("html-form-element", "getElements"),
+    # TextTrack - addCue/removeCue takes TextTrackCue
+    ("text-track", "addCue"),
+    ("text-track", "removeCue"),
+    # HTMLSelectElement - add takes HTMLOptGroupElement | HTMLOptionElement
+    ("html-select-element", "add"),
+    # Canvas - createPattern takes CanvasImageSource
+    ("canvas-fill-stroke-styles", "createPattern"),
+    # Canvas - drawImage takes CanvasImageSource
+    ("canvas-draw-image", "drawImage"),
+    # Canvas - putImageData takes ImageData
+    ("canvas-image-data", "putImageData"),
+    # Canvas - fill/stroke take optional Path2D
+    ("canvas-draw-path", "fill"),
+    ("canvas-draw-path", "stroke"),
+    ("canvas-draw-path", "clip"),
+    ("canvas-draw-path", "isPointInPath"),
+    ("canvas-draw-path", "isPointInStroke"),
+    # CustomElementRegistry - define takes CustomElementConstructor
+    ("custom-element-registry", "define"),
+    # HTMLElement - focus takes FocusOptions
+    ("html-element", "focus"),
+    # HTMLSlotElement - assignedNodes/assignedElements take AssignedNodesOptions
+    ("html-slot-element", "assignedNodes"),
+    ("html-slot-element", "assignedElements"),
+    # HTMLCanvasElement - toBlob takes BlobCallback
+    ("html-canvas-element", "toBlob"),
+    # OffscreenCanvas - convertToBlob takes ImageEncodeOptions
+    ("offscreencanvas", "convertToBlob"),
+    # FormData - append takes string | Blob
+    ("form-data", "append"),
+    # XMLHttpRequest - send takes body
+    ("xml-http-request", "send"),
+    # EventTarget - dispatchEvent takes Event
+    ("event-target", "dispatchEvent"),
+    # Request constructor - takes body
+    ("request", "new-request"),
+    # ResizeObserver - observe takes options
+    ("resize-observer", "observe"),
+    # HTMLTableElement - insertRow takes index
+    ("html-table-element", "insertRow"),
+    ("html-table-section-element", "insertRow"),
+    ("html-table-row-element", "insertCell"),
+    # HTMLMediaElement - canPlayType returns CanPlayTypeResult
+    ("html-media-element", "canPlayType"),
+    # Window - requestAnimationFrame takes FrameRequestCallback
+    ("window", "requestAnimationFrame"),
+    # Worklet - addModule takes options
+    ("worklet", "addModule"),
+    # Navigator - plugins/mimeTypes item returns Plugin | null
+    ("navigator", "getPlugins"),
+    ("navigator", "getMimeTypes"),
+    # PluginArray/MimeTypeArray - item/namedItem return Plugin | null
+    ("plugin-array", "item"),
+    ("plugin-array", "namedItem"),
+    ("mime-type-array", "item"),
+    ("mime-type-array", "namedItem"),
+    # Plugin - item/namedItem return MimeType | null
+    ("plugin", "item"),
+    ("plugin", "namedItem"),
+    # StorageEvent - initStorageEvent
+    ("storage-event", "initStorageEvent"),
+    # MouseEvent - initMouseEvent
+    ("mouse-event", "init-mouse-event"),
+    # KeyboardEvent - initKeyboardEvent
+    ("keyboard-event", "init-keyboard-event"),
+    # UIEvent - initUIEvent
+    ("ui-event", "init-ui-event"),
+    # Event - initEvent
+    ("event", "init-event"),
+    # MediaRecorder - start takes timeslice
+    ("media-recorder", "start"),
+    # Blob - slice takes content type string
+    ("blob", "slice"),
+    # URL - createObjectURL takes Blob | MediaSource
+    ("url", "create-object-url"),
+    # HTMLAnchorElement - assign takes string
+    ("html-anchor-element", "assign"),
+    # Document - getSetCookie is non-standard
+    ("document", "getSetCookie"),
+    # HTMLOListElement - start property setter
+    ("htmlo-list-element", "start"),
 }
 
 # Properties that return readonly arrays and need spreading
@@ -5247,6 +5966,9 @@ READONLY_ARRAY_PROPERTIES = {
     ("performance-entry-list", "entryList"),
     ("clipboard-item", "types"),
     ("performance-observer", "supportedEntryTypes"),
+    # Gamepad axes and buttons are readonly
+    ("gamepad", "axes"),
+    ("gamepad", "buttons"),
 }
 
 # Properties that return arrays of objects that need handle conversion
@@ -5262,6 +5984,9 @@ HANDLE_RETURNING_ARRAY_PROPERTIES = {
     ("rtc-peer-connection", "getLocalStreams"): ("media-stream-list", "media-stream"),
     ("rtc-track-event", "getStreams"): ("media-stream-list", "media-stream"),
     ("extendable-message-event", "getPorts"): ("message-port-list", "message-port"),
+    # PointerEvent getCoalescedEvents/getPredictedEvents return arrays
+    ("pointer-event", "getCoalescedEvents"): ("pointer-event-list", "pointer-event"),
+    ("pointer-event", "getPredictedEvents"): ("pointer-event-list", "pointer-event"),
 }
 
 # JavaScript/TypeScript reserved keywords

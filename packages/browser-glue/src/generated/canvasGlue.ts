@@ -248,7 +248,7 @@ const _domRectReadOnlyHandles = new Map<bigint, DOMRectReadOnly>();
 let _nextDomRectReadOnly = 1n;
 
 /** Handle table for float-32-list values */
-const _float32ListHandles = new Map<bigint, Float32Array>();
+const _float32ListHandles = new Map<bigint, readonly number[]>();
 let _nextFloat32List = 1n;
 
 /** Handle table for image-track values */
@@ -359,7 +359,7 @@ function lookupOptionDomRectReadOnly(handle: bigint | undefined): DOMRectReadOnl
 }
 
 /** Lookup a float-32-list value by handle. */
-function lookupFloat32List(handle: bigint): Float32Array {
+function lookupFloat32List(handle: bigint): readonly number[] {
   const obj = _float32ListHandles.get(handle);
   if (obj === undefined) {
     throw new Error(`float-32-list handle ${handle} not found`);
@@ -368,7 +368,7 @@ function lookupFloat32List(handle: bigint): Float32Array {
 }
 
 /** Lookup an optional float-32-list value by handle. */
-function lookupOptionFloat32List(handle: bigint | undefined): Float32Array | null {
+function lookupOptionFloat32List(handle: bigint | undefined): readonly number[] | null {
   if (handle === undefined || handle === 0n) {
     return null;
   }
@@ -2593,6 +2593,7 @@ export function createRenderbuffer(self: bigint): bigint {
 export function createShader(self: bigint, type: bigint): bigint | undefined {
   const obj = lookupWebGLRenderingContextBase(self);
   const _callResult = obj.createShader(Number(type));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlObject++;
   _webGlObjectHandles.set(handle, _callResult);
   return handle;
@@ -4070,6 +4071,7 @@ export function getSamplerParameter(self: bigint, sampler: bigint, pname: bigint
 export function fenceSync(self: bigint, condition: bigint, flags: bigint): bigint | undefined {
   const obj = lookupWebGL2RenderingContextBase(self);
   const _callResult = obj.fenceSync(Number(condition), Number(flags));
+  if (_callResult === null) return undefined;
   const handle = _nextWebGlObject++;
   _webGlObjectHandles.set(handle, _callResult);
   return handle;

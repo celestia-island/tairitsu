@@ -344,7 +344,7 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): boolean {
+export function getRootMargin(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -379,7 +379,7 @@ export function getDelay(self: bigint): number {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): (string)[] {
+export function getTrackVisibility(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -387,15 +387,15 @@ export function getTrackVisibility(self: bigint): (string)[] {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: bigint): void {
+export function IntersectionObserverObserve(self: bigint, target: string): void {
   const obj = lookupIntersectionObserver(self);
-  obj.observe(target);
+  obj.observe(lookupElement(target));
 }
 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: string): void {
+export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(target);
 }
@@ -411,7 +411,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): string {
+export function takeRecords(self: bigint): (string)[] {
   const obj = lookupIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -438,7 +438,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): number {
+export function getTime(self: bigint): string {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -496,7 +496,7 @@ export function getIsVisible(self: bigint): boolean {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): number {
+export function getIntersectionRatio(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -534,15 +534,15 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: boolean | undefined): void {
   const obj = lookupResizeObserver(self);
-  obj.observe(target, options);
+  (obj as any).observe(lookupElement(target), options as any);
 }
 
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: bigint): void {
+export function ResizeObserverUnobserve(self: bigint, target: EventHandlerRecord): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -651,7 +651,7 @@ function lookupResizeObserverSize(handle: bigint): ResizeObserverSize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): number {
+export function getInlineSize(self: bigint): bigint | undefined {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }

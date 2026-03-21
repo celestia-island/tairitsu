@@ -558,6 +558,8 @@ class CodeGenerator:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[handle_key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {class_ref}.{func.browser_method}({args});")
+                if func.return_is_optional:
+                    lines.append(f"  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
@@ -605,6 +607,8 @@ class CodeGenerator:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_method}({args});")
+                if func.return_is_optional:
+                    lines.append(f"  if (_callResult === null) return undefined;")
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
