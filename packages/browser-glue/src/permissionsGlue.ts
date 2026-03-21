@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -384,7 +387,7 @@ export function getName(self: bigint): bigint {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): bigint {
   const obj = lookupPermissionStatus(self);
   return (obj as any).onchange;
 }
@@ -392,7 +395,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchange(self: bigint, value: bigint): void {
   const obj = lookupPermissionStatus(self);
   (obj as any).onchange = value;
 }

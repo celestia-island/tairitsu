@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -253,6 +256,10 @@ let _nextElement = 1n;
 const _eventHandles = new Map<bigint, Event>();
 let _nextEvent = 1n;
 
+/** Handle table for event-handler values */
+const _eventHandlerHandles = new Map<bigint, EventHandler>();
+let _nextEventHandler = 1n;
+
 /** Handle table for event-listener values */
 const _eventListenerHandles = new Map<bigint, EventListener>();
 let _nextEventListener = 1n;
@@ -434,6 +441,23 @@ function lookupOptionEvent(handle: bigint | undefined): Event | null {
     return null;
   }
   return _eventHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-handler value by handle. */
+function lookupEventHandler(handle: bigint): EventHandler {
+  const obj = _eventHandlerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-handler handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-handler value by handle. */
+function lookupOptionEventHandler(handle: bigint | undefined): EventHandler | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventHandlerHandles.get(handle) ?? null;
 }
 
 /** Lookup a event-listener value by handle. */
@@ -1072,17 +1096,21 @@ export function throwIfAborted(self: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): EventHandlerRecord {
+export function getOnabort(self: bigint): bigint {
   const obj = lookupAbortSignal(self);
-  return obj.onabort;
+  const handler = obj.onabort;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: EventHandlerRecord): void {
+export function setOnabort(self: bigint, value: bigint): void {
   const obj = lookupAbortSignal(self);
-  obj.onabort = value;
+  obj.onabort = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -2166,17 +2194,21 @@ export function getHost(self: bigint): bigint {
 /**
  * `get-onslotchange()` operation.
  */
-export function getOnslotchange(self: bigint): EventHandlerRecord {
+export function getOnslotchange(self: bigint): bigint {
   const obj = lookupShadowRoot(self);
-  return obj.onslotchange;
+  const handler = obj.onslotchange;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onslotchange()` operation.
  */
-export function setOnslotchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnslotchange(self: bigint, value: bigint): void {
   const obj = lookupShadowRoot(self);
-  obj.onslotchange = value;
+  obj.onslotchange = value as any;
 }
 
 /**

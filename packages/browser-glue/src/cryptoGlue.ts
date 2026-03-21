@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -312,32 +315,19 @@ function lookupOptionUint8Array(handle: bigint | undefined): Uint8Array | null {
 /** Type alias */
 export type CryptoHandle = bigint;
 
-/** Handle table for Crypto instances */
-const _cryptoHandles = new Map<bigint, Crypto>();
-let _nextCrypto = 1n;
+/** Handle for global singleton Crypto (fixed to 0n). */
+const _Crypto_HANDLE = 0n;
 
-/** Lookup a Crypto by handle, throwing if not found. */
-function lookupCrypto(handle: bigint): Crypto {
-  const obj = _cryptoHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Crypto handle ${handle} not found`);
-  }
-  return obj!;
+/** Get the global Crypto object. */
+function getGlobalCrypto(): Crypto {
+  return window.crypto;
 }
 
-/** Lookup an optional Crypto by handle. */
-function lookupOptionCrypto(handle: bigint | undefined): Crypto | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _cryptoHandles.get(handle) ?? null;
-}
 /**
  * `get-subtle()` operation.
  */
-export function getSubtle(self: bigint): bigint {
-  const obj = lookupCrypto(self);
-  const _callResult = obj.subtle;
+export function getSubtle(): bigint {
+  const _callResult = window.crypto.subtle;
   const handle = _nextSubtleCrypto++;
   _subtleCryptohandles.set(handle, _callResult);
   return handle;
@@ -346,9 +336,8 @@ export function getSubtle(self: bigint): bigint {
 /**
  * `get-random-values()` operation.
  */
-export function getRandomValues(self: bigint, array: bigint): bigint {
-  const obj = lookupCrypto(self);
-  const _callResult = obj.getRandomValues(lookupUint8Array(array));
+export function getRandomValues(array: bigint): bigint {
+  const _callResult = window.crypto.getRandomValues(lookupUint8Array(array));
   const handle = _nextUint8Array++;
   _uint8ArrayHandles.set(handle, _callResult);
   return handle;
@@ -357,9 +346,8 @@ export function getRandomValues(self: bigint, array: bigint): bigint {
 /**
  * `random-uuid()` operation.
  */
-export function randomUuid(self: bigint): string {
-  const obj = lookupCrypto(self);
-  return obj.randomUUID();
+export function randomUuid(): string {
+  return window.crypto.randomUUID();
 }
 
 // ---------------------------------------------------------------------------

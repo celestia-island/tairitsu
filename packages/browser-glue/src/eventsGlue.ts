@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -480,9 +483,9 @@ export type ClipboardChangeEventHandle = bigint;
 /**
  * `get-types()` operation.
  */
-export function ClipboardChangeEventGetTypes(self: bigint): string {
+export function ClipboardChangeEventGetTypes(self: bigint): (string)[] {
   const obj = lookupClipboardEvent(self);
-  return obj.type;
+  return (obj as any).types;
 }
 
 /**

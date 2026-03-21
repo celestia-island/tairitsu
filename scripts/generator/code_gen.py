@@ -19,6 +19,7 @@ from .config import (
     ENUM_SETTER_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
     BOOLEAN_TO_BIGINT_PROPERTIES,
+    EVENT_HANDLER_PROPERTIES,
     PROPERTIES_NEEDING_TYPE_ASSERTION,
     SYNTHETIC_HANDLE_TYPES,
     correct_type_casing,
@@ -140,6 +141,13 @@ class CodeGenerator:
                     target_list_type, element_type = HANDLE_RETURNING_ARRAY_PROPERTIES[key]
                     if element_type in SYNTHETIC_HANDLE_TYPES:
                         needed_synthetic_types.add(element_type)
+                
+                # Check for EVENT_HANDLER_PROPERTIES in getters
+                if func.is_getter:
+                    prop_name = func.browser_attr if func.browser_attr else kebab_to_camel(func.wit_name[4:] if func.wit_name.startswith("get-") else func.wit_name)
+                    event_handler_key = (iface.wit_name, prop_name)
+                    if event_handler_key in EVENT_HANDLER_PROPERTIES:
+                        needed_synthetic_types.add("event-handler")
                 
                 for param in func.params:
                     param_key = (iface.wit_name, func.wit_name, param.wit_name)
@@ -522,6 +530,12 @@ class CodeGenerator:
                     lines.append(f"  return value != null ? (value ? 1n : 0n) : undefined;")
                 else:
                     lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ? 1n : 0n;")
+            elif enum_key in EVENT_HANDLER_PROPERTIES:
+                lines.append(f"  const handler = {obj_ref_with_assertion}.{func.browser_attr};")
+                lines.append(f"  if (handler == null) return 0n;")
+                lines.append(f"  const handle = _nextEventHandler++;")
+                lines.append(f"  _eventHandlerHandles.set(handle, handler);")
+                lines.append(f"  return handle;")
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? undefined;")
             else:
@@ -617,9 +631,12 @@ class CodeGenerator:
                     _, target_pascal = self._get_handle_info(target_type)
                     value_expr = f"Array.from({value_param}).map((h: bigint) => lookup{target_pascal}(h))"
             
-            # Check if this is an enum setter
+            # Check if this is an event handler setter
             enum_key = (iface.wit_name, prop_name)
-            if enum_key in ENUM_SETTER_PROPERTIES:
+            if enum_key in EVENT_HANDLER_PROPERTIES:
+                value_expr = f"{value_param} as any"
+            # Check if this is an enum setter
+            elif enum_key in ENUM_SETTER_PROPERTIES:
                 enum_name = ENUM_SETTER_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
                 # Generate reverse mapping (int -> string)

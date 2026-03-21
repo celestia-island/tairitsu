@@ -1290,19 +1290,19 @@ interface audio-track-list {
     get-track-by-id: func(self: audio-track-list-handle, id: string) -> option<u64>;
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: audio-track-list-handle) -> event-handler-record;
+    get-onchange: func(self: audio-track-list-handle) -> u64;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: audio-track-list-handle, value: event-handler-record);
+    set-onchange: func(self: audio-track-list-handle, value: u64);
 
     /// `onaddtrack` attribute — getter.
-    get-onaddtrack: func(self: audio-track-list-handle) -> event-handler-record;
+    get-onaddtrack: func(self: audio-track-list-handle) -> u64;
     /// `onaddtrack` attribute — setter.
-    set-onaddtrack: func(self: audio-track-list-handle, value: event-handler-record);
+    set-onaddtrack: func(self: audio-track-list-handle, value: u64);
 
     /// `onremovetrack` attribute — getter.
-    get-onremovetrack: func(self: audio-track-list-handle) -> event-handler-record;
+    get-onremovetrack: func(self: audio-track-list-handle) -> u64;
     /// `onremovetrack` attribute — setter.
-    set-onremovetrack: func(self: audio-track-list-handle, value: event-handler-record);
+    set-onremovetrack: func(self: audio-track-list-handle, value: u64);
 }
 
 /// WebIDL interface: `AudioTrack`
@@ -1349,19 +1349,19 @@ interface video-track-list {
     get-selected-index: func(self: video-track-list-handle) -> s32;
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: video-track-list-handle) -> event-handler-record;
+    get-onchange: func(self: video-track-list-handle) -> u64;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: video-track-list-handle, value: event-handler-record);
+    set-onchange: func(self: video-track-list-handle, value: u64);
 
     /// `onaddtrack` attribute — getter.
-    get-onaddtrack: func(self: video-track-list-handle) -> event-handler-record;
+    get-onaddtrack: func(self: video-track-list-handle) -> u64;
     /// `onaddtrack` attribute — setter.
-    set-onaddtrack: func(self: video-track-list-handle, value: event-handler-record);
+    set-onaddtrack: func(self: video-track-list-handle, value: u64);
 
     /// `onremovetrack` attribute — getter.
-    get-onremovetrack: func(self: video-track-list-handle) -> event-handler-record;
+    get-onremovetrack: func(self: video-track-list-handle) -> u64;
     /// `onremovetrack` attribute — setter.
-    set-onremovetrack: func(self: video-track-list-handle, value: event-handler-record);
+    set-onremovetrack: func(self: video-track-list-handle, value: u64);
 }
 
 /// WebIDL interface: `VideoTrack`
@@ -1405,19 +1405,19 @@ interface text-track-list {
     get-track-by-id: func(self: text-track-list-handle, id: string) -> option<u64>;
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: text-track-list-handle) -> event-handler-record;
+    get-onchange: func(self: text-track-list-handle) -> u64;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: text-track-list-handle, value: event-handler-record);
+    set-onchange: func(self: text-track-list-handle, value: u64);
 
     /// `onaddtrack` attribute — getter.
-    get-onaddtrack: func(self: text-track-list-handle) -> event-handler-record;
+    get-onaddtrack: func(self: text-track-list-handle) -> u64;
     /// `onaddtrack` attribute — setter.
-    set-onaddtrack: func(self: text-track-list-handle, value: event-handler-record);
+    set-onaddtrack: func(self: text-track-list-handle, value: u64);
 
     /// `onremovetrack` attribute — getter.
-    get-onremovetrack: func(self: text-track-list-handle) -> event-handler-record;
+    get-onremovetrack: func(self: text-track-list-handle) -> u64;
     /// `onremovetrack` attribute — setter.
-    set-onremovetrack: func(self: text-track-list-handle, value: event-handler-record);
+    set-onremovetrack: func(self: text-track-list-handle, value: u64);
 }
 
 /// WebIDL interface: `TextTrack`
@@ -1460,9 +1460,9 @@ interface text-track {
     remove-cue: func(self: text-track-handle, cue: u64);
 
     /// `oncuechange` attribute — getter.
-    get-oncuechange: func(self: text-track-handle) -> event-handler-record;
+    get-oncuechange: func(self: text-track-handle) -> u64;
     /// `oncuechange` attribute — setter.
-    set-oncuechange: func(self: text-track-handle, value: event-handler-record);
+    set-oncuechange: func(self: text-track-handle, value: u64);
 }
 
 /// WebIDL interface: `TextTrackCueList`
@@ -1512,14 +1512,14 @@ interface text-track-cue {
     set-pause-on-exit: func(self: text-track-cue-handle, value: bool);
 
     /// `onenter` attribute — getter.
-    get-onenter: func(self: text-track-cue-handle) -> event-handler-record;
+    get-onenter: func(self: text-track-cue-handle) -> u64;
     /// `onenter` attribute — setter.
-    set-onenter: func(self: text-track-cue-handle, value: event-handler-record);
+    set-onenter: func(self: text-track-cue-handle, value: u64);
 
     /// `onexit` attribute — getter.
-    get-onexit: func(self: text-track-cue-handle) -> event-handler-record;
+    get-onexit: func(self: text-track-cue-handle) -> u64;
     /// `onexit` attribute — setter.
-    set-onexit: func(self: text-track-cue-handle, value: event-handler-record);
+    set-onexit: func(self: text-track-cue-handle, value: u64);
 }
 
 /// WebIDL interface: `TimeRanges`
@@ -3670,14 +3670,14 @@ interface offscreen-canvas {
     convert-to-blob: func(self: offscreen-canvas-handle, options: option<u64>) -> u64;
 
     /// `oncontextlost` attribute — getter.
-    get-oncontextlost: func(self: offscreen-canvas-handle) -> event-handler-record;
+    get-oncontextlost: func(self: offscreen-canvas-handle) -> u64;
     /// `oncontextlost` attribute — setter.
-    set-oncontextlost: func(self: offscreen-canvas-handle, value: event-handler-record);
+    set-oncontextlost: func(self: offscreen-canvas-handle, value: u64);
 
     /// `oncontextrestored` attribute — getter.
-    get-oncontextrestored: func(self: offscreen-canvas-handle) -> event-handler-record;
+    get-oncontextrestored: func(self: offscreen-canvas-handle) -> u64;
     /// `oncontextrestored` attribute — setter.
-    set-oncontextrestored: func(self: offscreen-canvas-handle, value: event-handler-record);
+    set-oncontextrestored: func(self: offscreen-canvas-handle, value: u64);
 }
 
 /// WebIDL interface: `OffscreenCanvasRenderingContext2D`
@@ -3858,14 +3858,14 @@ interface close-watcher {
     destroy: func(self: close-watcher-handle);
 
     /// `oncancel` attribute — getter.
-    get-oncancel: func(self: close-watcher-handle) -> event-handler-record;
+    get-oncancel: func(self: close-watcher-handle) -> u64;
     /// `oncancel` attribute — setter.
-    set-oncancel: func(self: close-watcher-handle, value: event-handler-record);
+    set-oncancel: func(self: close-watcher-handle, value: u64);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: close-watcher-handle) -> event-handler-record;
+    get-onclose: func(self: close-watcher-handle) -> u64;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: close-watcher-handle, value: event-handler-record);
+    set-onclose: func(self: close-watcher-handle, value: u64);
 }
 
 /// WebIDL interface: `DataTransfer`
@@ -4005,98 +4005,100 @@ interface bar-prop {
 }
 
 /// WebIDL interface: `Location`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
 interface location {
     /// Opaque handle to a host-side `Location` instance.
     type location-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func(self: location-handle) -> u64;
+    get-href: func() -> u64;
     /// `href` attribute — setter.
-    set-href: func(self: location-handle, value: u64);
+    set-href: func(value: u64);
 
     /// `origin` attribute — getter.
-    get-origin: func(self: location-handle) -> string;
+    get-origin: func() -> string;
 
     /// `protocol` attribute — getter.
-    get-protocol: func(self: location-handle) -> string;
+    get-protocol: func() -> string;
     /// `protocol` attribute — setter.
-    set-protocol: func(self: location-handle, value: string);
+    set-protocol: func(value: string);
 
     /// `host` attribute — getter.
-    get-host: func(self: location-handle) -> string;
+    get-host: func() -> string;
     /// `host` attribute — setter.
-    set-host: func(self: location-handle, value: string);
+    set-host: func(value: string);
 
     /// `hostname` attribute — getter.
-    get-hostname: func(self: location-handle) -> string;
+    get-hostname: func() -> string;
     /// `hostname` attribute — setter.
-    set-hostname: func(self: location-handle, value: string);
+    set-hostname: func(value: string);
 
     /// `port` attribute — getter.
-    get-port: func(self: location-handle) -> string;
+    get-port: func() -> string;
     /// `port` attribute — setter.
-    set-port: func(self: location-handle, value: string);
+    set-port: func(value: string);
 
     /// `pathname` attribute — getter.
-    get-pathname: func(self: location-handle) -> string;
+    get-pathname: func() -> string;
     /// `pathname` attribute — setter.
-    set-pathname: func(self: location-handle, value: string);
+    set-pathname: func(value: string);
 
     /// `search` attribute — getter.
-    get-search: func(self: location-handle) -> string;
+    get-search: func() -> string;
     /// `search` attribute — setter.
-    set-search: func(self: location-handle, value: string);
+    set-search: func(value: string);
 
     /// `hash` attribute — getter.
-    get-hash: func(self: location-handle) -> string;
+    get-hash: func() -> string;
     /// `hash` attribute — setter.
-    set-hash: func(self: location-handle, value: string);
+    set-hash: func(value: string);
 
     /// `assign()` operation.
-    assign: func(self: location-handle, url: string);
+    assign: func(url: string);
 
     /// `replace()` operation.
-    replace: func(self: location-handle, url: string);
+    replace: func(url: string);
 
     /// `reload()` operation.
-    reload: func(self: location-handle);
+    reload: func();
 
     /// `ancestorOrigins` attribute — getter.
-    get-ancestor-origins: func(self: location-handle) -> list<string>;
+    get-ancestor-origins: func() -> list<string>;
 }
 
 /// WebIDL interface: `History`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
 interface history {
     /// Opaque handle to a host-side `History` instance.
     type history-handle = u64;
 
     /// `length` attribute — getter.
-    get-length: func(self: history-handle) -> u32;
+    get-length: func() -> u32;
 
     /// `scrollRestoration` attribute — getter.
-    get-scroll-restoration: func(self: history-handle) -> u64;
+    get-scroll-restoration: func() -> u64;
     /// `scrollRestoration` attribute — setter.
-    set-scroll-restoration: func(self: history-handle, value: u64);
+    set-scroll-restoration: func(value: u64);
 
     /// `state` attribute — getter.
-    get-state: func(self: history-handle) -> string;
+    get-state: func() -> string;
 
     /// `go()` operation.
-    go: func(self: history-handle, delta: option<s32>);
+    go: func(delta: option<s32>);
 
     /// `back()` operation.
-    back: func(self: history-handle);
+    back: func();
 
     /// `forward()` operation.
-    forward: func(self: history-handle);
+    forward: func();
 
     /// `pushState()` operation.
-    push-state: func(self: history-handle, data: string, unused: string, url: option<string>);
+    push-state: func(data: string, unused: string, url: option<string>);
 
     /// `replaceState()` operation.
-    replace-state: func(self: history-handle, data: string, unused: string, url: option<string>);
+    replace-state: func(data: string, unused: string, url: option<string>);
 }
 
 /// WebIDL interface: `Navigation`
@@ -4143,24 +4145,24 @@ interface navigation {
     forward: func(self: navigation-handle, options: option<u64>) -> u64;
 
     /// `onnavigate` attribute — getter.
-    get-onnavigate: func(self: navigation-handle) -> event-handler-record;
+    get-onnavigate: func(self: navigation-handle) -> u64;
     /// `onnavigate` attribute — setter.
-    set-onnavigate: func(self: navigation-handle, value: event-handler-record);
+    set-onnavigate: func(self: navigation-handle, value: u64);
 
     /// `onnavigatesuccess` attribute — getter.
-    get-onnavigatesuccess: func(self: navigation-handle) -> event-handler-record;
+    get-onnavigatesuccess: func(self: navigation-handle) -> u64;
     /// `onnavigatesuccess` attribute — setter.
-    set-onnavigatesuccess: func(self: navigation-handle, value: event-handler-record);
+    set-onnavigatesuccess: func(self: navigation-handle, value: u64);
 
     /// `onnavigateerror` attribute — getter.
-    get-onnavigateerror: func(self: navigation-handle) -> event-handler-record;
+    get-onnavigateerror: func(self: navigation-handle) -> u64;
     /// `onnavigateerror` attribute — setter.
-    set-onnavigateerror: func(self: navigation-handle, value: event-handler-record);
+    set-onnavigateerror: func(self: navigation-handle, value: u64);
 
     /// `oncurrententrychange` attribute — getter.
-    get-oncurrententrychange: func(self: navigation-handle) -> event-handler-record;
+    get-oncurrententrychange: func(self: navigation-handle) -> u64;
     /// `oncurrententrychange` attribute — setter.
-    set-oncurrententrychange: func(self: navigation-handle, value: event-handler-record);
+    set-oncurrententrychange: func(self: navigation-handle, value: u64);
 }
 
 /// WebIDL interface: `NavigationHistoryEntry`
@@ -4189,9 +4191,9 @@ interface navigation-history-entry {
     get-state: func(self: navigation-history-entry-handle) -> string;
 
     /// `ondispose` attribute — getter.
-    get-ondispose: func(self: navigation-history-entry-handle) -> event-handler-record;
+    get-ondispose: func(self: navigation-history-entry-handle) -> u64;
     /// `ondispose` attribute — setter.
-    set-ondispose: func(self: navigation-history-entry-handle, value: event-handler-record);
+    set-ondispose: func(self: navigation-history-entry-handle, value: u64);
 }
 
 /// WebIDL interface: `NavigationTransition`
@@ -4784,19 +4786,19 @@ interface event-source {
     get-ready-state: func(self: event-source-handle) -> u16;
 
     /// `onopen` attribute — getter.
-    get-onopen: func(self: event-source-handle) -> event-handler-record;
+    get-onopen: func(self: event-source-handle) -> u64;
     /// `onopen` attribute — setter.
-    set-onopen: func(self: event-source-handle, value: event-handler-record);
+    set-onopen: func(self: event-source-handle, value: u64);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: event-source-handle) -> event-handler-record;
+    get-onmessage: func(self: event-source-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: event-source-handle, value: event-handler-record);
+    set-onmessage: func(self: event-source-handle, value: u64);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: event-source-handle) -> event-handler-record;
+    get-onerror: func(self: event-source-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: event-source-handle, value: event-handler-record);
+    set-onerror: func(self: event-source-handle, value: u64);
 
     /// `close()` operation.
     close: func(self: event-source-handle);
@@ -4822,14 +4824,14 @@ interface message-event-target {
     type message-event-target-handle = u64;
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: message-event-target-handle) -> event-handler-record;
+    get-onmessage: func(self: message-event-target-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: message-event-target-handle, value: event-handler-record);
+    set-onmessage: func(self: message-event-target-handle, value: u64);
 
     /// `onmessageerror` attribute — getter.
-    get-onmessageerror: func(self: message-event-target-handle) -> event-handler-record;
+    get-onmessageerror: func(self: message-event-target-handle) -> u64;
     /// `onmessageerror` attribute — setter.
-    set-onmessageerror: func(self: message-event-target-handle, value: event-handler-record);
+    set-onmessageerror: func(self: message-event-target-handle, value: u64);
 }
 
 /// WebIDL interface: `MessagePort`
@@ -4849,9 +4851,9 @@ interface message-port {
     close: func(self: message-port-handle);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: message-port-handle) -> event-handler-record;
+    get-onclose: func(self: message-port-handle) -> u64;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: message-port-handle, value: event-handler-record);
+    set-onclose: func(self: message-port-handle, value: u64);
 }
 
 /// WebIDL interface: `BroadcastChannel`
@@ -4871,14 +4873,14 @@ interface broadcast-channel {
     close: func(self: broadcast-channel-handle);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: broadcast-channel-handle) -> event-handler-record;
+    get-onmessage: func(self: broadcast-channel-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: broadcast-channel-handle, value: event-handler-record);
+    set-onmessage: func(self: broadcast-channel-handle, value: u64);
 
     /// `onmessageerror` attribute — getter.
-    get-onmessageerror: func(self: broadcast-channel-handle) -> event-handler-record;
+    get-onmessageerror: func(self: broadcast-channel-handle) -> u64;
     /// `onmessageerror` attribute — setter.
-    set-onmessageerror: func(self: broadcast-channel-handle, value: event-handler-record);
+    set-onmessageerror: func(self: broadcast-channel-handle, value: u64);
 }
 
 /// WebIDL interface: `WorkerGlobalScope`
@@ -4901,34 +4903,34 @@ interface worker-global-scope {
     import-scripts: func(self: worker-global-scope-handle, urls: list<u64>);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: worker-global-scope-handle) -> on-error-event-handler-record;
+    get-onerror: func(self: worker-global-scope-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: worker-global-scope-handle, value: on-error-event-handler-record);
+    set-onerror: func(self: worker-global-scope-handle, value: u64);
 
     /// `onlanguagechange` attribute — getter.
-    get-onlanguagechange: func(self: worker-global-scope-handle) -> event-handler-record;
+    get-onlanguagechange: func(self: worker-global-scope-handle) -> u64;
     /// `onlanguagechange` attribute — setter.
-    set-onlanguagechange: func(self: worker-global-scope-handle, value: event-handler-record);
+    set-onlanguagechange: func(self: worker-global-scope-handle, value: u64);
 
     /// `onoffline` attribute — getter.
-    get-onoffline: func(self: worker-global-scope-handle) -> event-handler-record;
+    get-onoffline: func(self: worker-global-scope-handle) -> u64;
     /// `onoffline` attribute — setter.
-    set-onoffline: func(self: worker-global-scope-handle, value: event-handler-record);
+    set-onoffline: func(self: worker-global-scope-handle, value: u64);
 
     /// `ononline` attribute — getter.
-    get-ononline: func(self: worker-global-scope-handle) -> event-handler-record;
+    get-ononline: func(self: worker-global-scope-handle) -> u64;
     /// `ononline` attribute — setter.
-    set-ononline: func(self: worker-global-scope-handle, value: event-handler-record);
+    set-ononline: func(self: worker-global-scope-handle, value: u64);
 
     /// `onrejectionhandled` attribute — getter.
-    get-onrejectionhandled: func(self: worker-global-scope-handle) -> event-handler-record;
+    get-onrejectionhandled: func(self: worker-global-scope-handle) -> u64;
     /// `onrejectionhandled` attribute — setter.
-    set-onrejectionhandled: func(self: worker-global-scope-handle, value: event-handler-record);
+    set-onrejectionhandled: func(self: worker-global-scope-handle, value: u64);
 
     /// `onunhandledrejection` attribute — getter.
-    get-onunhandledrejection: func(self: worker-global-scope-handle) -> event-handler-record;
+    get-onunhandledrejection: func(self: worker-global-scope-handle) -> u64;
     /// `onunhandledrejection` attribute — setter.
-    set-onunhandledrejection: func(self: worker-global-scope-handle, value: event-handler-record);
+    set-onunhandledrejection: func(self: worker-global-scope-handle, value: u64);
 }
 
 /// WebIDL interface: `DedicatedWorkerGlobalScope`
@@ -4962,9 +4964,9 @@ interface shared-worker-global-scope {
     close: func(self: shared-worker-global-scope-handle);
 
     /// `onconnect` attribute — getter.
-    get-onconnect: func(self: shared-worker-global-scope-handle) -> event-handler-record;
+    get-onconnect: func(self: shared-worker-global-scope-handle) -> u64;
     /// `onconnect` attribute — setter.
-    set-onconnect: func(self: shared-worker-global-scope-handle, value: event-handler-record);
+    set-onconnect: func(self: shared-worker-global-scope-handle, value: u64);
 }
 
 /// WebIDL interface: `AbstractWorker`
@@ -4974,9 +4976,9 @@ interface abstract-worker {
     type abstract-worker-handle = u64;
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: abstract-worker-handle) -> event-handler-record;
+    get-onerror: func(self: abstract-worker-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: abstract-worker-handle, value: event-handler-record);
+    set-onerror: func(self: abstract-worker-handle, value: u64);
 }
 
 /// WebIDL interface: `Worker`
@@ -5077,28 +5079,29 @@ interface worklet {
 }
 
 /// WebIDL interface: `Storage`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
 interface storage {
     /// Opaque handle to a host-side `Storage` instance.
     type storage-handle = u64;
 
     /// `length` attribute — getter.
-    get-length: func(self: storage-handle) -> u32;
+    get-length: func() -> u32;
 
     /// `key()` operation.
-    key: func(self: storage-handle, index: u32) -> option<string>;
+    key: func(index: u32) -> option<string>;
 
     /// `getItem()` operation.
-    get-item: func(self: storage-handle, key: string) -> option<string>;
+    get-item: func(key: string) -> option<string>;
 
     /// `setItem()` operation.
-    set-item: func(self: storage-handle, key: string, value: string);
+    set-item: func(key: string, value: string);
 
     /// `removeItem()` operation.
-    remove-item: func(self: storage-handle, key: string);
+    remove-item: func(key: string);
 
     /// `clear()` operation.
-    clear: func(self: storage-handle);
+    clear: func();
 }
 
 /// WebIDL interface: `WindowSessionStorage`

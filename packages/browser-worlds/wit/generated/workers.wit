@@ -27,9 +27,9 @@ interface service-worker {
     post-message: func(self: service-worker-handle, message: string, transfer: list<u64>);
 
     /// `onstatechange` attribute — getter.
-    get-onstatechange: func(self: service-worker-handle) -> event-handler-record;
+    get-onstatechange: func(self: service-worker-handle) -> u64;
     /// `onstatechange` attribute — setter.
-    set-onstatechange: func(self: service-worker-handle, value: event-handler-record);
+    set-onstatechange: func(self: service-worker-handle, value: u64);
 }
 
 /// WebIDL interface: `ServiceWorkerContainer`
@@ -55,19 +55,19 @@ interface service-worker-container {
     start-messages: func(self: service-worker-container-handle);
 
     /// `oncontrollerchange` attribute — getter.
-    get-oncontrollerchange: func(self: service-worker-container-handle) -> event-handler-record;
+    get-oncontrollerchange: func(self: service-worker-container-handle) -> u64;
     /// `oncontrollerchange` attribute — setter.
-    set-oncontrollerchange: func(self: service-worker-container-handle, value: event-handler-record);
+    set-oncontrollerchange: func(self: service-worker-container-handle, value: u64);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: service-worker-container-handle) -> event-handler-record;
+    get-onmessage: func(self: service-worker-container-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: service-worker-container-handle, value: event-handler-record);
+    set-onmessage: func(self: service-worker-container-handle, value: u64);
 
     /// `onmessageerror` attribute — getter.
-    get-onmessageerror: func(self: service-worker-container-handle) -> event-handler-record;
+    get-onmessageerror: func(self: service-worker-container-handle) -> u64;
     /// `onmessageerror` attribute — setter.
-    set-onmessageerror: func(self: service-worker-container-handle, value: event-handler-record);
+    set-onmessageerror: func(self: service-worker-container-handle, value: u64);
 }
 
 /// WebIDL interface: `NavigationPreloadManager`

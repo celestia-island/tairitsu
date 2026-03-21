@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -238,6 +241,10 @@ const _asyncHandles = new Map<bigint, AsyncHandle<unknown>>();
 // Synthetic handle tables for primitive/utility types
 // ---------------------------------------------------------------------------
 
+/** Handle table for event-handler values */
+const _eventHandlerHandles = new Map<bigint, EventHandler>();
+let _nextEventHandler = 1n;
+
 /** Handle table for payment-address values */
 const _paymentAddresshandles = new Map<bigint, PaymentAddress>();
 let _nextPaymentAddress = 1n;
@@ -245,6 +252,23 @@ let _nextPaymentAddress = 1n;
 // ---------------------------------------------------------------------------
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
+
+/** Lookup a event-handler value by handle. */
+function lookupEventHandler(handle: bigint): EventHandler {
+  const obj = _eventHandlerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-handler handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-handler value by handle. */
+function lookupOptionEventHandler(handle: bigint | undefined): EventHandler | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventHandlerHandles.get(handle) ?? null;
+}
 
 /** Lookup a payment-address value by handle. */
 function lookupPaymentAddress(handle: bigint): PaymentAddress {
@@ -452,7 +476,7 @@ export function getShippingType(self: bigint): bigint | undefined {
 /**
  * `get-onshippingaddresschange()` operation.
  */
-export function getOnshippingaddresschange(self: bigint): EventHandlerRecord {
+export function getOnshippingaddresschange(self: bigint): bigint {
   const obj = lookupPaymentRequest(self);
   return (obj as any).onshippingaddresschange;
 }
@@ -460,7 +484,7 @@ export function getOnshippingaddresschange(self: bigint): EventHandlerRecord {
 /**
  * `set-onshippingaddresschange()` operation.
  */
-export function setOnshippingaddresschange(self: bigint, value: EventHandlerRecord): void {
+export function setOnshippingaddresschange(self: bigint, value: bigint): void {
   const obj = lookupPaymentRequest(self);
   (obj as any).onshippingaddresschange = value as any;
 }
@@ -468,7 +492,7 @@ export function setOnshippingaddresschange(self: bigint, value: EventHandlerReco
 /**
  * `get-onshippingoptionchange()` operation.
  */
-export function getOnshippingoptionchange(self: bigint): EventHandlerRecord {
+export function getOnshippingoptionchange(self: bigint): bigint {
   const obj = lookupPaymentRequest(self);
   return (obj as any).onshippingoptionchange;
 }
@@ -476,7 +500,7 @@ export function getOnshippingoptionchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onshippingoptionchange()` operation.
  */
-export function setOnshippingoptionchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnshippingoptionchange(self: bigint, value: bigint): void {
   const obj = lookupPaymentRequest(self);
   (obj as any).onshippingoptionchange = value as any;
 }
@@ -484,7 +508,7 @@ export function setOnshippingoptionchange(self: bigint, value: EventHandlerRecor
 /**
  * `get-onpaymentmethodchange()` operation.
  */
-export function getOnpaymentmethodchange(self: bigint): EventHandlerRecord {
+export function getOnpaymentmethodchange(self: bigint): bigint {
   const obj = lookupPaymentRequest(self);
   return (obj as any).onpaymentmethodchange;
 }
@@ -492,7 +516,7 @@ export function getOnpaymentmethodchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onpaymentmethodchange()` operation.
  */
-export function setOnpaymentmethodchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnpaymentmethodchange(self: bigint, value: bigint): void {
   const obj = lookupPaymentRequest(self);
   (obj as any).onpaymentmethodchange = value as any;
 }
@@ -687,15 +711,19 @@ export function pollRetry(requestId: bigint): { ok: true; value: bigint } | { ok
 /**
  * `get-onpayerdetailchange()` operation.
  */
-export function getOnpayerdetailchange(self: bigint): EventHandlerRecord {
+export function getOnpayerdetailchange(self: bigint): bigint {
   const obj = lookupPaymentResponse(self);
-  return obj.onpayerdetailchange;
+  const handler = obj.onpayerdetailchange;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onpayerdetailchange()` operation.
  */
-export function setOnpayerdetailchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnpayerdetailchange(self: bigint, value: bigint): void {
   const obj = lookupPaymentResponse(self);
   obj.onpayerdetailchange = value as any;
 }

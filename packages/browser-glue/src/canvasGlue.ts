@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -250,6 +253,10 @@ let _nextBufferSource = 1n;
 const _domRectReadOnlyHandles = new Map<bigint, DOMRectReadOnly>();
 let _nextDomRectReadOnly = 1n;
 
+/** Handle table for event-handler values */
+const _eventHandlerHandles = new Map<bigint, EventHandler>();
+let _nextEventHandler = 1n;
+
 /** Handle table for float-32-list values */
 const _float32ListHandles = new Map<bigint, readonly number[]>();
 let _nextFloat32List = 1n;
@@ -359,6 +366,23 @@ function lookupOptionDomRectReadOnly(handle: bigint | undefined): DOMRectReadOnl
     return null;
   }
   return _domRectReadOnlyHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-handler value by handle. */
+function lookupEventHandler(handle: bigint): EventHandler {
+  const obj = _eventHandlerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-handler handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-handler value by handle. */
+function lookupOptionEventHandler(handle: bigint | undefined): EventHandler | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventHandlerHandles.get(handle) ?? null;
 }
 
 /** Lookup a float-32-list value by handle. */
@@ -651,17 +675,21 @@ export function AudioDecoderGetDecodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function AudioDecoderGetOndequeue(self: bigint): EventHandlerRecord {
+export function AudioDecoderGetOndequeue(self: bigint): bigint {
   const obj = lookupAudioDecoder(self);
-  return obj.ondequeue;
+  const handler = obj.ondequeue;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ondequeue()` operation.
  */
-export function AudioDecoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
+export function AudioDecoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupAudioDecoder(self);
-  obj.ondequeue = value;
+  obj.ondequeue = value as any;
 }
 
 /**
@@ -823,17 +851,21 @@ export function VideoDecoderGetDecodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function VideoDecoderGetOndequeue(self: bigint): EventHandlerRecord {
+export function VideoDecoderGetOndequeue(self: bigint): bigint {
   const obj = lookupVideoDecoder(self);
-  return obj.ondequeue;
+  const handler = obj.ondequeue;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ondequeue()` operation.
  */
-export function VideoDecoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
+export function VideoDecoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupVideoDecoder(self);
-  obj.ondequeue = value;
+  obj.ondequeue = value as any;
 }
 
 /**
@@ -995,17 +1027,21 @@ export function AudioEncoderGetEncodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function AudioEncoderGetOndequeue(self: bigint): EventHandlerRecord {
+export function AudioEncoderGetOndequeue(self: bigint): bigint {
   const obj = lookupAudioEncoder(self);
-  return obj.ondequeue;
+  const handler = obj.ondequeue;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ondequeue()` operation.
  */
-export function AudioEncoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
+export function AudioEncoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupAudioEncoder(self);
-  obj.ondequeue = value;
+  obj.ondequeue = value as any;
 }
 
 /**
@@ -1167,17 +1203,21 @@ export function VideoEncoderGetEncodeQueueSize(self: bigint): number {
 /**
  * `get-ondequeue()` operation.
  */
-export function VideoEncoderGetOndequeue(self: bigint): EventHandlerRecord {
+export function VideoEncoderGetOndequeue(self: bigint): bigint {
   const obj = lookupVideoEncoder(self);
-  return obj.ondequeue;
+  const handler = obj.ondequeue;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ondequeue()` operation.
  */
-export function VideoEncoderSetOndequeue(self: bigint, value: EventHandlerRecord): void {
+export function VideoEncoderSetOndequeue(self: bigint, value: bigint): void {
   const obj = lookupVideoEncoder(self);
-  obj.ondequeue = value;
+  obj.ondequeue = value as any;
 }
 
 /**

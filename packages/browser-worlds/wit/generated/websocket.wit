@@ -27,19 +27,19 @@ interface web-socket {
     get-buffered-amount: func(self: web-socket-handle) -> u64;
 
     /// `onopen` attribute — getter.
-    get-onopen: func(self: web-socket-handle) -> event-handler-record;
+    get-onopen: func(self: web-socket-handle) -> u64;
     /// `onopen` attribute — setter.
-    set-onopen: func(self: web-socket-handle, value: event-handler-record);
+    set-onopen: func(self: web-socket-handle, value: u64);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: web-socket-handle) -> event-handler-record;
+    get-onerror: func(self: web-socket-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: web-socket-handle, value: event-handler-record);
+    set-onerror: func(self: web-socket-handle, value: u64);
 
     /// `onclose` attribute — getter.
-    get-onclose: func(self: web-socket-handle) -> event-handler-record;
+    get-onclose: func(self: web-socket-handle) -> u64;
     /// `onclose` attribute — setter.
-    set-onclose: func(self: web-socket-handle, value: event-handler-record);
+    set-onclose: func(self: web-socket-handle, value: u64);
 
     /// `extensions` attribute — getter.
     get-extensions: func(self: web-socket-handle) -> string;
@@ -51,9 +51,9 @@ interface web-socket {
     close: func(self: web-socket-handle, code: option<u16>, reason: option<string>);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: web-socket-handle) -> event-handler-record;
+    get-onmessage: func(self: web-socket-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: web-socket-handle, value: event-handler-record);
+    set-onmessage: func(self: web-socket-handle, value: u64);
 
     /// `binaryType` attribute — getter.
     get-binary-type: func(self: web-socket-handle) -> u64;

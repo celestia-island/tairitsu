@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -368,7 +371,7 @@ export function ServiceWorkerPostMessage(self: bigint, message: string, transfer
 /**
  * `get-onstatechange()` operation.
  */
-export function getOnstatechange(self: bigint): EventHandlerRecord {
+export function getOnstatechange(self: bigint): bigint {
   const obj = lookupServiceWorker(self);
   return (obj as any).onstatechange;
 }
@@ -376,7 +379,7 @@ export function getOnstatechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onstatechange()` operation.
  */
-export function setOnstatechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnstatechange(self: bigint, value: bigint): void {
   const obj = lookupServiceWorker(self);
   (obj as any).onstatechange = value;
 }
@@ -545,7 +548,7 @@ export function startMessages(self: bigint): void {
 /**
  * `get-oncontrollerchange()` operation.
  */
-export function getOncontrollerchange(self: bigint): EventHandlerRecord {
+export function getOncontrollerchange(self: bigint): bigint {
   const obj = lookupServiceWorkerContainer(self);
   return (obj as any).oncontrollerchange;
 }
@@ -553,7 +556,7 @@ export function getOncontrollerchange(self: bigint): EventHandlerRecord {
 /**
  * `set-oncontrollerchange()` operation.
  */
-export function setOncontrollerchange(self: bigint, value: EventHandlerRecord): void {
+export function setOncontrollerchange(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerContainer(self);
   (obj as any).oncontrollerchange = value as any;
 }
@@ -561,7 +564,7 @@ export function setOncontrollerchange(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): bigint {
   const obj = lookupServiceWorkerContainer(self);
   return (obj as any).onmessage;
 }
@@ -569,7 +572,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessage(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerContainer(self);
   (obj as any).onmessage = value as any;
 }
@@ -577,7 +580,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): EventHandlerRecord {
+export function getOnmessageerror(self: bigint): bigint {
   const obj = lookupServiceWorkerContainer(self);
   return (obj as any).onmessageerror;
 }
@@ -585,7 +588,7 @@ export function getOnmessageerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupServiceWorkerContainer(self);
   (obj as any).onmessageerror = value as any;
 }
