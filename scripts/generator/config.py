@@ -4116,7 +4116,6 @@ PARAMETER_BIGINT_TO_NUMBER = {
 
     # RTCSctpTransport.transport - wrong handle table
     ("rtc-sctp-transport", "getTransport"): "rtc-dtls-transport",
-}
     # Window clearInterval/clearTimeout - id needs number conversion
     ("window-or-worker-global-scope", "clear-interval", "id"): True,
     ("window-or-worker-global-scope", "clear-timeout", "id"): True,
@@ -4150,6 +4149,89 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("window", "get-event", "event"): "any",
     # TextEvent initTextEvent - view param needs optional window handle
     ("text-event", "init-text-event", "view"): "optional-handle:window",
+    # TouchList item - index needs number conversion
+    ("touch-list", "item", "index"): True,
+    # CompositionEvent initCompositionEvent - view-arg needs window lookup
+    ("composition-event", "init-composition-event", "view-arg"): "optional-handle:window",
+    # Headers set - value needs any cast
+    ("headers", "set", "value"): "any",
+    # Response redirect - status needs number conversion
+    ("response", "redirect", "status"): True,
+    # RTCPeerConnection methods
+    ("rtc-peer-connection", "generate-certificate", "keygen-algorithm"): "any",
+    ("rtc-peer-connection", "add-track", "track"): "handle:media-stream-track",
+    ("rtc-peer-connection", "remove-track", "sender"): "handle:rtc-rtp-sender",
+    ("rtc-peer-connection", "add-transceiver", "track-or-kind"): "any",
+    ("rtc-peer-connection", "create-data-channel", "data-channel-dict"): "dictionary:any",
+    ("rtc-peer-connection", "get-stats", "selector"): "optional-handle:media-stream-track",
+    # RTCRtpSender replaceTrack
+    ("rtc-rtp-sender", "replace-track", "with-track"): "optional-handle:media-stream-track",
+    # RTCPeerConnection createDataChannel - label is string not bigint
+    ("rtc-peer-connection", "create-data-channel", "label"): "string",
+    # RTCDTMFSender insertDTMF - duration needs number conversion
+    ("rtc-dtmf-sender", "insert-dtmf", "duration"): True,
+    # WebSocket send - data needs any cast
+    ("ws", "send", "data"): "any",
+    # WebSocket close - code needs number conversion
+    ("ws", "close", "code"): True,
+    # PerformanceObserverEntryList getEntriesByType - type is string not boolean
+    ("performance-observer-entry-list", "get-entries-by-type", "type"): "string",
+    # PerformanceObserverEntryList getEntriesByName - name is string not boolean
+    ("performance-observer-entry-list", "get-entries-by-name", "name"): "string",
+    # URLSearchParams delete - name is string not number
+    ("url-search-params", "delete", "name"): "string",
+    # URLSearchParams has - value param
+    ("url-search-params", "has", "value"): "string",
+    # Cache put - request needs any, response needs handle lookup
+    ("cache", "put", "request"): "any",
+    ("cache", "put", "response"): "handle:response",
+    # RTCPeerConnection createDataChannel - label is string not bigint
+    ("rtc-peer-connection", "create-data-channel", "label"): "string",
+    # PerformanceObserverEntryList getEntriesByName - name is string not boolean
+    ("performance-observer-entry-list", "get-entries-by-name", "name"): "string",
+    # PerformanceObserverEntryList getEntriesByType - type is string not boolean
+    ("performance-observer-entry-list", "get-entries-by-type", "type"): "string",
+    # MediaStream getTrackById - trackId is string not boolean
+    ("media-stream", "get-track-by-id", "track-id"): "string",
+    # HtmlElement setPopoverTargetElement - element handle with null
+    ("html-element", "set-popover-target-element", "element"): "optional-handle-strict:html-element",
+    # Path2D addPath transform - DOMMatrix with null
+    ("path-2d", "add-path", "transform"): "optional-handle-strict:dom-matrix",
+    # RTCDataChannel createDataChannel - label is string not bigint
+    ("rtc-peer-connection", "create-data-channel", "label"): "string",
+    # RTCPeerConnection addTrack - streams is array of MediaStream
+    ("rtc-peer-connection", "add-track", "streams"): "handle-array:media-stream",
+    # RTCPeerConnection addTransceiver - init is dictionary
+    ("rtc-peer-connection", "add-transceiver", "init"): "dictionary:any",
+    # RTCSctpTransport.transport - wrong handle table
+    ("rtc-sctp-transport", "getTransport"): "rtc-dtls-transport",
+    # Performance mark - markOptions is dictionary
+    ("performance", "mark", "mark-options"): "dictionary:any",
+    # ServiceWorkerContainer register - options is dictionary
+    ("service-worker-container", "register", "options"): "dictionary:any",
+    # Cache match - options is dictionary
+    ("cache", "match", "options"): "dictionary:any",
+    # Cache matchAll - options is dictionary
+    ("cache", "match-all", "options"): "dictionary:any",
+    # Cache delete - options is dictionary
+    ("cache", "delete", "options"): "dictionary:any",
+    # Cache put - request is any
+    ("cache", "put", "request"): "any",
+    # Cache add - request is any
+    ("cache", "add", "request"): "any",
+    # Cache addAll - requests is any
+    ("cache", "add-all", "requests"): "any",
+    # WebSocket send - data is any (BufferSource)
+    ("ws", "send", "data"): "any",
+    # WebSocket close - code is number
+    ("ws", "close", "code"): True,
+    # Worker constructor - scriptUrl is any
+    ("worker", "constructor", "script-url"): "any",
+    ("worker", "constructor", "options"): "dictionary:any",
+    # URLSearchParams set - name is string not bigint
+    ("url-search-params", "set", "name"): "string",
+    # URLSearchParams append - name is string not bigint
+    ("url-search-params", "append", "name"): "string",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)

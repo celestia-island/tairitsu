@@ -275,7 +275,7 @@ export function name(handle: bigint): string {
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): bigint {
+export function version(handle: bigint): string {
   const obj = lookupIdbDb(handle);
   return (obj as any).version();
 }
@@ -471,7 +471,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: string): void {
+export function advance(handle: bigint, count: number): void {
   const obj = lookupIDBCursor(handle);
   obj.advance(count);
 }
@@ -522,7 +522,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): string {
+export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = lookupIDBRequest(handle);
   return (obj as any).source() ?? undefined;
 }
