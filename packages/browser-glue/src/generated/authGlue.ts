@@ -263,7 +263,7 @@ export function getId(self: bigint): string {
  */
 export function getType(self: bigint): string {
   const obj = lookupCredential(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**

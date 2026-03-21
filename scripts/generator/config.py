@@ -546,7 +546,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("image-decoder", "tracks"): "image-track-list",
     ("image-track-list", "imageTrack"): "image-track",
     ("image-decoder", "decode"): "image-decode-result",
-    ("image-decoder", "getType"): "string",
+    ("image-decoder", "type"): "string",
     # DOM
     ("node", "getRootNode"): "node",
     ("element", "closest"): "element",
@@ -942,9 +942,9 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("link-style", "getSheet"): "css-style-sheet",
     # ImageDecoder
     ("image-decoder", "getTracks"): "image-track-list",
-    ("image-decoder", "getType"): "string",
+    ("image-decoder", "type"): "string",
     # CryptoKey - enum and object properties
-    ("crypto-key", "getType"): "string",
+    ("crypto-key", "type"): "string",
     ("crypto-key", "getAlgorithm"): "any",
     ("crypto-key", "getUsages"): "string-list",
     # Gamepad
@@ -1106,7 +1106,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("notification", "getVibrate"): "number-list",
     # ScreenOrientation
     ("screen-orientation", "lock"): "promise-void",
-    ("screen-orientation", "getType"): "string",
+    ("screen-orientation", "type"): "string",
     # HTML elements
     ("html-element", "getOffsetParent"): "element",
     ("html-element", "getStyle"): "css-style-declaration",
@@ -2190,6 +2190,64 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("css-grouping-rule", "getCssRules"): "css-rule-list",
     # CSSStyleSheet getCssRules returns CSSRuleList
     ("css-style-sheet", "getCssRules"): "css-rule-list",
+    # TextTrackCue getTrack returns TextTrack
+    ("text-track-cue", "getTrack"): "text-track",
+    # TrackEvent getTrack returns TextTrack
+    ("track-event", "getTrack"): "text-track",
+    # HTMLInputElement getValueAsDate returns Date
+    ("html-input-element", "getValueAsDate"): "date",
+    # ElementInternals getShadowRoot returns ShadowRoot
+    ("element-internals", "getShadowRoot"): "shadow-root",
+    # HTMLLegendElement getForm returns HTMLFormElement
+    ("html-legend-element", "getForm"): "html-form-element",
+    # MediaStream clone returns MediaStream
+    ("media-stream", "clone"): "media-stream",
+    # MediaStreamTrack clone returns MediaStreamTrack
+    ("media-stream-track", "clone"): "media-stream-track",
+    # MediaStreamTrackEvent getTrack returns MediaStreamTrack
+    ("media-stream-track-event", "getTrack"): "media-stream-track",
+    # RTCPeerConnection addTrack returns RTCRtpSender
+    ("rtc-peer-connection", "addTrack"): "rtc-rtp-sender",
+    # RTCPeerConnection addTransceiver returns RTCRtpTransceiver
+    ("rtc-peer-connection", "addTransceiver"): "rtc-rtp-transceiver",
+    # RTCPeerConnection createDataChannel returns RTCDataChannel
+    ("rtc-peer-connection", "createDataChannel"): "rtc-data-channel",
+    # RTCIceCandidatePair getLocal/getRemote return RTCIceCandidate
+    ("rtc-ice-candidate-pair", "getLocal"): "rtc-ice-candidate",
+    ("rtc-ice-candidate-pair", "getRemote"): "rtc-ice-candidate",
+    # RTCTrackEvent getReceiver/getTransceiver
+    ("rtc-track-event", "getReceiver"): "rtc-rtp-receiver",
+    ("rtc-track-event", "getTransceiver"): "rtc-rtp-transceiver",
+    # MediaDevices getSupportedConstraints returns MediaTrackSupportedConstraints
+    ("media-devices", "getSupportedConstraints"): "any",
+    # MediaSession setMicrophoneActive/setCameraActive return Promise<void>
+    ("media-session", "setMicrophoneActive"): "promise-void",
+    ("media-session", "setCameraActive"): "promise-void",
+    # PerformanceObserver takeRecords returns PerformanceEntryList
+    ("performance-observer", "takeRecords"): "any",
+    # Performance getEntries returns PerformanceEntryList
+    ("performance", "getEntries"): "any",
+    # URL getSearchParams returns URLSearchParams
+    ("url", "getSearchParams"): "url-search-params",
+    # Headers getSetCookie returns string[]
+    ("headers", "getSetCookie"): "string-list",
+    # IntersectionObserver takeRecords returns IntersectionObserverEntry[]
+    ("intersection-observer", "takeRecords"): "any",
+    # SharedWorker getPort returns MessagePort
+    ("shared-worker", "getPort"): "message-port",
+    # CSSGroupingRule item returns CSSRule
+    ("css-grouping-rule", "item"): "css-rule",
+    # RTCRtpReceiver getContributingSources returns RTCRtpContributingSource[]
+    ("rtc-rtp-receiver", "getContributingSources"): "any",
+    # RTCRtpSender getDtmf returns RTCDTMFSender
+    ("rtc-rtp-sender", "getDtmf"): "any",
+    # RTCIceTransport getLocalCandidates/getRemoteCandidates return RTCIceCandidate[]
+    ("rtc-ice-transport", "getLocalCandidates"): "any",
+    ("rtc-ice-transport", "getRemoteCandidates"): "any",
+    # RTCDtlsTransport getRemoteCertificates returns ArrayBuffer[]
+    ("rtc-dtls-transport", "getRemoteCertificates"): "any",
+    # Navigation getCurrentEntry currentEntry returns NavigationHistoryEntry
+    ("navigation", "currentEntry"): "navigation-history-entry",
 }
 
 
@@ -4009,6 +4067,56 @@ PARAMETER_BIGINT_TO_NUMBER = {
     # Node setters
     ("node", "set-node-value", "value"): "string-or-null",
     ("node", "set-text-content", "value"): "string-or-null",
+    # HTMLElement focus options
+    ("html-or-svg-element", "focus", "options"): "dictionary:focus-options",
+    # HTMLFormElement requestSubmit
+    ("html-form-element", "request-submit", "submitter"): "optional-handle:html-element",
+    # HTMLInputElement/TextAreaElement setSelectionRange direction
+    ("html-input-element", "set-selection-range", "direction"): "enum-string",
+    ("html-text-area-element", "set-selection-range", "direction"): "enum-string",
+    # CanvasImageData createImageData settings
+    ("canvas-image-data", "create-image-data", "settings"): "dictionary:image-data-settings",
+    # Path2D addPath
+    ("path-2d", "add-path", "path"): "handle:path-2-d",
+    ("path-2d", "add-path", "transform"): "dictionary:dom-matrix",
+    # OffscreenCanvas convertToBlob options
+    ("offscreen-canvas", "convert-to-blob", "options"): "dictionary:image-encode-options",
+    # CustomElementRegistry upgrade
+    ("custom-element-registry", "upgrade", "root"): "handle:node",
+    # ElementInternals setFormValue
+    ("element-internals", "set-form-value", "value"): "any",
+    ("element-internals", "set-form-value", "state"): "any",
+    # ElementInternals setValidity
+    ("element-internals", "set-validity", "flags"): "dictionary:validity-state-flags",
+    ("element-internals", "set-validity", "anchor"): "optional-handle:html-element",
+    # DataTransfer setDragImage
+    ("data-transfer", "set-drag-image", "image"): "handle:element",
+    # AnimationFrameProvider requestAnimationFrame
+    ("animation-frame-provider", "request-animation-frame", "callback"): "dictionary:frame-request-callback",
+    # IntersectionObserver unobserve target
+    ("intersection-observer", "unobserve", "target"): "handle:element",
+    # ResizeObserver observe options
+    ("resize-observer", "observe", "options"): "dictionary:resize-observer-options",
+    # Return type casts - properties that return values that need "as any" cast
+    # Properties that return readonly arrays that need spreading
+    ("data-transfer", "types"): "readonly-array",
+    ("clipboard-item", "types"): "readonly-array",
+    ("performance", "entryList"): "readonly-array"
+    ("navigator-language", "languages"): "readonly array"
+    ("performance-observer", "supportedEntryTypes"): "readonly array"
+    ("gamepad", "axes"): "readonly array"
+    ("gamepad", "buttons"): "readonly array"
+    # Location ancestorOrigins
+    ("location", "ancestorOrigins"): "readonly array"
+
+    # IntersectionObserverEntry root
+    ("intersection-observer-entry", "rootBounds"): "readonly array"
+    # ResizeObserverEntry borderBoxSize/contentBoxSize/devicePixelContentBoxSize
+    ("resize-observer-entry", "devicePixelContentBoxSize"): "readonly array"
+    ("resize-observer-size-list", "borderBoxSize/contentBoxSize/devicePixelContentBoxSize"): "readonly array"
+
+    # RTCSctpTransport.transport - wrong handle table
+    ("rtc-sctp-transport", "getTransport"): "rtc-dtls-transport",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -4155,6 +4263,14 @@ ENUM_PROPERTIES = {
     ("pointer-event", "get-pointer-type"): "PointerType",
     # InputEvent inputType
     ("input-event", "get-input-type"): "InputType",
+    # Crypto randomUUID returns UUID string
+    ("crypto", "random-uuid"): "UUID",
+    # PerformanceEntry entryType returns string
+    ("performance-entry", "get-entry-type"): "PerformanceEntryType",
+    # MediaSession playbackState returns string
+    ("media-session", "get-playback-state"): "MediaSessionPlaybackState",
+    # RTCError errorDetail returns string
+    ("rtc-error", "get-error-detail"): "RTCErrorDetailType",
 }
 
 # Enum value mappings (string → bigint)
@@ -4622,6 +4738,19 @@ ENUM_VALUE_MAPPINGS = {
         "historyUndo": 8,
         "historyRedo": 9,
     },
+    # MediaSessionPlaybackState
+    "MediaSessionPlaybackState": {
+        "none": 0,
+        "paused": 1,
+        "playing": 2,
+    },
+    # RTCErrorDetailType
+    "RTCErrorDetailType": {
+        "data-channel-failure": 0,
+        "dtls-failure": 1,
+        "fingerprint-failure": 2,
+        "sctp-failure": 3,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -4733,6 +4862,10 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("dom-token-list", "contains"): True,
     # DOMTokenList supports returns boolean
     ("dom-token-list", "supports"): True,
+    # TouchEvent getAltKey/getCtrlKey/getShiftKey return boolean
+    ("touch-event", "get-alt-key"): True,
+    ("touch-event", "get-ctrl-key"): True,
+    ("touch-event", "get-shift-key"): True,
 }
 
 # Properties that return number but need to be converted to bigint
@@ -4986,6 +5119,12 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("screen-orientation", "angle"): True,
     # GeolocationPositionError code
     ("geolocation-position-error", "code"): True,
+    # TouchList length
+    ("touch-list", "get-length"): True,
+    # IntersectionObserver thresholds
+    ("intersection-observer", "get-thresholds"): True,
+    # MediaStreamTrack getSettings capabilities number values
+    ("media-stream-track", "get-settings"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -5382,6 +5521,12 @@ SYNTHETIC_HANDLE_TYPES = {
     "canvas-image-source": ("CanvasImageSource", "canvasImageSourceHandles", "CanvasImageSource"),
     # html-option-or-opt-group
     "html-option-or-opt-group": ("HTMLOptGroupElement | HTMLOptionElement", "htmlOptionOrOptGroupHandles", "HtmlOptionOrOptGroup"),
+    # rtc-ice-candidate
+    "rtc-ice-candidate": ("RTCIceCandidate", "rtcIceCandidateHandles", "RtcIceCandidate"),
+    # url-search-params
+    "url-search-params": ("URLSearchParams", "urlSearchParamsHandles", "UrlSearchParams"),
+    # media-stream-track-event
+    "media-stream-track-event": ("MediaStreamTrackEvent", "mediaStreamTrackEventHandles", "MediaStreamTrackEvent"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -6369,6 +6514,42 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("rtc-data-channel", "onbufferedamountlow"),
     # MouseEvent getModifierState - method not property
     ("mouse-event", "getModifierState"),
+    # getType methods - missing from TypeScript DOM types
+    ("credential", "type"),
+    ("encoded-audio-chunk", "type"),
+    ("encoded-video-chunk", "type"),
+    ("image-decoder", "type"),
+    ("web-gl-active-info", "type"),
+    ("crypto-key", "type"),
+    ("css-rule", "type"),
+    ("style-sheet", "type"),
+    ("screen-orientation", "type"),
+    ("event", "type"),
+    ("mutation-record", "type"),
+    ("response", "type"),
+    ("html-link-element", "type"),
+    ("html-style-element", "type"),
+    ("htmlo-list-element", "type"),
+    ("htmlu-list-element", "type"),
+    ("htmlli-element", "type"),
+    ("html-anchor-element", "type"),
+    ("html-source-element", "type"),
+    ("html-embed-element", "type"),
+    ("html-object-element", "type"),
+    ("html-input-element", "type"),
+    ("html-button-element", "type"),
+    ("html-select-element", "type"),
+    ("html-text-area-element", "type"),
+    ("html-output-element", "type"),
+    ("html-field-set-element", "type"),
+    ("html-script-element", "type"),
+    ("data-transfer-item", "type"),
+    ("mime-type", "type"),
+    ("html-param-element", "type"),
+    ("performance-navigation-timing", "type"),
+    ("performance-navigation", "type"),
+    ("rtc-session-description", "type"),
+    ("rtc-ice-candidate", "type"),
 }
 
 # Properties that return readonly arrays and need spreading
