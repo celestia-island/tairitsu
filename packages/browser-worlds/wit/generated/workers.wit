@@ -46,7 +46,7 @@ interface service-worker-container {
     get-ready: func(self: service-worker-container-handle) -> u64;
 
     /// `register()` operation.
-    register: func(self: service-worker-container-handle, script-url: u64, options: option<u64>) -> u64;
+    register: func(self: service-worker-container-handle, script-url: string, options: option<u64>) -> u64;
 
     /// `getRegistrations()` operation.
     get-registrations: func(self: service-worker-container-handle) -> u64;

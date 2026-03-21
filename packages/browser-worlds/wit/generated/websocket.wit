@@ -61,7 +61,7 @@ interface web-socket {
     set-binary-type: func(self: web-socket-handle, value: u64);
 
     /// `send()` operation.
-    send: func(self: web-socket-handle, data: list<u8>);
+    send: func(self: web-socket-handle, data: string);
 }
 
 /// WebIDL interface: `CloseEvent`

@@ -273,6 +273,35 @@ def convert_type(type_str: str) -> str:
         inner = type_str[1:-1]
         parts = [p.strip() for p in re.split(r"\bor\b", inner)]
         real = [p for p in parts if p not in ("undefined", "null", "")]
+        
+        # Priority order for union types:
+        # 1. Boolean types (for properties like hidden that can be boolean or string)
+        # 2. String types (for properties like setAttribute value)
+        # 3. Numeric types
+        # 4. First type as fallback
+        
+        boolean_types = {"boolean", "bool"}
+        string_types = {"DOMString", "USVString", "CSSOMString", "ByteString", "string"}
+        numeric_types = {"unrestricted double", "double", "unrestricted float", "float", 
+                         "long long", "unsigned long long", "long", "unsigned long",
+                         "short", "unsigned short", "byte", "octet"}
+        
+        # Check for boolean types first
+        for p in real:
+            if p in boolean_types:
+                return f"option<bool>" if nullable else "bool"
+        
+        # Then check for string types
+        for p in real:
+            if p in string_types:
+                return f"option<string>" if nullable else "string"
+        
+        # For numeric types, use f64 as a universal numeric type
+        for p in real:
+            if p in numeric_types:
+                return f"option<f64>" if nullable else "f64"
+        
+        # Otherwise, use first type
         converted = convert_type(real[0]) if real else "string"
         if converted == "_":
             converted = "string"

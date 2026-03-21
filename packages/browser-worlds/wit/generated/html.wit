@@ -52,7 +52,7 @@ interface html-options-collection {
     undefined: func(self: html-options-collection-handle, index: u32, %option: option<u64>);
 
     /// `add()` operation.
-    add: func(self: html-options-collection-handle, element: u64, before: option<u64>);
+    add: func(self: html-options-collection-handle, element: u64, before: option<f64>);
 
     /// `remove()` operation.
     remove: func(self: html-options-collection-handle, index: s32);
@@ -805,9 +805,9 @@ interface htmli-frame-element {
     set-src: func(self: htmli-frame-element-handle, value: string);
 
     /// `srcdoc` attribute — getter.
-    get-srcdoc: func(self: htmli-frame-element-handle) -> u64;
+    get-srcdoc: func(self: htmli-frame-element-handle) -> string;
     /// `srcdoc` attribute — setter.
-    set-srcdoc: func(self: htmli-frame-element-handle, value: u64);
+    set-srcdoc: func(self: htmli-frame-element-handle, value: string);
 
     /// `name` attribute — getter.
     get-name: func(self: htmli-frame-element-handle) -> string;
@@ -2446,7 +2446,7 @@ interface html-select-element {
     named-item: func(self: html-select-element-handle, name: string) -> option<u64>;
 
     /// `add()` operation.
-    add: func(self: html-select-element-handle, element: u64, before: option<u64>);
+    add: func(self: html-select-element-handle, element: u64, before: option<f64>);
 
     /// `remove()` operation.
     remove: func(self: html-select-element-handle);
@@ -3722,7 +3722,7 @@ interface element-internals {
     get-shadow-root: func(self: element-internals-handle) -> option<u64>;
 
     /// `setFormValue()` operation.
-    set-form-value: func(self: element-internals-handle, value: option<u64>, state: option<u64>);
+    set-form-value: func(self: element-internals-handle, value: option<string>, state: option<string>);
 
     /// `form` attribute — getter.
     get-form: func(self: element-internals-handle) -> option<u64>;
@@ -4495,7 +4495,7 @@ interface dom-parser {
     type dom-parser-handle = u64;
 
     /// `parseFromString()` operation.
-    parse-from-string: func(self: dom-parser-handle, %string: u64, %type: u64) -> u64;
+    parse-from-string: func(self: dom-parser-handle, %string: string, %type: u64) -> u64;
 }
 
 /// WebIDL interface: `XMLSerializer`
@@ -4900,7 +4900,7 @@ interface worker-global-scope {
     get-navigator: func(self: worker-global-scope-handle) -> u64;
 
     /// `importScripts()` operation.
-    import-scripts: func(self: worker-global-scope-handle, urls: list<u64>);
+    import-scripts: func(self: worker-global-scope-handle, urls: list<string>);
 
     /// `onerror` attribute — getter.
     get-onerror: func(self: worker-global-scope-handle) -> u64;

@@ -131,7 +131,7 @@ interface rtc-peer-connection {
     remove-track: func(self: rtc-peer-connection-handle, sender: u64);
 
     /// `addTransceiver()` operation.
-    add-transceiver: func(self: rtc-peer-connection-handle, track-or-kind: u64, init: option<u64>) -> u64;
+    add-transceiver: func(self: rtc-peer-connection-handle, track-or-kind: string, init: option<u64>) -> u64;
 
     /// `ontrack` attribute — getter.
     get-ontrack: func(self: rtc-peer-connection-handle) -> u64;

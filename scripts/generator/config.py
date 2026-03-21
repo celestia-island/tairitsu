@@ -4822,9 +4822,6 @@ ENUM_PROPERTIES = {
     ("history", "scrollRestoration"): "ScrollRestoration",
     # TextTrack mode
     ("text-track", "mode"): "TextTrackMode",
-    # Element innerHTML/outerHTML
-    ("element", "innerHTML"): "HTMLString",
-    ("element", "outerHTML"): "HTMLString",
     # MediaList mediaText
     ("media-list", "mediaText"): "MediaText",
     # Request enums (additional)
@@ -4833,8 +4830,6 @@ ENUM_PROPERTIES = {
     ("request", "mode"): "RequestMode",
     # Response url
     ("response", "url"): "ResponseUrl",
-    # ShadowRoot innerHTML
-    ("shadow-root", "innerHTML"): "HTMLString",
     # HTMLMediaElement canPlayType (method returns enum)
     ("html-media-element", "canPlayType"): "CanPlayTypeResult",
     # MediaRecorder state
@@ -5184,9 +5179,6 @@ ENUM_VALUE_MAPPINGS = {
         "disabled": 0,
         "hidden": 1,
         "showing": 2,
-    },
-    "HTMLString": {
-        "": 0,
     },
     "MediaText": {
         "": 0,
@@ -5635,11 +5627,6 @@ ENUM_SETTER_PROPERTIES = {
     # XMLHttpRequest setter
     ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
     # URL setter - href removed, it's just a string property
-    # Element setters
-    ("element", "innerHTML"): "HTMLString",
-    ("element", "outerHTML"): "HTMLString",
-    # ShadowRoot setter
-    ("shadow-root", "innerHTML"): "HTMLString",
     # HTMLIFrameElement setter
     ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
     # WebRTC setters

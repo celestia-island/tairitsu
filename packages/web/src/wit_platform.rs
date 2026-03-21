@@ -363,8 +363,12 @@ mod wasm_impl {
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            // New WIT: set-style-property returns void
-            bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value);
+            // New WIT: set-style-property returns result<_, string>
+            if let Err(e) =
+                bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value)
+            {
+                log_warning(&format!("set_style_property failed: {}", e));
+            }
         }
 
         fn set_class(&self, element: &Self::Element, class: &str) {
@@ -430,9 +434,14 @@ mod wasm_impl {
     }
 
     pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: &VNode) -> Result<()> {
+        // Document handle for non-element-parent-node operations (getElementById)
+        // Document implements NonElementParentNode, so we use its handle
+        let doc_handle: u64 = 0; // Global document singleton uses handle 0
+
         let app = if let Some(handle) =
-            bindings::tairitsu_browser::full::document::get_element_by_id("app")
-        {
+            bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id(
+                doc_handle, "app",
+            ) {
             WitElement(handle)
         } else {
             let body = bindings::tairitsu_browser::full::document::get_body()
