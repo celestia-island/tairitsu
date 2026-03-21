@@ -2589,6 +2589,7 @@ export function blendFuncSeparate(self: bigint, srcRgb: bigint, dstRgb: bigint, 
 export function checkFramebufferStatus(self: bigint, target: bigint): bigint {
   const obj = lookupWebGLRenderingContextBase(self);
   return BigInt(obj.checkFramebufferStatus(Number(target)));
+  return BigInt(obj.checkFramebufferStatus(Number(target)));
 }
 
 /**
@@ -4234,6 +4235,7 @@ export function deleteSync(self: bigint, sync: bigint | undefined): void {
  */
 export function clientWaitSync(self: bigint, sync: bigint, flags: bigint, timeout: bigint): bigint {
   const obj = lookupWebGL2RenderingContextBase(self);
+  return BigInt(obj.clientWaitSync(lookupWebGlObject(sync), Number(flags), Number(timeout)));
   return BigInt(obj.clientWaitSync(lookupWebGlObject(sync), Number(flags), Number(timeout)));
 }
 

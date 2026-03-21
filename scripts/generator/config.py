@@ -736,6 +736,8 @@ HANDLE_RETURNING_FUNCTIONS = {
     # StyleSheet - ownerNode/parentStyleSheet properties
     ("style-sheet", "getOwnerNode"): "event-target",
     ("style-sheet", "getParentStyleSheet"): "css-style-sheet",
+    # Crypto - getRandomValues returns Uint8Array
+    ("crypto", "getRandomValues"): "uint8-array",
     # Window - object properties
     ("window", "getWindow"): "window",
     ("window", "getSelf"): "window",
@@ -2391,6 +2393,12 @@ PARAMETER_HANDLE_MAPPING = {
     ("tree-walker", "set-current-node", "value"): ("node", "Node"),
     ("resize-observer", "unobserve", "target"): ("element", "Element"),
     ("crypto", "get-random-values", "array"): ("uint8-array", "Uint8Array"),
+    # SubtleCrypto encrypt key parameter
+    ("subtle-crypto", "encrypt", "key"): ("crypto-key", "CryptoKey"),
+    # SpeechSynthesisUtterance voice setter
+    ("speech-synthesis-utterance", "set-voice", "value"): ("speech-synthesis-voice", "SpeechSynthesisVoice"),
+    # SubtleCrypto deriveBits baseKey parameter
+    ("subtle-crypto", "derive-bits", "base-key"): ("crypto-key", "CryptoKey"),
 }
 
 # Parameters that are dictionary types (not handles) - should be passed directly as objects
@@ -2431,6 +2439,8 @@ DICTIONARY_PARAMETER_TYPES = {
     ("payment-response", "retry", "error-fields"): "PaymentValidationErrors | undefined",
     # RTCPeerConnection
     ("rtc-peer-connection", "create-offer", "options"): "RTCOfferOptions | undefined",
+    # Geolocation watchPosition options
+    ("geolocation", "watch-position", "options"): "PositionOptions | undefined",
 }
 
 # Parameters that need bigint to number conversion
@@ -4625,6 +4635,23 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("url", "set-search", "value"): "string",
     # RTCDTMFSender.insertDTMF - duration is bigint but needs number conversion
     ("rtc-dtmf-sender", "insert-dtmf", "duration"): True,
+    # KeyboardEvent.initKeyboardEvent - locationArg is string but needs number conversion
+    ("keyboard-event", "init-keyboard-event", "location-arg"): True,
+    # TextEvent.initTextEvent - view is boolean but needs handle lookup
+    ("text-event", "init-text-event", "view-arg"): "optional-handle:window",
+    # SpeechRecognitionResultList item - index is string but needs number conversion
+    ("speech-recognition-result-list", "item", "index"): True,
+    # SpeechRecognitionResult item - index is string but needs number conversion
+    ("speech-recognition-result", "item", "index"): True,
+    # IDBCursor.advance - count is string but needs number conversion
+    ("idb-cursor", "advance", "count"): True,
+    # WebSocket.send - data is string | undefined but needs any cast
+    ("ws", "send", "data"): "any",
+    # SubtleCrypto deriveKey algorithm - needs any cast
+    ("subtle-crypto", "derive-key", "algorithm"): "any",
+    ("subtle-crypto", "derive-key", "derived-key-type"): "any",
+    # XPathExpression evaluate type parameter
+    ("x-path-expression", "evaluate", "type"): True,
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -4809,6 +4836,8 @@ ENUM_PROPERTIES = {
     ("payment-method-change-event", "methodName"): "MethodNameString",
     # PaymentResponse payerEmail (string → bigint)
     ("payment-response", "payerEmail"): "PayerEmailString",
+    # PaymentResponse methodName (string → bigint)
+    ("payment-response", "methodName"): "MethodNameString",
     # SpeechSynthesisUtterance lang (string → bigint)
     ("speech-synthesis-utterance", "lang"): "SpeechLang",
     # GeolocationPositionError message (string → bigint)
@@ -4816,7 +4845,7 @@ ENUM_PROPERTIES = {
     # RTCIceCandidate address (string → boolean)
     ("rtc-ice-candidate", "address"): "RTCIceCandidateAddress",
     # PerformanceNavigation redirectCount (number → string)
-    ("performance-navigation", "redirectCount"): "PerformanceRedirectCount",
+    ("performance-navigation", "redirect-count"): "PerformanceRedirectCount",
     # URL protocol (string → bigint)
     ("url", "protocol"): "UrlProtocol",
     # URL toJSON (string → bigint)
@@ -4832,11 +4861,27 @@ ENUM_PROPERTIES = {
     # MediaRecorder audioBitsPerSecond (number → string)
     ("media-recorder", "audio-bits-per-second"): "AudioBitsPerSecondString",
     # SpeechRecognitionResultList length (number → boolean)
-    ("speech-recognition-result-list", "length"): "RecognitionLengthBoolean",
+
     # PerformanceNavigationTiming unloadEventEnd (number → string)
     ("performance-navigation-timing", "unload-event-end"): "UnloadEventEndString",
     # SpeechSynthesisVoice lang (string → bigint)
     ("speech-synthesis-voice", "lang"): "SpeechSynthesisVoiceLang",
+    # PerformanceResourceTiming connectEnd (number → string)
+    ("performance-resource-timing", "connect-end"): "PerformanceConnectEndString",
+    # PerformanceResourceTiming responseStart (number → string)
+    ("performance-resource-timing", "response-start"): "PerformanceResponseStartString",
+    # PerformanceEntry name (string → bigint)
+    ("performance-entry", "name"): "PerformanceEntryName",
+    # SpeechSynthesisEvent name (string → number)
+    ("speech-synthesis-event", "name"): "SpeechSynthesisEventName",
+    # PaymentRequest id (string → number)
+    ("payment-request", "id"): "PaymentRequestId",
+    # RTCIceCandidate relatedAddress (string | undefined → bigint | undefined)
+    ("rtc-ice-candidate", "related-address"): "RTCIceRelatedAddress",
+    # RTCDataChannel bufferedAmountLowThreshold (number → string)
+    ("rtc-data-channel", "buffered-amount-low-threshold"): "BufferedAmountLowThresholdString",
+    # ExtendableMessageEvent lastEventId (string → number)
+    ("extendable-message-event", "last-event-id"): "ExtendableMessageEventLastEventId",
 }
 
 # Enum value mappings (string → bigint)
@@ -5457,11 +5502,6 @@ ENUM_VALUE_MAPPINGS = {
     "AudioBitsPerSecondString": {
         "0": 0,
     },
-    # RecognitionLengthBoolean (number as boolean)
-    "RecognitionLengthBoolean": {
-        "0": 0,
-        "1": 1,
-    },
     # UnloadEventEndString (opaque number)
     "UnloadEventEndString": {
         "0": 0,
@@ -5469,7 +5509,7 @@ ENUM_VALUE_MAPPINGS = {
     # SpeechSynthesisVoiceLang (opaque string)
     "SpeechSynthesisVoiceLang": {
         "": 0,
-    },
+    }
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -5619,6 +5659,8 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("clipboard-item", "supports"): True,
     # Headers.has returns boolean
     ("headers", "has"): True,
+    # KeyboardEvent.getModifierState returns boolean
+    ("keyboard-event", "get-modifier-state"): True,
 }
 
 # Getters that return optional types in DOM but non-optional in WIT
@@ -5887,7 +5929,7 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # GeolocationPositionError code
     ("geolocation-position-error", "code"): True,
     # TouchList length
-    ("touch-list", "get-length"): True,
+    ("touch-list", "length"): True,
     # IntersectionObserver thresholds
     ("intersection-observer", "get-thresholds"): True,
     # MediaStreamTrack getSettings capabilities number values
@@ -5909,6 +5951,13 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # SpeechRecognition
     ("speech-recognition-alternative", "confidence"): True,
     ("speech-recognition-result", "length"): True,
+    ("speech-recognition-result-list", "length"): True,
+    # ReadableByteStreamController desiredSize
+    ("readable-byte-stream-controller", "desiredSize"): True,
+    # ReadableStreamDefaultController desiredSize
+    ("readable-stream-default-controller", "desiredSize"): True,
+    # Performance.now()
+    ("performance", "now"): True,
     # UIEvent - which returns number
     ("ui-event", "which"): True,
     # UIEvent - detail returns number
@@ -5922,45 +5971,8 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # ResizeObserverSize - blockSize/inlineSize return number
     ("resize-observer-size", "block-size"): True,
     ("resize-observer-size", "inline-size"): True,
-    # DOMTokenList - length returns number
-    ("dom-token-list", "length"): True,
-    # RTCDataChannel - maxMessageSize returns number
-    ("rtc-data-channel", "get-max-message-size"): True,
-    # RTCDataChannel - id returns number
-    ("rtc-data-channel", "get-id"): True,
-    # RTCDataChannel - bufferedAmount returns number
-    ("rtc-data-channel", "get-buffered-amount"): True,
-    # RTCDataChannel - bufferedAmountLowThreshold returns number
-    ("rtc-data-channel", "get-buffered-amount-low-threshold"): True,
-    # RTCError - sdpLineNumber returns number
-    ("rtc-error", "get-sdp-line-number"): True,
-    # RTCError - sctpCauseCode returns number
-    ("rtc-error", "get-sctp-cause-code"): True,
-    # ExtendableMessageEvent - lastEventId returns string not number
-    ("extendable-message-event", "get-last-event-id"): True,
-    # PerformanceNavigationTiming - unloadEventStart returns number
-    ("performance-navigation-timing", "get-unload-event-start"): True,
-    # RTCIceCandidate - sdpMLineIndex returns number | undefined
-    ("rtc-ice-candidate", "get-sdp-m-line-index"): True,
-    # RTCSctpTransport - maxMessageSize returns number
-    ("rtc-sctp-transport", "get-max-message-size"): True,
-    # KeyboardEvent keyCode returns number
-    ("keyboard-event", "get-key-code"): True,
-    # SpeechSynthesisUtterance rate returns number
-    ("speech-synthesis-utterance", "get-rate"): True,
-    # PerformanceResourceTiming - workerStart/domainLookupStart/requestStart return number
-    ("performance-resource-timing", "get-worker-start"): True,
-    ("performance-resource-timing", "get-domain-lookup-start"): True,
-    ("performance-resource-timing", "get-request-start"): True,
-    # WheelEvent deltaZ returns number
-    ("wheel-event", "get-delta-z"): True,
     # ReadableStreamDefaultController desiredSize returns number
-    ("readable-stream-default-controller", "get-desired-size"): True,
-    # SpeechSynthesisEvent charIndex/charLength return number
-    ("speech-synthesis-event", "get-char-index"): True,
-    ("speech-synthesis-event", "get-char-length"): True,
-    # SpeechSynthesisUtterance rate returns number
-    ("speech-synthesis-utterance", "get-rate"): True,
+    ("readable-stream-default-controller", "desired-size"): True,
 }
 
 # Interface-specific browser attribute name overrides

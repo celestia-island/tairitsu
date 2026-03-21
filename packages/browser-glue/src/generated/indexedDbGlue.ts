@@ -522,9 +522,9 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: string): void {
+export function advance(handle: bigint, count: number): void {
   const obj = lookupIDBCursor(handle);
-  obj.advance(count);
+  obj.advance(Number(count));
 }
 
 /**
