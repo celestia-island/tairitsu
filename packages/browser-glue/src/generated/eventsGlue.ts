@@ -480,7 +480,7 @@ export type ClipboardChangeEventHandle = bigint;
 /**
  * `get-types()` operation.
  */
-export function ClipboardChangeEventGetTypes(self: bigint): (string)[] {
+export function ClipboardChangeEventGetTypes(self: bigint): string {
   const obj = lookupClipboardEvent(self);
   return obj.type;
 }
@@ -1212,7 +1212,7 @@ export function TouchEventGetShiftKey(self: bigint): bigint {
 /**
  * `get-modifier-state()` operation.
  */
-export function TouchEventGetModifierState(self: bigint, keyArg: string): bigint | undefined {
+export function TouchEventGetModifierState(self: bigint, keyArg: string): boolean {
   const obj = lookupTouchEvent(self);
   return (obj as any).getModifierState(keyArg);
 }
@@ -1267,7 +1267,7 @@ export function getDetail(self: bigint): bigint {
 /**
  * `init-ui-event()` operation.
  */
-export function initUiEvent(self: bigint, typeArg: string, bubblesArg: bigint, cancelableArg: string, viewArg: boolean, detailArg: string): void {
+export function initUiEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, detailArg: number | undefined): void {
   const obj = lookupUIEvent(self);
   obj.initUIEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), Number(detailArg));
 }
@@ -1496,7 +1496,7 @@ export function KeyboardEventGetModifierState(self: bigint, keyArg: string): big
 /**
  * `init-keyboard-event()` operation.
  */
-export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint, keyArg: string | undefined, locationArg: bigint | undefined, ctrlKey: boolean | undefined, altKey: bigint | undefined, shiftKey: boolean | undefined, metaKey: boolean | undefined): void {
+export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint, keyArg: string | undefined, locationArg: number | undefined, ctrlKey: boolean | undefined, altKey: boolean | undefined, shiftKey: boolean | undefined, metaKey: boolean | undefined): void {
   const obj = lookupKeyboardEvent(self);
   obj.initKeyboardEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), keyArg as any, Number(locationArg), Boolean(ctrlKey), Boolean(altKey), Boolean(shiftKey), metaKey !== undefined ? Boolean(metaKey) : undefined);
 }
@@ -1601,7 +1601,7 @@ export function TextEventGetData(self: bigint): string {
 /**
  * `init-text-event()` operation.
  */
-export function initTextEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean, view: bigint | undefined, data: string): void {
+export function initTextEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, view: bigint | undefined, data: string | undefined): void {
   const obj = lookupTextEvent(self);
   obj.initTextEvent(type, Boolean(bubbles), Boolean(cancelable), lookupOptionWindow(view), data as any);
 }

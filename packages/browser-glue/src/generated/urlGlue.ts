@@ -298,13 +298,9 @@ export function canParse(url: string, base: string | undefined): bigint {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): bigint {
+export function getHref(self: bigint): string {
   const obj = lookupURL(self);
-  const value = obj.href;
-  switch ((value as any)) {
-    case '': return 0n;
-    default: return 0n;
-  }
+  return obj.href;
 }
 
 /**
@@ -312,17 +308,13 @@ export function getHref(self: bigint): bigint {
  */
 export function setHref(self: bigint, value: string): void {
   const obj = lookupURL(self);
-  const _enumInput = value;
-  let enumValue: URLHref | '';
-  if (_enumInput === 0n) { enumValue = ''; }
-  else { enumValue = ''; }
-  obj.href = enumValue as any;
+  obj.href = value;
 }
 
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): boolean {
+export function getOrigin(self: bigint): string {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -350,7 +342,7 @@ export function setProtocol(self: bigint, value: string): void {
 /**
  * `get-username()` operation.
  */
-export function getUsername(self: bigint): bigint {
+export function getUsername(self: bigint): string {
   const obj = lookupURL(self);
   return obj.username;
 }
@@ -548,7 +540,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: bigint): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name as any, value as any);
 }

@@ -437,12 +437,12 @@ export function requestPermission(deprecatedCallback: bigint | undefined): bigin
  * Poll an async `requestPermission()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollRequestPermission(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollRequestPermission(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -455,7 +455,7 @@ export function getMaxActions(): number {
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: bigint): string {
+export function getOnclick(self: bigint): EventHandlerRecord {
   const obj = lookupNotification(self);
   return (obj as any).onclick;
 }
@@ -567,7 +567,7 @@ export function getBody(self: bigint): bigint {
 /**
  * `get-navigate()` operation.
  */
-export function getNavigate(self: bigint): bigint {
+export function getNavigate(self: bigint): string {
   const obj = lookupNotification(self);
   return (obj as any).navigate;
 }
@@ -675,7 +675,7 @@ export function getRequireInteraction(self: bigint): bigint {
 /**
  * `get-data()` operation.
  */
-export function getData(self: bigint): number {
+export function getData(self: bigint): string {
   const obj = lookupNotification(self);
   return obj.data;
 }
@@ -728,7 +728,7 @@ function lookupOptionServiceWorkerRegistration(handle: bigint | undefined): Serv
  *
  * Async operation: returns request ID, poll with `pollShowNotification()`
  */
-export function showNotification(self: bigint, title: string, options: number): bigint {
+export function showNotification(self: bigint, title: string, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerRegistration(self);
   const promise = obj.showNotification(title as any, options as any)
@@ -791,12 +791,12 @@ export function getNotifications(self: bigint, filter: GetNotificationOptions | 
  * Poll an async `getNotifications()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollGetNotifications(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollGetNotifications(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -998,7 +998,7 @@ export function getNotification(self: bigint): bigint {
 /**
  * `get-action()` operation.
  */
-export function getAction(self: bigint): boolean {
+export function getAction(self: bigint): string {
   const obj = lookupNotificationEvent(self);
   return (obj as any).action;
 }

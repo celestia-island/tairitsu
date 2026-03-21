@@ -4039,6 +4039,9 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("performance", "mark", "options"): "any",
     ("performance", "measure", "options"): "any",
     ("performance", "measure", "start-or-options"): "any",
+    ("performance", "measure", "start-or-measure-options"): "string | PerformanceMeasureOptions | undefined",
+    # Performance clearMeasures - measureName is string | undefined
+    ("performance", "clear-measures", "measure-name"): "string | undefined",
     # Performance setResourceTimingBufferSize - maxSize needs number conversion
     ("performance", "set-resource-timing-buffer-size", "max-size"): True,
     # ResizeObserverEntry box sizes - need array spread
@@ -4733,8 +4736,7 @@ ENUM_PROPERTIES = {
     ("navigation-activation", "navigationType"): "NavigationType",
     # Location href
     ("location", "href"): "LocationHref",
-    # URL href (for setter)
-    ("url", "href"): "URLHref",
+    # URL href - removed, href is just a string property, not an enum
     # HTMLHyperlinkElementUtils href
     ("html-hyperlink-element-utils", "href"): "HTMLHyperlinkHref",
     # MediaStreamTrack ready state
@@ -4866,8 +4868,7 @@ ENUM_PROPERTIES = {
     ("geolocation-position-error", "message"): "GeolocationErrorMessage",
     # RTCIceCandidate address (string → boolean)
     ("rtc-ice-candidate", "address"): "RTCIceCandidateAddress",
-    # PerformanceNavigation redirectCount (number → string)
-    ("performance-navigation", "redirectCount"): "PerformanceRedirectCount",
+    # PerformanceNavigation redirectCount - removed, it's a number not an enum
     # URL protocol (string → bigint)
     ("url", "protocol"): "UrlProtocol",
     # URL toJSON (string → bigint)
@@ -5560,8 +5561,7 @@ ENUM_SETTER_PROPERTIES = {
     ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
     # Location setter
     ("location", "href"): "LocationHref",
-    # URL setter
-    ("url", "href"): "URLHref",
+    # URL setter - href removed, it's just a string property
     # HTMLHyperlinkElementUtils setter
     ("html-hyperlink-element-utils", "href"): "HTMLHyperlinkHref",
     # Element setters
@@ -5810,6 +5810,12 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("performance-navigation-timing", "loadEventEnd"): True,
     ("performance-navigation-timing", "unloadEventStart"): True,
     ("performance-navigation-timing", "unloadEventEnd"): True,
+    ("performance-navigation-timing", "redirectCount"): True,
+    # PerformanceNavigation
+    ("performance-navigation", "redirectCount"): True,
+    # PerformanceResourceTiming
+    ("performance-resource-timing", "redirectStart"): True,
+    ("performance-resource-timing", "responseStatus"): True,
     # Events
     ("event", "eventPhase"): True,
     ("event", "timeStamp"): True,

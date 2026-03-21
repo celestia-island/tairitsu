@@ -793,12 +793,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -869,12 +869,12 @@ export function BodyJson(self: bigint): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollJson(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1084,7 +1084,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): boolean {
+export function getIntegrity(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.integrity;
 }
@@ -1100,7 +1100,7 @@ export function getKeepalive(self: bigint): bigint {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): string {
+export function getIsReloadNavigation(self: bigint): boolean {
   const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
@@ -1240,7 +1240,7 @@ export function getOk(self: bigint): bigint {
 /**
  * `get-status-text()` operation.
  */
-export function ResponseGetStatusText(self: bigint): bigint {
+export function ResponseGetStatusText(self: bigint): string {
   const obj = lookupResponse(self);
   return obj.statusText;
 }
@@ -1330,12 +1330,12 @@ export function fetch(self: bigint, input: bigint, init: bigint | undefined): bi
  * Poll an async `fetch()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFetch(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function pollFetch(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1352,7 +1352,7 @@ export function getPerformance(self: bigint): bigint {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): bigint {
+export function getOrigin(self: bigint): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.origin;
 }
@@ -1376,7 +1376,7 @@ export function getCrossOriginIsolated(self: bigint): bigint {
 /**
  * `report-error()` operation.
  */
-export function reportError(self: bigint, e: bigint | undefined): void {
+export function reportError(self: bigint, e: string): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.reportError(e);
 }
@@ -1392,7 +1392,7 @@ export function btoa(self: bigint, data: string): string {
 /**
  * `atob()` operation.
  */
-export function atob(self: bigint, data: bigint): string {
+export function atob(self: bigint, data: string): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.atob(data as any);
 }
@@ -1400,7 +1400,7 @@ export function atob(self: bigint, data: bigint): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (bigint | undefined)[]): number {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setTimeout(handler, timeout, _arguments);
 }
@@ -1408,7 +1408,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: bigint | undefined): void {
+export function clearTimeout(self: bigint, id: number | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(Number(id));
 }
@@ -1416,7 +1416,7 @@ export function clearTimeout(self: bigint, id: bigint | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: bigint, _arguments: (bigint)[]): number {
+export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setInterval(handler, timeout, _arguments);
 }
@@ -1432,7 +1432,7 @@ export function clearInterval(self: bigint, id: number | undefined): void {
 /**
  * `queue-microtask()` operation.
  */
-export function queueMicrotask(self: bigint, callback: bigint | undefined): void {
+export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback as any);
 }
@@ -1478,7 +1478,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): bigint {
+export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value as any, options as any);
 }

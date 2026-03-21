@@ -251,7 +251,7 @@ function lookupOptionIDBFactory(handle: bigint | undefined): IDBFactory | null {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): string {
+export function cmp(handle: bigint, first: string, second: string): number {
   const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -463,7 +463,7 @@ export function multiEntry(handle: bigint): boolean {
 /**
  * `unique()` operation.
  */
-export function unique(handle: bigint): string {
+export function unique(handle: bigint): boolean {
   const obj = lookupIDBIndex(handle);
   return (obj as any).unique();
 }

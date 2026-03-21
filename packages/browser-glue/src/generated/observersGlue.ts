@@ -428,7 +428,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): (bigint)[] {
+export function getDelay(self: bigint): number {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -436,7 +436,7 @@ export function getDelay(self: bigint): (bigint)[] {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): string {
+export function getTrackVisibility(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -444,7 +444,7 @@ export function getTrackVisibility(self: bigint): string {
 /**
  * `observe()` operation.
  */
-export function IntersectionObserverObserve(self: bigint, target: boolean): void {
+export function IntersectionObserverObserve(self: bigint, target: bigint): void {
   const obj = lookupIntersectionObserver(self);
   obj.observe(lookupElement(target));
 }
