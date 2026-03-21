@@ -24,6 +24,7 @@ from .config import (
     correct_type_casing,
     READONLY_ARRAY_PROPERTIES,
     GETTER_RETURN_COALESCING,
+    GETTER_HANDLE_NON_NULL_ASSERTION,
     HANDLE_RETURNING_ARRAY_PROPERTIES,
     PARAMS_TO_SKIP,
     SETTER_METHOD_NAMES,
@@ -159,6 +160,10 @@ class CodeGenerator:
                                 needed_synthetic_types.add("event-listener")
                             elif conversion_type == "node-array":
                                 needed_synthetic_types.add("node")
+                    if param_key in PARAMETER_HANDLE_MAPPING:
+                        target_iface, _ = PARAMETER_HANDLE_MAPPING[param_key]
+                        if target_iface in SYNTHETIC_HANDLE_TYPES:
+                            needed_synthetic_types.add(target_iface)
 
         generated_helpers = set()
         
@@ -249,6 +254,14 @@ class CodeGenerator:
                         lines.append(f"    throw new Error(`{iface.browser_class} handle ${{handle}} not found`);")
                         lines.append("  }")
                         lines.append("  return obj!;")
+                        lines.append("}")
+                        lines.append("")
+                        lines.append(f"/** Lookup an optional {iface.browser_class} by handle. */")
+                        lines.append(f"function lookupOption{iface.handle_pascal}(handle: bigint | undefined): {js_type} | null {{")
+                        lines.append("  if (handle === undefined || handle === 0n) {")
+                        lines.append("    return null;")
+                        lines.append("  }")
+                        lines.append(f"  return _{iface.handle_var}.get(handle) ?? null;")
                         lines.append("}")
                         generated_helpers.add(iface.handle_pascal)
 
@@ -453,7 +466,11 @@ class CodeGenerator:
             if func.return_is_optional:
                 lines.append(f"  if (_callResult === null) return undefined;")
             lines.append(f"  const handle = _next{target_pascal}++;")
-            lines.append(f"  _{target_var}.set(handle, _callResult);")
+            non_null_key = (iface.wit_name, func.wit_name)
+            if non_null_key in GETTER_HANDLE_NON_NULL_ASSERTION:
+                lines.append(f"  _{target_var}.set(handle, _callResult!);")
+            else:
+                lines.append(f"  _{target_var}.set(handle, _callResult);")
             lines.append("  return handle;")
         else:
             enum_key = (iface.wit_name, prop_name)
@@ -863,6 +880,8 @@ class CodeGenerator:
                     converted_args.append(f"{param.name} as any")
                 elif conversion_type == "boolean-or-undefined":
                     converted_args.append(f"{param.name} !== undefined ? Boolean({param.name}) : undefined")
+                elif conversion_type == "boolean-or-false":
+                    converted_args.append(f"Boolean({param.name} ?? false)")
                 elif isinstance(conversion_type, str) and conversion_type.startswith("handle-array:"):
                     target_type = conversion_type[13:]
                     _, target_pascal = self._get_handle_info(target_type)
@@ -943,6 +962,8 @@ class CodeGenerator:
                         converted_args.append(f"{param.name} as any")
                     elif conversion_type == "boolean-or-undefined":
                         converted_args.append(f"{param.name} !== undefined ? Boolean({param.name}) : undefined")
+                    elif conversion_type == "boolean-or-false":
+                        converted_args.append(f"Boolean({param.name} ?? false)")
                     elif isinstance(conversion_type, str) and conversion_type.startswith("handle-array:"):
                         target_type = conversion_type[13:]
                         _, target_pascal = self._get_handle_info(target_type)

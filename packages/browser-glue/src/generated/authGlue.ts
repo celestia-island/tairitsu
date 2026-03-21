@@ -253,6 +253,14 @@ function lookupCredential(handle: bigint): Credential {
   }
   return obj!;
 }
+
+/** Lookup an optional Credential by handle. */
+function lookupOptionCredential(handle: bigint | undefined): Credential | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _credentialHandles.get(handle) ?? null;
+}
 /**
  * `get-id()` operation.
  */
@@ -325,6 +333,14 @@ function lookupCredentialUserData(handle: bigint): any {
   }
   return obj!;
 }
+
+/** Lookup an optional any by handle. */
+function lookupOptionCredentialUserData(handle: bigint | undefined): any | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _credentialUserDatahandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -365,6 +381,14 @@ function lookupCredentialsContainer(handle: bigint): CredentialsContainer {
     throw new Error(`CredentialsContainer handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CredentialsContainer by handle. */
+function lookupOptionCredentialsContainer(handle: bigint | undefined): CredentialsContainer | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _credentialsContainerhandles.get(handle) ?? null;
 }
 /**
  * `get()` operation.
@@ -537,6 +561,14 @@ function lookupPasswordCredential(handle: bigint): any {
   }
   return obj!;
 }
+
+/** Lookup an optional PasswordCredential by handle. */
+function lookupOptionPasswordCredential(handle: bigint | undefined): any | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _passwordCredentialhandles.get(handle) ?? null;
+}
 /**
  * `get-password()` operation.
  */
@@ -563,6 +595,14 @@ function lookupFederatedCredential(handle: bigint): any {
     throw new Error(`FederatedCredential handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional FederatedCredential by handle. */
+function lookupOptionFederatedCredential(handle: bigint | undefined): any | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _federatedCredentialhandles.get(handle) ?? null;
 }
 /**
  * `get-provider()` operation.

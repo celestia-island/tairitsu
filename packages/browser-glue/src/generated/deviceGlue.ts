@@ -776,7 +776,7 @@ export function getServiceWorker(): bigint {
 /**
  * `vibrate()` operation.
  */
-export function vibrate(pattern: bigint): bigint {
+export function vibrate(pattern: string): bigint {
   return (navigator as any).vibrate(pattern) ? 1n : 0n;
 }
 
@@ -806,7 +806,7 @@ export function getChargingTime(self: bigint): number {
 /**
  * `get-discharging-time()` operation.
  */
-export function getDischargingTime(self: bigint): bigint {
+export function getDischargingTime(self: bigint): number {
   const obj = lookupBatteryManager(self);
   return obj.dischargingTime;
 }
@@ -822,7 +822,7 @@ export function getLevel(self: bigint): number {
 /**
  * `get-onchargingchange()` operation.
  */
-export function getOnchargingchange(self: bigint): EventHandlerRecord {
+export function getOnchargingchange(self: bigint): bigint {
   const obj = lookupBatteryManager(self);
   return obj.onchargingchange;
 }
@@ -830,7 +830,7 @@ export function getOnchargingchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchargingchange()` operation.
  */
-export function setOnchargingchange(self: bigint, value: string): void {
+export function setOnchargingchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupBatteryManager(self);
   obj.onchargingchange = value;
 }
@@ -838,7 +838,7 @@ export function setOnchargingchange(self: bigint, value: string): void {
 /**
  * `get-onchargingtimechange()` operation.
  */
-export function getOnchargingtimechange(self: bigint): boolean {
+export function getOnchargingtimechange(self: bigint): EventHandlerRecord {
   const obj = lookupBatteryManager(self);
   return obj.onchargingtimechange;
 }
@@ -965,7 +965,7 @@ export function getButtons(self: bigint): bigint {
 /**
  * `get-touches()` operation.
  */
-export function getTouches(self: bigint): string | undefined {
+export function getTouches(self: bigint): (bigint)[] {
   const obj = lookupGamepad(self);
   return (obj as any).touches;
 }
@@ -999,6 +999,14 @@ function lookupGamepadButton(handle: bigint): GamepadButton {
     throw new Error(`GamepadButton handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GamepadButton by handle. */
+function lookupOptionGamepadButton(handle: bigint | undefined): GamepadButton | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _gamepadButtonhandles.get(handle) ?? null;
 }
 /**
  * `get-pressed()` operation.
@@ -1043,10 +1051,18 @@ function lookupGamepadHapticActuator(handle: bigint): GamepadHapticActuator {
   }
   return obj!;
 }
+
+/** Lookup an optional GamepadHapticActuator by handle. */
+function lookupOptionGamepadHapticActuator(handle: bigint | undefined): GamepadHapticActuator | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _gamepadHapticActuatorhandles.get(handle) ?? null;
+}
 /**
  * `get-effects()` operation.
  */
-export function getEffects(self: bigint): (string)[] {
+export function getEffects(self: bigint): (bigint)[] {
   const obj = lookupGamepadHapticActuator(self);
   return (obj as any).effects;
 }
@@ -1056,7 +1072,7 @@ export function getEffects(self: bigint): (string)[] {
  *
  * Async operation: returns request ID, poll with `pollPlayEffect()`
  */
-export function playEffect(self: bigint, type: bigint, params: bigint | undefined): bigint {
+export function playEffect(self: bigint, type: bigint, params: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupGamepadHapticActuator(self);
   const promise = obj.playEffect(type as any, params as any)
@@ -1081,12 +1097,12 @@ export function playEffect(self: bigint, type: bigint, params: bigint | undefine
  * Poll an async `playEffect()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPlayEffect(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollPlayEffect(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string | undefined } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1119,12 +1135,12 @@ export function reset(self: bigint): bigint {
  * Poll an async `reset()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollReset(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollReset(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -1145,6 +1161,14 @@ function lookupGamepadEvent(handle: bigint): GamepadEvent {
     throw new Error(`GamepadEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GamepadEvent by handle. */
+function lookupOptionGamepadEvent(handle: bigint | undefined): GamepadEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _gamepadEventhandles.get(handle) ?? null;
 }
 /**
  * `get-gamepad()` operation.
@@ -1175,6 +1199,14 @@ function lookupWindowEventrs(handle: bigint): WindowEventHandlers {
     throw new Error(`WindowEventHandlers handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WindowEventHandlers by handle. */
+function lookupOptionWindowEventrs(handle: bigint | undefined): WindowEventHandlers | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _windowEventhandlesrshandles.get(handle) ?? null;
 }
 /**
  * `get-ongamepadconnected()` operation.
@@ -1243,7 +1275,7 @@ export function setOnbeforeprint(self: bigint, value: EventHandlerRecord): void 
 /**
  * `get-onbeforeunload()` operation.
  */
-export function getOnbeforeunload(self: bigint): OnBeforeUnloadEventHandlerRecord {
+export function getOnbeforeunload(self: bigint): EventHandlerRecord {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onbeforeunload;
 }
@@ -1267,7 +1299,7 @@ export function getOnhashchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onhashchange()` operation.
  */
-export function setOnhashchange(self: bigint, value: number): void {
+export function setOnhashchange(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onhashchange = value;
 }
@@ -1283,7 +1315,7 @@ export function getOnlanguagechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onlanguagechange()` operation.
  */
-export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnlanguagechange(self: bigint, value: number): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onlanguagechange = value;
 }
@@ -1315,7 +1347,7 @@ export function getOnmessageerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onmessageerror = value;
 }
@@ -1347,7 +1379,7 @@ export function getOnonline(self: bigint): bigint {
 /**
  * `set-ononline()` operation.
  */
-export function setOnonline(self: bigint, value: EventHandlerRecord): void {
+export function setOnonline(self: bigint, value: number): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).ononline = value;
 }
@@ -1363,7 +1395,7 @@ export function getOnpagehide(self: bigint): EventHandlerRecord {
 /**
  * `set-onpagehide()` operation.
  */
-export function setOnpagehide(self: bigint, value: string): void {
+export function setOnpagehide(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpagehide = value;
 }
@@ -1379,7 +1411,7 @@ export function getOnpagereveal(self: bigint): EventHandlerRecord {
 /**
  * `set-onpagereveal()` operation.
  */
-export function setOnpagereveal(self: bigint, value: EventHandlerRecord): void {
+export function setOnpagereveal(self: bigint, value: string): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpagereveal = value as any;
 }
@@ -1395,7 +1427,7 @@ export function getOnpageshow(self: bigint): EventHandlerRecord {
 /**
  * `set-onpageshow()` operation.
  */
-export function setOnpageshow(self: bigint, value: string): void {
+export function setOnpageshow(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpageshow = value;
 }
@@ -1411,7 +1443,7 @@ export function getOnpageswap(self: bigint): EventHandlerRecord {
 /**
  * `set-onpageswap()` operation.
  */
-export function setOnpageswap(self: bigint, value: EventHandlerRecord): void {
+export function setOnpageswap(self: bigint, value: string): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpageswap = value;
 }
@@ -1459,7 +1491,7 @@ export function getOnstorage(self: bigint): EventHandlerRecord {
 /**
  * `set-onstorage()` operation.
  */
-export function setOnstorage(self: bigint, value: EventHandlerRecord): void {
+export function setOnstorage(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onstorage = value;
 }
@@ -1467,7 +1499,7 @@ export function setOnstorage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onunhandledrejection()` operation.
  */
-export function getOnunhandledrejection(self: bigint): string | undefined {
+export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onunhandledrejection;
 }
@@ -1483,7 +1515,7 @@ export function setOnunhandledrejection(self: bigint, value: EventHandlerRecord)
 /**
  * `get-onunload()` operation.
  */
-export function getOnunload(self: bigint): string {
+export function getOnunload(self: bigint): EventHandlerRecord {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onunload;
 }
@@ -1491,7 +1523,7 @@ export function getOnunload(self: bigint): string {
 /**
  * `set-onunload()` operation.
  */
-export function setOnunload(self: bigint, value: EventHandlerRecord): void {
+export function setOnunload(self: bigint, value: string): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onunload = value;
 }
@@ -1508,7 +1540,7 @@ export type GeolocationHandle = bigint;
  *
  * Async operation: returns request ID, poll with `pollGetCurrentPosition()`
  */
-export function getCurrentPosition(self: bigint, successCallback: bigint, errorCallback: string, options: bigint): bigint {
+export function getCurrentPosition(self: bigint, successCallback: bigint, errorCallback: bigint | undefined, options: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupGeolocation(self);
   const promise = (obj as any).getCurrentPosition(lookupPositionCallback(successCallback), lookupOptionPositionErrorCallback(errorCallback), options)
@@ -1544,7 +1576,7 @@ export function pollGetCurrentPosition(requestId: bigint): { ok: true } | { ok: 
 /**
  * `watch-position()` operation.
  */
-export function watchPosition(self: bigint, successCallback: boolean, errorCallback: bigint, options: bigint | undefined): bigint {
+export function watchPosition(self: bigint, successCallback: string, errorCallback: bigint, options: bigint | undefined): string {
   const obj = lookupGeolocation(self);
   return obj.watchPosition(lookupPositionCallback(successCallback), lookupOptionPositionErrorCallback(errorCallback), options as any);
 }
@@ -1576,6 +1608,14 @@ function lookupGeolocationPosition(handle: bigint): GeolocationPosition {
   }
   return obj!;
 }
+
+/** Lookup an optional GeolocationPosition by handle. */
+function lookupOptionGeolocationPosition(handle: bigint | undefined): GeolocationPosition | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _geolocationPositionhandles.get(handle) ?? null;
+}
 /**
  * `get-coords()` operation.
  */
@@ -1598,7 +1638,7 @@ export function GeolocationPositionGetTimestamp(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function GeolocationPositionToJson(self: bigint): bigint {
+export function GeolocationPositionToJson(self: bigint): string | undefined {
   const obj = lookupGeolocationPosition(self);
   return obj.toJSON();
 }
@@ -1694,7 +1734,7 @@ export function getSpeed(self: bigint): bigint | undefined {
 /**
  * `to-json()` operation.
  */
-export function GeolocationCoordinatesToJson(self: bigint): EventHandlerRecord {
+export function GeolocationCoordinatesToJson(self: bigint): bigint {
   const obj = lookupGeolocationCoordinates(self);
   return obj.toJSON();
 }
@@ -1717,6 +1757,14 @@ function lookupGeolocationPositionError(handle: bigint): GeolocationPositionErro
     throw new Error(`GeolocationPositionError handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GeolocationPositionError by handle. */
+function lookupOptionGeolocationPositionError(handle: bigint | undefined): GeolocationPositionError | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _geolocationPositionErrorhandles.get(handle) ?? null;
 }
 /**
  * `get-code()` operation.
@@ -1753,10 +1801,18 @@ function lookupScreenOrientation(handle: bigint): ScreenOrientation {
   }
   return obj!;
 }
+
+/** Lookup an optional ScreenOrientation by handle. */
+function lookupOptionScreenOrientation(handle: bigint | undefined): ScreenOrientation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _screenOrientationhandles.get(handle) ?? null;
+}
 /**
  * `lock()` operation.
  */
-export function lock(self: bigint, orientation: bigint): bigint {
+export function lock(self: bigint, orientation: string): bigint {
   const obj = lookupScreenOrientation(self);
   const _callResult = (obj as any).lock(orientation);
   const handle = _nextPromiseVoid++;

@@ -240,10 +240,18 @@ function lookupFileReader(handle: bigint): FileReader {
   }
   return obj!;
 }
+
+/** Lookup an optional FileReader by handle. */
+function lookupOptionFileReader(handle: bigint | undefined): FileReader | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileReaderhandles.get(handle) ?? null;
+}
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: bigint } {
+export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -266,7 +274,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): boolean {
+export function resultVal(handle: bigint): string | undefined {
   const obj = lookupFileReader(handle);
   return (obj as any).result() ?? undefined;
 }
@@ -289,6 +297,14 @@ function lookupFileList(handle: bigint): FileList {
     throw new Error(`FileList handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional FileList by handle. */
+function lookupOptionFileList(handle: bigint | undefined): FileList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileListhandles.get(handle) ?? null;
 }
 /**
  * `length()` operation.

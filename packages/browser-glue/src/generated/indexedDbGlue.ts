@@ -240,6 +240,14 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
   }
   return obj!;
 }
+
+/** Lookup an optional IDBFactory by handle. */
+function lookupOptionIDBFactory(handle: bigint | undefined): IDBFactory | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbFactoryhandles.get(handle) ?? null;
+}
 /**
  * `cmp()` operation.
  */
@@ -266,6 +274,14 @@ function lookupIdbDb(handle: bigint): IDBDatabase {
     throw new Error(`IDBDatabase handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional IDBDatabase by handle. */
+function lookupOptionIdbDb(handle: bigint | undefined): IDBDatabase | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbDbhandles.get(handle) ?? null;
 }
 /**
  * `name()` operation.
@@ -302,6 +318,14 @@ function lookupIdbTx(handle: bigint): IDBTransaction {
   }
   return obj!;
 }
+
+/** Lookup an optional IDBTransaction by handle. */
+function lookupOptionIdbTx(handle: bigint | undefined): IDBTransaction | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbTxhandles.get(handle) ?? null;
+}
 /**
  * `commit()` operation.
  */
@@ -336,6 +360,14 @@ function lookupIdbStore(handle: bigint): IDBObjectStore {
     throw new Error(`IDBObjectStore handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional IDBObjectStore by handle. */
+function lookupOptionIdbStore(handle: bigint | undefined): IDBObjectStore | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbStorehandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -387,6 +419,14 @@ function lookupIDBIndex(handle: bigint): IDBIndex {
     throw new Error(`IDBIndex handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional IDBIndex by handle. */
+function lookupOptionIDBIndex(handle: bigint | undefined): IDBIndex | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbIndexhandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -446,6 +486,14 @@ function lookupIDBCursor(handle: bigint): IDBCursor {
     throw new Error(`IDBCursor handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional IDBCursor by handle. */
+function lookupOptionIDBCursor(handle: bigint | undefined): IDBCursor | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbCursorhandles.get(handle) ?? null;
 }
 /**
  * `source()` operation.
@@ -514,6 +562,14 @@ function lookupIDBRequest(handle: bigint): IDBRequest {
   }
   return obj!;
 }
+
+/** Lookup an optional IDBRequest by handle. */
+function lookupOptionIDBRequest(handle: bigint | undefined): IDBRequest | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _idbRequesthandles.get(handle) ?? null;
+}
 /**
  * `result-val()` operation.
  */
@@ -525,7 +581,7 @@ export function resultVal(handle: bigint): string {
 /**
  * `source()` operation.
  */
-export function IdbRequestSource(handle: bigint): boolean | undefined {
+export function IdbRequestSource(handle: bigint): string | undefined {
   const obj = lookupIDBRequest(handle);
   return (obj as any).source() ?? undefined;
 }

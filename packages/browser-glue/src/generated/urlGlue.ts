@@ -269,6 +269,14 @@ function lookupURL(handle: bigint): URL {
   }
   return obj!;
 }
+
+/** Lookup an optional URL by handle. */
+function lookupOptionURL(handle: bigint | undefined): URL | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _urlHandles.get(handle) ?? null;
+}
 /**
  * `parse()` operation.
  */
@@ -314,7 +322,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): string {
+export function getOrigin(self: bigint): EventHandlerRecord {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -354,7 +362,7 @@ export function setUsername(self: bigint, value: string): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): EventHandlerRecord {
+export function getPassword(self: bigint): string {
   const obj = lookupURL(self);
   return obj.password;
 }
@@ -414,7 +422,7 @@ export function getPort(self: bigint): string {
 /**
  * `set-port()` operation.
  */
-export function setPort(self: bigint, value: EventHandlerRecord): void {
+export function setPort(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.port = value;
 }
@@ -505,6 +513,14 @@ function lookupURLSearchParams(handle: bigint): URLSearchParams {
   }
   return obj!;
 }
+
+/** Lookup an optional URLSearchParams by handle. */
+function lookupOptionURLSearchParams(handle: bigint | undefined): URLSearchParams | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _urlSearchParamshandles.get(handle) ?? null;
+}
 /**
  * `get-size()` operation.
  */
@@ -516,7 +532,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: string, value: EventHandlerRecord): void {
+export function append(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name as any, value);
 }
@@ -524,7 +540,7 @@ export function append(self: bigint, name: string, value: EventHandlerRecord): v
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: EventHandlerRecord): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name as any, value);
 }
@@ -556,7 +572,7 @@ export function has(self: bigint, name: string, value: string | undefined): bool
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, name: bigint | undefined, value: string): void {
+export function _set(self: bigint, name: string, value: string): void {
   const obj = lookupURLSearchParams(self);
   obj.set(name as any, value);
 }
