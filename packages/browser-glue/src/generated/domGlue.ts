@@ -2768,7 +2768,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: string): boolean {
+export function DomTokenListContains(self: bigint, token: string): EventHandlerRecord {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token);
 }
@@ -2776,7 +2776,7 @@ export function DomTokenListContains(self: bigint, token: string): boolean {
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: (bigint)[]): void {
+export function add(self: bigint, tokens: EventHandlerRecord): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -2784,7 +2784,7 @@ export function add(self: bigint, tokens: (bigint)[]): void {
 /**
  * `remove()` operation.
  */
-export function DomTokenListRemove(self: bigint, tokens: EventHandlerRecord): void {
+export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
   const obj = lookupDOMTokenList(self);
   obj.remove(tokens as any);
 }
@@ -3045,7 +3045,7 @@ export function createNsResolver(self: bigint, nodeResolver: bigint): bigint {
 /**
  * `evaluate()` operation.
  */
-export function XPathEvaluatorBaseEvaluate(self: bigint, expression: string, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathEvaluatorBaseEvaluate(self: bigint, expression: bigint, contextNode: bigint, resolver: bigint | undefined, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathEvaluatorBase(self);
   const _callResult = obj.evaluate(expression, lookupNode(contextNode), resolver as any, type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
@@ -3083,7 +3083,7 @@ export function importStylesheet(self: bigint, style: bigint): void {
 /**
  * `transform-to-fragment()` operation.
  */
-export function transformToFragment(self: bigint, source: string, output: bigint): bigint {
+export function transformToFragment(self: bigint, source: bigint, output: bigint): bigint {
   const obj = lookupXSLTProcessor(self);
   const _callResult = obj.transformToFragment(lookupNode(source), lookupDocument(output));
   const handle = _nextDocumentFragment++;
@@ -3094,7 +3094,7 @@ export function transformToFragment(self: bigint, source: string, output: bigint
 /**
  * `transform-to-document()` operation.
  */
-export function transformToDocument(self: bigint, source: string): bigint {
+export function transformToDocument(self: bigint, source: bigint): bigint {
   const obj = lookupXSLTProcessor(self);
   const _callResult = obj.transformToDocument(lookupNode(source));
   const handle = _nextDocument++;

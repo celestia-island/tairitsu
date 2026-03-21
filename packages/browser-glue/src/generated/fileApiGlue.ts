@@ -255,7 +255,7 @@ export function abort(handle: bigint): void {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): EventHandlerRecord {
+export function readyState(handle: bigint): number {
   const obj = lookupFileReader(handle);
   return (obj as any).readyState();
 }

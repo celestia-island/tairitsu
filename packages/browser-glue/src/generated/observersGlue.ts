@@ -234,6 +234,10 @@ let _nextElement = 1n;
 const _numberListHandles = new Map<bigint, number[]>();
 let _nextNumberList = 1n;
 
+/** Handle table for resize-observer-size-list values */
+const _resizeObserverSizeListhandles = new Map<bigint, ResizeObserverSize[]>();
+let _nextResizeObserverSizeList = 1n;
+
 // ---------------------------------------------------------------------------
 // Helper functions for handle lookups
 // ---------------------------------------------------------------------------
@@ -289,6 +293,23 @@ function lookupOptionNumberList(handle: bigint | undefined): number[] | null {
   return _numberListHandles.get(handle) ?? null;
 }
 
+/** Lookup a resize-observer-size-list value by handle. */
+function lookupResizeObserverSizeList(handle: bigint): ResizeObserverSize[] {
+  const obj = _resizeObserverSizeListhandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`resize-observer-size-list handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional resize-observer-size-list value by handle. */
+function lookupOptionResizeObserverSizeList(handle: bigint | undefined): ResizeObserverSize[] | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _resizeObserverSizeListhandles.get(handle) ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // WIT interface: intersection-observer
 // ---------------------------------------------------------------------------
@@ -323,7 +344,7 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): string {
+export function getRootMargin(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return obj.rootMargin;
 }
@@ -331,7 +352,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): number | undefined {
+export function getScrollMargin(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).scrollMargin;
 }
@@ -350,7 +371,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): bigint {
+export function getDelay(self: bigint): number {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -358,7 +379,7 @@ export function getDelay(self: bigint): bigint {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): boolean {
+export function getTrackVisibility(self: bigint): (string)[] {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -374,7 +395,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
+export function IntersectionObserverUnobserve(self: bigint, target: string): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(target);
 }
@@ -390,7 +411,7 @@ export function IntersectionObserverDisconnect(self: bigint): void {
 /**
  * `take-records()` operation.
  */
-export function takeRecords(self: bigint): number {
+export function takeRecords(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return obj.takeRecords();
 }
@@ -513,7 +534,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: number | undefined | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   obj.observe(target, options);
 }
