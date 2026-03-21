@@ -588,7 +588,7 @@ export type HeadersHandle = bigint;
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: string, value: (bigint)[]): void {
+export function HeadersAppend(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
   obj.append(name, value as any);
 }
@@ -635,7 +635,7 @@ export function HeadersHas(self: bigint, name: string): bigint {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: EventHandlerRecord, value: string): void {
+export function HeadersSet(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
   obj.set(name as any, value as any);
 }
@@ -793,12 +793,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: (bigint)[] } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: (bigint)[] } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1092,9 +1092,9 @@ export function getIntegrity(self: bigint): string {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): boolean {
+export function getKeepalive(self: bigint): bigint {
   const obj = lookupRequest(self);
-  return obj.keepalive;
+  return obj.keepalive ? 1n : 0n;
 }
 
 /**
@@ -1167,7 +1167,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): bigint {
+export function redirect(url: boolean, status: number | undefined): bigint {
   const _callResult = Response.redirect(url as any, Number(status));
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1177,7 +1177,7 @@ export function redirect(url: string, status: number | undefined): bigint {
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: string): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1360,17 +1360,17 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-is-secure-context()` operation.
  */
-export function getIsSecureContext(self: bigint): boolean {
+export function getIsSecureContext(self: bigint): bigint {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.isSecureContext;
+  return obj.isSecureContext ? 1n : 0n;
 }
 
 /**
  * `get-cross-origin-isolated()` operation.
  */
-export function getCrossOriginIsolated(self: bigint): boolean {
+export function getCrossOriginIsolated(self: bigint): bigint {
   const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.crossOriginIsolated;
+  return obj.crossOriginIsolated ? 1n : 0n;
 }
 
 /**
@@ -1384,7 +1384,7 @@ export function reportError(self: bigint, e: string): void {
 /**
  * `btoa()` operation.
  */
-export function btoa(self: bigint, data: string): string {
+export function btoa(self: bigint, data: bigint | undefined): bigint {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.btoa(data);
 }
@@ -1400,7 +1400,7 @@ export function atob(self: bigint, data: string): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (string)[]): number {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined | undefined, _arguments: (bigint)[]): bigint | undefined {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setTimeout(handler, timeout, _arguments);
 }
@@ -1408,7 +1408,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: bigint): void {
+export function clearTimeout(self: bigint, id: bigint | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(Number(id));
 }
@@ -1416,7 +1416,7 @@ export function clearTimeout(self: bigint, id: bigint): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: bigint): number {
+export function setInterval(self: bigint, handler: bigint | undefined, timeout: number | undefined, _arguments: bigint): bigint {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setInterval(handler, timeout, _arguments);
 }
@@ -1424,7 +1424,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: bigint | und
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: number | undefined): void {
+export function clearInterval(self: bigint, id: bigint | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearInterval(Number(id));
 }
@@ -1478,7 +1478,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint): string {
+export function structuredClone(self: bigint, value: bigint, options: bigint | undefined): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value as any, options as any);
 }

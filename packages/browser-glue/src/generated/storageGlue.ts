@@ -329,12 +329,12 @@ export function persisted(self: bigint): bigint {
  * Poll an async `persisted()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersisted(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollPersisted(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -367,12 +367,12 @@ export function persist(self: bigint): bigint {
  * Poll an async `persist()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollPersist(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollPersist(requestId: bigint): { ok: true; value: boolean } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: boolean } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**

@@ -293,21 +293,21 @@ function lookupOptionModule(handle: bigint | undefined): WebAssembly.Module | nu
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (string)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: bigint): (bigint)[] {
+export function imports(moduleObject: bigint): string {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
 /**
  * `custom-sections()` operation.
  */
-export function customSections(moduleObject: bigint, sectionName: string): (string)[] {
+export function customSections(moduleObject: bigint, sectionName: number): (string)[] {
   return (globalThis as any).WebAssembly.Module.customSections(moduleObject, sectionName);
 }
 
@@ -379,15 +379,15 @@ function lookupOptionMemory(handle: bigint | undefined): Memory | null {
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: bigint | undefined): string {
+export function MemoryGrow(self: bigint, delta: boolean): bigint {
   const obj = lookupMemory(self);
-  return BigInt((obj as any).grow(delta));
+  return (obj as any).grow(delta);
 }
 
 /**
  * `to-fixed-length-buffer()` operation.
  */
-export function toFixedLengthBuffer(self: bigint): string {
+export function toFixedLengthBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toFixedLengthBuffer();
 }
@@ -395,7 +395,7 @@ export function toFixedLengthBuffer(self: bigint): string {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): string {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -403,7 +403,7 @@ export function toResizableBuffer(self: bigint): string {
 /**
  * `get-buffer()` operation.
  */
-export function getBuffer(self: bigint): bigint {
+export function getBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).buffer;
 }
@@ -438,9 +438,9 @@ function lookupOptionTable(handle: bigint | undefined): Table | null {
 /**
  * `grow()` operation.
  */
-export function TableGrow(self: bigint, delta: bigint, value: string | undefined): bigint {
+export function TableGrow(self: bigint, delta: bigint, value: EventHandlerRecord | undefined): bigint {
   const obj = lookupTable(self);
-  return BigInt((obj as any).grow(delta, value));
+  return (obj as any).grow(delta, value);
 }
 
 /**
@@ -448,7 +448,7 @@ export function TableGrow(self: bigint, delta: bigint, value: string | undefined
  *
  * Async operation: returns request ID, poll with `pollGet()`
  */
-export function _get(self: bigint, index: bigint | undefined): bigint {
+export function _get(self: bigint, index: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupTable(self);
   const promise = (obj as any).get(index)
@@ -484,7 +484,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: number): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -581,7 +581,7 @@ function lookupOptionException(handle: bigint | undefined): Exception | null {
 /**
  * `get-arg()` operation.
  */
-export function getArg(self: bigint, exceptionTag: number, index: number): string {
+export function getArg(self: bigint, exceptionTag: EventHandlerRecord, index: number): string {
   const obj = lookupException(self);
   return obj.arg;
 }
@@ -589,7 +589,7 @@ export function getArg(self: bigint, exceptionTag: number, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: bigint): string {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }
