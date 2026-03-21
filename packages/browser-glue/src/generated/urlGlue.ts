@@ -269,7 +269,7 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: EventHandlerRecord): bigint | undefined {
   return URL.parse(url, base);
 }
 
@@ -331,7 +331,7 @@ export function setProtocol(self: bigint, value: string): void {
 /**
  * `get-username()` operation.
  */
-export function getUsername(self: bigint): string {
+export function getUsername(self: bigint): number {
   const obj = lookupURL(self);
   return obj.username;
 }
@@ -339,7 +339,7 @@ export function getUsername(self: bigint): string {
 /**
  * `set-username()` operation.
  */
-export function setUsername(self: bigint, value: string): void {
+export function setUsername(self: bigint, value: number): void {
   const obj = lookupURL(self);
   obj.username = value;
 }
@@ -391,7 +391,7 @@ export function getHostname(self: bigint): string {
 /**
  * `set-hostname()` operation.
  */
-export function setHostname(self: bigint, value: bigint): void {
+export function setHostname(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.hostname = value;
 }
@@ -519,7 +519,7 @@ export function append(self: bigint, name: string, value: string): void {
  */
 export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
-  obj.delete(name, value);
+  obj.delete(name as any, value);
 }
 
 /**
@@ -541,7 +541,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: string, value: string | undefined): boolean {
+export function has(self: bigint, name: bigint, value: string | undefined): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value as any);
 }

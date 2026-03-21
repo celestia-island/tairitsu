@@ -392,7 +392,7 @@ export function getThresholds(self: bigint): bigint {
 /**
  * `get-delay()` operation.
  */
-export function getDelay(self: bigint): string {
+export function getDelay(self: bigint): number {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).delay;
 }
@@ -400,7 +400,7 @@ export function getDelay(self: bigint): string {
 /**
  * `get-track-visibility()` operation.
  */
-export function getTrackVisibility(self: bigint): string {
+export function getTrackVisibility(self: bigint): boolean {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).trackVisibility;
 }
@@ -416,7 +416,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
 /**
  * `unobserve()` operation.
  */
-export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
+export function IntersectionObserverUnobserve(self: bigint, target: boolean): void {
   const obj = lookupIntersectionObserver(self);
   obj.unobserve(lookupElement(target));
 }
@@ -462,7 +462,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): number {
+export function getTime(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -512,7 +512,7 @@ export function getIsIntersecting(self: bigint): boolean {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): string {
+export function getIsVisible(self: bigint): boolean {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -520,7 +520,7 @@ export function getIsVisible(self: bigint): string {
 /**
  * `get-intersection-ratio()` operation.
  */
-export function getIntersectionRatio(self: bigint): bigint {
+export function getIntersectionRatio(self: bigint): number {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.intersectionRatio;
 }
@@ -558,7 +558,7 @@ function lookupResizeObserver(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: boolean, options: string | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: string, options: bigint | undefined): void {
   const obj = lookupResizeObserver(self);
   (obj as any).observe(lookupElement(target), options as any);
 }
@@ -566,7 +566,7 @@ export function ResizeObserverObserve(self: bigint, target: boolean, options: st
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: boolean): void {
+export function ResizeObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -675,7 +675,7 @@ function lookupResizeObserverSize(handle: bigint): ResizeObserverSize {
 /**
  * `get-inline-size()` operation.
  */
-export function getInlineSize(self: bigint): bigint {
+export function getInlineSize(self: bigint): string {
   const obj = lookupResizeObserverSize(self);
   return obj.inlineSize;
 }

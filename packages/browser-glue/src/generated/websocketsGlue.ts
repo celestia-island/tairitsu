@@ -240,7 +240,7 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: bigint | undefined): { ok: true; value: bigint } | { ok: false; error: EventHandlerRecord } {
+export function connect(url: string, protocols: string): { ok: true; value: bigint | undefined } | { ok: false; error: string } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
@@ -263,7 +263,7 @@ export function readyState(handle: bigint): number {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint | undefined {
+export function bufferedAmount(handle: bigint): number {
   const obj = lookupWs(handle);
   return (obj as any).bufferedAmount();
 }
@@ -271,7 +271,7 @@ export function bufferedAmount(handle: bigint): bigint | undefined {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): (string)[] {
+export function extensions(handle: bigint): string | undefined {
   const obj = lookupWs(handle);
   return (obj as any).extensions();
 }
@@ -279,7 +279,7 @@ export function extensions(handle: bigint): (string)[] {
 /**
  * `protocol()` operation.
  */
-export function protocol(handle: bigint): number {
+export function protocol(handle: bigint): bigint | undefined {
   const obj = lookupWs(handle);
   return (obj as any).protocol();
 }
@@ -295,7 +295,7 @@ export function close(handle: bigint, code: number, reason: string): void {
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: string): void {
+export function send(handle: bigint, data: bigint): void {
   const obj = lookupWs(handle);
   obj.send(data);
 }
