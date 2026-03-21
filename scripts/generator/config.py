@@ -4250,6 +4250,12 @@ SETTER_BUT_ACTUALLY_METHOD = {
     "parameters",
     # MediaSession - screenshareActive setter returns void but WIT expects return
     "screenshare-active",
+    # Canvas methods
+    "set-transform",
+    # Element methods that return Attr
+    "set-attribute-node",
+    "set-attribute-node-ns",
+    "remove-attribute-node",
 }
 
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces
@@ -4409,6 +4415,64 @@ SYNTHETIC_HANDLE_TYPES = {
     # Types for parameter conversion
     "buffer-source": ("BufferSource", "bufferSourceHandles", "BufferSource"),
     "event-listener": ("EventListener", "eventListenerHandles", "EventListener"),
+    # Geolocation callbacks
+    "position-callback": ("PositionCallback", "positionCallbackHandles", "PositionCallback"),
+    "option-position-error-callback": ("PositionErrorCallback", "optionPositionErrorCallbackHandles", "OptionPositionErrorCallback"),
+    # HTML/DOM types
+    "offscreen-canvas": ("OffscreenCanvas", "offscreencanvasHandles", "Offscreencanvas"),
+    "file-list": ("FileList", "fileListhandles", "FileList"),
+    "message-event-source": ("EventTarget", "messageEventSourcehandles", "MessageEventSource"),
+    # Media types
+    "speech-synthesis-voice-list": ("SpeechSynthesisVoice[]", "speechSynthesisVoiceListhandles", "SpeechSynthesisVoiceList"),
+    # Service Worker types
+    "service-worker": ("ServiceWorker", "serviceWorkerhandles", "ServiceWorker"),
+    "navigation-preload-manager": ("NavigationPreloadManager", "navigationPreloadManagerhandles", "NavigationPreloadManager"),
+    # Observer types
+    "resize-observer-size-list": ("ResizeObserverSize[]", "resizeObserverSizeListhandles", "ResizeObserverSizeList"),
+    # Payment types
+    "payment-address": ("PaymentAddress", "paymentAddresshandles", "PaymentAddress"),
+    # WebRTC types
+    "rtc-dtls-transport": ("RTCDtlsTransport", "rtcDtlsTransportHandles", "RtcDtlsTransport"),
+    "rtc-rtp-sender": ("RTCRtpSender", "rtcRtpSenderHandles", "RtcRtpSender"),
+    "rtc-rtp-receiver": ("RTCRtpReceiver", "rtcRtpReceiverHandles", "RtcRtpReceiver"),
+    "rtc-ice-transport": ("RTCIceTransport", "rtcIceTransportHandles", "RtcIceTransport"),
+    # Missing HTML element types
+    "html-table-row-element": ("HTMLTableRowElement", "htmlTableRowElementHandles", "HtmlTableRowElement"),
+    "html-table-cell-element": ("HTMLTableCellElement", "htmlTableCellElementHandles", "HtmlTableCellElement"),
+    "html-option-element": ("HTMLOptionElement", "htmlOptionElementHandles", "HtmlOptionElement"),
+    # Missing DOM types
+    "html-slot-element": ("HTMLSlotElement", "htmlSlotElementHandles", "HtmlSlotElement"),
+    # offscreencanvas (alias without hyphen)
+    "offscreencanvas": ("OffscreenCanvas", "offscreencanvasHandles", "Offscreencanvas"),
+    # form-data type
+    "form-data": ("FormData", "formDataHandles", "FormData"),
+    # image-bitmap type
+    "image-bitmap": ("ImageBitmap", "imageBitmapHandles", "ImageBitmap"),
+    # custom-state-set type
+    "custom-state-set": ("CustomStateSet", "customStateSetHandles", "CustomStateSet"),
+    # data-transfer-item type
+    "data-transfer-item": ("DataTransferItem", "dataTransferItemHandles", "DataTransferItem"),
+    # navigation types
+    "navigation-history-entry": ("NavigationHistoryEntry", "navigationHistoryEntryHandles", "NavigationHistoryEntry"),
+    "navigation-activation": ("NavigationActivation", "navigationActivationHandles", "NavigationActivation"),
+    # date type (for valueAsDate)
+    "date": ("Date", "dateHandles", "Date"),
+    # plugin type
+    "plugin": ("Plugin", "pluginHandles", "Plugin"),
+    # mime-type
+    "mime-type": ("MimeType", "mimeTypeHandles", "MimeType"),
+    # image-data-array
+    "image-data-array": ("ImageDataSettings", "imageDataArrayHandles", "ImageDataArray"),
+    # speech-synthesis-utterance
+    "speech-synthesis-utterance": ("SpeechSynthesisUtterance", "speechSynthesisUtteranceHandles", "SpeechSynthesisUtterance"),
+    # blob type
+    "blob": ("Blob", "blobHandles", "Blob"),
+    # media-stream
+    "media-stream": ("MediaStream", "mediaStreamHandles", "MediaStream"),
+    # media-stream-track
+    "media-stream-track": ("MediaStreamTrack", "mediaStreamTrackHandles", "MediaStreamTrack"),
+    # queuing-strategy-size
+    "queuing-strategy-size": ("any", "queuingStrategySizeHandles", "QueuingStrategySize"),
 }
 
 # Type definitions that need to be generated in glue code

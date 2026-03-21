@@ -75,5 +75,5 @@ export const GLUE_STATS = {
   totalDomains: 28,
   totalInterfaces: 454,
   totalFunctions: 3974,
-  generatedAt: "2026-03-21T03:34:16.942998",
+  generatedAt: "2026-03-21T03:36:49.880787",
 };

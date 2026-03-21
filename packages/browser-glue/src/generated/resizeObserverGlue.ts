@@ -246,7 +246,7 @@ function lookupRo(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function observe(handle: bigint, target: bigint, options: bigint | undefined): void {
+export function observe(handle: bigint, target: bigint, options: string): void {
   const obj = lookupRo(handle);
   obj.observe(target, options);
 }

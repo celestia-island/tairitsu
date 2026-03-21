@@ -286,7 +286,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): bigint {
+export function getProtocol(self: bigint): string {
   const obj = lookupURL(self);
   return obj.protocol;
 }
@@ -318,7 +318,7 @@ export function setUsername(self: bigint, value: bigint): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): string {
+export function getPassword(self: bigint): EventHandlerRecord {
   const obj = lookupURL(self);
   return obj.password;
 }
@@ -326,7 +326,7 @@ export function getPassword(self: bigint): string {
 /**
  * `set-password()` operation.
  */
-export function setPassword(self: bigint, value: string): void {
+export function setPassword(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupURL(self);
   obj.password = value;
 }
@@ -346,7 +346,7 @@ export function getHost(self: bigint): bigint {
 /**
  * `set-host()` operation.
  */
-export function setHost(self: bigint, value: bigint): void {
+export function setHost(self: bigint, value: string): void {
   const obj = lookupURL(self);
   obj.host = value;
 }
@@ -402,7 +402,7 @@ export function setPathname(self: bigint, value: string): void {
 /**
  * `get-search()` operation.
  */
-export function getSearch(self: bigint): string {
+export function getSearch(self: bigint): EventHandlerRecord {
   const obj = lookupURL(self);
   return obj.search;
 }
@@ -477,7 +477,7 @@ export function getSize(self: bigint): number {
 /**
  * `append()` operation.
  */
-export function append(self: bigint, name: bigint | undefined, value: string): void {
+export function append(self: bigint, name: bigint, value: bigint | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.append(name, value);
 }
@@ -485,7 +485,7 @@ export function append(self: bigint, name: bigint | undefined, value: string): v
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: string | undefined): void {
+export function _delete(self: bigint, name: string, value: bigint | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }

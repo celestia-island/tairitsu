@@ -271,6 +271,10 @@ let _nextDomTokenList = 1n;
 const _elementListHandles = new Map<bigint, Element[]>();
 let _nextElementList = 1n;
 
+/** Handle table for file-list values */
+const _fileListhandles = new Map<bigint, FileList>();
+let _nextFileList = 1n;
+
 /** Handle table for float-32-list values */
 const _float32ListHandles = new Map<bigint, Float32Array>();
 let _nextFloat32List = 1n;
@@ -306,6 +310,10 @@ let _nextMediaError = 1n;
 /** Handle table for media-provider values */
 const _mediaProviderHandles = new Map<bigint, MediaProvider>();
 let _nextMediaProvider = 1n;
+
+/** Handle table for message-event-source values */
+const _messageEventSourcehandles = new Map<bigint, EventTarget>();
+let _nextMessageEventSource = 1n;
 
 /** Handle table for message-port values */
 const _messagePortHandles = new Map<bigint, MessagePort>();
@@ -512,6 +520,23 @@ function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
   return _elementListHandles.get(handle) ?? null;
 }
 
+/** Lookup a file-list value by handle. */
+function lookupFileList(handle: bigint): FileList {
+  const obj = _fileListhandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`file-list handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional file-list value by handle. */
+function lookupOptionFileList(handle: bigint | undefined): FileList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileListhandles.get(handle) ?? null;
+}
+
 /** Lookup a float-32-list value by handle. */
 function lookupFloat32List(handle: bigint): Float32Array {
   const obj = _float32ListHandles.get(handle);
@@ -663,6 +688,23 @@ function lookupOptionMediaProvider(handle: bigint | undefined): MediaProvider | 
     return null;
   }
   return _mediaProviderHandles.get(handle) ?? null;
+}
+
+/** Lookup a message-event-source value by handle. */
+function lookupMessageEventSource(handle: bigint): EventTarget {
+  const obj = _messageEventSourcehandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`message-event-source handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional message-event-source value by handle. */
+function lookupOptionMessageEventSource(handle: bigint | undefined): EventTarget | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _messageEventSourcehandles.get(handle) ?? null;
 }
 
 /** Lookup a message-port value by handle. */

@@ -240,7 +240,7 @@ function lookupWs(handle: bigint): WebSocket {
 /**
  * `connect()` operation.
  */
-export function connect(url: string, protocols: bigint | undefined): string {
+export function connect(url: bigint, protocols: string): { ok: true; value: bigint } | { ok: false; error: string } {
   return (globalThis as any).WebSocket.connect(url, protocols);
 }
 
@@ -255,7 +255,7 @@ export function url(handle: bigint): string {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): EventHandlerRecord {
+export function readyState(handle: bigint): number {
   const obj = lookupWs(handle);
   return (obj as any).readyState();
 }
@@ -263,7 +263,7 @@ export function readyState(handle: bigint): EventHandlerRecord {
 /**
  * `buffered-amount()` operation.
  */
-export function bufferedAmount(handle: bigint): bigint {
+export function bufferedAmount(handle: bigint): boolean {
   const obj = lookupWs(handle);
   return (obj as any).bufferedAmount();
 }
@@ -271,7 +271,7 @@ export function bufferedAmount(handle: bigint): bigint {
 /**
  * `extensions()` operation.
  */
-export function extensions(handle: bigint): bigint {
+export function extensions(handle: bigint): number | undefined {
   const obj = lookupWs(handle);
   return (obj as any).extensions();
 }
@@ -295,7 +295,7 @@ export function close(handle: bigint, code: number, reason: string): void {
 /**
  * `send()` operation.
  */
-export function send(handle: bigint, data: bigint): void {
+export function send(handle: bigint, data: string): void {
   const obj = lookupWs(handle);
   obj.send(data);
 }

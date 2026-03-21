@@ -564,7 +564,7 @@ export type HeadersHandle = bigint;
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: string, value: string): void {
+export function HeadersAppend(self: bigint, name: bigint, value: string): void {
   const obj = lookupHeaders(self);
   obj.append(name, value);
 }
@@ -572,7 +572,7 @@ export function HeadersAppend(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function HeadersDelete(self: bigint, name: EventHandlerRecord): void {
+export function HeadersDelete(self: bigint, name: string): void {
   const obj = lookupHeaders(self);
   obj.delete(name as any);
 }
@@ -599,7 +599,7 @@ export function getSetCookie(self: bigint): (string)[] {
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: string): boolean {
+export function HeadersHas(self: bigint, name: EventHandlerRecord): boolean {
   const obj = lookupHeaders(self);
   return obj.has(name as any);
 }
@@ -607,7 +607,7 @@ export function HeadersHas(self: bigint, name: string): boolean {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: string, value: (bigint)[]): void {
+export function HeadersSet(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
   obj.set(name as any, value);
 }
@@ -646,7 +646,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): bigint {
+export function getBodyUsed(self: bigint): boolean {
   const obj = lookupBody(self);
   return obj.bodyUsed;
 }
@@ -681,12 +681,12 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: (string)[] } | { ok: false; error: string } | undefined {
+export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: (string)[] } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -719,12 +719,12 @@ export function blob(self: bigint): bigint {
  * Poll an async `blob()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBlob(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
+export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -908,7 +908,7 @@ export function getMethod(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): number {
+export function RequestGetUrl(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.url;
 }
@@ -1048,7 +1048,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): string {
+export function getIntegrity(self: bigint): EventHandlerRecord {
   const obj = lookupRequest(self);
   return obj.integrity;
 }
@@ -1064,7 +1064,7 @@ export function getKeepalive(self: bigint): boolean {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): EventHandlerRecord {
+export function getIsReloadNavigation(self: bigint): boolean {
   const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
@@ -1372,7 +1372,7 @@ export function clearTimeout(self: bigint, id: number | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (bigint | undefined)[]): number {
+export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setInterval(handler, timeout, _arguments);
 }
@@ -1380,7 +1380,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: number | und
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: number | undefined): void {
+export function clearInterval(self: bigint, id: bigint | undefined | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
@@ -1388,7 +1388,7 @@ export function clearInterval(self: bigint, id: number | undefined): void {
 /**
  * `queue-microtask()` operation.
  */
-export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
+export function queueMicrotask(self: bigint, callback: bigint): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback);
 }

@@ -240,7 +240,7 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): string {
   const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -396,7 +396,7 @@ export function IdbIndexGetName(handle: bigint): string {
 /**
  * `set-name()` operation.
  */
-export function IdbIndexSetName(handle: bigint, value: string): void {
+export function IdbIndexSetName(handle: bigint, value: boolean): void {
   const obj = lookupIDBIndex(handle);
   obj.name = value;
 }
