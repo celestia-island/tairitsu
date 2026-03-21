@@ -240,7 +240,7 @@ function lookupWebSocket(handle: bigint): WebSocket {
 /**
  * `get-url()` operation.
  */
-export function getUrl(self: bigint): string {
+export function getUrl(self: bigint): bigint | undefined {
   const obj = lookupWebSocket(self);
   return (obj as any).url;
 }
@@ -288,7 +288,7 @@ export function getOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: string | undefined): void {
+export function setOnerror(self: bigint, value: string): void {
   const obj = lookupWebSocket(self);
   obj.onerror = value;
 }
@@ -312,7 +312,7 @@ export function setOnclose(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-extensions()` operation.
  */
-export function getExtensions(self: bigint): string {
+export function getExtensions(self: bigint): string | undefined {
   const obj = lookupWebSocket(self);
   return (obj as any).extensions;
 }
@@ -320,7 +320,7 @@ export function getExtensions(self: bigint): string {
 /**
  * `get-protocol()` operation.
  */
-export function getProtocol(self: bigint): string | undefined {
+export function getProtocol(self: bigint): string {
   const obj = lookupWebSocket(self);
   return (obj as any).protocol;
 }
@@ -328,7 +328,7 @@ export function getProtocol(self: bigint): string | undefined {
 /**
  * `close()` operation.
  */
-export function close(self: bigint, code: EventHandlerRecord | undefined, reason: bigint | undefined): void {
+export function close(self: bigint, code: number | undefined, reason: EventHandlerRecord): void {
   const obj = lookupWebSocket(self);
   obj.close(code, reason);
 }
@@ -336,7 +336,7 @@ export function close(self: bigint, code: EventHandlerRecord | undefined, reason
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): number {
+export function getOnmessage(self: bigint): EventHandlerRecord {
   const obj = lookupWebSocket(self);
   return obj.onmessage;
 }
@@ -365,7 +365,7 @@ export function getBinaryType(self: bigint): bigint {
 /**
  * `set-binary-type()` operation.
  */
-export function setBinaryType(self: bigint, value: bigint): void {
+export function setBinaryType(self: bigint, value: number): void {
   const obj = lookupWebSocket(self);
   obj.binaryType = value;
 }
@@ -373,7 +373,7 @@ export function setBinaryType(self: bigint, value: bigint): void {
 /**
  * `send()` operation.
  */
-export function send(self: bigint, data: Uint8Array): void {
+export function send(self: bigint, data: bigint): void {
   const obj = lookupWebSocket(self);
   obj.send(data);
 }
@@ -416,7 +416,7 @@ export function getCode(self: bigint): bigint {
 /**
  * `get-reason()` operation.
  */
-export function getReason(self: bigint): string {
+export function getReason(self: bigint): number | undefined {
   const obj = lookupCloseEvent(self);
   return obj.reason;
 }

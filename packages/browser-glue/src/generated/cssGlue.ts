@@ -1613,6 +1613,7 @@ export function CssKeyframesRuleDeleteRule(self: bigint, select: string): void {
 export function findRule(self: bigint, select: string): bigint | undefined {
   const obj = lookupCSSKeyframesRule(self);
   const _callResult = obj.findRule(select);
+  if (_callResult === null) return undefined;
   const handle = _nextCssKeyframeRule++;
   _cssKeyframeRuleHandles.set(handle, _callResult);
   return handle;
@@ -4304,6 +4305,7 @@ export function getFrameElement(): bigint | undefined {
  */
 export function WindowOpen(url: string | undefined, target: string | undefined, features: string | undefined): bigint | undefined {
   const _callResult = window.open(url as any, target as any, features as any);
+  if (_callResult === null) return undefined;
   const handle = _nextWindow++;
   _windowHandles.set(handle, _callResult);
   return handle;
@@ -4365,6 +4367,7 @@ export function confirm(message: string | undefined): bigint {
  */
 export function prompt(message: string | undefined, _default: string | undefined): bigint | undefined {
   const _callResult = window.prompt(message, _default);
+  if (_callResult === null) return undefined;
   const handle = _nextString++;
   _stringHandles.set(handle, _callResult);
   return handle;
@@ -4606,6 +4609,7 @@ function getGlobalDocument(): Document {
  */
 export function elementFromPoint(x: number, y: number): bigint | undefined {
   const _callResult = document.elementFromPoint(Number(x), Number(y));
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -4626,6 +4630,7 @@ export function elementsFromPoint(x: number, y: number): bigint {
  */
 export function caretPositionFromPoint(x: number, y: number, options: bigint | undefined): bigint | undefined {
   const _callResult = document.caretPositionFromPoint(x, y, options as any);
+  if (_callResult === null) return undefined;
   const handle = _nextCaretPosition++;
   _caretPositionhandles.set(handle, _callResult);
   return handle;
@@ -5041,7 +5046,7 @@ export function getCookie(): bigint {
  * `set-cookie()` operation.
  */
 export function setCookie(value: string): void {
-  document.getSetCookie = value;
+  (document as any).getSetCookie = value;
 }
 
 /**
@@ -5849,7 +5854,7 @@ export function getAttributes(self: bigint): bigint {
  */
 export function getAttributeNames(self: bigint): bigint {
   const obj = lookupElement(self);
-  const _callResult = obj.getAttributeNames;
+  const _callResult = obj.getAttributeNames();
   const handle = _nextStringList++;
   _stringListHandles.set(handle, _callResult);
   return handle;
@@ -5872,7 +5877,7 @@ export function getAttribute(self: bigint, qualifiedName: string): bigint | unde
  */
 export function getAttributeNs(self: bigint, namespace: string | undefined, localName: string): bigint | undefined {
   const obj = lookupElement(self);
-  const _callResult = obj.getAttributeNS(namespace, localName);
+  const _callResult = obj.getAttributeNS(namespace as any, localName);
   if (_callResult === null) return undefined;
   const handle = _nextString++;
   _stringHandles.set(handle, _callResult);
@@ -5985,7 +5990,11 @@ export function setAttributeNode(self: bigint, attr: bigint): bigint | undefined
  */
 export function setAttributeNodeNs(self: bigint, attr: bigint): bigint | undefined {
   const obj = lookupElement(self);
-  return obj.setAttributeNodeNS(lookupAttr(attr)) ?? undefined;
+  const _callResult = obj.setAttributeNodeNS(lookupAttr(attr));
+  if (_callResult === null) return undefined;
+  const handle = _nextAttr++;
+  _attrHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -6036,6 +6045,7 @@ export function ElementGetCustomElementRegistry(self: bigint): bigint | undefine
 export function closest(self: bigint, selectors: string): bigint | undefined {
   const obj = lookupElement(self);
   const _callResult = obj.closest(selectors);
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -6102,6 +6112,7 @@ export function ElementGetElementsByClassName(self: bigint, classNames: string):
 export function insertAdjacentElement(self: bigint, where: string, element: bigint): bigint | undefined {
   const obj = lookupElement(self);
   const _callResult = obj.insertAdjacentElement(where as any, lookupElement(element));
+  if (_callResult === null) return undefined;
   const handle = _nextElement++;
   _elementHandles.set(handle, _callResult);
   return handle;
@@ -7520,7 +7531,7 @@ export function getModifierState(self: bigint, keyArg: string): boolean {
  */
 export function initMouseEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, detailArg: number | undefined, screenXArg: number | undefined, screenYArg: number | undefined, clientXArg: number | undefined, clientYArg: number | undefined, ctrlKeyArg: boolean | undefined, altKeyArg: boolean | undefined, shiftKeyArg: boolean | undefined, metaKeyArg: boolean | undefined, buttonArg: number | undefined, relatedTargetArg: bigint | undefined): void {
   const obj = lookupMouseEvent(self);
-  obj.initMouseEvent(typeArg, bubblesArg, cancelableArg, viewArg, detailArg, screenXArg, screenYArg, clientXArg, clientYArg, ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg, buttonArg, relatedTargetArg);
+  obj.initMouseEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), Number(detailArg), Number(screenXArg), Number(screenYArg), Number(clientXArg), Number(clientYArg), ctrlKeyArg !== undefined ? Boolean(ctrlKeyArg) : undefined, altKeyArg !== undefined ? Boolean(altKeyArg) : undefined, shiftKeyArg !== undefined ? Boolean(shiftKeyArg) : undefined, metaKeyArg !== undefined ? Boolean(metaKeyArg) : undefined, Number(buttonArg), lookupOptionEventTarget(relatedTargetArg));
 }
 
 // ---------------------------------------------------------------------------
@@ -7753,6 +7764,7 @@ export function MediaListGetLength(self: bigint): bigint {
 export function MediaListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupMediaList(self);
   const _callResult = obj.item(index);
+  if (_callResult === null) return undefined;
   const handle = _nextString++;
   _stringHandles.set(handle, _callResult);
   return handle;
@@ -8018,6 +8030,7 @@ export type StyleSheetListHandle = bigint;
 export function StyleSheetListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupStyleSheetList(self);
   const _callResult = obj.item(index);
+  if (_callResult === null) return undefined;
   const handle = _nextCssStyleSheet++;
   _cssStyleSheetHandles.set(handle, _callResult);
   return handle;
@@ -8168,6 +8181,7 @@ function lookupCSSRuleList(handle: bigint): CSSRuleList {
 export function CssRuleListItem(self: bigint, index: number): bigint | undefined {
   const obj = lookupCSSRuleList(self);
   const _callResult = obj.item(index);
+  if (_callResult === null) return undefined;
   const handle = _nextCssRule++;
   _cssRuleHandles.set(handle, _callResult);
   return handle;

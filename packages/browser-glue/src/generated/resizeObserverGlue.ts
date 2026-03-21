@@ -219,6 +219,35 @@ export type URLHref = string;
 
 
 // ---------------------------------------------------------------------------
+// Synthetic handle tables for primitive/utility types
+// ---------------------------------------------------------------------------
+
+/** Handle table for element values */
+const _elementHandles = new Map<bigint, Element>();
+let _nextElement = 1n;
+
+// ---------------------------------------------------------------------------
+// Helper functions for handle lookups
+// ---------------------------------------------------------------------------
+
+/** Lookup a element value by handle. */
+function lookupElement(handle: bigint): Element {
+  const obj = _elementHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`element handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional element value by handle. */
+function lookupOptionElement(handle: bigint | undefined): Element | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _elementHandles.get(handle) ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: resize-observer
 // ---------------------------------------------------------------------------
 
@@ -246,9 +275,9 @@ function lookupRo(handle: bigint): ResizeObserver {
 /**
  * `observe()` operation.
  */
-export function observe(handle: bigint, target: bigint, options: string): void {
+export function observe(handle: bigint, target: bigint, options: bigint): void {
   const obj = lookupRo(handle);
-  obj.observe(target, options);
+  (obj as any).observe(lookupElement(target), options as any);
 }
 
 // ---------------------------------------------------------------------------
