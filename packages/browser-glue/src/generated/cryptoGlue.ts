@@ -392,7 +392,7 @@ function lookupOptionCryptoKey(handle: bigint | undefined): CryptoKey | null {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): string {
+export function getType(self: bigint): bigint {
   const obj = lookupCryptoKey(self);
   return (obj as any).getType();
 }
@@ -573,7 +573,7 @@ export function pollSign(requestId: bigint): { ok: true; value: bigint } | { ok:
  *
  * Async operation: returns request ID, poll with `pollVerify()`
  */
-export function verify(self: bigint, algorithm: bigint, key: bigint, signature: Uint8Array, data: (bigint)[]): bigint {
+export function verify(self: bigint, algorithm: bigint, key: bigint, signature: Uint8Array, data: Uint8Array): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = obj.verify(algorithm as any, lookupCryptoKey(key), signature as any, data as any)
@@ -611,7 +611,7 @@ export function pollVerify(requestId: bigint): { ok: true; value: bigint } | { o
  *
  * Async operation: returns request ID, poll with `pollDigest()`
  */
-export function digest(self: bigint, algorithm: bigint, data: bigint): bigint {
+export function digest(self: bigint, algorithm: bigint, data: Uint8Array): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = obj.digest(algorithm as any, data as any)
@@ -687,7 +687,7 @@ export function pollDeriveKey(requestId: bigint): { ok: true; value: bigint } | 
  *
  * Async operation: returns request ID, poll with `pollDeriveBits()`
  */
-export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, length: number | undefined): bigint {
+export function deriveBits(self: bigint, algorithm: bigint, baseKey: bigint, length: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = obj.deriveBits(algorithm as any, lookupCryptoKey(baseKey), Number(length))
@@ -725,7 +725,7 @@ export function pollDeriveBits(requestId: bigint): { ok: true; value: bigint } |
  *
  * Async operation: returns request ID, poll with `pollImportKey()`
  */
-export function importKey(self: bigint, format: bigint, keyData: (string)[], algorithm: bigint, extractable: boolean, keyUsages: bigint): bigint {
+export function importKey(self: bigint, format: bigint, keyData: boolean, algorithm: bigint, extractable: boolean, keyUsages: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = (obj as any).importKey(format as any, keyData as any, algorithm as any, extractable, keyUsages)
@@ -801,7 +801,7 @@ export function pollWrapKey(requestId: bigint): { ok: true; value: bigint } | { 
  *
  * Async operation: returns request ID, poll with `pollUnwrapKey()`
  */
-export function unwrapKey(self: bigint, format: bigint, wrappedKey: Uint8Array, unwrappingKey: bigint, unwrapAlgorithm: bigint, unwrappedKeyAlgorithm: bigint, extractable: bigint, keyUsages: (bigint)[]): bigint {
+export function unwrapKey(self: bigint, format: bigint, wrappedKey: number, unwrappingKey: bigint, unwrapAlgorithm: bigint, unwrappedKeyAlgorithm: bigint, extractable: boolean, keyUsages: (bigint)[]): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupSubtleCrypto(self);
   const promise = (obj as any).unwrapKey(format as any, wrappedKey as any, lookupCryptoKey(unwrappingKey), unwrapAlgorithm, unwrappedKeyAlgorithm, extractable, keyUsages)

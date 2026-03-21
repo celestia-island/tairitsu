@@ -272,7 +272,7 @@ export function getId(handle: bigint): string {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: Uint8Array): void {
+export function setId(handle: bigint, value: string): void {
   const obj = lookupAnimation(handle);
   (obj as any).id = value;
 }
@@ -280,7 +280,7 @@ export function setId(handle: bigint, value: Uint8Array): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): Uint8Array {
+export function getPlaybackRate(handle: bigint): string {
   const obj = lookupAnimation(handle);
   return (obj as any).playbackRate;
 }
@@ -288,7 +288,7 @@ export function getPlaybackRate(handle: bigint): Uint8Array {
 /**
  * `set-playback-rate()` operation.
  */
-export function setPlaybackRate(handle: bigint, value: number): void {
+export function setPlaybackRate(handle: bigint, value: string): void {
   const obj = lookupAnimation(handle);
   (obj as any).playbackRate = value;
 }
@@ -296,7 +296,7 @@ export function setPlaybackRate(handle: bigint, value: number): void {
 /**
  * `pending()` operation.
  */
-export function pending(handle: bigint): bigint | undefined {
+export function pending(handle: bigint): boolean {
   const obj = lookupAnimation(handle);
   return (obj as any).pending();
 }
@@ -336,7 +336,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: boolean): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
   const obj = lookupAnimation(handle);
   obj.updatePlaybackRate(Number(playbackRate));
 }

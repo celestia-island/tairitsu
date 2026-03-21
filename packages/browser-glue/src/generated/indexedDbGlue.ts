@@ -294,7 +294,7 @@ export function name(handle: bigint): string {
 /**
  * `version()` operation.
  */
-export function version(handle: bigint): bigint {
+export function version(handle: bigint): string {
   const obj = lookupIdbDb(handle);
   return (obj as any).version();
 }

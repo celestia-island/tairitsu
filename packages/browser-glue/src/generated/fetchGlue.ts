@@ -588,7 +588,7 @@ export type HeadersHandle = bigint;
 /**
  * `append()` operation.
  */
-export function HeadersAppend(self: bigint, name: string, value: string): void {
+export function HeadersAppend(self: bigint, name: string, value: (bigint)[]): void {
   const obj = lookupHeaders(self);
   obj.append(name, value as any);
 }
@@ -604,7 +604,7 @@ export function HeadersDelete(self: bigint, name: string): void {
 /**
  * `get()` operation.
  */
-export function HeadersGet(self: bigint, name: bigint): bigint | undefined {
+export function HeadersGet(self: bigint, name: string): bigint | undefined {
   const obj = lookupHeaders(self);
   const _callResult = obj.get(name as any);
   if (_callResult === null) return undefined;
@@ -635,7 +635,7 @@ export function HeadersHas(self: bigint, name: string): bigint {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: bigint, value: string): void {
+export function HeadersSet(self: bigint, name: EventHandlerRecord, value: string): void {
   const obj = lookupHeaders(self);
   obj.set(name as any, value as any);
 }
@@ -793,12 +793,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: (bigint)[] } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: (bigint)[] } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1084,7 +1084,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): bigint {
+export function getIntegrity(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.integrity;
 }
@@ -1167,7 +1167,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string | undefined, status: string | undefined): bigint {
+export function redirect(url: string, status: number | undefined): bigint {
   const _callResult = Response.redirect(url as any, Number(status));
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1177,7 +1177,7 @@ export function redirect(url: string | undefined, status: string | undefined): b
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: bigint, init: bigint | undefined): bigint {
+export function ResponseJson(data: string, init: string): bigint {
   const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1305,7 +1305,7 @@ function lookupOptionWindowOrWorkerGlobalScope(handle: bigint | undefined): Wind
  *
  * Async operation: returns request ID, poll with `pollFetch()`
  */
-export function fetch(self: bigint, input: bigint, init: string | undefined): bigint {
+export function fetch(self: bigint, input: bigint, init: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWindowOrWorkerGlobalScope(self);
   const promise = obj.fetch(input as any, init as any)
@@ -1400,7 +1400,7 @@ export function atob(self: bigint, data: string): string {
 /**
  * `set-timeout()` operation.
  */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
+export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: (string)[]): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setTimeout(handler, timeout, _arguments);
 }
@@ -1408,7 +1408,7 @@ export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigin
 /**
  * `clear-timeout()` operation.
  */
-export function clearTimeout(self: bigint, id: number | undefined): void {
+export function clearTimeout(self: bigint, id: bigint): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearTimeout(Number(id));
 }
@@ -1416,7 +1416,7 @@ export function clearTimeout(self: bigint, id: number | undefined): void {
 /**
  * `set-interval()` operation.
  */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
+export function setInterval(self: bigint, handler: bigint, timeout: bigint | undefined, _arguments: bigint): number {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return (obj as any).setInterval(handler, timeout, _arguments);
 }
@@ -1627,7 +1627,7 @@ export function pipeThrough(self: bigint, transform: bigint, options: bigint | u
  *
  * Async operation: returns request ID, poll with `pollPipeTo()`
  */
-export function pipeTo(self: bigint, destination: bigint | undefined, options: bigint | undefined): bigint {
+export function pipeTo(self: bigint, destination: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStream(self);
   const promise = obj.pipeTo(destination as any, options as any)
@@ -1728,12 +1728,12 @@ export function ReadableStreamGenericReaderGetClosed(self: bigint): bigint {
  * Poll an async `getClosed()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ReadableStreamGenericReaderPollGetClosed(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function ReadableStreamGenericReaderPollGetClosed(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -1766,12 +1766,12 @@ export function ReadableStreamGenericReaderCancel(self: bigint, reason: string |
  * Poll an async `cancel()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function ReadableStreamGenericReaderPollCancel(requestId: bigint): { ok: true; value: bigint | undefined } | { ok: false; error: string } | undefined {
+export function ReadableStreamGenericReaderPollCancel(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -1879,7 +1879,7 @@ function lookupOptionReadableStreamBYOBReader(handle: bigint | undefined): Reada
  *
  * Async operation: returns request ID, poll with `ReadableStreamByobReaderPollRead()`
  */
-export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint): bigint {
+export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStreamBYOBReader(self);
   const promise = obj.read(view as any)
@@ -1975,7 +1975,7 @@ export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: stri
 /**
  * `error()` operation.
  */
-export function ReadableStreamDefaultControllerError(self: bigint, e: bigint): void {
+export function ReadableStreamDefaultControllerError(self: bigint, e: string | undefined): void {
   const obj = lookupReadableStreamDefaultController(self);
   obj.error(e);
 }
