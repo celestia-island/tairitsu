@@ -1395,6 +1395,14 @@ function lookupAnimationEvent(handle: bigint): AnimationEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional AnimationEvent by handle. */
+function lookupOptionAnimationEvent(handle: bigint | undefined): AnimationEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _animationEventhandles.get(handle) ?? null;
+}
 /**
  * `get-animation-name()` operation.
  */
@@ -1437,6 +1445,14 @@ function lookupCSSRule(handle: bigint): CSSRule {
     throw new Error(`CSSRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSRule by handle. */
+function lookupOptionCSSRule(handle: bigint | undefined): CSSRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssRulehandles.get(handle) ?? null;
 }
 /**
  * `get-css-text()` operation.
@@ -1505,6 +1521,14 @@ function lookupCSSKeyframeRule(handle: bigint): CSSKeyframeRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSKeyframeRule by handle. */
+function lookupOptionCSSKeyframeRule(handle: bigint | undefined): CSSKeyframeRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssKeyframeRulehandles.get(handle) ?? null;
+}
 /**
  * `get-key-text()` operation.
  */
@@ -1550,6 +1574,14 @@ function lookupCSSKeyframesRule(handle: bigint): CSSKeyframesRule {
     throw new Error(`CSSKeyframesRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSKeyframesRule by handle. */
+function lookupOptionCSSKeyframesRule(handle: bigint | undefined): CSSKeyframesRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssKeyframesRulehandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -1640,6 +1672,14 @@ function lookupGlobalEventrs(handle: bigint): GlobalEventHandlers {
     throw new Error(`GlobalEventHandlers handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GlobalEventHandlers by handle. */
+function lookupOptionGlobalEventrs(handle: bigint | undefined): GlobalEventHandlers | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _globalEventhandlesrshandles.get(handle) ?? null;
 }
 /**
  * `get-onanimationstart()` operation.
@@ -3244,6 +3284,14 @@ function lookupCSSConditionRule(handle: bigint): CSSConditionRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSConditionRule by handle. */
+function lookupOptionCSSConditionRule(handle: bigint | undefined): CSSConditionRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssConditionRulehandles.get(handle) ?? null;
+}
 /**
  * `get-condition-text()` operation.
  */
@@ -3270,6 +3318,14 @@ function lookupCSSMediaRule(handle: bigint): CSSMediaRule {
     throw new Error(`CSSMediaRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSMediaRule by handle. */
+function lookupOptionCSSMediaRule(handle: bigint | undefined): CSSMediaRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssMediaRulehandles.get(handle) ?? null;
 }
 /**
  * `get-media()` operation.
@@ -3309,6 +3365,14 @@ function lookupCSSSupportsRule(handle: bigint): CSSSupportsRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSSupportsRule by handle. */
+function lookupOptionCSSSupportsRule(handle: bigint | undefined): CSSSupportsRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssSupportsRulehandles.get(handle) ?? null;
+}
 /**
  * `get-matches()` operation.
  */
@@ -3335,6 +3399,14 @@ function lookupCSSFontFaceDescriptors(handle: bigint): CSSFontFaceDescriptors {
     throw new Error(`CSSFontFaceDescriptors handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSFontFaceDescriptors by handle. */
+function lookupOptionCSSFontFaceDescriptors(handle: bigint | undefined): CSSFontFaceDescriptors | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssFontFaceDescriptorshandles.get(handle) ?? null;
 }
 /**
  * `get-src()` operation.
@@ -3595,6 +3667,14 @@ function lookupCSSFontFaceRule(handle: bigint): CSSFontFaceRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSFontFaceRule by handle. */
+function lookupOptionCSSFontFaceRule(handle: bigint | undefined): CSSFontFaceRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssFontFaceRulehandles.get(handle) ?? null;
+}
 /**
  * `get-style()` operation.
  */
@@ -3624,6 +3704,14 @@ function lookupCSSFontFeatureValuesRule(handle: bigint): CSSFontFeatureValuesRul
     throw new Error(`CSSFontFeatureValuesRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSFontFeatureValuesRule by handle. */
+function lookupOptionCSSFontFeatureValuesRule(handle: bigint | undefined): CSSFontFeatureValuesRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssFontFeatureValuesRulehandles.get(handle) ?? null;
 }
 /**
  * `get-font-family()` operation.
@@ -3716,6 +3804,14 @@ function lookupCSSFontFeatureValuesMap(handle: bigint): CSSFontFeatureValuesMap 
   }
   return obj!;
 }
+
+/** Lookup an optional CSSFontFeatureValuesMap by handle. */
+function lookupOptionCSSFontFeatureValuesMap(handle: bigint | undefined): CSSFontFeatureValuesMap | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssFontFeatureValuesMaphandles.get(handle) ?? null;
+}
 /**
  * `set()` operation.
  */
@@ -3742,6 +3838,14 @@ function lookupCSSFontPaletteValuesRule(handle: bigint): CSSFontPaletteValuesRul
     throw new Error(`CSSFontPaletteValuesRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSFontPaletteValuesRule by handle. */
+function lookupOptionCSSFontPaletteValuesRule(handle: bigint | undefined): CSSFontPaletteValuesRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssFontPaletteValuesRulehandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -3793,6 +3897,14 @@ function lookupTransitionEvent(handle: bigint): TransitionEvent {
     throw new Error(`TransitionEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional TransitionEvent by handle. */
+function lookupOptionTransitionEvent(handle: bigint | undefined): TransitionEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _transitionEventhandles.get(handle) ?? null;
 }
 /**
  * `get-property-name()` operation.
@@ -4029,7 +4141,7 @@ export function getComputedStyle(elt: bigint, pseudoElt: string | undefined): bi
 export function getEvent(): bigint {
   const _callResult = window.event;
   const handle = _nextEvent++;
-  _eventHandles.set(handle, _callResult);
+  _eventHandles.set(handle, _callResult!);
   return handle;
 }
 
@@ -4443,6 +4555,14 @@ function lookupMediaQueryList(handle: bigint): MediaQueryList {
   }
   return obj!;
 }
+
+/** Lookup an optional MediaQueryList by handle. */
+function lookupOptionMediaQueryList(handle: bigint | undefined): MediaQueryList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mediaQueryListhandles.get(handle) ?? null;
+}
 /**
  * `get-media()` operation.
  */
@@ -4509,6 +4629,14 @@ function lookupMediaQueryListEvent(handle: bigint): MediaQueryListEvent {
     throw new Error(`MediaQueryListEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional MediaQueryListEvent by handle. */
+function lookupOptionMediaQueryListEvent(handle: bigint | undefined): MediaQueryListEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mediaQueryListEventhandles.get(handle) ?? null;
 }
 /**
  * `get-media()` operation.
@@ -5218,8 +5346,8 @@ export function getElementsByName(elementName: string): bigint {
 export function getCurrentScript(): bigint | undefined {
   const _callResult = document.currentScript;
   if (_callResult === null) return undefined;
-  const handle = _nextHtmlElement++;
-  _htmlElementHandles.set(handle, _callResult);
+  const handle = _nextEventTarget++;
+  _eventTargetHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -5535,6 +5663,14 @@ function lookupCaretPosition(handle: bigint): CaretPosition {
     throw new Error(`CaretPosition handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CaretPosition by handle. */
+function lookupOptionCaretPosition(handle: bigint | undefined): CaretPosition | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _caretPositionhandles.get(handle) ?? null;
 }
 /**
  * `get-offset-node()` operation.
@@ -6314,6 +6450,14 @@ function lookupHTMLElement(handle: bigint): HTMLElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLElement by handle. */
+function lookupOptionHTMLElement(handle: bigint | undefined): HTMLElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlElementhandles.get(handle) ?? null;
+}
 /**
  * `get-scroll-parent()` operation.
  */
@@ -6707,6 +6851,14 @@ function lookupHTMLImageElement(handle: bigint): HTMLImageElement {
     throw new Error(`HTMLImageElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLImageElement by handle. */
+function lookupOptionHTMLImageElement(handle: bigint | undefined): HTMLImageElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlImageElementhandles.get(handle) ?? null;
 }
 /**
  * `get-x()` operation.
@@ -7365,6 +7517,14 @@ function lookupMouseEvent(handle: bigint): MouseEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional MouseEvent by handle. */
+function lookupOptionMouseEvent(handle: bigint | undefined): MouseEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mouseEventhandles.get(handle) ?? null;
+}
 /**
  * `get-screen-x()` operation.
  */
@@ -7534,7 +7694,7 @@ export function getModifierState(self: bigint, keyArg: string): boolean {
  */
 export function initMouseEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, detailArg: number | undefined, screenXArg: number | undefined, screenYArg: number | undefined, clientXArg: number | undefined, clientYArg: number | undefined, ctrlKeyArg: boolean | undefined, altKeyArg: boolean | undefined, shiftKeyArg: boolean | undefined, metaKeyArg: boolean | undefined, buttonArg: number | undefined, relatedTargetArg: bigint | undefined): void {
   const obj = lookupMouseEvent(self);
-  obj.initMouseEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), Number(detailArg), Number(screenXArg), Number(screenYArg), Number(clientXArg), Number(clientYArg), ctrlKeyArg !== undefined ? Boolean(ctrlKeyArg) : undefined, altKeyArg !== undefined ? Boolean(altKeyArg) : undefined, shiftKeyArg !== undefined ? Boolean(shiftKeyArg) : undefined, metaKeyArg !== undefined ? Boolean(metaKeyArg) : undefined, Number(buttonArg), lookupOptionEventTarget(relatedTargetArg));
+  obj.initMouseEvent(typeArg as any, Boolean(bubblesArg ?? false), Boolean(cancelableArg ?? false), lookupOptionWindow(viewArg) as any, Number(detailArg), Number(screenXArg), Number(screenYArg), Number(clientXArg), Number(clientYArg), Boolean(ctrlKeyArg ?? false), Boolean(altKeyArg ?? false), Boolean(shiftKeyArg ?? false), Boolean(metaKeyArg ?? false), Number(buttonArg), lookupOptionEventTarget(relatedTargetArg));
 }
 
 // ---------------------------------------------------------------------------
@@ -7555,6 +7715,14 @@ function lookupGeometryUtils(handle: bigint): GeometryUtils {
     throw new Error(`GeometryUtils handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GeometryUtils by handle. */
+function lookupOptionGeometryUtils(handle: bigint | undefined): GeometryUtils | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _geometryUtilshandles.get(handle) ?? null;
 }
 /**
  * `get-box-quads()` operation.
@@ -7808,6 +7976,14 @@ function lookupStyleSheet(handle: bigint): StyleSheet {
   }
   return obj!;
 }
+
+/** Lookup an optional StyleSheet by handle. */
+function lookupOptionStyleSheet(handle: bigint | undefined): StyleSheet | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _styleSheethandles.get(handle) ?? null;
+}
 /**
  * `get-type()` operation.
  */
@@ -7831,8 +8007,8 @@ export function getOwnerNode(self: bigint): bigint | undefined {
   const obj = lookupStyleSheet(self);
   const _callResult = obj.ownerNode;
   if (_callResult === null) return undefined;
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
+  const handle = _nextEventTarget++;
+  _eventTargetHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -7901,6 +8077,14 @@ function lookupCSSStyleSheet(handle: bigint): CSSStyleSheet {
     throw new Error(`CSSStyleSheet handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSStyleSheet by handle. */
+function lookupOptionCSSStyleSheet(handle: bigint | undefined): CSSStyleSheet | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssStyleSheethandles.get(handle) ?? null;
 }
 /**
  * `get-owner-rule()` operation.
@@ -8066,6 +8250,14 @@ function lookupDocumentOrShadowRoot(handle: bigint): DocumentOrShadowRoot {
   }
   return obj!;
 }
+
+/** Lookup an optional DocumentOrShadowRoot by handle. */
+function lookupOptionDocumentOrShadowRoot(handle: bigint | undefined): DocumentOrShadowRoot | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _documentOrShadowRoothandles.get(handle) ?? null;
+}
 /**
  * `get-style-sheets()` operation.
  */
@@ -8147,6 +8339,14 @@ function lookupLinkStyle(handle: bigint): LinkStyle {
   }
   return obj!;
 }
+
+/** Lookup an optional LinkStyle by handle. */
+function lookupOptionLinkStyle(handle: bigint | undefined): LinkStyle | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _linkStylehandles.get(handle) ?? null;
+}
 /**
  * `get-sheet()` operation.
  */
@@ -8177,6 +8377,14 @@ function lookupCSSRuleList(handle: bigint): CSSRuleList {
     throw new Error(`CSSRuleList handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSRuleList by handle. */
+function lookupOptionCSSRuleList(handle: bigint | undefined): CSSRuleList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssRuleListhandles.get(handle) ?? null;
 }
 /**
  * `item()` operation.
@@ -8216,6 +8424,14 @@ function lookupCSSStyleRule(handle: bigint): CSSStyleRule {
     throw new Error(`CSSStyleRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSStyleRule by handle. */
+function lookupOptionCSSStyleRule(handle: bigint | undefined): CSSStyleRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssStyleRulehandles.get(handle) ?? null;
 }
 /**
  * `get-selector-text()` operation.
@@ -8262,6 +8478,14 @@ function lookupCSSImportRule(handle: bigint): CSSImportRule {
     throw new Error(`CSSImportRule handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSImportRule by handle. */
+function lookupOptionCSSImportRule(handle: bigint | undefined): CSSImportRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssImportRulehandles.get(handle) ?? null;
 }
 /**
  * `get-href()` operation.
@@ -8329,6 +8553,14 @@ function lookupCSSGroupingRule(handle: bigint): CSSGroupingRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSGroupingRule by handle. */
+function lookupOptionCSSGroupingRule(handle: bigint | undefined): CSSGroupingRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssGroupingRulehandles.get(handle) ?? null;
+}
 /**
  * `get-css-rules()` operation.
  */
@@ -8377,6 +8609,14 @@ function lookupCSSPageDescriptors(handle: bigint): CSSPageDescriptors {
     throw new Error(`CSSPageDescriptors handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSPageDescriptors by handle. */
+function lookupOptionCSSPageDescriptors(handle: bigint | undefined): CSSPageDescriptors | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssPageDescriptorshandles.get(handle) ?? null;
 }
 /**
  * `get-margin()` operation.
@@ -8541,6 +8781,14 @@ function lookupCSSPageRule(handle: bigint): CSSPageRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSPageRule by handle. */
+function lookupOptionCSSPageRule(handle: bigint | undefined): CSSPageRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssPageRulehandles.get(handle) ?? null;
+}
 /**
  * `get-selector-text()` operation.
  */
@@ -8587,6 +8835,14 @@ function lookupCSSMarginRule(handle: bigint): CSSMarginRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSMarginRule by handle. */
+function lookupOptionCSSMarginRule(handle: bigint | undefined): CSSMarginRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssMarginRulehandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -8625,6 +8881,14 @@ function lookupCSSNamespaceRule(handle: bigint): CSSNamespaceRule {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSNamespaceRule by handle. */
+function lookupOptionCSSNamespaceRule(handle: bigint | undefined): CSSNamespaceRule | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssNamespaceRulehandles.get(handle) ?? null;
+}
 /**
  * `get-namespace-uri()` operation.
  */
@@ -8659,6 +8923,14 @@ function lookupCSSStyleDeclaration(handle: bigint): CSSStyleDeclaration {
     throw new Error(`CSSStyleDeclaration handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CSSStyleDeclaration by handle. */
+function lookupOptionCSSStyleDeclaration(handle: bigint | undefined): CSSStyleDeclaration | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssStyleDeclarationhandles.get(handle) ?? null;
 }
 /**
  * `get-css-text()` operation.
@@ -8767,6 +9039,14 @@ function lookupCSSStyleProperties(handle: bigint): CSSStyleProperties {
   }
   return obj!;
 }
+
+/** Lookup an optional CSSStyleProperties by handle. */
+function lookupOptionCSSStyleProperties(handle: bigint | undefined): CSSStyleProperties | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _cssStylePropertieshandles.get(handle) ?? null;
+}
 /**
  * `get-css-float()` operation.
  */
@@ -8801,6 +9081,14 @@ function lookupElementCSSInlineStyle(handle: bigint): ElementCSSInlineStyle {
     throw new Error(`ElementCSSInlineStyle handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ElementCSSInlineStyle by handle. */
+function lookupOptionElementCSSInlineStyle(handle: bigint | undefined): ElementCSSInlineStyle | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _elementCssInlineStylehandles.get(handle) ?? null;
 }
 /**
  * `get-style()` operation.

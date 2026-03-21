@@ -734,7 +734,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("css-style-sheet", "getMedia"): "media-list",
     ("css-style-sheet", "getCssRules"): "css-rule-list",
     # StyleSheet - ownerNode/parentStyleSheet properties
-    ("style-sheet", "getOwnerNode"): "element",
+    ("style-sheet", "getOwnerNode"): "event-target",
     ("style-sheet", "getParentStyleSheet"): "css-style-sheet",
     # Window - object properties
     ("window", "getWindow"): "window",
@@ -784,7 +784,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("document", "getImages"): "html-collection",
     ("document", "getScripts"): "html-collection",
     ("document", "getDefaultView"): "window",
-    ("document", "getCurrentScript"): "html-element",
+    ("document", "getCurrentScript"): "event-target",
     ("document", "getFirstChild"): "node",
     ("document", "getFirstChildElement"): "element",
     ("document", "getLastChild"): "node",
@@ -925,7 +925,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # Event - object properties
     ("event", "getTarget"): "event-target",
     ("event", "getCurrentTarget"): "event-target",
-    ("event", "getSrcElement"): "element",
+    ("event", "getSrcElement"): "event-target",
     # DocumentOrShadowRoot - object properties
     ("document-or-shadow-root", "getActiveElement"): "element",
     ("document-or-shadow-root", "getStyleSheets"): "style-sheet-list",
@@ -1012,7 +1012,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # Event
     ("event", "getTarget"): "event-target",
     ("event", "getCurrentTarget"): "event-target",
-    ("event", "getSrcElement"): "element",
+    ("event", "getSrcElement"): "event-target",
     # AbortController
     ("abort-controller", "getSignal"): "abort-signal",
     # Request
@@ -1045,7 +1045,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("mutation-record", "getAddedNodes"): "node-list",
     ("mutation-record", "getRemovedNodes"): "node-list",
     # StyleSheet
-    ("style-sheet", "getOwnerNode"): "element",
+    ("style-sheet", "getOwnerNode"): "event-target",
     ("style-sheet", "getParentStyleSheet"): "css-style-sheet",
     # CSSStyleSheet
     ("css-style-sheet", "getOwnerRule"): "css-rule",
@@ -1186,7 +1186,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("table", "get"): "any",
     ("global", "getValue"): "any",
     # Observers
-    ("intersection-observer", "getRoot"): "element",
+    ("intersection-observer", "getRoot"): "event-target",
     ("intersection-observer", "getThresholds"): "number-list",
     ("mutation-observer", "getRecords"): "any",
     # WebSocket
@@ -1500,7 +1500,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # MimeTypeArray
     ("navigator", "getMimeTypes"): "mime-type-array",
     # IntersectionObserver
-    ("intersection-observer", "getRoot"): "element",
+    ("intersection-observer", "getRoot"): "event-target",
     # Window - getNavigation returns Navigator
     ("window", "getNavigation"): "navigator",
     # Element - attribute getters that return Attr
@@ -1511,7 +1511,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # Event - target getters
     ("event", "getTarget"): "event-target",
     ("event", "getCurrentTarget"): "event-target",
-    ("event", "getSrcElement"): "element",
+    ("event", "getSrcElement"): "event-target",
     # DocumentOrShadowRoot - element getters
     ("document-or-shadow-root", "getFullscreenElement"): "element",
     ("document-or-shadow-root", "getActiveElement"): "element",
@@ -1768,7 +1768,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("resize-observer-entry", "getContentRect"): "dom-rect-read-only",
     ("resize-observer-entry", "getBorderBoxSize"): "resize-observer-size-list",
     ("resize-observer-entry", "getContentBoxSize"): "resize-observer-size-list",
-    ("resize-observer-entry", "getDevicePixelContentBoxSize"): "resize-observer-size",
+    ("resize-observer-entry", "getDevicePixelContentBoxSize"): "resize-observer-size-list",
     # Navigation
     ("navigation", "getCurrentEntry"): "navigation-history-entry",
     ("navigation", "getActivation"): "navigation-activation",
@@ -1849,11 +1849,12 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("rtc-data-channel", "getTransport"): "rtc-sctp-transport",
     # PaymentRequest
     ("payment-response", "getShippingAddress"): "payment-address",
+    ("payment-request", "getShippingAddress"): "payment-address",
     # FormData
     ("html-form-element", "getFormData"): "form-data",
     ("form-data-event", "getFormData"): "form-data",
     # IntersectionObserver
-    ("intersection-observer", "getRoot"): "element",
+    ("intersection-observer", "getRoot"): "event-target",
     # ResizeObserverEntry target
     ("resize-observer-entry", "getTarget"): "element",
     # ResizeObserverSize
@@ -2069,7 +2070,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # ViewTransition startViewTransition returns ViewTransition
     ("document", "startViewTransition"): "view-transition",
     # IntersectionObserver getRoot returns Element
-    ("intersection-observer", "getRoot"): "element",
+    ("intersection-observer", "getRoot"): "event-target",
     # ClipboardItem getTypes returns string array as handle
     ("clipboard-item", "getTypes"): "string-list",
     # SpeechSynthesis getVoices returns SpeechSynthesisVoiceList
@@ -2173,7 +2174,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # ViewTransition startViewTransition returns ViewTransition
     ("document", "startViewTransition"): "view-transition",
     # IntersectionObserver getRoot returns Element
-    ("intersection-observer", "getRoot"): "element",
+    ("intersection-observer", "getRoot"): "event-target",
     # ClipboardItem getTypes returns string array as handle
     ("clipboard-item", "getTypes"): "string-list",
     # SpeechSynthesis getVoices returns SpeechSynthesisVoiceList
@@ -2387,6 +2388,9 @@ PARAMETER_HANDLE_MAPPING = {
     ("audio-encoder", "encode", "data"): ("audio-data", "AudioData"),
     ("video-encoder", "encode", "frame"): ("video-frame", "VideoFrame"),
     ("credentials-container", "store", "credential"): ("credential", "Credential"),
+    ("tree-walker", "set-current-node", "value"): ("node", "Node"),
+    ("resize-observer", "unobserve", "target"): ("element", "Element"),
+    ("crypto", "get-random-values", "array"): ("uint8-array", "Uint8Array"),
 }
 
 # Parameters that are dictionary types (not handles) - should be passed directly as objects
@@ -3245,7 +3249,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("subtle-crypto", "digest", "algorithm"): "dictionary:AlgorithmIdentifier",
     ("subtle-crypto", "generate-key", "algorithm"): "dictionary:AlgorithmIdentifier",
     ("subtle-crypto", "derive-key", "algorithm"): "dictionary:AlgorithmIdentifier",
-    ("subtle-crypto", "derive-key", "base-key"): "handle:crypto-key",
+    ("subtle-crypto", "derive-key", "base-key"): "optional-handle:crypto-key",
     ("subtle-crypto", "derive-bits", "algorithm"): "dictionary:AlgorithmIdentifier",
     ("subtle-crypto", "derive-bits", "base-key"): "handle:crypto-key",
     ("subtle-crypto", "import-key", "format"): "enum:KeyFormat",
@@ -3783,18 +3787,18 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("intersection-observer", "observe", "target"): "handle:element",
     # MouseEvent initMouseEvent
     ("mouse-event", "init-mouse-event", "type-arg"): "string",
-    ("mouse-event", "init-mouse-event", "bubbles-arg"): "boolean-or-undefined",
-    ("mouse-event", "init-mouse-event", "cancelable-arg"): "boolean-or-undefined",
-    ("mouse-event", "init-mouse-event", "view-arg"): "optional-handle:window",
+    ("mouse-event", "init-mouse-event", "bubbles-arg"): "boolean-or-false",
+    ("mouse-event", "init-mouse-event", "cancelable-arg"): "boolean-or-false",
+    ("mouse-event", "init-mouse-event", "view-arg"): "optional-handle-strict:window",
     ("mouse-event", "init-mouse-event", "detail-arg"): True,
     ("mouse-event", "init-mouse-event", "screen-x-arg"): True,
     ("mouse-event", "init-mouse-event", "screen-y-arg"): True,
     ("mouse-event", "init-mouse-event", "client-x-arg"): True,
     ("mouse-event", "init-mouse-event", "client-y-arg"): True,
-    ("mouse-event", "init-mouse-event", "ctrl-key-arg"): "boolean-or-undefined",
-    ("mouse-event", "init-mouse-event", "alt-key-arg"): "boolean-or-undefined",
-    ("mouse-event", "init-mouse-event", "shift-key-arg"): "boolean-or-undefined",
-    ("mouse-event", "init-mouse-event", "meta-key-arg"): "boolean-or-undefined",
+    ("mouse-event", "init-mouse-event", "ctrl-key-arg"): "boolean-or-false",
+    ("mouse-event", "init-mouse-event", "alt-key-arg"): "boolean-or-false",
+    ("mouse-event", "init-mouse-event", "shift-key-arg"): "boolean-or-false",
+    ("mouse-event", "init-mouse-event", "meta-key-arg"): "boolean-or-false",
     ("mouse-event", "init-mouse-event", "button-arg"): True,
     ("mouse-event", "init-mouse-event", "related-target-arg"): "optional-handle:event-target",
     # UIEvent initUIEvent
@@ -4390,7 +4394,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("response", "redirect", "status"): True,
     # RTCPeerConnection methods
     ("rtc-peer-connection", "generate-certificate", "keygen-algorithm"): "any",
-    ("rtc-peer-connection", "add-track", "track"): "handle:media-stream-track",
+    ("rtc-peer-connection", "add-track", "track"): "optional-handle-strict:media-stream-track",
     ("rtc-peer-connection", "remove-track", "sender"): "handle:rtc-rtp-sender",
     ("rtc-peer-connection", "add-transceiver", "track-or-kind"): "any",
     ("rtc-peer-connection", "create-data-channel", "data-channel-dict"): "dictionary:any",
@@ -5291,6 +5295,13 @@ GETTER_RETURN_COALESCING = {
     ("html-or-svg-element", "get-nonce"): "",
 }
 
+# Handle-returning getters that need non-null assertion (!) when storing
+# Maps (interface, getter_name) to True
+GETTER_HANDLE_NON_NULL_ASSERTION = {
+    # window.event returns Event | undefined in DOM but WIT expects non-optional
+    ("window", "get-event"): True,
+}
+
 # Properties that return number but need to be converted to bigint
 # Maps (interface, property) to True
 # NOTE: property names should be in camelCase (the format used by the code generator)
@@ -5565,6 +5576,19 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # SpeechRecognition
     ("speech-recognition-alternative", "confidence"): True,
     ("speech-recognition-result", "length"): True,
+    # UIEvent - which returns number
+    ("ui-event", "which"): True,
+    # UIEvent - detail returns number
+    ("ui-event", "detail"): True,
+    # RTCDataChannel - bufferedAmountLowThreshold returns number
+    ("rtc-data-channel", "buffered-amount-low-threshold"): True,
+    # RTCDataChannel - bufferedAmount returns number
+    ("rtc-data-channel", "buffered-amount"): True,
+    # IntersectionObserverEntry - time returns DOMHighResTimeStamp (number)
+    ("intersection-observer-entry", "time"): True,
+    # ResizeObserverSize - blockSize/inlineSize return number
+    ("resize-observer-size", "block-size"): True,
+    ("resize-observer-size", "inline-size"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -5633,6 +5657,8 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "type",
     # KeyboardEvent.getModifierState takes a parameter
     "modifier-state",
+    # Crypto.getRandomValues takes a parameter
+    "random-values",
 }
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
@@ -5741,6 +5767,8 @@ SETTER_BUT_ACTUALLY_METHOD = {
     ("html-text-area-element", "custom-validity"),
     ("html-output-element", "custom-validity"),
     ("html-field-set-element", "custom-validity"),
+    # XSLTProcessor - setParameter is a method
+    ("xslt-processor", "parameter"),
 }
 
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces
@@ -5749,6 +5777,7 @@ SETTER_BUT_ACTUALLY_METHOD = {
 # handle_pascal: the PascalCase name for the counter (e.g., "String" -> _nextString)
 SYNTHETIC_HANDLE_TYPES = {
     "string": ("string", "stringHandles", "String"),
+    "uint8-array": ("Uint8Array", "uint8ArrayHandles", "Uint8Array"),
     "void": ("void", "voidHandles", "Void"),
     "boolean": ("boolean", "booleanHandles", "Boolean"),
     "number": ("number", "numberHandles", "Number"),
@@ -7083,6 +7112,18 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("performance-navigation", "type"),
     ("rtc-session-description", "type"),
     ("rtc-ice-candidate", "type"),
+    # ReadableStreamBYOBRequest.view returns ArrayBufferView
+    ("readable-stream-byob-request", "view"),
+    # PaymentRequestUpdateEvent.updateWith takes PaymentDetailsUpdate
+    ("payment-request-update-event", "updateWith"),
+    # WebAssembly Global.valueOf returns Object
+    ("global", "valueOf"),
+    # Animation.id setter expects string
+    ("animation", "id"),
+    # Animation.playbackRate getter returns number
+    ("animation", "playbackRate"),
+    # PermissionStatus.onchange setter needs function
+    ("permission-status", "onchange"),
 }
 
 # Properties that return readonly arrays and need spreading

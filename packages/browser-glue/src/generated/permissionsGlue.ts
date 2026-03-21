@@ -282,6 +282,14 @@ function lookupPermissions(handle: bigint): Permissions {
   }
   return obj!;
 }
+
+/** Lookup an optional Permissions by handle. */
+function lookupOptionPermissions(handle: bigint | undefined): Permissions | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _permissionsHandles.get(handle) ?? null;
+}
 /**
  * `query()` operation.
  *
@@ -339,6 +347,14 @@ function lookupPermissionStatus(handle: bigint): PermissionStatus {
   }
   return obj!;
 }
+
+/** Lookup an optional PermissionStatus by handle. */
+function lookupOptionPermissionStatus(handle: bigint | undefined): PermissionStatus | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _permissionStatushandles.get(handle) ?? null;
+}
 /**
  * `get-state()` operation.
  */
@@ -370,15 +386,15 @@ export function getName(self: bigint): bigint {
  */
 export function getOnchange(self: bigint): EventHandlerRecord {
   const obj = lookupPermissionStatus(self);
-  return obj.onchange;
+  return (obj as any).onchange;
 }
 
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: bigint): void {
+export function setOnchange(self: bigint, value: string): void {
   const obj = lookupPermissionStatus(self);
-  obj.onchange = value;
+  (obj as any).onchange = value;
 }
 
 // ---------------------------------------------------------------------------

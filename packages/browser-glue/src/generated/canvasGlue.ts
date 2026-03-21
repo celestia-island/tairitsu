@@ -618,6 +618,14 @@ function lookupAudioDecoder(handle: bigint): AudioDecoder {
   }
   return obj!;
 }
+
+/** Lookup an optional AudioDecoder by handle. */
+function lookupOptionAudioDecoder(handle: bigint | undefined): AudioDecoder | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioDecoderhandles.get(handle) ?? null;
+}
 /**
  * `get-state()` operation.
  */
@@ -781,6 +789,14 @@ function lookupVideoDecoder(handle: bigint): VideoDecoder {
     throw new Error(`VideoDecoder handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional VideoDecoder by handle. */
+function lookupOptionVideoDecoder(handle: bigint | undefined): VideoDecoder | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoDecoderhandles.get(handle) ?? null;
 }
 /**
  * `get-state()` operation.
@@ -946,6 +962,14 @@ function lookupAudioEncoder(handle: bigint): AudioEncoder {
   }
   return obj!;
 }
+
+/** Lookup an optional AudioEncoder by handle. */
+function lookupOptionAudioEncoder(handle: bigint | undefined): AudioEncoder | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioEncoderhandles.get(handle) ?? null;
+}
 /**
  * `get-state()` operation.
  */
@@ -1109,6 +1133,14 @@ function lookupVideoEncoder(handle: bigint): VideoEncoder {
     throw new Error(`VideoEncoder handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional VideoEncoder by handle. */
+function lookupOptionVideoEncoder(handle: bigint | undefined): VideoEncoder | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoEncoderhandles.get(handle) ?? null;
 }
 /**
  * `get-state()` operation.
@@ -1274,6 +1306,14 @@ function lookupEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
   }
   return obj!;
 }
+
+/** Lookup an optional EncodedAudioChunk by handle. */
+function lookupOptionEncodedAudioChunk(handle: bigint | undefined): EncodedAudioChunk | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _encodedAudioChunkhandles.get(handle) ?? null;
+}
 /**
  * `get-type()` operation.
  */
@@ -1339,6 +1379,14 @@ function lookupEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
   }
   return obj!;
 }
+
+/** Lookup an optional EncodedVideoChunk by handle. */
+function lookupOptionEncodedVideoChunk(handle: bigint | undefined): EncodedVideoChunk | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _encodedVideoChunkhandles.get(handle) ?? null;
+}
 /**
  * `get-type()` operation.
  */
@@ -1403,6 +1451,14 @@ function lookupAudioData(handle: bigint): AudioData {
     throw new Error(`AudioData handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional AudioData by handle. */
+function lookupOptionAudioData(handle: bigint | undefined): AudioData | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioDatahandles.get(handle) ?? null;
 }
 /**
  * `get-format()` operation.
@@ -1516,6 +1572,14 @@ function lookupVideoFrame(handle: bigint): VideoFrame {
     throw new Error(`VideoFrame handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional VideoFrame by handle. */
+function lookupOptionVideoFrame(handle: bigint | undefined): VideoFrame | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoFramehandles.get(handle) ?? null;
 }
 /**
  * `get-format()` operation.
@@ -1726,6 +1790,14 @@ function lookupVideoColorSpace(handle: bigint): VideoColorSpace {
   }
   return obj!;
 }
+
+/** Lookup an optional VideoColorSpace by handle. */
+function lookupOptionVideoColorSpace(handle: bigint | undefined): VideoColorSpace | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoColorSpacehandles.get(handle) ?? null;
+}
 /**
  * `get-primaries()` operation.
  */
@@ -1805,6 +1877,14 @@ function lookupImageDecoder(handle: bigint): ImageDecoder {
     throw new Error(`ImageDecoder handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ImageDecoder by handle. */
+function lookupOptionImageDecoder(handle: bigint | undefined): ImageDecoder | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _imageDecoderhandles.get(handle) ?? null;
 }
 /**
  * `get-type()` operation.
@@ -2109,6 +2189,14 @@ function lookupWebGLObject(handle: bigint): WebGLObject {
   }
   return obj!;
 }
+
+/** Lookup an optional WebGLObject by handle. */
+function lookupOptionWebGLObject(handle: bigint | undefined): WebGLObject | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlObjecthandles.get(handle) ?? null;
+}
 /**
  * `get-label()` operation.
  */
@@ -2143,6 +2231,14 @@ function lookupWebGLActiveInfo(handle: bigint): WebGLActiveInfo {
     throw new Error(`WebGLActiveInfo handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WebGLActiveInfo by handle. */
+function lookupOptionWebGLActiveInfo(handle: bigint | undefined): WebGLActiveInfo | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlActiveInfohandles.get(handle) ?? null;
 }
 /**
  * `get-size()` operation.
@@ -2186,6 +2282,14 @@ function lookupWebGLShaderPrecisionFormat(handle: bigint): WebGLShaderPrecisionF
     throw new Error(`WebGLShaderPrecisionFormat handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WebGLShaderPrecisionFormat by handle. */
+function lookupOptionWebGLShaderPrecisionFormat(handle: bigint | undefined): WebGLShaderPrecisionFormat | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlShaderPrecisionFormathandles.get(handle) ?? null;
 }
 /**
  * `get-range-min()` operation.
@@ -2235,6 +2339,14 @@ function lookupWebGLRenderingContextBase(handle: bigint): WebGLRenderingContextB
     throw new Error(`WebGLRenderingContextBase handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WebGLRenderingContextBase by handle. */
+function lookupOptionWebGLRenderingContextBase(handle: bigint | undefined): WebGLRenderingContextBase | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlRenderingContextBasehandles.get(handle) ?? null;
 }
 /**
  * `get-canvas()` operation.
@@ -3375,6 +3487,14 @@ function lookupWebGLRenderingContextOverloads(handle: bigint): WebGLRenderingCon
   }
   return obj!;
 }
+
+/** Lookup an optional WebGLRenderingContextOverloads by handle. */
+function lookupOptionWebGLRenderingContextOverloads(handle: bigint | undefined): WebGLRenderingContextOverloads | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlRenderingContextOverloadshandles.get(handle) ?? null;
+}
 /**
  * `buffer-data()` operation.
  */
@@ -3538,6 +3658,14 @@ function lookupWebGLContextEvent(handle: bigint): WebGLContextEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional WebGLContextEvent by handle. */
+function lookupOptionWebGLContextEvent(handle: bigint | undefined): WebGLContextEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGlContextEventhandles.get(handle) ?? null;
+}
 /**
  * `get-status-message()` operation.
  */
@@ -3570,6 +3698,14 @@ function lookupWebGL2RenderingContextBase(handle: bigint): WebGL2RenderingContex
     throw new Error(`WebGL2RenderingContextBase handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WebGL2RenderingContextBase by handle. */
+function lookupOptionWebGL2RenderingContextBase(handle: bigint | undefined): WebGL2RenderingContextBase | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGl2RenderingContextBasehandles.get(handle) ?? null;
 }
 /**
  * `copy-buffer-sub-data()` operation.
@@ -4352,6 +4488,14 @@ function lookupWebGL2RenderingContextOverloads(handle: bigint): WebGL2RenderingC
     throw new Error(`WebGL2RenderingContextOverloads handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WebGL2RenderingContextOverloads by handle. */
+function lookupOptionWebGL2RenderingContextOverloads(handle: bigint | undefined): WebGL2RenderingContextOverloads | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _webGl2RenderingContextOverloadshandles.get(handle) ?? null;
 }
 /**
  * `buffer-data()` operation.

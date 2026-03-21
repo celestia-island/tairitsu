@@ -311,6 +311,14 @@ function lookupPerformance(handle: bigint): Performance {
   }
   return obj!;
 }
+
+/** Lookup an optional Performance by handle. */
+function lookupOptionPerformance(handle: bigint | undefined): Performance | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceHandles.get(handle) ?? null;
+}
 /**
  * `now()` operation.
  */
@@ -409,7 +417,7 @@ export function setResourceTimingBufferSize(self: bigint, maxSize: number): void
 /**
  * `get-onresourcetimingbufferfull()` operation.
  */
-export function getOnresourcetimingbufferfull(self: bigint): number {
+export function getOnresourcetimingbufferfull(self: bigint): EventHandlerRecord {
   const obj = lookupPerformance(self);
   return (obj as any).onresourcetimingbufferfull;
 }
@@ -417,7 +425,7 @@ export function getOnresourcetimingbufferfull(self: bigint): number {
 /**
  * `set-onresourcetimingbufferfull()` operation.
  */
-export function setOnresourcetimingbufferfull(self: bigint, value: EventHandlerRecord): void {
+export function setOnresourcetimingbufferfull(self: bigint, value: string): void {
   const obj = lookupPerformance(self);
   (obj as any).onresourcetimingbufferfull = value as any;
 }
@@ -436,7 +444,7 @@ export function mark(self: bigint, markName: string, markOptions: bigint | undef
 /**
  * `clear-marks()` operation.
  */
-export function clearMarks(self: bigint, markName: string): void {
+export function clearMarks(self: bigint, markName: number | undefined): void {
   const obj = lookupPerformance(self);
   obj.clearMarks(markName);
 }
@@ -478,6 +486,14 @@ function lookupPerformanceNavigationTiming(handle: bigint): PerformanceNavigatio
     throw new Error(`PerformanceNavigationTiming handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PerformanceNavigationTiming by handle. */
+function lookupOptionPerformanceNavigationTiming(handle: bigint | undefined): PerformanceNavigationTiming | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceNavigationTiminghandles.get(handle) ?? null;
 }
 /**
  * `get-unload-event-start()` operation.
@@ -577,7 +593,7 @@ export function getCriticalChRestart(self: bigint): number {
 /**
  * `get-not-restored-reasons()` operation.
  */
-export function getNotRestoredReasons(self: bigint): bigint | undefined {
+export function getNotRestoredReasons(self: bigint): number {
   const obj = lookupPerformanceNavigationTiming(self);
   return (obj as any).notRestoredReasons ?? undefined;
 }
@@ -617,6 +633,14 @@ function lookupPerformanceTimingConfidence(handle: bigint): PerformanceTimingCon
   }
   return obj!;
 }
+
+/** Lookup an optional PerformanceTimingConfidence by handle. */
+function lookupOptionPerformanceTimingConfidence(handle: bigint | undefined): PerformanceTimingConfidence | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceTimingConfidencehandles.get(handle) ?? null;
+}
 /**
  * `get-randomized-trigger-rate()` operation.
  */
@@ -639,7 +663,7 @@ export function getValue(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function PerformanceTimingConfidenceToJson(self: bigint): string {
+export function PerformanceTimingConfidenceToJson(self: bigint): bigint {
   const obj = lookupPerformanceTimingConfidence(self);
   return obj.toJSON();
 }
@@ -662,6 +686,14 @@ function lookupPerformanceTiming(handle: bigint): PerformanceTiming {
     throw new Error(`PerformanceTiming handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PerformanceTiming by handle. */
+function lookupOptionPerformanceTiming(handle: bigint | undefined): PerformanceTiming | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceTiminghandles.get(handle) ?? null;
 }
 /**
  * `get-navigation-start()` operation.
@@ -858,10 +890,18 @@ function lookupPerformanceNavigation(handle: bigint): PerformanceNavigation {
   }
   return obj!;
 }
+
+/** Lookup an optional PerformanceNavigation by handle. */
+function lookupOptionPerformanceNavigation(handle: bigint | undefined): PerformanceNavigation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceNavigationhandles.get(handle) ?? null;
+}
 /**
  * `get-type()` operation.
  */
-export function PerformanceNavigationGetType(self: bigint): (bigint)[] {
+export function PerformanceNavigationGetType(self: bigint): number {
   const obj = lookupPerformanceNavigation(self);
   return (obj as any).getType();
 }
@@ -869,7 +909,7 @@ export function PerformanceNavigationGetType(self: bigint): (bigint)[] {
 /**
  * `get-redirect-count()` operation.
  */
-export function PerformanceNavigationGetRedirectCount(self: bigint): string | undefined {
+export function PerformanceNavigationGetRedirectCount(self: bigint): number {
   const obj = lookupPerformanceNavigation(self);
   return obj.redirectCount;
 }
@@ -901,10 +941,18 @@ function lookupPerformanceEntry(handle: bigint): PerformanceEntry {
   }
   return obj!;
 }
+
+/** Lookup an optional PerformanceEntry by handle. */
+function lookupOptionPerformanceEntry(handle: bigint | undefined): PerformanceEntry | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceEntryhandles.get(handle) ?? null;
+}
 /**
  * `get-id()` operation.
  */
-export function getId(self: bigint): number {
+export function getId(self: bigint): bigint {
   const obj = lookupPerformanceEntry(self);
   return (obj as any).id;
 }
@@ -955,7 +1003,7 @@ export function getNavigationId(self: bigint): bigint {
 /**
  * `to-json()` operation.
  */
-export function PerformanceEntryToJson(self: bigint): string {
+export function PerformanceEntryToJson(self: bigint): bigint | undefined {
   const obj = lookupPerformanceEntry(self);
   return obj.toJSON();
 }
@@ -978,6 +1026,14 @@ function lookupPerformanceObserver(handle: bigint): PerformanceObserver {
     throw new Error(`PerformanceObserver handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PerformanceObserver by handle. */
+function lookupOptionPerformanceObserver(handle: bigint | undefined): PerformanceObserver | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceObserverhandles.get(handle) ?? null;
 }
 /**
  * `observe()` operation.
@@ -1009,7 +1065,7 @@ export function takeRecords(self: bigint): bigint {
 /**
  * `get-supported-entry-types()` operation.
  */
-export function getSupportedEntryTypes(): (string)[] {
+export function getSupportedEntryTypes(): string {
   return [...PerformanceObserver.supportedEntryTypes];
 }
 
@@ -1032,10 +1088,18 @@ function lookupPerformanceObserverEntryList(handle: bigint): PerformanceObserver
   }
   return obj!;
 }
+
+/** Lookup an optional PerformanceObserverEntryList by handle. */
+function lookupOptionPerformanceObserverEntryList(handle: bigint | undefined): PerformanceObserverEntryList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceObserverEntryListhandles.get(handle) ?? null;
+}
 /**
  * `get-entries()` operation.
  */
-export function PerformanceObserverEntryListGetEntries(self: bigint): string {
+export function PerformanceObserverEntryListGetEntries(self: bigint): bigint {
   const obj = lookupPerformanceObserverEntryList(self);
   return (obj as any).getEntries();
 }
@@ -1080,6 +1144,14 @@ function lookupPerformanceResourceTiming(handle: bigint): PerformanceResourceTim
     throw new Error(`PerformanceResourceTiming handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PerformanceResourceTiming by handle. */
+function lookupOptionPerformanceResourceTiming(handle: bigint | undefined): PerformanceResourceTiming | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceResourceTiminghandles.get(handle) ?? null;
 }
 /**
  * `get-initiator-type()` operation.
@@ -1148,7 +1220,7 @@ export function PerformanceResourceTimingGetDomainLookupStart(self: bigint): num
 /**
  * `get-domain-lookup-end()` operation.
  */
-export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): string {
+export function PerformanceResourceTimingGetDomainLookupEnd(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.domainLookupEnd;
 }
@@ -1172,7 +1244,7 @@ export function PerformanceResourceTimingGetConnectEnd(self: bigint): number {
 /**
  * `get-secure-connection-start()` operation.
  */
-export function PerformanceResourceTimingGetSecureConnectionStart(self: bigint): number {
+export function PerformanceResourceTimingGetSecureConnectionStart(self: bigint): string {
   const obj = lookupPerformanceResourceTiming(self);
   return obj.secureConnectionStart;
 }
@@ -1188,7 +1260,7 @@ export function PerformanceResourceTimingGetRequestStart(self: bigint): number {
 /**
  * `get-final-response-headers-start()` operation.
  */
-export function getFinalResponseHeadersStart(self: bigint): string {
+export function getFinalResponseHeadersStart(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).finalResponseHeadersStart;
 }
@@ -1220,7 +1292,7 @@ export function PerformanceResourceTimingGetResponseEnd(self: bigint): number {
 /**
  * `get-worker-router-evaluation-start()` operation.
  */
-export function getWorkerRouterEvaluationStart(self: bigint): string {
+export function getWorkerRouterEvaluationStart(self: bigint): number {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).workerRouterEvaluationStart;
 }
@@ -1284,7 +1356,7 @@ export function getResponseStatus(self: bigint): number {
 /**
  * `get-render-blocking-status()` operation.
  */
-export function getRenderBlockingStatus(self: bigint): string {
+export function getRenderBlockingStatus(self: bigint): bigint {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).renderBlockingStatus;
 }
@@ -1300,7 +1372,7 @@ export function getContentType(self: bigint): string {
 /**
  * `get-content-encoding()` operation.
  */
-export function getContentEncoding(self: bigint): string {
+export function getContentEncoding(self: bigint): string | undefined {
   const obj = lookupPerformanceResourceTiming(self);
   return (obj as any).contentEncoding;
 }
@@ -1332,6 +1404,14 @@ function lookupPerformanceMark(handle: bigint): PerformanceMark {
   }
   return obj!;
 }
+
+/** Lookup an optional PerformanceMark by handle. */
+function lookupOptionPerformanceMark(handle: bigint | undefined): PerformanceMark | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceMarkhandles.get(handle) ?? null;
+}
 /**
  * `get-detail()` operation.
  */
@@ -1358,6 +1438,14 @@ function lookupPerformanceMeasure(handle: bigint): PerformanceMeasure {
     throw new Error(`PerformanceMeasure handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PerformanceMeasure by handle. */
+function lookupOptionPerformanceMeasure(handle: bigint | undefined): PerformanceMeasure | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _performanceMeasurehandles.get(handle) ?? null;
 }
 /**
  * `get-detail()` operation.

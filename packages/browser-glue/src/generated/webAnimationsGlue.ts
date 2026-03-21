@@ -253,20 +253,28 @@ function lookupAnimation(handle: bigint): Animation {
   }
   return obj!;
 }
+
+/** Lookup an optional Animation by handle. */
+function lookupOptionAnimation(handle: bigint | undefined): Animation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _animationHandles.get(handle) ?? null;
+}
 /**
  * `get-id()` operation.
  */
 export function getId(handle: bigint): number {
   const obj = lookupAnimation(handle);
-  return obj.id;
+  return (obj as any).id;
 }
 
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: (EventHandlerRecord)[]): void {
+export function setId(handle: bigint, value: Uint8Array): void {
   const obj = lookupAnimation(handle);
-  obj.id = value;
+  (obj as any).id = value;
 }
 
 /**
@@ -274,7 +282,7 @@ export function setId(handle: bigint, value: (EventHandlerRecord)[]): void {
  */
 export function getPlaybackRate(handle: bigint): Uint8Array {
   const obj = lookupAnimation(handle);
-  return obj.playbackRate;
+  return (obj as any).playbackRate;
 }
 
 /**
@@ -282,7 +290,7 @@ export function getPlaybackRate(handle: bigint): Uint8Array {
  */
 export function setPlaybackRate(handle: bigint, value: number): void {
   const obj = lookupAnimation(handle);
-  obj.playbackRate = value;
+  (obj as any).playbackRate = value;
 }
 
 /**
@@ -328,7 +336,7 @@ export function pause(handle: bigint): void {
 /**
  * `update-playback-rate()` operation.
  */
-export function updatePlaybackRate(handle: bigint, playbackRate: number): void {
+export function updatePlaybackRate(handle: bigint, playbackRate: bigint): void {
   const obj = lookupAnimation(handle);
   obj.updatePlaybackRate(playbackRate);
 }

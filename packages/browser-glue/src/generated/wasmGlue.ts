@@ -282,17 +282,25 @@ function lookupModule(handle: bigint): WebAssembly.Module {
   }
   return obj!;
 }
+
+/** Lookup an optional WebAssembly.Module by handle. */
+function lookupOptionModule(handle: bigint | undefined): WebAssembly.Module | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _moduleHandles.get(handle) ?? null;
+}
 /**
  * `exports()` operation.
  */
-export function exports(moduleObject: bigint): (number)[] {
+export function exports(moduleObject: bigint): (bigint)[] {
   return (globalThis as any).WebAssembly.Module.exports(moduleObject);
 }
 
 /**
  * `imports()` operation.
  */
-export function imports(moduleObject: boolean): (bigint)[] {
+export function imports(moduleObject: bigint): boolean {
   return (globalThis as any).WebAssembly.Module.imports(moduleObject);
 }
 
@@ -321,6 +329,14 @@ function lookupInstance(handle: bigint): Instance {
     throw new Error(`Instance handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Instance by handle. */
+function lookupOptionInstance(handle: bigint | undefined): Instance | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _instanceHandles.get(handle) ?? null;
 }
 /**
  * `get-exports()` operation.
@@ -352,10 +368,18 @@ function lookupMemory(handle: bigint): Memory {
   }
   return obj!;
 }
+
+/** Lookup an optional Memory by handle. */
+function lookupOptionMemory(handle: bigint | undefined): Memory | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _memoryHandles.get(handle) ?? null;
+}
 /**
  * `grow()` operation.
  */
-export function MemoryGrow(self: bigint, delta: string): bigint {
+export function MemoryGrow(self: bigint, delta: bigint): bigint {
   const obj = lookupMemory(self);
   return BigInt((obj as any).grow(delta));
 }
@@ -371,7 +395,7 @@ export function toFixedLengthBuffer(self: bigint): Uint8Array {
 /**
  * `to-resizable-buffer()` operation.
  */
-export function toResizableBuffer(self: bigint): (EventHandlerRecord)[] {
+export function toResizableBuffer(self: bigint): Uint8Array {
   const obj = lookupMemory(self);
   return (obj as any).toResizableBuffer();
 }
@@ -402,6 +426,14 @@ function lookupTable(handle: bigint): Table {
     throw new Error(`Table handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Table by handle. */
+function lookupOptionTable(handle: bigint | undefined): Table | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _tableHandles.get(handle) ?? null;
 }
 /**
  * `grow()` operation.
@@ -452,7 +484,7 @@ export function pollGet(requestId: bigint): { ok: true } | { ok: false; error: s
 /**
  * `set()` operation.
  */
-export function _set(self: bigint, index: bigint, value: string | undefined): void {
+export function _set(self: bigint, index: bigint, value: bigint): void {
   const obj = lookupTable(self);
   (obj as any).set(index, value);
 }
@@ -484,12 +516,20 @@ function lookupGlobal(handle: bigint): Global {
   }
   return obj!;
 }
+
+/** Lookup an optional Global by handle. */
+function lookupOptionGlobal(handle: bigint | undefined): Global | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _globalHandles.get(handle) ?? null;
+}
 /**
  * `value-of()` operation.
  */
-export function valueOf(self: bigint): bigint | undefined {
+export function valueOf(self: bigint): EventHandlerRecord {
   const obj = lookupGlobal(self);
-  return obj.valueOf();
+  return (obj as any).valueOf();
 }
 
 /**
@@ -506,7 +546,7 @@ export function getValue(self: bigint): bigint {
 /**
  * `set-value()` operation.
  */
-export function setValue(self: bigint, value: string): void {
+export function setValue(self: bigint, value: number): void {
   const obj = lookupGlobal(self);
   (obj as any).value = value;
 }
@@ -530,6 +570,14 @@ function lookupException(handle: bigint): Exception {
   }
   return obj!;
 }
+
+/** Lookup an optional Exception by handle. */
+function lookupOptionException(handle: bigint | undefined): Exception | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _exceptionHandles.get(handle) ?? null;
+}
 /**
  * `get-arg()` operation.
  */
@@ -541,7 +589,7 @@ export function getArg(self: bigint, exceptionTag: bigint, index: number): strin
 /**
  * `is()` operation.
  */
-export function is(self: bigint, exceptionTag: boolean): boolean {
+export function is(self: bigint, exceptionTag: bigint): boolean {
   const obj = lookupException(self);
   return obj.is(exceptionTag);
 }

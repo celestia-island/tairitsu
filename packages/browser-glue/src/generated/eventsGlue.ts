@@ -450,6 +450,14 @@ function lookupClipboardEvent(handle: bigint): ClipboardEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional ClipboardEvent by handle. */
+function lookupOptionClipboardEvent(handle: bigint | undefined): ClipboardEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _clipboardEventhandles.get(handle) ?? null;
+}
 /**
  * `get-clipboard-data()` operation.
  */
@@ -504,6 +512,14 @@ function lookupClipboardItem(handle: bigint): ClipboardItem {
   }
   return obj!;
 }
+
+/** Lookup an optional ClipboardItem by handle. */
+function lookupOptionClipboardItem(handle: bigint | undefined): ClipboardItem | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _clipboardItemhandles.get(handle) ?? null;
+}
 /**
  * `get-presentation-style()` operation.
  */
@@ -532,7 +548,7 @@ export function ClipboardItemGetTypes(self: bigint): bigint {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint, type: string): bigint {
+export function getType(self: bigint, type: bigint): bigint {
   const obj = lookupClipboardItem(self);
   const _callResult = obj.getType(type as any);
   const handle = _nextPromiseAny++;
@@ -566,12 +582,20 @@ function lookupClipboard(handle: bigint): Clipboard {
   }
   return obj!;
 }
+
+/** Lookup an optional Clipboard by handle. */
+function lookupOptionClipboard(handle: bigint | undefined): Clipboard | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _clipboardHandles.get(handle) ?? null;
+}
 /**
  * `read()` operation.
  *
  * Async operation: returns request ID, poll with `pollRead()`
  */
-export function read(self: bigint, formats: bigint | undefined): bigint {
+export function read(self: bigint, formats: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupClipboard(self);
   const promise = obj.read()
@@ -737,6 +761,14 @@ function lookupPointerEvent(handle: bigint): PointerEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional PointerEvent by handle. */
+function lookupOptionPointerEvent(handle: bigint | undefined): PointerEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _pointerEventhandles.get(handle) ?? null;
+}
 /**
  * `get-pointer-id()` operation.
  */
@@ -887,6 +919,14 @@ function lookupWheelEvent(handle: bigint): WheelEvent {
     throw new Error(`WheelEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WheelEvent by handle. */
+function lookupOptionWheelEvent(handle: bigint | undefined): WheelEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _wheelEventhandles.get(handle) ?? null;
 }
 /**
  * `get-delta-x()` operation.
@@ -1045,7 +1085,7 @@ export function TouchGetAzimuthAngle(self: bigint): number {
 /**
  * `get-touch-type()` operation.
  */
-export function getTouchType(self: bigint): bigint {
+export function getTouchType(self: bigint): string {
   const obj = lookupTouch(self);
   return (obj as any).touchType;
 }
@@ -1095,6 +1135,14 @@ function lookupTouchEvent(handle: bigint): TouchEvent {
     throw new Error(`TouchEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional TouchEvent by handle. */
+function lookupOptionTouchEvent(handle: bigint | undefined): TouchEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _touchEventhandles.get(handle) ?? null;
 }
 /**
  * `get-touches()` operation.
@@ -1164,7 +1212,7 @@ export function TouchEventGetShiftKey(self: bigint): bigint {
 /**
  * `get-modifier-state()` operation.
  */
-export function TouchEventGetModifierState(self: bigint, keyArg: string): boolean {
+export function TouchEventGetModifierState(self: bigint, keyArg: string): bigint {
   const obj = lookupTouchEvent(self);
   return (obj as any).getModifierState(keyArg);
 }
@@ -1188,6 +1236,14 @@ function lookupUIEvent(handle: bigint): UIEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional UIEvent by handle. */
+function lookupOptionUIEvent(handle: bigint | undefined): UIEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _uiEventhandles.get(handle) ?? null;
+}
 /**
  * `get-view()` operation.
  */
@@ -1203,15 +1259,15 @@ export function getView(self: bigint): bigint | undefined {
 /**
  * `get-detail()` operation.
  */
-export function getDetail(self: bigint): number {
+export function getDetail(self: bigint): bigint {
   const obj = lookupUIEvent(self);
-  return obj.detail;
+  return BigInt(obj.detail);
 }
 
 /**
  * `init-ui-event()` operation.
  */
-export function initUiEvent(self: bigint, typeArg: string | undefined, bubblesArg: string, cancelableArg: bigint, viewArg: bigint | undefined, detailArg: bigint | undefined | undefined): void {
+export function initUiEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: bigint, viewArg: bigint | undefined, detailArg: number | undefined): void {
   const obj = lookupUIEvent(self);
   obj.initUIEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), Number(detailArg));
 }
@@ -1221,7 +1277,7 @@ export function initUiEvent(self: bigint, typeArg: string | undefined, bubblesAr
  */
 export function getWhich(self: bigint): bigint {
   const obj = lookupUIEvent(self);
-  return obj.which;
+  return BigInt(obj.which);
 }
 
 // ---------------------------------------------------------------------------
@@ -1242,6 +1298,14 @@ function lookupFocusEvent(handle: bigint): FocusEvent {
     throw new Error(`FocusEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional FocusEvent by handle. */
+function lookupOptionFocusEvent(handle: bigint | undefined): FocusEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _focusEventhandles.get(handle) ?? null;
 }
 /**
  * `get-related-target()` operation.
@@ -1274,10 +1338,18 @@ function lookupInputEvent(handle: bigint): InputEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional InputEvent by handle. */
+function lookupOptionInputEvent(handle: bigint | undefined): InputEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _inputEventhandles.get(handle) ?? null;
+}
 /**
  * `get-data()` operation.
  */
-export function InputEventGetData(self: bigint): boolean | undefined {
+export function InputEventGetData(self: bigint): bigint | undefined {
   const obj = lookupInputEvent(self);
   return obj.data ?? undefined;
 }
@@ -1285,7 +1357,7 @@ export function InputEventGetData(self: bigint): boolean | undefined {
 /**
  * `get-is-composing()` operation.
  */
-export function InputEventGetIsComposing(self: bigint): boolean {
+export function InputEventGetIsComposing(self: bigint): bigint {
   const obj = lookupInputEvent(self);
   return obj.isComposing;
 }
@@ -1330,6 +1402,14 @@ function lookupKeyboardEvent(handle: bigint): KeyboardEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional KeyboardEvent by handle. */
+function lookupOptionKeyboardEvent(handle: bigint | undefined): KeyboardEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _keyboardEventhandles.get(handle) ?? null;
+}
 /**
  * `get-key()` operation.
  */
@@ -1344,7 +1424,7 @@ export function getKey(self: bigint): bigint {
 /**
  * `get-code()` operation.
  */
-export function getCode(self: bigint): string {
+export function getCode(self: bigint): EventHandlerRecord {
   const obj = lookupKeyboardEvent(self);
   return obj.code;
 }
@@ -1360,7 +1440,7 @@ export function getLocation(self: bigint): number {
 /**
  * `get-ctrl-key()` operation.
  */
-export function KeyboardEventGetCtrlKey(self: bigint): boolean {
+export function KeyboardEventGetCtrlKey(self: bigint): string {
   const obj = lookupKeyboardEvent(self);
   return obj.ctrlKey;
 }
@@ -1392,7 +1472,7 @@ export function KeyboardEventGetMetaKey(self: bigint): boolean {
 /**
  * `get-repeat()` operation.
  */
-export function getRepeat(self: bigint): boolean {
+export function getRepeat(self: bigint): bigint {
   const obj = lookupKeyboardEvent(self);
   return obj.repeat;
 }
@@ -1400,7 +1480,7 @@ export function getRepeat(self: bigint): boolean {
 /**
  * `get-is-composing()` operation.
  */
-export function KeyboardEventGetIsComposing(self: bigint): string {
+export function KeyboardEventGetIsComposing(self: bigint): boolean {
   const obj = lookupKeyboardEvent(self);
   return obj.isComposing;
 }
@@ -1408,7 +1488,7 @@ export function KeyboardEventGetIsComposing(self: bigint): string {
 /**
  * `get-modifier-state()` operation.
  */
-export function KeyboardEventGetModifierState(self: bigint, keyArg: bigint): boolean {
+export function KeyboardEventGetModifierState(self: bigint, keyArg: string): boolean {
   const obj = lookupKeyboardEvent(self);
   return obj.getModifierState(keyArg);
 }
@@ -1416,7 +1496,7 @@ export function KeyboardEventGetModifierState(self: bigint, keyArg: bigint): boo
 /**
  * `init-keyboard-event()` operation.
  */
-export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, keyArg: bigint, locationArg: number | undefined, ctrlKey: number | undefined, altKey: boolean | undefined, shiftKey: boolean | undefined, metaKey: boolean | undefined): void {
+export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: number | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, keyArg: string | undefined, locationArg: number | undefined, ctrlKey: boolean | undefined, altKey: bigint | undefined, shiftKey: boolean | undefined, metaKey: bigint): void {
   const obj = lookupKeyboardEvent(self);
   obj.initKeyboardEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), keyArg as any, locationArg, ctrlKey !== undefined ? Boolean(ctrlKey) : undefined, altKey !== undefined ? Boolean(altKey) : undefined, shiftKey !== undefined ? Boolean(shiftKey) : undefined, metaKey !== undefined ? Boolean(metaKey) : undefined);
 }
@@ -1456,6 +1536,14 @@ function lookupCompositionEvent(handle: bigint): CompositionEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional CompositionEvent by handle. */
+function lookupOptionCompositionEvent(handle: bigint | undefined): CompositionEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _compositionEventhandles.get(handle) ?? null;
+}
 /**
  * `get-data()` operation.
  */
@@ -1470,7 +1558,7 @@ export function CompositionEventGetData(self: bigint): bigint {
 /**
  * `init-composition-event()` operation.
  */
-export function initCompositionEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, dataArg: string | undefined): void {
+export function initCompositionEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: boolean | undefined, dataArg: string | undefined): void {
   const obj = lookupCompositionEvent(self);
   obj.initCompositionEvent(typeArg as any, bubblesArg, cancelableArg, lookupOptionWindow(viewArg), dataArg);
 }
@@ -1494,10 +1582,18 @@ function lookupTextEvent(handle: bigint): TextEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional TextEvent by handle. */
+function lookupOptionTextEvent(handle: bigint | undefined): TextEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _textEventhandles.get(handle) ?? null;
+}
 /**
  * `get-data()` operation.
  */
-export function TextEventGetData(self: bigint): string {
+export function TextEventGetData(self: bigint): boolean {
   const obj = lookupTextEvent(self);
   return obj.data;
 }
@@ -1505,7 +1601,7 @@ export function TextEventGetData(self: bigint): string {
 /**
  * `init-text-event()` operation.
  */
-export function initTextEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, view: boolean | undefined, data: string | undefined): void {
+export function initTextEvent(self: bigint, type: boolean | undefined, bubbles: boolean | undefined, cancelable: boolean | undefined, view: bigint | undefined, data: string | undefined): void {
   const obj = lookupTextEvent(self);
   obj.initTextEvent(type, Boolean(bubbles), cancelable, lookupOptionWindow(view), data);
 }

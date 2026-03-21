@@ -604,7 +604,7 @@ export function HeadersDelete(self: bigint, name: string): void {
 /**
  * `get()` operation.
  */
-export function HeadersGet(self: bigint, name: string): bigint | undefined {
+export function HeadersGet(self: bigint, name: bigint | undefined): bigint | undefined {
   const obj = lookupHeaders(self);
   const _callResult = obj.get(name as any);
   if (_callResult === null) return undefined;
@@ -658,6 +658,14 @@ function lookupBody(handle: bigint): Body {
     throw new Error(`Body handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Body by handle. */
+function lookupOptionBody(handle: bigint | undefined): Body | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _bodyHandles.get(handle) ?? null;
 }
 /**
  * `get-body()` operation.
@@ -861,12 +869,12 @@ export function BodyJson(self: bigint): bigint {
  * Poll an async `json()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollJson(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -899,12 +907,12 @@ export function text(self: bigint): bigint {
  * Poll an async `text()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollText(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string | undefined } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -936,7 +944,7 @@ export function getMethod(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): bigint {
+export function RequestGetUrl(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.url;
 }
@@ -1076,7 +1084,7 @@ export function getRedirect(self: bigint): bigint {
 /**
  * `get-integrity()` operation.
  */
-export function getIntegrity(self: bigint): string | undefined {
+export function getIntegrity(self: bigint): string {
   const obj = lookupRequest(self);
   return obj.integrity;
 }
@@ -1084,7 +1092,7 @@ export function getIntegrity(self: bigint): string | undefined {
 /**
  * `get-keepalive()` operation.
  */
-export function getKeepalive(self: bigint): (bigint)[] {
+export function getKeepalive(self: bigint): number {
   const obj = lookupRequest(self);
   return obj.keepalive;
 }
@@ -1092,7 +1100,7 @@ export function getKeepalive(self: bigint): (bigint)[] {
 /**
  * `get-is-reload-navigation()` operation.
  */
-export function getIsReloadNavigation(self: bigint): (number)[] {
+export function getIsReloadNavigation(self: bigint): bigint {
   const obj = lookupRequest(self);
   return (obj as any).isReloadNavigation;
 }
@@ -1169,7 +1177,7 @@ export function redirect(url: EventHandlerRecord, status: number | undefined): b
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: EventHandlerRecord): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1283,6 +1291,14 @@ function lookupWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalSc
     throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WindowOrWorkerGlobalScope by handle. */
+function lookupOptionWindowOrWorkerGlobalScope(handle: bigint | undefined): WindowOrWorkerGlobalScope | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _windowOrWorkerGlobalScopehandles.get(handle) ?? null;
 }
 /**
  * `fetch()` operation.
@@ -1426,7 +1442,7 @@ export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void
  *
  * Async operation: returns request ID, poll with `pollCreateImageBitmap()`
  */
-export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined): bigint {
+export function createImageBitmap(self: bigint, image: bigint, options: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWindowOrWorkerGlobalScope(self);
   const promise = obj.createImageBitmap(image as any, options as any)
@@ -1462,7 +1478,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: Uint8Array | undefined): Uint8Array {
+export function structuredClone(self: bigint, value: string, options: bigint | undefined): bigint {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value as any, options as any);
 }
@@ -1507,6 +1523,14 @@ function lookupFetchLaterResult(handle: bigint): FetchLaterResult {
     throw new Error(`FetchLaterResult handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional FetchLaterResult by handle. */
+function lookupOptionFetchLaterResult(handle: bigint | undefined): FetchLaterResult | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fetchLaterResulthandles.get(handle) ?? null;
 }
 /**
  * `get-activated()` operation.
@@ -1666,6 +1690,14 @@ function lookupReadableStreamGenericReader(handle: bigint): ReadableStreamGeneri
   }
   return obj!;
 }
+
+/** Lookup an optional ReadableStreamGenericReader by handle. */
+function lookupOptionReadableStreamGenericReader(handle: bigint | undefined): ReadableStreamGenericReader | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableStreamGenericReaderhandles.get(handle) ?? null;
+}
 /**
  * `get-closed()` operation.
  *
@@ -1761,6 +1793,14 @@ function lookupReadableStreamDefaultReader(handle: bigint): ReadableStreamDefaul
   }
   return obj!;
 }
+
+/** Lookup an optional ReadableStreamDefaultReader by handle. */
+function lookupOptionReadableStreamDefaultReader(handle: bigint | undefined): ReadableStreamDefaultReader | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableStreamDefaultReaderhandles.get(handle) ?? null;
+}
 /**
  * `read()` operation.
  *
@@ -1825,6 +1865,14 @@ function lookupReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReade
     throw new Error(`ReadableStreamBYOBReader handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ReadableStreamBYOBReader by handle. */
+function lookupOptionReadableStreamBYOBReader(handle: bigint | undefined): ReadableStreamBYOBReader | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableStreamByobReaderhandles.get(handle) ?? null;
 }
 /**
  * `read()` operation.
@@ -1891,6 +1939,14 @@ function lookupReadableStreamDefaultController(handle: bigint): ReadableStreamDe
   }
   return obj!;
 }
+
+/** Lookup an optional ReadableStreamDefaultController by handle. */
+function lookupOptionReadableStreamDefaultController(handle: bigint | undefined): ReadableStreamDefaultController | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableStreamDefaultControllerhandles.get(handle) ?? null;
+}
 /**
  * `get-desired-size()` operation.
  */
@@ -1941,6 +1997,14 @@ function lookupReadableByteStreamController(handle: bigint): ReadableByteStreamC
     throw new Error(`ReadableByteStreamController handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ReadableByteStreamController by handle. */
+function lookupOptionReadableByteStreamController(handle: bigint | undefined): ReadableByteStreamController | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableByteStreamControllerhandles.get(handle) ?? null;
 }
 /**
  * `get-byob-request()` operation.
@@ -2005,12 +2069,20 @@ function lookupReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequ
   }
   return obj!;
 }
+
+/** Lookup an optional ReadableStreamBYOBRequest by handle. */
+function lookupOptionReadableStreamBYOBRequest(handle: bigint | undefined): ReadableStreamBYOBRequest | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _readableStreamByobRequesthandles.get(handle) ?? null;
+}
 /**
  * `get-view()` operation.
  */
 export function getView(self: bigint): Uint8Array | undefined {
   const obj = lookupReadableStreamBYOBRequest(self);
-  return obj.view ?? undefined;
+  return (obj as any).view ?? undefined;
 }
 
 /**
@@ -2149,6 +2221,14 @@ function lookupWritableStreamDefaultWriter(handle: bigint): WritableStreamDefaul
     throw new Error(`WritableStreamDefaultWriter handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WritableStreamDefaultWriter by handle. */
+function lookupOptionWritableStreamDefaultWriter(handle: bigint | undefined): WritableStreamDefaultWriter | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _writableStreamDefaultWriterhandles.get(handle) ?? null;
 }
 /**
  * `get-closed()` operation.
@@ -2345,6 +2425,14 @@ function lookupWritableStreamDefaultController(handle: bigint): WritableStreamDe
   }
   return obj!;
 }
+
+/** Lookup an optional WritableStreamDefaultController by handle. */
+function lookupOptionWritableStreamDefaultController(handle: bigint | undefined): WritableStreamDefaultController | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _writableStreamDefaultControllerhandles.get(handle) ?? null;
+}
 /**
  * `get-signal()` operation.
  */
@@ -2382,6 +2470,14 @@ function lookupTransformStream(handle: bigint): TransformStream {
     throw new Error(`TransformStream handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional TransformStream by handle. */
+function lookupOptionTransformStream(handle: bigint | undefined): TransformStream | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _transformStreamhandles.get(handle) ?? null;
 }
 /**
  * `get-readable()` operation.
@@ -2423,6 +2519,14 @@ function lookupTransformStreamDefaultController(handle: bigint): TransformStream
     throw new Error(`TransformStreamDefaultController handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional TransformStreamDefaultController by handle. */
+function lookupOptionTransformStreamDefaultController(handle: bigint | undefined): TransformStreamDefaultController | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _transformStreamDefaultControllerhandles.get(handle) ?? null;
 }
 /**
  * `get-desired-size()` operation.
@@ -2475,6 +2579,14 @@ function lookupByteLengthQueuingStrategy(handle: bigint): ByteLengthQueuingStrat
   }
   return obj!;
 }
+
+/** Lookup an optional ByteLengthQueuingStrategy by handle. */
+function lookupOptionByteLengthQueuingStrategy(handle: bigint | undefined): ByteLengthQueuingStrategy | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _byteLengthQueuingStrategyhandles.get(handle) ?? null;
+}
 /**
  * `get-high-water-mark()` operation.
  */
@@ -2513,6 +2625,14 @@ function lookupCountQueuingStrategy(handle: bigint): CountQueuingStrategy {
   }
   return obj!;
 }
+
+/** Lookup an optional CountQueuingStrategy by handle. */
+function lookupOptionCountQueuingStrategy(handle: bigint | undefined): CountQueuingStrategy | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _countQueuingStrategyhandles.get(handle) ?? null;
+}
 /**
  * `get-high-water-mark()` operation.
  */
@@ -2550,6 +2670,14 @@ function lookupGenericTransformStream(handle: bigint): GenericTransformStream {
     throw new Error(`GenericTransformStream handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional GenericTransformStream by handle. */
+function lookupOptionGenericTransformStream(handle: bigint | undefined): GenericTransformStream | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _genericTransformStreamhandles.get(handle) ?? null;
 }
 /**
  * `get-readable()` operation.
@@ -2591,6 +2719,14 @@ function lookupXMLHttpRequestEventTarget(handle: bigint): XMLHttpRequestEventTar
     throw new Error(`XMLHttpRequestEventTarget handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional XMLHttpRequestEventTarget by handle. */
+function lookupOptionXMLHttpRequestEventTarget(handle: bigint | undefined): XMLHttpRequestEventTarget | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _xmlHttpRequestEventTargethandles.get(handle) ?? null;
 }
 /**
  * `get-onloadstart()` operation.
@@ -2722,6 +2858,14 @@ function lookupXMLHttpRequest(handle: bigint): XMLHttpRequest {
     throw new Error(`XMLHttpRequest handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional XMLHttpRequest by handle. */
+function lookupOptionXMLHttpRequest(handle: bigint | undefined): XMLHttpRequest | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _xmlHttpRequesthandles.get(handle) ?? null;
 }
 /**
  * `get-onreadystatechange()` operation.
@@ -2955,6 +3099,14 @@ function lookupFormData(handle: bigint): FormData {
   }
   return obj!;
 }
+
+/** Lookup an optional FormData by handle. */
+function lookupOptionFormData(handle: bigint | undefined): FormData | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _formDatahandles.get(handle) ?? null;
+}
 /**
  * `append()` operation.
  */
@@ -3025,6 +3177,14 @@ function lookupProgressEvent(handle: bigint): ProgressEvent {
     throw new Error(`ProgressEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ProgressEvent by handle. */
+function lookupOptionProgressEvent(handle: bigint | undefined): ProgressEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _progressEventhandles.get(handle) ?? null;
 }
 /**
  * `get-length-computable()` operation.

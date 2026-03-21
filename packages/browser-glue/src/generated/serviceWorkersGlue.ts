@@ -240,10 +240,18 @@ function lookupSwReg(handle: bigint): ServiceWorkerRegistration {
   }
   return obj!;
 }
+
+/** Lookup an optional ServiceWorkerRegistration by handle. */
+function lookupOptionSwReg(handle: bigint | undefined): ServiceWorkerRegistration | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _swReghandles.get(handle) ?? null;
+}
 /**
  * `scope()` operation.
  */
-export function scope(handle: bigint): string {
+export function scope(handle: bigint): bigint {
   const obj = lookupSwReg(handle);
   return (obj as any).scope();
 }
@@ -267,6 +275,14 @@ function lookupSw(handle: bigint): ServiceWorker {
   }
   return obj!;
 }
+
+/** Lookup an optional ServiceWorker by handle. */
+function lookupOptionSw(handle: bigint | undefined): ServiceWorker | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _swHandles.get(handle) ?? null;
+}
 /**
  * `script-url()` operation.
  */
@@ -278,7 +294,7 @@ export function scriptUrl(handle: bigint): string {
 /**
  * `post-message()` operation.
  */
-export function postMessage(handle: bigint, message: string, transfer: bigint): void {
+export function postMessage(handle: bigint, message: string, transfer: (Uint8Array)[]): void {
   const obj = lookupSw(handle);
   obj.postMessage(message as any, transfer as any);
 }

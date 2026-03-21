@@ -1458,6 +1458,14 @@ function lookupHTMLAllCollection(handle: bigint): HTMLAllCollection {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLAllCollection by handle. */
+function lookupOptionHTMLAllCollection(handle: bigint | undefined): HTMLAllCollection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlAllCollectionhandles.get(handle) ?? null;
+}
 /**
  * `get-length()` operation.
  */
@@ -1493,6 +1501,14 @@ function lookupRadioNodeList(handle: bigint): RadioNodeList {
   }
   return obj!;
 }
+
+/** Lookup an optional RadioNodeList by handle. */
+function lookupOptionRadioNodeList(handle: bigint | undefined): RadioNodeList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _radioNodeListhandles.get(handle) ?? null;
+}
 /**
  * `get-value()` operation.
  */
@@ -1527,6 +1543,14 @@ function lookupHTMLOptionsCollection(handle: bigint): HTMLOptionsCollection {
     throw new Error(`HTMLOptionsCollection handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLOptionsCollection by handle. */
+function lookupOptionHTMLOptionsCollection(handle: bigint | undefined): HTMLOptionsCollection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlOptionsCollectionhandles.get(handle) ?? null;
 }
 /**
  * `get-length()` operation.
@@ -1603,6 +1627,14 @@ function lookupDOMStringList(handle: bigint): DOMStringList {
   }
   return obj!;
 }
+
+/** Lookup an optional DOMStringList by handle. */
+function lookupOptionDOMStringList(handle: bigint | undefined): DOMStringList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _domStringListhandles.get(handle) ?? null;
+}
 /**
  * `get-length()` operation.
  */
@@ -1645,6 +1677,14 @@ function lookupHTMLOrSVGElement(handle: bigint): HTMLOrSVGElement {
     throw new Error(`HTMLOrSVGElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLOrSVGElement by handle. */
+function lookupOptionHTMLOrSVGElement(handle: bigint | undefined): HTMLOrSVGElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlOrSvgElementhandles.get(handle) ?? null;
 }
 /**
  * `get-dataset()` operation.
@@ -1740,6 +1780,14 @@ function lookupDOMStringMap(handle: bigint): DOMStringMap {
   }
   return obj!;
 }
+
+/** Lookup an optional DOMStringMap by handle. */
+function lookupOptionDOMStringMap(handle: bigint | undefined): DOMStringMap | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _domStringMaphandles.get(handle) ?? null;
+}
 /**
  * `dom-string()` operation.
  */
@@ -1774,6 +1822,14 @@ function lookupHTMLHtmlElement(handle: bigint): HTMLHtmlElement {
     throw new Error(`HTMLHtmlElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLHtmlElement by handle. */
+function lookupOptionHTMLHtmlElement(handle: bigint | undefined): HTMLHtmlElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlHtmlElementhandles.get(handle) ?? null;
 }
 /**
  * `get-version()` operation.
@@ -1810,6 +1866,14 @@ function lookupHTMLTitleElement(handle: bigint): HTMLTitleElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLTitleElement by handle. */
+function lookupOptionHTMLTitleElement(handle: bigint | undefined): HTMLTitleElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTitleElementhandles.get(handle) ?? null;
+}
 /**
  * `get-text()` operation.
  */
@@ -1844,6 +1908,14 @@ function lookupHTMLBaseElement(handle: bigint): HTMLBaseElement {
     throw new Error(`HTMLBaseElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLBaseElement by handle. */
+function lookupOptionHTMLBaseElement(handle: bigint | undefined): HTMLBaseElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlBaseElementhandles.get(handle) ?? null;
 }
 /**
  * `get-href()` operation.
@@ -1895,6 +1967,14 @@ function lookupHTMLLinkElement(handle: bigint): HTMLLinkElement {
     throw new Error(`HTMLLinkElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLLinkElement by handle. */
+function lookupOptionHTMLLinkElement(handle: bigint | undefined): HTMLLinkElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlLinkElementhandles.get(handle) ?? null;
 }
 /**
  * `get-href()` operation.
@@ -2204,6 +2284,14 @@ function lookupHTMLMetaElement(handle: bigint): HTMLMetaElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLMetaElement by handle. */
+function lookupOptionHTMLMetaElement(handle: bigint | undefined): HTMLMetaElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMetaElementhandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -2303,6 +2391,14 @@ function lookupHTMLStyleElement(handle: bigint): HTMLStyleElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLStyleElement by handle. */
+function lookupOptionHTMLStyleElement(handle: bigint | undefined): HTMLStyleElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlStyleElementhandles.get(handle) ?? null;
+}
 /**
  * `get-disabled()` operation.
  */
@@ -2380,6 +2476,14 @@ function lookupHTMLBodyElement(handle: bigint): HTMLBodyElement {
     throw new Error(`HTMLBodyElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLBodyElement by handle. */
+function lookupOptionHTMLBodyElement(handle: bigint | undefined): HTMLBodyElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlBodyElementhandles.get(handle) ?? null;
 }
 /**
  * `get-text()` operation.
@@ -2496,6 +2600,14 @@ function lookupHTMLHeadingElement(handle: bigint): HTMLHeadingElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLHeadingElement by handle. */
+function lookupOptionHTMLHeadingElement(handle: bigint | undefined): HTMLHeadingElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlHeadingElementhandles.get(handle) ?? null;
+}
 /**
  * `get-align()` operation.
  */
@@ -2531,6 +2643,14 @@ function lookupHTMLParagraphElement(handle: bigint): HTMLParagraphElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLParagraphElement by handle. */
+function lookupOptionHTMLParagraphElement(handle: bigint | undefined): HTMLParagraphElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlParagraphElementhandles.get(handle) ?? null;
+}
 /**
  * `get-align()` operation.
  */
@@ -2565,6 +2685,14 @@ function lookupHTMLHRElement(handle: bigint): HTMLHRElement {
     throw new Error(`HTMLHRElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLHRElement by handle. */
+function lookupOptionHTMLHRElement(handle: bigint | undefined): HTMLHRElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlhrElementhandles.get(handle) ?? null;
 }
 /**
  * `get-align()` operation.
@@ -2665,6 +2793,14 @@ function lookupHTMLPreElement(handle: bigint): HTMLPreElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLPreElement by handle. */
+function lookupOptionHTMLPreElement(handle: bigint | undefined): HTMLPreElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlPreElementhandles.get(handle) ?? null;
+}
 /**
  * `get-width()` operation.
  */
@@ -2700,6 +2836,14 @@ function lookupHTMLQuoteElement(handle: bigint): HTMLQuoteElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLQuoteElement by handle. */
+function lookupOptionHTMLQuoteElement(handle: bigint | undefined): HTMLQuoteElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlQuoteElementhandles.get(handle) ?? null;
+}
 /**
  * `get-cite()` operation.
  */
@@ -2734,6 +2878,14 @@ function lookupHTMLOListElement(handle: bigint): HTMLOListElement {
     throw new Error(`HTMLOListElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLOListElement by handle. */
+function lookupOptionHTMLOListElement(handle: bigint | undefined): HTMLOListElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmloListElementhandles.get(handle) ?? null;
 }
 /**
  * `get-reversed()` operation.
@@ -2818,6 +2970,14 @@ function lookupHTMLUListElement(handle: bigint): HTMLUListElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLUListElement by handle. */
+function lookupOptionHTMLUListElement(handle: bigint | undefined): HTMLUListElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmluListElementhandles.get(handle) ?? null;
+}
 /**
  * `get-compact()` operation.
  */
@@ -2869,6 +3029,14 @@ function lookupHTMLMenuElement(handle: bigint): HTMLMenuElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLMenuElement by handle. */
+function lookupOptionHTMLMenuElement(handle: bigint | undefined): HTMLMenuElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMenuElementhandles.get(handle) ?? null;
+}
 /**
  * `get-compact()` operation.
  */
@@ -2903,6 +3071,14 @@ function lookupHTMLLIElement(handle: bigint): HTMLLIElement {
     throw new Error(`HTMLLIElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLLIElement by handle. */
+function lookupOptionHTMLLIElement(handle: bigint | undefined): HTMLLIElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlliElementhandles.get(handle) ?? null;
 }
 /**
  * `get-value()` operation.
@@ -2955,6 +3131,14 @@ function lookupHTMLDListElement(handle: bigint): HTMLDListElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLDListElement by handle. */
+function lookupOptionHTMLDListElement(handle: bigint | undefined): HTMLDListElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmldListElementhandles.get(handle) ?? null;
+}
 /**
  * `get-compact()` operation.
  */
@@ -2990,6 +3174,14 @@ function lookupHTMLDivElement(handle: bigint): HTMLDivElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLDivElement by handle. */
+function lookupOptionHTMLDivElement(handle: bigint | undefined): HTMLDivElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDivElementhandles.get(handle) ?? null;
+}
 /**
  * `get-align()` operation.
  */
@@ -3024,6 +3216,14 @@ function lookupHTMLAnchorElement(handle: bigint): HTMLAnchorElement {
     throw new Error(`HTMLAnchorElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLAnchorElement by handle. */
+function lookupOptionHTMLAnchorElement(handle: bigint | undefined): HTMLAnchorElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlAnchorElementhandles.get(handle) ?? null;
 }
 /**
  * `get-target()` operation.
@@ -3263,6 +3463,14 @@ function lookupHTMLDataElement(handle: bigint): HTMLDataElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLDataElement by handle. */
+function lookupOptionHTMLDataElement(handle: bigint | undefined): HTMLDataElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDataElementhandles.get(handle) ?? null;
+}
 /**
  * `get-value()` operation.
  */
@@ -3297,6 +3505,14 @@ function lookupHTMLTimeElement(handle: bigint): HTMLTimeElement {
     throw new Error(`HTMLTimeElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTimeElement by handle. */
+function lookupOptionHTMLTimeElement(handle: bigint | undefined): HTMLTimeElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTimeElementhandles.get(handle) ?? null;
 }
 /**
  * `get-date-time()` operation.
@@ -3333,6 +3549,14 @@ function lookupHTMLBRElement(handle: bigint): HTMLBRElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLBRElement by handle. */
+function lookupOptionHTMLBRElement(handle: bigint | undefined): HTMLBRElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlbrElementhandles.get(handle) ?? null;
+}
 /**
  * `get-clear()` operation.
  */
@@ -3367,6 +3591,14 @@ function lookupHyperlinkElementUtils(handle: bigint): HyperlinkElementUtils {
     throw new Error(`HyperlinkElementUtils handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HyperlinkElementUtils by handle. */
+function lookupOptionHyperlinkElementUtils(handle: bigint | undefined): HyperlinkElementUtils | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _hyperlinkElementUtilshandles.get(handle) ?? null;
 }
 /**
  * `get-origin()` operation.
@@ -3539,6 +3771,14 @@ function lookupHTMLHyperlinkElementUtils(handle: bigint): HTMLHyperlinkElementUt
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLHyperlinkElementUtils by handle. */
+function lookupOptionHTMLHyperlinkElementUtils(handle: bigint | undefined): HTMLHyperlinkElementUtils | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlHyperlinkElementUtilshandles.get(handle) ?? null;
+}
 /**
  * `get-href()` operation.
  */
@@ -3580,6 +3820,14 @@ function lookupHTMLModElement(handle: bigint): HTMLModElement {
     throw new Error(`HTMLModElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLModElement by handle. */
+function lookupOptionHTMLModElement(handle: bigint | undefined): HTMLModElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlModElementhandles.get(handle) ?? null;
 }
 /**
  * `get-cite()` operation.
@@ -3631,6 +3879,14 @@ function lookupHTMLSourceElement(handle: bigint): HTMLSourceElement {
     throw new Error(`HTMLSourceElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLSourceElement by handle. */
+function lookupOptionHTMLSourceElement(handle: bigint | undefined): HTMLSourceElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlSourceElementhandles.get(handle) ?? null;
 }
 /**
  * `get-src()` operation.
@@ -3762,6 +4018,14 @@ function lookupHTMLIFrameElement(handle: bigint): HTMLIFrameElement {
     throw new Error(`HTMLIFrameElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLIFrameElement by handle. */
+function lookupOptionHTMLIFrameElement(handle: bigint | undefined): HTMLIFrameElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmliFrameElementhandles.get(handle) ?? null;
 }
 /**
  * `get-src()` operation.
@@ -4073,6 +4337,14 @@ function lookupHTMLEmbedElement(handle: bigint): HTMLEmbedElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLEmbedElement by handle. */
+function lookupOptionHTMLEmbedElement(handle: bigint | undefined): HTMLEmbedElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlEmbedElementhandles.get(handle) ?? null;
+}
 /**
  * `get-src()` operation.
  */
@@ -4199,6 +4471,14 @@ function lookupHTMLObjectElement(handle: bigint): HTMLObjectElement {
     throw new Error(`HTMLObjectElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLObjectElement by handle. */
+function lookupOptionHTMLObjectElement(handle: bigint | undefined): HTMLObjectElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlObjectElementhandles.get(handle) ?? null;
 }
 /**
  * `get-data()` operation.
@@ -4574,6 +4854,14 @@ function lookupHTMLVideoElement(handle: bigint): HTMLVideoElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLVideoElement by handle. */
+function lookupOptionHTMLVideoElement(handle: bigint | undefined): HTMLVideoElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlVideoElementhandles.get(handle) ?? null;
+}
 /**
  * `get-width()` operation.
  */
@@ -4672,6 +4960,14 @@ function lookupHTMLTrackElement(handle: bigint): HTMLTrackElement {
     throw new Error(`HTMLTrackElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTrackElement by handle. */
+function lookupOptionHTMLTrackElement(handle: bigint | undefined): HTMLTrackElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTrackElementhandles.get(handle) ?? null;
 }
 /**
  * `get-kind()` operation.
@@ -4793,6 +5089,14 @@ function lookupHTMLMediaElement(handle: bigint): HTMLMediaElement {
     throw new Error(`HTMLMediaElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLMediaElement by handle. */
+function lookupOptionHTMLMediaElement(handle: bigint | undefined): HTMLMediaElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMediaElementhandles.get(handle) ?? null;
 }
 /**
  * `get-error()` operation.
@@ -5294,6 +5598,14 @@ function lookupAudioTrackList(handle: bigint): AudioTrackList {
   }
   return obj!;
 }
+
+/** Lookup an optional AudioTrackList by handle. */
+function lookupOptionAudioTrackList(handle: bigint | undefined): AudioTrackList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioTrackListhandles.get(handle) ?? null;
+}
 /**
  * `get-length()` operation.
  */
@@ -5385,6 +5697,14 @@ function lookupAudioTrack(handle: bigint): AudioTrack {
   }
   return obj!;
 }
+
+/** Lookup an optional AudioTrack by handle. */
+function lookupOptionAudioTrack(handle: bigint | undefined): AudioTrack | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioTrackhandles.get(handle) ?? null;
+}
 /**
  * `get-id()` operation.
  */
@@ -5451,6 +5771,14 @@ function lookupVideoTrackList(handle: bigint): VideoTrackList {
     throw new Error(`VideoTrackList handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional VideoTrackList by handle. */
+function lookupOptionVideoTrackList(handle: bigint | undefined): VideoTrackList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoTrackListhandles.get(handle) ?? null;
 }
 /**
  * `get-length()` operation.
@@ -5550,6 +5878,14 @@ function lookupVideoTrack(handle: bigint): VideoTrack {
     throw new Error(`VideoTrack handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional VideoTrack by handle. */
+function lookupOptionVideoTrack(handle: bigint | undefined): VideoTrack | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _videoTrackhandles.get(handle) ?? null;
 }
 /**
  * `get-id()` operation.
@@ -6025,6 +6361,14 @@ function lookupTrackEvent(handle: bigint): TrackEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional TrackEvent by handle. */
+function lookupOptionTrackEvent(handle: bigint | undefined): TrackEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _trackEventhandles.get(handle) ?? null;
+}
 /**
  * `get-track()` operation.
  */
@@ -6055,6 +6399,14 @@ function lookupHTMLMapElement(handle: bigint): HTMLMapElement {
     throw new Error(`HTMLMapElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLMapElement by handle. */
+function lookupOptionHTMLMapElement(handle: bigint | undefined): HTMLMapElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMapElementhandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -6101,6 +6453,14 @@ function lookupHTMLAreaElement(handle: bigint): HTMLAreaElement {
     throw new Error(`HTMLAreaElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLAreaElement by handle. */
+function lookupOptionHTMLAreaElement(handle: bigint | undefined): HTMLAreaElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlAreaElementhandles.get(handle) ?? null;
 }
 /**
  * `get-alt()` operation.
@@ -6281,6 +6641,14 @@ function lookupHTMLTableElement(handle: bigint): HTMLTableElement {
     throw new Error(`HTMLTableElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTableElement by handle. */
+function lookupOptionHTMLTableElement(handle: bigint | undefined): HTMLTableElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableElementhandles.get(handle) ?? null;
 }
 /**
  * `get-caption()` operation.
@@ -6614,6 +6982,14 @@ function lookupHTMLTableCaptionElement(handle: bigint): HTMLTableCaptionElement 
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLTableCaptionElement by handle. */
+function lookupOptionHTMLTableCaptionElement(handle: bigint | undefined): HTMLTableCaptionElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableCaptionElementhandles.get(handle) ?? null;
+}
 /**
  * `get-align()` operation.
  */
@@ -6648,6 +7024,14 @@ function lookupHTMLTableColElement(handle: bigint): HTMLTableColElement {
     throw new Error(`HTMLTableColElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTableColElement by handle. */
+function lookupOptionHTMLTableColElement(handle: bigint | undefined): HTMLTableColElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableColElementhandles.get(handle) ?? null;
 }
 /**
  * `get-span()` operation.
@@ -6764,6 +7148,14 @@ function lookupHTMLTableSectionElement(handle: bigint): HTMLTableSectionElement 
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLTableSectionElement by handle. */
+function lookupOptionHTMLTableSectionElement(handle: bigint | undefined): HTMLTableSectionElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableSectionElementhandles.get(handle) ?? null;
+}
 /**
  * `get-rows()` operation.
  */
@@ -6876,6 +7268,14 @@ function lookupHTMLTableRowElement(handle: bigint): HTMLTableRowElement {
     throw new Error(`HTMLTableRowElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTableRowElement by handle. */
+function lookupOptionHTMLTableRowElement(handle: bigint | undefined): HTMLTableRowElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableRowElementhandles.get(handle) ?? null;
 }
 /**
  * `get-row-index()` operation.
@@ -7021,6 +7421,14 @@ function lookupHTMLTableCellElement(handle: bigint): HTMLTableCellElement {
     throw new Error(`HTMLTableCellElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTableCellElement by handle. */
+function lookupOptionHTMLTableCellElement(handle: bigint | undefined): HTMLTableCellElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTableCellElementhandles.get(handle) ?? null;
 }
 /**
  * `get-col-span()` operation.
@@ -7272,6 +7680,14 @@ function lookupHTMLFormElement(handle: bigint): HTMLFormElement {
     throw new Error(`HTMLFormElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLFormElement by handle. */
+function lookupOptionHTMLFormElement(handle: bigint | undefined): HTMLFormElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlFormElementhandles.get(handle) ?? null;
 }
 /**
  * `get-accept-charset()` operation.
@@ -7533,6 +7949,14 @@ function lookupHTMLLabelElement(handle: bigint): HTMLLabelElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLLabelElement by handle. */
+function lookupOptionHTMLLabelElement(handle: bigint | undefined): HTMLLabelElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlLabelElementhandles.get(handle) ?? null;
+}
 /**
  * `get-form()` operation.
  */
@@ -7591,6 +8015,14 @@ function lookupHTMLInputElement(handle: bigint): HTMLInputElement {
     throw new Error(`HTMLInputElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLInputElement by handle. */
+function lookupOptionHTMLInputElement(handle: bigint | undefined): HTMLInputElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlInputElementhandles.get(handle) ?? null;
 }
 /**
  * `get-accept()` operation.
@@ -8415,6 +8847,14 @@ function lookupHTMLButtonElement(handle: bigint): HTMLButtonElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLButtonElement by handle. */
+function lookupOptionHTMLButtonElement(handle: bigint | undefined): HTMLButtonElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlButtonElementhandles.get(handle) ?? null;
+}
 /**
  * `get-command()` operation.
  */
@@ -8683,6 +9123,14 @@ function lookupHTMLSelectElement(handle: bigint): HTMLSelectElement {
     throw new Error(`HTMLSelectElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLSelectElement by handle. */
+function lookupOptionHTMLSelectElement(handle: bigint | undefined): HTMLSelectElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlSelectElementhandles.get(handle) ?? null;
 }
 /**
  * `get-autocomplete()` operation.
@@ -9007,6 +9455,14 @@ function lookupHTMLDataListElement(handle: bigint): HTMLDataListElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLDataListElement by handle. */
+function lookupOptionHTMLDataListElement(handle: bigint | undefined): HTMLDataListElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDataListElementhandles.get(handle) ?? null;
+}
 /**
  * `get-options()` operation.
  */
@@ -9036,6 +9492,14 @@ function lookupHTMLOptGroupElement(handle: bigint): HTMLOptGroupElement {
     throw new Error(`HTMLOptGroupElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLOptGroupElement by handle. */
+function lookupOptionHTMLOptGroupElement(handle: bigint | undefined): HTMLOptGroupElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlOptGroupElementhandles.get(handle) ?? null;
 }
 /**
  * `get-disabled()` operation.
@@ -9087,6 +9551,14 @@ function lookupHTMLOptionElement(handle: bigint): HTMLOptionElement {
     throw new Error(`HTMLOptionElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLOptionElement by handle. */
+function lookupOptionHTMLOptionElement(handle: bigint | undefined): HTMLOptionElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlOptionElementhandles.get(handle) ?? null;
 }
 /**
  * `get-disabled()` operation.
@@ -9222,6 +9694,14 @@ function lookupHTMLTextAreaElement(handle: bigint): HTMLTextAreaElement {
     throw new Error(`HTMLTextAreaElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLTextAreaElement by handle. */
+function lookupOptionHTMLTextAreaElement(handle: bigint | undefined): HTMLTextAreaElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTextAreaElementhandles.get(handle) ?? null;
 }
 /**
  * `get-autocomplete()` operation.
@@ -9628,6 +10108,14 @@ function lookupHTMLOutputElement(handle: bigint): HTMLOutputElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLOutputElement by handle. */
+function lookupOptionHTMLOutputElement(handle: bigint | undefined): HTMLOutputElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlOutputElementhandles.get(handle) ?? null;
+}
 /**
  * `get-html-for()` operation.
  */
@@ -9788,6 +10276,14 @@ function lookupHTMLProgressElement(handle: bigint): HTMLProgressElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLProgressElement by handle. */
+function lookupOptionHTMLProgressElement(handle: bigint | undefined): HTMLProgressElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlProgressElementhandles.get(handle) ?? null;
+}
 /**
  * `get-value()` operation.
  */
@@ -9857,6 +10353,14 @@ function lookupHTMLMeterElement(handle: bigint): HTMLMeterElement {
     throw new Error(`HTMLMeterElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLMeterElement by handle. */
+function lookupOptionHTMLMeterElement(handle: bigint | undefined): HTMLMeterElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMeterElementhandles.get(handle) ?? null;
 }
 /**
  * `get-value()` operation.
@@ -9983,6 +10487,14 @@ function lookupHTMLFieldSetElement(handle: bigint): HTMLFieldSetElement {
     throw new Error(`HTMLFieldSetElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLFieldSetElement by handle. */
+function lookupOptionHTMLFieldSetElement(handle: bigint | undefined): HTMLFieldSetElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlFieldSetElementhandles.get(handle) ?? null;
 }
 /**
  * `get-disabled()` operation.
@@ -10116,6 +10628,14 @@ function lookupHTMLLegendElement(handle: bigint): HTMLLegendElement {
     throw new Error(`HTMLLegendElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLLegendElement by handle. */
+function lookupOptionHTMLLegendElement(handle: bigint | undefined): HTMLLegendElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlLegendElementhandles.get(handle) ?? null;
 }
 /**
  * `get-form()` operation.
@@ -10259,6 +10779,14 @@ function lookupSubmitEvent(handle: bigint): SubmitEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional SubmitEvent by handle. */
+function lookupOptionSubmitEvent(handle: bigint | undefined): SubmitEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _submitEventhandles.get(handle) ?? null;
+}
 /**
  * `get-submitter()` operation.
  */
@@ -10290,6 +10818,14 @@ function lookupFormDataEvent(handle: bigint): FormDataEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional FormDataEvent by handle. */
+function lookupOptionFormDataEvent(handle: bigint | undefined): FormDataEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _formDataEventhandles.get(handle) ?? null;
+}
 /**
  * `get-form-data()` operation.
  */
@@ -10319,6 +10855,14 @@ function lookupHTMLDetailsElement(handle: bigint): HTMLDetailsElement {
     throw new Error(`HTMLDetailsElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLDetailsElement by handle. */
+function lookupOptionHTMLDetailsElement(handle: bigint | undefined): HTMLDetailsElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDetailsElementhandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -10370,6 +10914,14 @@ function lookupHTMLDialogElement(handle: bigint): HTMLDialogElement {
     throw new Error(`HTMLDialogElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLDialogElement by handle. */
+function lookupOptionHTMLDialogElement(handle: bigint | undefined): HTMLDialogElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDialogElementhandles.get(handle) ?? null;
 }
 /**
  * `get-open()` operation.
@@ -10469,6 +11021,14 @@ function lookupHTMLScriptElement(handle: bigint): HTMLScriptElement {
     throw new Error(`HTMLScriptElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLScriptElement by handle. */
+function lookupOptionHTMLScriptElement(handle: bigint | undefined): HTMLScriptElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlScriptElementhandles.get(handle) ?? null;
 }
 /**
  * `get-type()` operation.
@@ -10715,6 +11275,14 @@ function lookupHTMLTemplateElement(handle: bigint): HTMLTemplateElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLTemplateElement by handle. */
+function lookupOptionHTMLTemplateElement(handle: bigint | undefined): HTMLTemplateElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlTemplateElementhandles.get(handle) ?? null;
+}
 /**
  * `get-content()` operation.
  */
@@ -10825,6 +11393,14 @@ function lookupHTMLSlotElement(handle: bigint): HTMLSlotElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLSlotElement by handle. */
+function lookupOptionHTMLSlotElement(handle: bigint | undefined): HTMLSlotElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlSlotElementhandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -10889,6 +11465,14 @@ function lookupHTMLCanvasElement(handle: bigint): HTMLCanvasElement {
     throw new Error(`HTMLCanvasElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLCanvasElement by handle. */
+function lookupOptionHTMLCanvasElement(handle: bigint | undefined): HTMLCanvasElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlCanvasElementhandles.get(handle) ?? null;
 }
 /**
  * `get-width()` operation.
@@ -10980,6 +11564,14 @@ function lookupCanvasRenderingContext2D(handle: bigint): CanvasRenderingContext2
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasRenderingContext2D by handle. */
+function lookupOptionCanvasRenderingContext2D(handle: bigint | undefined): CanvasRenderingContext2D | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasRenderingContext2Dhandles.get(handle) ?? null;
+}
 /**
  * `get-canvas()` operation.
  */
@@ -11010,6 +11602,14 @@ function lookupCanvasSettings(handle: bigint): CanvasSettings {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasSettings by handle. */
+function lookupOptionCanvasSettings(handle: bigint | undefined): CanvasSettings | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasSettingshandles.get(handle) ?? null;
+}
 /**
  * `get-context-attributes()` operation.
  */
@@ -11039,6 +11639,14 @@ function lookupCanvasState(handle: bigint): CanvasState {
     throw new Error(`CanvasState handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasState by handle. */
+function lookupOptionCanvasState(handle: bigint | undefined): CanvasState | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasStatehandles.get(handle) ?? null;
 }
 /**
  * `save()` operation.
@@ -11090,6 +11698,14 @@ function lookupCanvasTransform(handle: bigint): CanvasTransform {
     throw new Error(`CanvasTransform handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasTransform by handle. */
+function lookupOptionCanvasTransform(handle: bigint | undefined): CanvasTransform | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasTransformhandles.get(handle) ?? null;
 }
 /**
  * `scale()` operation.
@@ -11169,6 +11785,14 @@ function lookupCanvasCompositing(handle: bigint): CanvasCompositing {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasCompositing by handle. */
+function lookupOptionCanvasCompositing(handle: bigint | undefined): CanvasCompositing | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasCompositinghandles.get(handle) ?? null;
+}
 /**
  * `get-global-alpha()` operation.
  */
@@ -11219,6 +11843,14 @@ function lookupCanvasImageSmoothing(handle: bigint): CanvasImageSmoothing {
     throw new Error(`CanvasImageSmoothing handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasImageSmoothing by handle. */
+function lookupOptionCanvasImageSmoothing(handle: bigint | undefined): CanvasImageSmoothing | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasImageSmoothinghandles.get(handle) ?? null;
 }
 /**
  * `get-image-smoothing-enabled()` operation.
@@ -11288,6 +11920,14 @@ function lookupCanvasFillStrokeStyles(handle: bigint): CanvasFillStrokeStyles {
     throw new Error(`CanvasFillStrokeStyles handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasFillStrokeStyles by handle. */
+function lookupOptionCanvasFillStrokeStyles(handle: bigint | undefined): CanvasFillStrokeStyles | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasFillStrokeStyleshandles.get(handle) ?? null;
 }
 /**
  * `get-stroke-style()` operation.
@@ -11391,6 +12031,14 @@ function lookupCanvasShadowStyles(handle: bigint): CanvasShadowStyles {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasShadowStyles by handle. */
+function lookupOptionCanvasShadowStyles(handle: bigint | undefined): CanvasShadowStyles | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasShadowStyleshandles.get(handle) ?? null;
+}
 /**
  * `get-shadow-offset-x()` operation.
  */
@@ -11474,6 +12122,14 @@ function lookupCanvasFilters(handle: bigint): CanvasFilters {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasFilters by handle. */
+function lookupOptionCanvasFilters(handle: bigint | undefined): CanvasFilters | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasFiltershandles.get(handle) ?? null;
+}
 /**
  * `get-filter()` operation.
  */
@@ -11508,6 +12164,14 @@ function lookupCanvasRect(handle: bigint): CanvasRect {
     throw new Error(`CanvasRect handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasRect by handle. */
+function lookupOptionCanvasRect(handle: bigint | undefined): CanvasRect | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasRecthandles.get(handle) ?? null;
 }
 /**
  * `clear-rect()` operation.
@@ -11551,6 +12215,14 @@ function lookupCanvasDrawPath(handle: bigint): CanvasDrawPath {
     throw new Error(`CanvasDrawPath handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasDrawPath by handle. */
+function lookupOptionCanvasDrawPath(handle: bigint | undefined): CanvasDrawPath | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasDrawPathhandles.get(handle) ?? null;
 }
 /**
  * `begin-path()` operation.
@@ -11619,6 +12291,14 @@ function lookupCanvasUserInterface(handle: bigint): CanvasUserInterface {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasUserInterface by handle. */
+function lookupOptionCanvasUserInterface(handle: bigint | undefined): CanvasUserInterface | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasUserInterfacehandles.get(handle) ?? null;
+}
 /**
  * `draw-focus-if-needed()` operation.
  */
@@ -11645,6 +12325,14 @@ function lookupCanvasText(handle: bigint): CanvasText {
     throw new Error(`CanvasText handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasText by handle. */
+function lookupOptionCanvasText(handle: bigint | undefined): CanvasText | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasTexthandles.get(handle) ?? null;
 }
 /**
  * `fill-text()` operation.
@@ -11692,6 +12380,14 @@ function lookupCanvasDrawImage(handle: bigint): CanvasDrawImage {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasDrawImage by handle. */
+function lookupOptionCanvasDrawImage(handle: bigint | undefined): CanvasDrawImage | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasDrawImagehandles.get(handle) ?? null;
+}
 /**
  * `draw-image()` operation.
  */
@@ -11724,6 +12420,14 @@ function lookupCanvasImageData(handle: bigint): CanvasImageData {
     throw new Error(`CanvasImageData handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasImageData by handle. */
+function lookupOptionCanvasImageData(handle: bigint | undefined): CanvasImageData | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasImageDatahandles.get(handle) ?? null;
 }
 /**
  * `create-image-data()` operation.
@@ -11773,6 +12477,14 @@ function lookupCanvasPathDrawingStyles(handle: bigint): CanvasPathDrawingStyles 
     throw new Error(`CanvasPathDrawingStyles handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasPathDrawingStyles by handle. */
+function lookupOptionCanvasPathDrawingStyles(handle: bigint | undefined): CanvasPathDrawingStyles | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasPathDrawingStyleshandles.get(handle) ?? null;
 }
 /**
  * `get-line-width()` operation.
@@ -11915,6 +12627,14 @@ function lookupCanvasTextDrawingStyles(handle: bigint): CanvasTextDrawingStyles 
     throw new Error(`CanvasTextDrawingStyles handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CanvasTextDrawingStyles by handle. */
+function lookupOptionCanvasTextDrawingStyles(handle: bigint | undefined): CanvasTextDrawingStyles | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasTextDrawingStyleshandles.get(handle) ?? null;
 }
 /**
  * `get-lang()` operation.
@@ -12199,6 +12919,14 @@ function lookupCanvasPath(handle: bigint): CanvasPath {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasPath by handle. */
+function lookupOptionCanvasPath(handle: bigint | undefined): CanvasPath | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasPathhandles.get(handle) ?? null;
+}
 /**
  * `close-path()` operation.
  */
@@ -12313,6 +13041,14 @@ function lookupCanvasPattern(handle: bigint): CanvasPattern {
   }
   return obj!;
 }
+
+/** Lookup an optional CanvasPattern by handle. */
+function lookupOptionCanvasPattern(handle: bigint | undefined): CanvasPattern | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _canvasPatternhandles.get(handle) ?? null;
+}
 /**
  * `set-transform()` operation.
  */
@@ -12339,6 +13075,14 @@ function lookupTextMetrics(handle: bigint): TextMetrics {
     throw new Error(`TextMetrics handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional TextMetrics by handle. */
+function lookupOptionTextMetrics(handle: bigint | undefined): TextMetrics | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _textMetricshandles.get(handle) ?? null;
 }
 /**
  * `get-width()` operation.
@@ -12455,6 +13199,14 @@ function lookupPath2D(handle: bigint): Path2D {
   }
   return obj!;
 }
+
+/** Lookup an optional Path2D by handle. */
+function lookupOptionPath2D(handle: bigint | undefined): Path2D | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _path2Dhandles.get(handle) ?? null;
+}
 /**
  * `add-path()` operation.
  */
@@ -12481,6 +13233,14 @@ function lookupImageBitmapRenderingContext(handle: bigint): ImageBitmapRendering
     throw new Error(`ImageBitmapRenderingContext handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ImageBitmapRenderingContext by handle. */
+function lookupOptionImageBitmapRenderingContext(handle: bigint | undefined): ImageBitmapRenderingContext | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _imageBitmapRenderingContexthandles.get(handle) ?? null;
 }
 /**
  * `get-canvas()` operation.
@@ -12519,6 +13279,14 @@ function lookupOffscreenCanvas(handle: bigint): OffscreenCanvas {
     throw new Error(`OffscreenCanvas handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional OffscreenCanvas by handle. */
+function lookupOptionOffscreenCanvas(handle: bigint | undefined): OffscreenCanvas | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _offscreenCanvashandles.get(handle) ?? null;
 }
 /**
  * `get-width()` operation.
@@ -12660,6 +13428,14 @@ function lookupOffscreenCanvasRenderingContext2D(handle: bigint): OffscreenCanva
   }
   return obj!;
 }
+
+/** Lookup an optional OffscreenCanvasRenderingContext2D by handle. */
+function lookupOptionOffscreenCanvasRenderingContext2D(handle: bigint | undefined): OffscreenCanvasRenderingContext2D | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _offscreenCanvasRenderingContext2Dhandles.get(handle) ?? null;
+}
 /**
  * `get-canvas()` operation.
  */
@@ -12689,6 +13465,14 @@ function lookupCustomElementRegistry(handle: bigint): CustomElementRegistry {
     throw new Error(`CustomElementRegistry handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CustomElementRegistry by handle. */
+function lookupOptionCustomElementRegistry(handle: bigint | undefined): CustomElementRegistry | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _customElementRegistryhandles.get(handle) ?? null;
 }
 /**
  * `define()` operation.
@@ -12778,6 +13562,14 @@ function lookupElementInternals(handle: bigint): ElementInternals {
     throw new Error(`ElementInternals handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ElementInternals by handle. */
+function lookupOptionElementInternals(handle: bigint | undefined): ElementInternals | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _elementInternalshandles.get(handle) ?? null;
 }
 /**
  * `get-shadow-root()` operation.
@@ -12903,6 +13695,14 @@ function lookupVisibilityStateEntry(handle: bigint): VisibilityStateEntry {
   }
   return obj!;
 }
+
+/** Lookup an optional VisibilityStateEntry by handle. */
+function lookupOptionVisibilityStateEntry(handle: bigint | undefined): VisibilityStateEntry | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _visibilityStateEntryhandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -12954,6 +13754,14 @@ function lookupUserActivation(handle: bigint): UserActivation {
   }
   return obj!;
 }
+
+/** Lookup an optional UserActivation by handle. */
+function lookupOptionUserActivation(handle: bigint | undefined): UserActivation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _userActivationhandles.get(handle) ?? null;
+}
 /**
  * `get-has-been-active()` operation.
  */
@@ -12988,6 +13796,14 @@ function lookupToggleEvent(handle: bigint): ToggleEvent {
     throw new Error(`ToggleEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ToggleEvent by handle. */
+function lookupOptionToggleEvent(handle: bigint | undefined): ToggleEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _toggleEventhandles.get(handle) ?? null;
 }
 /**
  * `get-old-state()` operation.
@@ -13032,6 +13848,14 @@ function lookupCommandEvent(handle: bigint): CommandEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional CommandEvent by handle. */
+function lookupOptionCommandEvent(handle: bigint | undefined): CommandEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _commandEventhandles.get(handle) ?? null;
+}
 /**
  * `get-source()` operation.
  */
@@ -13066,6 +13890,14 @@ function lookupElementContentEditable(handle: bigint): ElementContentEditable {
     throw new Error(`ElementContentEditable handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional ElementContentEditable by handle. */
+function lookupOptionElementContentEditable(handle: bigint | undefined): ElementContentEditable | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _elementContentEditablehandles.get(handle) ?? null;
 }
 /**
  * `get-content-editable()` operation.
@@ -13141,6 +13973,14 @@ function lookupCloseWatcher(handle: bigint): CloseWatcher {
     throw new Error(`CloseWatcher handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional CloseWatcher by handle. */
+function lookupOptionCloseWatcher(handle: bigint | undefined): CloseWatcher | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _closeWatcherhandles.get(handle) ?? null;
 }
 /**
  * `request-close()` operation.
@@ -13318,6 +14158,14 @@ function lookupDataTransferItemList(handle: bigint): DataTransferItemList {
   }
   return obj!;
 }
+
+/** Lookup an optional DataTransferItemList by handle. */
+function lookupOptionDataTransferItemList(handle: bigint | undefined): DataTransferItemList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _dataTransferItemListhandles.get(handle) ?? null;
+}
 /**
  * `get-length()` operation.
  */
@@ -13420,6 +14268,14 @@ function lookupDragEvent(handle: bigint): DragEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional DragEvent by handle. */
+function lookupOptionDragEvent(handle: bigint | undefined): DragEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _dragEventhandles.get(handle) ?? null;
+}
 /**
  * `get-data-transfer()` operation.
  */
@@ -13450,6 +14306,14 @@ function lookupPopoverTargetAttributes(handle: bigint): PopoverTargetAttributes 
     throw new Error(`PopoverTargetAttributes handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PopoverTargetAttributes by handle. */
+function lookupOptionPopoverTargetAttributes(handle: bigint | undefined): PopoverTargetAttributes | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _popoverTargetAttributeshandles.get(handle) ?? null;
 }
 /**
  * `get-popover-target-element()` operation.
@@ -13501,6 +14365,14 @@ function lookupOrigin(handle: bigint): Origin {
     throw new Error(`Origin handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Origin by handle. */
+function lookupOptionOrigin(handle: bigint | undefined): Origin | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _originHandles.get(handle) ?? null;
 }
 /**
  * `from()` operation.
@@ -13582,6 +14454,14 @@ function lookupBarProp(handle: bigint): BarProp {
   }
   return obj!;
 }
+
+/** Lookup an optional BarProp by handle. */
+function lookupOptionBarProp(handle: bigint | undefined): BarProp | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _barProphandles.get(handle) ?? null;
+}
 /**
  * `get-visible()` operation.
  */
@@ -13608,6 +14488,14 @@ function lookupLocation(handle: bigint): Location {
     throw new Error(`Location handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Location by handle. */
+function lookupOptionLocation(handle: bigint | undefined): Location | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _locationHandles.get(handle) ?? null;
 }
 /**
  * `get-href()` operation.
@@ -13804,6 +14692,14 @@ function lookupHistory(handle: bigint): History {
   }
   return obj!;
 }
+
+/** Lookup an optional History by handle. */
+function lookupOptionHistory(handle: bigint | undefined): History | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _historyHandles.get(handle) ?? null;
+}
 /**
  * `get-length()` operation.
  */
@@ -13904,6 +14800,14 @@ function lookupNavigation(handle: bigint): Navigation {
     throw new Error(`Navigation handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Navigation by handle. */
+function lookupOptionNavigation(handle: bigint | undefined): Navigation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigationHandles.get(handle) ?? null;
 }
 /**
  * `entries()` operation.
@@ -14167,6 +15071,14 @@ function lookupNavigationTransition(handle: bigint): NavigationTransition {
   }
   return obj!;
 }
+
+/** Lookup an optional NavigationTransition by handle. */
+function lookupOptionNavigationTransition(handle: bigint | undefined): NavigationTransition | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigationTransitionhandles.get(handle) ?? null;
+}
 /**
  * `get-navigation-type()` operation.
  */
@@ -14270,6 +15182,14 @@ function lookupNavigateEvent(handle: bigint): NavigateEvent {
     throw new Error(`NavigateEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NavigateEvent by handle. */
+function lookupOptionNavigateEvent(handle: bigint | undefined): NavigateEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigateEventhandles.get(handle) ?? null;
 }
 /**
  * `get-navigation-type()` operation.
@@ -14413,6 +15333,14 @@ function lookupNavigationPrecommitController(handle: bigint): NavigationPrecommi
   }
   return obj!;
 }
+
+/** Lookup an optional NavigationPrecommitController by handle. */
+function lookupOptionNavigationPrecommitController(handle: bigint | undefined): NavigationPrecommitController | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigationPrecommitControllerhandles.get(handle) ?? null;
+}
 /**
  * `redirect()` operation.
  */
@@ -14447,6 +15375,14 @@ function lookupNavigationDestination(handle: bigint): NavigationDestination {
     throw new Error(`NavigationDestination handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NavigationDestination by handle. */
+function lookupOptionNavigationDestination(handle: bigint | undefined): NavigationDestination | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigationDestinationhandles.get(handle) ?? null;
 }
 /**
  * `get-url()` operation.
@@ -14515,6 +15451,14 @@ function lookupNavigationCurrentEntryChangeEvent(handle: bigint): NavigationCurr
   }
   return obj!;
 }
+
+/** Lookup an optional NavigationCurrentEntryChangeEvent by handle. */
+function lookupOptionNavigationCurrentEntryChangeEvent(handle: bigint | undefined): NavigationCurrentEntryChangeEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigationCurrentEntryChangeEventhandles.get(handle) ?? null;
+}
 /**
  * `get-navigation-type()` operation.
  */
@@ -14549,6 +15493,14 @@ function lookupPopStateEvent(handle: bigint): PopStateEvent {
     throw new Error(`PopStateEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PopStateEvent by handle. */
+function lookupOptionPopStateEvent(handle: bigint | undefined): PopStateEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _popStateEventhandles.get(handle) ?? null;
 }
 /**
  * `get-state()` operation.
@@ -14585,6 +15537,14 @@ function lookupHashChangeEvent(handle: bigint): HashChangeEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional HashChangeEvent by handle. */
+function lookupOptionHashChangeEvent(handle: bigint | undefined): HashChangeEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _hashChangeEventhandles.get(handle) ?? null;
+}
 /**
  * `get-old-url()` operation.
  */
@@ -14619,6 +15579,14 @@ function lookupPageSwapEvent(handle: bigint): PageSwapEvent {
     throw new Error(`PageSwapEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PageSwapEvent by handle. */
+function lookupOptionPageSwapEvent(handle: bigint | undefined): PageSwapEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _pageSwapEventhandles.get(handle) ?? null;
 }
 /**
  * `get-activation()` operation.
@@ -14663,6 +15631,14 @@ function lookupPageRevealEvent(handle: bigint): PageRevealEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional PageRevealEvent by handle. */
+function lookupOptionPageRevealEvent(handle: bigint | undefined): PageRevealEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _pageRevealEventhandles.get(handle) ?? null;
+}
 /**
  * `get-view-transition()` operation.
  */
@@ -14694,6 +15670,14 @@ function lookupPageTransitionEvent(handle: bigint): PageTransitionEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional PageTransitionEvent by handle. */
+function lookupOptionPageTransitionEvent(handle: bigint | undefined): PageTransitionEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _pageTransitionEventhandles.get(handle) ?? null;
+}
 /**
  * `get-persisted()` operation.
  */
@@ -14720,6 +15704,14 @@ function lookupBeforeUnloadEvent(handle: bigint): BeforeUnloadEvent {
     throw new Error(`BeforeUnloadEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional BeforeUnloadEvent by handle. */
+function lookupOptionBeforeUnloadEvent(handle: bigint | undefined): BeforeUnloadEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _beforeUnloadEventhandles.get(handle) ?? null;
 }
 /**
  * `get-return-value()` operation.
@@ -14756,6 +15748,14 @@ function lookupNotRestoredReasonDetails(handle: bigint): NotRestoredReasonDetail
   }
   return obj!;
 }
+
+/** Lookup an optional NotRestoredReasonDetails by handle. */
+function lookupOptionNotRestoredReasonDetails(handle: bigint | undefined): NotRestoredReasonDetails | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _notRestoredReasonDetailshandles.get(handle) ?? null;
+}
 /**
  * `get-reason()` operation.
  */
@@ -14790,6 +15790,14 @@ function lookupNotRestoredReasons(handle: bigint): NotRestoredReasons {
     throw new Error(`NotRestoredReasons handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NotRestoredReasons by handle. */
+function lookupOptionNotRestoredReasons(handle: bigint | undefined): NotRestoredReasons | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _notRestoredReasonshandles.get(handle) ?? null;
 }
 /**
  * `get-src()` operation.
@@ -14866,6 +15874,14 @@ function lookupErrorEvent(handle: bigint): ErrorEvent {
   }
   return obj!;
 }
+
+/** Lookup an optional ErrorEvent by handle. */
+function lookupOptionErrorEvent(handle: bigint | undefined): ErrorEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _errorEventhandles.get(handle) ?? null;
+}
 /**
  * `get-message()` operation.
  */
@@ -14924,6 +15940,14 @@ function lookupPromiseRejectionEvent(handle: bigint): PromiseRejectionEvent {
     throw new Error(`PromiseRejectionEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional PromiseRejectionEvent by handle. */
+function lookupOptionPromiseRejectionEvent(handle: bigint | undefined): PromiseRejectionEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _promiseRejectionEventhandles.get(handle) ?? null;
 }
 /**
  * `get-promise()` operation.
@@ -14990,6 +16014,14 @@ function lookupDOMParser(handle: bigint): DOMParser {
   }
   return obj!;
 }
+
+/** Lookup an optional DOMParser by handle. */
+function lookupOptionDOMParser(handle: bigint | undefined): DOMParser | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _domParserhandles.get(handle) ?? null;
+}
 /**
  * `parse-from-string()` operation.
  */
@@ -15020,6 +16052,14 @@ function lookupXMLSerializer(handle: bigint): XMLSerializer {
   }
   return obj!;
 }
+
+/** Lookup an optional XMLSerializer by handle. */
+function lookupOptionXMLSerializer(handle: bigint | undefined): XMLSerializer | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _xmlSerializerhandles.get(handle) ?? null;
+}
 /**
  * `serialize-to-string()` operation.
  */
@@ -15046,6 +16086,14 @@ function lookupNavigatorID(handle: bigint): NavigatorID {
     throw new Error(`NavigatorID handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NavigatorID by handle. */
+function lookupOptionNavigatorID(handle: bigint | undefined): NavigatorID | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorIdhandles.get(handle) ?? null;
 }
 /**
  * `get-app-code-name()` operation.
@@ -15154,6 +16202,14 @@ function lookupNavigatorLanguage(handle: bigint): NavigatorLanguage {
   }
   return obj!;
 }
+
+/** Lookup an optional NavigatorLanguage by handle. */
+function lookupOptionNavigatorLanguage(handle: bigint | undefined): NavigatorLanguage | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorLanguagehandles.get(handle) ?? null;
+}
 /**
  * `get-language()` operation.
  */
@@ -15189,6 +16245,14 @@ function lookupNavigatorOnLine(handle: bigint): NavigatorOnLine {
   }
   return obj!;
 }
+
+/** Lookup an optional NavigatorOnLine by handle. */
+function lookupOptionNavigatorOnLine(handle: bigint | undefined): NavigatorOnLine | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorOnLinehandles.get(handle) ?? null;
+}
 /**
  * `get-on-line()` operation.
  */
@@ -15215,6 +16279,14 @@ function lookupNavigatorContentUtils(handle: bigint): NavigatorContentUtils {
     throw new Error(`NavigatorContentUtils handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NavigatorContentUtils by handle. */
+function lookupOptionNavigatorContentUtils(handle: bigint | undefined): NavigatorContentUtils | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorContentUtilshandles.get(handle) ?? null;
 }
 /**
  * `register-protocol-handler()` operation.
@@ -15251,6 +16323,14 @@ function lookupNavigatorCookies(handle: bigint): NavigatorCookies {
   }
   return obj!;
 }
+
+/** Lookup an optional NavigatorCookies by handle. */
+function lookupOptionNavigatorCookies(handle: bigint | undefined): NavigatorCookies | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorCookieshandles.get(handle) ?? null;
+}
 /**
  * `get-cookie-enabled()` operation.
  */
@@ -15277,6 +16357,14 @@ function lookupNavigatorPlugins(handle: bigint): NavigatorPlugins {
     throw new Error(`NavigatorPlugins handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional NavigatorPlugins by handle. */
+function lookupOptionNavigatorPlugins(handle: bigint | undefined): NavigatorPlugins | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorPluginshandles.get(handle) ?? null;
 }
 /**
  * `get-plugins()` operation.
@@ -15612,6 +16700,14 @@ function lookupAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
   }
   return obj!;
 }
+
+/** Lookup an optional AnimationFrameProvider by handle. */
+function lookupOptionAnimationFrameProvider(handle: bigint | undefined): AnimationFrameProvider | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _animationFrameProviderhandles.get(handle) ?? null;
+}
 /**
  * `request-animation-frame()` operation.
  */
@@ -15646,6 +16742,14 @@ function lookupMessageEvent(handle: bigint): MessageEvent {
     throw new Error(`MessageEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional MessageEvent by handle. */
+function lookupOptionMessageEvent(handle: bigint | undefined): MessageEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _messageEventhandles.get(handle) ?? null;
 }
 /**
  * `get-data()` operation.
@@ -15724,6 +16828,14 @@ function lookupEventSource(handle: bigint): EventSource {
     throw new Error(`EventSource handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional EventSource by handle. */
+function lookupOptionEventSource(handle: bigint | undefined): EventSource | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventSourcehandles.get(handle) ?? null;
 }
 /**
  * `get-url()` operation.
@@ -15824,6 +16936,14 @@ function lookupMessageChannel(handle: bigint): MessageChannel {
   }
   return obj!;
 }
+
+/** Lookup an optional MessageChannel by handle. */
+function lookupOptionMessageChannel(handle: bigint | undefined): MessageChannel | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _messageChannelhandles.get(handle) ?? null;
+}
 /**
  * `get-port1()` operation.
  */
@@ -15864,6 +16984,14 @@ function lookupMessageEventTarget(handle: bigint): MessageEventTarget<any> {
     throw new Error(`MessageEventTarget<any> handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional MessageEventTarget<any> by handle. */
+function lookupOptionMessageEventTarget(handle: bigint | undefined): MessageEventTarget<any> | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _messageEventTargethandles.get(handle) ?? null;
 }
 /**
  * `get-onmessage()` operation.
@@ -15963,6 +17091,14 @@ function lookupBroadcastChannel(handle: bigint): BroadcastChannel {
   }
   return obj!;
 }
+
+/** Lookup an optional BroadcastChannel by handle. */
+function lookupOptionBroadcastChannel(handle: bigint | undefined): BroadcastChannel | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _broadcastChannelhandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -16037,6 +17173,14 @@ function lookupWorkerGlobalScope(handle: bigint): WorkerGlobalScope {
     throw new Error(`WorkerGlobalScope handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WorkerGlobalScope by handle. */
+function lookupOptionWorkerGlobalScope(handle: bigint | undefined): WorkerGlobalScope | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _workerGlobalScopehandles.get(handle) ?? null;
 }
 /**
  * `get-self()` operation.
@@ -16185,6 +17329,14 @@ function lookupDedicatedWorkerGlobalScope(handle: bigint): DedicatedWorkerGlobal
   }
   return obj!;
 }
+
+/** Lookup an optional DedicatedWorkerGlobalScope by handle. */
+function lookupOptionDedicatedWorkerGlobalScope(handle: bigint | undefined): DedicatedWorkerGlobalScope | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _dedicatedWorkerGlobalScopehandles.get(handle) ?? null;
+}
 /**
  * `get-name()` operation.
  */
@@ -16227,6 +17379,14 @@ function lookupSharedWorkerGlobalScope(handle: bigint): SharedWorkerGlobalScope 
     throw new Error(`SharedWorkerGlobalScope handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional SharedWorkerGlobalScope by handle. */
+function lookupOptionSharedWorkerGlobalScope(handle: bigint | undefined): SharedWorkerGlobalScope | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _sharedWorkerGlobalScopehandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -16279,6 +17439,14 @@ function lookupAbstractWorker(handle: bigint): AbstractWorker {
   }
   return obj!;
 }
+
+/** Lookup an optional AbstractWorker by handle. */
+function lookupOptionAbstractWorker(handle: bigint | undefined): AbstractWorker | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _abstractWorkerhandles.get(handle) ?? null;
+}
 /**
  * `get-onerror()` operation.
  */
@@ -16313,6 +17481,14 @@ function lookupWorker(handle: bigint): Worker {
     throw new Error(`Worker handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Worker by handle. */
+function lookupOptionWorker(handle: bigint | undefined): Worker | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _workerHandles.get(handle) ?? null;
 }
 /**
  * `terminate()` operation.
@@ -16349,6 +17525,14 @@ function lookupSharedWorker(handle: bigint): SharedWorker {
   }
   return obj!;
 }
+
+/** Lookup an optional SharedWorker by handle. */
+function lookupOptionSharedWorker(handle: bigint | undefined): SharedWorker | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _sharedWorkerhandles.get(handle) ?? null;
+}
 /**
  * `get-port()` operation.
  */
@@ -16379,6 +17563,14 @@ function lookupNavigatorConcurrentHardware(handle: bigint): NavigatorConcurrentH
   }
   return obj!;
 }
+
+/** Lookup an optional NavigatorConcurrentHardware by handle. */
+function lookupOptionNavigatorConcurrentHardware(handle: bigint | undefined): NavigatorConcurrentHardware | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _navigatorConcurrentHardwarehandles.get(handle) ?? null;
+}
 /**
  * `get-hardware-concurrency()` operation.
  */
@@ -16405,6 +17597,14 @@ function lookupWorkerNavigator(handle: bigint): WorkerNavigator {
     throw new Error(`WorkerNavigator handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WorkerNavigator by handle. */
+function lookupOptionWorkerNavigator(handle: bigint | undefined): WorkerNavigator | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _workerNavigatorhandles.get(handle) ?? null;
 }
 /**
  * `get-media-capabilities()` operation.
@@ -16448,6 +17648,14 @@ function lookupWorkerLocation(handle: bigint): WorkerLocation {
     throw new Error(`WorkerLocation handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional WorkerLocation by handle. */
+function lookupOptionWorkerLocation(handle: bigint | undefined): WorkerLocation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _workerLocationhandles.get(handle) ?? null;
 }
 /**
  * `get-href()` operation.
@@ -16547,6 +17755,14 @@ function lookupWorklet(handle: bigint): Worklet {
     throw new Error(`Worklet handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional Worklet by handle. */
+function lookupOptionWorklet(handle: bigint | undefined): Worklet | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _workletHandles.get(handle) ?? null;
 }
 /**
  * `add-module()` operation.
@@ -16660,6 +17876,14 @@ function lookupWindowSessionStorage(handle: bigint): WindowSessionStorage {
   }
   return obj!;
 }
+
+/** Lookup an optional WindowSessionStorage by handle. */
+function lookupOptionWindowSessionStorage(handle: bigint | undefined): WindowSessionStorage | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _windowSessionStoragehandles.get(handle) ?? null;
+}
 /**
  * `get-session-storage()` operation.
  */
@@ -16690,6 +17914,14 @@ function lookupWindowLocalStorage(handle: bigint): WindowLocalStorage {
   }
   return obj!;
 }
+
+/** Lookup an optional WindowLocalStorage by handle. */
+function lookupOptionWindowLocalStorage(handle: bigint | undefined): WindowLocalStorage | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _windowLocalStoragehandles.get(handle) ?? null;
+}
 /**
  * `get-local-storage()` operation.
  */
@@ -16719,6 +17951,14 @@ function lookupStorageEvent(handle: bigint): StorageEvent {
     throw new Error(`StorageEvent handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional StorageEvent by handle. */
+function lookupOptionStorageEvent(handle: bigint | undefined): StorageEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _storageEventhandles.get(handle) ?? null;
 }
 /**
  * `get-key()` operation.
@@ -16790,6 +18030,14 @@ function lookupHTMLMarqueeElement(handle: bigint): HTMLMarqueeElement {
     throw new Error(`HTMLMarqueeElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLMarqueeElement by handle. */
+function lookupOptionHTMLMarqueeElement(handle: bigint | undefined): HTMLMarqueeElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlMarqueeElementhandles.get(handle) ?? null;
 }
 /**
  * `get-behavior()` operation.
@@ -17002,6 +18250,14 @@ function lookupHTMLFrameSetElement(handle: bigint): HTMLFrameSetElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLFrameSetElement by handle. */
+function lookupOptionHTMLFrameSetElement(handle: bigint | undefined): HTMLFrameSetElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlFrameSetElementhandles.get(handle) ?? null;
+}
 /**
  * `get-cols()` operation.
  */
@@ -17052,6 +18308,14 @@ function lookupHTMLFrameElement(handle: bigint): HTMLFrameElement {
     throw new Error(`HTMLFrameElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLFrameElement by handle. */
+function lookupOptionHTMLFrameElement(handle: bigint | undefined): HTMLFrameElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlFrameElementhandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -17224,6 +18488,14 @@ function lookupHTMLDirectoryElement(handle: bigint): HTMLDirectoryElement {
   }
   return obj!;
 }
+
+/** Lookup an optional HTMLDirectoryElement by handle. */
+function lookupOptionHTMLDirectoryElement(handle: bigint | undefined): HTMLDirectoryElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlDirectoryElementhandles.get(handle) ?? null;
+}
 /**
  * `get-compact()` operation.
  */
@@ -17258,6 +18530,14 @@ function lookupHTMLFontElement(handle: bigint): HTMLFontElement {
     throw new Error(`HTMLFontElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLFontElement by handle. */
+function lookupOptionHTMLFontElement(handle: bigint | undefined): HTMLFontElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlFontElementhandles.get(handle) ?? null;
 }
 /**
  * `get-color()` operation.
@@ -17325,6 +18605,14 @@ function lookupHTMLParamElement(handle: bigint): HTMLParamElement {
     throw new Error(`HTMLParamElement handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional HTMLParamElement by handle. */
+function lookupOptionHTMLParamElement(handle: bigint | undefined): HTMLParamElement | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _htmlParamElementhandles.get(handle) ?? null;
 }
 /**
  * `get-name()` operation.
@@ -17408,6 +18696,14 @@ function lookupExternal(handle: bigint): External {
     throw new Error(`External handle ${handle} not found`);
   }
   return obj!;
+}
+
+/** Lookup an optional External by handle. */
+function lookupOptionExternal(handle: bigint | undefined): External | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _externalHandles.get(handle) ?? null;
 }
 /**
  * `add-search-provider()` operation.

@@ -253,6 +253,14 @@ function lookupGeo(handle: bigint): Geolocation {
   }
   return obj!;
 }
+
+/** Lookup an optional Geolocation by handle. */
+function lookupOptionGeo(handle: bigint | undefined): Geolocation | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _geoHandles.get(handle) ?? null;
+}
 /**
  * `get-current-position()` operation.
  *
