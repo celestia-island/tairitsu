@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -7523,7 +7526,7 @@ export function getRelatedTarget(self: bigint): bigint | undefined {
  */
 export function getModifierState(self: bigint, keyArg: string): boolean {
   const obj = lookupMouseEvent(self);
-  return (obj as any).getModifierState;
+  return (obj as any).getModifierState(keyArg);
 }
 
 /**

@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -587,13 +590,13 @@ export type HeadersHandle = bigint;
  */
 export function HeadersAppend(self: bigint, name: string, value: bigint): void {
   const obj = lookupHeaders(self);
-  obj.append(name, value);
+  obj.append(name, value as any);
 }
 
 /**
  * `delete()` operation.
  */
-export function HeadersDelete(self: bigint, name: (bigint)[]): void {
+export function HeadersDelete(self: bigint, name: string): void {
   const obj = lookupHeaders(self);
   obj.delete(name as any);
 }
@@ -601,7 +604,7 @@ export function HeadersDelete(self: bigint, name: (bigint)[]): void {
 /**
  * `get()` operation.
  */
-export function HeadersGet(self: bigint, name: string): bigint | undefined {
+export function HeadersGet(self: bigint, name: bigint): bigint | undefined {
   const obj = lookupHeaders(self);
   const _callResult = obj.get(name as any);
   if (_callResult === null) return undefined;
@@ -624,7 +627,7 @@ export function getSetCookie(self: bigint): bigint {
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: string): boolean {
+export function HeadersHas(self: bigint, name: string): bigint | undefined {
   const obj = lookupHeaders(self);
   return obj.has(name as any);
 }
@@ -671,7 +674,7 @@ export function getBody(self: bigint): bigint | undefined {
 /**
  * `get-body-used()` operation.
  */
-export function getBodyUsed(self: bigint): bigint {
+export function getBodyUsed(self: bigint): boolean {
   const obj = lookupBody(self);
   return obj.bodyUsed;
 }
@@ -782,12 +785,12 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: number } | { ok: false; error: string } | undefined {
+export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: number } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -933,7 +936,7 @@ export function getMethod(self: bigint): bigint {
 /**
  * `get-url()` operation.
  */
-export function RequestGetUrl(self: bigint): string {
+export function RequestGetUrl(self: bigint): bigint {
   const obj = lookupRequest(self);
   return obj.url;
 }
@@ -1097,9 +1100,9 @@ export function getIsReloadNavigation(self: bigint): boolean {
 /**
  * `get-is-history-navigation()` operation.
  */
-export function getIsHistoryNavigation(self: bigint): bigint {
+export function getIsHistoryNavigation(self: bigint): number {
   const obj = lookupRequest(self);
-  return (obj as any).isHistoryNavigation ? 1n : 0n;
+  return (obj as any).isHistoryNavigation;
 }
 
 /**
@@ -1156,7 +1159,7 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: number | undefined): bigint {
+export function redirect(url: string, status: bigint | undefined): bigint {
   const _callResult = Response.redirect(url, Number(status));
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1166,7 +1169,7 @@ export function redirect(url: string, status: number | undefined): bigint {
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: bigint | undefined): bigint {
+export function ResponseJson(data: string, init: string): bigint {
   const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1341,7 +1344,7 @@ export function getOrigin(self: bigint): string {
 /**
  * `get-is-secure-context()` operation.
  */
-export function getIsSecureContext(self: bigint): string {
+export function getIsSecureContext(self: bigint): boolean {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.isSecureContext;
 }
@@ -1373,7 +1376,7 @@ export function btoa(self: bigint, data: string): string {
 /**
  * `atob()` operation.
  */
-export function atob(self: bigint, data: string): string {
+export function atob(self: bigint, data: bigint): string {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.atob(data);
 }
@@ -1706,7 +1709,7 @@ export function ReadableStreamGenericReaderPollGetClosed(requestId: bigint): { o
  *
  * Async operation: returns request ID, poll with `ReadableStreamGenericReaderPollCancel()`
  */
-export function ReadableStreamGenericReaderCancel(self: bigint, reason: bigint | undefined): bigint {
+export function ReadableStreamGenericReaderCancel(self: bigint, reason: string | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStreamGenericReader(self);
   const promise = obj.cancel(reason)
@@ -1828,7 +1831,7 @@ function lookupReadableStreamBYOBReader(handle: bigint): ReadableStreamBYOBReade
  *
  * Async operation: returns request ID, poll with `ReadableStreamByobReaderPollRead()`
  */
-export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined | undefined): bigint {
+export function ReadableStreamByobReaderRead(self: bigint, view: Uint8Array, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupReadableStreamBYOBReader(self);
   const promise = obj.read(view)
@@ -1891,7 +1894,7 @@ function lookupReadableStreamDefaultController(handle: bigint): ReadableStreamDe
 /**
  * `get-desired-size()` operation.
  */
-export function ReadableStreamDefaultControllerGetDesiredSize(self: bigint): bigint {
+export function ReadableStreamDefaultControllerGetDesiredSize(self: bigint): number | undefined {
   const obj = lookupReadableStreamDefaultController(self);
   return obj.desiredSize ?? undefined;
 }
@@ -1907,7 +1910,7 @@ export function ReadableStreamDefaultControllerClose(self: bigint): void {
 /**
  * `enqueue()` operation.
  */
-export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: bigint | undefined | undefined): void {
+export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: bigint | undefined): void {
   const obj = lookupReadableStreamDefaultController(self);
   obj.enqueue(chunk);
 }
@@ -1915,7 +1918,7 @@ export function ReadableStreamDefaultControllerEnqueue(self: bigint, chunk: bigi
 /**
  * `error()` operation.
  */
-export function ReadableStreamDefaultControllerError(self: bigint, e: bigint): void {
+export function ReadableStreamDefaultControllerError(self: bigint, e: string | undefined): void {
   const obj = lookupReadableStreamDefaultController(self);
   obj.error(e);
 }
@@ -1954,7 +1957,7 @@ export function getByobRequest(self: bigint): bigint | undefined {
 /**
  * `get-desired-size()` operation.
  */
-export function ReadableByteStreamControllerGetDesiredSize(self: bigint): number | undefined {
+export function ReadableByteStreamControllerGetDesiredSize(self: bigint): bigint | undefined | undefined {
   const obj = lookupReadableByteStreamController(self);
   return obj.desiredSize ?? undefined;
 }
@@ -1970,7 +1973,7 @@ export function ReadableByteStreamControllerClose(self: bigint): void {
 /**
  * `enqueue()` operation.
  */
-export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: (bigint | undefined)[]): void {
+export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: bigint): void {
   const obj = lookupReadableByteStreamController(self);
   obj.enqueue(chunk as any);
 }
@@ -1978,7 +1981,7 @@ export function ReadableByteStreamControllerEnqueue(self: bigint, chunk: (bigint
 /**
  * `error()` operation.
  */
-export function ReadableByteStreamControllerError(self: bigint, e: string | undefined): void {
+export function ReadableByteStreamControllerError(self: bigint, e: bigint | undefined | undefined): void {
   const obj = lookupReadableByteStreamController(self);
   obj.error(e);
 }
@@ -2005,7 +2008,7 @@ function lookupReadableStreamBYOBRequest(handle: bigint): ReadableStreamBYOBRequ
 /**
  * `get-view()` operation.
  */
-export function getView(self: bigint): Uint8Array | undefined {
+export function getView(self: bigint): bigint {
   const obj = lookupReadableStreamBYOBRequest(self);
   return obj.view ?? undefined;
 }
@@ -2779,9 +2782,9 @@ export function XmlHttpRequestSetTimeout(self: bigint, value: number): void {
 /**
  * `get-with-credentials()` operation.
  */
-export function getWithCredentials(self: bigint): bigint {
+export function getWithCredentials(self: bigint): boolean {
   const obj = lookupXMLHttpRequest(self);
-  return obj.withCredentials ? 1n : 0n;
+  return obj.withCredentials;
 }
 
 /**

@@ -860,7 +860,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("html-table-element", "getRows"): "html-collection",
     ("html-table-element", "getTBodies"): "html-collection",
     # HTMLFormElement
-    ("html-form-element", "getElements"): "html-collection",
+    ("html-form-element", "getElements"): "html-form-controls-collection",
     ("html-form-element", "getLength"): "number",
     # HTMLInputElement
     ("html-input-element", "getList"): "html-element",
@@ -1110,7 +1110,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # HTML elements
     ("html-element", "getOffsetParent"): "element",
     ("html-element", "getStyle"): "css-style-declaration",
-    ("html-form-element", "getElements"): "html-collection",
+    ("html-form-element", "getElements"): "html-form-controls-collection",
     ("html-input-element", "getList"): "html-element",
     ("html-input-element", "getForm"): "html-form-element",
     ("html-input-element", "getLabels"): "node-list",
@@ -1721,7 +1721,7 @@ HANDLE_RETURNING_FUNCTIONS = {
     # HTMLElement validity (for elements with validation)
     ("html-element", "getValidity"): "validity-state",
     # HTMLFormElement methods
-    ("html-form-element", "getElements"): "html-collection",
+    ("html-form-element", "getElements"): "html-form-controls-collection",
     # HTMLInputElement validity
     ("html-input-element", "getValidity"): "validity-state",
     # HTMLTextAreaElement validity
@@ -2097,6 +2097,61 @@ HANDLE_RETURNING_FUNCTIONS = {
     # HTMLCanvasElement transferControlToOffscreen returns OffscreenCanvas
     ("html-canvas-element", "transferControlToOffscreen"): "offscreencanvas",
 
+    # htmlGlue.ts fixes - HANDLE_RETURNING_FUNCTIONS for getters returning objects
+    # CanvasRenderingContext2D.getCanvas returns HTMLCanvasElement
+    ("canvas-rendering-context2-d", "getCanvas"): "html-canvas-element",
+    # ImageBitmapRenderingContext.getCanvas returns HTMLCanvasElement | OffscreenCanvas
+    ("image-bitmap-rendering-context", "getCanvas"): "any",
+    # OffscreenCanvas.transferToImageBitmap returns ImageBitmap
+    ("offscreencanvas", "transferToImageBitmap"): "image-bitmap",
+    # ElementInternals.getStates returns CustomStateSet
+    ("element-internals", "getStates"): "custom-state-set",
+    # ElementInternals.getForm returns HTMLFormElement
+    ("element-internals", "getForm"): "html-form-element",
+    # DataTransferItemList.add returns DataTransferItem
+    ("data-transfer-item-list", "add"): "data-transfer-item",
+    # NavigationActivation.getFrom returns NavigationHistoryEntry | undefined
+    ("navigation-activation", "getFrom"): "navigation-history-entry",
+    # NavigationActivation.getEntry returns NavigationHistoryEntry
+    ("navigation-activation", "getEntry"): "navigation-history-entry",
+    # NavigateEvent.getDestination returns NavigationHistoryEntry
+    ("navigate-event", "getDestination"): "navigation-history-entry",
+    # Navigation.getCurrentEntry returns NavigationHistoryEntry
+    ("navigation", "getCurrentEntry"): "navigation-history-entry",
+    # Navigation.getActivation returns NavigationActivation
+    ("navigation", "getActivation"): "navigation-activation",
+    # Navigation.getTransition returns ViewTransition
+    ("navigation", "getTransition"): "view-transition",
+    # Document.startViewTransition returns ViewTransition
+    ("document", "startViewTransition"): "view-transition",
+    # Navigator.getPlugins returns PluginArray
+    ("navigator", "getPlugins"): "plugin-array",
+    # Navigator.getMimeTypes returns MimeTypeArray
+    ("navigator", "getMimeTypes"): "mime-type-array",
+    # PluginArray.item/namedItem return Plugin
+    ("plugin-array", "item"): "plugin",
+    ("plugin-array", "namedItem"): "plugin",
+    # MimeTypeArray.item/namedItem return MimeType
+    ("mime-type-array", "item"): "mime-type",
+    ("mime-type-array", "namedItem"): "mime-type",
+    # Plugin.item/namedItem return MimeType
+    ("plugin", "item"): "mime-type",
+    ("plugin", "namedItem"): "mime-type",
+    # Event.getTarget returns EventTarget
+    ("event", "getTarget"): "event-target",
+    # Window.getLocalStorage/getSessionStorage return Storage
+    ("window", "getLocalStorage"): "storage",
+    ("window", "getSessionStorage"): "storage",
+    # NavigateEvent canIntercept/userInitiated/hashChange/hasUAVisualTransition need type assertion
+    ("navigate-event", "getCanIntercept"): "any",
+    ("navigate-event", "getUserInitiated"): "any",
+    ("navigate-event", "getHashChange"): "any",
+    ("navigate-event", "getHasUaVisualTransition"): "any",
+    # StorageEvent.storageArea
+    ("storage-event", "getStorageArea"): "storage",
+    # MessageEvent.source
+    ("message-event", "getSource"): "message-event-source",
+
     # CSSRuleList item returns CSSRule
     ("css-rule-list", "item"): "css-rule",
     # Event getTarget/getCurrentTarget return EventTarget
@@ -2248,6 +2303,67 @@ HANDLE_RETURNING_FUNCTIONS = {
     ("rtc-dtls-transport", "getRemoteCertificates"): "any",
     # Navigation getCurrentEntry currentEntry returns NavigationHistoryEntry
     ("navigation", "currentEntry"): "navigation-history-entry",
+    # BlobEvent data returns Blob
+    ("blob-event", "getData"): "blob",
+    # SpeechSynthesisEvent utterance returns SpeechSynthesisUtterance
+    ("speech-synthesis-event", "getUtterance"): "speech-synthesis-utterance",
+    # SpeechSynthesis getVoices returns SpeechSynthesisVoiceList
+    ("speech-synthesis", "getVoices"): "speech-synthesis-voice-list",
+    # SpeechSynthesisUtterance getVoice returns SpeechSynthesisVoice
+    ("speech-synthesis-utterance", "getVoice"): "speech-synthesis-voice",
+    # SpeechSynthesisEvent getUtterance returns SpeechSynthesisUtterance
+    ("speech-synthesis-event", "getUtterance"): "speech-synthesis-utterance",
+    # InputDeviceInfo getCapabilities returns MediaTrackCapabilities
+    ("input-device-info", "getCapabilities"): "any",
+    # WebRTC getters that return objects needing handle wrapping
+    ("rtc-peer-connection", "getSctp"): "rtc-sctp-transport",
+    ("rtc-session-description", "toJson"): "any",
+    ("rtc-ice-candidate", "toJson"): "any",
+    ("rtc-certificate", "getFingerprints"): "any",
+    ("rtc-rtp-sender", "setParameters"): "promise-void",
+    ("rtc-rtp-receiver", "getTransport"): "rtc-dtls-transport",
+    ("rtc-rtp-transceiver", "getSender"): "rtc-rtp-sender",
+    ("rtc-rtp-transceiver", "getReceiver"): "rtc-rtp-receiver",
+    ("rtc-dtls-transport", "getIceTransport"): "rtc-ice-transport",
+    ("rtc-ice-transport", "getSelectedCandidatePair"): "rtc-ice-candidate-pair",
+    ("rtc-track-event", "getTrack"): "media-stream-track",
+    ("rtc-sctp-transport", "getTransport"): "rtc-dtls-transport",
+    ("rtc-data-channel-event", "getChannel"): "rtc-data-channel",
+    ("rtc-error-event", "getError"): "rtc-error",
+    # htmlGlue.ts HANDLE_RETURNING_FUNCTIONS fixes
+    # NavigateEvent getSrcElement returns EventTarget
+    ("navigate-event", "getSrcElement"): "event-target",
+    ("navigate-event", "getSourceElement"): "event-target",
+    # PageSwapEvent getActivation/getViewTransition
+    ("page-swap-event", "getActivation"): "navigation-activation",
+    ("page-swap-event", "getViewTransition"): "view-transition",
+    # PageRevealEvent getViewTransition
+    ("page-reveal-event", "getViewTransition"): "view-transition",
+    # HTMLFrameElement getContentWindow returns Window
+    ("html-frame-element", "getContentWindow"): "window",
+    # WindowLocalStorage/SessionStorage getLocalStorage/getSessionStorage return Storage
+    ("window-local-storage", "getLocalStorage"): "storage",
+    ("window-session-storage", "getSessionStorage"): "storage",
+    # ImageBitmapRenderingContext getCanvas returns HTMLCanvasElement | OffscreenCanvas
+    ("image-bitmap-rendering-context", "getCanvas"): "any",
+    # CanvasTransform getTransform returns DOMMatrix
+    ("canvas-transform", "getTransform"): "dom-matrix",
+    # CanvasFillStrokeStyles getStrokeStyle/getFillStyle return string | CanvasGradient | CanvasPattern
+    ("canvas-fill-stroke-styles", "getStrokeStyle"): "any",
+    ("canvas-fill-stroke-styles", "getFillStyle"): "any",
+    # CanvasPattern getTransform returns DOMMatrix | null
+    ("canvas-pattern", "getTransform"): "dom-matrix",
+    # OffscreenCanvasRenderingContext2D getCanvas returns OffscreenCanvas
+    ("offscreen-canvas-rendering-context2-d", "getCanvas"): "offscreencanvas",
+    # NavigatorPlugins getPlugins/getMimeTypes return PluginArray/MimeTypeArray
+    ("navigator-plugins", "getPlugins"): "plugin-array",
+    ("navigator-plugins", "getMimeTypes"): "mime-type-array",
+    # MimeType getEnabledPlugin returns Plugin
+    ("mime-type", "getEnabledPlugin"): "plugin",
+    # ImageData getData returns ImageDataArray (Uint8ClampedArray)
+    ("image-data", "getData"): "image-data-array",
+    # OffscreenCanvas transferToImageBitmap returns ImageBitmap
+    ("offscreen-canvas", "transferToImageBitmap"): "image-bitmap",
 }
 
 
@@ -3861,7 +3977,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("canvas-user-interface", "draw-focus-if-needed", "element"): "handle:element",
     # Path2D addPath - path and transform need handle lookup
     ("path2-d", "add-path", "path"): "handle:path2-d",
-    ("path2-d", "add-path", "transform"): "optional-handle:dom-matrix",
+    ("path2-d", "add-path", "transform"): "optional-handle-strict:dom-matrix",
     # DOMParser parseFromString - string and type need string conversion
     ("dom-parser", "parse-from-string", "string"): "string",
     ("dom-parser", "parse-from-string", "type"): "string",
@@ -3918,6 +4034,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("rtc-rtp-sender", "set-parameters", "parameters"): "any",
     ("rtc-rtp-sender", "replace-track", "track"): "optional-handle:media-stream-track",
     ("rtc-rtp-transceiver", "set-direction", "direction"): "any",
+    ("rtc-peer-connection", "set-configuration", "configuration"): "optional-handle:any",
     ("rtc-rtp-receiver", "get-parameters", "parameters"): "any",
     # URL createObjectURL - object needs any
     ("url", "create-object-url", "object"): "any",
@@ -4055,11 +4172,49 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("rtc-data-channel", "set-onclose", "value"): "event-handler",
     ("rtc-data-channel", "set-onerror", "value"): "event-handler",
     ("rtc-data-channel", "set-onmessage", "value"): "event-handler",
+    ("rtc-data-channel", "set-onbufferedamountlow", "value"): "event-handler",
+    # RTCIceTransport event handlers
+    ("rtc-ice-transport", "set-onstatechange", "value"): "event-handler",
+    ("rtc-ice-transport", "set-ongatheringstatechange", "value"): "event-handler",
+    ("rtc-ice-transport", "set-onselectedcandidatepairchange", "value"): "event-handler",
+    # RTCDtlsTransport event handlers
+    ("rtc-dtls-transport", "set-onstatechange", "value"): "event-handler",
+    ("rtc-dtls-transport", "set-onerror", "value"): "event-handler",
+    # RTCSctpTransport event handlers
+    ("rtc-sctp-transport", "set-onstatechange", "value"): "event-handler",
+    # RTCDTMFSender event handlers
+    ("rtcdtmf-sender", "set-ontonechange", "value"): "event-handler",
     ("web-socket", "set-onopen", "value"): "event-handler",
     ("web-socket", "set-onclose", "value"): "event-handler",
     ("web-socket", "set-onerror", "value"): "event-handler",
     ("web-socket", "set-onmessage", "value"): "event-handler",
     ("web-socket", "set-binary-type", "value"): "enum-string",
+    # MediaStream event handlers
+    ("media-stream", "set-onaddtrack", "value"): "event-handler",
+    ("media-stream", "set-onremovetrack", "value"): "event-handler",
+    # MediaRecorder event handlers
+    ("media-recorder", "set-onstart", "value"): "event-handler",
+    ("media-recorder", "set-onstop", "value"): "event-handler",
+    ("media-recorder", "set-ondataavailable", "value"): "event-handler",
+    ("media-recorder", "set-onpause", "value"): "event-handler",
+    ("media-recorder", "set-onresume", "value"): "event-handler",
+    ("media-recorder", "set-onerror", "value"): "event-handler",
+    # SpeechSynthesis event handlers
+    ("speech-synthesis", "set-onvoiceschanged", "value"): "event-handler",
+    # SpeechSynthesisUtterance event handlers
+    ("speech-synthesis-utterance", "set-onstart", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onend", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onerror", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onpause", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onresume", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onmark", "value"): "event-handler",
+    ("speech-synthesis-utterance", "set-onboundary", "value"): "event-handler",
+    # SpeechSynthesisUtterance voice handle conversion
+    ("speech-synthesis-utterance", "set-voice", "value"): "optional-handle:speech-synthesis-voice",
+    # MediaSession playbackState enum setter
+    ("media-session", "set-playback-state", "value"): "enum-string",
+    # MediaMetadata artwork handle array setter
+    ("media-metadata", "set-artwork", "value"): "handle-array:media-image",
     # RTCRtpReceiver jitter buffer target
     ("rtc-rtp-receiver", "set-jitter-buffer-target", "value"): "number-or-null",
     # Document body setter
@@ -4074,13 +4229,52 @@ PARAMETER_BIGINT_TO_NUMBER = {
     # HTMLInputElement/TextAreaElement setSelectionRange direction
     ("html-input-element", "set-selection-range", "direction"): "enum-string",
     ("html-text-area-element", "set-selection-range", "direction"): "enum-string",
+    # htmlGlue.ts fixes - additional enum setters
+    ("htmli-frame-element", "set-referrer-policy", "value"): "enum-string",
+    ("htmli-frame-element", "set-loading", "value"): "enum-string",
+    ("html-input-element", "set-selection-direction", "value"): "enum-string",
+    ("html-text-area-element", "set-selection-direction", "value"): "enum-string",
+    ("canvas-compositing", "set-global-composite-operation", "value"): "enum-string",
+    ("canvas-fill-stroke-styles", "set-stroke-style", "value"): "any",
+    ("canvas-fill-stroke-styles", "set-fill-style", "value"): "any",
+    ("data-transfer", "set-drop-effect", "value"): "enum-string",
+    ("data-transfer", "set-effect-allowed", "value"): "enum-string",
+    # CanvasImageData settings - any type
+    ("canvas-image-data", "get-image-data", "settings"): "any",
+    # Path2D addPath
+    ("path-2d", "add-path", "path"): "handle:path-2-d",
     # CanvasImageData createImageData settings
     ("canvas-image-data", "create-image-data", "settings"): "dictionary:image-data-settings",
     # Path2D addPath
     ("path-2d", "add-path", "path"): "handle:path-2-d",
+    # htmlGlue.ts PARAMETER_BIGINT_TO_NUMBER fixes
+    # OffscreenCanvas width/height setters need number conversion
+    ("offscreencanvas", "set-width", "value"): True,
+    ("offscreencanvas", "set-height", "value"): True,
+    # CanvasPattern setTransform parameter
+    ("canvas-pattern", "set-transform", "transform"): "optional-handle-strict:dom-matrix",
+    # ElementInternals setValidity anchor - null vs undefined
+    ("element-internals", "set-validity", "anchor"): "optional-handle-strict:html-element",
+    # Path2D addPath transform
+    ("path-2d", "add-path", "transform"): "optional-handle-strict:dom-matrix",
+    # OffscreenCanvas width/height setters need number conversion
+    ("offscreencanvas", "set-width", "value"): True,
+    ("offscreencanvas", "set-height", "value"): True,
+    # HTMLIFrameElement srcdoc setter - enum property (HTMLSrcdoc)
+    ("htmli-frame-element", "set-srcdoc", "value"): "string",
+    # HTMLFormElement getElements - need any cast for HTMLFormControlsCollection
+    ("html-form-element", "get-elements", "elements"): "any",
+    # HTMLInputElement/TextAreaElement setSelectionRange direction - needs string conversion
+    ("html-input-element", "set-selection-range", "direction"): "string",
+    ("html-text-area-element", "set-selection-range", "direction"): "string",
+    # HTMLOrSVGElement nonce getter - returns string | undefined
+    ("html-or-svg-element", "get-nonce", "nonce"): "string-or-null",
     ("path-2d", "add-path", "transform"): "dictionary:dom-matrix",
     # OffscreenCanvas convertToBlob options
     ("offscreen-canvas", "convert-to-blob", "options"): "dictionary:image-encode-options",
+    # OffscreenCanvas width/height setters - need number conversion
+    ("offscreen-canvas", "set-width", "value"): True,
+    ("offscreen-canvas", "set-height", "value"): True,
     # CustomElementRegistry upgrade
     ("custom-element-registry", "upgrade", "root"): "handle:node",
     # ElementInternals setFormValue
@@ -4088,7 +4282,7 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("element-internals", "set-form-value", "state"): "any",
     # ElementInternals setValidity
     ("element-internals", "set-validity", "flags"): "dictionary:validity-state-flags",
-    ("element-internals", "set-validity", "anchor"): "optional-handle:html-element",
+    ("element-internals", "set-validity", "anchor"): "optional-handle-strict:html-element",
     # DataTransfer setDragImage
     ("data-transfer", "set-drag-image", "image"): "handle:element",
     # AnimationFrameProvider requestAnimationFrame
@@ -4199,8 +4393,8 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("path-2d", "add-path", "transform"): "optional-handle-strict:dom-matrix",
     # RTCDataChannel createDataChannel - label is string not bigint
     ("rtc-peer-connection", "create-data-channel", "label"): "string",
-    # RTCPeerConnection addTrack - streams is array of MediaStream
-    ("rtc-peer-connection", "add-track", "streams"): "handle-array:media-stream",
+    # RTCPeerConnection addTrack - streams is array of MediaStream (spread as rest params)
+    ("rtc-peer-connection", "add-track", "streams"): "spread-handle-array:media-stream",
     # RTCPeerConnection addTransceiver - init is dictionary
     ("rtc-peer-connection", "add-transceiver", "init"): "dictionary:any",
     # RTCSctpTransport.transport - wrong handle table
@@ -4232,6 +4426,30 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("url-search-params", "set", "name"): "string",
     # URLSearchParams append - name is string not bigint
     ("url-search-params", "append", "name"): "string",
+    # ClipboardItem supports - type is string not boolean
+    ("clipboard-item", "supports", "type"): "string",
+    # TextEvent initTextEvent - view needs optional handle lookup
+    ("text-event", "init-text-event", "view"): "optional-handle:window",
+    # TextEvent initTextEvent - bubbles is boolean not string
+    ("text-event", "init-text-event", "bubbles"): "boolean",
+    # CompositionEvent initCompositionEvent - view-arg needs handle lookup
+    ("composition-event", "init-composition-event", "view-arg"): "optional-handle:window",
+    # SpeechSynthesis speak - utterance needs handle lookup
+    ("speech-synthesis", "speak", "utterance"): "handle:speech-synthesis-utterance",
+    # PaymentRequest show - detailsPromise is any
+    ("payment-request", "show", "details-promise"): "any",
+    # PaymentResponse retry - errorFields is dictionary
+    ("payment-response", "retry", "error-fields"): "dictionary:any",
+    # ServiceWorkerContainer register - scriptUrl is string
+    ("service-worker-container", "register", "script-url"): "string",
+    # Headers append - value is string
+    ("headers", "append", "value"): "string",
+    # ExtendableMessageEvent getSource - source is any
+    ("extendable-message-event", "get-source", "source"): "any",
+    # Notification constructor - options is dictionary
+    ("notification", "constructor", "options"): "dictionary:any",
+    # Cache matchAll - request needs any
+    ("cache", "match-all", "request"): "any",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -4363,29 +4581,47 @@ ENUM_PROPERTIES = {
     # XMLHttpRequest responseURL
     ("xml-http-request", "responseURL"): "ResponseUrl",
     # Notification permission
-    ("notification", "get-permission"): "NotificationPermission",
+    ("notification", "permission"): "NotificationPermission",
     # RTCSessionDescription type
-    ("rtc-session-description", "get-type"): "RTCSdpType",
+    ("rtc-session-description", "type"): "RTCSdpType",
     # RTCIceCandidate type
-    ("rtc-ice-candidate", "get-type"): "RTCIceCandidateType",
+    ("rtc-ice-candidate", "type"): "RTCIceCandidateType",
     # RTCIceCandidate tcpType
-    ("rtc-ice-candidate", "get-tcp-type"): "RTCIceTcpCandidateType",
+    ("rtc-ice-candidate", "tcpType"): "RTCIceTcpCandidateType",
     # RTCDataChannel protocol
-    ("rtc-data-channel", "get-protocol"): "DataChannelProtocol",
+    ("rtc-data-channel", "protocol"): "DataChannelProtocol",
     # SpeechSynthesisErrorCode
-    ("speech-synthesis-error-event", "get-error"): "SpeechSynthesisErrorCode",
+    ("speech-synthesis-error-event", "error"): "SpeechSynthesisErrorCode",
     # PointerEvent pointerType
-    ("pointer-event", "get-pointer-type"): "PointerType",
+    ("pointer-event", "pointerType"): "PointerType",
     # InputEvent inputType
-    ("input-event", "get-input-type"): "InputType",
+    ("input-event", "inputType"): "InputType",
     # Crypto randomUUID returns UUID string
     ("crypto", "random-uuid"): "UUID",
     # PerformanceEntry entryType returns string
-    ("performance-entry", "get-entry-type"): "PerformanceEntryType",
+    ("performance-entry", "entryType"): "PerformanceEntryType",
     # MediaSession playbackState returns string
-    ("media-session", "get-playback-state"): "MediaSessionPlaybackState",
+    ("media-session", "playbackState"): "MediaSessionPlaybackState",
     # RTCError errorDetail returns string
-    ("rtc-error", "get-error-detail"): "RTCErrorDetailType",
+    ("rtc-error", "errorDetail"): "RTCErrorDetailType",
+    # KeyboardEvent key returns string (needs enum conversion)
+    ("keyboard-event", "key"): "KeyString",
+    # CompositionEvent data returns string (needs enum conversion)
+    ("composition-event", "data"): "CompositionData",
+    # MediaStreamTrack kind returns string
+    ("media-stream-track", "kind"): "MediaStreamTrackKind",
+    # RTCIceCandidate enum properties
+    ("rtc-ice-candidate", "protocol"): "RTCIceProtocol",
+    ("rtc-ice-candidate", "relayProtocol"): "RTCIceProtocol",
+    ("rtc-ice-candidate", "usernameFragment"): "RTCIceUsernameFragment",
+    ("rtc-ice-candidate", "component"): "RTCIceComponent",
+    ("rtc-ice-candidate", "tcpType"): "RTCIceTcpCandidateType",
+    # RTCRtpTransceiver enum properties
+    ("rtc-rtp-transceiver", "currentDirection"): "RTCRtpTransceiverDirection",
+    # RTCDataChannel label (string → bigint)
+    ("rtc-data-channel", "label"): "DataChannelLabel",
+    # RTCError errorDetail
+    ("rtc-error", "errorDetail"): "RTCErrorDetailType",
 }
 
 # Enum value mappings (string → bigint)
@@ -4816,6 +5052,24 @@ ENUM_VALUE_MAPPINGS = {
         "passive": 1,
         "so": 2,
     },
+    # RTC Ice protocol
+    "RTCIceProtocol": {
+        "udp": 0,
+        "tcp": 1,
+    },
+    # RTC Ice component
+    "RTCIceComponent": {
+        "rtp": 0,
+        "rtcp": 1,
+    },
+    # RTC Ice username fragment (opaque string)
+    "RTCIceUsernameFragment": {
+        "": 0,
+    },
+    # DataChannel label (opaque string)
+    "DataChannelLabel": {
+        "": 0,
+    },
     # DataChannel protocol
     "DataChannelProtocol": {
         "": 0,
@@ -4909,6 +5163,9 @@ ENUM_SETTER_PROPERTIES = {
     ("dom-token-list", "value"): "DOMTokenListValue",
     # HTMLIFrameElement setter
     ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
+    # WebRTC setters
+    ("rtc-rtp-transceiver", "direction"): "RTCRtpTransceiverDirection",
+    ("rtc-data-channel", "binaryType"): "RTCDataChannelBinaryType",
 }
 
 # Properties that return readonly arrays that need to be converted to mutable arrays
@@ -4929,48 +5186,51 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("web-gl2-rendering-context-base", "is-transform-feedback"): True,
     ("web-gl2-rendering-context-base", "is-vertex-array"): True,
     # AbortSignal
-    ("abort-signal", "get-aborted"): True,
+    ("abort-signal", "aborted"): True,
     # URL
     ("url", "can-parse"): True,
     # Event
-    ("event", "get-bubbles"): True,
-    ("event", "get-return-value"): True,
-    ("event", "get-composed"): True,
-    ("event", "get-cancel-bubble"): True,
-    ("event", "get-is-trusted"): True,
+    ("event", "bubbles"): True,
+    ("event", "returnValue"): True,
+    ("event", "composed"): True,
+    ("event", "cancelBubble"): True,
+    ("event", "isTrusted"): True,
     # Notification
-    ("notification", "get-require-interaction"): True,
+    ("notification", "requireInteraction"): True,
     # PointerEvent
-    ("pointer-event", "get-is-primary"): True,
+    ("pointer-event", "isPrimary"): True,
     # SpeechSynthesis
-    ("speech-synthesis", "get-pending"): True,
+    ("speech-synthesis", "pending"): True,
     # Navigator
     ("navigator", "vibrate"): True,
     # SpeechRecognitionResult
-    ("speech-recognition-result", "get-is-final"): True,
+    ("speech-recognition-result", "isFinal"): True,
     # SpeechSynthesisVoice
-    ("speech-synthesis-voice", "get-default"): True,
+    ("speech-synthesis-voice", "default"): True,
     # CloseEvent
-    ("close-event", "get-was-clean"): True,
+    ("close-event", "wasClean"): True,
     # CryptoKey
-    ("crypto-key", "get-extractable"): True,
+    ("crypto-key", "extractable"): True,
     # Gamepad
-    ("gamepad", "get-connected"): True,
+    ("gamepad", "connected"): True,
     # GamepadButton
-    ("gamepad-button", "get-pressed"): True,
+    ("gamepad-button", "pressed"): True,
+    ("gamepad-button", "touched"): True,
     # XMLHttpRequest
-    ("xml-http-request", "get-with-credentials"): True,
+    ("xml-http-request", "withCredentials"): True,
     # Request
-    ("request", "get-is-history-navigation"): True,
+    ("request", "isHistoryNavigation"): True,
+    # Body - bodyUsed returns boolean
+    ("body", "bodyUsed"): True,
     # TouchEvent
-    ("touch-event", "get-meta-key"): True,
+    ("touch-event", "metaKey"): True,
     # Response
     ("response", "ok"): True,
     # Event getBubbles/getCancelable/getComposed/getIsTrusted
-    ("event", "get-bubbles"): True,
-    ("event", "get-cancelable"): True,
-    ("event", "get-composed"): True,
-    ("event", "get-is-trusted"): True,
+    ("event", "bubbles"): True,
+    ("event", "cancelable"): True,
+    ("event", "composed"): True,
+    ("event", "isTrusted"): True,
     # Clipboard has types method returns boolean
     ("clipboard-item", "has-type"): True,
     # DOMTokenList contains returns boolean
@@ -4978,9 +5238,20 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     # DOMTokenList supports returns boolean
     ("dom-token-list", "supports"): True,
     # TouchEvent getAltKey/getCtrlKey/getShiftKey return boolean
-    ("touch-event", "get-alt-key"): True,
-    ("touch-event", "get-ctrl-key"): True,
-    ("touch-event", "get-shift-key"): True,
+    ("touch-event", "altKey"): True,
+    ("touch-event", "ctrlKey"): True,
+    ("touch-event", "shiftKey"): True,
+    # WebRTC boolean to bigint
+    ("rtc-peer-connection", "canTrickleIceCandidates"): True,
+    ("rtc-data-channel", "ordered"): True,
+    ("rtc-data-channel", "negotiated"): True,
+}
+
+# Getters that return optional types in DOM but non-optional in WIT
+# Maps (interface, getter_name) to the default value to use for coalescing
+GETTER_RETURN_COALESCING = {
+    # HTMLOrSVGElement.nonce returns string | undefined in DOM, but string in WIT
+    ("html-or-svg-element", "get-nonce"): "",
 }
 
 # Properties that return number but need to be converted to bigint
@@ -5240,6 +5511,19 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("intersection-observer", "get-thresholds"): True,
     # MediaStreamTrack getSettings capabilities number values
     ("media-stream-track", "get-settings"): True,
+    # WebRTC - number to bigint
+    ("rtc-ice-candidate", "relatedPort"): True,
+    ("rtc-ice-candidate", "port"): True,
+    ("rtc-ice-candidate", "priority"): True,
+    ("rtc-certificate", "expires"): True,
+    ("rtc-data-channel", "maxPacketLifeTime"): True,
+    ("rtc-data-channel", "maxRetransmits"): True,
+    ("rtc-data-channel", "id"): True,
+    ("rtc-rtp-receiver", "jitterBufferTarget"): True,
+    ("rtc-error", "sdpLineNumber"): True,
+    ("rtc-error", "sctpCauseCode"): True,
+    ("rtc-error", "receivedAlert"): True,
+    ("rtc-error", "sentAlert"): True,
 }
 
 # Interface-specific browser attribute name overrides
@@ -5306,6 +5590,8 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "attribute-names",
     # ClipboardItem getType takes a parameter
     "type",
+    # KeyboardEvent.getModifierState takes a parameter
+    "modifier-state",
 }
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
@@ -5340,6 +5626,7 @@ SETTER_METHOD_NAMES = {
     ("html-text-area-element", "custom-validity"): "setCustomValidity",
     ("html-output-element", "custom-validity"): "setCustomValidity",
     ("html-field-set-element", "custom-validity"): "setCustomValidity",
+    ("rtc-peer-connection", "configuration"): "setConfiguration",
 }
 
 SETTER_BUT_ACTUALLY_METHOD = {
@@ -5360,6 +5647,7 @@ SETTER_BUT_ACTUALLY_METHOD = {
     ("range", "end-after"),
     # HTMLInputElement/HTMLTextAreaElement methods
     ("html-input-element", "selection-range"),
+    ("html-input-element", "range-text"),
     ("html-text-area-element", "selection-range"),
     ("html-text-area-element", "range-text"),
     # ElementInternals methods
@@ -5384,8 +5672,10 @@ SETTER_BUT_ACTUALLY_METHOD = {
     ("data-transfer", "drag-image"),
     # HTMLButtonElement methods
     ("html-button-element", "popover-target-element"),
-    # Canvas methods
-    ("canvas-transform", "set-transform"),
+    # Canvas methods - setTransform is a method, property name without "set-" prefix
+    ("canvas-transform", "transform"),
+    # CanvasPattern setTransform is a method
+    ("canvas-pattern", "transform"),
     # NamedNodeMap methods that return replaced Attr
     ("named-node-map", "named-item"),
     ("named-node-map", "named-item-ns"),
@@ -5394,6 +5684,8 @@ SETTER_BUT_ACTUALLY_METHOD = {
     ("window-or-worker-global-scope", "interval"),
     # RTCRtpSender - setParameters is a method
     ("rtc-rtp-sender", "parameters"),
+    # RTCPeerConnection - setConfiguration is a method
+    ("rtc-peer-connection", "configuration"),
     # MediaSession - screenshareActive setter returns void but WIT expects return
     ("media-session", "screenshare-active"),
     # Element methods that return Attr
@@ -5427,6 +5719,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "window": ("Window", "windowHandles", "Window"),
     "element-list": ("Element[]", "elementListHandles", "ElementList"),
     "html-collection": ("HTMLCollection", "htmlCollectionHandles", "HtmlCollection"),
+    "html-form-controls-collection": ("HTMLFormControlsCollection", "htmlFormControlsCollectionHandles", "HtmlFormControlsCollection"),
     "document-fragment": ("DocumentFragment", "documentFragmentHandles", "DocumentFragment"),
     "text": ("Text", "textHandles", "Text"),
     "comment": ("Comment", "commentHandles", "Comment"),
@@ -5577,6 +5870,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "message-event-source": ("EventTarget", "messageEventSourcehandles", "MessageEventSource"),
     # Media types
     "speech-synthesis-voice-list": ("SpeechSynthesisVoice[]", "speechSynthesisVoiceListhandles", "SpeechSynthesisVoiceList"),
+    "speech-synthesis-voice": ("SpeechSynthesisVoice", "speechSynthesisVoiceHandles", "SpeechSynthesisVoice"),
     # Service Worker types
     "service-worker": ("ServiceWorker", "serviceWorkerhandles", "ServiceWorker"),
     "navigation-preload-manager": ("NavigationPreloadManager", "navigationPreloadManagerhandles", "NavigationPreloadManager"),
@@ -5588,6 +5882,7 @@ SYNTHETIC_HANDLE_TYPES = {
     "rtc-dtls-transport": ("RTCDtlsTransport", "rtcDtlsTransportHandles", "RtcDtlsTransport"),
     "rtc-rtp-sender": ("RTCRtpSender", "rtcRtpSenderHandles", "RtcRtpSender"),
     "rtc-rtp-receiver": ("RTCRtpReceiver", "rtcRtpReceiverHandles", "RtcRtpReceiver"),
+    "rtc-rtp-transceiver": ("RTCRtpTransceiver", "rtcRtpTransceiverHandles", "RtcRtpTransceiver"),
     "rtc-ice-transport": ("RTCIceTransport", "rtcIceTransportHandles", "RtcIceTransport"),
     # Missing HTML element types
     "html-table-row-element": ("HTMLTableRowElement", "htmlTableRowElementHandles", "HtmlTableRowElement"),
@@ -5642,6 +5937,26 @@ SYNTHETIC_HANDLE_TYPES = {
     "url-search-params": ("URLSearchParams", "urlSearchParamsHandles", "UrlSearchParams"),
     # media-stream-track-event
     "media-stream-track-event": ("MediaStreamTrackEvent", "mediaStreamTrackEventHandles", "MediaStreamTrackEvent"),
+    # custom-state-set
+    "custom-state-set": ("CustomStateSet", "customStateSetHandles", "CustomStateSet"),
+    # navigation types
+    "navigation-history-entry": ("NavigationHistoryEntry", "navigationHistoryEntryHandles", "NavigationHistoryEntry"),
+    "navigation-activation": ("NavigationActivation", "navigationActivationHandles", "NavigationActivation"),
+    # plugin/mimetype types
+    "plugin-array": ("PluginArray", "pluginArrayHandles", "PluginArray"),
+    "mime-type-array": ("MimeTypeArray", "mimeTypeArrayHandles", "MimeTypeArray"),
+    "plugin": ("Plugin", "pluginHandles", "Plugin"),
+    "mime-type": ("MimeType", "mimeTypeHandles", "MimeType"),
+    # html-canvas-element (for CanvasRenderingContext2D.getCanvas)
+    "html-canvas-element": ("HTMLCanvasElement", "htmlCanvasElementHandles", "HtmlCanvasElement"),
+    # ImageDataArray (Uint8ClampedArray)
+    "image-data-array": ("Uint8ClampedArray", "imageDataArrayHandles", "ImageDataArray"),
+    # OffscreenCanvas (for transferToImageBitmap, getCanvas)
+    "offscreencanvas": ("OffscreenCanvas", "offscreencanvasHandles", "Offscreencanvas"),
+    # WebRTC list types
+    "rtc-rtp-receiver-list": ("RTCRtpReceiver[]", "rtcRtpReceiverListHandles", "RtcRtpReceiverList"),
+    "rtc-rtp-transceiver-list": ("RTCRtpTransceiver[]", "rtcRtpTransceiverListHandles", "RtcRtpTransceiverList"),
+    "rtc-rtp-sender-list": ("RTCRtpSender[]", "rtcRtpSenderListHandles", "RtcRtpSenderList"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -5650,6 +5965,7 @@ CUSTOM_TYPE_DEFINITIONS = {
     "EventHandlerRecord": "any",
     "WebGLObject": "any",
     "u64": "bigint",
+    "RTCDataChannelBinaryType": "\"blob\" | \"arraybuffer\"",
     "CSSFontFaceDescriptors": "any",
     "CSSFontFeatureValuesMap": "any",
     "OnBeforeUnloadEventHandlerRecord": "OnBeforeUnloadEventHandlerNonNull | null",
@@ -6627,6 +6943,30 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("rtc-data-channel", "onerror"),
     ("rtc-data-channel", "onmessage"),
     ("rtc-data-channel", "onbufferedamountlow"),
+    # MediaStream event handlers - need type assertion
+    ("media-stream", "onaddtrack"),
+    ("media-stream", "onremovetrack"),
+    # MediaStreamTrack event handlers - need type assertion
+    ("media-stream-track", "onmute"),
+    ("media-stream-track", "onunmute"),
+    ("media-stream-track", "onended"),
+    # MediaRecorder event handlers - need type assertion
+    ("media-recorder", "onstart"),
+    ("media-recorder", "onstop"),
+    ("media-recorder", "ondataavailable"),
+    ("media-recorder", "onpause"),
+    ("media-recorder", "onresume"),
+    ("media-recorder", "onerror"),
+    # SpeechSynthesis event handlers - need type assertion
+    ("speech-synthesis", "onvoiceschanged"),
+    # SpeechSynthesisUtterance event handlers - need type assertion
+    ("speech-synthesis-utterance", "onstart"),
+    ("speech-synthesis-utterance", "onend"),
+    ("speech-synthesis-utterance", "onerror"),
+    ("speech-synthesis-utterance", "onpause"),
+    ("speech-synthesis-utterance", "onresume"),
+    ("speech-synthesis-utterance", "onmark"),
+    ("speech-synthesis-utterance", "onboundary"),
     # MouseEvent getModifierState - method not property
     ("mouse-event", "getModifierState"),
     # getType methods - missing from TypeScript DOM types
@@ -6699,6 +7039,11 @@ HANDLE_RETURNING_ARRAY_PROPERTIES = {
     # PointerEvent getCoalescedEvents/getPredictedEvents return arrays
     ("pointer-event", "getCoalescedEvents"): ("pointer-event-list", "pointer-event"),
     ("pointer-event", "getPredictedEvents"): ("pointer-event-list", "pointer-event"),
+    # WebRTC methods that return arrays of objects
+    ("rtc-peer-connection", "getReceivers"): ("rtc-rtp-receiver-list", "rtc-rtp-receiver"),
+    ("rtc-peer-connection", "getTransceivers"): ("rtc-rtp-transceiver-list", "rtc-rtp-transceiver"),
+    ("rtc-peer-connection", "getSenders"): ("rtc-rtp-sender-list", "rtc-rtp-sender"),
+    ("rtc-certificate", "getFingerprints"): ("any", "any"),
 }
 
 # JavaScript/TypeScript reserved keywords

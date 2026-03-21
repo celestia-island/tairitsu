@@ -7,102 +7,80 @@ Fix TS2322 type mismatch errors in browser-glue generated code by modifying the 
 ## Progress
 
 - **Initial:** 216 TS2322 errors
-- **Current:** 171 TypeScript errors
-- **Fixed:** 45 errors
+- **Current:** 83 TypeScript errors (16 in target files mediaGlue.ts and eventsGlue.ts)
+- **Fixed:** 133 errors
 
 ## What Was Done
 
-### 1. Added Conversion Types in `config.py` (`PARAMETER_BIGINT_TO_NUMBER`)
+### 1. Fixed ENUM_PROPERTIES entries to use property names
 
-**String setters needing `string-or-null`:**
-- `html-element`: `set-access-key`, `set-autocapitalize`, `set-dir`, `set-inner-text`, `set-lang`, `set-title`, `set-translate`, `set-popover`, `set-outer-text`, `set-hidden`
-- `html-anchor-element`: `set-download`, `set-href`, `set-hreflang`, `set-ping`, `set-rel`, `set-target`
-- `html-media-element`: `set-src`, `set-cross-origin`
-- `html-image-element`: `set-src`, `set-cross-origin`
-- `html-link-element`: `set-cross-origin`
-- `html-script-element`: `set-cross-origin`
-- `html-source-element`, `html-track-element`, `html-iframe-element`, `html-embed-element`: `set-src`
-- `node`: `set-node-value`, `set-text-content`
+Changed entries from function names (e.g., `"get-pointer-type"`) to property names (e.g., `"pointerType"`):
+- `("pointer-event", "pointerType"): "PointerType"`
+- `("input-event", "inputType"): "InputType"`
+- `("keyboard-event", "key"): "KeyString"`
+- `("composition-event", "data"): "CompositionData"`
+- And 14 more entries
 
-**Number setters needing `number-or-null`:**
-- `html-input-element`: `set-selection-start`, `set-selection-end`
-- `rtc-rtp-receiver`: `set-jitter-buffer-target`
+### 2. Fixed BOOLEAN_TO_BIGINT_PROPERTIES entries to use property names
 
-**Enum string setters needing `enum-string`:**
-- `html-media-element`: `set-preload`
-- `html-image-element`: `set-loading`, `set-fetch-priority`, `set-decoding`
-- `html-link-element`: `set-fetch-priority`, `set-loading`
-- `html-script-element`: `set-fetch-priority`
-- `html-button-element`: `set-type`
-- `html-input-element`: `set-form-enctype`, `set-form-method`, `set-enter-key-hint`, `set-autocomplete`
-- `html-text-area-element`: `set-enter-key-hint`, `set-wrap`, `set-autocomplete`
-- `html-form-element`: `set-enctype`, `set-method`, `set-autocomplete`
-- `html-select-element`: `set-autocomplete`
-- `html-style-element`: `set-media`
-- `web-socket`: `set-binary-type`
+Changed entries from function names to property names:
+- `("event", "bubbles")`, `("event", "cancelable")`, `("event", "composed")`
+- `("touch-event", "metaKey")`, `("touch-event", "altKey")`, `("touch-event", "ctrlKey")`
+- And 20 more entries
 
-**Event handler setters needing `event-handler`:**
-- `window-event-handlers`: `set-ongamepadconnected`, `set-ongamepaddisconnected`
-- `global-event-handlers`: onclick, ondblclick, onmousedown, onmouseup, onmouseover, onmousemove, onmouseout, onkeydown, onkeyup, onfocus, onblur, onchange, onsubmit, onreset, oninput
-- `screen-orientation`: `set-onchange`
-- `rtc-peer-connection`: all on* event setters
-- `rtc-data-channel`: all on* event setters
-- `web-socket`: all on* event setters
+### 3. Added to GETTER_BUT_ACTUALLY_METHOD
 
-**Handle setters needing `optional-handle:*` or `optional-handle-strict:*`:**
-- `document`: `set-body` → `optional-handle-strict:html-element`
+Added `"modifier-state"` for `KeyboardEvent.getModifierState()` which is a method, not a property.
 
-### 2. Added Conversion Type Handling in `code_gen.py`
+### 4. Added to SYNTHETIC_HANDLE_TYPES
 
-Added handling in `_render_setter_body()` for:
-- `string-or-null` → `{param} ?? null`
-- `number-or-null` → `{param} ?? null`
-- `boolean-or-false` → `{param} ?? false`
-- `enum-string` → `{param} as any`
-- `event-handler` → `{param} as any`
-- `optional-handle-strict:*` → `lookupOption{Type}({param}) as any`
+Added `"speech-synthesis-voice"` to enable creation of `lookupOptionSpeechSynthesisVoice` function.
 
-### 3. Added Method Setters in `config.py`
+### 5. Previous work (from earlier session)
 
-Added to `SETTER_BUT_ACTUALLY_METHOD`:
-- `html-object-element`, `html-input-element`, `html-button-element`, `html-select-element`, `html-text-area-element`, `html-output-element`, `html-field-set-element`: `custom-validity`
+- Added conversion types in `PARAMETER_BIGINT_TO_NUMBER`
+- Added handling in `code_gen.py` for various conversion types
+- Added method setters in `SETTER_BUT_ACTUALLY_METHOD`
 
-Added to `SETTER_METHOD_NAMES`:
-- All the above with method name `setCustomValidity`
+## Remaining Errors (16 in target files)
 
-## Remaining Errors (171)
+### eventsGlue.ts (9 errors)
+- Line 474: `ClipboardChangeEventGetTypes` - returns `obj.type` but expects `string[]`
+- Line 525: readonly string[] to string[] assignment
+- Line 1150: boolean not assignable to bigint
+- Line 1205: number not assignable to bigint
+- Line 1279: string | undefined not assignable to string
+- Line 1418: initKeyboardEvent parameter type issues
+- Line 1472: initCompositionEvent parameter type issues
+- Line 1507: initTextEvent parameter type issues
 
-### Error Categories:
+### mediaGlue.ts (7 errors)
+- Line 1154: string not assignable to number
+- Line 1309: bigint not assignable to boolean
+- Lines 1406, 1414: MediaImage[] handle array conversion issues
+- Line 1684: number not assignable to string
+- Line 2168: number not assignable to boolean
+- Line 2203: string not assignable to number
 
-1. **Return type mismatches** - DOM API returns different type than WIT expects
-2. **Parameter type mismatches** - Arguments need conversion
-3. **Handle wrapping needed** - Methods return objects that need handle wrapping
+## Key Config Patterns
 
-### Files with Most Errors:
-- `htmlGlue.ts` (34)
-- `webrtcGlue.ts` (29)
-- `mediaGlue.ts` (22)
-- `eventsGlue.ts` (12)
+1. **ENUM_PROPERTIES**: Use property name (camelCase), not function name
+   - Correct: `("pointer-event", "pointerType")`
+   - Wrong: `("pointer-event", "get-pointer-type")`
 
-## Key Config Patterns Needed
+2. **BOOLEAN_TO_BIGINT_PROPERTIES**: Use property name, not function name
+   - Correct: `("event", "bubbles")`
+   - Wrong: `("event", "get-bubbles")`
 
-1. **HANDLE_RETURNING_FUNCTIONS**: For getters/methods that return objects needing handle wrapping
-   - Key: `(interface_name, method_name)`
-   - Value: target interface name or `"any"`
+3. **GETTER_BUT_ACTUALLY_METHOD**: Use name without "get-" prefix
+   - Correct: `"modifier-state"`
+   - Wrong: `"get-modifier-state"`
 
-2. **PARAMETER_BIGINT_TO_NUMBER**: For parameters needing type conversion
-   - Key: `(interface_name, function_name, param_name)`
-   - Value: conversion type (`"handle:X"`, `"enum-string"`, `"any"`, etc.)
-
-3. **GETTER_BUT_ACTUALLY_METHOD**: For WIT getters that are DOM methods
-   - Key: `function_name[4:]` (without "get-" prefix)
-
-4. **SETTER_BUT_ACTUALLY_METHOD**: For WIT setters that are DOM methods
-   - Key: `(interface_name, property_name)`
+4. **SYNTHETIC_HANDLE_TYPES**: Add types that need `lookupOption*` functions
 
 ## Relevant Files
 
-- `/mnt/sdb1/tairitsu/scripts/generator/config.py` - Main config file with type mappings
+- `/mnt/sdb1/tairitsu/scripts/generator/config.py` - Main config file
 - `/mnt/sdb1/tairitsu/scripts/generator/code_gen.py` - Code generator
 - `/mnt/sdb1/tairitsu/scripts/generate_browser_glue.py` - Main generator script
 - `/mnt/sdb1/tairitsu/packages/browser-glue/src/generated/` - Generated files (do not edit)

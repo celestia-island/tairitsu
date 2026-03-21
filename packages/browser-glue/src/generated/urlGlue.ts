@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -307,7 +310,7 @@ export function setHref(self: bigint, value: bigint): void {
 /**
  * `get-origin()` operation.
  */
-export function getOrigin(self: bigint): bigint | undefined {
+export function getOrigin(self: bigint): string {
   const obj = lookupURL(self);
   return obj.origin;
 }
@@ -347,7 +350,7 @@ export function setUsername(self: bigint, value: string): void {
 /**
  * `get-password()` operation.
  */
-export function getPassword(self: bigint): bigint {
+export function getPassword(self: bigint): string {
   const obj = lookupURL(self);
   return obj.password;
 }
@@ -501,7 +504,7 @@ function lookupURLSearchParams(handle: bigint): URLSearchParams {
 /**
  * `get-size()` operation.
  */
-export function getSize(self: bigint): number {
+export function getSize(self: bigint): bigint {
   const obj = lookupURLSearchParams(self);
   return obj.size;
 }
@@ -525,7 +528,7 @@ export function _delete(self: bigint, name: string, value: string | undefined): 
 /**
  * `get()` operation.
  */
-export function _get(self: bigint, name: bigint | undefined): string | undefined {
+export function _get(self: bigint, name: EventHandlerRecord): string | undefined {
   const obj = lookupURLSearchParams(self);
   return obj.get(name) ?? undefined;
 }
