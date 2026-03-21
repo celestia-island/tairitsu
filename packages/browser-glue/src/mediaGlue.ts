@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -674,7 +677,7 @@ export function getActive(self: bigint): bigint {
 /**
  * `get-onaddtrack()` operation.
  */
-export function getOnaddtrack(self: bigint): EventHandlerRecord {
+export function getOnaddtrack(self: bigint): bigint {
   const obj = lookupMediaStream(self);
   return (obj as any).onaddtrack;
 }
@@ -682,7 +685,7 @@ export function getOnaddtrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onaddtrack()` operation.
  */
-export function setOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+export function setOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupMediaStream(self);
   (obj as any).onaddtrack = value as any;
 }
@@ -690,7 +693,7 @@ export function setOnaddtrack(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onremovetrack()` operation.
  */
-export function getOnremovetrack(self: bigint): EventHandlerRecord {
+export function getOnremovetrack(self: bigint): bigint {
   const obj = lookupMediaStream(self);
   return (obj as any).onremovetrack;
 }
@@ -698,7 +701,7 @@ export function getOnremovetrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onremovetrack()` operation.
  */
-export function setOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+export function setOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupMediaStream(self);
   (obj as any).onremovetrack = value as any;
 }
@@ -764,7 +767,7 @@ export function getMuted(self: bigint): boolean {
 /**
  * `get-onmute()` operation.
  */
-export function getOnmute(self: bigint): EventHandlerRecord {
+export function getOnmute(self: bigint): bigint {
   const obj = lookupMediaStreamTrack(self);
   return (obj as any).onmute;
 }
@@ -772,7 +775,7 @@ export function getOnmute(self: bigint): EventHandlerRecord {
 /**
  * `set-onmute()` operation.
  */
-export function setOnmute(self: bigint, value: EventHandlerRecord): void {
+export function setOnmute(self: bigint, value: bigint): void {
   const obj = lookupMediaStreamTrack(self);
   (obj as any).onmute = value;
 }
@@ -780,7 +783,7 @@ export function setOnmute(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onunmute()` operation.
  */
-export function getOnunmute(self: bigint): EventHandlerRecord {
+export function getOnunmute(self: bigint): bigint {
   const obj = lookupMediaStreamTrack(self);
   return (obj as any).onunmute;
 }
@@ -788,7 +791,7 @@ export function getOnunmute(self: bigint): EventHandlerRecord {
 /**
  * `set-onunmute()` operation.
  */
-export function setOnunmute(self: bigint, value: EventHandlerRecord): void {
+export function setOnunmute(self: bigint, value: bigint): void {
   const obj = lookupMediaStreamTrack(self);
   (obj as any).onunmute = value;
 }
@@ -809,7 +812,7 @@ export function getReadyState(self: bigint): bigint {
 /**
  * `get-onended()` operation.
  */
-export function getOnended(self: bigint): EventHandlerRecord {
+export function getOnended(self: bigint): bigint {
   const obj = lookupMediaStreamTrack(self);
   return (obj as any).onended;
 }
@@ -817,7 +820,7 @@ export function getOnended(self: bigint): EventHandlerRecord {
 /**
  * `set-onended()` operation.
  */
-export function setOnended(self: bigint, value: EventHandlerRecord): void {
+export function setOnended(self: bigint, value: bigint): void {
   const obj = lookupMediaStreamTrack(self);
   (obj as any).onended = value;
 }
@@ -1015,7 +1018,7 @@ function lookupOptionMediaDevices(handle: bigint | undefined): MediaDevices | nu
 /**
  * `get-ondevicechange()` operation.
  */
-export function getOndevicechange(self: bigint): EventHandlerRecord {
+export function getOndevicechange(self: bigint): bigint {
   const obj = lookupMediaDevices(self);
   return (obj as any).ondevicechange;
 }
@@ -1023,7 +1026,7 @@ export function getOndevicechange(self: bigint): EventHandlerRecord {
 /**
  * `set-ondevicechange()` operation.
  */
-export function setOndevicechange(self: bigint, value: EventHandlerRecord): void {
+export function setOndevicechange(self: bigint, value: bigint): void {
   const obj = lookupMediaDevices(self);
   (obj as any).ondevicechange = value as any;
 }
@@ -1639,7 +1642,7 @@ export function getState(self: bigint): bigint {
 /**
  * `get-onstart()` operation.
  */
-export function MediaRecorderGetOnstart(self: bigint): EventHandlerRecord {
+export function MediaRecorderGetOnstart(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).onstart;
 }
@@ -1647,7 +1650,7 @@ export function MediaRecorderGetOnstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onstart()` operation.
  */
-export function MediaRecorderSetOnstart(self: bigint, value: EventHandlerRecord): void {
+export function MediaRecorderSetOnstart(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).onstart = value as any;
 }
@@ -1655,7 +1658,7 @@ export function MediaRecorderSetOnstart(self: bigint, value: EventHandlerRecord)
 /**
  * `get-onstop()` operation.
  */
-export function getOnstop(self: bigint): EventHandlerRecord {
+export function getOnstop(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).onstop;
 }
@@ -1663,7 +1666,7 @@ export function getOnstop(self: bigint): EventHandlerRecord {
 /**
  * `set-onstop()` operation.
  */
-export function setOnstop(self: bigint, value: EventHandlerRecord): void {
+export function setOnstop(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).onstop = value as any;
 }
@@ -1671,7 +1674,7 @@ export function setOnstop(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-ondataavailable()` operation.
  */
-export function getOndataavailable(self: bigint): EventHandlerRecord {
+export function getOndataavailable(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).ondataavailable;
 }
@@ -1679,7 +1682,7 @@ export function getOndataavailable(self: bigint): EventHandlerRecord {
 /**
  * `set-ondataavailable()` operation.
  */
-export function setOndataavailable(self: bigint, value: EventHandlerRecord): void {
+export function setOndataavailable(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).ondataavailable = value as any;
 }
@@ -1687,7 +1690,7 @@ export function setOndataavailable(self: bigint, value: EventHandlerRecord): voi
 /**
  * `get-onpause()` operation.
  */
-export function MediaRecorderGetOnpause(self: bigint): EventHandlerRecord {
+export function MediaRecorderGetOnpause(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).onpause;
 }
@@ -1695,7 +1698,7 @@ export function MediaRecorderGetOnpause(self: bigint): EventHandlerRecord {
 /**
  * `set-onpause()` operation.
  */
-export function MediaRecorderSetOnpause(self: bigint, value: EventHandlerRecord): void {
+export function MediaRecorderSetOnpause(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).onpause = value as any;
 }
@@ -1703,7 +1706,7 @@ export function MediaRecorderSetOnpause(self: bigint, value: EventHandlerRecord)
 /**
  * `get-onresume()` operation.
  */
-export function MediaRecorderGetOnresume(self: bigint): EventHandlerRecord {
+export function MediaRecorderGetOnresume(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).onresume;
 }
@@ -1711,7 +1714,7 @@ export function MediaRecorderGetOnresume(self: bigint): EventHandlerRecord {
 /**
  * `set-onresume()` operation.
  */
-export function MediaRecorderSetOnresume(self: bigint, value: EventHandlerRecord): void {
+export function MediaRecorderSetOnresume(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).onresume = value as any;
 }
@@ -1719,7 +1722,7 @@ export function MediaRecorderSetOnresume(self: bigint, value: EventHandlerRecord
 /**
  * `get-onerror()` operation.
  */
-export function MediaRecorderGetOnerror(self: bigint): EventHandlerRecord {
+export function MediaRecorderGetOnerror(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   return (obj as any).onerror;
 }
@@ -1727,7 +1730,7 @@ export function MediaRecorderGetOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function MediaRecorderSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function MediaRecorderSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupMediaRecorder(self);
   (obj as any).onerror = value as any;
 }
@@ -2064,7 +2067,7 @@ export function install(options: bigint): bigint {
 /**
  * `get-onaudiostart()` operation.
  */
-export function getOnaudiostart(self: bigint): EventHandlerRecord {
+export function getOnaudiostart(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onaudiostart;
 }
@@ -2072,7 +2075,7 @@ export function getOnaudiostart(self: bigint): EventHandlerRecord {
 /**
  * `set-onaudiostart()` operation.
  */
-export function setOnaudiostart(self: bigint, value: EventHandlerRecord): void {
+export function setOnaudiostart(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onaudiostart = value;
 }
@@ -2080,7 +2083,7 @@ export function setOnaudiostart(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onsoundstart()` operation.
  */
-export function getOnsoundstart(self: bigint): EventHandlerRecord {
+export function getOnsoundstart(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onsoundstart;
 }
@@ -2088,7 +2091,7 @@ export function getOnsoundstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onsoundstart()` operation.
  */
-export function setOnsoundstart(self: bigint, value: EventHandlerRecord): void {
+export function setOnsoundstart(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onsoundstart = value;
 }
@@ -2096,7 +2099,7 @@ export function setOnsoundstart(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onspeechstart()` operation.
  */
-export function getOnspeechstart(self: bigint): EventHandlerRecord {
+export function getOnspeechstart(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onspeechstart;
 }
@@ -2104,7 +2107,7 @@ export function getOnspeechstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onspeechstart()` operation.
  */
-export function setOnspeechstart(self: bigint, value: EventHandlerRecord): void {
+export function setOnspeechstart(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onspeechstart = value;
 }
@@ -2112,7 +2115,7 @@ export function setOnspeechstart(self: bigint, value: EventHandlerRecord): void 
 /**
  * `get-onspeechend()` operation.
  */
-export function getOnspeechend(self: bigint): EventHandlerRecord {
+export function getOnspeechend(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onspeechend;
 }
@@ -2120,7 +2123,7 @@ export function getOnspeechend(self: bigint): EventHandlerRecord {
 /**
  * `set-onspeechend()` operation.
  */
-export function setOnspeechend(self: bigint, value: EventHandlerRecord): void {
+export function setOnspeechend(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onspeechend = value;
 }
@@ -2128,7 +2131,7 @@ export function setOnspeechend(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onsoundend()` operation.
  */
-export function getOnsoundend(self: bigint): EventHandlerRecord {
+export function getOnsoundend(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onsoundend;
 }
@@ -2136,7 +2139,7 @@ export function getOnsoundend(self: bigint): EventHandlerRecord {
 /**
  * `set-onsoundend()` operation.
  */
-export function setOnsoundend(self: bigint, value: EventHandlerRecord): void {
+export function setOnsoundend(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onsoundend = value;
 }
@@ -2144,7 +2147,7 @@ export function setOnsoundend(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onaudioend()` operation.
  */
-export function getOnaudioend(self: bigint): EventHandlerRecord {
+export function getOnaudioend(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onaudioend;
 }
@@ -2152,7 +2155,7 @@ export function getOnaudioend(self: bigint): EventHandlerRecord {
 /**
  * `set-onaudioend()` operation.
  */
-export function setOnaudioend(self: bigint, value: EventHandlerRecord): void {
+export function setOnaudioend(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onaudioend = value;
 }
@@ -2160,7 +2163,7 @@ export function setOnaudioend(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onresult()` operation.
  */
-export function getOnresult(self: bigint): EventHandlerRecord {
+export function getOnresult(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onresult;
 }
@@ -2168,7 +2171,7 @@ export function getOnresult(self: bigint): EventHandlerRecord {
 /**
  * `set-onresult()` operation.
  */
-export function setOnresult(self: bigint, value: EventHandlerRecord): void {
+export function setOnresult(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onresult = value;
 }
@@ -2176,7 +2179,7 @@ export function setOnresult(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onnomatch()` operation.
  */
-export function getOnnomatch(self: bigint): EventHandlerRecord {
+export function getOnnomatch(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onnomatch;
 }
@@ -2184,7 +2187,7 @@ export function getOnnomatch(self: bigint): EventHandlerRecord {
 /**
  * `set-onnomatch()` operation.
  */
-export function setOnnomatch(self: bigint, value: EventHandlerRecord): void {
+export function setOnnomatch(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onnomatch = value;
 }
@@ -2192,7 +2195,7 @@ export function setOnnomatch(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onerror()` operation.
  */
-export function SpeechRecognitionGetOnerror(self: bigint): EventHandlerRecord {
+export function SpeechRecognitionGetOnerror(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onerror;
 }
@@ -2200,7 +2203,7 @@ export function SpeechRecognitionGetOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function SpeechRecognitionSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function SpeechRecognitionSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onerror = value;
 }
@@ -2208,7 +2211,7 @@ export function SpeechRecognitionSetOnerror(self: bigint, value: EventHandlerRec
 /**
  * `get-onstart()` operation.
  */
-export function SpeechRecognitionGetOnstart(self: bigint): EventHandlerRecord {
+export function SpeechRecognitionGetOnstart(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onstart;
 }
@@ -2216,7 +2219,7 @@ export function SpeechRecognitionGetOnstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onstart()` operation.
  */
-export function SpeechRecognitionSetOnstart(self: bigint, value: EventHandlerRecord): void {
+export function SpeechRecognitionSetOnstart(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onstart = value;
 }
@@ -2224,7 +2227,7 @@ export function SpeechRecognitionSetOnstart(self: bigint, value: EventHandlerRec
 /**
  * `get-onend()` operation.
  */
-export function SpeechRecognitionGetOnend(self: bigint): EventHandlerRecord {
+export function SpeechRecognitionGetOnend(self: bigint): bigint {
   const obj = lookupSpeechRecognition(self);
   return obj.onend;
 }
@@ -2232,7 +2235,7 @@ export function SpeechRecognitionGetOnend(self: bigint): EventHandlerRecord {
 /**
  * `set-onend()` operation.
  */
-export function SpeechRecognitionSetOnend(self: bigint, value: EventHandlerRecord): void {
+export function SpeechRecognitionSetOnend(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.onend = value;
 }
@@ -2685,7 +2688,7 @@ export function getPaused(self: bigint): boolean {
 /**
  * `get-onvoiceschanged()` operation.
  */
-export function getOnvoiceschanged(self: bigint): EventHandlerRecord {
+export function getOnvoiceschanged(self: bigint): bigint {
   const obj = lookupSpeechSynthesis(self);
   return (obj as any).onvoiceschanged;
 }
@@ -2693,7 +2696,7 @@ export function getOnvoiceschanged(self: bigint): EventHandlerRecord {
 /**
  * `set-onvoiceschanged()` operation.
  */
-export function setOnvoiceschanged(self: bigint, value: EventHandlerRecord): void {
+export function setOnvoiceschanged(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesis(self);
   (obj as any).onvoiceschanged = value as any;
 }
@@ -2859,7 +2862,7 @@ export function setPitch(self: bigint, value: number): void {
 /**
  * `get-onstart()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnstart(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnstart(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onstart;
 }
@@ -2867,7 +2870,7 @@ export function SpeechSynthesisUtteranceGetOnstart(self: bigint): EventHandlerRe
 /**
  * `set-onstart()` operation.
  */
-export function SpeechSynthesisUtteranceSetOnstart(self: bigint, value: EventHandlerRecord): void {
+export function SpeechSynthesisUtteranceSetOnstart(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onstart = value as any;
 }
@@ -2875,7 +2878,7 @@ export function SpeechSynthesisUtteranceSetOnstart(self: bigint, value: EventHan
 /**
  * `get-onend()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnend(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnend(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onend;
 }
@@ -2883,7 +2886,7 @@ export function SpeechSynthesisUtteranceGetOnend(self: bigint): EventHandlerReco
 /**
  * `set-onend()` operation.
  */
-export function SpeechSynthesisUtteranceSetOnend(self: bigint, value: EventHandlerRecord): void {
+export function SpeechSynthesisUtteranceSetOnend(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onend = value as any;
 }
@@ -2891,7 +2894,7 @@ export function SpeechSynthesisUtteranceSetOnend(self: bigint, value: EventHandl
 /**
  * `get-onerror()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnerror(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnerror(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onerror;
 }
@@ -2899,7 +2902,7 @@ export function SpeechSynthesisUtteranceGetOnerror(self: bigint): EventHandlerRe
 /**
  * `set-onerror()` operation.
  */
-export function SpeechSynthesisUtteranceSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function SpeechSynthesisUtteranceSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onerror = value as any;
 }
@@ -2907,7 +2910,7 @@ export function SpeechSynthesisUtteranceSetOnerror(self: bigint, value: EventHan
 /**
  * `get-onpause()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnpause(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnpause(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onpause;
 }
@@ -2915,7 +2918,7 @@ export function SpeechSynthesisUtteranceGetOnpause(self: bigint): EventHandlerRe
 /**
  * `set-onpause()` operation.
  */
-export function SpeechSynthesisUtteranceSetOnpause(self: bigint, value: EventHandlerRecord): void {
+export function SpeechSynthesisUtteranceSetOnpause(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onpause = value as any;
 }
@@ -2923,7 +2926,7 @@ export function SpeechSynthesisUtteranceSetOnpause(self: bigint, value: EventHan
 /**
  * `get-onresume()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnresume(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnresume(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onresume;
 }
@@ -2931,7 +2934,7 @@ export function SpeechSynthesisUtteranceGetOnresume(self: bigint): EventHandlerR
 /**
  * `set-onresume()` operation.
  */
-export function SpeechSynthesisUtteranceSetOnresume(self: bigint, value: EventHandlerRecord): void {
+export function SpeechSynthesisUtteranceSetOnresume(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onresume = value as any;
 }
@@ -2939,7 +2942,7 @@ export function SpeechSynthesisUtteranceSetOnresume(self: bigint, value: EventHa
 /**
  * `get-onmark()` operation.
  */
-export function getOnmark(self: bigint): EventHandlerRecord {
+export function getOnmark(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onmark;
 }
@@ -2947,7 +2950,7 @@ export function getOnmark(self: bigint): EventHandlerRecord {
 /**
  * `set-onmark()` operation.
  */
-export function setOnmark(self: bigint, value: EventHandlerRecord): void {
+export function setOnmark(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onmark = value as any;
 }
@@ -2955,7 +2958,7 @@ export function setOnmark(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onboundary()` operation.
  */
-export function getOnboundary(self: bigint): EventHandlerRecord {
+export function getOnboundary(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   return (obj as any).onboundary;
 }
@@ -2963,7 +2966,7 @@ export function getOnboundary(self: bigint): EventHandlerRecord {
 /**
  * `set-onboundary()` operation.
  */
-export function setOnboundary(self: bigint, value: EventHandlerRecord): void {
+export function setOnboundary(self: bigint, value: bigint): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   (obj as any).onboundary = value as any;
 }

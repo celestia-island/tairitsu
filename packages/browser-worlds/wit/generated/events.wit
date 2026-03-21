@@ -28,9 +28,8 @@ interface clipboard-change-event {
     /// Opaque handle to a host-side `ClipboardChangeEvent` instance.
     type clipboard-change-event-handle = u64;
 
-    /// `types` attribute — getter for clipboardData.types (FrozenArray<string>)
-    /// Note: This returns the event type as a single-element array for compatibility
-    get-types: func(self: clipboard-change-event-handle) -> string;
+    /// `types` attribute — getter.
+    get-types: func(self: clipboard-change-event-handle) -> list<string>;
 
     /// `changeId` attribute — getter.
     get-change-id: func(self: clipboard-change-event-handle) -> u64;

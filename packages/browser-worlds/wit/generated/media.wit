@@ -58,14 +58,14 @@ interface media-stream {
     get-active: func(self: media-stream-handle) -> bool;
 
     /// `onaddtrack` attribute — getter.
-    get-onaddtrack: func(self: media-stream-handle) -> event-handler-record;
+    get-onaddtrack: func(self: media-stream-handle) -> u64;
     /// `onaddtrack` attribute — setter.
-    set-onaddtrack: func(self: media-stream-handle, value: event-handler-record);
+    set-onaddtrack: func(self: media-stream-handle, value: u64);
 
     /// `onremovetrack` attribute — getter.
-    get-onremovetrack: func(self: media-stream-handle) -> event-handler-record;
+    get-onremovetrack: func(self: media-stream-handle) -> u64;
     /// `onremovetrack` attribute — setter.
-    set-onremovetrack: func(self: media-stream-handle, value: event-handler-record);
+    set-onremovetrack: func(self: media-stream-handle, value: u64);
 }
 
 /// WebIDL interface: `MediaStreamTrack`
@@ -93,22 +93,22 @@ interface media-stream-track {
     get-muted: func(self: media-stream-track-handle) -> bool;
 
     /// `onmute` attribute — getter.
-    get-onmute: func(self: media-stream-track-handle) -> event-handler-record;
+    get-onmute: func(self: media-stream-track-handle) -> u64;
     /// `onmute` attribute — setter.
-    set-onmute: func(self: media-stream-track-handle, value: event-handler-record);
+    set-onmute: func(self: media-stream-track-handle, value: u64);
 
     /// `onunmute` attribute — getter.
-    get-onunmute: func(self: media-stream-track-handle) -> event-handler-record;
+    get-onunmute: func(self: media-stream-track-handle) -> u64;
     /// `onunmute` attribute — setter.
-    set-onunmute: func(self: media-stream-track-handle, value: event-handler-record);
+    set-onunmute: func(self: media-stream-track-handle, value: u64);
 
     /// `readyState` attribute — getter.
     get-ready-state: func(self: media-stream-track-handle) -> u64;
 
     /// `onended` attribute — getter.
-    get-onended: func(self: media-stream-track-handle) -> event-handler-record;
+    get-onended: func(self: media-stream-track-handle) -> u64;
     /// `onended` attribute — setter.
-    set-onended: func(self: media-stream-track-handle, value: event-handler-record);
+    set-onended: func(self: media-stream-track-handle, value: u64);
 
     /// `clone()` operation.
     clone: func(self: media-stream-track-handle) -> u64;
@@ -159,9 +159,9 @@ interface media-devices {
     type media-devices-handle = u64;
 
     /// `ondevicechange` attribute — getter.
-    get-ondevicechange: func(self: media-devices-handle) -> event-handler-record;
+    get-ondevicechange: func(self: media-devices-handle) -> u64;
     /// `ondevicechange` attribute — setter.
-    set-ondevicechange: func(self: media-devices-handle, value: event-handler-record);
+    set-ondevicechange: func(self: media-devices-handle, value: u64);
 
     /// `enumerateDevices()` operation.
     enumerate-devices: func(self: media-devices-handle) -> u64;
@@ -318,34 +318,34 @@ interface media-recorder {
     get-state: func(self: media-recorder-handle) -> u64;
 
     /// `onstart` attribute — getter.
-    get-onstart: func(self: media-recorder-handle) -> event-handler-record;
+    get-onstart: func(self: media-recorder-handle) -> u64;
     /// `onstart` attribute — setter.
-    set-onstart: func(self: media-recorder-handle, value: event-handler-record);
+    set-onstart: func(self: media-recorder-handle, value: u64);
 
     /// `onstop` attribute — getter.
-    get-onstop: func(self: media-recorder-handle) -> event-handler-record;
+    get-onstop: func(self: media-recorder-handle) -> u64;
     /// `onstop` attribute — setter.
-    set-onstop: func(self: media-recorder-handle, value: event-handler-record);
+    set-onstop: func(self: media-recorder-handle, value: u64);
 
     /// `ondataavailable` attribute — getter.
-    get-ondataavailable: func(self: media-recorder-handle) -> event-handler-record;
+    get-ondataavailable: func(self: media-recorder-handle) -> u64;
     /// `ondataavailable` attribute — setter.
-    set-ondataavailable: func(self: media-recorder-handle, value: event-handler-record);
+    set-ondataavailable: func(self: media-recorder-handle, value: u64);
 
     /// `onpause` attribute — getter.
-    get-onpause: func(self: media-recorder-handle) -> event-handler-record;
+    get-onpause: func(self: media-recorder-handle) -> u64;
     /// `onpause` attribute — setter.
-    set-onpause: func(self: media-recorder-handle, value: event-handler-record);
+    set-onpause: func(self: media-recorder-handle, value: u64);
 
     /// `onresume` attribute — getter.
-    get-onresume: func(self: media-recorder-handle) -> event-handler-record;
+    get-onresume: func(self: media-recorder-handle) -> u64;
     /// `onresume` attribute — setter.
-    set-onresume: func(self: media-recorder-handle, value: event-handler-record);
+    set-onresume: func(self: media-recorder-handle, value: u64);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: media-recorder-handle) -> event-handler-record;
+    get-onerror: func(self: media-recorder-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: media-recorder-handle, value: event-handler-record);
+    set-onerror: func(self: media-recorder-handle, value: u64);
 
     /// `videoBitsPerSecond` attribute — getter.
     get-video-bits-per-second: func(self: media-recorder-handle) -> u32;
@@ -458,59 +458,59 @@ interface speech-recognition {
     install: func(options: u64) -> u64;
 
     /// `onaudiostart` attribute — getter.
-    get-onaudiostart: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onaudiostart: func(self: speech-recognition-handle) -> u64;
     /// `onaudiostart` attribute — setter.
-    set-onaudiostart: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onaudiostart: func(self: speech-recognition-handle, value: u64);
 
     /// `onsoundstart` attribute — getter.
-    get-onsoundstart: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onsoundstart: func(self: speech-recognition-handle) -> u64;
     /// `onsoundstart` attribute — setter.
-    set-onsoundstart: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onsoundstart: func(self: speech-recognition-handle, value: u64);
 
     /// `onspeechstart` attribute — getter.
-    get-onspeechstart: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onspeechstart: func(self: speech-recognition-handle) -> u64;
     /// `onspeechstart` attribute — setter.
-    set-onspeechstart: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onspeechstart: func(self: speech-recognition-handle, value: u64);
 
     /// `onspeechend` attribute — getter.
-    get-onspeechend: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onspeechend: func(self: speech-recognition-handle) -> u64;
     /// `onspeechend` attribute — setter.
-    set-onspeechend: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onspeechend: func(self: speech-recognition-handle, value: u64);
 
     /// `onsoundend` attribute — getter.
-    get-onsoundend: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onsoundend: func(self: speech-recognition-handle) -> u64;
     /// `onsoundend` attribute — setter.
-    set-onsoundend: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onsoundend: func(self: speech-recognition-handle, value: u64);
 
     /// `onaudioend` attribute — getter.
-    get-onaudioend: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onaudioend: func(self: speech-recognition-handle) -> u64;
     /// `onaudioend` attribute — setter.
-    set-onaudioend: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onaudioend: func(self: speech-recognition-handle, value: u64);
 
     /// `onresult` attribute — getter.
-    get-onresult: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onresult: func(self: speech-recognition-handle) -> u64;
     /// `onresult` attribute — setter.
-    set-onresult: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onresult: func(self: speech-recognition-handle, value: u64);
 
     /// `onnomatch` attribute — getter.
-    get-onnomatch: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onnomatch: func(self: speech-recognition-handle) -> u64;
     /// `onnomatch` attribute — setter.
-    set-onnomatch: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onnomatch: func(self: speech-recognition-handle, value: u64);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onerror: func(self: speech-recognition-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onerror: func(self: speech-recognition-handle, value: u64);
 
     /// `onstart` attribute — getter.
-    get-onstart: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onstart: func(self: speech-recognition-handle) -> u64;
     /// `onstart` attribute — setter.
-    set-onstart: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onstart: func(self: speech-recognition-handle, value: u64);
 
     /// `onend` attribute — getter.
-    get-onend: func(self: speech-recognition-handle) -> event-handler-record;
+    get-onend: func(self: speech-recognition-handle) -> u64;
     /// `onend` attribute — setter.
-    set-onend: func(self: speech-recognition-handle, value: event-handler-record);
+    set-onend: func(self: speech-recognition-handle, value: u64);
 }
 
 /// WebIDL interface: `SpeechRecognitionErrorEvent`
@@ -649,9 +649,9 @@ interface speech-synthesis {
     get-paused: func(self: speech-synthesis-handle) -> bool;
 
     /// `onvoiceschanged` attribute — getter.
-    get-onvoiceschanged: func(self: speech-synthesis-handle) -> event-handler-record;
+    get-onvoiceschanged: func(self: speech-synthesis-handle) -> u64;
     /// `onvoiceschanged` attribute — setter.
-    set-onvoiceschanged: func(self: speech-synthesis-handle, value: event-handler-record);
+    set-onvoiceschanged: func(self: speech-synthesis-handle, value: u64);
 
     /// `speak()` operation.
     speak: func(self: speech-synthesis-handle, utterance: u64);
@@ -707,39 +707,39 @@ interface speech-synthesis-utterance {
     set-pitch: func(self: speech-synthesis-utterance-handle, value: f32);
 
     /// `onstart` attribute — getter.
-    get-onstart: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onstart: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onstart` attribute — setter.
-    set-onstart: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onstart: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onend` attribute — getter.
-    get-onend: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onend: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onend` attribute — setter.
-    set-onend: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onend: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onerror` attribute — getter.
-    get-onerror: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onerror: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onerror` attribute — setter.
-    set-onerror: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onerror: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onpause` attribute — getter.
-    get-onpause: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onpause: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onpause` attribute — setter.
-    set-onpause: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onpause: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onresume` attribute — getter.
-    get-onresume: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onresume: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onresume` attribute — setter.
-    set-onresume: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onresume: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onmark` attribute — getter.
-    get-onmark: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onmark: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onmark` attribute — setter.
-    set-onmark: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onmark: func(self: speech-synthesis-utterance-handle, value: u64);
 
     /// `onboundary` attribute — getter.
-    get-onboundary: func(self: speech-synthesis-utterance-handle) -> event-handler-record;
+    get-onboundary: func(self: speech-synthesis-utterance-handle) -> u64;
     /// `onboundary` attribute — setter.
-    set-onboundary: func(self: speech-synthesis-utterance-handle, value: event-handler-record);
+    set-onboundary: func(self: speech-synthesis-utterance-handle, value: u64);
 }
 
 /// WebIDL interface: `SpeechSynthesisEvent`

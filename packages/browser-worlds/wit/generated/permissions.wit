@@ -34,9 +34,9 @@ interface permission-status {
     get-name: func(self: permission-status-handle) -> string;
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: permission-status-handle) -> event-handler-record;
+    get-onchange: func(self: permission-status-handle) -> u64;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: permission-status-handle, value: event-handler-record);
+    set-onchange: func(self: permission-status-handle, value: u64);
 }
 
 /// Browser permissions world — all 2 auto-generated interfaces.

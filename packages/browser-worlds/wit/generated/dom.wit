@@ -154,9 +154,9 @@ interface abort-signal {
     throw-if-aborted: func(self: abort-signal-handle);
 
     /// `onabort` attribute — getter.
-    get-onabort: func(self: abort-signal-handle) -> event-handler-record;
+    get-onabort: func(self: abort-signal-handle) -> u64;
     /// `onabort` attribute — setter.
-    set-onabort: func(self: abort-signal-handle, value: event-handler-record);
+    set-onabort: func(self: abort-signal-handle, value: u64);
 }
 
 /// WebIDL interface: `NonElementParentNode`
@@ -488,9 +488,9 @@ interface shadow-root {
     get-host: func(self: shadow-root-handle) -> u64;
 
     /// `onslotchange` attribute — getter.
-    get-onslotchange: func(self: shadow-root-handle) -> event-handler-record;
+    get-onslotchange: func(self: shadow-root-handle) -> u64;
     /// `onslotchange` attribute — setter.
-    set-onslotchange: func(self: shadow-root-handle, value: event-handler-record);
+    set-onslotchange: func(self: shadow-root-handle, value: u64);
 
     /// `setHTMLUnsafe()` operation.
     set-html-unsafe: func(self: shadow-root-handle, html: u64);

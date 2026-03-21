@@ -172,11 +172,11 @@ WEBIDL_TO_WIT: Dict[str, str] = {
     "CSSOMString": "string",
     "DOMHighResTimeStamp": "f64",
     "DOMTimeStamp": "u64",
-    # Event handler types - use record type with function signatures
-    "EventHandler": "event-handler-record",
-    "OnErrorEventHandler": "on-error-event-handler-record",
-    "OnBeforeUnloadEventHandler": "on-before-unload-event-handler-record",
-    "VoidFunction": "void-function-record",
+    # Event handler types - use u64 as opaque handles
+    "EventHandler": "u64",
+    "OnErrorEventHandler": "u64",
+    "OnBeforeUnloadEventHandler": "u64",
+    "VoidFunction": "u64",
     # Callback/function types that are handles (async callbacks, etc.)
     "Function": "u64",
     "MutationCallback": "u64",
@@ -597,15 +597,37 @@ def parse_webidl_file(
 # WIT generation
 # ---------------------------------------------------------------------------
 
+# Global singleton interfaces - these don't need self parameters
+# because they represent global browser objects (window, document, navigator)
+GLOBAL_SINGLETON_INTERFACES = {
+    "window",
+    "document", 
+    "navigator",
+    "location",
+    "history",
+    "screen",
+    "console",
+    "performance",
+    "storage",
+    "local-storage",
+    "session-storage",
+    "crypto",
+    "fetch",
+}
+
+
 def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
     """Render one WebIDL interface as a WIT interface block. Returns None if empty."""
     wit_name = sanitize_wit_ident(iface.name)
     handle_type = f"{wit_name}-handle"
+    is_singleton = iface.name.lower().replace("-", "") in {n.replace("-", "") for n in GLOBAL_SINGLETON_INTERFACES}
 
     lines: list[str] = []
     lines.append(f"/// WebIDL interface: `{iface.name}`")
     if iface.inheritance:
         lines.append(f"/// Inherits: `{iface.inheritance}`")
+    if is_singleton:
+        lines.append(f"/// Note: Global singleton - no self parameter needed")
     lines.append(
         f"/// Source: https://github.com/w3c/webref/tree/main/ed/idl/{iface.source_spec}.idl"
     )
@@ -619,7 +641,6 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
 
     for member in iface.members:
         if member.kind == "attribute":
-            # Use camel_to_kebab directly (no % prefix) so "get-type" stays valid.
             suffix = camel_to_kebab(member.name)
             getter = f"get-{suffix}"
             setter = f"set-{suffix}"
@@ -631,7 +652,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
             if getter not in emitted:
                 lines.append("")
                 lines.append(f"    /// `{member.name}` attribute — getter.")
-                if member.static:
+                if member.static or is_singleton:
                     lines.append(f"    {getter}: func() -> {wit_type};")
                 else:
                     lines.append(
@@ -642,7 +663,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
 
             if not member.readonly and setter not in emitted:
                 lines.append(f"    /// `{member.name}` attribute — setter.")
-                if member.static:
+                if member.static or is_singleton:
                     lines.append(f"    {setter}: func(value: {wit_type});")
                 else:
                     lines.append(
@@ -652,13 +673,12 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
 
         elif member.kind == "operation":
             op_name = sanitize_wit_ident(member.name)
-            # Skip constructors — object creation is handled at the host level.
             if op_name in ("%constructor", "constructor"):
                 continue
             ret_type = convert_type(member.idl_type)
 
             params: list[str] = []
-            if not member.static:
+            if not member.static and not is_singleton:
                 params.append(f"self: {handle_type}")
 
             for p in member.params:
@@ -686,7 +706,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
     lines.append("}")
 
     if not has_non_handle:
-        return None  # Don't emit empty (handle-only) interfaces
+        return None
 
     return "\n".join(lines)
 
@@ -932,6 +952,235 @@ def run_generate(
     if not dry_run and written > 0:
         print()
         log_info(f"Result : {written} files written, {skipped} skipped")
+
+        # Generate unified browser-full.wit
+        generate_full_world(output_dir, dry_run)
+
+
+def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
+    """
+    Generate a unified browser-full.wit that combines all domain worlds.
+    
+    This creates a single WIT file with package tairitsu-browser:full@0.2.0
+    that imports all domain-specific interfaces, allowing Rust code to use
+    a single world binding.
+    """
+    generated_dir = output_dir
+    if not generated_dir.exists():
+        log_warn("Cannot generate browser-full.wit: generated directory not found")
+        return
+    
+    # Collect all interfaces from all domain WIT files
+    all_interfaces: List[str] = []
+    seen_interface_names: Set[str] = set()
+    domain_files = sorted(generated_dir.glob("*.wit"))
+    
+    # Interfaces we define manually - skip these from collected interfaces
+    manual_interfaces = {"event-callbacks", "lifecycle", "event-target"}
+    
+    for domain_file in domain_files:
+        if domain_file.name == "browser-full.wit":
+            continue
+        
+        content = domain_file.read_text(encoding="utf-8")
+        
+        # Extract interface blocks (between "interface" and closing "}")
+        # Skip the world definition and package declaration
+        in_interface = False
+        brace_depth = 0
+        current_block: List[str] = []
+        
+        for line in content.split("\n"):
+            stripped = line.strip()
+            
+            # Skip package, world, and comments at file level
+            if stripped.startswith("package "):
+                continue
+            if stripped.startswith("/// ") and not in_interface:
+                continue
+            if stripped.startswith("world "):
+                break  # Stop at world definition
+            
+            # Track interface blocks
+            if stripped.startswith("interface "):
+                # Extract interface name
+                m = re.match(r"interface\s+([\w-]+)", stripped)
+                if m:
+                    iface_name = m.group(1)
+                    # Skip if we've seen this name before or it's a manual interface
+                    if iface_name in seen_interface_names or iface_name in manual_interfaces:
+                        in_interface = False
+                        current_block = []
+                        continue
+                    seen_interface_names.add(iface_name)
+                
+                in_interface = True
+                current_block = [line]
+                brace_depth = line.count("{") - line.count("}")
+                continue
+            
+            if in_interface:
+                current_block.append(line)
+                brace_depth += line.count("{") - line.count("}")
+                
+                if brace_depth == 0:
+                    all_interfaces.append("\n".join(current_block))
+                    in_interface = False
+                    current_block = []
+    
+    if not all_interfaces:
+        log_warn("No interfaces found to include in browser-full.wit")
+        return
+    
+    # Build the unified WIT file
+    header = """/// Unified browser world — combines all auto-generated domain interfaces.
+///
+/// Generated by: scripts/generate_browser_wit.py
+/// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
+///
+/// All browser objects are represented as opaque u64 handles.
+/// Regenerate with: just wit-gen
+///
+/// Status: auto-generated (Phase A) — review before use in production
+package tairitsu-browser:full@0.2.0;
+
+"""
+    
+    # Event callbacks interface (exported to host)
+    event_callbacks = """/// Event callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when DOM events fire.
+interface event-callbacks {
+    /// Opaque listener identifier returned by add-event-listener.
+    type listener-id = u64;
+    /// Opaque event handle for prevent-default/stop-propagation.
+    type event-handle = u64;
+
+    /// Mouse event data structure.
+    record mouse-event-data {
+        client-x: f64,
+        client-y: f64,
+        offset-x: f64,
+        offset-y: f64,
+        button: u8,
+        buttons: u8,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    /// Keyboard event data structure.
+    record keyboard-event-data {
+        key: string,
+        code: string,
+        key-code: u32,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+        repeat: bool,
+    }
+
+    /// Focus event data structure.
+    record focus-event-data {
+        related-target: option<u64>,
+    }
+
+    /// Input event data structure.
+    record input-event-data {
+        data: option<string>,
+        input-type: string,
+    }
+
+    /// Called when a mouse event fires on a registered listener.
+    on-mouse-event: func(listener-id: listener-id, event: event-handle, data: mouse-event-data);
+    /// Called when a keyboard event fires on a registered listener.
+    on-keyboard-event: func(listener-id: listener-id, event: event-handle, data: keyboard-event-data);
+    /// Called when a focus event fires on a registered listener.
+    on-focus-event: func(listener-id: listener-id, event: event-handle, data: focus-event-data);
+    /// Called when an input event fires on a registered listener.
+    on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
+    /// Called for any other event type.
+    on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
+}
+
+/// Component lifecycle interface - implemented by the component.
+interface lifecycle {
+    /// Called by the host after the component is instantiated.
+    /// This is the entry point for the component's main logic.
+    start: func() -> result<_, string>;
+}
+
+/// Console interface for logging.
+interface console {
+    /// Log a message to the console.
+    log: func(message: string);
+    /// Log a warning to the console.
+    warn: func(message: string);
+    /// Log an error to the console.
+    error: func(message: string);
+}
+
+/// Event target interface for adding/removing event listeners.
+interface event-target {
+    /// Add an event listener to a target node.
+    /// Returns a listener-id that can be used to remove the listener.
+    add-event-listener: func(target: u64, event-type: string, use-capture: bool) -> result<u64, string>;
+    /// Remove a previously registered event listener.
+    remove-event-listener: func(target: u64, listener-id: u64) -> result<_, string>;
+    /// Prevent the default action for this event.
+    prevent-default: func(event: u64);
+    /// Stop the event from propagating further.
+    stop-propagation: func(event: u64);
+}
+
+/// Style interface - convenience wrapper for CSS operations.
+/// This is a simplified interface for the most common style operations.
+interface style {
+    /// Set a CSS property on an element.
+    set-style-property: func(element: u64, property: string, value: string) -> result<_, string>;
+    /// Get a CSS property value from an element.
+    get-style-property: func(element: u64, property: string) -> option<string>;
+    /// Remove a CSS property from an element.
+    remove-style-property: func(element: u64, property: string) -> result<_, string>;
+}
+
+"""
+    
+    # Collect import interface names (already filtered for duplicates)
+    import_interface_names = list(seen_interface_names)
+    # Sort for consistent output
+    import_interface_names.sort()
+    
+    # Add special interfaces (including style wrapper and console)
+    all_interface_names = import_interface_names + ["event-callbacks", "lifecycle", "event-target", "style", "console"]
+    
+    world_imports = "\n".join(f"    import {name};" for name in import_interface_names)
+    world_exports = """    export event-callbacks;
+    export lifecycle;"""
+    
+    world_block = f"""
+/// Full browser world — all {len(all_interface_names)} auto-generated interfaces.
+world browser-full {{
+{world_imports}
+    import event-target;
+    import style;
+    import console;
+{world_exports}
+}}
+"""
+    
+    full_content = header + event_callbacks + "\n\n".join(all_interfaces) + "\n" + world_block + "\n"
+    
+    dest = output_dir.parent / "browser-full.wit"
+    
+    if dry_run:
+        log_info(f"dry-run write {dest.name} ({len(all_interface_names)} interfaces, {len(full_content):,} bytes)")
+        return
+    
+    dest.write_text(full_content, encoding="utf-8")
+    log_ok(f"Wrote {dest.name:<30} {len(all_interface_names):3d} interfaces ({len(full_content):,} bytes)")
 
 
 # ---------------------------------------------------------------------------

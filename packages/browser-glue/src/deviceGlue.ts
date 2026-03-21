@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -822,7 +825,7 @@ export function getLevel(self: bigint): number {
 /**
  * `get-onchargingchange()` operation.
  */
-export function getOnchargingchange(self: bigint): EventHandlerRecord {
+export function getOnchargingchange(self: bigint): bigint {
   const obj = lookupBatteryManager(self);
   return obj.onchargingchange;
 }
@@ -830,7 +833,7 @@ export function getOnchargingchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchargingchange()` operation.
  */
-export function setOnchargingchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchargingchange(self: bigint, value: bigint): void {
   const obj = lookupBatteryManager(self);
   obj.onchargingchange = value;
 }
@@ -838,7 +841,7 @@ export function setOnchargingchange(self: bigint, value: EventHandlerRecord): vo
 /**
  * `get-onchargingtimechange()` operation.
  */
-export function getOnchargingtimechange(self: bigint): EventHandlerRecord {
+export function getOnchargingtimechange(self: bigint): bigint {
   const obj = lookupBatteryManager(self);
   return obj.onchargingtimechange;
 }
@@ -846,7 +849,7 @@ export function getOnchargingtimechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchargingtimechange()` operation.
  */
-export function setOnchargingtimechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchargingtimechange(self: bigint, value: bigint): void {
   const obj = lookupBatteryManager(self);
   obj.onchargingtimechange = value;
 }
@@ -854,7 +857,7 @@ export function setOnchargingtimechange(self: bigint, value: EventHandlerRecord)
 /**
  * `get-ondischargingtimechange()` operation.
  */
-export function getOndischargingtimechange(self: bigint): EventHandlerRecord {
+export function getOndischargingtimechange(self: bigint): bigint {
   const obj = lookupBatteryManager(self);
   return obj.ondischargingtimechange;
 }
@@ -862,7 +865,7 @@ export function getOndischargingtimechange(self: bigint): EventHandlerRecord {
 /**
  * `set-ondischargingtimechange()` operation.
  */
-export function setOndischargingtimechange(self: bigint, value: EventHandlerRecord): void {
+export function setOndischargingtimechange(self: bigint, value: bigint): void {
   const obj = lookupBatteryManager(self);
   obj.ondischargingtimechange = value;
 }
@@ -870,7 +873,7 @@ export function setOndischargingtimechange(self: bigint, value: EventHandlerReco
 /**
  * `get-onlevelchange()` operation.
  */
-export function getOnlevelchange(self: bigint): EventHandlerRecord {
+export function getOnlevelchange(self: bigint): bigint {
   const obj = lookupBatteryManager(self);
   return obj.onlevelchange;
 }
@@ -878,7 +881,7 @@ export function getOnlevelchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onlevelchange()` operation.
  */
-export function setOnlevelchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnlevelchange(self: bigint, value: bigint): void {
   const obj = lookupBatteryManager(self);
   obj.onlevelchange = value;
 }
@@ -1211,7 +1214,7 @@ function lookupOptionWindowEventrs(handle: bigint | undefined): WindowEventHandl
 /**
  * `get-ongamepadconnected()` operation.
  */
-export function getOngamepadconnected(self: bigint): EventHandlerRecord {
+export function getOngamepadconnected(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).ongamepadconnected;
 }
@@ -1219,7 +1222,7 @@ export function getOngamepadconnected(self: bigint): EventHandlerRecord {
 /**
  * `set-ongamepadconnected()` operation.
  */
-export function setOngamepadconnected(self: bigint, value: EventHandlerRecord): void {
+export function setOngamepadconnected(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).ongamepadconnected = value as any;
 }
@@ -1227,7 +1230,7 @@ export function setOngamepadconnected(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-ongamepaddisconnected()` operation.
  */
-export function getOngamepaddisconnected(self: bigint): EventHandlerRecord {
+export function getOngamepaddisconnected(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).ongamepaddisconnected;
 }
@@ -1235,7 +1238,7 @@ export function getOngamepaddisconnected(self: bigint): EventHandlerRecord {
 /**
  * `set-ongamepaddisconnected()` operation.
  */
-export function setOngamepaddisconnected(self: bigint, value: EventHandlerRecord): void {
+export function setOngamepaddisconnected(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).ongamepaddisconnected = value as any;
 }
@@ -1243,7 +1246,7 @@ export function setOngamepaddisconnected(self: bigint, value: EventHandlerRecord
 /**
  * `get-onafterprint()` operation.
  */
-export function getOnafterprint(self: bigint): EventHandlerRecord {
+export function getOnafterprint(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onafterprint;
 }
@@ -1251,7 +1254,7 @@ export function getOnafterprint(self: bigint): EventHandlerRecord {
 /**
  * `set-onafterprint()` operation.
  */
-export function setOnafterprint(self: bigint, value: EventHandlerRecord): void {
+export function setOnafterprint(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onafterprint = value;
 }
@@ -1259,7 +1262,7 @@ export function setOnafterprint(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onbeforeprint()` operation.
  */
-export function getOnbeforeprint(self: bigint): EventHandlerRecord {
+export function getOnbeforeprint(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onbeforeprint;
 }
@@ -1267,7 +1270,7 @@ export function getOnbeforeprint(self: bigint): EventHandlerRecord {
 /**
  * `set-onbeforeprint()` operation.
  */
-export function setOnbeforeprint(self: bigint, value: EventHandlerRecord): void {
+export function setOnbeforeprint(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onbeforeprint = value;
 }
@@ -1275,7 +1278,7 @@ export function setOnbeforeprint(self: bigint, value: EventHandlerRecord): void 
 /**
  * `get-onbeforeunload()` operation.
  */
-export function getOnbeforeunload(self: bigint): OnBeforeUnloadEventHandlerRecord {
+export function getOnbeforeunload(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onbeforeunload;
 }
@@ -1283,7 +1286,7 @@ export function getOnbeforeunload(self: bigint): OnBeforeUnloadEventHandlerRecor
 /**
  * `set-onbeforeunload()` operation.
  */
-export function setOnbeforeunload(self: bigint, value: OnBeforeUnloadEventHandlerRecord): void {
+export function setOnbeforeunload(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onbeforeunload = value;
 }
@@ -1291,7 +1294,7 @@ export function setOnbeforeunload(self: bigint, value: OnBeforeUnloadEventHandle
 /**
  * `get-onhashchange()` operation.
  */
-export function getOnhashchange(self: bigint): EventHandlerRecord {
+export function getOnhashchange(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onhashchange;
 }
@@ -1299,7 +1302,7 @@ export function getOnhashchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onhashchange()` operation.
  */
-export function setOnhashchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnhashchange(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onhashchange = value;
 }
@@ -1307,7 +1310,7 @@ export function setOnhashchange(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onlanguagechange()` operation.
  */
-export function getOnlanguagechange(self: bigint): EventHandlerRecord {
+export function getOnlanguagechange(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onlanguagechange;
 }
@@ -1315,7 +1318,7 @@ export function getOnlanguagechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onlanguagechange()` operation.
  */
-export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnlanguagechange(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onlanguagechange = value;
 }
@@ -1323,7 +1326,7 @@ export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): vo
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onmessage;
 }
@@ -1331,7 +1334,7 @@ export function getOnmessage(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessage()` operation.
  */
-export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessage(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onmessage = value;
 }
@@ -1339,7 +1342,7 @@ export function setOnmessage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessageerror()` operation.
  */
-export function getOnmessageerror(self: bigint): EventHandlerRecord {
+export function getOnmessageerror(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onmessageerror;
 }
@@ -1347,7 +1350,7 @@ export function getOnmessageerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onmessageerror()` operation.
  */
-export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onmessageerror = value;
 }
@@ -1355,7 +1358,7 @@ export function setOnmessageerror(self: bigint, value: EventHandlerRecord): void
 /**
  * `get-onoffline()` operation.
  */
-export function getOnoffline(self: bigint): EventHandlerRecord {
+export function getOnoffline(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onoffline;
 }
@@ -1363,7 +1366,7 @@ export function getOnoffline(self: bigint): EventHandlerRecord {
 /**
  * `set-onoffline()` operation.
  */
-export function setOnoffline(self: bigint, value: EventHandlerRecord): void {
+export function setOnoffline(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onoffline = value;
 }
@@ -1371,7 +1374,7 @@ export function setOnoffline(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-ononline()` operation.
  */
-export function getOnonline(self: bigint): EventHandlerRecord {
+export function getOnonline(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).ononline;
 }
@@ -1379,7 +1382,7 @@ export function getOnonline(self: bigint): EventHandlerRecord {
 /**
  * `set-ononline()` operation.
  */
-export function setOnonline(self: bigint, value: EventHandlerRecord): void {
+export function setOnonline(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).ononline = value;
 }
@@ -1387,7 +1390,7 @@ export function setOnonline(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onpagehide()` operation.
  */
-export function getOnpagehide(self: bigint): EventHandlerRecord {
+export function getOnpagehide(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onpagehide;
 }
@@ -1395,7 +1398,7 @@ export function getOnpagehide(self: bigint): EventHandlerRecord {
 /**
  * `set-onpagehide()` operation.
  */
-export function setOnpagehide(self: bigint, value: EventHandlerRecord): void {
+export function setOnpagehide(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpagehide = value;
 }
@@ -1403,7 +1406,7 @@ export function setOnpagehide(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onpagereveal()` operation.
  */
-export function getOnpagereveal(self: bigint): EventHandlerRecord {
+export function getOnpagereveal(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onpagereveal;
 }
@@ -1411,7 +1414,7 @@ export function getOnpagereveal(self: bigint): EventHandlerRecord {
 /**
  * `set-onpagereveal()` operation.
  */
-export function setOnpagereveal(self: bigint, value: EventHandlerRecord): void {
+export function setOnpagereveal(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpagereveal = value as any;
 }
@@ -1419,7 +1422,7 @@ export function setOnpagereveal(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onpageshow()` operation.
  */
-export function getOnpageshow(self: bigint): EventHandlerRecord {
+export function getOnpageshow(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onpageshow;
 }
@@ -1427,7 +1430,7 @@ export function getOnpageshow(self: bigint): EventHandlerRecord {
 /**
  * `set-onpageshow()` operation.
  */
-export function setOnpageshow(self: bigint, value: EventHandlerRecord): void {
+export function setOnpageshow(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpageshow = value;
 }
@@ -1435,7 +1438,7 @@ export function setOnpageshow(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onpageswap()` operation.
  */
-export function getOnpageswap(self: bigint): EventHandlerRecord {
+export function getOnpageswap(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onpageswap;
 }
@@ -1443,7 +1446,7 @@ export function getOnpageswap(self: bigint): EventHandlerRecord {
 /**
  * `set-onpageswap()` operation.
  */
-export function setOnpageswap(self: bigint, value: EventHandlerRecord): void {
+export function setOnpageswap(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpageswap = value;
 }
@@ -1451,7 +1454,7 @@ export function setOnpageswap(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onpopstate()` operation.
  */
-export function getOnpopstate(self: bigint): EventHandlerRecord {
+export function getOnpopstate(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onpopstate;
 }
@@ -1459,7 +1462,7 @@ export function getOnpopstate(self: bigint): EventHandlerRecord {
 /**
  * `set-onpopstate()` operation.
  */
-export function setOnpopstate(self: bigint, value: EventHandlerRecord): void {
+export function setOnpopstate(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onpopstate = value;
 }
@@ -1467,7 +1470,7 @@ export function setOnpopstate(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onrejectionhandled()` operation.
  */
-export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
+export function getOnrejectionhandled(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onrejectionhandled;
 }
@@ -1475,7 +1478,7 @@ export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
 /**
  * `set-onrejectionhandled()` operation.
  */
-export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): void {
+export function setOnrejectionhandled(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onrejectionhandled = value;
 }
@@ -1483,7 +1486,7 @@ export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onstorage()` operation.
  */
-export function getOnstorage(self: bigint): EventHandlerRecord {
+export function getOnstorage(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onstorage;
 }
@@ -1491,7 +1494,7 @@ export function getOnstorage(self: bigint): EventHandlerRecord {
 /**
  * `set-onstorage()` operation.
  */
-export function setOnstorage(self: bigint, value: EventHandlerRecord): void {
+export function setOnstorage(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onstorage = value;
 }
@@ -1499,7 +1502,7 @@ export function setOnstorage(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onunhandledrejection()` operation.
  */
-export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
+export function getOnunhandledrejection(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onunhandledrejection;
 }
@@ -1507,7 +1510,7 @@ export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
 /**
  * `set-onunhandledrejection()` operation.
  */
-export function setOnunhandledrejection(self: bigint, value: EventHandlerRecord): void {
+export function setOnunhandledrejection(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onunhandledrejection = value;
 }
@@ -1515,7 +1518,7 @@ export function setOnunhandledrejection(self: bigint, value: EventHandlerRecord)
 /**
  * `get-onunload()` operation.
  */
-export function getOnunload(self: bigint): EventHandlerRecord {
+export function getOnunload(self: bigint): bigint {
   const obj = lookupWindowEventrs(self);
   return (obj as any).onunload;
 }
@@ -1523,7 +1526,7 @@ export function getOnunload(self: bigint): EventHandlerRecord {
 /**
  * `set-onunload()` operation.
  */
-export function setOnunload(self: bigint, value: EventHandlerRecord): void {
+export function setOnunload(self: bigint, value: bigint): void {
   const obj = lookupWindowEventrs(self);
   (obj as any).onunload = value;
 }
@@ -1851,7 +1854,7 @@ export function getAngle(self: bigint): bigint {
 /**
  * `get-onchange()` operation.
  */
-export function getOnchange(self: bigint): EventHandlerRecord {
+export function getOnchange(self: bigint): bigint {
   const obj = lookupScreenOrientation(self);
   return (obj as any).onchange;
 }
@@ -1859,7 +1862,7 @@ export function getOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function setOnchange(self: bigint, value: EventHandlerRecord): void {
+export function setOnchange(self: bigint, value: bigint): void {
   const obj = lookupScreenOrientation(self);
   (obj as any).onchange = value as any;
 }

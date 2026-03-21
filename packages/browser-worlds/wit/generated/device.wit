@@ -11,49 +11,50 @@
 package tairitsu-browser:device@0.2.0;
 
 /// WebIDL interface: `Navigator`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/battery-status.idl
 interface navigator {
     /// Opaque handle to a host-side `Navigator` instance.
     type navigator-handle = u64;
 
     /// `getBattery()` operation.
-    get-battery: func(self: navigator-handle) -> u64;
+    get-battery: func() -> u64;
 
     /// `clipboard` attribute — getter.
-    get-clipboard: func(self: navigator-handle) -> u64;
+    get-clipboard: func() -> u64;
 
     /// `credentials` attribute — getter.
-    get-credentials: func(self: navigator-handle) -> u64;
+    get-credentials: func() -> u64;
 
     /// `getGamepads()` operation.
-    get-gamepads: func(self: navigator-handle) -> list<option<u64>>;
+    get-gamepads: func() -> list<option<u64>>;
 
     /// `geolocation` attribute — getter.
-    get-geolocation: func(self: navigator-handle) -> u64;
+    get-geolocation: func() -> u64;
 
     /// `userActivation` attribute — getter.
-    get-user-activation: func(self: navigator-handle) -> u64;
+    get-user-activation: func() -> u64;
 
     /// `mediaCapabilities` attribute — getter.
-    get-media-capabilities: func(self: navigator-handle) -> u64;
+    get-media-capabilities: func() -> u64;
 
     /// `mediaDevices` attribute — getter.
-    get-media-devices: func(self: navigator-handle) -> u64;
+    get-media-devices: func() -> u64;
 
     /// `mediaSession` attribute — getter.
-    get-media-session: func(self: navigator-handle) -> u64;
+    get-media-session: func() -> u64;
 
     /// `permissions` attribute — getter.
-    get-permissions: func(self: navigator-handle) -> u64;
+    get-permissions: func() -> u64;
 
     /// `maxTouchPoints` attribute — getter.
-    get-max-touch-points: func(self: navigator-handle) -> s32;
+    get-max-touch-points: func() -> s32;
 
     /// `serviceWorker` attribute — getter.
-    get-service-worker: func(self: navigator-handle) -> u64;
+    get-service-worker: func() -> u64;
 
     /// `vibrate()` operation.
-    vibrate: func(self: navigator-handle, pattern: u64) -> bool;
+    vibrate: func(pattern: u64) -> bool;
 }
 
 /// WebIDL interface: `BatteryManager`
@@ -76,24 +77,24 @@ interface battery-manager {
     get-level: func(self: battery-manager-handle) -> f64;
 
     /// `onchargingchange` attribute — getter.
-    get-onchargingchange: func(self: battery-manager-handle) -> event-handler-record;
+    get-onchargingchange: func(self: battery-manager-handle) -> u64;
     /// `onchargingchange` attribute — setter.
-    set-onchargingchange: func(self: battery-manager-handle, value: event-handler-record);
+    set-onchargingchange: func(self: battery-manager-handle, value: u64);
 
     /// `onchargingtimechange` attribute — getter.
-    get-onchargingtimechange: func(self: battery-manager-handle) -> event-handler-record;
+    get-onchargingtimechange: func(self: battery-manager-handle) -> u64;
     /// `onchargingtimechange` attribute — setter.
-    set-onchargingtimechange: func(self: battery-manager-handle, value: event-handler-record);
+    set-onchargingtimechange: func(self: battery-manager-handle, value: u64);
 
     /// `ondischargingtimechange` attribute — getter.
-    get-ondischargingtimechange: func(self: battery-manager-handle) -> event-handler-record;
+    get-ondischargingtimechange: func(self: battery-manager-handle) -> u64;
     /// `ondischargingtimechange` attribute — setter.
-    set-ondischargingtimechange: func(self: battery-manager-handle, value: event-handler-record);
+    set-ondischargingtimechange: func(self: battery-manager-handle, value: u64);
 
     /// `onlevelchange` attribute — getter.
-    get-onlevelchange: func(self: battery-manager-handle) -> event-handler-record;
+    get-onlevelchange: func(self: battery-manager-handle) -> u64;
     /// `onlevelchange` attribute — setter.
-    set-onlevelchange: func(self: battery-manager-handle, value: event-handler-record);
+    set-onlevelchange: func(self: battery-manager-handle, value: u64);
 }
 
 /// WebIDL interface: `Gamepad`
@@ -180,104 +181,104 @@ interface window-event-handlers {
     type window-event-handlers-handle = u64;
 
     /// `ongamepadconnected` attribute — getter.
-    get-ongamepadconnected: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-ongamepadconnected: func(self: window-event-handlers-handle) -> u64;
     /// `ongamepadconnected` attribute — setter.
-    set-ongamepadconnected: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-ongamepadconnected: func(self: window-event-handlers-handle, value: u64);
 
     /// `ongamepaddisconnected` attribute — getter.
-    get-ongamepaddisconnected: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-ongamepaddisconnected: func(self: window-event-handlers-handle) -> u64;
     /// `ongamepaddisconnected` attribute — setter.
-    set-ongamepaddisconnected: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-ongamepaddisconnected: func(self: window-event-handlers-handle, value: u64);
 
     /// `onafterprint` attribute — getter.
-    get-onafterprint: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onafterprint: func(self: window-event-handlers-handle) -> u64;
     /// `onafterprint` attribute — setter.
-    set-onafterprint: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onafterprint: func(self: window-event-handlers-handle, value: u64);
 
     /// `onbeforeprint` attribute — getter.
-    get-onbeforeprint: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onbeforeprint: func(self: window-event-handlers-handle) -> u64;
     /// `onbeforeprint` attribute — setter.
-    set-onbeforeprint: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onbeforeprint: func(self: window-event-handlers-handle, value: u64);
 
     /// `onbeforeunload` attribute — getter.
-    get-onbeforeunload: func(self: window-event-handlers-handle) -> on-before-unload-event-handler-record;
+    get-onbeforeunload: func(self: window-event-handlers-handle) -> u64;
     /// `onbeforeunload` attribute — setter.
-    set-onbeforeunload: func(self: window-event-handlers-handle, value: on-before-unload-event-handler-record);
+    set-onbeforeunload: func(self: window-event-handlers-handle, value: u64);
 
     /// `onhashchange` attribute — getter.
-    get-onhashchange: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onhashchange: func(self: window-event-handlers-handle) -> u64;
     /// `onhashchange` attribute — setter.
-    set-onhashchange: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onhashchange: func(self: window-event-handlers-handle, value: u64);
 
     /// `onlanguagechange` attribute — getter.
-    get-onlanguagechange: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onlanguagechange: func(self: window-event-handlers-handle) -> u64;
     /// `onlanguagechange` attribute — setter.
-    set-onlanguagechange: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onlanguagechange: func(self: window-event-handlers-handle, value: u64);
 
     /// `onmessage` attribute — getter.
-    get-onmessage: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onmessage: func(self: window-event-handlers-handle) -> u64;
     /// `onmessage` attribute — setter.
-    set-onmessage: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onmessage: func(self: window-event-handlers-handle, value: u64);
 
     /// `onmessageerror` attribute — getter.
-    get-onmessageerror: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onmessageerror: func(self: window-event-handlers-handle) -> u64;
     /// `onmessageerror` attribute — setter.
-    set-onmessageerror: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onmessageerror: func(self: window-event-handlers-handle, value: u64);
 
     /// `onoffline` attribute — getter.
-    get-onoffline: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onoffline: func(self: window-event-handlers-handle) -> u64;
     /// `onoffline` attribute — setter.
-    set-onoffline: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onoffline: func(self: window-event-handlers-handle, value: u64);
 
     /// `ononline` attribute — getter.
-    get-ononline: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-ononline: func(self: window-event-handlers-handle) -> u64;
     /// `ononline` attribute — setter.
-    set-ononline: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-ononline: func(self: window-event-handlers-handle, value: u64);
 
     /// `onpagehide` attribute — getter.
-    get-onpagehide: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onpagehide: func(self: window-event-handlers-handle) -> u64;
     /// `onpagehide` attribute — setter.
-    set-onpagehide: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onpagehide: func(self: window-event-handlers-handle, value: u64);
 
     /// `onpagereveal` attribute — getter.
-    get-onpagereveal: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onpagereveal: func(self: window-event-handlers-handle) -> u64;
     /// `onpagereveal` attribute — setter.
-    set-onpagereveal: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onpagereveal: func(self: window-event-handlers-handle, value: u64);
 
     /// `onpageshow` attribute — getter.
-    get-onpageshow: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onpageshow: func(self: window-event-handlers-handle) -> u64;
     /// `onpageshow` attribute — setter.
-    set-onpageshow: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onpageshow: func(self: window-event-handlers-handle, value: u64);
 
     /// `onpageswap` attribute — getter.
-    get-onpageswap: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onpageswap: func(self: window-event-handlers-handle) -> u64;
     /// `onpageswap` attribute — setter.
-    set-onpageswap: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onpageswap: func(self: window-event-handlers-handle, value: u64);
 
     /// `onpopstate` attribute — getter.
-    get-onpopstate: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onpopstate: func(self: window-event-handlers-handle) -> u64;
     /// `onpopstate` attribute — setter.
-    set-onpopstate: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onpopstate: func(self: window-event-handlers-handle, value: u64);
 
     /// `onrejectionhandled` attribute — getter.
-    get-onrejectionhandled: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onrejectionhandled: func(self: window-event-handlers-handle) -> u64;
     /// `onrejectionhandled` attribute — setter.
-    set-onrejectionhandled: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onrejectionhandled: func(self: window-event-handlers-handle, value: u64);
 
     /// `onstorage` attribute — getter.
-    get-onstorage: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onstorage: func(self: window-event-handlers-handle) -> u64;
     /// `onstorage` attribute — setter.
-    set-onstorage: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onstorage: func(self: window-event-handlers-handle, value: u64);
 
     /// `onunhandledrejection` attribute — getter.
-    get-onunhandledrejection: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onunhandledrejection: func(self: window-event-handlers-handle) -> u64;
     /// `onunhandledrejection` attribute — setter.
-    set-onunhandledrejection: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onunhandledrejection: func(self: window-event-handlers-handle, value: u64);
 
     /// `onunload` attribute — getter.
-    get-onunload: func(self: window-event-handlers-handle) -> event-handler-record;
+    get-onunload: func(self: window-event-handlers-handle) -> u64;
     /// `onunload` attribute — setter.
-    set-onunload: func(self: window-event-handlers-handle, value: event-handler-record);
+    set-onunload: func(self: window-event-handlers-handle, value: u64);
 }
 
 /// WebIDL interface: `Geolocation`
@@ -376,9 +377,9 @@ interface screen-orientation {
     get-angle: func(self: screen-orientation-handle) -> u16;
 
     /// `onchange` attribute — getter.
-    get-onchange: func(self: screen-orientation-handle) -> event-handler-record;
+    get-onchange: func(self: screen-orientation-handle) -> u64;
     /// `onchange` attribute — setter.
-    set-onchange: func(self: screen-orientation-handle, value: event-handler-record);
+    set-onchange: func(self: screen-orientation-handle, value: u64);
 }
 
 /// Browser device world — all 12 auto-generated interfaces.

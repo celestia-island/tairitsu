@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -258,6 +261,10 @@ let _nextCrypto = 1n;
 const _documentHandles = new Map<bigint, Document>();
 let _nextDocument = 1n;
 
+/** Handle table for event-handler values */
+const _eventHandlerHandles = new Map<bigint, EventHandler>();
+let _nextEventHandler = 1n;
+
 /** Handle table for headers values */
 const _headersHandles = new Map<bigint, Headers>();
 let _nextHeaders = 1n;
@@ -389,6 +396,23 @@ function lookupOptionDocument(handle: bigint | undefined): Document | null {
     return null;
   }
   return _documentHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-handler value by handle. */
+function lookupEventHandler(handle: bigint): EventHandler {
+  const obj = _eventHandlerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-handler handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-handler value by handle. */
+function lookupOptionEventHandler(handle: bigint | undefined): EventHandler | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventHandlerHandles.get(handle) ?? null;
 }
 
 /** Lookup a headers value by handle. */
@@ -1432,7 +1456,7 @@ export function clearInterval(self: bigint, id: number | undefined): void {
 /**
  * `queue-microtask()` operation.
  */
-export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void {
+export function queueMicrotask(self: bigint, callback: bigint): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.queueMicrotask(callback as any);
 }
@@ -2733,113 +2757,141 @@ function lookupOptionXMLHttpRequestEventTarget(handle: bigint | undefined): XMLH
 /**
  * `get-onloadstart()` operation.
  */
-export function getOnloadstart(self: bigint): EventHandlerRecord {
+export function getOnloadstart(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onloadstart;
+  const handler = obj.onloadstart;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onloadstart()` operation.
  */
-export function setOnloadstart(self: bigint, value: EventHandlerRecord): void {
+export function setOnloadstart(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onloadstart = value;
+  obj.onloadstart = value as any;
 }
 
 /**
  * `get-onprogress()` operation.
  */
-export function getOnprogress(self: bigint): EventHandlerRecord {
+export function getOnprogress(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onprogress;
+  const handler = obj.onprogress;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onprogress()` operation.
  */
-export function setOnprogress(self: bigint, value: EventHandlerRecord): void {
+export function setOnprogress(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onprogress = value;
+  obj.onprogress = value as any;
 }
 
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): EventHandlerRecord {
+export function getOnabort(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onabort;
+  const handler = obj.onabort;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: EventHandlerRecord): void {
+export function setOnabort(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onabort = value;
+  obj.onabort = value as any;
 }
 
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): EventHandlerRecord {
+export function getOnerror(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onerror;
+  const handler = obj.onerror;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnerror(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onerror = value;
+  obj.onerror = value as any;
 }
 
 /**
  * `get-onload()` operation.
  */
-export function getOnload(self: bigint): EventHandlerRecord {
+export function getOnload(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onload;
+  const handler = obj.onload;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onload()` operation.
  */
-export function setOnload(self: bigint, value: EventHandlerRecord): void {
+export function setOnload(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onload = value;
+  obj.onload = value as any;
 }
 
 /**
  * `get-ontimeout()` operation.
  */
-export function getOntimeout(self: bigint): EventHandlerRecord {
+export function getOntimeout(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.ontimeout;
+  const handler = obj.ontimeout;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ontimeout()` operation.
  */
-export function setOntimeout(self: bigint, value: EventHandlerRecord): void {
+export function setOntimeout(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.ontimeout = value;
+  obj.ontimeout = value as any;
 }
 
 /**
  * `get-onloadend()` operation.
  */
-export function getOnloadend(self: bigint): EventHandlerRecord {
+export function getOnloadend(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  return obj.onloadend;
+  const handler = obj.onloadend;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onloadend()` operation.
  */
-export function setOnloadend(self: bigint, value: EventHandlerRecord): void {
+export function setOnloadend(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
-  obj.onloadend = value;
+  obj.onloadend = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -2872,17 +2924,21 @@ function lookupOptionXMLHttpRequest(handle: bigint | undefined): XMLHttpRequest 
 /**
  * `get-onreadystatechange()` operation.
  */
-export function getOnreadystatechange(self: bigint): EventHandlerRecord {
+export function getOnreadystatechange(self: bigint): bigint {
   const obj = lookupXMLHttpRequest(self);
-  return obj.onreadystatechange;
+  const handler = obj.onreadystatechange;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onreadystatechange()` operation.
  */
-export function setOnreadystatechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnreadystatechange(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequest(self);
-  obj.onreadystatechange = value;
+  obj.onreadystatechange = value as any;
 }
 
 /**

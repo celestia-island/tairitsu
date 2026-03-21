@@ -31,6 +31,7 @@ from .config import (
     ENUM_PROPERTIES,
     NUMBER_TO_BIGINT_PROPERTIES,
     BOOLEAN_TO_BIGINT_PROPERTIES,
+    EVENT_HANDLER_PROPERTIES,
     INTERFACE_ATTR_OVERRIDES,
 )
 from .models import (
@@ -112,7 +113,7 @@ class WitParser:
             
             params.append(GeneratedParam(param_name, ts_type, wit_type_str, needs_lookup, target_pascal, p.name))
 
-            if i == 0:
+            if i == 0 and not is_global_singleton:
                 self_param = param_name
             
             if i > 0:
@@ -212,6 +213,11 @@ class WitParser:
                     ts_return = "bigint | undefined"
                 else:
                     ts_return = "bigint"
+                ts_return_inner = ""
+            
+            # Check for EVENT_HANDLER_PROPERTIES
+            if num_key in EVENT_HANDLER_PROPERTIES:
+                ts_return = "bigint"
                 ts_return_inner = ""
         elif is_setter:
             attr_name = wit_name[4:]

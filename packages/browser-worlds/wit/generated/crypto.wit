@@ -11,19 +11,20 @@
 package tairitsu-browser:crypto@0.2.0;
 
 /// WebIDL interface: `Crypto`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/webcrypto.idl
 interface crypto {
     /// Opaque handle to a host-side `Crypto` instance.
     type crypto-handle = u64;
 
     /// `subtle` attribute — getter.
-    get-subtle: func(self: crypto-handle) -> u64;
+    get-subtle: func() -> u64;
 
     /// `getRandomValues()` operation.
-    get-random-values: func(self: crypto-handle, array: list<u8>) -> list<u8>;
+    get-random-values: func(array: list<u8>) -> list<u8>;
 
     /// `randomUUID()` operation.
-    random-uuid: func(self: crypto-handle) -> string;
+    random-uuid: func() -> string;
 }
 
 /// WebIDL interface: `CryptoKey`

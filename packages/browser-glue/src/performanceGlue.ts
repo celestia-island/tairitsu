@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -299,56 +302,40 @@ function lookupOptionPerformanceEntryList(handle: bigint | undefined): Performan
 /** Type alias */
 export type PerformanceHandle = bigint;
 
-/** Handle table for Performance instances */
-const _performanceHandles = new Map<bigint, Performance>();
-let _nextPerformance = 1n;
+/** Handle for global singleton Performance (fixed to 0n). */
+const _Performance_HANDLE = 0n;
 
-/** Lookup a Performance by handle, throwing if not found. */
-function lookupPerformance(handle: bigint): Performance {
-  const obj = _performanceHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Performance handle ${handle} not found`);
-  }
-  return obj!;
+/** Get the global Performance object. */
+function getGlobalPerformance(): Performance {
+  return window.performance;
 }
 
-/** Lookup an optional Performance by handle. */
-function lookupOptionPerformance(handle: bigint | undefined): Performance | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _performanceHandles.get(handle) ?? null;
-}
 /**
  * `now()` operation.
  */
-export function now(self: bigint): number {
-  const obj = lookupPerformance(self);
-  return obj.now();
+export function now(): number {
+  return window.performance.now();
 }
 
 /**
  * `get-time-origin()` operation.
  */
-export function getTimeOrigin(self: bigint): bigint {
-  const obj = lookupPerformance(self);
-  return BigInt(obj.timeOrigin);
+export function getTimeOrigin(): bigint {
+  return BigInt(window.performance.timeOrigin);
 }
 
 /**
  * `to-json()` operation.
  */
-export function PerformanceToJson(self: bigint): bigint {
-  const obj = lookupPerformance(self);
-  return obj.toJSON();
+export function PerformanceToJson(): bigint {
+  return window.performance.toJSON();
 }
 
 /**
  * `get-timing()` operation.
  */
-export function getTiming(self: bigint): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.timing;
+export function getTiming(): bigint {
+  const _callResult = window.performance.timing;
   const handle = _nextPerformanceTiming++;
   _performanceTiminghandles.set(handle, _callResult);
   return handle;
@@ -357,9 +344,8 @@ export function getTiming(self: bigint): bigint {
 /**
  * `get-navigation()` operation.
  */
-export function getNavigation(self: bigint): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.navigation;
+export function getNavigation(): bigint {
+  const _callResult = window.performance.navigation;
   const handle = _nextPerformanceNavigation++;
   _performanceNavigationhandles.set(handle, _callResult);
   return handle;
@@ -368,9 +354,8 @@ export function getNavigation(self: bigint): bigint {
 /**
  * `get-entries()` operation.
  */
-export function PerformanceGetEntries(self: bigint): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = (obj as any).getEntries();
+export function PerformanceGetEntries(): bigint {
+  const _callResult = (window.performance as any).getEntries();
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
   return handle;
@@ -379,9 +364,8 @@ export function PerformanceGetEntries(self: bigint): bigint {
 /**
  * `get-entries-by-type()` operation.
  */
-export function PerformanceGetEntriesByType(self: bigint, type: string): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.getEntriesByType(type);
+export function PerformanceGetEntriesByType(type: string): bigint {
+  const _callResult = window.performance.getEntriesByType(type);
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
   return handle;
@@ -390,9 +374,8 @@ export function PerformanceGetEntriesByType(self: bigint, type: string): bigint 
 /**
  * `get-entries-by-name()` operation.
  */
-export function PerformanceGetEntriesByName(self: bigint, name: string, type: string | undefined): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.getEntriesByName(name, type as any);
+export function PerformanceGetEntriesByName(name: string, type: string | undefined): bigint {
+  const _callResult = window.performance.getEntriesByName(name, type as any);
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
   return handle;
@@ -401,41 +384,36 @@ export function PerformanceGetEntriesByName(self: bigint, name: string, type: st
 /**
  * `clear-resource-timings()` operation.
  */
-export function clearResourceTimings(self: bigint): void {
-  const obj = lookupPerformance(self);
-  obj.clearResourceTimings();
+export function clearResourceTimings(): void {
+  window.performance.clearResourceTimings();
 }
 
 /**
  * `set-resource-timing-buffer-size()` operation.
  */
-export function setResourceTimingBufferSize(self: bigint, maxSize: number): void {
-  const obj = lookupPerformance(self);
-  obj.setResourceTimingBufferSize(Number(maxSize));
+export function setResourceTimingBufferSize(maxSize: number): void {
+  window.performance.setResourceTimingBufferSize(Number(maxSize));
 }
 
 /**
  * `get-onresourcetimingbufferfull()` operation.
  */
-export function getOnresourcetimingbufferfull(self: bigint): EventHandlerRecord {
-  const obj = lookupPerformance(self);
-  return (obj as any).onresourcetimingbufferfull;
+export function getOnresourcetimingbufferfull(): bigint {
+  return (window.performance as any).onresourcetimingbufferfull;
 }
 
 /**
  * `set-onresourcetimingbufferfull()` operation.
  */
-export function setOnresourcetimingbufferfull(self: bigint, value: EventHandlerRecord): void {
-  const obj = lookupPerformance(self);
-  (obj as any).onresourcetimingbufferfull = value as any;
+export function setOnresourcetimingbufferfull(value: bigint): void {
+  (window.performance as any).onresourcetimingbufferfull = value as any;
 }
 
 /**
  * `mark()` operation.
  */
-export function mark(self: bigint, markName: string, markOptions: bigint | undefined): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.mark(markName, markOptions as any);
+export function mark(markName: string, markOptions: bigint | undefined): bigint {
+  const _callResult = window.performance.mark(markName, markOptions as any);
   const handle = _nextPerformanceMark++;
   _performanceMarkhandles.set(handle, _callResult);
   return handle;
@@ -444,17 +422,15 @@ export function mark(self: bigint, markName: string, markOptions: bigint | undef
 /**
  * `clear-marks()` operation.
  */
-export function clearMarks(self: bigint, markName: string | undefined): void {
-  const obj = lookupPerformance(self);
-  obj.clearMarks(markName as any);
+export function clearMarks(markName: string | undefined): void {
+  window.performance.clearMarks(markName as any);
 }
 
 /**
  * `measure()` operation.
  */
-export function measure(self: bigint, measureName: string, startOrMeasureOptions: string | undefined, endMark: string | undefined): bigint {
-  const obj = lookupPerformance(self);
-  const _callResult = obj.measure(measureName, startOrMeasureOptions as any, endMark);
+export function measure(measureName: string, startOrMeasureOptions: string | undefined, endMark: string | undefined): bigint {
+  const _callResult = window.performance.measure(measureName, startOrMeasureOptions as any, endMark);
   const handle = _nextPerformanceMeasure++;
   _performanceMeasurehandles.set(handle, _callResult);
   return handle;
@@ -463,9 +439,8 @@ export function measure(self: bigint, measureName: string, startOrMeasureOptions
 /**
  * `clear-measures()` operation.
  */
-export function clearMeasures(self: bigint, measureName: string | undefined): void {
-  const obj = lookupPerformance(self);
-  obj.clearMeasures(measureName as any);
+export function clearMeasures(measureName: string | undefined): void {
+  window.performance.clearMeasures(measureName as any);
 }
 
 // ---------------------------------------------------------------------------

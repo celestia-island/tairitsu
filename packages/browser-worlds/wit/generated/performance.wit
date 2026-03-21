@@ -12,57 +12,58 @@ package tairitsu-browser:performance@0.2.0;
 
 /// WebIDL interface: `Performance`
 /// Inherits: `EventTarget`
+/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/hr-time.idl
 interface performance {
     /// Opaque handle to a host-side `Performance` instance.
     type performance-handle = u64;
 
     /// `now()` operation.
-    now: func(self: performance-handle) -> f64;
+    now: func() -> f64;
 
     /// `timeOrigin` attribute — getter.
-    get-time-origin: func(self: performance-handle) -> f64;
+    get-time-origin: func() -> f64;
 
     /// `toJSON()` operation.
-    to-json: func(self: performance-handle) -> u64;
+    to-json: func() -> u64;
 
     /// `timing` attribute — getter.
-    get-timing: func(self: performance-handle) -> u64;
+    get-timing: func() -> u64;
 
     /// `navigation` attribute — getter.
-    get-navigation: func(self: performance-handle) -> u64;
+    get-navigation: func() -> u64;
 
     /// `getEntries()` operation.
-    get-entries: func(self: performance-handle) -> u64;
+    get-entries: func() -> u64;
 
     /// `getEntriesByType()` operation.
-    get-entries-by-type: func(self: performance-handle, %type: string) -> u64;
+    get-entries-by-type: func(%type: string) -> u64;
 
     /// `getEntriesByName()` operation.
-    get-entries-by-name: func(self: performance-handle, name: string, %type: option<string>) -> u64;
+    get-entries-by-name: func(name: string, %type: option<string>) -> u64;
 
     /// `clearResourceTimings()` operation.
-    clear-resource-timings: func(self: performance-handle);
+    clear-resource-timings: func();
 
     /// `setResourceTimingBufferSize()` operation.
-    set-resource-timing-buffer-size: func(self: performance-handle, max-size: u32);
+    set-resource-timing-buffer-size: func(max-size: u32);
 
     /// `onresourcetimingbufferfull` attribute — getter.
-    get-onresourcetimingbufferfull: func(self: performance-handle) -> event-handler-record;
+    get-onresourcetimingbufferfull: func() -> u64;
     /// `onresourcetimingbufferfull` attribute — setter.
-    set-onresourcetimingbufferfull: func(self: performance-handle, value: event-handler-record);
+    set-onresourcetimingbufferfull: func(value: u64);
 
     /// `mark()` operation.
-    mark: func(self: performance-handle, mark-name: string, mark-options: option<u64>) -> u64;
+    mark: func(mark-name: string, mark-options: option<u64>) -> u64;
 
     /// `clearMarks()` operation.
-    clear-marks: func(self: performance-handle, mark-name: option<string>);
+    clear-marks: func(mark-name: option<string>);
 
     /// `measure()` operation.
-    measure: func(self: performance-handle, measure-name: string, start-or-measure-options: option<string>, end-mark: option<string>) -> u64;
+    measure: func(measure-name: string, start-or-measure-options: option<string>, end-mark: option<string>) -> u64;
 
     /// `clearMeasures()` operation.
-    clear-measures: func(self: performance-handle, measure-name: option<string>);
+    clear-measures: func(measure-name: option<string>);
 }
 
 /// WebIDL interface: `PerformanceNavigationTiming`

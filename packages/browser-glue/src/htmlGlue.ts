@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -293,6 +296,10 @@ let _nextElement = 1n;
 /** Handle table for element-list values */
 const _elementListHandles = new Map<bigint, Element[]>();
 let _nextElementList = 1n;
+
+/** Handle table for event-handler values */
+const _eventHandlerHandles = new Map<bigint, EventHandler>();
+let _nextEventHandler = 1n;
 
 /** Handle table for event-target values */
 const _eventTargetHandles = new Map<bigint, EventTarget>();
@@ -706,6 +713,23 @@ function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
     return null;
   }
   return _elementListHandles.get(handle) ?? null;
+}
+
+/** Lookup a event-handler value by handle. */
+function lookupEventHandler(handle: bigint): EventHandler {
+  const obj = _eventHandlerHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`event-handler handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional event-handler value by handle. */
+function lookupOptionEventHandler(handle: bigint | undefined): EventHandler | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _eventHandlerHandles.get(handle) ?? null;
 }
 
 /** Lookup a event-target value by handle. */
@@ -5633,7 +5657,7 @@ export function AudioTrackListGetTrackById(self: bigint, id: string): bigint | u
 /**
  * `get-onchange()` operation.
  */
-export function AudioTrackListGetOnchange(self: bigint): EventHandlerRecord {
+export function AudioTrackListGetOnchange(self: bigint): bigint {
   const obj = lookupAudioTrackList(self);
   return obj.onchange;
 }
@@ -5641,7 +5665,7 @@ export function AudioTrackListGetOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function AudioTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+export function AudioTrackListSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupAudioTrackList(self);
   obj.onchange = value;
 }
@@ -5649,7 +5673,7 @@ export function AudioTrackListSetOnchange(self: bigint, value: EventHandlerRecor
 /**
  * `get-onaddtrack()` operation.
  */
-export function AudioTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+export function AudioTrackListGetOnaddtrack(self: bigint): bigint {
   const obj = lookupAudioTrackList(self);
   return obj.onaddtrack;
 }
@@ -5657,7 +5681,7 @@ export function AudioTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onaddtrack()` operation.
  */
-export function AudioTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+export function AudioTrackListSetOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupAudioTrackList(self);
   obj.onaddtrack = value;
 }
@@ -5665,7 +5689,7 @@ export function AudioTrackListSetOnaddtrack(self: bigint, value: EventHandlerRec
 /**
  * `get-onremovetrack()` operation.
  */
-export function AudioTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+export function AudioTrackListGetOnremovetrack(self: bigint): bigint {
   const obj = lookupAudioTrackList(self);
   return obj.onremovetrack;
 }
@@ -5673,7 +5697,7 @@ export function AudioTrackListGetOnremovetrack(self: bigint): EventHandlerRecord
 /**
  * `set-onremovetrack()` operation.
  */
-export function AudioTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+export function AudioTrackListSetOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupAudioTrackList(self);
   obj.onremovetrack = value;
 }
@@ -5815,7 +5839,7 @@ export function VideoTrackListGetSelectedIndex(self: bigint): number {
 /**
  * `get-onchange()` operation.
  */
-export function VideoTrackListGetOnchange(self: bigint): EventHandlerRecord {
+export function VideoTrackListGetOnchange(self: bigint): bigint {
   const obj = lookupVideoTrackList(self);
   return obj.onchange;
 }
@@ -5823,7 +5847,7 @@ export function VideoTrackListGetOnchange(self: bigint): EventHandlerRecord {
 /**
  * `set-onchange()` operation.
  */
-export function VideoTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+export function VideoTrackListSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupVideoTrackList(self);
   obj.onchange = value;
 }
@@ -5831,7 +5855,7 @@ export function VideoTrackListSetOnchange(self: bigint, value: EventHandlerRecor
 /**
  * `get-onaddtrack()` operation.
  */
-export function VideoTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+export function VideoTrackListGetOnaddtrack(self: bigint): bigint {
   const obj = lookupVideoTrackList(self);
   return obj.onaddtrack;
 }
@@ -5839,7 +5863,7 @@ export function VideoTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onaddtrack()` operation.
  */
-export function VideoTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+export function VideoTrackListSetOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupVideoTrackList(self);
   obj.onaddtrack = value;
 }
@@ -5847,7 +5871,7 @@ export function VideoTrackListSetOnaddtrack(self: bigint, value: EventHandlerRec
 /**
  * `get-onremovetrack()` operation.
  */
-export function VideoTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+export function VideoTrackListGetOnremovetrack(self: bigint): bigint {
   const obj = lookupVideoTrackList(self);
   return obj.onremovetrack;
 }
@@ -5855,7 +5879,7 @@ export function VideoTrackListGetOnremovetrack(self: bigint): EventHandlerRecord
 /**
  * `set-onremovetrack()` operation.
  */
-export function VideoTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+export function VideoTrackListSetOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupVideoTrackList(self);
   obj.onremovetrack = value;
 }
@@ -5976,49 +6000,61 @@ export function TextTrackListGetTrackById(self: bigint, id: string): bigint | un
 /**
  * `get-onchange()` operation.
  */
-export function TextTrackListGetOnchange(self: bigint): EventHandlerRecord {
+export function TextTrackListGetOnchange(self: bigint): bigint {
   const obj = lookupTextTrackList(self);
-  return obj.onchange;
+  const handler = obj.onchange;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onchange()` operation.
  */
-export function TextTrackListSetOnchange(self: bigint, value: EventHandlerRecord): void {
+export function TextTrackListSetOnchange(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onchange = value;
+  obj.onchange = value as any;
 }
 
 /**
  * `get-onaddtrack()` operation.
  */
-export function TextTrackListGetOnaddtrack(self: bigint): EventHandlerRecord {
+export function TextTrackListGetOnaddtrack(self: bigint): bigint {
   const obj = lookupTextTrackList(self);
-  return obj.onaddtrack;
+  const handler = obj.onaddtrack;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onaddtrack()` operation.
  */
-export function TextTrackListSetOnaddtrack(self: bigint, value: EventHandlerRecord): void {
+export function TextTrackListSetOnaddtrack(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onaddtrack = value;
+  obj.onaddtrack = value as any;
 }
 
 /**
  * `get-onremovetrack()` operation.
  */
-export function TextTrackListGetOnremovetrack(self: bigint): EventHandlerRecord {
+export function TextTrackListGetOnremovetrack(self: bigint): bigint {
   const obj = lookupTextTrackList(self);
-  return obj.onremovetrack;
+  const handler = obj.onremovetrack;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onremovetrack()` operation.
  */
-export function TextTrackListSetOnremovetrack(self: bigint, value: EventHandlerRecord): void {
+export function TextTrackListSetOnremovetrack(self: bigint, value: bigint): void {
   const obj = lookupTextTrackList(self);
-  obj.onremovetrack = value;
+  obj.onremovetrack = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -6148,17 +6184,21 @@ export function removeCue(self: bigint, cue: bigint): void {
 /**
  * `get-oncuechange()` operation.
  */
-export function getOncuechange(self: bigint): EventHandlerRecord {
+export function getOncuechange(self: bigint): bigint {
   const obj = lookupTextTrack(self);
-  return obj.oncuechange;
+  const handler = obj.oncuechange;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-oncuechange()` operation.
  */
-export function setOncuechange(self: bigint, value: EventHandlerRecord): void {
+export function setOncuechange(self: bigint, value: bigint): void {
   const obj = lookupTextTrack(self);
-  obj.oncuechange = value;
+  obj.oncuechange = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -6282,33 +6322,41 @@ export function setPauseOnExit(self: bigint, value: boolean): void {
 /**
  * `get-onenter()` operation.
  */
-export function getOnenter(self: bigint): EventHandlerRecord {
+export function getOnenter(self: bigint): bigint {
   const obj = lookupTextTrackCue(self);
-  return obj.onenter;
+  const handler = obj.onenter;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onenter()` operation.
  */
-export function setOnenter(self: bigint, value: EventHandlerRecord): void {
+export function setOnenter(self: bigint, value: bigint): void {
   const obj = lookupTextTrackCue(self);
-  obj.onenter = value;
+  obj.onenter = value as any;
 }
 
 /**
  * `get-onexit()` operation.
  */
-export function getOnexit(self: bigint): EventHandlerRecord {
+export function getOnexit(self: bigint): bigint {
   const obj = lookupTextTrackCue(self);
-  return obj.onexit;
+  const handler = obj.onexit;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onexit()` operation.
  */
-export function setOnexit(self: bigint, value: EventHandlerRecord): void {
+export function setOnexit(self: bigint, value: bigint): void {
   const obj = lookupTextTrackCue(self);
-  obj.onexit = value;
+  obj.onexit = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -13380,33 +13428,41 @@ export function pollConvertToBlob(requestId: bigint): { ok: true; value: bigint 
 /**
  * `get-oncontextlost()` operation.
  */
-export function getOncontextlost(self: bigint): EventHandlerRecord {
+export function getOncontextlost(self: bigint): bigint {
   const obj = lookupOffscreenCanvas(self);
-  return obj.oncontextlost;
+  const handler = obj.oncontextlost;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-oncontextlost()` operation.
  */
-export function setOncontextlost(self: bigint, value: EventHandlerRecord): void {
+export function setOncontextlost(self: bigint, value: bigint): void {
   const obj = lookupOffscreenCanvas(self);
-  obj.oncontextlost = value;
+  obj.oncontextlost = value as any;
 }
 
 /**
  * `get-oncontextrestored()` operation.
  */
-export function getOncontextrestored(self: bigint): EventHandlerRecord {
+export function getOncontextrestored(self: bigint): bigint {
   const obj = lookupOffscreenCanvas(self);
-  return obj.oncontextrestored;
+  const handler = obj.oncontextrestored;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-oncontextrestored()` operation.
  */
-export function setOncontextrestored(self: bigint, value: EventHandlerRecord): void {
+export function setOncontextrestored(self: bigint, value: bigint): void {
   const obj = lookupOffscreenCanvas(self);
-  obj.oncontextrestored = value;
+  obj.oncontextrestored = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -14009,7 +14065,7 @@ export function destroy(self: bigint): void {
 /**
  * `get-oncancel()` operation.
  */
-export function getOncancel(self: bigint): EventHandlerRecord {
+export function getOncancel(self: bigint): bigint {
   const obj = lookupCloseWatcher(self);
   return (obj as any).oncancel;
 }
@@ -14017,7 +14073,7 @@ export function getOncancel(self: bigint): EventHandlerRecord {
 /**
  * `set-oncancel()` operation.
  */
-export function setOncancel(self: bigint, value: EventHandlerRecord): void {
+export function setOncancel(self: bigint, value: bigint): void {
   const obj = lookupCloseWatcher(self);
   (obj as any).oncancel = value;
 }
@@ -14025,7 +14081,7 @@ export function setOncancel(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onclose()` operation.
  */
-export function CloseWatcherGetOnclose(self: bigint): EventHandlerRecord {
+export function CloseWatcherGetOnclose(self: bigint): bigint {
   const obj = lookupCloseWatcher(self);
   return (obj as any).onclose;
 }
@@ -14033,7 +14089,7 @@ export function CloseWatcherGetOnclose(self: bigint): EventHandlerRecord {
 /**
  * `set-onclose()` operation.
  */
-export function CloseWatcherSetOnclose(self: bigint, value: EventHandlerRecord): void {
+export function CloseWatcherSetOnclose(self: bigint, value: bigint): void {
   const obj = lookupCloseWatcher(self);
   (obj as any).onclose = value;
 }
@@ -14477,32 +14533,19 @@ export function getVisible(self: bigint): boolean {
 /** Type alias */
 export type LocationHandle = bigint;
 
-/** Handle table for Location instances */
-const _locationHandles = new Map<bigint, Location>();
-let _nextLocation = 1n;
+/** Handle for global singleton Location (fixed to 0n). */
+const _Location_HANDLE = 0n;
 
-/** Lookup a Location by handle, throwing if not found. */
-function lookupLocation(handle: bigint): Location {
-  const obj = _locationHandles.get(handle);
-  if (!obj) {
-    throw new Error(`Location handle ${handle} not found`);
-  }
-  return obj!;
+/** Get the global Location object. */
+function getGlobalLocation(): Location {
+  return window.location;
 }
 
-/** Lookup an optional Location by handle. */
-function lookupOptionLocation(handle: bigint | undefined): Location | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _locationHandles.get(handle) ?? null;
-}
 /**
  * `get-href()` operation.
  */
-export function LocationGetHref(self: bigint): bigint {
-  const obj = lookupLocation(self);
-  const value = obj.href;
+export function LocationGetHref(): bigint {
+  const value = window.location.href;
   switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
@@ -14512,165 +14555,145 @@ export function LocationGetHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function LocationSetHref(self: bigint, value: bigint): void {
-  const obj = lookupLocation(self);
+export function LocationSetHref(value: bigint): void {
   const _enumInput = value;
   let enumValue: LocationHref | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.href = enumValue as any;
+  window.location.href = enumValue as any;
 }
 
 /**
  * `get-origin()` operation.
  */
-export function LocationGetOrigin(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.origin;
+export function LocationGetOrigin(): string {
+  return window.location.origin;
 }
 
 /**
  * `get-protocol()` operation.
  */
-export function LocationGetProtocol(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.protocol;
+export function LocationGetProtocol(): string {
+  return window.location.protocol;
 }
 
 /**
  * `set-protocol()` operation.
  */
-export function LocationSetProtocol(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.protocol = value;
+export function LocationSetProtocol(value: string): void {
+  window.location.protocol = value;
 }
 
 /**
  * `get-host()` operation.
  */
-export function LocationGetHost(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.host;
+export function LocationGetHost(): string {
+  return window.location.host;
 }
 
 /**
  * `set-host()` operation.
  */
-export function LocationSetHost(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.host = value;
+export function LocationSetHost(value: string): void {
+  window.location.host = value;
 }
 
 /**
  * `get-hostname()` operation.
  */
-export function LocationGetHostname(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.hostname;
+export function LocationGetHostname(): string {
+  return window.location.hostname;
 }
 
 /**
  * `set-hostname()` operation.
  */
-export function LocationSetHostname(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.hostname = value;
+export function LocationSetHostname(value: string): void {
+  window.location.hostname = value;
 }
 
 /**
  * `get-port()` operation.
  */
-export function LocationGetPort(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.port;
+export function LocationGetPort(): string {
+  return window.location.port;
 }
 
 /**
  * `set-port()` operation.
  */
-export function LocationSetPort(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.port = value;
+export function LocationSetPort(value: string): void {
+  window.location.port = value;
 }
 
 /**
  * `get-pathname()` operation.
  */
-export function LocationGetPathname(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.pathname;
+export function LocationGetPathname(): string {
+  return window.location.pathname;
 }
 
 /**
  * `set-pathname()` operation.
  */
-export function LocationSetPathname(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.pathname = value;
+export function LocationSetPathname(value: string): void {
+  window.location.pathname = value;
 }
 
 /**
  * `get-search()` operation.
  */
-export function LocationGetSearch(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.search;
+export function LocationGetSearch(): string {
+  return window.location.search;
 }
 
 /**
  * `set-search()` operation.
  */
-export function LocationSetSearch(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.search = value;
+export function LocationSetSearch(value: string): void {
+  window.location.search = value;
 }
 
 /**
  * `get-hash()` operation.
  */
-export function LocationGetHash(self: bigint): string {
-  const obj = lookupLocation(self);
-  return obj.hash;
+export function LocationGetHash(): string {
+  return window.location.hash;
 }
 
 /**
  * `set-hash()` operation.
  */
-export function LocationSetHash(self: bigint, value: string): void {
-  const obj = lookupLocation(self);
-  obj.hash = value;
+export function LocationSetHash(value: string): void {
+  window.location.hash = value;
 }
 
 /**
  * `assign()` operation.
  */
-export function LocationAssign(self: bigint, url: string): void {
-  const obj = lookupLocation(self);
-  obj.assign(url);
+export function LocationAssign(url: string): void {
+  window.location.assign(url);
 }
 
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, url: string): void {
-  const obj = lookupLocation(self);
-  obj.replace(url);
+export function replace(url: string): void {
+  window.location.replace(url);
 }
 
 /**
  * `reload()` operation.
  */
-export function LocationReload(self: bigint): void {
-  const obj = lookupLocation(self);
-  obj.reload();
+export function LocationReload(): void {
+  window.location.reload();
 }
 
 /**
  * `get-ancestor-origins()` operation.
  */
-export function getAncestorOrigins(self: bigint): (string)[] {
-  const obj = lookupLocation(self);
-  return [...obj.ancestorOrigins];
+export function getAncestorOrigins(): (string)[] {
+  return [...window.location.ancestorOrigins];
 }
 
 // ---------------------------------------------------------------------------
@@ -14680,40 +14703,26 @@ export function getAncestorOrigins(self: bigint): (string)[] {
 /** Type alias */
 export type HistoryHandle = bigint;
 
-/** Handle table for History instances */
-const _historyHandles = new Map<bigint, History>();
-let _nextHistory = 1n;
+/** Handle for global singleton History (fixed to 0n). */
+const _History_HANDLE = 0n;
 
-/** Lookup a History by handle, throwing if not found. */
-function lookupHistory(handle: bigint): History {
-  const obj = _historyHandles.get(handle);
-  if (!obj) {
-    throw new Error(`History handle ${handle} not found`);
-  }
-  return obj!;
+/** Get the global History object. */
+function getGlobalHistory(): History {
+  return window.history;
 }
 
-/** Lookup an optional History by handle. */
-function lookupOptionHistory(handle: bigint | undefined): History | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _historyHandles.get(handle) ?? null;
-}
 /**
  * `get-length()` operation.
  */
-export function HistoryGetLength(self: bigint): number {
-  const obj = lookupHistory(self);
-  return obj.length;
+export function HistoryGetLength(): number {
+  return window.history.length;
 }
 
 /**
  * `get-scroll-restoration()` operation.
  */
-export function getScrollRestoration(self: bigint): bigint {
-  const obj = lookupHistory(self);
-  const value = obj.scrollRestoration;
+export function getScrollRestoration(): bigint {
+  const value = window.history.scrollRestoration;
   switch (value) {
     case 'auto': return 0n;
     case 'manual': return 1n;
@@ -14724,62 +14733,55 @@ export function getScrollRestoration(self: bigint): bigint {
 /**
  * `set-scroll-restoration()` operation.
  */
-export function setScrollRestoration(self: bigint, value: bigint): void {
-  const obj = lookupHistory(self);
+export function setScrollRestoration(value: bigint): void {
   const _enumInput = value;
   let enumValue: ScrollRestoration;
   if (_enumInput === 0n) { enumValue = 'auto'; }
   if (_enumInput === 1n) { enumValue = 'manual'; }
   else { enumValue = 'auto'; }
-  obj.scrollRestoration = enumValue;
+  window.history.scrollRestoration = enumValue;
 }
 
 /**
  * `get-state()` operation.
  */
-export function HistoryGetState(self: bigint): string {
-  const obj = lookupHistory(self);
-  return obj.state;
+export function HistoryGetState(): string {
+  return window.history.state;
 }
 
 /**
  * `go()` operation.
  */
-export function go(self: bigint, delta: number | undefined): void {
-  const obj = lookupHistory(self);
-  obj.go(delta);
+export function go(delta: number | undefined): void {
+  window.history.go(delta);
 }
 
 /**
  * `back()` operation.
  */
-export function HistoryBack(self: bigint): void {
-  const obj = lookupHistory(self);
-  obj.back();
+export function HistoryBack(): void {
+  window.history.back();
 }
 
 /**
  * `forward()` operation.
  */
-export function HistoryForward(self: bigint): void {
-  const obj = lookupHistory(self);
-  obj.forward();
+export function HistoryForward(): void {
+  window.history.forward();
 }
 
 /**
  * `push-state()` operation.
  */
-export function pushState(self: bigint, data: string, unused: string, url: string | undefined): void {
-  const obj = lookupHistory(self);
-  obj.pushState(data, unused, url);
+export function pushState(data: string, unused: string, url: string | undefined): void {
+  window.history.pushState(data, unused, url);
 }
 
 /**
  * `replace-state()` operation.
  */
-export function replaceState(self: bigint, data: string, unused: string, url: string | undefined): void {
-  const obj = lookupHistory(self);
-  obj.replaceState(data, unused, url);
+export function replaceState(data: string, unused: string, url: string | undefined): void {
+  window.history.replaceState(data, unused, url);
 }
 
 // ---------------------------------------------------------------------------
@@ -14920,7 +14922,7 @@ export function NavigationForward(self: bigint, options: bigint | undefined): bi
 /**
  * `get-onnavigate()` operation.
  */
-export function getOnnavigate(self: bigint): EventHandlerRecord {
+export function getOnnavigate(self: bigint): bigint {
   const obj = lookupNavigation(self);
   return obj.onnavigate;
 }
@@ -14928,7 +14930,7 @@ export function getOnnavigate(self: bigint): EventHandlerRecord {
 /**
  * `set-onnavigate()` operation.
  */
-export function setOnnavigate(self: bigint, value: EventHandlerRecord): void {
+export function setOnnavigate(self: bigint, value: bigint): void {
   const obj = lookupNavigation(self);
   obj.onnavigate = value;
 }
@@ -14936,7 +14938,7 @@ export function setOnnavigate(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onnavigatesuccess()` operation.
  */
-export function getOnnavigatesuccess(self: bigint): EventHandlerRecord {
+export function getOnnavigatesuccess(self: bigint): bigint {
   const obj = lookupNavigation(self);
   return obj.onnavigatesuccess;
 }
@@ -14944,7 +14946,7 @@ export function getOnnavigatesuccess(self: bigint): EventHandlerRecord {
 /**
  * `set-onnavigatesuccess()` operation.
  */
-export function setOnnavigatesuccess(self: bigint, value: EventHandlerRecord): void {
+export function setOnnavigatesuccess(self: bigint, value: bigint): void {
   const obj = lookupNavigation(self);
   obj.onnavigatesuccess = value;
 }
@@ -14952,7 +14954,7 @@ export function setOnnavigatesuccess(self: bigint, value: EventHandlerRecord): v
 /**
  * `get-onnavigateerror()` operation.
  */
-export function getOnnavigateerror(self: bigint): EventHandlerRecord {
+export function getOnnavigateerror(self: bigint): bigint {
   const obj = lookupNavigation(self);
   return obj.onnavigateerror;
 }
@@ -14960,7 +14962,7 @@ export function getOnnavigateerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onnavigateerror()` operation.
  */
-export function setOnnavigateerror(self: bigint, value: EventHandlerRecord): void {
+export function setOnnavigateerror(self: bigint, value: bigint): void {
   const obj = lookupNavigation(self);
   obj.onnavigateerror = value;
 }
@@ -14968,7 +14970,7 @@ export function setOnnavigateerror(self: bigint, value: EventHandlerRecord): voi
 /**
  * `get-oncurrententrychange()` operation.
  */
-export function getOncurrententrychange(self: bigint): EventHandlerRecord {
+export function getOncurrententrychange(self: bigint): bigint {
   const obj = lookupNavigation(self);
   return obj.oncurrententrychange;
 }
@@ -14976,7 +14978,7 @@ export function getOncurrententrychange(self: bigint): EventHandlerRecord {
 /**
  * `set-oncurrententrychange()` operation.
  */
-export function setOncurrententrychange(self: bigint, value: EventHandlerRecord): void {
+export function setOncurrententrychange(self: bigint, value: bigint): void {
   const obj = lookupNavigation(self);
   obj.oncurrententrychange = value;
 }
@@ -15039,17 +15041,21 @@ export function NavigationHistoryEntryGetState(self: bigint): string {
 /**
  * `get-ondispose()` operation.
  */
-export function getOndispose(self: bigint): EventHandlerRecord {
+export function getOndispose(self: bigint): bigint {
   const obj = lookupNavigationHistoryEntry(self);
-  return obj.ondispose;
+  const handler = obj.ondispose;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-ondispose()` operation.
  */
-export function setOndispose(self: bigint, value: EventHandlerRecord): void {
+export function setOndispose(self: bigint, value: bigint): void {
   const obj = lookupNavigationHistoryEntry(self);
-  obj.ondispose = value;
+  obj.ondispose = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -16864,49 +16870,61 @@ export function EventSourceGetReadyState(self: bigint): number {
 /**
  * `get-onopen()` operation.
  */
-export function getOnopen(self: bigint): EventHandlerRecord {
+export function getOnopen(self: bigint): bigint {
   const obj = lookupEventSource(self);
-  return obj.onopen;
+  const handler = obj.onopen;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onopen()` operation.
  */
-export function setOnopen(self: bigint, value: EventHandlerRecord): void {
+export function setOnopen(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onopen = value;
+  obj.onopen = value as any;
 }
 
 /**
  * `get-onmessage()` operation.
  */
-export function EventSourceGetOnmessage(self: bigint): EventHandlerRecord {
+export function EventSourceGetOnmessage(self: bigint): bigint {
   const obj = lookupEventSource(self);
-  return obj.onmessage;
+  const handler = obj.onmessage;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onmessage()` operation.
  */
-export function EventSourceSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function EventSourceSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onmessage = value;
+  obj.onmessage = value as any;
 }
 
 /**
  * `get-onerror()` operation.
  */
-export function EventSourceGetOnerror(self: bigint): EventHandlerRecord {
+export function EventSourceGetOnerror(self: bigint): bigint {
   const obj = lookupEventSource(self);
-  return obj.onerror;
+  const handler = obj.onerror;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onerror()` operation.
  */
-export function EventSourceSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function EventSourceSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupEventSource(self);
-  obj.onerror = value;
+  obj.onerror = value as any;
 }
 
 /**
@@ -16996,33 +17014,41 @@ function lookupOptionMessageEventTarget(handle: bigint | undefined): MessageEven
 /**
  * `get-onmessage()` operation.
  */
-export function MessageEventTargetGetOnmessage(self: bigint): EventHandlerRecord {
+export function MessageEventTargetGetOnmessage(self: bigint): bigint {
   const obj = lookupMessageEventTarget(self);
-  return obj.onmessage;
+  const handler = obj.onmessage;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onmessage()` operation.
  */
-export function MessageEventTargetSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function MessageEventTargetSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupMessageEventTarget(self);
-  obj.onmessage = value;
+  obj.onmessage = value as any;
 }
 
 /**
  * `get-onmessageerror()` operation.
  */
-export function MessageEventTargetGetOnmessageerror(self: bigint): EventHandlerRecord {
+export function MessageEventTargetGetOnmessageerror(self: bigint): bigint {
   const obj = lookupMessageEventTarget(self);
-  return obj.onmessageerror;
+  const handler = obj.onmessageerror;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onmessageerror()` operation.
  */
-export function MessageEventTargetSetOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function MessageEventTargetSetOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupMessageEventTarget(self);
-  obj.onmessageerror = value;
+  obj.onmessageerror = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -17059,7 +17085,7 @@ export function MessagePortClose(self: bigint): void {
 /**
  * `get-onclose()` operation.
  */
-export function MessagePortGetOnclose(self: bigint): EventHandlerRecord {
+export function MessagePortGetOnclose(self: bigint): bigint {
   const obj = lookupMessagePort(self);
   return (obj as any).onclose;
 }
@@ -17067,7 +17093,7 @@ export function MessagePortGetOnclose(self: bigint): EventHandlerRecord {
 /**
  * `set-onclose()` operation.
  */
-export function MessagePortSetOnclose(self: bigint, value: EventHandlerRecord): void {
+export function MessagePortSetOnclose(self: bigint, value: bigint): void {
   const obj = lookupMessagePort(self);
   (obj as any).onclose = value;
 }
@@ -17126,33 +17152,41 @@ export function BroadcastChannelClose(self: bigint): void {
 /**
  * `get-onmessage()` operation.
  */
-export function BroadcastChannelGetOnmessage(self: bigint): EventHandlerRecord {
+export function BroadcastChannelGetOnmessage(self: bigint): bigint {
   const obj = lookupBroadcastChannel(self);
-  return obj.onmessage;
+  const handler = obj.onmessage;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onmessage()` operation.
  */
-export function BroadcastChannelSetOnmessage(self: bigint, value: EventHandlerRecord): void {
+export function BroadcastChannelSetOnmessage(self: bigint, value: bigint): void {
   const obj = lookupBroadcastChannel(self);
-  obj.onmessage = value;
+  obj.onmessage = value as any;
 }
 
 /**
  * `get-onmessageerror()` operation.
  */
-export function BroadcastChannelGetOnmessageerror(self: bigint): EventHandlerRecord {
+export function BroadcastChannelGetOnmessageerror(self: bigint): bigint {
   const obj = lookupBroadcastChannel(self);
-  return obj.onmessageerror;
+  const handler = obj.onmessageerror;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onmessageerror()` operation.
  */
-export function BroadcastChannelSetOnmessageerror(self: bigint, value: EventHandlerRecord): void {
+export function BroadcastChannelSetOnmessageerror(self: bigint, value: bigint): void {
   const obj = lookupBroadcastChannel(self);
-  obj.onmessageerror = value;
+  obj.onmessageerror = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -17217,7 +17251,7 @@ export function importScripts(self: bigint, urls: (bigint)[]): void {
 /**
  * `get-onerror()` operation.
  */
-export function WorkerGlobalScopeGetOnerror(self: bigint): OnErrorEventHandlerRecord {
+export function WorkerGlobalScopeGetOnerror(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.onerror;
 }
@@ -17225,7 +17259,7 @@ export function WorkerGlobalScopeGetOnerror(self: bigint): OnErrorEventHandlerRe
 /**
  * `set-onerror()` operation.
  */
-export function WorkerGlobalScopeSetOnerror(self: bigint, value: OnErrorEventHandlerRecord): void {
+export function WorkerGlobalScopeSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.onerror = value;
 }
@@ -17233,7 +17267,7 @@ export function WorkerGlobalScopeSetOnerror(self: bigint, value: OnErrorEventHan
 /**
  * `get-onlanguagechange()` operation.
  */
-export function getOnlanguagechange(self: bigint): EventHandlerRecord {
+export function getOnlanguagechange(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.onlanguagechange;
 }
@@ -17241,7 +17275,7 @@ export function getOnlanguagechange(self: bigint): EventHandlerRecord {
 /**
  * `set-onlanguagechange()` operation.
  */
-export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): void {
+export function setOnlanguagechange(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.onlanguagechange = value;
 }
@@ -17249,7 +17283,7 @@ export function setOnlanguagechange(self: bigint, value: EventHandlerRecord): vo
 /**
  * `get-onoffline()` operation.
  */
-export function getOnoffline(self: bigint): EventHandlerRecord {
+export function getOnoffline(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.onoffline;
 }
@@ -17257,7 +17291,7 @@ export function getOnoffline(self: bigint): EventHandlerRecord {
 /**
  * `set-onoffline()` operation.
  */
-export function setOnoffline(self: bigint, value: EventHandlerRecord): void {
+export function setOnoffline(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.onoffline = value;
 }
@@ -17265,7 +17299,7 @@ export function setOnoffline(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-ononline()` operation.
  */
-export function getOnonline(self: bigint): EventHandlerRecord {
+export function getOnonline(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.ononline;
 }
@@ -17273,7 +17307,7 @@ export function getOnonline(self: bigint): EventHandlerRecord {
 /**
  * `set-ononline()` operation.
  */
-export function setOnonline(self: bigint, value: EventHandlerRecord): void {
+export function setOnonline(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.ononline = value;
 }
@@ -17281,7 +17315,7 @@ export function setOnonline(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onrejectionhandled()` operation.
  */
-export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
+export function getOnrejectionhandled(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.onrejectionhandled;
 }
@@ -17289,7 +17323,7 @@ export function getOnrejectionhandled(self: bigint): EventHandlerRecord {
 /**
  * `set-onrejectionhandled()` operation.
  */
-export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): void {
+export function setOnrejectionhandled(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.onrejectionhandled = value;
 }
@@ -17297,7 +17331,7 @@ export function setOnrejectionhandled(self: bigint, value: EventHandlerRecord): 
 /**
  * `get-onunhandledrejection()` operation.
  */
-export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
+export function getOnunhandledrejection(self: bigint): bigint {
   const obj = lookupWorkerGlobalScope(self);
   return obj.onunhandledrejection;
 }
@@ -17305,7 +17339,7 @@ export function getOnunhandledrejection(self: bigint): EventHandlerRecord {
 /**
  * `set-onunhandledrejection()` operation.
  */
-export function setOnunhandledrejection(self: bigint, value: EventHandlerRecord): void {
+export function setOnunhandledrejection(self: bigint, value: bigint): void {
   const obj = lookupWorkerGlobalScope(self);
   obj.onunhandledrejection = value;
 }
@@ -17407,7 +17441,7 @@ export function SharedWorkerGlobalScopeClose(self: bigint): void {
 /**
  * `get-onconnect()` operation.
  */
-export function getOnconnect(self: bigint): EventHandlerRecord {
+export function getOnconnect(self: bigint): bigint {
   const obj = lookupSharedWorkerGlobalScope(self);
   return obj.onconnect;
 }
@@ -17415,7 +17449,7 @@ export function getOnconnect(self: bigint): EventHandlerRecord {
 /**
  * `set-onconnect()` operation.
  */
-export function setOnconnect(self: bigint, value: EventHandlerRecord): void {
+export function setOnconnect(self: bigint, value: bigint): void {
   const obj = lookupSharedWorkerGlobalScope(self);
   obj.onconnect = value;
 }
@@ -17450,17 +17484,21 @@ function lookupOptionAbstractWorker(handle: bigint | undefined): AbstractWorker 
 /**
  * `get-onerror()` operation.
  */
-export function AbstractWorkerGetOnerror(self: bigint): EventHandlerRecord {
+export function AbstractWorkerGetOnerror(self: bigint): bigint {
   const obj = lookupAbstractWorker(self);
-  return obj.onerror;
+  const handler = obj.onerror;
+  if (handler == null) return 0n;
+  const handle = _nextEventHandler++;
+  _eventHandlerHandles.set(handle, handler);
+  return handle;
 }
 
 /**
  * `set-onerror()` operation.
  */
-export function AbstractWorkerSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function AbstractWorkerSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupAbstractWorker(self);
-  obj.onerror = value;
+  obj.onerror = value as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -17812,49 +17850,44 @@ export type StorageHandle = bigint;
 /**
  * `get-length()` operation.
  */
-export function StorageGetLength(self: bigint): number {
-  const obj = lookupStorage(self);
-  return obj.length;
+export function StorageGetLength(): number {
+  return Storage.length;
 }
 
 /**
  * `key()` operation.
  */
-export function key(self: bigint, index: number): string | undefined {
-  const obj = lookupStorage(self);
-  return obj.key(index) ?? undefined;
+export function key(index: number): string | undefined {
+  return Storage.key(index);
 }
 
 /**
  * `get-item()` operation.
  */
-export function getItem(self: bigint, key: string): string | undefined {
-  const obj = lookupStorage(self);
-  return obj.getItem(key) ?? undefined;
+export function getItem(key: string): string | undefined {
+  return Storage.getItem() ?? undefined;
 }
 
 /**
  * `set-item()` operation.
  */
-export function setItem(self: bigint, key: string, value: string): void {
-  const obj = lookupStorage(self);
+export function setItem(key: string, value: string): void {
+  const obj = lookupStorage(key);
   obj.item = value;
 }
 
 /**
  * `remove-item()` operation.
  */
-export function removeItem(self: bigint, key: string): void {
-  const obj = lookupStorage(self);
-  obj.removeItem(key);
+export function removeItem(key: string): void {
+  return Storage.removeItem(key);
 }
 
 /**
  * `clear()` operation.
  */
-export function StorageClear(self: bigint): void {
-  const obj = lookupStorage(self);
-  obj.clear();
+export function StorageClear(): void {
+  return Storage.clear();
 }
 
 // ---------------------------------------------------------------------------

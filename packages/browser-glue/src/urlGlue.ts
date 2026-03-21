@@ -43,6 +43,9 @@ export type OnErrorEventHandlerRecord = OnErrorEventHandlerNonNull | null;
 /** Type definition for VoidFunctionRecord */
 export type VoidFunctionRecord = VoidFunction;
 
+/** Type definition for EventHandler */
+export type EventHandler = (this: any, ev: any) => any;
+
 /** Type definition for GeometryUtils */
 export type GeometryUtils = any;
 
@@ -298,7 +301,7 @@ export function canParse(url: string, base: string | undefined): bigint {
 /**
  * `get-href()` operation.
  */
-export function getHref(self: bigint): string {
+export function getHref(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.href;
 }
@@ -306,7 +309,7 @@ export function getHref(self: bigint): string {
 /**
  * `set-href()` operation.
  */
-export function setHref(self: bigint, value: string): void {
+export function setHref(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.href = value;
 }

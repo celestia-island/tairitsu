@@ -71,6 +71,11 @@ GLOBAL_SINGLETONS = {
     "window": "window",
     "document": "document",
     "navigator": "navigator",
+    "crypto": "window.crypto",
+    "screen": "window.screen",
+    "location": "window.location",
+    "history": "window.history",
+    "performance": "window.performance",
 }
 
 # Known async operation patterns (return Promises in browser)
@@ -4268,6 +4273,76 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("notification", "set-onclose", "value"): "event-handler",
     # WindowEventHandlers event handlers
     ("window-event-handlers", "set-onpagereveal", "value"): "event-handler",
+    # WebCodecs event handlers
+    ("audio-decoder", "set-ondequeue", "value"): "event-handler",
+    ("video-decoder", "set-ondequeue", "value"): "event-handler",
+    ("audio-encoder", "set-ondequeue", "value"): "event-handler",
+    ("video-encoder", "set-ondequeue", "value"): "event-handler",
+    # GlobalEventHandlers - missing event handlers
+    ("global-event-handlers", "set-onbeforeinput", "value"): "event-handler",
+    ("global-event-handlers", "set-onbeforematch", "value"): "event-handler",
+    ("global-event-handlers", "set-onbeforetoggle", "value"): "event-handler",
+    ("global-event-handlers", "set-onresize", "value"): "event-handler",
+    ("global-event-handlers", "set-ontouchstart", "value"): "event-handler",
+    ("global-event-handlers", "set-ontouchend", "value"): "event-handler",
+    ("global-event-handlers", "set-ontouchmove", "value"): "event-handler",
+    ("global-event-handlers", "set-ontouchcancel", "value"): "event-handler",
+    # MediaQueryList event handler
+    ("media-query-list", "set-onchange", "value"): "event-handler",
+    # Document event handlers
+    ("document", "set-onfullscreenchange", "value"): "event-handler",
+    ("document", "set-onfullscreenerror", "value"): "event-handler",
+    ("document", "set-onreadystatechange", "value"): "event-handler",
+    ("document", "set-onvisibilitychange", "value"): "event-handler",
+    # Element event handlers
+    ("element", "set-onfullscreenchange", "value"): "event-handler",
+    ("element", "set-onfullscreenerror", "value"): "event-handler",
+    # VisualViewport event handlers
+    ("visual-viewport", "set-onresize", "value"): "event-handler",
+    ("visual-viewport", "set-onscroll", "value"): "event-handler",
+    # AbortSignal event handler
+    ("abort-signal", "set-onabort", "value"): "event-handler",
+    # ShadowRoot event handler
+    ("shadow-root", "set-onslotchange", "value"): "event-handler",
+    # XMLHttpRequestEventTarget event handlers
+    ("xml-http-request-event-target", "set-onloadstart", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-onprogress", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-onabort", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-onerror", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-onload", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-ontimeout", "value"): "event-handler",
+    ("xml-http-request-event-target", "set-onloadend", "value"): "event-handler",
+    # XMLHttpRequest event handlers
+    ("xml-http-request", "set-onreadystatechange", "value"): "event-handler",
+    # TextTrackCue event handlers
+    ("text-track-cue", "set-onenter", "value"): "event-handler",
+    ("text-track-cue", "set-onexit", "value"): "event-handler",
+    # TextTrack event handlers
+    ("text-track", "set-oncuechange", "value"): "event-handler",
+    # TextTrackList event handlers
+    ("text-track-list", "set-onchange", "value"): "event-handler",
+    ("text-track-list", "set-onaddtrack", "value"): "event-handler",
+    ("text-track-list", "set-onremovetrack", "value"): "event-handler",
+    # OffscreenCanvas event handlers
+    ("offscreen-canvas", "set-oncontextlost", "value"): "event-handler",
+    ("offscreen-canvas", "set-oncontextrestored", "value"): "event-handler",
+    # NavigationHistoryEntry event handlers
+    ("navigation-history-entry", "set-ondispose", "value"): "event-handler",
+    # EventSource event handlers
+    ("event-source", "set-onopen", "value"): "event-handler",
+    ("event-source", "set-onmessage", "value"): "event-handler",
+    ("event-source", "set-onerror", "value"): "event-handler",
+    # MessagePort event handlers
+    ("message-port", "set-onmessage", "value"): "event-handler",
+    ("message-port", "set-onmessageerror", "value"): "event-handler",
+    # BroadcastChannel event handlers
+    ("broadcast-channel", "set-onmessage", "value"): "event-handler",
+    ("broadcast-channel", "set-onmessageerror", "value"): "event-handler",
+    # MessageEventTarget event handlers
+    ("message-event-target", "set-onmessage", "value"): "event-handler",
+    ("message-event-target", "set-onmessageerror", "value"): "event-handler",
+    # AbstractWorker event handlers
+    ("abstract-worker", "set-onerror", "value"): "event-handler",
     # SpeechSynthesisUtterance voice handle conversion
     ("speech-synthesis-utterance", "set-voice", "value"): "optional-handle:speech-synthesis-voice",
     # MediaSession playbackState enum setter
@@ -6030,6 +6105,93 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     ("keyboard-event", "location"): True,
 }
 
+# Event handler properties that return EventHandler | null but WIT expects bigint
+# Maps (interface_wit_name, property_name) to True
+# These getters need to convert event handlers to bigint handles
+EVENT_HANDLER_PROPERTIES = {
+    # WebCodecs
+    ("audio-decoder", "ondequeue"): True,
+    ("video-decoder", "ondequeue"): True,
+    ("audio-encoder", "ondequeue"): True,
+    ("video-encoder", "ondequeue"): True,
+    # GlobalEventHandlers
+    ("global-event-handlers", "onbeforeinput"): True,
+    ("global-event-handlers", "onbeforematch"): True,
+    ("global-event-handlers", "onbeforetoggle"): True,
+    ("global-event-handlers", "onresize"): True,
+    ("global-event-handlers", "ontouchstart"): True,
+    ("global-event-handlers", "ontouchend"): True,
+    ("global-event-handlers", "ontouchmove"): True,
+    ("global-event-handlers", "ontouchcancel"): True,
+    ("global-event-handlers", "onpointerrawupdate"): True,
+    # MediaQueryList
+    ("media-query-list", "onchange"): True,
+    # Document
+    ("document", "onfullscreenchange"): True,
+    ("document", "onfullscreenerror"): True,
+    ("document", "onreadystatechange"): True,
+    ("document", "onvisibilitychange"): True,
+    # Element
+    ("element", "onfullscreenchange"): True,
+    ("element", "onfullscreenerror"): True,
+    # VisualViewport
+    ("visual-viewport", "onresize"): True,
+    ("visual-viewport", "onscroll"): True,
+    # AbortSignal
+    ("abort-signal", "onabort"): True,
+    # ShadowRoot
+    ("shadow-root", "onslotchange"): True,
+    # XMLHttpRequestEventTarget
+    ("xml-http-request-event-target", "onloadstart"): True,
+    ("xml-http-request-event-target", "onprogress"): True,
+    ("xml-http-request-event-target", "onabort"): True,
+    ("xml-http-request-event-target", "onerror"): True,
+    ("xml-http-request-event-target", "onload"): True,
+    ("xml-http-request-event-target", "ontimeout"): True,
+    ("xml-http-request-event-target", "onloadend"): True,
+    # XMLHttpRequest
+    ("xml-http-request", "onreadystatechange"): True,
+    # TextTrackList
+    ("text-track-list", "onchange"): True,
+    ("text-track-list", "onaddtrack"): True,
+    ("text-track-list", "onremovetrack"): True,
+    # TextTrack
+    ("text-track", "oncuechange"): True,
+    # TextTrackCue
+    ("text-track-cue", "onenter"): True,
+    ("text-track-cue", "onexit"): True,
+    # TextTrack
+    ("text-track", "oncuechange"): True,
+    # TextTrackList
+    ("text-track-list", "onchange"): True,
+    ("text-track-list", "onaddtrack"): True,
+    ("text-track-list", "onremovetrack"): True,
+    # OffscreenCanvas
+    ("offscreen-canvas", "oncontextlost"): True,
+    ("offscreen-canvas", "oncontextrestored"): True,
+    # NavigationHistoryEntry
+    ("navigation-history-entry", "ondispose"): True,
+    # EventSource
+    ("event-source", "onopen"): True,
+    ("event-source", "onmessage"): True,
+    ("event-source", "onerror"): True,
+    # MessagePort
+    ("message-port", "onmessage"): True,
+    ("message-port", "onmessageerror"): True,
+    # BroadcastChannel
+    ("broadcast-channel", "onmessage"): True,
+    ("broadcast-channel", "onmessageerror"): True,
+    # MessageEventTarget
+    ("message-event-target", "onmessage"): True,
+    ("message-event-target", "onmessageerror"): True,
+    # AbstractWorker
+    ("abstract-worker", "onerror"): True,
+    # PaymentResponse
+    ("payment-response", "onpayerdetailchange"): True,
+    # RTCDTMFSender
+    ("rtcdtmf-sender", "ontonechange"): True,
+}
+
 # Interface-specific browser attribute name overrides
 # Maps (interface_name, wit_attr_name) -> browser_attr_name
 # This is used when the same WIT attribute name maps to different browser names on different interfaces
@@ -6042,8 +6204,6 @@ INTERFACE_ATTR_OVERRIDES = {
     ("window", "navigation"): "navigator",
     # NamedNodeMap.namedItem should be getNamedItem
     ("named-node-map", "named-item"): "getNamedItem",
-    # ClipboardChangeEvent.types should be type (singular) - the property is clipboardData.types
-    ("clipboard-change-event", "types"): "type",
     # ClipboardItem.type should be types (plural) 
     ("clipboard-item", "type"): "types",
     # WebGLRenderingContextBase.shader-source getter should call getShaderSource
@@ -6472,6 +6632,8 @@ SYNTHETIC_HANDLE_TYPES = {
     "media-image-list": ("MediaImage[]", "mediaImageListHandles", "MediaImageList"),
     # PerformanceEntryList type
     "performance-entry-list": ("PerformanceEntryList", "performanceEntryListHandles", "PerformanceEntryList"),
+    # Event handler type for on* properties
+    "event-handler": ("EventHandler", "eventHandlerHandles", "EventHandler"),
 }
 
 # Type definitions that need to be generated in glue code
@@ -6486,6 +6648,7 @@ CUSTOM_TYPE_DEFINITIONS = {
     "OnBeforeUnloadEventHandlerRecord": "OnBeforeUnloadEventHandlerNonNull | null",
     "OnErrorEventHandlerRecord": "OnErrorEventHandlerNonNull | null",
     "VoidFunctionRecord": "VoidFunction",
+    "EventHandler": "(this: any, ev: any) => any",
     "GeometryUtils": "any",
     "HyperlinkElementUtils": "any",
     "PopoverTargetAttributes": "any",
@@ -6895,6 +7058,7 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("x-path-ns-resolver", "lookupNamespaceURI"),
     # ClipboardEvent
     ("clipboard-change-event", "changeId"),
+    ("clipboard-change-event", "types"),
     # PointerEvent
     ("pointer-event", "persistentDeviceId"),
     # Touch

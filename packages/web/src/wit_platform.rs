@@ -291,11 +291,11 @@ mod wasm_impl {
         // Test basic DOM operations to ensure the host is working
         let result = std::panic::catch_unwind(|| {
             // Try to access document - this will call the WIT import
-            let _body = bindings::tairitsu_browser::full::document::body();
+            let _body = bindings::tairitsu_browser::full::document::get_body();
             // Try window operations
-            let _width = bindings::tairitsu_browser::full::window::inner_width();
+            let _width = bindings::tairitsu_browser::full::window::get_inner_width();
             // Try console operations
-            bindings::tairitsu_browser::full::window::console_log(
+            bindings::tairitsu_browser::full::console::log(
                 "[WitPlatform] Environment validation passed",
             );
         });
@@ -309,19 +309,19 @@ mod wasm_impl {
     /// Log an error through the WIT console interface.
     fn log_error(message: &str) {
         let formatted = format!("[WitPlatform ERROR] {}", message);
-        bindings::tairitsu_browser::full::window::console_error(&formatted);
+        bindings::tairitsu_browser::full::console::error(&formatted);
     }
 
     /// Log a warning through the WIT console interface.
     fn log_warning(message: &str) {
         let formatted = format!("[WitPlatform WARNING] {}", message);
-        bindings::tairitsu_browser::full::window::console_warn(&formatted);
+        bindings::tairitsu_browser::full::console::warn(&formatted);
     }
 
     /// Log diagnostic information through the WIT console interface.
     fn log_info(message: &str) {
         let formatted = format!("[WitPlatform] {}", message);
-        bindings::tairitsu_browser::full::window::console_log(&formatted);
+        bindings::tairitsu_browser::full::console::log(&formatted);
     }
 
     // ── Platform trait implementation ────────────────────────────────────
@@ -331,83 +331,44 @@ mod wasm_impl {
         type Event = WitEvent;
 
         fn create_element(&self, tag: &str) -> Self::Element {
-            match bindings::tairitsu_browser::full::document::create_element(tag) {
-                Ok(handle) => WitElement(handle),
-                Err(e) => {
-                    log_error(&format!("create_element({}) failed: {}", tag, e));
-                    panic!("WIT create-element failed for '{}': {}", tag, e);
-                }
-            }
+            // New WIT: create-element returns u64 directly, takes optional options
+            let handle = bindings::tairitsu_browser::full::document::create_element(tag, None);
+            WitElement(handle)
         }
 
         fn create_text_node(&self, text: &str) -> Self::Element {
-            match bindings::tairitsu_browser::full::document::create_text_node(text) {
-                Ok(handle) => WitElement(handle),
-                Err(e) => {
-                    log_error(&format!("create_text_node failed: {}", e));
-                    panic!("WIT create-text-node failed: {}", e);
-                }
-            }
+            // New WIT: create-text-node returns u64 directly
+            let handle = bindings::tairitsu_browser::full::document::create_text_node(text);
+            WitElement(handle)
         }
 
         fn append_child(&self, parent: &Self::Element, child: &Self::Element) {
-            if let Err(e) = bindings::tairitsu_browser::full::node::append_child(parent.0, child.0)
-            {
-                log_error(&format!("append_child failed: {}", e));
-                panic!("WIT append-child failed: {}", e);
-            }
+            // New WIT: append-child returns u64 (the appended node)
+            let _ = bindings::tairitsu_browser::full::node::append_child(parent.0, child.0);
         }
 
         fn remove_child(&self, parent: &Self::Element, child: &Self::Element) {
-            if let Err(e) = bindings::tairitsu_browser::full::node::remove_child(parent.0, child.0)
-            {
-                log_warning(&format!("remove_child failed: {}", e));
-                // Don't panic for remove_child errors - they might be benign
-            }
+            // New WIT: remove-child returns u64 (the removed node)
+            let _ = bindings::tairitsu_browser::full::node::remove_child(parent.0, child.0);
         }
 
         fn set_attribute(&self, element: &Self::Element, name: &str, value: &str) {
-            if let Err(e) =
-                bindings::tairitsu_browser::full::node::set_attribute(element.0, name, value)
-            {
-                log_warning(&format!(
-                    "set_attribute({}, {}, {}) failed: {}",
-                    element.0, name, value, e
-                ));
-            }
+            // New WIT: set-attribute returns void
+            bindings::tairitsu_browser::full::element::set_attribute(element.0, name, value);
         }
 
         fn remove_attribute(&self, element: &Self::Element, name: &str) {
-            if let Err(e) =
-                bindings::tairitsu_browser::full::node::remove_attribute(element.0, name)
-            {
-                log_warning(&format!(
-                    "remove_attribute({}, {}) failed: {}",
-                    element.0, name, e
-                ));
-            }
+            // New WIT: remove-attribute returns void
+            bindings::tairitsu_browser::full::element::remove_attribute(element.0, name);
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            if let Err(e) =
-                bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value)
-            {
-                log_warning(&format!(
-                    "set_style_property({}, {}, {}) failed: {}",
-                    element.0, name, value, e
-                ));
-            }
+            // New WIT: set-style-property returns void
+            bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value);
         }
 
         fn set_class(&self, element: &Self::Element, class: &str) {
-            if let Err(e) =
-                bindings::tairitsu_browser::full::node::set_attribute(element.0, "class", class)
-            {
-                log_warning(&format!(
-                    "set_class({}, {}) failed: {}",
-                    element.0, class, e
-                ));
-            }
+            bindings::tairitsu_browser::full::element::set_attribute(element.0, "class", class);
         }
 
         fn add_event_listener(
@@ -416,6 +377,7 @@ mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
+            // New WIT: add-event-listener returns result<u64, string>
             match bindings::tairitsu_browser::full::event_target::add_event_listener(
                 element.0, event, false,
             ) {
@@ -473,19 +435,16 @@ mod wasm_impl {
         {
             WitElement(handle)
         } else {
-            let body = bindings::tairitsu_browser::full::document::body()
+            let body = bindings::tairitsu_browser::full::document::get_body()
                 .ok_or_else(|| anyhow::anyhow!("document.body is not available"))?;
-            let div = bindings::tairitsu_browser::full::document::create_element("div")
-                .map_err(|e| anyhow::anyhow!("failed to create #app element: {e}"))?;
-            bindings::tairitsu_browser::full::node::set_attribute(div, "id", "app")
-                .map_err(|e| anyhow::anyhow!("failed to set #app id: {e}"))?;
-            bindings::tairitsu_browser::full::node::append_child(body, div)
-                .map_err(|e| anyhow::anyhow!("failed to append #app to body: {e}"))?;
+            let div = bindings::tairitsu_browser::full::document::create_element("div", None);
+            bindings::tairitsu_browser::full::element::set_attribute(div, "id", "app");
+            let _ = bindings::tairitsu_browser::full::node::append_child(body, div);
             WitElement(div)
         };
 
-        bindings::tairitsu_browser::full::node::set_text_content(app.0, "")
-            .map_err(|e| anyhow::anyhow!("failed to clear #app content: {e}"))?;
+        // set_text_content takes option<string>, returns void
+        bindings::tairitsu_browser::full::node::set_text_content(app.0, Some(""));
 
         render_vnode(platform, vnode, &app)
     }
