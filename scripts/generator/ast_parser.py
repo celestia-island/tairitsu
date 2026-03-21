@@ -36,7 +36,7 @@ from .models import (
     GeneratedParam, GeneratedFunction, GeneratedTypeAlias,
     GeneratedInterface, GeneratedDomain,
 )
-from .config import correct_type_casing
+from .config import correct_type_casing, strip_generic_params
 
 
 class WitParser:
@@ -145,7 +145,7 @@ class WitParser:
         is_setter = wit_name.startswith("set-")
         is_async = self._is_async_function(wit_name, func, interface.name)
         is_getter_but_method = is_getter and wit_name[4:] in GETTER_BUT_ACTUALLY_METHOD
-        is_setter_but_method = is_setter and wit_name[4:] in SETTER_BUT_ACTUALLY_METHOD
+        is_setter_but_method = is_setter and (interface.name, wit_name[4:]) in SETTER_BUT_ACTUALLY_METHOD
         
         has_self_param = any(p.name == "self" for p in func.params)
         first_param_is_handle = (
@@ -261,7 +261,7 @@ class WitParser:
             if ta.name.endswith("-handle"):
                 handle_type = ta.name
                 handle_var = kebab_to_camel(ta.name.replace("-handle", "Handles"))
-                handle_pascal = correct_type_casing(kebab_to_pascal(ta.name.replace("-handle", "")))
+                handle_pascal = strip_generic_params(correct_type_casing(kebab_to_pascal(ta.name.replace("-handle", ""))))
                 break
 
         browser_class = INTERFACE_TO_BROWSER_CLASS.get(wit_name, correct_type_casing(kebab_to_pascal(wit_name)))

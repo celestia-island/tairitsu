@@ -1276,7 +1276,7 @@ function lookupEncodedAudioChunk(handle: bigint): EncodedAudioChunk {
  */
 export function EncodedAudioChunkGetType(self: bigint): bigint {
   const obj = lookupEncodedAudioChunk(self);
-  const value = obj.type;
+  const value = obj.getType();
   switch (value) {
     case 'key': return 0n;
     case 'delta': return 1n;
@@ -1341,7 +1341,7 @@ function lookupEncodedVideoChunk(handle: bigint): EncodedVideoChunk {
  */
 export function EncodedVideoChunkGetType(self: bigint): bigint {
   const obj = lookupEncodedVideoChunk(self);
-  const value = obj.type;
+  const value = obj.getType();
   switch (value) {
     case 'key': return 0n;
     case 'delta': return 1n;
@@ -1808,7 +1808,7 @@ function lookupImageDecoder(handle: bigint): ImageDecoder {
  */
 export function ImageDecoderGetType(self: bigint): bigint {
   const obj = lookupImageDecoder(self);
-  const _callResult = obj.type;
+  const _callResult = obj.getType();
   const handle = _nextString++;
   _stringHandles.set(handle, _callResult);
   return handle;
@@ -2157,7 +2157,7 @@ export function getSize(self: bigint): bigint {
  */
 export function WebGlActiveInfoGetType(self: bigint): bigint {
   const obj = lookupWebGLActiveInfo(self);
-  return BigInt(obj.type);
+  return obj.getType();
 }
 
 /**

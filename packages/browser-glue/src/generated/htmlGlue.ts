@@ -251,6 +251,10 @@ let _nextCanvasImageSource = 1n;
 const _dataTransferHandles = new Map<bigint, DataTransfer>();
 let _nextDataTransfer = 1n;
 
+/** Handle table for date values */
+const _dateHandles = new Map<bigint, Date>();
+let _nextDate = 1n;
+
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
 let _nextDocument = 1n;
@@ -270,6 +274,10 @@ let _nextDomStringMap = 1n;
 /** Handle table for dom-token-list values */
 const _domTokenListHandles = new Map<bigint, DOMTokenList>();
 let _nextDomTokenList = 1n;
+
+/** Handle table for element values */
+const _elementHandles = new Map<bigint, Element>();
+let _nextElement = 1n;
 
 /** Handle table for element-list values */
 const _elementListHandles = new Map<bigint, Element[]>();
@@ -323,6 +331,10 @@ let _nextHtmlTableRowElement = 1n;
 const _htmlTableSectionElementHandles = new Map<bigint, HTMLTableSectionElement>();
 let _nextHtmlTableSectionElement = 1n;
 
+/** Handle table for image-bitmap values */
+const _imageBitmapHandles = new Map<bigint, ImageBitmap>();
+let _nextImageBitmap = 1n;
+
 /** Handle table for image-data values */
 const _imageDataHandles = new Map<bigint, ImageData>();
 let _nextImageData = 1n;
@@ -354,6 +366,10 @@ let _nextNavigationActivation = 1n;
 /** Handle table for navigation-history-entry values */
 const _navigationHistoryEntryHandles = new Map<bigint, NavigationHistoryEntry>();
 let _nextNavigationHistoryEntry = 1n;
+
+/** Handle table for node values */
+const _nodeHandles = new Map<bigint, Node>();
+let _nextNode = 1n;
 
 /** Handle table for node-list values */
 const _nodeListHandles = new Map<bigint, NodeList>();
@@ -479,6 +495,23 @@ function lookupOptionDataTransfer(handle: bigint | undefined): DataTransfer | nu
   return _dataTransferHandles.get(handle) ?? null;
 }
 
+/** Lookup a date value by handle. */
+function lookupDate(handle: bigint): Date {
+  const obj = _dateHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`date handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional date value by handle. */
+function lookupOptionDate(handle: bigint | undefined): Date | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _dateHandles.get(handle) ?? null;
+}
+
 /** Lookup a document value by handle. */
 function lookupDocument(handle: bigint): Document {
   const obj = _documentHandles.get(handle);
@@ -562,6 +595,23 @@ function lookupOptionDomTokenList(handle: bigint | undefined): DOMTokenList | nu
     return null;
   }
   return _domTokenListHandles.get(handle) ?? null;
+}
+
+/** Lookup a element value by handle. */
+function lookupElement(handle: bigint): Element {
+  const obj = _elementHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`element handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional element value by handle. */
+function lookupOptionElement(handle: bigint | undefined): Element | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _elementHandles.get(handle) ?? null;
 }
 
 /** Lookup a element-list value by handle. */
@@ -785,6 +835,23 @@ function lookupOptionHtmlTableSectionElement(handle: bigint | undefined): HTMLTa
   return _htmlTableSectionElementHandles.get(handle) ?? null;
 }
 
+/** Lookup a image-bitmap value by handle. */
+function lookupImageBitmap(handle: bigint): ImageBitmap {
+  const obj = _imageBitmapHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`image-bitmap handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional image-bitmap value by handle. */
+function lookupOptionImageBitmap(handle: bigint | undefined): ImageBitmap | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _imageBitmapHandles.get(handle) ?? null;
+}
+
 /** Lookup a image-data value by handle. */
 function lookupImageData(handle: bigint): ImageData {
   const obj = _imageDataHandles.get(handle);
@@ -919,6 +986,23 @@ function lookupOptionNavigationHistoryEntry(handle: bigint | undefined): Navigat
     return null;
   }
   return _navigationHistoryEntryHandles.get(handle) ?? null;
+}
+
+/** Lookup a node value by handle. */
+function lookupNode(handle: bigint): Node {
+  const obj = _nodeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`node handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional node value by handle. */
+function lookupOptionNode(handle: bigint | undefined): Node | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _nodeHandles.get(handle) ?? null;
 }
 
 /** Lookup a node-list value by handle. */
@@ -1628,7 +1712,7 @@ export function HtmlLinkElementGetCrossOrigin(self: bigint): string | undefined 
  */
 export function HtmlLinkElementSetCrossOrigin(self: bigint, value: string | undefined): void {
   const obj = lookupHTMLLinkElement(self);
-  obj.crossOrigin = value;
+  obj.crossOrigin = value ?? null;
 }
 
 /**
@@ -1727,7 +1811,7 @@ export function HtmlLinkElementSetHreflang(self: bigint, value: string): void {
  */
 export function HtmlLinkElementGetType(self: bigint): string {
   const obj = lookupHTMLLinkElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -1837,7 +1921,7 @@ export function HtmlLinkElementGetFetchPriority(self: bigint): string {
  */
 export function HtmlLinkElementSetFetchPriority(self: bigint, value: string): void {
   const obj = lookupHTMLLinkElement(self);
-  obj.fetchPriority = value;
+  obj.fetchPriority = value as any;
 }
 
 /**
@@ -2035,7 +2119,7 @@ export function HtmlStyleElementGetMedia(self: bigint): string {
  */
 export function HtmlStyleElementSetMedia(self: bigint, value: string): void {
   const obj = lookupHTMLStyleElement(self);
-  obj.media = value;
+  obj.media = value as any;
 }
 
 /**
@@ -2054,7 +2138,7 @@ export function HtmlStyleElementGetBlocking(self: bigint): bigint {
  */
 export function HtmlStyleElementGetType(self: bigint): string {
   const obj = lookupHTMLStyleElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -2467,7 +2551,7 @@ export function getStart(self: bigint): number {
  */
 export function setStart(self: bigint, value: number): void {
   const obj = lookupHTMLOListElement(self);
-  (obj as any).setStart(value);
+  (obj as any).start = value;
 }
 
 /**
@@ -2475,7 +2559,7 @@ export function setStart(self: bigint, value: number): void {
  */
 export function HtmloListElementGetType(self: bigint): string {
   const obj = lookupHTMLOListElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -2542,7 +2626,7 @@ export function HtmluListElementSetCompact(self: bigint, value: boolean): void {
  */
 export function HtmluListElementGetType(self: bigint): string {
   const obj = lookupHTMLUListElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -2628,7 +2712,7 @@ export function HtmlliElementSetValue(self: bigint, value: number): void {
  */
 export function HtmlliElementGetType(self: bigint): string {
   const obj = lookupHTMLLIElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -2741,7 +2825,7 @@ export function HtmlAnchorElementGetTarget(self: bigint): string {
  */
 export function HtmlAnchorElementSetTarget(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.target = value;
+  obj.target = value ?? null;
 }
 
 /**
@@ -2757,7 +2841,7 @@ export function HtmlAnchorElementGetDownload(self: bigint): string {
  */
 export function HtmlAnchorElementSetDownload(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.download = value;
+  obj.download = value ?? null;
 }
 
 /**
@@ -2773,7 +2857,7 @@ export function HtmlAnchorElementGetPing(self: bigint): string {
  */
 export function HtmlAnchorElementSetPing(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.ping = value;
+  obj.ping = value ?? null;
 }
 
 /**
@@ -2789,7 +2873,7 @@ export function HtmlAnchorElementGetRel(self: bigint): string {
  */
 export function HtmlAnchorElementSetRel(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.rel = value;
+  obj.rel = value ?? null;
 }
 
 /**
@@ -2816,7 +2900,7 @@ export function HtmlAnchorElementGetHreflang(self: bigint): string {
  */
 export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.hreflang = value;
+  obj.hreflang = value ?? null;
 }
 
 /**
@@ -2824,7 +2908,7 @@ export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void 
  */
 export function HtmlAnchorElementGetType(self: bigint): string {
   const obj = lookupHTMLAnchorElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -3259,10 +3343,10 @@ export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
 export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): void {
   const obj = lookupHTMLHyperlinkElementUtils(self);
   const _enumInput = value;
-  let enumValue: HTMLHyperlinkHref;
+  let enumValue: HTMLHyperlinkHref | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.href = enumValue;
+  obj.href = enumValue as any;
 }
 
 // ---------------------------------------------------------------------------
@@ -3348,7 +3432,7 @@ export function HtmlSourceElementGetSrc(self: bigint): string {
  */
 export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
   const obj = lookupHTMLSourceElement(self);
-  obj.src = value;
+  obj.src = value ?? null;
 }
 
 /**
@@ -3356,7 +3440,7 @@ export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
  */
 export function HtmlSourceElementGetType(self: bigint): string {
   const obj = lookupHTMLSourceElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -3488,7 +3572,7 @@ export function HtmliFrameElementSetSrc(self: bigint, value: string): void {
 export function getSrcdoc(self: bigint): bigint {
   const obj = lookupHTMLIFrameElement(self);
   const value = obj.srcdoc;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -3789,7 +3873,7 @@ export function HtmlEmbedElementGetSrc(self: bigint): string {
  */
 export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
   const obj = lookupHTMLEmbedElement(self);
-  obj.src = value;
+  obj.src = value ?? null;
 }
 
 /**
@@ -3797,7 +3881,7 @@ export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
  */
 export function HtmlEmbedElementGetType(self: bigint): string {
   const obj = lookupHTMLEmbedElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -3924,7 +4008,7 @@ export function HtmlObjectElementSetData(self: bigint, value: string): void {
  */
 export function HtmlObjectElementGetType(self: bigint): string {
   const obj = lookupHTMLObjectElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -4405,7 +4489,7 @@ export function HtmlTrackElementGetSrc(self: bigint): string {
  */
 export function HtmlTrackElementSetSrc(self: bigint, value: string): void {
   const obj = lookupHTMLTrackElement(self);
-  obj.src = value;
+  obj.src = value ?? null;
 }
 
 /**
@@ -4522,7 +4606,7 @@ export function HtmlMediaElementGetSrc(self: bigint): string {
  */
 export function HtmlMediaElementSetSrc(self: bigint, value: string): void {
   const obj = lookupHTMLMediaElement(self);
-  obj.src = value;
+  obj.src = value ?? null;
 }
 
 /**
@@ -4542,7 +4626,7 @@ export function getSrcObject(self: bigint): bigint | undefined {
  */
 export function setSrcObject(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLMediaElement(self);
-  obj.srcObject = value;
+  obj.srcObject = lookupOptionMediaProvider(value);
 }
 
 /**
@@ -4566,7 +4650,7 @@ export function HtmlMediaElementGetCrossOrigin(self: bigint): string | undefined
  */
 export function HtmlMediaElementSetCrossOrigin(self: bigint, value: string | undefined): void {
   const obj = lookupHTMLMediaElement(self);
-  obj.crossOrigin = value;
+  obj.crossOrigin = value ?? null;
 }
 
 /**
@@ -4583,7 +4667,7 @@ export function getNetworkState(self: bigint): bigint {
 export function getPreload(self: bigint): bigint {
   const obj = lookupHTMLMediaElement(self);
   const value = obj.preload;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     case 'none': return 1n;
     case 'metadata': return 2n;
@@ -4597,7 +4681,7 @@ export function getPreload(self: bigint): bigint {
  */
 export function setPreload(self: bigint, value: string): void {
   const obj = lookupHTMLMediaElement(self);
-  obj.preload = value;
+  obj.preload = value as any;
 }
 
 /**
@@ -4625,7 +4709,7 @@ export function load(self: bigint): void {
 export function canPlayType(self: bigint, type: string): bigint {
   const obj = lookupHTMLMediaElement(self);
   const value = (obj as any).canPlayType(type);
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     case 'probably': return 1n;
     case 'maybe': return 2n;
@@ -5994,7 +6078,7 @@ export function getCaption(self: bigint): bigint | undefined {
  */
 export function setCaption(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLTableElement(self);
-  obj.caption = value;
+  obj.caption = lookupOptionHtmlTableCaptionElement(value);
 }
 
 /**
@@ -6033,7 +6117,7 @@ export function getTHead(self: bigint): bigint | undefined {
  */
 export function setTHead(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLTableElement(self);
-  obj.tHead = value;
+  obj.tHead = lookupOptionHtmlTableSectionElement(value);
 }
 
 /**
@@ -6072,7 +6156,7 @@ export function getTFoot(self: bigint): bigint | undefined {
  */
 export function setTFoot(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLTableElement(self);
-  obj.tFoot = value;
+  obj.tFoot = lookupOptionHtmlTableSectionElement(value);
 }
 
 /**
@@ -7013,7 +7097,7 @@ export function HtmlFormElementGetAutocomplete(self: bigint): string {
  */
 export function HtmlFormElementSetAutocomplete(self: bigint, value: string): void {
   const obj = lookupHTMLFormElement(self);
-  obj.autocomplete = value;
+  obj.autocomplete = value as any;
 }
 
 /**
@@ -7029,7 +7113,7 @@ export function getEnctype(self: bigint): string {
  */
 export function setEnctype(self: bigint, value: string): void {
   const obj = lookupHTMLFormElement(self);
-  obj.enctype = value;
+  obj.enctype = value as any;
 }
 
 /**
@@ -7061,7 +7145,7 @@ export function getMethod(self: bigint): string {
  */
 export function setMethod(self: bigint, value: string): void {
   const obj = lookupHTMLFormElement(self);
-  obj.method = value;
+  obj.method = value as any;
 }
 
 /**
@@ -7348,7 +7432,7 @@ export function HtmlInputElementGetAutocomplete(self: bigint): string {
  */
 export function HtmlInputElementSetAutocomplete(self: bigint, value: string): void {
   const obj = lookupHTMLInputElement(self);
-  obj.autocomplete = value;
+  obj.autocomplete = value as any;
 }
 
 /**
@@ -7460,7 +7544,7 @@ export function HtmlInputElementGetFiles(self: bigint): bigint | undefined {
  */
 export function setFiles(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLInputElement(self);
-  obj.files = value;
+  obj.files = lookupOptionFileList(value);
 }
 
 /**
@@ -7492,7 +7576,7 @@ export function HtmlInputElementGetFormEnctype(self: bigint): string {
  */
 export function HtmlInputElementSetFormEnctype(self: bigint, value: string): void {
   const obj = lookupHTMLInputElement(self);
-  obj.formEnctype = value;
+  obj.formEnctype = value as any;
 }
 
 /**
@@ -7508,7 +7592,7 @@ export function HtmlInputElementGetFormMethod(self: bigint): string {
  */
 export function HtmlInputElementSetFormMethod(self: bigint, value: string): void {
   const obj = lookupHTMLInputElement(self);
-  obj.formMethod = value;
+  obj.formMethod = value as any;
 }
 
 /**
@@ -7800,7 +7884,7 @@ export function setStep(self: bigint, value: string): void {
  */
 export function HtmlInputElementGetType(self: bigint): string {
   const obj = lookupHTMLInputElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -7856,7 +7940,7 @@ export function getValueAsDate(self: bigint): bigint | undefined {
  */
 export function setValueAsDate(self: bigint, value: bigint | undefined): void {
   const obj = lookupHTMLInputElement(self);
-  obj.valueAsDate = value;
+  obj.valueAsDate = lookupOptionDate(value);
 }
 
 /**
@@ -7995,7 +8079,7 @@ export function HtmlInputElementGetSelectionStart(self: bigint): bigint | undefi
  */
 export function HtmlInputElementSetSelectionStart(self: bigint, value: number | undefined): void {
   const obj = lookupHTMLInputElement(self);
-  obj.selectionStart = value;
+  obj.selectionStart = value ?? null;
 }
 
 /**
@@ -8012,7 +8096,7 @@ export function HtmlInputElementGetSelectionEnd(self: bigint): bigint | undefine
  */
 export function HtmlInputElementSetSelectionEnd(self: bigint, value: number | undefined): void {
   const obj = lookupHTMLInputElement(self);
-  obj.selectionEnd = value;
+  obj.selectionEnd = value ?? null;
 }
 
 /**
@@ -8036,7 +8120,7 @@ export function HtmlInputElementSetSelectionDirection(self: bigint, value: strin
  */
 export function HtmlInputElementSetRangeText(self: bigint, replacement: string): void {
   const obj = lookupHTMLInputElement(self);
-  obj.setRangeText(replacement);
+  obj.setRangeText = replacement;
 }
 
 /**
@@ -8267,7 +8351,7 @@ export function HtmlButtonElementSetName(self: bigint, value: string): void {
  */
 export function HtmlButtonElementGetType(self: bigint): string {
   const obj = lookupHTMLButtonElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -8275,7 +8359,7 @@ export function HtmlButtonElementGetType(self: bigint): string {
  */
 export function HtmlButtonElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLButtonElement(self);
-  obj.type = value;
+  obj.type = value as any;
 }
 
 /**
@@ -8388,7 +8472,7 @@ export function HtmlSelectElementGetAutocomplete(self: bigint): string {
  */
 export function HtmlSelectElementSetAutocomplete(self: bigint, value: string): void {
   const obj = lookupHTMLSelectElement(self);
-  obj.autocomplete = value;
+  obj.autocomplete = value as any;
 }
 
 /**
@@ -8488,7 +8572,7 @@ export function HtmlSelectElementSetSize(self: bigint, value: number): void {
  */
 export function HtmlSelectElementGetType(self: bigint): string {
   const obj = lookupHTMLSelectElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -8927,7 +9011,7 @@ export function HtmlTextAreaElementGetAutocomplete(self: bigint): string {
  */
 export function HtmlTextAreaElementSetAutocomplete(self: bigint, value: string): void {
   const obj = lookupHTMLTextAreaElement(self);
-  obj.autocomplete = value;
+  obj.autocomplete = value as any;
 }
 
 /**
@@ -9115,7 +9199,7 @@ export function getWrap(self: bigint): string {
  */
 export function setWrap(self: bigint, value: string): void {
   const obj = lookupHTMLTextAreaElement(self);
-  obj.wrap = value;
+  obj.wrap = value as any;
 }
 
 /**
@@ -9123,7 +9207,7 @@ export function setWrap(self: bigint, value: string): void {
  */
 export function HtmlTextAreaElementGetType(self: bigint): string {
   const obj = lookupHTMLTextAreaElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -9363,7 +9447,7 @@ export function HtmlOutputElementSetName(self: bigint, value: string): void {
  */
 export function HtmlOutputElementGetType(self: bigint): string {
   const obj = lookupHTMLOutputElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -9724,7 +9808,7 @@ export function HtmlFieldSetElementSetName(self: bigint, value: string): void {
  */
 export function HtmlFieldSetElementGetType(self: bigint): string {
   const obj = lookupHTMLFieldSetElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -10162,7 +10246,7 @@ function lookupHTMLScriptElement(handle: bigint): HTMLScriptElement {
  */
 export function HtmlScriptElementGetType(self: bigint): string {
   const obj = lookupHTMLScriptElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -10261,7 +10345,7 @@ export function HtmlScriptElementGetCrossOrigin(self: bigint): string | undefine
  */
 export function HtmlScriptElementSetCrossOrigin(self: bigint, value: string | undefined): void {
   const obj = lookupHTMLScriptElement(self);
-  obj.crossOrigin = value;
+  obj.crossOrigin = value ?? null;
 }
 
 /**
@@ -10309,7 +10393,7 @@ export function HtmlScriptElementGetFetchPriority(self: bigint): string {
  */
 export function HtmlScriptElementSetFetchPriority(self: bigint, value: string): void {
   const obj = lookupHTMLScriptElement(self);
-  obj.fetchPriority = value;
+  obj.fetchPriority = value as any;
 }
 
 /**
@@ -11302,7 +11386,7 @@ function lookupCanvasUserInterface(handle: bigint): CanvasUserInterface {
  */
 export function drawFocusIfNeeded(self: bigint, element: bigint): void {
   const obj = lookupCanvasUserInterface(self);
-  obj.drawFocusIfNeeded(element);
+  obj.drawFocusIfNeeded(lookupElement(element));
 }
 
 // ---------------------------------------------------------------------------
@@ -11770,7 +11854,7 @@ export function setFontKerning(self: bigint, value: bigint): void {
 export function getFontStretch(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
   const value = obj.fontStretch;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -11782,10 +11866,10 @@ export function getFontStretch(self: bigint): bigint {
 export function setFontStretch(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
   const _enumInput = value;
-  let enumValue: CanvasFontStretch;
+  let enumValue: CanvasFontStretch | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.fontStretch = enumValue;
+  obj.fontStretch = enumValue as any;
 }
 
 /**
@@ -11794,7 +11878,7 @@ export function setFontStretch(self: bigint, value: bigint): void {
 export function getFontVariantCaps(self: bigint): bigint {
   const obj = lookupCanvasTextDrawingStyles(self);
   const value = obj.fontVariantCaps;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -11806,10 +11890,10 @@ export function getFontVariantCaps(self: bigint): bigint {
 export function setFontVariantCaps(self: bigint, value: bigint): void {
   const obj = lookupCanvasTextDrawingStyles(self);
   const _enumInput = value;
-  let enumValue: CanvasFontVariantCaps;
+  let enumValue: CanvasFontVariantCaps | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.fontVariantCaps = enumValue;
+  obj.fontVariantCaps = enumValue as any;
 }
 
 /**
@@ -12173,7 +12257,7 @@ export function ImageBitmapRenderingContextGetCanvas(self: bigint): bigint {
  */
 export function transferFromImageBitmap(self: bigint, bitmap: bigint | undefined): void {
   const obj = lookupImageBitmapRenderingContext(self);
-  obj.transferFromImageBitmap(bitmap);
+  obj.transferFromImageBitmap(lookupOptionImageBitmap(bitmap));
 }
 
 // ---------------------------------------------------------------------------
@@ -12481,7 +12565,7 @@ export function ElementInternalsGetForm(self: bigint): bigint | undefined {
  */
 export function setValidity(self: bigint, flags: bigint | undefined, message: string | undefined, anchor: bigint | undefined): void {
   const obj = lookupElementInternals(self);
-  obj.validity = anchor;
+  obj.setValidity(flags, message, anchor);
 }
 
 /**
@@ -12921,13 +13005,9 @@ export function setDragImage(self: bigint, image: bigint, x: number, y: number):
 /**
  * `get-types()` operation.
  */
-export function getTypes(self: bigint): bigint {
+export function getTypes(self: bigint): (string)[] {
   const obj = lookupDataTransfer(self);
-  const value = obj.types;
-  switch (value) {
-    case '': return 0n;
-    default: return 0n;
-  }
+  return [...obj.types];
 }
 
 /**
@@ -13056,7 +13136,7 @@ export function DataTransferItemGetKind(self: bigint): string {
  */
 export function DataTransferItemGetType(self: bigint): string {
   const obj = lookupDataTransferItem(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -13138,7 +13218,7 @@ export function getPopoverTargetElement(self: bigint): bigint | undefined {
  */
 export function setPopoverTargetElement(self: bigint, value: bigint | undefined): void {
   const obj = lookupPopoverTargetAttributes(self);
-  obj.setPopoverTargetElement(value);
+  obj.popoverTargetElement = value;
 }
 
 /**
@@ -13289,7 +13369,7 @@ function lookupLocation(handle: bigint): Location {
 export function LocationGetHref(self: bigint): bigint {
   const obj = lookupLocation(self);
   const value = obj.href;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -13301,10 +13381,10 @@ export function LocationGetHref(self: bigint): bigint {
 export function LocationSetHref(self: bigint, value: bigint): void {
   const obj = lookupLocation(self);
   const _enumInput = value;
-  let enumValue: LocationHref;
+  let enumValue: LocationHref | '';
   if (_enumInput === 0n) { enumValue = ''; }
   else { enumValue = ''; }
-  obj.href = enumValue;
+  obj.href = enumValue as any;
 }
 
 /**
@@ -13456,7 +13536,7 @@ export function LocationReload(self: bigint): void {
  */
 export function getAncestorOrigins(self: bigint): (string)[] {
   const obj = lookupLocation(self);
-  return obj.ancestorOrigins;
+  return [...obj.ancestorOrigins];
 }
 
 // ---------------------------------------------------------------------------
@@ -14631,7 +14711,7 @@ function lookupDOMParser(handle: bigint): DOMParser {
  */
 export function parseFromString(self: bigint, string: bigint, type: bigint): bigint {
   const obj = lookupDOMParser(self);
-  const _callResult = obj.parseFromString(string, type);
+  const _callResult = obj.parseFromString(string as any, type as any);
   const handle = _nextDocument++;
   _documentHandles.set(handle, _callResult);
   return handle;
@@ -14661,7 +14741,7 @@ function lookupXMLSerializer(handle: bigint): XMLSerializer {
  */
 export function serializeToString(self: bigint, root: bigint): string {
   const obj = lookupXMLSerializer(self);
-  return obj.serializeToString(root);
+  return obj.serializeToString(lookupNode(root));
 }
 
 // ---------------------------------------------------------------------------
@@ -15131,7 +15211,7 @@ export type MimeTypeHandle = bigint;
  */
 export function MimeTypeGetType(self: bigint): string {
   const obj = lookupMimeType(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**
@@ -15217,18 +15297,6 @@ export function ImageDataGetColorSpace(self: bigint): bigint {
 /** Type alias */
 export type ImageBitmapHandle = bigint;
 
-/** Handle table for ImageBitmap instances */
-const _imageBitmaphandles = new Map<bigint, ImageBitmap>();
-let _nextImageBitmap = 1n;
-
-/** Lookup a ImageBitmap by handle, throwing if not found. */
-function lookupImageBitmap(handle: bigint): ImageBitmap {
-  const obj = _imageBitmaphandles.get(handle);
-  if (!obj) {
-    throw new Error(`ImageBitmap handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `get-width()` operation.
  */
@@ -15363,7 +15431,7 @@ export function getPorts(self: bigint): (bigint)[] {
  */
 export function initMessageEvent(self: bigint, type: string, bubbles: boolean | undefined, cancelable: boolean | undefined, data: string | undefined, origin: string | undefined, lastEventId: string | undefined, source: bigint | undefined, ports: (bigint)[] | undefined): void {
   const obj = lookupMessageEvent(self);
-  (obj as any).initMessageEvent(type, bubbles, cancelable, data, origin, lastEventId, source, ports);
+  (obj as any).initMessageEvent(type, bubbles, cancelable, data, origin, lastEventId, source, ports as any);
 }
 
 // ---------------------------------------------------------------------------
@@ -15513,15 +15581,15 @@ export function getPort2(self: bigint): bigint {
 /** Type alias */
 export type MessageEventTargetHandle = bigint;
 
-/** Handle table for MessageEventTarget instances */
-const _messageEventTargethandles = new Map<bigint, MessageEventTarget>();
+/** Handle table for MessageEventTarget<any> instances */
+const _messageEventTargethandles = new Map<bigint, MessageEventTarget<any>>();
 let _nextMessageEventTarget = 1n;
 
-/** Lookup a MessageEventTarget by handle, throwing if not found. */
-function lookupMessageEventTarget(handle: bigint): MessageEventTarget {
+/** Lookup a MessageEventTarget<any> by handle, throwing if not found. */
+function lookupMessageEventTarget(handle: bigint): MessageEventTarget<any> {
   const obj = _messageEventTargethandles.get(handle);
   if (!obj) {
-    throw new Error(`MessageEventTarget handle ${handle} not found`);
+    throw new Error(`MessageEventTarget<any> handle ${handle} not found`);
   }
   return obj!;
 }
@@ -15858,7 +15926,7 @@ export function DedicatedWorkerGlobalScopeGetName(self: bigint): string {
  */
 export function DedicatedWorkerGlobalScopePostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupDedicatedWorkerGlobalScope(self);
-  obj.postMessage(message, transfer);
+  obj.postMessage(message as any, transfer as any);
 }
 
 /**
@@ -15987,7 +16055,7 @@ export function terminate(self: bigint): void {
  */
 export function WorkerPostMessage(self: bigint, message: string, transfer: (bigint)[]): void {
   const obj = lookupWorker(self);
-  (obj as any).postMessage(message, transfer);
+  (obj as any).postMessage(message as any, transfer as any);
 }
 
 // ---------------------------------------------------------------------------
@@ -16283,7 +16351,7 @@ export function key(self: bigint, index: number): string | undefined {
  */
 export function getItem(self: bigint, key: string): string | undefined {
   const obj = lookupStorage(self);
-  return obj.item(key) ?? undefined;
+  return obj.getItem(key) ?? undefined;
 }
 
 /**
@@ -17018,7 +17086,7 @@ export function HtmlParamElementSetValue(self: bigint, value: string): void {
  */
 export function HtmlParamElementGetType(self: bigint): string {
   const obj = lookupHTMLParamElement(self);
-  return obj.type;
+  return obj.getType();
 }
 
 /**

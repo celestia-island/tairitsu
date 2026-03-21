@@ -291,8 +291,10 @@ BROWSER_API_NAME_MAPPINGS = {
     "client-rect": "getClientRect",
     "attribute": "getAttribute",
     "attribute-ns": "getAttributeNS",
+    "get-attribute-ns": "getAttributeNS",
     "attribute-node": "getAttributeNode",
     "attribute-node-ns": "getAttributeNodeNS",
+    "get-attribute-node-ns": "getAttributeNodeNS",
     "attribute-names": "getAttributeNames",
     "get-transform": "getTransform",
     "set-attribute": "setAttribute",
@@ -301,6 +303,7 @@ BROWSER_API_NAME_MAPPINGS = {
     "has-attribute-ns": "hasAttributeNS",
     "named-item": "namedItem",
     "named-item-ns": "getNamedItemNS",
+    "get-named-item-ns": "getNamedItemNS",
     "get-named-item": "getNamedItem",
     "track-by-id": "getTrackById",
     "create-element-ns": "createElementNS",
@@ -390,6 +393,7 @@ BROWSER_API_NAME_MAPPINGS = {
     "property-value": "getPropertyValue",
     "property-priority": "getPropertyPriority",
     "svg-document": "getSVGDocument",
+    "get-svg-document": "getSVGDocument",
     "custom-validity": "setCustomValidity",
     "range-text": "setRangeText",
     "selection-range": "setSelectionRange",
@@ -2232,6 +2236,12 @@ DICTIONARY_PARAMETER_TYPES = {
     ("element", "scroll-by", "options"): "ScrollToOptions | undefined",
     ("element", "request-fullscreen", "options"): "FullscreenOptions | undefined",
     ("element", "attach-shadow", "options"): "ShadowRootInit",
+    # ServiceWorkerRegistration
+    ("service-worker-registration", "get-notifications", "filter"): "GetNotificationOptions | undefined",
+    # PaymentResponse
+    ("payment-response", "retry", "error-fields"): "PaymentValidationErrors | undefined",
+    # RTCPeerConnection
+    ("rtc-peer-connection", "create-offer", "options"): "RTCOfferOptions | undefined",
 }
 
 # Parameters that need bigint to number conversion
@@ -3454,6 +3464,8 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("window-or-worker-global-scope", "fetch", "init"): "any",
     ("window-or-worker-global-scope", "create-image-bitmap", "image"): "any",
     ("window-or-worker-global-scope", "create-image-bitmap", "options"): "any",
+    ("window-or-worker-global-scope", "structured-clone", "value"): "any",
+    ("window-or-worker-global-scope", "structured-clone", "options"): "any",
     # Response methods
     ("response", "json", "init"): "any",
     # CompositionEvent methods
@@ -3537,6 +3549,19 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("media-recorder", "start", "timeslice"): True,
     # Element getAttributeNS - namespace can be undefined, convert to null
     ("element", "get-attribute-ns", "namespace"): "string-or-null",
+    # HTMLMediaElement srcObject - bigint handle to MediaProvider
+    ("html-media-element", "set-src-object", "value"): "optional-handle:media-provider",
+    # HTMLTableElement caption/tHead/tFoot - bigint handle to elements
+    ("html-table-element", "set-caption", "value"): "optional-handle:html-table-caption-element",
+    ("html-table-element", "set-t-head", "value"): "optional-handle:html-table-section-element",
+    ("html-table-element", "set-t-foot", "value"): "optional-handle:html-table-section-element",
+    # HTMLInputElement files - bigint handle to FileList
+    ("html-input-element", "set-files", "value"): "optional-handle:file-list",
+    # HTMLInputElement valueAsDate - bigint handle to Date
+    ("html-input-element", "set-value-as-date", "value"): "optional-handle:date",
+    # MediaStream addTrack/removeTrack - bigint handle to MediaStreamTrack
+    ("media-stream", "add-track", "track"): "handle:media-stream-track",
+    ("media-stream", "remove-track", "track"): "handle:media-stream-track",
     # Canvas createPattern - image needs handle lookup
     ("canvas-fill-stroke-styles", "create-pattern", "image"): "handle:canvas-image-source",
     # Canvas drawImage - image needs handle lookup
@@ -3763,6 +3788,227 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("storage-event", "init-storage-event", "new-value"): "string-or-null",
     ("storage-event", "init-storage-event", "url"): "string",
     ("storage-event", "init-storage-event", "storage-area"): "any",
+    # SubtleCrypto deriveBits - length needs Number()
+    ("subtle-crypto", "derive-bits", "length"): True,
+    # ReadableStreamBYOBRequest respond - bytesWritten needs Number()
+    ("readable-stream-byob-request", "respond", "bytes-written"): True,
+    # ReadableByteStreamController enqueue - chunk needs type assertion
+    ("readable-byte-stream-controller", "enqueue", "chunk"): "any",
+    # Element NS methods - namespace needs null conversion
+    ("element", "set-attribute-ns", "namespace"): "string-or-null",
+    ("element", "remove-attribute-ns", "namespace"): "string-or-null",
+    ("element", "has-attribute-ns", "namespace"): "string-or-null",
+    ("element", "get-attribute-node-ns", "namespace"): "string-or-null",
+    # CanvasUserInterface drawFocusIfNeeded - element needs handle lookup
+    ("canvas-user-interface", "draw-focus-if-needed", "element"): "handle:element",
+    # Path2D addPath - path and transform need handle lookup
+    ("path-2-d", "add-path", "path"): "handle:path-2-d",
+    ("path-2-d", "add-path", "transform"): "optional-handle:dom-matrix",
+    # DOMParser parseFromString - string and type need string conversion
+    ("dom-parser", "parse-from-string", "string"): "string",
+    ("dom-parser", "parse-from-string", "type"): "string",
+    # XMLSerializer serializeToString - root needs handle lookup
+    ("xml-serializer", "serialize-to-string", "root"): "handle:node",
+    # ImageBitmapRenderingContext transferFromImageBitmap - bitmap needs handle lookup
+    ("image-bitmap-rendering-context", "transfer-from-image-bitmap", "bitmap"): "optional-handle:image-bitmap",
+    # XSLTProcessor getParameter - localName needs string conversion
+    ("xslt-processor", "get-parameter", "local-name"): "string",
+    # Canvas drawImage - image needs handle lookup (additional variants)
+    ("canvas-draw-image", "draw-image", "image"): "handle:canvas-image-source",
+    # Canvas putImageData - imageData needs handle lookup
+    ("canvas-image-data", "put-image-data", "image-data"): "handle:image-data",
+    # Canvas createPattern - image needs handle lookup
+    ("canvas-fill-stroke-styles", "create-pattern", "image"): "handle:canvas-image-source",
+    # Window getEvent - can return undefined
+    ("window", "get-event", "event"): "any",
+    # Document currentScript - HTMLOrSVGScriptElement needs cast
+    ("document", "get-current-script", "script"): "any",
+    # CSS insertRule - rule index
+    ("css-style-sheet", "insert-rule", "index"): True,
+    # ClipboardItem getType - returns Promise
+    ("clipboard-item", "get-type", "type"): "string",
+    # PaymentRequest updateWith - details is dictionary
+    ("payment-request", "update-with", "details"): "any",
+    # PaymentResponse complete - result is enum
+    ("payment-response", "complete", "result"): "any",
+    # Performance mark/measure - options are dictionaries
+    ("performance", "mark", "options"): "any",
+    ("performance", "measure", "options"): "any",
+    ("performance", "measure", "start-or-options"): "any",
+    # ResizeObserverEntry box sizes - need array spread
+    ("resize-observer-entry", "get-border-box-size", "sizes"): "any",
+    ("resize-observer-entry", "get-content-box-size", "sizes"): "any",
+    ("resize-observer-entry", "get-device-pixel-content-box-size", "size"): "any",
+    # IntersectionObserver observe - target needs handle lookup
+    ("intersection-observer", "observe", "target"): "handle:element",
+    # ResizeObserver observe - target needs handle lookup
+    ("resize-observer", "observe", "target"): "handle:element",
+    # Node methods - node parameters need handle lookup
+    ("node", "append-child", "node"): "handle:node",
+    ("node", "insert-before", "node"): "handle:node",
+    ("node", "replace-child", "node"): "handle:node",
+    ("node", "remove-child", "node"): "handle:node",
+    # MediaStreamTrack applyConstraints - constraints is dictionary
+    ("media-stream-track", "apply-constraints", "constraints"): "any",
+    # MediaStream addTrack/removeTrack - track needs handle lookup
+    ("media-stream", "add-track", "track"): "handle:media-stream-track",
+    ("media-stream", "remove-track", "track"): "handle:media-stream-track",
+    # RTC methods - various dictionary/handle parameters
+    ("rtc-peer-connection", "set-local-description", "description"): "any",
+    ("rtc-peer-connection", "set-remote-description", "description"): "any",
+    ("rtc-peer-connection", "add-ice-candidate", "candidate"): "any",
+    ("rtc-rtp-sender", "set-parameters", "parameters"): "any",
+    ("rtc-rtp-sender", "replace-track", "track"): "optional-handle:media-stream-track",
+    ("rtc-rtp-transceiver", "set-direction", "direction"): "any",
+    ("rtc-rtp-receiver", "get-parameters", "parameters"): "any",
+    # URL createObjectURL - object needs any
+    ("url", "create-object-url", "object"): "any",
+    # WebSocket send - data can be various types
+    ("ws", "send", "data"): "any",
+    # RTCDataChannel send - data can be string or binary
+    ("rtc-data-channel", "send", "data"): "string | Blob | ArrayBuffer | ArrayBufferView",
+    # Worker/MessagePort postMessage - message/transfer need any
+    ("dedicated-worker-global-scope", "post-message", "message"): "any",
+    ("dedicated-worker-global-scope", "post-message", "transfer"): "any",
+    ("worker", "post-message", "message"): "any",
+    ("worker", "post-message", "transfer"): "any",
+    ("message-port", "post-message", "message"): "any",
+    ("message-port", "post-message", "transfer"): "any",
+    ("service-worker", "post-message", "message"): "any",
+    ("service-worker", "post-message", "transfer"): "any",
+    ("client", "post-message", "message"): "any",
+    ("client", "post-message", "transfer"): "any",
+    # Fetch Request/Response - init/body need any
+    ("window-or-worker-global-scope", "fetch", "input"): "any",
+    ("window-or-worker-global-scope", "fetch", "init"): "any",
+    ("request", "new-request", "input"): "any",
+    ("request", "new-request", "init"): "any",
+    ("response", "json", "body"): "any",
+    ("response", "json", "init"): "any",
+    # FileReader readAsText - encoding needs any
+    ("file-reader", "read-as-text", "encoding"): "any",
+    # Notification requestPermission - callback deprecated
+    ("notification", "request-permission", "callback"): "any",
+    # HTMLFormControlsCollection item - needs cast to HTMLCollection
+    ("html-form-element", "get-elements", "elements"): "any",
+    # StructuredSerializeOptions for postMessage
+    ("message-event", "init-message-event", "ports"): "any",
+    # NotificationPermissionCallback deprecated
+    ("notification", "request-permission", "deprecated-callback"): "any",
+    # MediaSession setPositionState
+    ("media-session", "set-position-state", "state"): "any",
+    # Clipboard read/write
+    ("clipboard", "read", "data"): "any",
+    ("clipboard", "write", "data"): "any",
+    # PerformanceObserver observe
+    ("performance-observer", "observe", "options"): "any",
+    # MediaRecorder start
+    ("media-recorder", "start", "timeslice"): True,
+    # SpeechSynthesisUtterance needs handle lookup
+    ("speech-synthesis", "speak", "utterance"): "handle:speech-synthesis-utterance",
+    # DocumentFragment children
+    ("html-form-element", "get-elements", "collection"): "any",
+    # Window requestAnimationFrame - callback parameter
+    ("window", "request-animation-frame", "callback"): "any",
+    # HTMLElement focus options
+    ("html-element", "focus", "options"): "any",
+    # Canvas draw focus
+    ("canvas-user-interface", "draw-focus-if-needed", "element"): "handle:element",
+    # SpeechSynthesis speak
+    ("speech-synthesis", "speak", "utterance"): "handle:speech-synthesis-utterance",
+    # Optional string setters that need null conversion
+    ("html-element", "set-access-key", "value"): "string-or-null",
+    ("html-element", "set-autocapitalize", "value"): "string-or-null",
+    ("html-element", "set-dir", "value"): "string-or-null",
+    ("html-element", "set-inner-text", "value"): "string-or-null",
+    ("html-element", "set-lang", "value"): "string-or-null",
+    ("html-element", "set-title", "value"): "string-or-null",
+    ("html-element", "set-translate", "value"): "string-or-null",
+    ("html-element", "set-popover", "value"): "string-or-null",
+    ("html-element", "set-outer-text", "value"): "string-or-null",
+    ("html-element", "set-hidden", "value"): "boolean-or-false",
+    ("html-anchor-element", "set-download", "value"): "string-or-null",
+    ("html-anchor-element", "set-href", "value"): "string-or-null",
+    ("html-anchor-element", "set-hreflang", "value"): "string-or-null",
+    ("html-anchor-element", "set-ping", "value"): "string-or-null",
+    ("html-anchor-element", "set-rel", "value"): "string-or-null",
+    ("html-anchor-element", "set-target", "value"): "string-or-null",
+    ("html-media-element", "set-src", "value"): "string-or-null",
+    ("html-image-element", "set-src", "value"): "string-or-null",
+    ("html-image-element", "set-cross-origin", "value"): "string-or-null",
+    ("html-image-element", "set-decoding", "value"): "enum-string",
+    ("html-link-element", "set-cross-origin", "value"): "string-or-null",
+    ("html-media-element", "set-cross-origin", "value"): "string-or-null",
+    ("html-script-element", "set-cross-origin", "value"): "string-or-null",
+    ("html-source-element", "set-src", "value"): "string-or-null",
+    ("html-track-element", "set-src", "value"): "string-or-null",
+    ("html-iframe-element", "set-src", "value"): "string-or-null",
+    ("html-embed-element", "set-src", "value"): "string-or-null",
+    # Enum string setters that need type assertion
+    ("html-media-element", "set-preload", "value"): "enum-string",
+    ("html-image-element", "set-loading", "value"): "enum-string",
+    ("html-image-element", "set-fetch-priority", "value"): "enum-string",
+    ("html-link-element", "set-fetch-priority", "value"): "enum-string",
+    ("html-link-element", "set-loading", "value"): "enum-string",
+    ("html-script-element", "set-fetch-priority", "value"): "enum-string",
+    ("html-button-element", "set-type", "value"): "enum-string",
+    ("html-input-element", "set-form-enctype", "value"): "enum-string",
+    ("html-input-element", "set-form-method", "value"): "enum-string",
+    ("html-input-element", "set-enter-key-hint", "value"): "enum-string",
+    ("html-text-area-element", "set-enter-key-hint", "value"): "enum-string",
+    ("html-text-area-element", "set-wrap", "value"): "enum-string",
+    ("html-input-element", "set-selection-start", "value"): "number-or-null",
+    ("html-input-element", "set-selection-end", "value"): "number-or-null",
+    ("html-form-element", "set-enctype", "value"): "enum-string",
+    ("html-form-element", "set-method", "value"): "enum-string",
+    ("html-form-element", "set-autocomplete", "value"): "enum-string",
+    ("html-input-element", "set-autocomplete", "value"): "enum-string",
+    ("html-select-element", "set-autocomplete", "value"): "enum-string",
+    ("html-text-area-element", "set-autocomplete", "value"): "enum-string",
+    ("html-style-element", "set-media", "value"): "enum-string",
+    # Event handler setters - need type assertion (on* properties)
+    ("window-event-handlers", "set-ongamepadconnected", "value"): "event-handler",
+    ("window-event-handlers", "set-ongamepaddisconnected", "value"): "event-handler",
+    ("global-event-handlers", "set-onclick", "value"): "event-handler",
+    ("global-event-handlers", "set-ondblclick", "value"): "event-handler",
+    ("global-event-handlers", "set-onmousedown", "value"): "event-handler",
+    ("global-event-handlers", "set-onmouseup", "value"): "event-handler",
+    ("global-event-handlers", "set-onmouseover", "value"): "event-handler",
+    ("global-event-handlers", "set-onmousemove", "value"): "event-handler",
+    ("global-event-handlers", "set-onmouseout", "value"): "event-handler",
+    ("global-event-handlers", "set-onkeydown", "value"): "event-handler",
+    ("global-event-handlers", "set-onkeyup", "value"): "event-handler",
+    ("global-event-handlers", "set-onfocus", "value"): "event-handler",
+    ("global-event-handlers", "set-onblur", "value"): "event-handler",
+    ("global-event-handlers", "set-onchange", "value"): "event-handler",
+    ("global-event-handlers", "set-onsubmit", "value"): "event-handler",
+    ("global-event-handlers", "set-onreset", "value"): "event-handler",
+    ("global-event-handlers", "set-oninput", "value"): "event-handler",
+    ("screen-orientation", "set-onchange", "value"): "event-handler",
+    ("rtc-peer-connection", "set-onconnectionstatechange", "value"): "event-handler",
+    ("rtc-peer-connection", "set-ondatachannel", "value"): "event-handler",
+    ("rtc-peer-connection", "set-onicecandidate", "value"): "event-handler",
+    ("rtc-peer-connection", "set-oniceconnectionstatechange", "value"): "event-handler",
+    ("rtc-peer-connection", "set-onicegatheringstatechange", "value"): "event-handler",
+    ("rtc-peer-connection", "set-onnegotiationneeded", "value"): "event-handler",
+    ("rtc-peer-connection", "set-onsignalingstatechange", "value"): "event-handler",
+    ("rtc-peer-connection", "set-ontrack", "value"): "event-handler",
+    ("rtc-data-channel", "set-onopen", "value"): "event-handler",
+    ("rtc-data-channel", "set-onclose", "value"): "event-handler",
+    ("rtc-data-channel", "set-onerror", "value"): "event-handler",
+    ("rtc-data-channel", "set-onmessage", "value"): "event-handler",
+    ("web-socket", "set-onopen", "value"): "event-handler",
+    ("web-socket", "set-onclose", "value"): "event-handler",
+    ("web-socket", "set-onerror", "value"): "event-handler",
+    ("web-socket", "set-onmessage", "value"): "event-handler",
+    ("web-socket", "set-binary-type", "value"): "enum-string",
+    # RTCRtpReceiver jitter buffer target
+    ("rtc-rtp-receiver", "set-jitter-buffer-target", "value"): "number-or-null",
+    # Document body setter
+    ("document", "set-body", "value"): "optional-handle-strict:html-element",
+    # Node setters
+    ("node", "set-node-value", "value"): "string-or-null",
+    ("node", "set-text-content", "value"): "string-or-null",
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -3893,10 +4139,6 @@ ENUM_PROPERTIES = {
     ("request", "getUrl"): "RequestUrl",
     # XMLHttpRequest responseURL
     ("xml-http-request", "responseURL"): "ResponseUrl",
-    # DataTransfer types
-    ("data-transfer", "types"): "DataTransferTypes",
-    # ClipboardChangeEvent types
-    ("clipboard-change-event", "types"): "ClipboardTypes",
     # Notification permission
     ("notification", "get-permission"): "NotificationPermission",
     # RTCSessionDescription type
@@ -4317,13 +4559,6 @@ ENUM_VALUE_MAPPINGS = {
         "metadata": 2,
         "auto": 3,
     },
-    # DataTransfer types
-    "DataTransferTypes": {
-        "": 0,
-    },
-    "ClipboardTypes": {
-        "": 0,
-    },
     # Notification permission
     "NotificationPermission": {
         "default": 0,
@@ -4434,16 +4669,6 @@ ENUM_SETTER_PROPERTIES = {
 
 # Properties that return readonly arrays that need to be converted to mutable arrays
 # Maps (interface, property) to True
-READONLY_ARRAY_PROPERTIES = {
-    # DataTransfer types
-    ("data-transfer", "types"): True,
-    ("clipboard-change-event", "types"): True,
-    ("clipboard-item", "types"): True,
-}
-
-# Methods that return boolean but need to be converted to bigint
-# Maps (interface, method_name) to True
-# NOTE: method_name should be the WIT function name in kebab-case
 BOOLEAN_TO_BIGINT_PROPERTIES = {
     # WebGLRenderingContext
     ("web-gl-rendering-context-base", "is-buffer"): True,
@@ -4825,6 +5050,8 @@ GETTER_BUT_ACTUALLY_METHOD = {
     "coalesced-events", "predicted-events",
     # Attribute names method
     "attribute-names",
+    # ClipboardItem getType takes a parameter
+    "type",
 }
 
 # Functions that are defined as setters in WIT but are actually methods in DOM API
@@ -4851,34 +5078,82 @@ SETTER_METHOD_NAMES = {
     ("window-or-worker-global-scope", "timeout"): "setTimeout",
     ("window-or-worker-global-scope", "interval"): "setInterval",
     ("rtc-rtp-sender", "parameters"): "setParameters",
+    ("element-internals", "validity"): "setValidity",
+    ("html-object-element", "custom-validity"): "setCustomValidity",
+    ("html-input-element", "custom-validity"): "setCustomValidity",
+    ("html-button-element", "custom-validity"): "setCustomValidity",
+    ("html-select-element", "custom-validity"): "setCustomValidity",
+    ("html-text-area-element", "custom-validity"): "setCustomValidity",
+    ("html-output-element", "custom-validity"): "setCustomValidity",
+    ("html-field-set-element", "custom-validity"): "setCustomValidity",
 }
 
 SETTER_BUT_ACTUALLY_METHOD = {
-    "attribute", "attribute-ns", "attribute-node", "attribute-node-ns",
-    "html-unsafe", "pointer-capture",
-    "start", "start-before", "start-after", "end", "end-before", "end-after",
-    "selection-range", "range-text", "custom-validity",
-    "request-header", "header-value",
-    "action-handler", "position-state", "microphone-active", "camera-active",
-    "resource-timing-buffer-size", "codec-preferences",
-    "form-value", "drag-image",
-    "popover-target-element",
+    # Format: (interface_name, property_name) tuples for interface-specific method handling
+    # Element methods
+    ("element", "attribute"),
+    ("element", "attribute-ns"),
+    ("element", "attribute-node"),
+    ("element", "attribute-node-ns"),
+    ("element", "html-unsafe"),
+    ("element", "pointer-capture"),
+    # Range methods
+    ("range", "start"),
+    ("range", "start-before"),
+    ("range", "start-after"),
+    ("range", "end"),
+    ("range", "end-before"),
+    ("range", "end-after"),
+    # HTMLInputElement/HTMLTextAreaElement methods
+    ("html-input-element", "selection-range"),
+    ("html-text-area-element", "selection-range"),
+    ("html-text-area-element", "range-text"),
+    # ElementInternals methods
+    ("element-internals", "custom-validity"),
+    ("element-internals", "validity"),
+    # XMLHttpRequest methods
+    ("xml-http-request", "request-header"),
+    # Headers methods
+    ("headers", "header-value"),
+    # MediaSession methods
+    ("media-session", "action-handler"),
+    ("media-session", "position-state"),
+    ("media-session", "microphone-active"),
+    ("media-session", "camera-active"),
+    # Performance methods
+    ("performance", "resource-timing-buffer-size"),
+    # RTCRtpTransceiver methods
+    ("rtc-rtp-transceiver", "codec-preferences"),
+    # ElementInternals methods
+    ("element-internals", "form-value"),
+    # DataTransfer methods
+    ("data-transfer", "drag-image"),
+    # HTMLButtonElement methods
+    ("html-button-element", "popover-target-element"),
     # Canvas methods
-    "set-transform",
-    # NamedNodeMap methods that return replaced Attr (wit_name[4:] after "set-")
-    "named-item", "named-item-ns",
-    # Timer methods that return timeout/interval ID (wit_name[4:] after "set-")
-    "timeout", "interval",
+    ("canvas-transform", "set-transform"),
+    # NamedNodeMap methods that return replaced Attr
+    ("named-node-map", "named-item"),
+    ("named-node-map", "named-item-ns"),
+    # Window timer methods that return timeout/interval ID
+    ("window-or-worker-global-scope", "timeout"),
+    ("window-or-worker-global-scope", "interval"),
     # RTCRtpSender - setParameters is a method
-    "parameters",
+    ("rtc-rtp-sender", "parameters"),
     # MediaSession - screenshareActive setter returns void but WIT expects return
-    "screenshare-active",
-    # Canvas methods
-    "set-transform",
+    ("media-session", "screenshare-active"),
     # Element methods that return Attr
-    "set-attribute-node",
-    "set-attribute-node-ns",
-    "remove-attribute-node",
+    ("element", "set-attribute-node"),
+    ("element", "set-attribute-node-ns"),
+    ("element", "remove-attribute-node"),
+    # setCustomValidity is a method, not a property setter
+    ("html-object-element", "custom-validity"),
+    ("html-input-element", "custom-validity"),
+    ("html-button-element", "custom-validity"),
+    ("html-select-element", "custom-validity"),
+    ("html-text-area-element", "custom-validity"),
+    ("html-output-element", "custom-validity"),
+    ("html-field-set-element", "custom-validity"),
 }
 
 # Synthetic handle types - types that need handle tables but don't have WIT interfaces
@@ -5434,7 +5709,7 @@ TYPE_NAME_CASING_OVERRIDES = {
     "OnErrorEventHandlerRecord": "OnErrorEventHandlerNonNull",
     "OnBeforeUnloadEventHandlerRecord": "OnBeforeUnloadEventHandlerNonNull",
     "VoidFunctionRecord": "VoidFunction",
-    "MessageEventTarget": "MessageEventTarget",
+    "MessageEventTarget": "MessageEventTarget<any>",
     "AudioTrackList": "AudioTrackList",
     "AudioTrack": "AudioTrack",
     "VideoTrackList": "VideoTrackList",
@@ -5955,6 +6230,145 @@ PROPERTIES_NEEDING_TYPE_ASSERTION = {
     ("document", "getSetCookie"),
     # HTMLOListElement - start property setter
     ("htmlo-list-element", "start"),
+    # Event handlers - need type assertion for bigint ↔ function conversion
+    ("window-event-handlers", "ongamepadconnected"),
+    ("window-event-handlers", "ongamepaddisconnected"),
+    ("window-event-handlers", "onafterprint"),
+    ("window-event-handlers", "onbeforeprint"),
+    ("window-event-handlers", "onbeforeunload"),
+    ("window-event-handlers", "onhashchange"),
+    ("window-event-handlers", "onlanguagechange"),
+    ("window-event-handlers", "onmessage"),
+    ("window-event-handlers", "onmessageerror"),
+    ("window-event-handlers", "onoffline"),
+    ("window-event-handlers", "ononline"),
+    ("window-event-handlers", "onpagehide"),
+    ("window-event-handlers", "onpageshow"),
+    ("window-event-handlers", "onpageswap"),
+    ("window-event-handlers", "onpopstate"),
+    ("window-event-handlers", "onrejectionhandled"),
+    ("window-event-handlers", "onstorage"),
+    ("window-event-handlers", "onunhandledrejection"),
+    ("window-event-handlers", "onunload"),
+    ("global-event-handlers", "onabort"),
+    ("global-event-handlers", "onanimationcancel"),
+    ("global-event-handlers", "onanimationend"),
+    ("global-event-handlers", "onanimationiteration"),
+    ("global-event-handlers", "onanimationstart"),
+    ("global-event-handlers", "onauxclick"),
+    ("global-event-handlers", "onblur"),
+    ("global-event-handlers", "oncanplay"),
+    ("global-event-handlers", "oncanplaythrough"),
+    ("global-event-handlers", "oncancel"),
+    ("global-event-handlers", "onchange"),
+    ("global-event-handlers", "onclick"),
+    ("global-event-handlers", "onclose"),
+    ("global-event-handlers", "oncontextlost"),
+    ("global-event-handlers", "oncontextmenu"),
+    ("global-event-handlers", "oncontextrestored"),
+    ("global-event-handlers", "oncopy"),
+    ("global-event-handlers", "oncuechange"),
+    ("global-event-handlers", "oncut"),
+    ("global-event-handlers", "ondblclick"),
+    ("global-event-handlers", "ondrag"),
+    ("global-event-handlers", "ondragend"),
+    ("global-event-handlers", "ondragenter"),
+    ("global-event-handlers", "ondragleave"),
+    ("global-event-handlers", "ondragover"),
+    ("global-event-handlers", "ondragstart"),
+    ("global-event-handlers", "ondrop"),
+    ("global-event-handlers", "ondurationchange"),
+    ("global-event-handlers", "onemptied"),
+    ("global-event-handlers", "onended"),
+    ("global-event-handlers", "onerror"),
+    ("global-event-handlers", "onfocus"),
+    ("global-event-handlers", "onfocusin"),
+    ("global-event-handlers", "onfocusout"),
+    ("global-event-handlers", "onformdata"),
+    ("global-event-handlers", "ongotpointercapture"),
+    ("global-event-handlers", "oninput"),
+    ("global-event-handlers", "oninvalid"),
+    ("global-event-handlers", "onkeydown"),
+    ("global-event-handlers", "onkeypress"),
+    ("global-event-handlers", "onkeyup"),
+    ("global-event-handlers", "onload"),
+    ("global-event-handlers", "onloadeddata"),
+    ("global-event-handlers", "onloadedmetadata"),
+    ("global-event-handlers", "onloadstart"),
+    ("global-event-handlers", "onlostpointercapture"),
+    ("global-event-handlers", "onmousedown"),
+    ("global-event-handlers", "onmouseenter"),
+    ("global-event-handlers", "onmouseleave"),
+    ("global-event-handlers", "onmousemove"),
+    ("global-event-handlers", "onmouseout"),
+    ("global-event-handlers", "onmouseover"),
+    ("global-event-handlers", "onmouseup"),
+    ("global-event-handlers", "onpaste"),
+    ("global-event-handlers", "onpause"),
+    ("global-event-handlers", "onplay"),
+    ("global-event-handlers", "onplaying"),
+    ("global-event-handlers", "onpointercancel"),
+    ("global-event-handlers", "onpointerdown"),
+    ("global-event-handlers", "onpointerenter"),
+    ("global-event-handlers", "onpointerleave"),
+    ("global-event-handlers", "onpointermove"),
+    ("global-event-handlers", "onpointerout"),
+    ("global-event-handlers", "onpointerover"),
+    ("global-event-handlers", "onpointerup"),
+    ("global-event-handlers", "onprogress"),
+    ("global-event-handlers", "onratechange"),
+    ("global-event-handlers", "onreset"),
+    ("global-event-handlers", "onresize"),
+    ("global-event-handlers", "onscroll"),
+    ("global-event-handlers", "onscrollend"),
+    ("global-event-handlers", "onsecuritypolicyviolation"),
+    ("global-event-handlers", "onseeked"),
+    ("global-event-handlers", "onseeking"),
+    ("global-event-handlers", "onselect"),
+    ("global-event-handlers", "onselectionchange"),
+    ("global-event-handlers", "onselectstart"),
+    ("global-event-handlers", "onslotchange"),
+    ("global-event-handlers", "onstalled"),
+    ("global-event-handlers", "onsubmit"),
+    ("global-event-handlers", "onsuspend"),
+    ("global-event-handlers", "ontimeupdate"),
+    ("global-event-handlers", "ontoggle"),
+    ("global-event-handlers", "ontransitioncancel"),
+    ("global-event-handlers", "ontransitionend"),
+    ("global-event-handlers", "ontransitionrun"),
+    ("global-event-handlers", "ontransitionstart"),
+    ("global-event-handlers", "onvolumechange"),
+    ("global-event-handlers", "onwaiting"),
+    ("global-event-handlers", "onwebkitanimationend"),
+    ("global-event-handlers", "onwebkitanimationiteration"),
+    ("global-event-handlers", "onwebkitanimationstart"),
+    ("global-event-handlers", "onwebkittransitionend"),
+    ("global-event-handlers", "onwheel"),
+    # ServiceWorker event handlers
+    ("service-worker", "onstatechange"),
+    ("service-worker", "onerror"),
+    # WebSocket event handlers
+    ("web-socket", "onopen"),
+    ("web-socket", "onclose"),
+    ("web-socket", "onerror"),
+    ("web-socket", "onmessage"),
+    # RTC event handlers
+    ("rtc-peer-connection", "onconnectionstatechange"),
+    ("rtc-peer-connection", "ondatachannel"),
+    ("rtc-peer-connection", "onicecandidate"),
+    ("rtc-peer-connection", "onicecandidateerror"),
+    ("rtc-peer-connection", "oniceconnectionstatechange"),
+    ("rtc-peer-connection", "onicegatheringstatechange"),
+    ("rtc-peer-connection", "onnegotiationneeded"),
+    ("rtc-peer-connection", "onsignalingstatechange"),
+    ("rtc-peer-connection", "ontrack"),
+    ("rtc-data-channel", "onopen"),
+    ("rtc-data-channel", "onclose"),
+    ("rtc-data-channel", "onerror"),
+    ("rtc-data-channel", "onmessage"),
+    ("rtc-data-channel", "onbufferedamountlow"),
+    # MouseEvent getModifierState - method not property
+    ("mouse-event", "getModifierState"),
 }
 
 # Properties that return readonly arrays and need spreading
@@ -5969,6 +6383,8 @@ READONLY_ARRAY_PROPERTIES = {
     # Gamepad axes and buttons are readonly
     ("gamepad", "axes"),
     ("gamepad", "buttons"),
+    # Location ancestorOrigins returns DOMStringList
+    ("location", "ancestorOrigins"),
 }
 
 # Properties that return arrays of objects that need handle conversion
@@ -6006,4 +6422,17 @@ def correct_type_casing(name: str) -> str:
     """Correct the casing of a type name to match TypeScript DOM conventions."""
     if name in TYPE_NAME_CASING_OVERRIDES:
         return TYPE_NAME_CASING_OVERRIDES[name]
+    return name
+
+
+def strip_generic_params(name: str) -> str:
+    """Strip generic parameters from a type name for use in variable/function names.
+    
+    Examples:
+        'MessageEventTarget<any>' -> 'MessageEventTarget'
+        'Foo<T, U>' -> 'Foo'
+    """
+    idx = name.find('<')
+    if idx >= 0:
+        return name[:idx]
     return name

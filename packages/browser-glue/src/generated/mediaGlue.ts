@@ -251,6 +251,10 @@ let _nextMediaStreamTrack = 1n;
 const _promiseAnyHandles = new Map<bigint, Promise<any>>();
 let _nextPromiseAny = 1n;
 
+/** Handle table for speech-synthesis-utterance values */
+const _speechSynthesisUtteranceHandles = new Map<bigint, SpeechSynthesisUtterance>();
+let _nextSpeechSynthesisUtterance = 1n;
+
 /** Handle table for speech-synthesis-voice-list values */
 const _speechSynthesisVoiceListhandles = new Map<bigint, SpeechSynthesisVoice[]>();
 let _nextSpeechSynthesisVoiceList = 1n;
@@ -331,6 +335,23 @@ function lookupOptionPromiseAny(handle: bigint | undefined): Promise<any> | null
   return _promiseAnyHandles.get(handle) ?? null;
 }
 
+/** Lookup a speech-synthesis-utterance value by handle. */
+function lookupSpeechSynthesisUtterance(handle: bigint): SpeechSynthesisUtterance {
+  const obj = _speechSynthesisUtteranceHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`speech-synthesis-utterance handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional speech-synthesis-utterance value by handle. */
+function lookupOptionSpeechSynthesisUtterance(handle: bigint | undefined): SpeechSynthesisUtterance | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _speechSynthesisUtteranceHandles.get(handle) ?? null;
+}
+
 /** Lookup a speech-synthesis-voice-list value by handle. */
 function lookupSpeechSynthesisVoiceList(handle: bigint): SpeechSynthesisVoice[] {
   const obj = _speechSynthesisVoiceListhandles.get(handle);
@@ -389,7 +410,7 @@ function lookupMediaCapabilities(handle: bigint): MediaCapabilities {
  *
  * Async operation: returns request ID, poll with `pollDecodingInfo()`
  */
-export function decodingInfo(self: bigint, configuration: bigint): bigint {
+export function decodingInfo(self: bigint, configuration: string): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupMediaCapabilities(self);
   const promise = obj.decodingInfo(configuration as any)
@@ -427,7 +448,7 @@ export function pollDecodingInfo(requestId: bigint): { ok: true } | { ok: false;
  *
  * Async operation: returns request ID, poll with `pollEncodingInfo()`
  */
-export function encodingInfo(self: bigint, configuration: string): bigint {
+export function encodingInfo(self: bigint, configuration: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupMediaCapabilities(self);
   const promise = obj.encodingInfo(configuration as any)
@@ -531,7 +552,7 @@ export function addTrack(self: bigint, track: bigint): void {
 /**
  * `remove-track()` operation.
  */
-export function removeTrack(self: bigint, track: bigint): void {
+export function removeTrack(self: bigint, track: bigint | undefined): void {
   const obj = lookupMediaStream(self);
   obj.removeTrack(lookupMediaStreamTrack(track));
 }
@@ -563,7 +584,7 @@ export function getOnaddtrack(self: bigint): EventHandlerRecord {
 /**
  * `set-onaddtrack()` operation.
  */
-export function setOnaddtrack(self: bigint, value: boolean): void {
+export function setOnaddtrack(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupMediaStream(self);
   obj.onaddtrack = value;
 }
@@ -618,7 +639,7 @@ export function MediaStreamTrackGetLabel(self: bigint): string {
 /**
  * `get-enabled()` operation.
  */
-export function getEnabled(self: bigint): boolean {
+export function getEnabled(self: bigint): string {
   const obj = lookupMediaStreamTrack(self);
   return obj.enabled;
 }
@@ -642,7 +663,7 @@ export function getMuted(self: bigint): boolean {
 /**
  * `get-onmute()` operation.
  */
-export function getOnmute(self: bigint): EventHandlerRecord {
+export function getOnmute(self: bigint): boolean {
   const obj = lookupMediaStreamTrack(self);
   return obj.onmute;
 }
@@ -757,7 +778,7 @@ export function getSettings(self: bigint): bigint {
 export function applyConstraints(self: bigint, constraints: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupMediaStreamTrack(self);
-  const promise = obj.applyConstraints(constraints)
+  const promise = obj.applyConstraints(constraints as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -965,7 +986,7 @@ export function pollGetUserMedia(requestId: bigint): { ok: true; value: bigint }
  *
  * Async operation: returns request ID, poll with `pollGetDisplayMedia()`
  */
-export function getDisplayMedia(self: bigint, options: boolean | undefined): bigint {
+export function getDisplayMedia(self: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupMediaDevices(self);
   const promise = obj.getDisplayMedia(options as any)
@@ -990,12 +1011,12 @@ export function getDisplayMedia(self: bigint, options: boolean | undefined): big
  * Poll an async `getDisplayMedia()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollGetDisplayMedia(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollGetDisplayMedia(requestId: bigint): { ok: true; value: string } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: string } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -1042,7 +1063,7 @@ export function MediaDeviceInfoGetKind(self: bigint): bigint {
 /**
  * `get-label()` operation.
  */
-export function MediaDeviceInfoGetLabel(self: bigint): string {
+export function MediaDeviceInfoGetLabel(self: bigint): number {
   const obj = lookupMediaDeviceInfo(self);
   return obj.label;
 }
@@ -1085,7 +1106,7 @@ function lookupInputDeviceInfo(handle: bigint): InputDeviceInfo {
 /**
  * `get-capabilities()` operation.
  */
-export function InputDeviceInfoGetCapabilities(self: bigint): boolean {
+export function InputDeviceInfoGetCapabilities(self: bigint): bigint {
   const obj = lookupInputDeviceInfo(self);
   return obj.getCapabilities();
 }
@@ -1112,7 +1133,7 @@ function lookupDeviceChangeEvent(handle: bigint): DeviceChangeEvent {
 /**
  * `get-devices()` operation.
  */
-export function getDevices(self: bigint): (bigint)[] {
+export function getDevices(self: bigint): number {
   const obj = lookupDeviceChangeEvent(self);
   return (obj as any).devices;
 }
@@ -1149,7 +1170,7 @@ function lookupMediaSession(handle: bigint): MediaSession {
  */
 export function getMetadata(self: bigint): bigint | undefined {
   const obj = lookupMediaSession(self);
-  const _callResult = (obj as any).metadata();
+  const _callResult = (obj as any).getMetadata();
   if (_callResult === null) return undefined;
   const handle = _nextAny++;
   _anyHandles.set(handle, _callResult);
@@ -1159,7 +1180,7 @@ export function getMetadata(self: bigint): bigint | undefined {
 /**
  * `set-metadata()` operation.
  */
-export function setMetadata(self: bigint, value: string | undefined): void {
+export function setMetadata(self: bigint, value: bigint | undefined): void {
   const obj = lookupMediaSession(self);
   (obj as any).metadata = value;
 }
@@ -1186,7 +1207,7 @@ export function setPlaybackState(self: bigint, value: bigint): void {
 /**
  * `set-action-handler()` operation.
  */
-export function setActionHandler(self: bigint, action: bigint, handler: boolean | undefined): void {
+export function setActionHandler(self: bigint, action: bigint, handler: bigint | undefined): void {
   const obj = lookupMediaSession(self);
   obj.setActionHandler(action as any, handler as any);
 }
@@ -1194,9 +1215,9 @@ export function setActionHandler(self: bigint, action: bigint, handler: boolean 
 /**
  * `set-position-state()` operation.
  */
-export function setPositionState(self: bigint, state: boolean | undefined): void {
+export function setPositionState(self: bigint, state: bigint | undefined): void {
   const obj = lookupMediaSession(self);
-  obj.setPositionState(state);
+  obj.setPositionState(state as any);
 }
 
 /**
@@ -1218,7 +1239,7 @@ export function setCameraActive(self: bigint, active: boolean): bigint {
 /**
  * `set-screenshare-active()` operation.
  */
-export function setScreenshareActive(self: bigint, active: boolean): string {
+export function setScreenshareActive(self: bigint, active: boolean): bigint {
   const obj = lookupMediaSession(self);
   return (obj as any).setScreenshareActive(active);
 }
@@ -1269,7 +1290,7 @@ export function getArtist(self: bigint): string {
 /**
  * `set-artist()` operation.
  */
-export function setArtist(self: bigint, value: boolean): void {
+export function setArtist(self: bigint, value: string): void {
   const obj = lookupMediaMetadata(self);
   obj.artist = value;
 }
@@ -1293,7 +1314,7 @@ export function setAlbum(self: bigint, value: string): void {
 /**
  * `get-artwork()` operation.
  */
-export function MediaMetadataGetArtwork(self: bigint): (bigint)[] {
+export function MediaMetadataGetArtwork(self: bigint): string {
   const obj = lookupMediaMetadata(self);
   return [...obj.artwork];
 }
@@ -1309,7 +1330,7 @@ export function setArtwork(self: bigint, value: (bigint)[]): void {
 /**
  * `get-chapter-info()` operation.
  */
-export function getChapterInfo(self: bigint): string {
+export function getChapterInfo(self: bigint): (bigint)[] {
   const obj = lookupMediaMetadata(self);
   return (obj as any).chapterInfo;
 }
@@ -1668,7 +1689,7 @@ export function getGrammars(self: bigint): bigint {
 /**
  * `set-grammars()` operation.
  */
-export function setGrammars(self: bigint, value: string): void {
+export function setGrammars(self: bigint, value: bigint): void {
   const obj = lookupSpeechRecognition(self);
   obj.grammars = value;
 }
@@ -1684,7 +1705,7 @@ export function SpeechRecognitionGetLang(self: bigint): string {
 /**
  * `set-lang()` operation.
  */
-export function SpeechRecognitionSetLang(self: bigint, value: bigint): void {
+export function SpeechRecognitionSetLang(self: bigint, value: string): void {
   const obj = lookupSpeechRecognition(self);
   obj.lang = value;
 }
@@ -1692,7 +1713,7 @@ export function SpeechRecognitionSetLang(self: bigint, value: bigint): void {
 /**
  * `get-continuous()` operation.
  */
-export function getContinuous(self: bigint): boolean {
+export function getContinuous(self: bigint): bigint | undefined {
   const obj = lookupSpeechRecognition(self);
   return obj.continuous;
 }
@@ -1700,7 +1721,7 @@ export function getContinuous(self: bigint): boolean {
 /**
  * `set-continuous()` operation.
  */
-export function setContinuous(self: bigint, value: bigint | undefined): void {
+export function setContinuous(self: bigint, value: boolean): void {
   const obj = lookupSpeechRecognition(self);
   obj.continuous = value;
 }
@@ -1732,7 +1753,7 @@ export function getMaxAlternatives(self: bigint): number {
 /**
  * `set-max-alternatives()` operation.
  */
-export function setMaxAlternatives(self: bigint, value: number): void {
+export function setMaxAlternatives(self: bigint, value: string): void {
   const obj = lookupSpeechRecognition(self);
   obj.maxAlternatives = value;
 }
@@ -1756,7 +1777,7 @@ export function setProcessLocally(self: bigint, value: boolean): void {
 /**
  * `get-phrases()` operation.
  */
-export function getPhrases(self: bigint): (bigint)[] {
+export function getPhrases(self: bigint): (string)[] {
   const obj = lookupSpeechRecognition(self);
   return obj.phrases;
 }
@@ -1796,14 +1817,14 @@ export function abort(self: bigint): void {
 /**
  * `available()` operation.
  */
-export function available(options: string): bigint {
+export function available(options: bigint): bigint {
   return (globalThis as any).SpeechRecognition.available(options);
 }
 
 /**
  * `install()` operation.
  */
-export function install(options: bigint): bigint {
+export function install(options: bigint): string {
   return (globalThis as any).SpeechRecognition.install(options);
 }
 
@@ -1818,7 +1839,7 @@ export function getOnaudiostart(self: bigint): EventHandlerRecord {
 /**
  * `set-onaudiostart()` operation.
  */
-export function setOnaudiostart(self: bigint, value: string): void {
+export function setOnaudiostart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupSpeechRecognition(self);
   obj.onaudiostart = value;
 }
@@ -1834,7 +1855,7 @@ export function getOnsoundstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onsoundstart()` operation.
  */
-export function setOnsoundstart(self: bigint, value: string): void {
+export function setOnsoundstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupSpeechRecognition(self);
   obj.onsoundstart = value;
 }
@@ -1850,7 +1871,7 @@ export function getOnspeechstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onspeechstart()` operation.
  */
-export function setOnspeechstart(self: bigint, value: EventHandlerRecord): void {
+export function setOnspeechstart(self: bigint, value: boolean): void {
   const obj = lookupSpeechRecognition(self);
   obj.onspeechstart = value;
 }
@@ -1882,7 +1903,7 @@ export function getOnsoundend(self: bigint): EventHandlerRecord {
 /**
  * `set-onsoundend()` operation.
  */
-export function setOnsoundend(self: bigint, value: EventHandlerRecord): void {
+export function setOnsoundend(self: bigint, value: string): void {
   const obj = lookupSpeechRecognition(self);
   obj.onsoundend = value;
 }
@@ -1898,7 +1919,7 @@ export function getOnaudioend(self: bigint): EventHandlerRecord {
 /**
  * `set-onaudioend()` operation.
  */
-export function setOnaudioend(self: bigint, value: EventHandlerRecord): void {
+export function setOnaudioend(self: bigint, value: boolean): void {
   const obj = lookupSpeechRecognition(self);
   obj.onaudioend = value;
 }
@@ -1946,7 +1967,7 @@ export function SpeechRecognitionGetOnerror(self: bigint): EventHandlerRecord {
 /**
  * `set-onerror()` operation.
  */
-export function SpeechRecognitionSetOnerror(self: bigint, value: EventHandlerRecord): void {
+export function SpeechRecognitionSetOnerror(self: bigint, value: boolean): void {
   const obj = lookupSpeechRecognition(self);
   obj.onerror = value;
 }
@@ -1962,7 +1983,7 @@ export function SpeechRecognitionGetOnstart(self: bigint): EventHandlerRecord {
 /**
  * `set-onstart()` operation.
  */
-export function SpeechRecognitionSetOnstart(self: bigint, value: number): void {
+export function SpeechRecognitionSetOnstart(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupSpeechRecognition(self);
   obj.onstart = value;
 }
@@ -1970,7 +1991,7 @@ export function SpeechRecognitionSetOnstart(self: bigint, value: number): void {
 /**
  * `get-onend()` operation.
  */
-export function SpeechRecognitionGetOnend(self: bigint): EventHandlerRecord {
+export function SpeechRecognitionGetOnend(self: bigint): number {
   const obj = lookupSpeechRecognition(self);
   return obj.onend;
 }
@@ -1978,7 +1999,7 @@ export function SpeechRecognitionGetOnend(self: bigint): EventHandlerRecord {
 /**
  * `set-onend()` operation.
  */
-export function SpeechRecognitionSetOnend(self: bigint, value: number): void {
+export function SpeechRecognitionSetOnend(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupSpeechRecognition(self);
   obj.onend = value;
 }
@@ -2013,7 +2034,7 @@ export function SpeechRecognitionErrorEventGetError(self: bigint): bigint {
 /**
  * `get-message()` operation.
  */
-export function getMessage(self: bigint): bigint {
+export function getMessage(self: bigint): string {
   const obj = lookupSpeechRecognitionErrorEvent(self);
   return (obj as any).message;
 }
@@ -2043,7 +2064,7 @@ function lookupSpeechRecognitionAlternative(handle: bigint): SpeechRecognitionAl
 export function getTranscript(self: bigint): bigint {
   const obj = lookupSpeechRecognitionAlternative(self);
   const value = obj.transcript;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -2052,7 +2073,7 @@ export function getTranscript(self: bigint): bigint {
 /**
  * `get-confidence()` operation.
  */
-export function getConfidence(self: bigint): number {
+export function getConfidence(self: bigint): bigint | undefined {
   const obj = lookupSpeechRecognitionAlternative(self);
   return obj.confidence;
 }
@@ -2079,7 +2100,7 @@ function lookupSpeechRecognitionResult(handle: bigint): SpeechRecognitionResult 
 /**
  * `get-length()` operation.
  */
-export function SpeechRecognitionResultGetLength(self: bigint): number {
+export function SpeechRecognitionResultGetLength(self: bigint): bigint | undefined {
   const obj = lookupSpeechRecognitionResult(self);
   return obj.length;
 }
@@ -2171,7 +2192,7 @@ export function getResultIndex(self: bigint): number {
 /**
  * `get-results()` operation.
  */
-export function getResults(self: bigint): string {
+export function getResults(self: bigint): bigint {
   const obj = lookupSpeechRecognitionEvent(self);
   return (obj as any).results;
 }
@@ -2214,7 +2235,7 @@ export function setSrc(self: bigint, value: string): void {
 /**
  * `get-weight()` operation.
  */
-export function getWeight(self: bigint): number {
+export function getWeight(self: bigint): bigint {
   const obj = lookupSpeechGrammar(self);
   return obj.weight;
 }
@@ -2249,7 +2270,7 @@ function lookupSpeechGrammarList(handle: bigint): SpeechGrammarList {
 /**
  * `get-length()` operation.
  */
-export function SpeechGrammarListGetLength(self: bigint): number {
+export function SpeechGrammarListGetLength(self: bigint): boolean {
   const obj = lookupSpeechGrammarList(self);
   return obj.length;
 }
@@ -2273,7 +2294,7 @@ export function addFromUri(self: bigint, src: string, weight: number | undefined
 /**
  * `add-from-string()` operation.
  */
-export function addFromString(self: bigint, string: bigint, weight: number | undefined): void {
+export function addFromString(self: bigint, string: string, weight: number | undefined): void {
   const obj = lookupSpeechGrammarList(self);
   obj.addFromString(string, weight);
 }
@@ -2300,7 +2321,7 @@ function lookupSpeechRecognitionPhrase(handle: bigint): SpeechRecognitionPhrase 
 /**
  * `get-phrase()` operation.
  */
-export function getPhrase(self: bigint): boolean {
+export function getPhrase(self: bigint): string {
   const obj = lookupSpeechRecognitionPhrase(self);
   return obj.phrase;
 }
@@ -2351,7 +2372,7 @@ export function getSpeaking(self: bigint): boolean {
 /**
  * `get-paused()` operation.
  */
-export function getPaused(self: bigint): string {
+export function getPaused(self: bigint): boolean {
   const obj = lookupSpeechSynthesis(self);
   return obj.paused;
 }
@@ -2377,7 +2398,7 @@ export function setOnvoiceschanged(self: bigint, value: EventHandlerRecord): voi
  */
 export function speak(self: bigint, utterance: bigint): void {
   const obj = lookupSpeechSynthesis(self);
-  obj.speak(utterance);
+  obj.speak(lookupSpeechSynthesisUtterance(utterance));
 }
 
 /**
@@ -2409,7 +2430,7 @@ export function SpeechSynthesisResume(self: bigint): void {
  */
 export function getVoices(self: bigint): bigint {
   const obj = lookupSpeechSynthesis(self);
-  const _callResult = (obj as any).voices();
+  const _callResult = (obj as any).getVoices();
   const handle = _nextSpeechSynthesisVoiceList++;
   _speechSynthesisVoiceListhandles.set(handle, _callResult);
   return handle;
@@ -2422,25 +2443,13 @@ export function getVoices(self: bigint): bigint {
 /** Type alias */
 export type SpeechSynthesisUtteranceHandle = bigint;
 
-/** Handle table for SpeechSynthesisUtterance instances */
-const _speechSynthesisUtterancehandles = new Map<bigint, SpeechSynthesisUtterance>();
-let _nextSpeechSynthesisUtterance = 1n;
-
-/** Lookup a SpeechSynthesisUtterance by handle, throwing if not found. */
-function lookupSpeechSynthesisUtterance(handle: bigint): SpeechSynthesisUtterance {
-  const obj = _speechSynthesisUtterancehandles.get(handle);
-  if (!obj) {
-    throw new Error(`SpeechSynthesisUtterance handle ${handle} not found`);
-  }
-  return obj!;
-}
 /**
  * `get-text()` operation.
  */
 export function getText(self: bigint): bigint {
   const obj = lookupSpeechSynthesisUtterance(self);
   const value = obj.text;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -2457,7 +2466,7 @@ export function setText(self: bigint, value: string): void {
 /**
  * `get-lang()` operation.
  */
-export function SpeechSynthesisUtteranceGetLang(self: bigint): bigint | undefined {
+export function SpeechSynthesisUtteranceGetLang(self: bigint): string {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.lang;
 }
@@ -2465,7 +2474,7 @@ export function SpeechSynthesisUtteranceGetLang(self: bigint): bigint | undefine
 /**
  * `set-lang()` operation.
  */
-export function SpeechSynthesisUtteranceSetLang(self: bigint, value: number): void {
+export function SpeechSynthesisUtteranceSetLang(self: bigint, value: string): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   obj.lang = value;
 }
@@ -2473,7 +2482,7 @@ export function SpeechSynthesisUtteranceSetLang(self: bigint, value: number): vo
 /**
  * `get-voice()` operation.
  */
-export function getVoice(self: bigint): bigint | undefined {
+export function getVoice(self: bigint): number {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.voice ?? undefined;
 }
@@ -2481,7 +2490,7 @@ export function getVoice(self: bigint): bigint | undefined {
 /**
  * `set-voice()` operation.
  */
-export function setVoice(self: bigint, value: bigint | undefined): void {
+export function setVoice(self: bigint, value: number): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   obj.voice = value;
 }
@@ -2489,7 +2498,7 @@ export function setVoice(self: bigint, value: bigint | undefined): void {
 /**
  * `get-volume()` operation.
  */
-export function getVolume(self: bigint): string {
+export function getVolume(self: bigint): number {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.volume;
 }
@@ -2529,7 +2538,7 @@ export function getPitch(self: bigint): number {
 /**
  * `set-pitch()` operation.
  */
-export function setPitch(self: bigint, value: boolean): void {
+export function setPitch(self: bigint, value: number): void {
   const obj = lookupSpeechSynthesisUtterance(self);
   obj.pitch = value;
 }
@@ -2569,7 +2578,7 @@ export function SpeechSynthesisUtteranceSetOnend(self: bigint, value: EventHandl
 /**
  * `get-onerror()` operation.
  */
-export function SpeechSynthesisUtteranceGetOnerror(self: bigint): EventHandlerRecord {
+export function SpeechSynthesisUtteranceGetOnerror(self: bigint): string {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.onerror;
 }
@@ -2617,7 +2626,7 @@ export function SpeechSynthesisUtteranceSetOnresume(self: bigint, value: EventHa
 /**
  * `get-onmark()` operation.
  */
-export function getOnmark(self: bigint): EventHandlerRecord {
+export function getOnmark(self: bigint): number {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.onmark;
 }
@@ -2633,7 +2642,7 @@ export function setOnmark(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onboundary()` operation.
  */
-export function getOnboundary(self: bigint): boolean {
+export function getOnboundary(self: bigint): EventHandlerRecord {
   const obj = lookupSpeechSynthesisUtterance(self);
   return obj.onboundary;
 }
@@ -2754,7 +2763,7 @@ function lookupSpeechSynthesisVoice(handle: bigint): SpeechSynthesisVoice {
 /**
  * `get-voice-uri()` operation.
  */
-export function getVoiceUri(self: bigint): number {
+export function getVoiceUri(self: bigint): string {
   const obj = lookupSpeechSynthesisVoice(self);
   return obj.voiceURI;
 }
@@ -2765,7 +2774,7 @@ export function getVoiceUri(self: bigint): number {
 export function SpeechSynthesisVoiceGetName(self: bigint): bigint {
   const obj = lookupSpeechSynthesisVoice(self);
   const value = obj.name;
-  switch (value) {
+  switch ((value as any)) {
     case '': return 0n;
     default: return 0n;
   }
@@ -2782,7 +2791,7 @@ export function SpeechSynthesisVoiceGetLang(self: bigint): string {
 /**
  * `get-local-service()` operation.
  */
-export function getLocalService(self: bigint): bigint | undefined {
+export function getLocalService(self: bigint): boolean {
   const obj = lookupSpeechSynthesisVoice(self);
   return obj.localService;
 }

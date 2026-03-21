@@ -531,7 +531,7 @@ export function ClipboardItemGetTypes(self: bigint): bigint {
  */
 export function getType(self: bigint, type: string): bigint {
   const obj = lookupClipboardItem(self);
-  const _callResult = obj.types;
+  const _callResult = obj.getType(type as any);
   const handle = _nextPromiseAny++;
   _promiseAnyHandles.set(handle, _callResult);
   return handle;
@@ -898,7 +898,7 @@ export function getDeltaY(self: bigint): number {
 /**
  * `get-delta-z()` operation.
  */
-export function getDeltaZ(self: bigint): string {
+export function getDeltaZ(self: bigint): number {
   const obj = lookupWheelEvent(self);
   return obj.deltaZ;
 }
@@ -1036,7 +1036,7 @@ export function TouchGetAzimuthAngle(self: bigint): number {
 /**
  * `get-touch-type()` operation.
  */
-export function getTouchType(self: bigint): string {
+export function getTouchType(self: bigint): bigint {
   const obj = lookupTouch(self);
   return (obj as any).touchType;
 }
@@ -1051,7 +1051,7 @@ export type TouchListHandle = bigint;
 /**
  * `get-length()` operation.
  */
-export function getLength(self: bigint): EventHandlerRecord {
+export function getLength(self: bigint): number {
   const obj = lookupTouchList(self);
   return obj.length;
 }
@@ -1059,7 +1059,7 @@ export function getLength(self: bigint): EventHandlerRecord {
 /**
  * `item()` operation.
  */
-export function item(self: bigint, index: number): bigint | undefined {
+export function item(self: bigint, index: bigint): bigint | undefined {
   const obj = lookupTouchList(self);
   const _callResult = obj.item(index);
   if (_callResult === null) return undefined;
@@ -1139,7 +1139,7 @@ export function TouchEventGetMetaKey(self: bigint): bigint {
 /**
  * `get-ctrl-key()` operation.
  */
-export function TouchEventGetCtrlKey(self: bigint): boolean {
+export function TouchEventGetCtrlKey(self: bigint): bigint {
   const obj = lookupTouchEvent(self);
   return obj.ctrlKey;
 }
@@ -1147,7 +1147,7 @@ export function TouchEventGetCtrlKey(self: bigint): boolean {
 /**
  * `get-shift-key()` operation.
  */
-export function TouchEventGetShiftKey(self: bigint): string {
+export function TouchEventGetShiftKey(self: bigint): bigint | undefined {
   const obj = lookupTouchEvent(self);
   return obj.shiftKey;
 }
@@ -1194,7 +1194,7 @@ export function getView(self: bigint): bigint | undefined {
 /**
  * `get-detail()` operation.
  */
-export function getDetail(self: bigint): bigint {
+export function getDetail(self: bigint): number {
   const obj = lookupUIEvent(self);
   return obj.detail;
 }
@@ -1202,7 +1202,7 @@ export function getDetail(self: bigint): bigint {
 /**
  * `init-ui-event()` operation.
  */
-export function initUiEvent(self: bigint, typeArg: bigint, bubblesArg: boolean | undefined, cancelableArg: bigint, viewArg: bigint | undefined, detailArg: string | undefined): void {
+export function initUiEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: EventHandlerRecord, viewArg: bigint | undefined, detailArg: number | undefined): void {
   const obj = lookupUIEvent(self);
   obj.initUIEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), Number(detailArg));
 }
@@ -1284,7 +1284,7 @@ export function InputEventGetIsComposing(self: bigint): boolean {
 /**
  * `get-input-type()` operation.
  */
-export function getInputType(self: bigint): bigint {
+export function getInputType(self: bigint): string {
   const obj = lookupInputEvent(self);
   return obj.inputType;
 }
@@ -1359,7 +1359,7 @@ export function KeyboardEventGetAltKey(self: bigint): boolean {
 /**
  * `get-meta-key()` operation.
  */
-export function KeyboardEventGetMetaKey(self: bigint): boolean {
+export function KeyboardEventGetMetaKey(self: bigint): string {
   const obj = lookupKeyboardEvent(self);
   return obj.metaKey;
 }
@@ -1375,7 +1375,7 @@ export function getRepeat(self: bigint): boolean {
 /**
  * `get-is-composing()` operation.
  */
-export function KeyboardEventGetIsComposing(self: bigint): number {
+export function KeyboardEventGetIsComposing(self: bigint): boolean {
   const obj = lookupKeyboardEvent(self);
   return obj.isComposing;
 }
@@ -1383,7 +1383,7 @@ export function KeyboardEventGetIsComposing(self: bigint): number {
 /**
  * `get-modifier-state()` operation.
  */
-export function KeyboardEventGetModifierState(self: bigint, keyArg: string): boolean {
+export function KeyboardEventGetModifierState(self: bigint, keyArg: boolean): boolean {
   const obj = lookupKeyboardEvent(self);
   return obj.getModifierState;
 }
@@ -1391,7 +1391,7 @@ export function KeyboardEventGetModifierState(self: bigint, keyArg: string): boo
 /**
  * `init-keyboard-event()` operation.
  */
-export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: string | undefined, keyArg: string | undefined, locationArg: number | undefined, ctrlKey: boolean | undefined, altKey: boolean | undefined, shiftKey: string | undefined, metaKey: boolean | undefined): void {
+export function initKeyboardEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, keyArg: boolean, locationArg: boolean, ctrlKey: boolean | undefined, altKey: boolean | undefined, shiftKey: boolean | undefined, metaKey: boolean | undefined): void {
   const obj = lookupKeyboardEvent(self);
   obj.initKeyboardEvent(typeArg as any, bubblesArg !== undefined ? Boolean(bubblesArg) : undefined, cancelableArg !== undefined ? Boolean(cancelableArg) : undefined, lookupOptionWindow(viewArg), keyArg as any, locationArg, ctrlKey !== undefined ? Boolean(ctrlKey) : undefined, altKey !== undefined ? Boolean(altKey) : undefined, shiftKey !== undefined ? Boolean(shiftKey) : undefined, metaKey !== undefined ? Boolean(metaKey) : undefined);
 }
@@ -1407,7 +1407,7 @@ export function getCharCode(self: bigint): number {
 /**
  * `get-key-code()` operation.
  */
-export function getKeyCode(self: bigint): boolean | undefined {
+export function getKeyCode(self: bigint): number {
   const obj = lookupKeyboardEvent(self);
   return obj.keyCode;
 }
@@ -1442,7 +1442,7 @@ export function CompositionEventGetData(self: bigint): string {
 /**
  * `init-composition-event()` operation.
  */
-export function initCompositionEvent(self: bigint, typeArg: string, bubblesArg: boolean | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, dataArg: string | undefined): void {
+export function initCompositionEvent(self: bigint, typeArg: boolean, bubblesArg: string | undefined, cancelableArg: boolean | undefined, viewArg: bigint | undefined, dataArg: string): void {
   const obj = lookupCompositionEvent(self);
   obj.initCompositionEvent(typeArg as any, bubblesArg, cancelableArg, viewArg, dataArg);
 }
@@ -1469,7 +1469,7 @@ function lookupTextEvent(handle: bigint): TextEvent {
 /**
  * `get-data()` operation.
  */
-export function TextEventGetData(self: bigint): boolean {
+export function TextEventGetData(self: bigint): string {
   const obj = lookupTextEvent(self);
   return obj.data;
 }
@@ -1477,7 +1477,7 @@ export function TextEventGetData(self: bigint): boolean {
 /**
  * `init-text-event()` operation.
  */
-export function initTextEvent(self: bigint, type: string, bubbles: boolean, cancelable: boolean | undefined, view: bigint | undefined, data: string): void {
+export function initTextEvent(self: bigint, type: boolean, bubbles: boolean | undefined, cancelable: boolean | undefined, view: boolean, data: string | undefined): void {
   const obj = lookupTextEvent(self);
   obj.initTextEvent(type, bubbles, cancelable, view, data);
 }
