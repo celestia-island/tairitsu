@@ -3410,9 +3410,9 @@ interface media-list {
     type media-list-handle = u64;
 
     /// `mediaText` attribute — getter.
-    get-media-text: func(self: media-list-handle) -> u64;
+    get-media-text: func(self: media-list-handle) -> string;
     /// `mediaText` attribute — setter.
-    set-media-text: func(self: media-list-handle, value: u64);
+    set-media-text: func(self: media-list-handle, value: string);
 
     /// `length` attribute — getter.
     get-length: func(self: media-list-handle) -> u32;
@@ -4731,9 +4731,9 @@ interface dom-token-list {
     supports: func(self: dom-token-list-handle, token: string) -> bool;
 
     /// `value` attribute — getter.
-    get-value: func(self: dom-token-list-handle) -> u64;
+    get-value: func(self: dom-token-list-handle) -> string;
     /// `value` attribute — setter.
-    set-value: func(self: dom-token-list-handle, value: u64);
+    set-value: func(self: dom-token-list-handle, value: string);
 }
 
 interface x-path-result {
@@ -6407,9 +6407,9 @@ interface html-hyperlink-element-utils {
     type html-hyperlink-element-utils-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func(self: html-hyperlink-element-utils-handle) -> u64;
+    get-href: func(self: html-hyperlink-element-utils-handle) -> string;
     /// `href` attribute — setter.
-    set-href: func(self: html-hyperlink-element-utils-handle, value: u64);
+    set-href: func(self: html-hyperlink-element-utils-handle, value: string);
 }
 
 interface html-mod-element {
@@ -9460,9 +9460,9 @@ interface location {
     type location-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func() -> u64;
+    get-href: func() -> string;
     /// `href` attribute — setter.
-    set-href: func(value: u64);
+    set-href: func(value: string);
 
     /// `origin` attribute — getter.
     get-origin: func() -> string;
@@ -10409,22 +10409,22 @@ interface storage {
     type storage-handle = u64;
 
     /// `length` attribute — getter.
-    get-length: func() -> u32;
+    get-length: func(self: storage-handle) -> u32;
 
     /// `key()` operation.
-    key: func(index: u32) -> option<string>;
+    key: func(self: storage-handle, index: u32) -> option<string>;
 
     /// `getItem()` operation.
-    get-item: func(key: string) -> option<string>;
+    get-item: func(self: storage-handle, key: string) -> option<string>;
 
     /// `setItem()` operation.
-    set-item: func(key: string, value: string);
+    set-item: func(self: storage-handle, key: string, value: string);
 
     /// `removeItem()` operation.
-    remove-item: func(key: string);
+    remove-item: func(self: storage-handle, key: string);
 
     /// `clear()` operation.
-    clear: func();
+    clear: func(self: storage-handle);
 }
 
 interface window-session-storage {
@@ -12261,9 +12261,9 @@ interface url {
     can-parse: func(url: string, base: option<string>) -> bool;
 
     /// `href` attribute — getter.
-    get-href: func(self: url-handle) -> u64;
+    get-href: func(self: url-handle) -> string;
     /// `href` attribute — setter.
-    set-href: func(self: url-handle, value: u64);
+    set-href: func(self: url-handle, value: string);
 
     /// `origin` attribute — getter.
     get-origin: func(self: url-handle) -> string;

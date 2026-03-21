@@ -726,9 +726,9 @@ interface html-hyperlink-element-utils {
     type html-hyperlink-element-utils-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func(self: html-hyperlink-element-utils-handle) -> u64;
+    get-href: func(self: html-hyperlink-element-utils-handle) -> string;
     /// `href` attribute — setter.
-    set-href: func(self: html-hyperlink-element-utils-handle, value: u64);
+    set-href: func(self: html-hyperlink-element-utils-handle, value: string);
 }
 
 /// WebIDL interface: `HTMLModElement`
@@ -4012,9 +4012,9 @@ interface location {
     type location-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func() -> u64;
+    get-href: func() -> string;
     /// `href` attribute — setter.
-    set-href: func(value: u64);
+    set-href: func(value: string);
 
     /// `origin` attribute — getter.
     get-origin: func() -> string;
@@ -5079,29 +5079,28 @@ interface worklet {
 }
 
 /// WebIDL interface: `Storage`
-/// Note: Global singleton - no self parameter needed
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/html.idl
 interface storage {
     /// Opaque handle to a host-side `Storage` instance.
     type storage-handle = u64;
 
     /// `length` attribute — getter.
-    get-length: func() -> u32;
+    get-length: func(self: storage-handle) -> u32;
 
     /// `key()` operation.
-    key: func(index: u32) -> option<string>;
+    key: func(self: storage-handle, index: u32) -> option<string>;
 
     /// `getItem()` operation.
-    get-item: func(key: string) -> option<string>;
+    get-item: func(self: storage-handle, key: string) -> option<string>;
 
     /// `setItem()` operation.
-    set-item: func(key: string, value: string);
+    set-item: func(self: storage-handle, key: string, value: string);
 
     /// `removeItem()` operation.
-    remove-item: func(key: string);
+    remove-item: func(self: storage-handle, key: string);
 
     /// `clear()` operation.
-    clear: func();
+    clear: func(self: storage-handle);
 }
 
 /// WebIDL interface: `WindowSessionStorage`

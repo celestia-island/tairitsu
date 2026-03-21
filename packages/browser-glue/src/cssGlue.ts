@@ -8006,13 +8006,9 @@ export function getMediaText(self: bigint): bigint {
 /**
  * `set-media-text()` operation.
  */
-export function setMediaText(self: bigint, value: bigint): void {
+export function setMediaText(self: bigint, value: string): void {
   const obj = lookupMediaList(self);
-  const _enumInput = value;
-  let enumValue: MediaText | '';
-  if (_enumInput === 0n) { enumValue = ''; }
-  else { enumValue = ''; }
-  obj.mediaText = enumValue as any;
+  obj.mediaText = value;
 }
 
 /**

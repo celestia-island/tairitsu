@@ -3817,13 +3817,9 @@ export function HtmlHyperlinkElementUtilsGetHref(self: bigint): bigint {
 /**
  * `set-href()` operation.
  */
-export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: bigint): void {
+export function HtmlHyperlinkElementUtilsSetHref(self: bigint, value: string): void {
   const obj = lookupHTMLHyperlinkElementUtils(self);
-  const _enumInput = value;
-  let enumValue: HTMLHyperlinkHref | '';
-  if (_enumInput === 0n) { enumValue = ''; }
-  else { enumValue = ''; }
-  obj.href = enumValue as any;
+  obj.href = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -14555,12 +14551,8 @@ export function LocationGetHref(): bigint {
 /**
  * `set-href()` operation.
  */
-export function LocationSetHref(value: bigint): void {
-  const _enumInput = value;
-  let enumValue: LocationHref | '';
-  if (_enumInput === 0n) { enumValue = ''; }
-  else { enumValue = ''; }
-  window.location.href = enumValue as any;
+export function LocationSetHref(value: string): void {
+  window.location.href = value;
 }
 
 /**
@@ -17850,44 +17842,49 @@ export type StorageHandle = bigint;
 /**
  * `get-length()` operation.
  */
-export function StorageGetLength(): number {
-  return Storage.length;
+export function StorageGetLength(self: bigint): number {
+  const obj = lookupStorage(self);
+  return obj.length;
 }
 
 /**
  * `key()` operation.
  */
-export function key(index: number): string | undefined {
-  return Storage.key(index);
+export function key(self: bigint, index: number): string | undefined {
+  const obj = lookupStorage(self);
+  return obj.key(index) ?? undefined;
 }
 
 /**
  * `get-item()` operation.
  */
-export function getItem(key: string): string | undefined {
-  return Storage.getItem() ?? undefined;
+export function getItem(self: bigint, key: string): string | undefined {
+  const obj = lookupStorage(self);
+  return obj.getItem(key) ?? undefined;
 }
 
 /**
  * `set-item()` operation.
  */
-export function setItem(key: string, value: string): void {
-  const obj = lookupStorage(key);
+export function setItem(self: bigint, key: string, value: string): void {
+  const obj = lookupStorage(self);
   obj.item = value;
 }
 
 /**
  * `remove-item()` operation.
  */
-export function removeItem(key: string): void {
-  return Storage.removeItem(key);
+export function removeItem(self: bigint, key: string): void {
+  const obj = lookupStorage(self);
+  obj.removeItem(key);
 }
 
 /**
  * `clear()` operation.
  */
-export function StorageClear(): void {
-  return Storage.clear();
+export function StorageClear(self: bigint): void {
+  const obj = lookupStorage(self);
+  obj.clear();
 }
 
 // ---------------------------------------------------------------------------

@@ -453,6 +453,10 @@ def _parse_member(stmt: str) -> Optional[WebIDLMember]:
         readonly = stmt.startswith("readonly ")
         if readonly:
             stmt = stmt[9:].lstrip()
+        
+        # Remove stringifier prefix (e.g., "stringifier attribute USVString href")
+        if stmt.startswith("stringifier "):
+            stmt = stmt[12:].lstrip()
         if not stmt.startswith("attribute "):
             # e.g. "readonly attribute type name" already stripped "readonly"
             pass
@@ -608,9 +612,6 @@ GLOBAL_SINGLETON_INTERFACES = {
     "screen",
     "console",
     "performance",
-    "storage",
-    "local-storage",
-    "session-storage",
     "crypto",
     "fetch",
 }

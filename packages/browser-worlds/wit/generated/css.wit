@@ -2086,9 +2086,9 @@ interface media-list {
     type media-list-handle = u64;
 
     /// `mediaText` attribute — getter.
-    get-media-text: func(self: media-list-handle) -> u64;
+    get-media-text: func(self: media-list-handle) -> string;
     /// `mediaText` attribute — setter.
-    set-media-text: func(self: media-list-handle, value: u64);
+    set-media-text: func(self: media-list-handle, value: string);
 
     /// `length` attribute — getter.
     get-length: func(self: media-list-handle) -> u32;

@@ -5634,20 +5634,12 @@ ENUM_SETTER_PROPERTIES = {
     ("text-track", "mode"): "TextTrackMode",
     # XMLHttpRequest setter
     ("xml-http-request", "responseType"): "XMLHttpRequestResponseType",
-    # Location setter
-    ("location", "href"): "LocationHref",
     # URL setter - href removed, it's just a string property
-    # HTMLHyperlinkElementUtils setter
-    ("html-hyperlink-element-utils", "href"): "HTMLHyperlinkHref",
     # Element setters
     ("element", "innerHTML"): "HTMLString",
     ("element", "outerHTML"): "HTMLString",
     # ShadowRoot setter
     ("shadow-root", "innerHTML"): "HTMLString",
-    # MediaList setter
-    ("media-list", "mediaText"): "MediaText",
-    # DOMTokenList setter
-    ("dom-token-list", "value"): "DOMTokenListValue",
     # HTMLIFrameElement setter
     ("html-iframe-element", "srcdoc"): "HTMLSrcdoc",
     # WebRTC setters

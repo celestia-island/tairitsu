@@ -3063,13 +3063,9 @@ export function DomTokenListGetValue(self: bigint): bigint {
 /**
  * `set-value()` operation.
  */
-export function DomTokenListSetValue(self: bigint, value: bigint): void {
+export function DomTokenListSetValue(self: bigint, value: string): void {
   const obj = lookupDOMTokenList(self);
-  const _enumInput = value;
-  let enumValue: DOMTokenListValue | '';
-  if (_enumInput === 0n) { enumValue = ''; }
-  else { enumValue = ''; }
-  obj.value = enumValue as any;
+  obj.value = value;
 }
 
 // ---------------------------------------------------------------------------
