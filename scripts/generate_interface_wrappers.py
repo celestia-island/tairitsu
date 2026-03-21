@@ -32,9 +32,11 @@ USED_INTERFACES = {
     "window": [
         "get-inner-width",
         "get-inner-height",
-        "console-log",
-        "console-warn",
-        "console-error",
+    ],
+    "console": [
+        "log",
+        "warn",
+        "error",
     ],
     "style": [
         "set-style-property",
