@@ -287,6 +287,10 @@ let _nextResponse = 1n;
 const _stringHandles = new Map<bigint, string>();
 let _nextString = 1n;
 
+/** Handle table for string-list values */
+const _stringListHandles = new Map<bigint, string[]>();
+let _nextStringList = 1n;
+
 /** Handle table for writable-stream values */
 const _writableStreamHandles = new Map<bigint, WritableStream>();
 let _nextWritableStream = 1n;
@@ -520,6 +524,23 @@ function lookupOptionString(handle: bigint | undefined): string | null {
   return _stringHandles.get(handle) ?? null;
 }
 
+/** Lookup a string-list value by handle. */
+function lookupStringList(handle: bigint): string[] {
+  const obj = _stringListHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`string-list handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional string-list value by handle. */
+function lookupOptionStringList(handle: bigint | undefined): string[] | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _stringListHandles.get(handle) ?? null;
+}
+
 /** Lookup a writable-stream value by handle. */
 function lookupWritableStream(handle: bigint): WritableStream {
   const obj = _writableStreamHandles.get(handle);
@@ -592,15 +613,18 @@ export function HeadersGet(self: bigint, name: string): bigint | undefined {
 /**
  * `get-set-cookie()` operation.
  */
-export function getSetCookie(self: bigint): (string)[] {
+export function getSetCookie(self: bigint): bigint {
   const obj = lookupHeaders(self);
-  return obj.getSetCookie();
+  const _callResult = obj.getSetCookie();
+  const handle = _nextStringList++;
+  _stringListHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
  * `has()` operation.
  */
-export function HeadersHas(self: bigint, name: string): EventHandlerRecord {
+export function HeadersHas(self: bigint, name: string): (number)[] {
   const obj = lookupHeaders(self);
   return obj.has(name as any);
 }
@@ -608,9 +632,9 @@ export function HeadersHas(self: bigint, name: string): EventHandlerRecord {
 /**
  * `set()` operation.
  */
-export function HeadersSet(self: bigint, name: EventHandlerRecord, value: bigint | undefined): void {
+export function HeadersSet(self: bigint, name: string, value: string): void {
   const obj = lookupHeaders(self);
-  obj.set(name as any, value);
+  obj.set(name as any, value as any);
 }
 
 // ---------------------------------------------------------------------------
@@ -682,12 +706,12 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: (bigint)[] | undefined } | { ok: false; error: string } | undefined {
+export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: (bigint)[] | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -796,12 +820,12 @@ export function formData(self: bigint): bigint {
  * Poll an async `formData()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollFormData(requestId: bigint): { ok: true; value: string | undefined } | { ok: false; error: string } | undefined {
+export function pollFormData(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: string | undefined } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -872,12 +896,12 @@ export function text(self: bigint): bigint {
  * Poll an async `text()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function pollText(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -1132,8 +1156,8 @@ export function ResponseError(): bigint {
 /**
  * `redirect()` operation.
  */
-export function redirect(url: string, status: string): bigint {
-  const _callResult = Response.redirect(url, status);
+export function redirect(url: string, status: number | undefined): bigint {
+  const _callResult = Response.redirect(url, Number(status));
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
   return handle;
@@ -1142,7 +1166,7 @@ export function redirect(url: string, status: string): bigint {
 /**
  * `json()` operation.
  */
-export function ResponseJson(data: string, init: string): bigint {
+export function ResponseJson(data: string, init: bigint | undefined): bigint {
   const _callResult = Response.json(data, init as any);
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
@@ -1154,7 +1178,7 @@ export function ResponseJson(data: string, init: string): bigint {
  */
 export function getType(self: bigint): bigint {
   const obj = lookupResponse(self);
-  const value = obj.getType();
+  const value = (obj as any).getType();
   switch (value) {
     case 'basic': return 0n;
     case 'cors': return 1n;
@@ -1381,7 +1405,7 @@ export function setInterval(self: bigint, handler: bigint, timeout: number | und
 /**
  * `clear-interval()` operation.
  */
-export function clearInterval(self: bigint, id: number | undefined): void {
+export function clearInterval(self: bigint, id: bigint | undefined): void {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   obj.clearInterval(id);
 }
@@ -1399,7 +1423,7 @@ export function queueMicrotask(self: bigint, callback: VoidFunctionRecord): void
  *
  * Async operation: returns request ID, poll with `pollCreateImageBitmap()`
  */
-export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined): bigint {
+export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupWindowOrWorkerGlobalScope(self);
   const promise = obj.createImageBitmap(image as any, options as any)
@@ -1435,7 +1459,7 @@ export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: big
 /**
  * `structured-clone()` operation.
  */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
+export function structuredClone(self: bigint, value: string, options: bigint | undefined): bigint | undefined {
   const obj = lookupWindowOrWorkerGlobalScope(self);
   return obj.structuredClone(value as any, options as any);
 }
@@ -1484,7 +1508,7 @@ function lookupFetchLaterResult(handle: bigint): FetchLaterResult {
 /**
  * `get-activated()` operation.
  */
-export function getActivated(self: bigint): boolean {
+export function getActivated(self: bigint): bigint | undefined {
   const obj = lookupFetchLaterResult(self);
   return obj.activated;
 }
@@ -1499,7 +1523,7 @@ export type ReadableStreamHandle = bigint;
 /**
  * `from()` operation.
  */
-export function from(asyncIterable: string): bigint {
+export function from(asyncIterable: bigint): Uint8Array | undefined {
   return (globalThis as any).ReadableStream.from(asyncIterable);
 }
 
@@ -1999,7 +2023,7 @@ export function respond(self: bigint, bytesWritten: bigint): void {
  */
 export function respondWithNewView(self: bigint, view: Uint8Array): void {
   const obj = lookupReadableStreamBYOBRequest(self);
-  obj.respondWithNewView(view);
+  obj.respondWithNewView(view as any);
 }
 
 // ---------------------------------------------------------------------------

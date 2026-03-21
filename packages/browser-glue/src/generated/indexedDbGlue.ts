@@ -240,7 +240,7 @@ function lookupIDBFactory(handle: bigint): IDBFactory {
 /**
  * `cmp()` operation.
  */
-export function cmp(handle: bigint, first: string, second: string): number {
+export function cmp(handle: bigint, first: string, second: string): string {
   const obj = lookupIDBFactory(handle);
   return obj.cmp(first, second);
 }
@@ -361,7 +361,7 @@ export function IdbObjectStoreKeyPath(handle: bigint): string {
 /**
  * `auto-increment()` operation.
  */
-export function autoIncrement(handle: bigint): string {
+export function autoIncrement(handle: bigint): boolean {
   const obj = lookupIdbStore(handle);
   return (obj as any).autoIncrement();
 }
@@ -479,7 +479,7 @@ export function advance(handle: bigint, count: number): void {
 /**
  * `continue()` operation.
  */
-export function _continue(handle: bigint, key: string): void {
+export function _continue(handle: bigint, key: boolean): void {
   const obj = lookupIDBCursor(handle);
   obj.continue(key);
 }

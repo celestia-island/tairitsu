@@ -387,6 +387,10 @@ let _nextOffscreencanvas = 1n;
 const _pluginHandles = new Map<bigint, Plugin>();
 let _nextPlugin = 1n;
 
+/** Handle table for shadow-root values */
+const _shadowRootHandles = new Map<bigint, ShadowRoot>();
+let _nextShadowRoot = 1n;
+
 /** Handle table for string values */
 const _stringHandles = new Map<bigint, string>();
 let _nextString = 1n;
@@ -1073,6 +1077,23 @@ function lookupOptionPlugin(handle: bigint | undefined): Plugin | null {
   return _pluginHandles.get(handle) ?? null;
 }
 
+/** Lookup a shadow-root value by handle. */
+function lookupShadowRoot(handle: bigint): ShadowRoot {
+  const obj = _shadowRootHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`shadow-root handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional shadow-root value by handle. */
+function lookupOptionShadowRoot(handle: bigint | undefined): ShadowRoot | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _shadowRootHandles.get(handle) ?? null;
+}
+
 /** Lookup a string value by handle. */
 function lookupString(handle: bigint): string {
   const obj = _stringHandles.get(handle);
@@ -1497,7 +1518,7 @@ export function setTabIndex(self: bigint, value: number): void {
  */
 export function focus(self: bigint, options: bigint | undefined): void {
   const obj = lookupHTMLOrSVGElement(self);
-  obj.focus(options);
+  obj.focus(options as any);
 }
 
 /**
@@ -1811,7 +1832,7 @@ export function HtmlLinkElementSetHreflang(self: bigint, value: string): void {
  */
 export function HtmlLinkElementGetType(self: bigint): string {
   const obj = lookupHTMLLinkElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -1819,7 +1840,7 @@ export function HtmlLinkElementGetType(self: bigint): string {
  */
 export function HtmlLinkElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLLinkElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -2138,7 +2159,7 @@ export function HtmlStyleElementGetBlocking(self: bigint): bigint {
  */
 export function HtmlStyleElementGetType(self: bigint): string {
   const obj = lookupHTMLStyleElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2146,7 +2167,7 @@ export function HtmlStyleElementGetType(self: bigint): string {
  */
 export function HtmlStyleElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLStyleElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -2559,7 +2580,7 @@ export function setStart(self: bigint, value: number): void {
  */
 export function HtmloListElementGetType(self: bigint): string {
   const obj = lookupHTMLOListElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2567,7 +2588,7 @@ export function HtmloListElementGetType(self: bigint): string {
  */
 export function HtmloListElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLOListElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -2626,7 +2647,7 @@ export function HtmluListElementSetCompact(self: bigint, value: boolean): void {
  */
 export function HtmluListElementGetType(self: bigint): string {
   const obj = lookupHTMLUListElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2634,7 +2655,7 @@ export function HtmluListElementGetType(self: bigint): string {
  */
 export function HtmluListElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLUListElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -2712,7 +2733,7 @@ export function HtmlliElementSetValue(self: bigint, value: number): void {
  */
 export function HtmlliElementGetType(self: bigint): string {
   const obj = lookupHTMLLIElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2720,7 +2741,7 @@ export function HtmlliElementGetType(self: bigint): string {
  */
 export function HtmlliElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLLIElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 // ---------------------------------------------------------------------------
@@ -2908,7 +2929,7 @@ export function HtmlAnchorElementSetHreflang(self: bigint, value: string): void 
  */
 export function HtmlAnchorElementGetType(self: bigint): string {
   const obj = lookupHTMLAnchorElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2916,7 +2937,7 @@ export function HtmlAnchorElementGetType(self: bigint): string {
  */
 export function HtmlAnchorElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLAnchorElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -3440,7 +3461,7 @@ export function HtmlSourceElementSetSrc(self: bigint, value: string): void {
  */
 export function HtmlSourceElementGetType(self: bigint): string {
   const obj = lookupHTMLSourceElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -3448,7 +3469,7 @@ export function HtmlSourceElementGetType(self: bigint): string {
  */
 export function HtmlSourceElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLSourceElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -3881,7 +3902,7 @@ export function HtmlEmbedElementSetSrc(self: bigint, value: string): void {
  */
 export function HtmlEmbedElementGetType(self: bigint): string {
   const obj = lookupHTMLEmbedElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -3889,7 +3910,7 @@ export function HtmlEmbedElementGetType(self: bigint): string {
  */
 export function HtmlEmbedElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLEmbedElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -4008,7 +4029,7 @@ export function HtmlObjectElementSetData(self: bigint, value: string): void {
  */
 export function HtmlObjectElementGetType(self: bigint): string {
   const obj = lookupHTMLObjectElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -4016,7 +4037,7 @@ export function HtmlObjectElementGetType(self: bigint): string {
  */
 export function HtmlObjectElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLObjectElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -5659,7 +5680,11 @@ export type TextTrackCueHandle = bigint;
  */
 export function TextTrackCueGetTrack(self: bigint): bigint | undefined {
   const obj = lookupTextTrackCue(self);
-  return obj.track ?? undefined;
+  const _callResult = obj.track;
+  if (_callResult === null) return undefined;
+  const handle = _nextTextTrack++;
+  _textTrackHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -5813,7 +5838,11 @@ function lookupTrackEvent(handle: bigint): TrackEvent {
  */
 export function TrackEventGetTrack(self: bigint): bigint | undefined {
   const obj = lookupTrackEvent(self);
-  return obj.track ?? undefined;
+  const _callResult = obj.track;
+  if (_callResult === null) return undefined;
+  const handle = _nextTextTrack++;
+  _textTrackHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -7266,7 +7295,7 @@ export function submit(self: bigint): void {
  */
 export function requestSubmit(self: bigint, submitter: bigint | undefined): void {
   const obj = lookupHTMLFormElement(self);
-  obj.requestSubmit(submitter);
+  obj.requestSubmit(lookupOptionHtmlElement(submitter));
 }
 
 /**
@@ -7884,7 +7913,7 @@ export function setStep(self: bigint, value: string): void {
  */
 export function HtmlInputElementGetType(self: bigint): string {
   const obj = lookupHTMLInputElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -7892,7 +7921,7 @@ export function HtmlInputElementGetType(self: bigint): string {
  */
 export function HtmlInputElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLInputElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -7932,7 +7961,11 @@ export function HtmlInputElementSetValue(self: bigint, value: string): void {
  */
 export function getValueAsDate(self: bigint): bigint | undefined {
   const obj = lookupHTMLInputElement(self);
-  return obj.valueAsDate ?? undefined;
+  const _callResult = obj.valueAsDate;
+  if (_callResult === null) return undefined;
+  const handle = _nextDate++;
+  _dateHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -8128,7 +8161,7 @@ export function HtmlInputElementSetRangeText(self: bigint, replacement: string):
  */
 export function HtmlInputElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
   const obj = lookupHTMLInputElement(self);
-  obj.setSelectionRange(start, end, direction);
+  obj.setSelectionRange(start, end, Number(direction));
 }
 
 /**
@@ -8351,7 +8384,7 @@ export function HtmlButtonElementSetName(self: bigint, value: string): void {
  */
 export function HtmlButtonElementGetType(self: bigint): string {
   const obj = lookupHTMLButtonElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -8359,7 +8392,7 @@ export function HtmlButtonElementGetType(self: bigint): string {
  */
 export function HtmlButtonElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLButtonElement(self);
-  obj.type = value as any;
+  (obj as any).type = value as any;
 }
 
 /**
@@ -8572,7 +8605,7 @@ export function HtmlSelectElementSetSize(self: bigint, value: number): void {
  */
 export function HtmlSelectElementGetType(self: bigint): string {
   const obj = lookupHTMLSelectElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -9207,7 +9240,7 @@ export function setWrap(self: bigint, value: string): void {
  */
 export function HtmlTextAreaElementGetType(self: bigint): string {
   const obj = lookupHTMLTextAreaElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -9381,7 +9414,7 @@ export function HtmlTextAreaElementSetRangeText(self: bigint, replacement: strin
  */
 export function HtmlTextAreaElementSetSelectionRange(self: bigint, start: number, end: number, direction: string | undefined): void {
   const obj = lookupHTMLTextAreaElement(self);
-  obj.setSelectionRange(start, end, direction);
+  obj.setSelectionRange(start, end, Number(direction));
 }
 
 // ---------------------------------------------------------------------------
@@ -9447,7 +9480,7 @@ export function HtmlOutputElementSetName(self: bigint, value: string): void {
  */
 export function HtmlOutputElementGetType(self: bigint): string {
   const obj = lookupHTMLOutputElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -9808,7 +9841,7 @@ export function HtmlFieldSetElementSetName(self: bigint, value: string): void {
  */
 export function HtmlFieldSetElementGetType(self: bigint): string {
   const obj = lookupHTMLFieldSetElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -9897,7 +9930,11 @@ function lookupHTMLLegendElement(handle: bigint): HTMLLegendElement {
  */
 export function HtmlLegendElementGetForm(self: bigint): bigint | undefined {
   const obj = lookupHTMLLegendElement(self);
-  return obj.form ?? undefined;
+  const _callResult = obj.form;
+  if (_callResult === null) return undefined;
+  const handle = _nextHtmlFormElement++;
+  _htmlFormElementHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -10246,7 +10283,7 @@ function lookupHTMLScriptElement(handle: bigint): HTMLScriptElement {
  */
 export function HtmlScriptElementGetType(self: bigint): string {
   const obj = lookupHTMLScriptElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -10254,7 +10291,7 @@ export function HtmlScriptElementGetType(self: bigint): string {
  */
 export function HtmlScriptElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLScriptElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**
@@ -11492,7 +11529,7 @@ function lookupCanvasImageData(handle: bigint): CanvasImageData {
  */
 export function createImageData(self: bigint, sw: number, sh: number, settings: bigint | undefined): bigint {
   const obj = lookupCanvasImageData(self);
-  const _callResult = obj.createImageData(sw, sh, settings);
+  const _callResult = obj.createImageData(sw, sh, settings as any);
   const handle = _nextImageData++;
   _imageDataHandles.set(handle, _callResult);
   return handle;
@@ -12335,7 +12372,7 @@ export function transferToImageBitmap(self: bigint): bigint {
 export function convertToBlob(self: bigint, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupOffscreenCanvas(self);
-  const promise = obj.convertToBlob(options)
+  const promise = obj.convertToBlob(options as any)
     .then((result: unknown) => {
       const entry = _asyncHandles.get(requestId);
       if (entry) {
@@ -12502,7 +12539,7 @@ export function pollWhenDefined(requestId: bigint): { ok: true; value: bigint } 
  */
 export function upgrade(self: bigint, root: bigint): void {
   const obj = lookupCustomElementRegistry(self);
-  obj.upgrade(root);
+  obj.upgrade(lookupNode(root));
 }
 
 /**
@@ -12537,7 +12574,11 @@ function lookupElementInternals(handle: bigint): ElementInternals {
  */
 export function getShadowRoot(self: bigint): bigint | undefined {
   const obj = lookupElementInternals(self);
-  return obj.shadowRoot ?? undefined;
+  const _callResult = obj.shadowRoot;
+  if (_callResult === null) return undefined;
+  const handle = _nextShadowRoot++;
+  _shadowRootHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
@@ -12545,7 +12586,7 @@ export function getShadowRoot(self: bigint): bigint | undefined {
  */
 export function setFormValue(self: bigint, value: bigint | undefined, state: bigint | undefined): void {
   const obj = lookupElementInternals(self);
-  obj.setFormValue(value, state);
+  obj.setFormValue(value as any, state as any);
 }
 
 /**
@@ -12565,7 +12606,7 @@ export function ElementInternalsGetForm(self: bigint): bigint | undefined {
  */
 export function setValidity(self: bigint, flags: bigint | undefined, message: string | undefined, anchor: bigint | undefined): void {
   const obj = lookupElementInternals(self);
-  obj.setValidity(flags, message, anchor);
+  obj.setValidity(flags as any, message, lookupOptionHtmlElement(anchor));
 }
 
 /**
@@ -12999,7 +13040,7 @@ export function getItems(self: bigint): bigint {
  */
 export function setDragImage(self: bigint, image: bigint, x: number, y: number): void {
   const obj = lookupDataTransfer(self);
-  obj.setDragImage(image, x, y);
+  obj.setDragImage(lookupElement(image), x, y);
 }
 
 /**
@@ -13136,7 +13177,7 @@ export function DataTransferItemGetKind(self: bigint): string {
  */
 export function DataTransferItemGetType(self: bigint): string {
   const obj = lookupDataTransferItem(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -15211,7 +15252,7 @@ export type MimeTypeHandle = bigint;
  */
 export function MimeTypeGetType(self: bigint): string {
   const obj = lookupMimeType(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -15345,7 +15386,7 @@ function lookupAnimationFrameProvider(handle: bigint): AnimationFrameProvider {
  */
 export function requestAnimationFrame(self: bigint, callback: bigint): number {
   const obj = lookupAnimationFrameProvider(self);
-  return obj.requestAnimationFrame(callback);
+  return obj.requestAnimationFrame(callback as any);
 }
 
 /**
@@ -16082,7 +16123,10 @@ function lookupSharedWorker(handle: bigint): SharedWorker {
  */
 export function SharedWorkerGetPort(self: bigint): bigint {
   const obj = lookupSharedWorker(self);
-  return obj.port;
+  const _callResult = obj.port;
+  const handle = _nextMessagePort++;
+  _messagePortHandles.set(handle, _callResult);
+  return handle;
 }
 
 // ---------------------------------------------------------------------------
@@ -17086,7 +17130,7 @@ export function HtmlParamElementSetValue(self: bigint, value: string): void {
  */
 export function HtmlParamElementGetType(self: bigint): string {
   const obj = lookupHTMLParamElement(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -17094,7 +17138,7 @@ export function HtmlParamElementGetType(self: bigint): string {
  */
 export function HtmlParamElementSetType(self: bigint, value: string): void {
   const obj = lookupHTMLParamElement(self);
-  obj.type = value;
+  (obj as any).type = value;
 }
 
 /**

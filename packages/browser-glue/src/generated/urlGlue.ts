@@ -219,6 +219,35 @@ export type URLHref = string;
 
 
 // ---------------------------------------------------------------------------
+// Synthetic handle tables for primitive/utility types
+// ---------------------------------------------------------------------------
+
+/** Handle table for url-search-params values */
+const _urlSearchParamsHandles = new Map<bigint, URLSearchParams>();
+let _nextUrlSearchParams = 1n;
+
+// ---------------------------------------------------------------------------
+// Helper functions for handle lookups
+// ---------------------------------------------------------------------------
+
+/** Lookup a url-search-params value by handle. */
+function lookupUrlSearchParams(handle: bigint): URLSearchParams {
+  const obj = _urlSearchParamsHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`url-search-params handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional url-search-params value by handle. */
+function lookupOptionUrlSearchParams(handle: bigint | undefined): URLSearchParams | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _urlSearchParamsHandles.get(handle) ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // WIT interface: url
 // ---------------------------------------------------------------------------
 
@@ -240,14 +269,14 @@ function lookupURL(handle: bigint): URL {
 /**
  * `parse()` operation.
  */
-export function parse(url: string, base: string | undefined): bigint | undefined {
+export function parse(url: string, base: string | undefined): bigint {
   return URL.parse(url, base);
 }
 
 /**
  * `can-parse()` operation.
  */
-export function canParse(url: EventHandlerRecord, base: string | undefined): bigint {
+export function canParse(url: string, base: bigint | undefined): bigint {
   return URL.canParse(url, base) ? 1n : 0n;
 }
 
@@ -354,7 +383,7 @@ export function setHost(self: bigint, value: string): void {
 /**
  * `get-hostname()` operation.
  */
-export function getHostname(self: bigint): number {
+export function getHostname(self: bigint): string {
   const obj = lookupURL(self);
   return obj.hostname;
 }
@@ -370,7 +399,7 @@ export function setHostname(self: bigint, value: string): void {
 /**
  * `get-port()` operation.
  */
-export function getPort(self: bigint): string {
+export function getPort(self: bigint): EventHandlerRecord {
   const obj = lookupURL(self);
   return obj.port;
 }
@@ -402,7 +431,7 @@ export function setPathname(self: bigint, value: string): void {
 /**
  * `get-search()` operation.
  */
-export function getSearch(self: bigint): string {
+export function getSearch(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.search;
 }
@@ -410,7 +439,7 @@ export function getSearch(self: bigint): string {
 /**
  * `set-search()` operation.
  */
-export function setSearch(self: bigint, value: string): void {
+export function setSearch(self: bigint, value: bigint): void {
   const obj = lookupURL(self);
   obj.search = value;
 }
@@ -420,13 +449,16 @@ export function setSearch(self: bigint, value: string): void {
  */
 export function getSearchParams(self: bigint): bigint {
   const obj = lookupURL(self);
-  return obj.searchParams;
+  const _callResult = obj.searchParams;
+  const handle = _nextUrlSearchParams++;
+  _urlSearchParamsHandles.set(handle, _callResult);
+  return handle;
 }
 
 /**
  * `get-hash()` operation.
  */
-export function getHash(self: bigint): string {
+export function getHash(self: bigint): bigint {
   const obj = lookupURL(self);
   return obj.hash;
 }
@@ -485,7 +517,7 @@ export function append(self: bigint, name: string, value: string): void {
 /**
  * `delete()` operation.
  */
-export function _delete(self: bigint, name: string, value: EventHandlerRecord | undefined): void {
+export function _delete(self: bigint, name: string, value: string | undefined): void {
   const obj = lookupURLSearchParams(self);
   obj.delete(name, value);
 }
@@ -501,7 +533,7 @@ export function _get(self: bigint, name: string): string | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): (string)[] {
+export function getAll(self: bigint, name: bigint | undefined): string {
   const obj = lookupURLSearchParams(self);
   return (obj as any).all;
 }
@@ -509,7 +541,7 @@ export function getAll(self: bigint, name: string): (string)[] {
 /**
  * `has()` operation.
  */
-export function has(self: bigint, name: bigint | undefined, value: bigint | undefined): boolean {
+export function has(self: bigint, name: string, value: number | undefined): boolean {
   const obj = lookupURLSearchParams(self);
   return obj.has(name, value);
 }

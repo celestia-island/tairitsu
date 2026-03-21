@@ -255,7 +255,7 @@ export function abort(handle: bigint): void {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): number | undefined {
   const obj = lookupFileReader(handle);
   return (obj as any).readyState();
 }
@@ -263,7 +263,7 @@ export function readyState(handle: bigint): number {
 /**
  * `result-val()` operation.
  */
-export function resultVal(handle: bigint): bigint {
+export function resultVal(handle: bigint): string {
   const obj = lookupFileReader(handle);
   return (obj as any).result() ?? undefined;
 }
@@ -290,7 +290,7 @@ function lookupFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): number {
+export function length(handle: bigint): bigint {
   const obj = lookupFileList(handle);
   return (obj as any).length();
 }

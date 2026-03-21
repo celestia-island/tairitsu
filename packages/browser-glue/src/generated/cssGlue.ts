@@ -1480,7 +1480,7 @@ export function CssRuleGetParentStyleSheet(self: bigint): bigint | undefined {
  */
 export function CssRuleGetType(self: bigint): number {
   const obj = lookupCSSRule(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 // ---------------------------------------------------------------------------
@@ -7810,7 +7810,7 @@ function lookupStyleSheet(handle: bigint): StyleSheet {
  */
 export function StyleSheetGetType(self: bigint): string {
   const obj = lookupStyleSheet(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**

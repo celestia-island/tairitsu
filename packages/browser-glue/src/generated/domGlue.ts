@@ -700,7 +700,7 @@ export type EventHandle = bigint;
  */
 export function EventGetType(self: bigint): string {
   const obj = lookupEvent(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -1490,7 +1490,7 @@ function lookupMutationRecord(handle: bigint): MutationRecord {
  */
 export function MutationRecordGetType(self: bigint): string {
   const obj = lookupMutationRecord(self);
-  return obj.getType();
+  return (obj as any).getType();
 }
 
 /**
@@ -2796,7 +2796,7 @@ function lookupDOMTokenList(handle: bigint): DOMTokenList {
 /**
  * `get-length()` operation.
  */
-export function DomTokenListGetLength(self: bigint): number {
+export function DomTokenListGetLength(self: bigint): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.length;
 }
@@ -2848,7 +2848,7 @@ export function toggle(self: bigint, token: string, force: boolean | undefined):
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): boolean {
+export function replace(self: bigint, token: string, newToken: EventHandlerRecord): boolean {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token as any, newToken as any);
 }
@@ -3010,7 +3010,7 @@ function lookupXPathExpression(handle: bigint): XPathExpression {
 /**
  * `evaluate()` operation.
  */
-export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: EventHandlerRecord, result: bigint | undefined): bigint {
+export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
   const obj = lookupXPathExpression(self);
   const _callResult = obj.evaluate(lookupNode(contextNode), type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
@@ -3040,7 +3040,7 @@ function lookupXPathNSResolver(handle: bigint): XPathNSResolver {
 /**
  * `lookup-namespace-uri()` operation.
  */
-export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
+export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string {
   const obj = lookupXPathNSResolver(self);
   return (obj as any).lookupNamespaceURI(prefix) ?? undefined;
 }
