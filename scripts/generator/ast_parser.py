@@ -22,6 +22,7 @@ from .config import (
     STATIC_METHOD_RETURN_OVERRIDES,
     STATIC_METHOD_NEEDS_TYPE_ASSERTION,
     HANDLE_RETURNING_FUNCTIONS,
+    HANDLE_RETURNING_ARRAY_PROPERTIES,
     JS_RESERVED_WORDS,
     ASYNC_PATTERNS,
     ASYNC_METHOD_OVERRIDES,
@@ -140,6 +141,9 @@ class WitParser:
                     return_is_handle = True
                     ts_return = "bigint | undefined" if return_is_optional else "bigint"
                     ts_return_inner = ""
+                elif key in HANDLE_RETURNING_ARRAY_PROPERTIES:
+                    # Array of handles - return type should be bigint[]
+                    ts_return = "(bigint)[]"
 
         is_getter = wit_name.startswith("get-")
         is_setter = wit_name.startswith("set-")
@@ -179,7 +183,7 @@ class WitParser:
 
         for bool_key in [(interface.name, wit_name), (interface.name, ts_name)]:
             if bool_key in BOOLEAN_TO_BIGINT_PROPERTIES:
-                ts_return = "bigint"
+                ts_return = "bigint | undefined" if return_is_optional else "bigint"
                 ts_return_inner = ""
                 break
 

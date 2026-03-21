@@ -23,6 +23,7 @@ from .config import (
     SYNTHETIC_HANDLE_TYPES,
     correct_type_casing,
     READONLY_ARRAY_PROPERTIES,
+    GETTER_RETURN_COALESCING,
     HANDLE_RETURNING_ARRAY_PROPERTIES,
     PARAMS_TO_SKIP,
     SETTER_METHOD_NAMES,
@@ -404,6 +405,20 @@ class CodeGenerator:
                 lines.append(f"  const handle = _next{target_pascal}++;")
                 lines.append(f"  _{target_var}.set(handle, _callResult);")
                 lines.append("  return handle;")
+            elif handle_key in HANDLE_RETURNING_ARRAY_PROPERTIES:
+                target_list_type, element_type = HANDLE_RETURNING_ARRAY_PROPERTIES[handle_key]
+                if element_type in SYNTHETIC_HANDLE_TYPES:
+                    elem_ts_type, elem_var, elem_pascal = SYNTHETIC_HANDLE_TYPES[element_type]
+                    lines.append(f"  const _arr = {obj_ref_with_assertion}.{method_name}({args});")
+                    lines.append(f"  const _handles: bigint[] = [];")
+                    lines.append(f"  for (const item of _arr) {{")
+                    lines.append(f"    const handle = _next{elem_pascal}++;")
+                    lines.append(f"    _{elem_var}.set(handle, item);")
+                    lines.append(f"    _handles.push(handle);")
+                    lines.append(f"  }}")
+                    lines.append(f"  return _handles;")
+                else:
+                    lines.append(f"  return [...{obj_ref_with_assertion}.{method_name}({args})];")
             elif enum_key in ENUM_PROPERTIES:
                 enum_name = ENUM_PROPERTIES[enum_key]
                 enum_values = ENUM_VALUE_MAPPINGS.get(enum_name, {})
@@ -483,7 +498,15 @@ class CodeGenerator:
             elif func.return_is_optional:
                 lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? undefined;")
             else:
-                lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr};")
+                getter_key = (iface.wit_name, func.wit_name)
+                if getter_key in GETTER_RETURN_COALESCING:
+                    default_value = GETTER_RETURN_COALESCING[getter_key]
+                    if isinstance(default_value, str):
+                        lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? \"{default_value}\";")
+                    else:
+                        lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr} ?? {default_value};")
+                else:
+                    lines.append(f"  return {obj_ref_with_assertion}.{func.browser_attr};")
 
     def _render_setter_body(self, lines: List[str], func: GeneratedFunction, iface: GeneratedInterface) -> None:
         """Render setter function body."""
@@ -560,6 +583,8 @@ class CodeGenerator:
                     value_expr = f"{value_param} as any"
                 elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
                     value_expr = f"{value_param} as any"
+                elif conversion_type == True:
+                    value_expr = f"Number({value_param})"
             
             # Check if this is an enum setter
             enum_key = (iface.wit_name, prop_name)
@@ -651,7 +676,21 @@ class CodeGenerator:
             lines.append(f"  return BigInt({obj_ref_with_assertion}.{func.browser_method}({args}));")
         elif func.return_is_handle:
             key = (iface.wit_name, kebab_to_camel(func.wit_name))
-            if key in HANDLE_RETURNING_FUNCTIONS:
+            if key in HANDLE_RETURNING_ARRAY_PROPERTIES:
+                target_list_type, element_type = HANDLE_RETURNING_ARRAY_PROPERTIES[key]
+                if element_type in SYNTHETIC_HANDLE_TYPES:
+                    elem_ts_type, elem_var, elem_pascal = SYNTHETIC_HANDLE_TYPES[element_type]
+                    lines.append(f"  const _arr = {obj_ref_with_assertion}.{func.browser_method}({args});")
+                    lines.append(f"  const _handles: bigint[] = [];")
+                    lines.append(f"  for (const item of _arr) {{")
+                    lines.append(f"    const handle = _next{elem_pascal}++;")
+                    lines.append(f"    _{elem_var}.set(handle, item);")
+                    lines.append(f"    _handles.push(handle);")
+                    lines.append(f"  }}")
+                    lines.append(f"  return _handles;")
+                else:
+                    lines.append(f"  return [...{obj_ref_with_assertion}.{func.browser_method}({args})];")
+            elif key in HANDLE_RETURNING_FUNCTIONS:
                 target_iface = HANDLE_RETURNING_FUNCTIONS[key]
                 target_var, target_pascal = self._get_handle_info(target_iface)
                 lines.append(f"  const _callResult = {obj_ref_with_assertion}.{func.browser_method}({args});")
@@ -765,7 +804,84 @@ class CodeGenerator:
             if skip_key in PARAMS_TO_SKIP:
                 continue
             
-            if param.needs_handle_lookup and param.target_handle_pascal:
+            key = (iface.wit_name, func.wit_name, param.wit_name)
+            if key in PARAMETER_BIGINT_TO_NUMBER_ALIAS:
+                conversion_type = PARAMETER_BIGINT_TO_NUMBER_ALIAS[key]
+                if conversion_type == "handle" or (isinstance(conversion_type, str) and conversion_type.startswith("handle:")):
+                    if isinstance(conversion_type, str) and conversion_type.startswith("handle:"):
+                        target_wit_type = conversion_type[7:]
+                    else:
+                        target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
+                    _, target_pascal = self._get_handle_info(target_wit_type)
+                    converted_args.append(f"lookup{target_pascal}({param.name})")
+                elif conversion_type == "optional-handle" or (isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:")):
+                    if isinstance(conversion_type, str) and conversion_type.startswith("optional-handle:"):
+                        target_wit_type = conversion_type[16:]
+                    else:
+                        target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
+                    _, target_pascal = self._get_handle_info(target_wit_type)
+                    converted_args.append(f"lookupOption{target_pascal}({param.name})")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("optional-handle-strict:"):
+                    target_wit_type = conversion_type[23:]
+                    _, target_pascal = self._get_handle_info(target_wit_type)
+                    converted_args.append(f"lookupOption{target_pascal}({param.name}) as any")
+                elif conversion_type == "array":
+                    converted_args.append(f"Array.from({param.name}).map(Number)")
+                elif conversion_type == "boolean":
+                    converted_args.append(f"Boolean({param.name})")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("dictionary:"):
+                    converted_args.append(f"{param.name} as any")
+                elif conversion_type == "string-from-array":
+                    converted_args.append(f"String.fromCodePoint(...Array.from({param.name}).map(Number))")
+                elif conversion_type == "buffer-source":
+                    converted_args.append(f"lookupBufferSource({param.name})")
+                elif conversion_type == "event-listener":
+                    converted_args.append(f"{param.name} !== undefined ? lookupEventListener({param.name}) : null")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("enum:"):
+                    converted_args.append(f"{param.name} as any")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("string"):
+                    converted_args.append(f"{param.name} as any")
+                elif conversion_type == "nullable-string":
+                    converted_args.append(f"{param.name} ?? null")
+                elif conversion_type == "node-array":
+                    converted_args.append(f"Array.from({param.name}).map((h: bigint) => lookupNode(h))")
+                elif conversion_type == "nullable-buffer-source":
+                    converted_args.append(f"{param.name} ?? null")
+                elif conversion_type == "buffer-source-or-string":
+                    converted_args.append(f"{param.name}")
+                elif conversion_type == "event-listener-options":
+                    converted_args.append(f"{param.name} as any")
+                elif conversion_type == "any":
+                    converted_args.append(f"{param.name} as any")
+                elif conversion_type == "boolean-or-undefined":
+                    converted_args.append(f"{param.name} !== undefined ? Boolean({param.name}) : undefined")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle-array:"):
+                    target_type = conversion_type[13:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    converted_args.append(f"Array.from({param.name}).map((h: bigint) => lookup{target_pascal}(h))")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("spread-handle-array:"):
+                    target_type = conversion_type[20:]
+                    _, target_pascal = self._get_handle_info(target_type)
+                    converted_args.append(f"...Array.from({param.name}).map((h: bigint) => lookup{target_pascal}(h))")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:event-target-list"):
+                    converted_args.append(f"Array.from({param.name}).map((h: bigint) => lookupEventTarget(h))")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:request-or-string"):
+                    converted_args.append(f"lookupRequestOrString({param.name})")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:blob-parts"):
+                    converted_args.append(f"Array.from({param.name}).map((h: bigint) => lookupBlob(h))")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:blob-or-media-source"):
+                    converted_args.append(f"lookupBlobOrMediaSource({param.name})")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:canvas-image-source"):
+                    converted_args.append(f"lookupCanvasImageSource({param.name})")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("handle:clipboard-items"):
+                    converted_args.append(f"Array.from({param.name}).map((h: bigint) => lookupClipboardItem(h))")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("string-or-url"):
+                    converted_args.append(f"{param.name} as any")
+                elif isinstance(conversion_type, str) and conversion_type.startswith("string-or-null"):
+                    converted_args.append(f"{param.name} ?? null")
+                else:
+                    converted_args.append(f"Number({param.name})")
+            elif param.needs_handle_lookup and param.target_handle_pascal:
                 converted_args.append(f"lookup{param.target_handle_pascal}({param.name})")
             else:
                 key = (iface.wit_name, func.wit_name, param.wit_name)
@@ -785,6 +901,10 @@ class CodeGenerator:
                             target_wit_type = param.wit_type_str.replace("-handle", "").replace("-list", "")
                         _, target_pascal = self._get_handle_info(target_wit_type)
                         converted_args.append(f"lookupOption{target_pascal}({param.name})")
+                    elif isinstance(conversion_type, str) and conversion_type.startswith("optional-handle-strict:"):
+                        target_wit_type = conversion_type[23:]
+                        _, target_pascal = self._get_handle_info(target_wit_type)
+                        converted_args.append(f"lookupOption{target_pascal}({param.name}) as any")
                     elif conversion_type == "array":
                         converted_args.append(f"Array.from({param.name}).map(Number)")
                     elif conversion_type == "boolean":

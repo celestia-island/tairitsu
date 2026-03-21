@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -769,9 +772,9 @@ export function stopPropagation(self: bigint): void {
 /**
  * `get-cancel-bubble()` operation.
  */
-export function getCancelBubble(self: bigint): bigint {
+export function getCancelBubble(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.cancelBubble ? 1n : 0n;
+  return obj.cancelBubble;
 }
 
 /**
@@ -793,25 +796,25 @@ export function stopImmediatePropagation(self: bigint): void {
 /**
  * `get-bubbles()` operation.
  */
-export function getBubbles(self: bigint): bigint {
+export function getBubbles(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.bubbles ? 1n : 0n;
+  return obj.bubbles;
 }
 
 /**
  * `get-cancelable()` operation.
  */
-export function getCancelable(self: bigint): bigint {
+export function getCancelable(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.cancelable ? 1n : 0n;
+  return obj.cancelable;
 }
 
 /**
  * `get-return-value()` operation.
  */
-export function getReturnValue(self: bigint): bigint {
+export function getReturnValue(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.returnValue ? 1n : 0n;
+  return obj.returnValue;
 }
 
 /**
@@ -841,17 +844,17 @@ export function getDefaultPrevented(self: bigint): boolean {
 /**
  * `get-composed()` operation.
  */
-export function getComposed(self: bigint): bigint {
+export function getComposed(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.composed ? 1n : 0n;
+  return obj.composed;
 }
 
 /**
  * `get-is-trusted()` operation.
  */
-export function getIsTrusted(self: bigint): bigint {
+export function getIsTrusted(self: bigint): boolean {
   const obj = lookupEvent(self);
-  return obj.isTrusted ? 1n : 0n;
+  return obj.isTrusted;
 }
 
 /**
@@ -1029,9 +1032,9 @@ export function any(signals: (bigint)[]): bigint {
 /**
  * `get-aborted()` operation.
  */
-export function getAborted(self: bigint): bigint {
+export function getAborted(self: bigint): boolean {
   const obj = lookupAbortSignal(self);
-  return obj.aborted ? 1n : 0n;
+  return obj.aborted;
 }
 
 /**
@@ -3010,7 +3013,7 @@ function lookupXPathExpression(handle: bigint): XPathExpression {
 /**
  * `evaluate()` operation.
  */
-export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: bigint | undefined): bigint {
+export function XPathExpressionEvaluate(self: bigint, contextNode: bigint, type: number | undefined, result: EventHandlerRecord): bigint {
   const obj = lookupXPathExpression(self);
   const _callResult = obj.evaluate(lookupNode(contextNode), type, lookupOptionXpathResult(result));
   const handle = _nextXpathResult++;
@@ -3040,7 +3043,7 @@ function lookupXPathNSResolver(handle: bigint): XPathNSResolver {
 /**
  * `lookup-namespace-uri()` operation.
  */
-export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): EventHandlerRecord | undefined {
+export function XPathNsResolverLookupNamespaceUri(self: bigint, prefix: string | undefined): string | undefined {
   const obj = lookupXPathNSResolver(self);
   return (obj as any).lookupNamespaceURI(prefix) ?? undefined;
 }
@@ -3073,7 +3076,7 @@ function lookupXPathEvaluatorBase(handle: bigint): XPathEvaluatorBase {
 /**
  * `create-expression()` operation.
  */
-export function createExpression(self: bigint, expression: string, resolver: bigint | undefined): bigint {
+export function createExpression(self: bigint, expression: bigint, resolver: bigint | undefined): bigint {
   const obj = lookupXPathEvaluatorBase(self);
   const _callResult = obj.createExpression(expression, resolver as any);
   const handle = _nextXpathExpression++;

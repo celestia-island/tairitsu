@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -240,7 +243,7 @@ function lookupFileReader(handle: bigint): FileReader {
 /**
  * `new-file-reader()` operation.
  */
-export function newFileReader(): { ok: true; value: bigint } | { ok: false; error: string } {
+export function newFileReader(): { ok: true; value: string } | { ok: false; error: string } {
   return (globalThis as any).FileReader.newFileReader();
 }
 
@@ -255,7 +258,7 @@ export function abort(handle: bigint): void {
 /**
  * `ready-state()` operation.
  */
-export function readyState(handle: bigint): number {
+export function readyState(handle: bigint): bigint {
   const obj = lookupFileReader(handle);
   return (obj as any).readyState();
 }
@@ -290,7 +293,7 @@ function lookupFileList(handle: bigint): FileList {
 /**
  * `length()` operation.
  */
-export function length(handle: bigint): bigint {
+export function length(handle: bigint): number {
   const obj = lookupFileList(handle);
   return (obj as any).length();
 }

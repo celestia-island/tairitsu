@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -261,7 +264,7 @@ export function getId(handle: bigint): number {
 /**
  * `set-id()` operation.
  */
-export function setId(handle: bigint, value: Uint8Array): void {
+export function setId(handle: bigint, value: EventHandlerRecord): void {
   const obj = lookupAnimation(handle);
   obj.id = value;
 }
@@ -269,7 +272,7 @@ export function setId(handle: bigint, value: Uint8Array): void {
 /**
  * `get-playback-rate()` operation.
  */
-export function getPlaybackRate(handle: bigint): EventHandlerRecord {
+export function getPlaybackRate(handle: bigint): number {
   const obj = lookupAnimation(handle);
   return obj.playbackRate;
 }

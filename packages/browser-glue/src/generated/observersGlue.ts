@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -373,7 +376,7 @@ export function getRootMargin(self: bigint): string {
 /**
  * `get-scroll-margin()` operation.
  */
-export function getScrollMargin(self: bigint): number {
+export function getScrollMargin(self: bigint): string {
   const obj = lookupIntersectionObserver(self);
   return (obj as any).scrollMargin;
 }
@@ -462,7 +465,7 @@ function lookupIntersectionObserverEntry(handle: bigint): IntersectionObserverEn
 /**
  * `get-time()` operation.
  */
-export function getTime(self: bigint): bigint {
+export function getTime(self: bigint): number {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.time;
 }
@@ -504,7 +507,7 @@ export function getIntersectionRect(self: bigint): bigint {
 /**
  * `get-is-intersecting()` operation.
  */
-export function getIsIntersecting(self: bigint): boolean {
+export function getIsIntersecting(self: bigint): EventHandlerRecord {
   const obj = lookupIntersectionObserverEntry(self);
   return obj.isIntersecting;
 }
@@ -566,7 +569,7 @@ export function ResizeObserverObserve(self: bigint, target: bigint, options: Eve
 /**
  * `unobserve()` operation.
  */
-export function ResizeObserverUnobserve(self: bigint, target: EventHandlerRecord): void {
+export function ResizeObserverUnobserve(self: bigint, target: number): void {
   const obj = lookupResizeObserver(self);
   obj.unobserve(target);
 }
@@ -683,7 +686,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): number {
+export function getBlockSize(self: bigint): bigint {
   const obj = lookupResizeObserverSize(self);
   return obj.blockSize;
 }

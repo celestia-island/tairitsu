@@ -25,6 +25,9 @@ export type WebGLObject = any;
 /** Type definition for u64 */
 export type u64 = bigint;
 
+/** Type definition for RTCDataChannelBinaryType */
+export type RTCDataChannelBinaryType = "blob" | "arraybuffer";
+
 /** Type definition for CSSFontFaceDescriptors */
 export type CSSFontFaceDescriptors = any;
 
@@ -388,7 +391,13 @@ function lookupNotification(handle: bigint): Notification {
  * `get-permission()` operation.
  */
 export function getPermission(): bigint {
-  return Notification.permission;
+  const value = Notification.permission;
+  switch (value) {
+    case 'default': return 0n;
+    case 'denied': return 1n;
+    case 'granted': return 2n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -396,7 +405,7 @@ export function getPermission(): bigint {
  *
  * Async operation: returns request ID, poll with `pollRequestPermission()`
  */
-export function requestPermission(deprecatedCallback: number | undefined): bigint {
+export function requestPermission(deprecatedCallback: boolean | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = Notification.requestPermission(deprecatedCallback as any)
     .then((result: unknown) => {
@@ -438,7 +447,7 @@ export function getMaxActions(): number {
 /**
  * `get-onclick()` operation.
  */
-export function getOnclick(self: bigint): number {
+export function getOnclick(self: bigint): string {
   const obj = lookupNotification(self);
   return obj.onclick;
 }
@@ -454,7 +463,7 @@ export function setOnclick(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onshow()` operation.
  */
-export function getOnshow(self: bigint): EventHandlerRecord {
+export function getOnshow(self: bigint): number {
   const obj = lookupNotification(self);
   return obj.onshow;
 }
@@ -462,7 +471,7 @@ export function getOnshow(self: bigint): EventHandlerRecord {
 /**
  * `set-onshow()` operation.
  */
-export function setOnshow(self: bigint, value: EventHandlerRecord): void {
+export function setOnshow(self: bigint, value: string): void {
   const obj = lookupNotification(self);
   obj.onshow = value;
 }
@@ -514,7 +523,7 @@ export function getTitle(self: bigint): bigint {
 /**
  * `get-dir()` operation.
  */
-export function getDir(self: bigint): boolean {
+export function getDir(self: bigint): bigint {
   const obj = lookupNotification(self);
   return obj.dir;
 }
@@ -660,7 +669,7 @@ export function getData(self: bigint): string {
 /**
  * `get-actions()` operation.
  */
-export function getActions(self: bigint): string {
+export function getActions(self: bigint): (EventHandlerRecord)[] {
   const obj = lookupNotification(self);
   return (obj as any).actions;
 }
@@ -697,7 +706,7 @@ function lookupServiceWorkerRegistration(handle: bigint): ServiceWorkerRegistrat
  *
  * Async operation: returns request ID, poll with `pollShowNotification()`
  */
-export function showNotification(self: bigint, title: string, options: bigint): bigint {
+export function showNotification(self: bigint, title: EventHandlerRecord, options: bigint | undefined): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupServiceWorkerRegistration(self);
   const promise = obj.showNotification(title, options)
@@ -722,12 +731,12 @@ export function showNotification(self: bigint, title: string, options: bigint): 
  * Poll an async `showNotification()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollShowNotification(requestId: bigint): { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | undefined {
+export function pollShowNotification(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
   }
-  return entry.result as { ok: true; value: EventHandlerRecord } | { ok: false; error: string } | null ?? undefined;
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
 }
 
 /**
@@ -818,7 +827,7 @@ export function getNavigationPreload(self: bigint): bigint {
 /**
  * `get-scope()` operation.
  */
-export function getScope(self: bigint): number {
+export function getScope(self: bigint): string {
   const obj = lookupServiceWorkerRegistration(self);
   return (obj as any).scope;
 }
@@ -916,7 +925,7 @@ export function pollUnregister(requestId: bigint): { ok: true; value: bigint } |
 /**
  * `get-onupdatefound()` operation.
  */
-export function getOnupdatefound(self: bigint): EventHandlerRecord {
+export function getOnupdatefound(self: bigint): bigint | undefined {
   const obj = lookupServiceWorkerRegistration(self);
   return obj.onupdatefound;
 }
@@ -951,7 +960,7 @@ function lookupNotificationEvent(handle: bigint): NotificationEvent {
 /**
  * `get-notification()` operation.
  */
-export function getNotification(self: bigint): bigint {
+export function getNotification(self: bigint): number {
   const obj = lookupNotificationEvent(self);
   return (obj as any).notification;
 }
@@ -994,7 +1003,7 @@ export function getOnnotificationclick(self: bigint): EventHandlerRecord {
 /**
  * `set-onnotificationclick()` operation.
  */
-export function setOnnotificationclick(self: bigint, value: number): void {
+export function setOnnotificationclick(self: bigint, value: EventHandlerRecord): void {
   const obj = lookupServiceWorkerGlobalScope(self);
   obj.onnotificationclick = value;
 }
@@ -1034,7 +1043,7 @@ export function getRegistration(self: bigint): bigint {
 /**
  * `get-service-worker()` operation.
  */
-export function getServiceWorker(self: bigint): bigint {
+export function getServiceWorker(self: bigint): string {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.serviceWorker;
 }
@@ -1098,7 +1107,7 @@ export function setOnfetch(self: bigint, value: EventHandlerRecord): void {
 /**
  * `get-onmessage()` operation.
  */
-export function getOnmessage(self: bigint): EventHandlerRecord {
+export function getOnmessage(self: bigint): number {
   const obj = lookupServiceWorkerGlobalScope(self);
   return obj.onmessage;
 }
