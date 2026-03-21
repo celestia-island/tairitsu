@@ -397,9 +397,13 @@ export function getRoot(self: bigint): bigint | undefined {
 /**
  * `get-root-margin()` operation.
  */
-export function getRootMargin(self: bigint): number {
+export function getRootMargin(self: bigint): bigint {
   const obj = lookupIntersectionObserver(self);
-  return obj.rootMargin;
+  const value = obj.rootMargin;
+  switch ((value as any)) {
+    case '': return 0n;
+    default: return 0n;
+  }
 }
 
 /**
@@ -450,7 +454,7 @@ export function IntersectionObserverObserve(self: bigint, target: bigint): void 
  */
 export function IntersectionObserverUnobserve(self: bigint, target: bigint): void {
   const obj = lookupIntersectionObserver(self);
-  obj.unobserve(lookupElement(target));
+  obj.unobserve(lookupOptionElement(target) as any);
 }
 
 /**
@@ -552,7 +556,7 @@ export function getIsIntersecting(self: bigint): boolean {
 /**
  * `get-is-visible()` operation.
  */
-export function getIsVisible(self: bigint): boolean {
+export function getIsVisible(self: bigint): bigint {
   const obj = lookupIntersectionObserverEntry(self);
   return (obj as any).isVisible;
 }
@@ -606,7 +610,7 @@ function lookupOptionResizeObserver(handle: bigint | undefined): ResizeObserver 
 /**
  * `observe()` operation.
  */
-export function ResizeObserverObserve(self: bigint, target: bigint, options: bigint | undefined): void {
+export function ResizeObserverObserve(self: bigint, target: bigint, options: boolean): void {
   const obj = lookupResizeObserver(self);
   (obj as any).observe(lookupElement(target), options as any);
 }
@@ -747,7 +751,7 @@ export function getInlineSize(self: bigint): number {
 /**
  * `get-block-size()` operation.
  */
-export function getBlockSize(self: bigint): number {
+export function getBlockSize(self: bigint): boolean {
   const obj = lookupResizeObserverSize(self);
   return obj.blockSize;
 }

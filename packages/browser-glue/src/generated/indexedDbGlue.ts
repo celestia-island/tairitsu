@@ -382,7 +382,7 @@ export function IdbObjectStoreGetName(handle: bigint): string {
  */
 export function IdbObjectStoreSetName(handle: bigint, value: string): void {
   const obj = lookupIdbStore(handle);
-  obj.name = value;
+  obj.name = value as any;
 }
 
 /**
@@ -522,7 +522,7 @@ export function primaryKey(handle: bigint): string {
 /**
  * `advance()` operation.
  */
-export function advance(handle: bigint, count: number): void {
+export function advance(handle: bigint, count: string): void {
   const obj = lookupIDBCursor(handle);
   obj.advance(count);
 }

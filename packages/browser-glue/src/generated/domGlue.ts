@@ -2688,9 +2688,9 @@ export function getReferenceNode(self: bigint): bigint {
 /**
  * `get-pointer-before-reference-node()` operation.
  */
-export function getPointerBeforeReferenceNode(self: bigint): boolean {
+export function getPointerBeforeReferenceNode(self: bigint): bigint {
   const obj = lookupNodeIterator(self);
-  return obj.pointerBeforeReferenceNode;
+  return obj.pointerBeforeReferenceNode ? 1n : 0n;
 }
 
 /**
@@ -2953,7 +2953,7 @@ function lookupOptionDOMTokenList(handle: bigint | undefined): DOMTokenList | nu
  */
 export function DomTokenListGetLength(self: bigint): bigint {
   const obj = lookupDOMTokenList(self);
-  return obj.length;
+  return BigInt(obj.length);
 }
 
 /**
@@ -2971,7 +2971,7 @@ export function DomTokenListItem(self: bigint, index: number): bigint | undefine
 /**
  * `contains()` operation.
  */
-export function DomTokenListContains(self: bigint, token: EventHandlerRecord): bigint {
+export function DomTokenListContains(self: bigint, token: string): bigint {
   const obj = lookupDOMTokenList(self);
   return obj.contains(token) ? 1n : 0n;
 }
@@ -2979,7 +2979,7 @@ export function DomTokenListContains(self: bigint, token: EventHandlerRecord): b
 /**
  * `add()` operation.
  */
-export function add(self: bigint, tokens: (EventHandlerRecord)[]): void {
+export function add(self: bigint, tokens: (string)[]): void {
   const obj = lookupDOMTokenList(self);
   obj.add(tokens as any);
 }
@@ -2997,13 +2997,13 @@ export function DomTokenListRemove(self: bigint, tokens: (string)[]): void {
  */
 export function toggle(self: bigint, token: string, force: boolean | undefined): bigint {
   const obj = lookupDOMTokenList(self);
-  return obj.toggle(token as any, force);
+  return obj.toggle(token as any, force) ? 1n : 0n;
 }
 
 /**
  * `replace()` operation.
  */
-export function replace(self: bigint, token: string, newToken: string): boolean {
+export function replace(self: bigint, token: string, newToken: string): EventHandlerRecord {
   const obj = lookupDOMTokenList(self);
   return obj.replace(token as any, newToken as any);
 }
@@ -3070,7 +3070,7 @@ function lookupOptionXPathResult(handle: bigint | undefined): XPathResult | null
 /**
  * `get-result-type()` operation.
  */
-export function getResultType(self: bigint): number {
+export function getResultType(self: bigint): EventHandlerRecord {
   const obj = lookupXPathResult(self);
   return obj.resultType;
 }

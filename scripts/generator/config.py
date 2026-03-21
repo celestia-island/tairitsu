@@ -4491,6 +4491,140 @@ PARAMETER_BIGINT_TO_NUMBER = {
     ("notification", "constructor", "options"): "dictionary:any",
     # Cache matchAll - request needs any
     ("cache", "match-all", "request"): "any",
+    # Cache delete - request needs any
+    ("cache", "delete", "request"): "any",
+    # Geolocation watchPosition - success-callback needs handle lookup
+    ("geolocation", "watch-position", "success-callback"): "handle:position-callback",
+    # CompositionEvent initCompositionEvent - view-arg needs window handle
+    ("composition-event", "init-composition-event", "view-arg"): "optional-handle:window",
+    # TextEvent initTextEvent - view needs window handle
+    ("text-event", "init-text-event", "view"): "optional-handle:window",
+    # WebSocket close - reason needs string conversion
+    ("web-socket", "close", "reason"): "string",
+    # WebSocket close - code needs number conversion
+    ("web-socket", "close", "code"): True,
+    # Ws close - reason needs string conversion
+    ("ws", "close", "reason"): "string",
+    # Ws close - code needs number conversion
+    ("ws", "close", "code"): True,
+    # ReadableStreamBYOBRequest respondWithNewView - view needs any
+    ("readable-stream-byob-request", "respond-with-new-view", "view"): "any",
+    # RTCPeerConnection addTransceiver - streams needs spread handle array
+    ("rtc-peer-connection", "add-transceiver", "streams"): "spread-handle-array:media-stream",
+    # RTCRtpReceiver setJitterBufferTarget - value needs number-or-null
+    ("rtc-rtp-receiver", "set-jitter-buffer-target", "value"): "number-or-null",
+    # Performance clearMarks - mark-name needs string
+    ("performance", "clear-marks", "mark-name"): "string",
+    # PerformanceObserverEntryList getEntriesByName - name needs string
+    ("performance-observer-entry-list", "get-entries-by-name", "name"): "string",
+    # PerformanceObserverEntryList getEntriesByType - entry-type needs string
+    ("performance-observer-entry-list", "get-entries-by-type", "entry-type"): "string",
+    # IntersectionObserverEntry getBoundingClientRect - rect needs any
+    ("intersection-observer-entry", "get-bounding-client-rect", "rect"): "any",
+    # PaymentResponse onpayerdetailchange setter - value needs event handler
+    ("payment-response", "set-onpayerdetailchange", "value"): "event-handler",
+    # Animation updatePlaybackRate - playback-rate needs number conversion
+    ("animation", "update-playback-rate", "playback-rate"): True,
+    # Cache delete - options needs any
+    ("cache", "delete", "options"): "any",
+    # URL.canParse - url is bigint but needs string conversion
+    ("url", "can-parse", "url"): "string",
+    # URL.setHost - value is bigint but needs string conversion
+    ("url", "set-host", "value"): "string",
+    # URL.setPort - value is boolean but needs string conversion
+    ("url", "set-port", "value"): "string",
+    # URLSearchParams.delete - value is bigint but needs string conversion
+    ("url-search-params", "delete", "value"): "string",
+    # IntersectionObserver.observe - target is number but needs handle lookup
+    ("intersection-observer", "observe", "target"): "handle:element",
+    # Response.redirect - url is bigint but needs string conversion
+    ("response", "redirect", "url"): "string",
+    # ReadableStreamBYOBReader.read - view is bigint but needs any
+    ("readable-stream-byob-reader", "read", "view"): "any",
+    # SubtleCrypto.decrypt - algorithm is bigint but needs string conversion
+    ("subtle-crypto", "decrypt", "algorithm"): "string",
+    # ServiceWorkerRegistration.showNotification - title is boolean but needs string conversion
+    ("service-worker-registration", "show-notification", "title"): "string",
+    # SpeechSynthesisUtterance.setVoice - value is boolean but needs handle lookup
+    ("speech-synthesis-utterance", "set-voice", "value"): "optional-handle:speech-synthesis-voice",
+    # SubtleCrypto.decrypt - algorithm is any
+    ("subtle-crypto", "decrypt", "algorithm"): "any",
+    # SubtleCrypto.decrypt - key is boolean but needs handle lookup
+    ("subtle-crypto", "decrypt", "key"): "handle:crypto-key",
+    # Geolocation.getCurrentPosition - callbacks need handle lookup
+    ("geolocation", "get-current-position", "success-callback"): "handle:position-callback",
+    ("geolocation", "get-current-position", "error-callback"): "optional-handle:position-error-callback",
+    # Geolocation.getCurrentPosition - options is dictionary
+    ("geolocation", "get-current-position", "options"): "dictionary:any",
+    # Geolocation.clearWatch - watchId is string but needs number conversion
+    ("geolocation", "clear-watch", "watch-id"): True,
+    # KeyboardEvent.initKeyboardEvent - viewArg is string but needs handle lookup
+    ("keyboard-event", "init-keyboard-event", "view-arg"): "optional-handle:window",
+    # KeyboardEvent.initKeyboardEvent - ctrlKey/shiftKey are string but need boolean conversion
+    ("keyboard-event", "init-keyboard-event", "ctrl-key"): "boolean",
+    ("keyboard-event", "init-keyboard-event", "shift-key"): "boolean",
+    # CompositionEvent.initCompositionEvent - dataArg is boolean but needs string conversion
+    ("composition-event", "init-composition-event", "data-arg"): "string",
+    # TextEvent.initTextEvent - view is boolean but needs handle lookup
+    ("text-event", "init-text-event", "view"): "optional-handle:window",
+    # WindowOrWorkerGlobalScope.queueMicrotask - callback is bigint but needs VoidFunction
+    ("window-or-worker-global-scope", "queue-microtask", "callback"): "any",
+    # MediaSession.setMicrophoneActive - active is number but needs boolean
+    ("media-session", "set-microphone-active", "active"): "boolean",
+    # MediaMetadata.setAlbum - value is number but needs string
+    ("media-metadata", "set-album", "value"): "string",
+    # MediaMetadata.setArtwork - value is string[] but needs handle array lookup
+    ("media-metadata", "set-artwork", "value"): "handle-array:media-image",
+    # ServiceWorkerRegistration.showNotification - options is bigint but needs dictionary
+    ("service-worker-registration", "show-notification", "options"): "dictionary:any",
+    # IntersectionObserver.unobserve - target is bigint | undefined but needs optional handle lookup
+    ("intersection-observer", "unobserve", "target"): "optional-handle-strict:element",
+    # ResizeObserver.observe - target is string but needs handle lookup
+    ("resize-observer", "observe", "target"): "handle:element",
+    # ResizeObserver.observe - options is EventHandlerRecord but needs dictionary
+    ("resize-observer", "observe", "options"): "dictionary:any",
+    # URLSearchParams.set - value is bigint but needs string
+    ("url-search-params", "set", "value"): "string",
+    # RTCPeerConnection.getStats - selector is string but needs handle lookup
+    ("rtc-peer-connection", "get-stats", "selector"): "optional-handle:media-stream-track",
+    # RTCIceCandidate sdpMLineIndex - is number | undefined but needs bigint
+    ("rtc-ice-candidate", "get-sdp-m-line-index", "sdp-m-line-index"): True,
+    # RTCDTMFSender.insertDTMF - duration is string but needs number conversion
+    ("rtc-dtmf-sender", "insert-dtmf", "duration"): True,
+    # IdbObjectStore.setName - value is bigint but needs string
+    ("idb-object-store", "set-name", "value"): "string",
+    # SubtleCrypto.deriveBits - algorithm is number but needs any
+    ("subtle-crypto", "derive-bits", "algorithm"): "any",
+    # SubtleCrypto.deriveBits - baseKey is number but needs handle lookup
+    ("subtle-crypto", "derive-bits", "base-key"): "handle:crypto-key",
+    # Geolocation.watchPosition - options is bigint but needs dictionary
+    ("geolocation", "watch-position", "options"): "dictionary:any",
+    # ClipboardItem.supports - returns boolean but needs string
+    ("clipboard-item", "supports", "type"): "string",
+    # WindowOrWorkerGlobalScope.atob - data is bigint but needs string
+    ("window-or-worker-global-scope", "atob", "data"): "string",
+    # SpeechSynthesisUtterance.setLang - value is boolean but needs string
+    ("speech-synthesis-utterance", "set-lang", "value"): "string",
+    # PaymentRequest.getId - returns string but needs number
+    ("payment-request", "get-id", "id"): True,
+    # Performance.getEntriesByName - type is number but needs string
+    ("performance", "get-entries-by-name", "type"): "string",
+    # URL.parse - base is boolean but needs string conversion
+    ("url", "parse", "base"): "string-or-url",
+    # Geolocation.watchPosition - errorCallback is string but needs handle lookup
+    ("geolocation", "watch-position", "error-callback"): "optional-handle:position-error-callback",
+    # KeyboardEvent.initKeyboardEvent - viewArg is boolean but needs handle lookup
+    ("keyboard-event", "init-keyboard-event", "view-arg"): "optional-handle:window",
+    # KeyboardEvent.initKeyboardEvent - altKey is string but needs boolean conversion
+    ("keyboard-event", "init-keyboard-event", "alt-key"): "boolean",
+    # TextEvent.initTextEvent - cancelable is string but needs boolean conversion
+    ("text-event", "init-text-event", "cancelable"): "boolean",
+    # SpeechSynthesisUtterance.setRate - value is string but needs number conversion
+    ("speech-synthesis-utterance", "set-rate", "value"): True,
+    # URL.setSearch - value is bigint but needs string conversion
+    ("url", "set-search", "value"): "string",
+    # RTCDTMFSender.insertDTMF - duration is bigint but needs number conversion
+    ("rtc-dtmf-sender", "insert-dtmf", "duration"): True,
 }
 
 # Properties that are enums (string in DOM, bigint in WIT)
@@ -4656,13 +4790,53 @@ ENUM_PROPERTIES = {
     ("rtc-ice-candidate", "relayProtocol"): "RTCIceProtocol",
     ("rtc-ice-candidate", "usernameFragment"): "RTCIceUsernameFragment",
     ("rtc-ice-candidate", "component"): "RTCIceComponent",
-    ("rtc-ice-candidate", "tcpType"): "RTCIceTcpCandidateType",
-    # RTCRtpTransceiver enum properties
+    # RTCIceCandidate candidate/sdpMid (string → bigint)
+    ("rtc-ice-candidate", "candidate"): "IceCandidateString",
+    ("rtc-ice-candidate", "sdpMid"): "SdpMidString",
+    # RTCRtpTransceiver currentDirection
     ("rtc-rtp-transceiver", "currentDirection"): "RTCRtpTransceiverDirection",
-    # RTCDataChannel label (string → bigint)
-    ("rtc-data-channel", "label"): "DataChannelLabel",
-    # RTCError errorDetail
-    ("rtc-error", "errorDetail"): "RTCErrorDetailType",
+    # Notification dir (string → bigint)
+    ("notification", "dir"): "NotificationDirection",
+    # IntersectionObserver rootMargin (string → number config)
+    ("intersection-observer", "rootMargin"): "RootMarginString",
+    # RTCIceCandidate foundation (string → bigint)
+    ("rtc-ice-candidate", "foundation"): "IceCandidateFoundation",
+    # RTCDTMFSender toneBuffer (string → bigint)
+    ("rtcdtmf-sender", "toneBuffer"): "ToneBufferString",
+    # PaymentRequest shippingType (string enum → bigint)
+    ("payment-request", "shippingType"): "PaymentShippingType",
+    # PaymentMethodChangeEvent methodName (string → bigint)
+    ("payment-method-change-event", "methodName"): "MethodNameString",
+    # PaymentResponse payerEmail (string → bigint)
+    ("payment-response", "payerEmail"): "PayerEmailString",
+    # SpeechSynthesisUtterance lang (string → bigint)
+    ("speech-synthesis-utterance", "lang"): "SpeechLang",
+    # GeolocationPositionError message (string → bigint)
+    ("geolocation-position-error", "message"): "GeolocationErrorMessage",
+    # RTCIceCandidate address (string → boolean)
+    ("rtc-ice-candidate", "address"): "RTCIceCandidateAddress",
+    # PerformanceNavigation redirectCount (number → string)
+    ("performance-navigation", "redirectCount"): "PerformanceRedirectCount",
+    # URL protocol (string → bigint)
+    ("url", "protocol"): "UrlProtocol",
+    # URL toJSON (string → bigint)
+    ("url", "to-json"): "UrlToJsonString",
+    # RTCIceCandidate relatedAddress (string → bigint)
+    ("rtc-ice-candidate", "related-address"): "RTCIceRelatedAddress",
+    # RTCIceCandidate sdpMLineIndex (number → string)
+    ("rtc-ice-candidate", "sdp-m-line-index"): "SdpMLineIndexString",
+    # URL search (string → bigint)
+    ("url", "search"): "UrlSearchString",
+    # WheelEvent deltaX (number → string)
+    ("wheel-event", "delta-x"): "WheelDeltaXString",
+    # MediaRecorder audioBitsPerSecond (number → string)
+    ("media-recorder", "audio-bits-per-second"): "AudioBitsPerSecondString",
+    # SpeechRecognitionResultList length (number → boolean)
+    ("speech-recognition-result-list", "length"): "RecognitionLengthBoolean",
+    # PerformanceNavigationTiming unloadEventEnd (number → string)
+    ("performance-navigation-timing", "unload-event-end"): "UnloadEventEndString",
+    # SpeechSynthesisVoice lang (string → bigint)
+    ("speech-synthesis-voice", "lang"): "SpeechSynthesisVoiceLang",
 }
 
 # Enum value mappings (string → bigint)
@@ -5161,6 +5335,141 @@ ENUM_VALUE_MAPPINGS = {
         "fingerprint-failure": 2,
         "sctp-failure": 3,
     },
+    # IceCandidateString (opaque string for randomUUID)
+    "IceCandidateString": {
+        "": 0,
+    },
+    # SdpMidString (opaque string)
+    "SdpMidString": {
+        "": 0,
+    },
+    # RTCIceUsernameFragment (opaque string)
+    "RTCIceUsernameFragment": {
+        "": 0,
+    },
+    # NotificationDirection
+    "NotificationDirection": {
+        "auto": 0,
+        "ltr": 2,
+        "rtl": 3,
+    },
+    # RootMarginString (opaque string)
+    "RootMarginString": {
+        "": 0,
+    },
+    # IceCandidateFoundation (opaque string)
+    "IceCandidateFoundation": {
+        "": 0,
+    },
+    # ToneBufferString (opaque string)
+    "ToneBufferString": {
+        "": 0,
+    },
+    # PaymentShippingType enum
+    "PaymentShippingType": {
+        "shipping": 0,
+        "delivery": 1,
+        "pickup": 2,
+    },
+    # MethodNameString (opaque string)
+    "MethodNameString": {
+        "": 0,
+    },
+    # PayerEmailString (opaque string)
+    "PayerEmailString": {
+        "": 0,
+    },
+    # SpeechLang (opaque string)
+    "SpeechLang": {
+        "": 0,
+    },
+    # GeolocationErrorMessage (opaque string)
+    "GeolocationErrorMessage": {
+        "": 0,
+    },
+    # RTCIceCandidateAddress (opaque string)
+    "RTCIceCandidateAddress": {
+        "": 0,
+    },
+    # PerformanceRedirectCount (number as string)
+    "PerformanceRedirectCount": {
+        "0": 0,
+    },
+    # UrlProtocol (opaque string)
+    "UrlProtocol": {
+        "": 0,
+    },
+    # UrlHostname (opaque string)
+    "UrlHostname": {
+        "": 0,
+    },
+    # UrlToJsonString (opaque string)
+    "UrlToJsonString": {
+        "": 0,
+    },
+    # RTCIceRelatedAddress (opaque string)
+    "RTCIceRelatedAddress": {
+        "": 0,
+    },
+    # SdpMLineIndexString (opaque number)
+    "SdpMLineIndexString": {
+        "0": 0,
+    },
+    # SpeechRate (opaque number)
+    "SpeechRate": {
+        "0": 0,
+    },
+    # KeyCodeString (opaque number)
+    "KeyCodeString": {
+        "0": 0,
+    },
+    # IsComposingNumber (boolean as number)
+    "IsComposingNumber": {
+        "false": 0,
+        "true": 1,
+    },
+    # WorkerStartString (opaque number)
+    "WorkerStartString": {
+        "0": 0,
+    },
+    # DomainLookupStartString (opaque number)
+    "DomainLookupStartString": {
+        "0": 0,
+    },
+    # RequestStartString (opaque number)
+    "RequestStartString": {
+        "0": 0,
+    },
+    # ClipboardSupportsNumber (boolean as number)
+    "ClipboardSupportsNumber": {
+        "false": 0,
+        "true": 1,
+    },
+    # UrlSearchString (opaque string)
+    "UrlSearchString": {
+        "": 0,
+    },
+    # WheelDeltaXString (opaque number)
+    "WheelDeltaXString": {
+        "0": 0,
+    },
+    # AudioBitsPerSecondString (opaque number)
+    "AudioBitsPerSecondString": {
+        "0": 0,
+    },
+    # RecognitionLengthBoolean (number as boolean)
+    "RecognitionLengthBoolean": {
+        "0": 0,
+        "1": 1,
+    },
+    # UnloadEventEndString (opaque number)
+    "UnloadEventEndString": {
+        "0": 0,
+    },
+    # SpeechSynthesisVoiceLang (opaque string)
+    "SpeechSynthesisVoiceLang": {
+        "": 0,
+    },
 }
 
 # Setters that accept enum values (bigint in WIT, string in DOM)
@@ -5286,6 +5595,30 @@ BOOLEAN_TO_BIGINT_PROPERTIES = {
     ("rtc-peer-connection", "get-can-trickle-ice-candidates"): True,
     ("rtc-data-channel", "get-ordered"): True,
     ("rtc-data-channel", "get-negotiated"): True,
+    # DOMTokenList toggle returns boolean
+    ("dom-token-list", "toggle"): True,
+    # InputEvent isComposing returns boolean
+    ("input-event", "get-is-composing"): True,
+    # KeyboardEvent repeat returns boolean
+    ("keyboard-event", "get-repeat"): True,
+    # SpeechSynthesisEvent elapsedTime returns number (not boolean)
+    ("speech-synthesis-event", "get-elapsed-time"): True,
+    # KeyboardEvent ctrlKey returns boolean
+    ("keyboard-event", "get-ctrl-key"): True,
+    # MediaRecorder isTypeSupported returns boolean
+    ("media-recorder", "is-type-supported"): True,
+    # KeyboardEvent altKey returns boolean
+    ("keyboard-event", "get-alt-key"): True,
+    # NodeIterator pointerBeforeReferenceNode returns boolean
+    ("node-iterator", "get-pointer-before-reference-node"): True,
+    # Response redirected returns boolean
+    ("response", "get-redirected"): True,
+    # KeyboardEvent isComposing returns boolean
+    ("keyboard-event", "get-is-composing"): True,
+    # ClipboardItem supports returns boolean
+    ("clipboard-item", "supports"): True,
+    # Headers.has returns boolean
+    ("headers", "has"): True,
 }
 
 # Getters that return optional types in DOM but non-optional in WIT
@@ -5589,6 +5922,45 @@ NUMBER_TO_BIGINT_PROPERTIES = {
     # ResizeObserverSize - blockSize/inlineSize return number
     ("resize-observer-size", "block-size"): True,
     ("resize-observer-size", "inline-size"): True,
+    # DOMTokenList - length returns number
+    ("dom-token-list", "length"): True,
+    # RTCDataChannel - maxMessageSize returns number
+    ("rtc-data-channel", "get-max-message-size"): True,
+    # RTCDataChannel - id returns number
+    ("rtc-data-channel", "get-id"): True,
+    # RTCDataChannel - bufferedAmount returns number
+    ("rtc-data-channel", "get-buffered-amount"): True,
+    # RTCDataChannel - bufferedAmountLowThreshold returns number
+    ("rtc-data-channel", "get-buffered-amount-low-threshold"): True,
+    # RTCError - sdpLineNumber returns number
+    ("rtc-error", "get-sdp-line-number"): True,
+    # RTCError - sctpCauseCode returns number
+    ("rtc-error", "get-sctp-cause-code"): True,
+    # ExtendableMessageEvent - lastEventId returns string not number
+    ("extendable-message-event", "get-last-event-id"): True,
+    # PerformanceNavigationTiming - unloadEventStart returns number
+    ("performance-navigation-timing", "get-unload-event-start"): True,
+    # RTCIceCandidate - sdpMLineIndex returns number | undefined
+    ("rtc-ice-candidate", "get-sdp-m-line-index"): True,
+    # RTCSctpTransport - maxMessageSize returns number
+    ("rtc-sctp-transport", "get-max-message-size"): True,
+    # KeyboardEvent keyCode returns number
+    ("keyboard-event", "get-key-code"): True,
+    # SpeechSynthesisUtterance rate returns number
+    ("speech-synthesis-utterance", "get-rate"): True,
+    # PerformanceResourceTiming - workerStart/domainLookupStart/requestStart return number
+    ("performance-resource-timing", "get-worker-start"): True,
+    ("performance-resource-timing", "get-domain-lookup-start"): True,
+    ("performance-resource-timing", "get-request-start"): True,
+    # WheelEvent deltaZ returns number
+    ("wheel-event", "get-delta-z"): True,
+    # ReadableStreamDefaultController desiredSize returns number
+    ("readable-stream-default-controller", "get-desired-size"): True,
+    # SpeechSynthesisEvent charIndex/charLength return number
+    ("speech-synthesis-event", "get-char-index"): True,
+    ("speech-synthesis-event", "get-char-length"): True,
+    # SpeechSynthesisUtterance rate returns number
+    ("speech-synthesis-utterance", "get-rate"): True,
 }
 
 # Interface-specific browser attribute name overrides
