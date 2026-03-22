@@ -283,85 +283,25 @@ fn build_wasm_component(
     Ok(wasm_path)
 }
 
-/// Embedded browser-glue files compiled into the packager binary.
-/// This ensures the packager works standalone without requiring external browser-glue.
-static BROWSER_GLUE_DIST: include_dir::Dir =
-    include_dir::include_dir!("$CARGO_MANIFEST_DIR/../browser-glue/dist");
+mod browser_glue_bundle {
+    include!(concat!(env!("OUT_DIR"), "/browser_glue_bundle.rs"));
+}
 
-fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
-    let target_glue = config.build.output_dir.join("browser-glue");
-    std::fs::create_dir_all(&target_glue)?;
-
-    // Strategy 1: Try workspace-relative path (for monorepo development)
-    if let Ok(workspace_root) = find_workspace_root() {
-        let glue_dist = workspace_root
-            .join("packages")
-            .join("browser-glue")
-            .join("dist");
-
-        if glue_dist.exists() {
-            // Recursively copy all files including subdirectories
-            // Special handling: flatten browser-glue/ subdirectory to root
-            for entry in walkdir::WalkDir::new(&glue_dist) {
-                let entry = entry.map_err(|e| {
-                    crate::TairitsuPackagerError::BuildError(format!(
-                        "Failed to walk browser-glue dist: {}",
-                        e
-                    ))
-                })?;
-                let path = entry.path();
-                if path.is_dir() {
-                    continue;
-                }
-                let relative = path.strip_prefix(&glue_dist).map_err(|e| {
-                    crate::TairitsuPackagerError::BuildError(format!(
-                        "Failed to compute browser-glue relative path: {}",
-                        e
-                    ))
-                })?;
-
-                // Flatten browser-glue/ subdirectory: dist/browser-glue/console.js -> browser-glue/console.js
-                let first_component = relative.components().next();
-                let first_str = first_component.map(|c| c.as_os_str().to_string_lossy().to_string());
-                let should_flatten = first_str.as_ref().map(|s| s == "browser-glue").unwrap_or(false);
-
-                let dest = if should_flatten {
-                    let mut components: Vec<_> = relative.components().collect();
-                    if !components.is_empty() {
-                        components.remove(0);
-                    }
-                    let flattened: std::path::PathBuf = components.iter().collect();
-                    target_glue.join(flattened)
-                } else {
-                    target_glue.join(relative)
-                };
-
-                if let Some(parent) = dest.parent() {
-                    std::fs::create_dir_all(parent)?;
-                }
-                std::fs::copy(path, &dest)?;
-            }
-            return Ok(());
-        }
+fn write_browser_glue_bundle(config: &Config) -> crate::Result<()> {
+    let glue_path = config.build.browser_glue_path.trim_start_matches('/');
+    let bundle_dest = config.build.output_dir.join(glue_path);
+    
+    if let Some(parent) = bundle_dest.parent() {
+        std::fs::create_dir_all(parent)?;
     }
+    
+    std::fs::write(&bundle_dest, browser_glue_bundle::BROWSER_GLUE_BUNDLE)?;
+    
+    Ok(())
+}
 
-    // Strategy 2: Use embedded browser-glue from compile time
-    let mut file_count = 0;
-    for file in BROWSER_GLUE_DIST.files() {
-        let dest = target_glue.join(file.path().file_name().unwrap());
-        if let Some(parent) = dest.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::write(&dest, file.contents())?;
-        file_count += 1;
-    }
-
-    if file_count == 0 {
-        pb.println(
-            "⚠  No browser-glue files found (neither on filesystem nor embedded).",
-        );
-    }
-
+fn copy_browser_glue(config: &Config, _pb: &ProgressBar) -> crate::Result<()> {
+    write_browser_glue_bundle(config)?;
     Ok(())
 }
 
@@ -686,6 +626,9 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         .as_deref()
         .map(|href| format!("<link rel=\"icon\" href=\"./{}\">", href))
         .unwrap_or_default();
+    
+    // Browser glue bundle path (relative to output directory)
+    let glue_bundle_path = &config.build.browser_glue_path;
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -699,17 +642,10 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
 </head>
 <body class="{body_class}">
     <div id="app">Loading...</div>
-        <script type="importmap">
-        {{
-            "imports": {{
-                "@bytecodealliance/preview2-shim/": "https://esm.sh/@bytecodealliance/preview2-shim/",
-                "tairitsu-browser:full/": "./browser-glue/"
-            }}
-        }}
-        </script>
     <script type="module">
-        // Load browser API glue (WIT interface implementations)
-        import './browser-glue/index.js?v={v}';
+        // Load browser API glue first - it will auto-register import map
+        await import('{glue_bundle_path}?v={v}');
+        
         import {{ instantiateWithWrapper }} from './component-wrapper-loader.js?v={v}';
 
         const appRoot = document.getElementById('app');
