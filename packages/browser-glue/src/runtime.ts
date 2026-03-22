@@ -265,7 +265,12 @@ function generateModuleCode(exports: Record<string, Function>): string {
     const lines: string[] = [];
     
     for (const [name, fn] of Object.entries(exports)) {
-        lines.push(`export const ${name} = ${fn.toString()};`);
+        let fnStr = fn.toString();
+        // Ensure function syntax is complete (shorthand methods don't have 'function' keyword)
+        if (!fnStr.startsWith('function')) {
+            fnStr = `function ${fnStr}`;
+        }
+        lines.push(`export const ${name} = ${fnStr};`);
     }
     
     return lines.join("\n");
