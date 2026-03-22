@@ -300,13 +300,46 @@ fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
             .join("dist");
 
         if glue_dist.exists() {
-            for entry in std::fs::read_dir(&glue_dist)? {
-                let entry = entry?;
+            // Recursively copy all files including subdirectories
+            // Special handling: flatten browser-glue/ subdirectory to root
+            for entry in walkdir::WalkDir::new(&glue_dist) {
+                let entry = entry.map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to walk browser-glue dist: {}",
+                        e
+                    ))
+                })?;
                 let path = entry.path();
-                if path.is_file() {
-                    let dest = target_glue.join(path.file_name().unwrap());
-                    std::fs::copy(&path, &dest)?;
+                if path.is_dir() {
+                    continue;
                 }
+                let relative = path.strip_prefix(&glue_dist).map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to compute browser-glue relative path: {}",
+                        e
+                    ))
+                })?;
+
+                // Flatten browser-glue/ subdirectory: dist/browser-glue/console.js -> browser-glue/console.js
+                let first_component = relative.components().next();
+                let first_str = first_component.map(|c| c.as_os_str().to_string_lossy().to_string());
+                let should_flatten = first_str.as_ref().map(|s| s == "browser-glue").unwrap_or(false);
+
+                let dest = if should_flatten {
+                    let mut components: Vec<_> = relative.components().collect();
+                    if !components.is_empty() {
+                        components.remove(0);
+                    }
+                    let flattened: std::path::PathBuf = components.iter().collect();
+                    target_glue.join(flattened)
+                } else {
+                    target_glue.join(relative)
+                };
+
+                if let Some(parent) = dest.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::copy(path, &dest)?;
             }
             return Ok(());
         }
@@ -316,6 +349,9 @@ fn copy_browser_glue(config: &Config, pb: &ProgressBar) -> crate::Result<()> {
     let mut file_count = 0;
     for file in BROWSER_GLUE_DIST.files() {
         let dest = target_glue.join(file.path().file_name().unwrap());
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
         std::fs::write(&dest, file.contents())?;
         file_count += 1;
     }

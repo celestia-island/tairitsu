@@ -105,7 +105,7 @@ def generate_wrappers(output_dir: Path, glue_dist_dir: Path) -> None:
         import_lines = []
         for domain in sorted(domain_imports.keys()):
             names = sorted(set(domain_imports[domain]))
-            import_lines.append(f"import {{ {', '.join(names)} }} from '../{domain}.js';")
+            import_lines.append(f"import {{ {', '.join(names)} }} from './{domain}.js';")
         
         export_lines = []
         for func in functions:
