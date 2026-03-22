@@ -30,7 +30,11 @@ pub fn compile_scss_with_config(
     let mut results = Vec::new();
 
     // Collect entries to process
-    tracing::info!("SCSS config: {} entries, load_paths: {:?}", config.entries.len(), config.load_paths);
+    tracing::info!(
+        "SCSS config: {} entries, load_paths: {:?}",
+        config.entries.len(),
+        config.load_paths
+    );
 
     let entries = if !config.entries.is_empty() {
         // Use explicit multi-entry configuration
@@ -107,7 +111,11 @@ pub fn compile_scss_with_config(
             output_path: output_path.clone(),
         });
 
-        tracing::info!("Compiled SCSS: {} -> {}", entry.entry, output_path.display());
+        tracing::info!(
+            "Compiled SCSS: {} -> {}",
+            entry.entry,
+            output_path.display()
+        );
     }
 
     Ok(results)

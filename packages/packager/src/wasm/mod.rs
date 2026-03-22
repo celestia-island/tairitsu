@@ -83,15 +83,30 @@ pub fn build_component(
     pb.set_prefix("[3/5]");
     pb.set_message("bundle assets");
     let t = Instant::now();
-    let dest_wasm = config
-        .build
-        .output_dir
-        .join(format!("{}.wasm", config.package.name.replace('-', "_")));
-    std::fs::create_dir_all(&config.build.output_dir)?;
+    
+    // Resolve output_dir relative to manifest_dir
+    let output_dir = if config.build.output_dir.is_relative() {
+        config.manifest_dir.join(&config.build.output_dir)
+    } else {
+        config.build.output_dir.clone()
+    };
+    
+    let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
+    
+    tracing::info!("Creating output directory: {}", output_dir.display());
+    std::fs::create_dir_all(&output_dir)?;
+    
+    tracing::info!("Copying WASM from {} to {}", wasm_path.display(), dest_wasm.display());
     std::fs::copy(&wasm_path, &dest_wasm)?;
-    copy_browser_glue(config, &pb)?;
-    copy_static_public_assets(config)?;
-    compile_project_scss(config)?;
+    
+    tracing::info!("Copying browser glue...");
+    copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
+    
+    tracing::info!("Copying static public assets...");
+    copy_static_public_assets_with_output_dir(config, &output_dir)?;
+    
+    tracing::info!("Compiling SCSS...");
+    compile_project_scss_with_output_dir(config, &output_dir)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "bundle assets",
@@ -103,7 +118,7 @@ pub fn build_component(
     pb.set_prefix("[4/5]");
     pb.set_message("component wrapper");
     let t = Instant::now();
-    prepare_component_wrapper_fallback(config, &dest_wasm, &pb)?;
+    prepare_component_wrapper_fallback(config, &dest_wasm, &output_dir, &pb)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "component wrapper",
@@ -115,7 +130,7 @@ pub fn build_component(
     pb.set_prefix("[5/5]");
     pb.set_message("generate HTML");
     let t = Instant::now();
-    generate_component_html(config)?;
+    generate_component_html_with_output_dir(config, &output_dir)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
         "generate HTML",
@@ -287,9 +302,9 @@ mod browser_glue_bundle {
     include!(concat!(env!("OUT_DIR"), "/browser_glue_bundle.rs"));
 }
 
-fn write_browser_glue_bundle(config: &Config) -> crate::Result<()> {
+fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     let glue_path = config.build.browser_glue_path.trim_start_matches('/');
-    let bundle_dest = config.build.output_dir.join(glue_path);
+    let bundle_dest = output_dir.join(glue_path);
     
     if let Some(parent) = bundle_dest.parent() {
         std::fs::create_dir_all(parent)?;
@@ -300,14 +315,13 @@ fn write_browser_glue_bundle(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
-fn copy_browser_glue(config: &Config, _pb: &ProgressBar) -> crate::Result<()> {
-    write_browser_glue_bundle(config)?;
+fn copy_browser_glue_with_output_dir(config: &Config, output_dir: &std::path::Path, _pb: &ProgressBar) -> crate::Result<()> {
+    write_browser_glue_bundle(config, output_dir)?;
     Ok(())
 }
 
-fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
-    let project_root = std::env::current_dir()?;
-    let public_dir = project_root.join("public");
+fn copy_static_public_assets_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    let public_dir = config.manifest_dir.join("public");
 
     if !public_dir.exists() {
         return Ok(());
@@ -328,7 +342,7 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
                 e
             ))
         })?;
-        let dest = config.build.output_dir.join(relative);
+        let dest = output_dir.join(relative);
         if let Some(parent) = dest.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -338,14 +352,16 @@ fn copy_static_public_assets(config: &Config) -> crate::Result<()> {
     Ok(())
 }
 
-fn compile_project_scss(config: &Config) -> crate::Result<()> {
-    let project_root = std::env::current_dir()?;
+fn compile_project_scss_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+    let project_root = &config.manifest_dir;
+
+    tracing::info!("SCSS project root: {}", project_root.display());
 
     // Use new SCSS configuration system
     let results = crate::styles::compile_scss_with_config(
         &config.scss,
-        &project_root,
-        &config.build.output_dir,
+        project_root,
+        output_dir,
     )
     .map_err(|e| {
         crate::TairitsuPackagerError::BuildError(format!("Failed to compile SCSS: {}", e))
@@ -353,7 +369,7 @@ fn compile_project_scss(config: &Config) -> crate::Result<()> {
 
     // Log compiled files
     for result in results {
-        tracing::debug!("Compiled SCSS: {}", result.output_path.display());
+        tracing::info!("Compiled SCSS: {}", result.output_path.display());
     }
 
     Ok(())
@@ -362,11 +378,12 @@ fn compile_project_scss(config: &Config) -> crate::Result<()> {
 fn prepare_component_wrapper_fallback(
     config: &Config,
     component_wasm_path: &std::path::Path,
+    output_dir: &std::path::Path,
     pb: &ProgressBar,
 ) -> crate::Result<()> {
-    write_component_wrapper_loader(config, component_wasm_path)?;
+    write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
-    if !try_generate_component_wrapper(config, component_wasm_path, pb)? {
+    if !try_generate_component_wrapper(config, component_wasm_path, output_dir, pb)? {
         let wasm_hint_path = std::fs::canonicalize(component_wasm_path)
             .unwrap_or_else(|_| component_wasm_path.to_path_buf());
         let wasm_hint = wasm_hint_path
@@ -378,18 +395,18 @@ fn prepare_component_wrapper_fallback(
             "⚠  Wrapper transpile command not found: 'jco'.\n   \
              Attempted: jco transpile {} -o {}",
             wasm_hint,
-            config.build.output_dir.join("component-wrapper").display()
+            output_dir.join("component-wrapper").display()
         ));
     }
 
     // Always normalize wrapper imports if wrapper files already exist.
-    rewrite_wrapper_imports_to_esm(config)?;
+    rewrite_wrapper_imports_to_esm(output_dir)?;
 
     Ok(())
 }
 
-fn rewrite_wrapper_imports_to_esm(config: &Config) -> crate::Result<()> {
-    let wrapper_dir = config.build.output_dir.join("component-wrapper");
+fn rewrite_wrapper_imports_to_esm(output_dir: &std::path::Path) -> crate::Result<()> {
+    let wrapper_dir = output_dir.join("component-wrapper");
     if !wrapper_dir.exists() {
         return Ok(());
     }
@@ -426,6 +443,7 @@ fn rewrite_wrapper_imports_to_esm(config: &Config) -> crate::Result<()> {
 fn write_component_wrapper_loader(
     config: &Config,
     component_wasm_path: &std::path::Path,
+    output_dir: &std::path::Path,
 ) -> crate::Result<()> {
     let wasm_stem = component_wasm_path
         .file_stem()
@@ -442,7 +460,7 @@ fn write_component_wrapper_loader(
     ))
     .replace("__WASM_STEM__", wasm_stem);
 
-    let loader_path = config.build.output_dir.join("component-wrapper-loader.js");
+    let loader_path = output_dir.join("component-wrapper-loader.js");
     std::fs::write(loader_path, loader)?;
     Ok(())
 }
@@ -450,9 +468,10 @@ fn write_component_wrapper_loader(
 fn try_generate_component_wrapper(
     config: &Config,
     component_wasm_path: &std::path::Path,
+    output_dir: &std::path::Path,
     pb: &ProgressBar,
 ) -> crate::Result<bool> {
-    let wrapper_dir = config.build.output_dir.join("component-wrapper");
+    let wrapper_dir = output_dir.join("component-wrapper");
     std::fs::create_dir_all(&wrapper_dir)?;
 
     let wasm_path_for_cmd = std::fs::canonicalize(component_wasm_path)
@@ -606,7 +625,7 @@ fn try_generate_component_wrapper(
     Ok(false)
 }
 
-fn generate_component_html(config: &Config) -> crate::Result<()> {
+fn generate_component_html_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
     // Build-time version stamp so browsers never serve stale cached JS/WASM
@@ -778,7 +797,7 @@ fn generate_component_html(config: &Config) -> crate::Result<()> {
         v = v,
     );
 
-    let html_path = config.build.output_dir.join("index.html");
+    let html_path = output_dir.join("index.html");
     std::fs::write(&html_path, html)?;
 
     Ok(())

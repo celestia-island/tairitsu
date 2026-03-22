@@ -18,6 +18,9 @@ pub struct Config {
     pub scss: ScssConfig,
     #[serde(default)]
     pub native: NativeConfig,
+    /// Directory containing the Cargo.toml (project root)
+    #[serde(skip)]
+    pub manifest_dir: PathBuf,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -204,6 +207,12 @@ impl Config {
             ));
         }
 
+        // Get the directory containing Cargo.toml, canonicalized to absolute path
+        let manifest_dir = cargo_toml_path
+            .parent()
+            .map(|p| p.canonicalize().unwrap_or_else(|_| p.to_path_buf()))
+            .unwrap_or_default();
+
         let content = std::fs::read_to_string(&cargo_toml_path)?;
         let manifest: toml::Value = toml::from_str(&content)?;
 
@@ -236,6 +245,7 @@ impl Config {
             css: metadata.css,
             scss: metadata.scss,
             native: metadata.native,
+            manifest_dir,
         })
     }
 }
