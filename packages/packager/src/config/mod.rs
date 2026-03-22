@@ -37,6 +37,9 @@ pub struct BuildConfig {
     pub optimize: bool,
     #[serde(default)]
     pub sourcemap: bool,
+    #[serde(alias = "browser-glue-path")]
+    #[serde(default = "default_browser_glue_path")]
+    pub browser_glue_path: String,
 }
 
 fn default_target() -> String {
@@ -45,6 +48,10 @@ fn default_target() -> String {
 
 fn default_output_dir() -> PathBuf {
     PathBuf::from("../../target/tairitsu-dist")
+}
+
+fn default_browser_glue_path() -> String {
+    "/browser-glue/__tairitsu_glue__.js".to_string()
 }
 
 #[derive(Debug, Clone, Deserialize)]
