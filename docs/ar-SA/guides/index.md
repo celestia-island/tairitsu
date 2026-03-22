@@ -11,11 +11,13 @@ This is the complete English documentation baseline for Tairitsu.
 - [Workspace Map](./workspace-map.md)
 - [Build, Test, and Release](./build-test-release.md)
 - [Migration from web-sys to WIT bindings](./migration.md)
+- [Troubleshooting](./troubleshooting.md)
 - [Glossary](./glossary.md)
 
 ### System
 - [System Overview](../system/overview.md)
 - [Runtime and Container Model](../system/runtime.md)
+- [Browser Glue Architecture](../system/browser-glue.md)
 - [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
 - [Dual Web Backends](../system/web-backends.md)
 - [Versioning Strategy](../system/versioning.md)

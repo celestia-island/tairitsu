@@ -1,26 +1,28 @@
-# Tairitsu Documentation Hub (English)
+# Hub de documentation Tairitsu (Français)
 
-> Generic WASM Component Runtime Engine
+> Moteur d'exécution de composants WASM générique
 
-This is the complete English documentation baseline for Tairitsu.
+Ceci est la documentation de référence complète en français pour Tairitsu.
 
 ## Navigation
 
 ### Guides
-- [Quick Start](./quick-start.md)
-- [Workspace Map](./workspace-map.md)
-- [Build, Test, and Release](./build-test-release.md)
-- [Migration from web-sys to WIT bindings](./migration.md)
-- [Glossary](./glossary.md)
+- [Démarrage rapide](./quick-start.md)
+- [Carte de l'espace de travail](./workspace-map.md)
+- [Build, Test et Release](./build-test-release.md)
+- [Migration de web-sys vers les liaisons WIT](./migration.md)
+- [Dépannage](./troubleshooting.md)
+- [Glossaire](./glossary.md)
 
-### System
-- [System Overview](../system/overview.md)
-- [Runtime and Container Model](../system/runtime.md)
-- [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
-- [Dual Web Backends](../system/web-backends.md)
-- [Versioning Strategy](../system/versioning.md)
+### Système
+- [Vue d'ensemble du système](../system/overview.md)
+- [Modèle de runtime et conteneur](../system/runtime.md)
+- [Pipeline W3C WebIDL vers WIT](../system/wit-pipeline.md)
+- [Double backend web](../system/web-backends.md)
+- [Architecture Browser Glue](../system/browser-glue.md)
+- [Stratégie de versioning](../system/versioning.md)
 
-### Components
-- [Layered Package Overview](../components/index.md)
-- [Workspace Package List](../components/packages.md)
+### Composants
+- [Vue d'ensemble des packages en couches](../components/index.md)
+- [Liste des packages de l'espace de travail](../components/packages.md)
 

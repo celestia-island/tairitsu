@@ -5,6 +5,7 @@
 - [ワークスペース構成](./workspace-map.md)
 - [ビルド・テスト・リリース](./build-test-release.md)
 - [web から wit-bindings への移行](./migration.md)
+- [トラブルシューティング](./troubleshooting.md)
 - [用語集](./glossary.md)
 
 ## System
@@ -12,6 +13,7 @@
 - [ランタイムとコンテナモデル](../system/runtime.md)
 - [WebIDL から WIT へのパイプライン](../system/wit-pipeline.md)
 - [Web バックエンド二系統](../system/web-backends.md)
+- [Browser Glue アーキテクチャ](../system/browser-glue.md)
 - [バージョニング戦略](../system/versioning.md)
 
 ## Components
