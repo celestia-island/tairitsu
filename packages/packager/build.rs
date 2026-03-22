@@ -6,7 +6,7 @@ fn main() {
     let workspace_root = find_workspace_root(&manifest_dir);
 
     // Watch for template changes
-    let template_js = manifest_dir.join("src/wasm/component-wrapper-loader.template.ts");
+    let template_js = manifest_dir.join("src/wasm/component-wrapper-loader.template.js");
     println!("cargo:rerun-if-changed={}", template_js.display());
 
     // Watch for runtime.ts changes
