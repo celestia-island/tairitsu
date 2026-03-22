@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tairitsu Browser Glue - Single Self-Contained Bundle
  * 
@@ -6,56 +7,86 @@
  * 
  * Usage: <script type="module" src="/__tairitsu_glue__.js"></script>
  * 
- * After loading, the bundle will:
+ * After loading, bundle will:
  * 1. Generate blob URLs for each interface
  * 2. Update the import map to map tairitsu-browser:full/* to these URLs
  */
 
 // ============================================================================
-// Handle Tables (shared across all glue functions)
+// Handle Tables (shared across all glue functions via globalThis)
 // ============================================================================
 
-const _elementHandles = new Map<bigint, Element>();
-const _documentHandles = new Map<bigint, Document>();
-const _nodeHandles = new Map<bigint, Node>();
-const _textHandles = new Map<bigint, Text>();
-let _nextHandle = 1n;
+// Initialize global handle tables if not already set
+globalThis.__elementHandles = globalThis.__elementHandles || new Map();
+globalThis.__documentHandles = globalThis.__documentHandles || new Map();
+globalThis.__nodeHandles = globalThis.__nodeHandles || new Map();
+globalThis.__textHandles = globalThis.__textHandles || new Map();
+globalThis.__nextHandle = globalThis.__nextHandle || 1n;
 
-(globalThis as any).__elementHandles = _elementHandles;
-(globalThis as any).__documentHandles = _documentHandles;
-(globalThis as any).__nodeHandles = _nodeHandles;
-(globalThis as any).__textHandles = _textHandles;
-
-function storeElement(el: Element | null | undefined): bigint | undefined {
+// Helper functions for blob URL modules
+globalThis.__storeElement = function(el) {
     if (!el) return undefined;
-    const handle = _nextHandle++;
-    _elementHandles.set(handle, el);
+    const handle = globalThis.__nextHandle++;
+    globalThis.__elementHandles.set(handle, el);
     return handle;
-}
+};
 
-function storeNode(node: Node | null | undefined): bigint | undefined {
+globalThis.__storeNode = function(node) {
     if (!node) return undefined;
-    const handle = _nextHandle++;
-    _nodeHandles.set(handle, node);
+    const handle = globalThis.__nextHandle++;
+    globalThis.__nodeHandles.set(handle, node);
     return handle;
-}
+};
 
-function storeText(text: Text | null | undefined): bigint | undefined {
+globalThis.__storeText = function(text) {
     if (!text) return undefined;
-    const handle = _nextHandle++;
-    _textHandles.set(handle, text);
+    const handle = globalThis.__nextHandle++;
+    globalThis.__textHandles.set(handle, text);
+    return handle;
+};
+
+globalThis.__lookupElement = function(handle) {
+    const el = globalThis.__elementHandles.get(handle);
+    if (!el) throw new Error("Element handle " + handle + " not found");
+    return el;
+};
+
+globalThis.__lookupNode = function(handle) {
+    const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
+    if (!node) throw new Error("Node handle " + handle + " not found");
+    return node;
+};
+
+function storeElement(el) {
+    if (!el) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__elementHandles.set(handle, el);
     return handle;
 }
 
-function lookupElement(handle: bigint): Element {
-    const el = _elementHandles.get(handle);
-    if (!el) throw new Error(`Element handle ${handle} not found`);
+function storeNode(node) {
+    if (!node) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__nodeHandles.set(handle, node);
+    return handle;
+}
+
+function storeText(text) {
+    if (!text) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__textHandles.set(handle, text);
+    return handle;
+}
+
+function lookupElement(handle) {
+    const el = globalThis.__elementHandles.get(handle);
+    if (!el) throw new Error("Element handle " + handle + " not found");
     return el;
 }
 
-function lookupNode(handle: bigint): Node {
-    const node = _nodeHandles.get(handle) || _elementHandles.get(handle);
-    if (!node) throw new Error(`Node handle ${handle} not found`);
+function lookupNode(handle) {
+    const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
+    if (!node) throw new Error("Node handle " + handle + " not found");
     return node;
 }
 
@@ -64,13 +95,13 @@ function lookupNode(handle: bigint): Node {
 // ============================================================================
 
 const console_exports = {
-    log(message: string): void {
+    log(message) {
         console.log(message);
     },
-    warn(message: string): void {
+    warn(message) {
         console.warn(message);
     },
-    error(message: string): void {
+    error(message) {
         console.error(message);
     },
 };
@@ -80,19 +111,19 @@ const console_exports = {
 // ============================================================================
 
 const style_exports = {
-    setStyleProperty(element: bigint, property: string, value: string): void | string {
+    setStyleProperty(element, property, value) {
         try {
-            (lookupElement(element) as HTMLElement).style.setProperty(property, value);
+            lookupElement(element).style.setProperty(property, value);
         } catch (e) {
             return String(e);
         }
     },
-    getStyleProperty(element: bigint, property: string): string | undefined {
-        return (lookupElement(element) as HTMLElement).style.getPropertyValue(property) || undefined;
+    getStyleProperty(element, property) {
+        return lookupElement(element).style.getPropertyValue(property) || undefined;
     },
-    removeStyleProperty(element: bigint, property: string): void | string {
+    removeStyleProperty(element, property) {
         try {
-            (lookupElement(element) as HTMLElement).style.removeProperty(property);
+            lookupElement(element).style.removeProperty(property);
         } catch (e) {
             return String(e);
         }
@@ -103,37 +134,32 @@ const style_exports = {
 // Event Target Interface (tairitsu-browser:full/event-target)
 // ============================================================================
 
-let _nextListenerId = 1n;
-const _listeners = new Map<bigint, {
-    target: EventTarget;
-    type: string;
-    listener: EventListener;
-    useCapture: boolean;
-}>();
-const _eventHandles = new Map<bigint, Event>();
-let _nextEventHandle = 1n;
+globalThis.__nextListenerId = globalThis.__nextListenerId || 1n;
+globalThis.__listeners = globalThis.__listeners || new Map();
+globalThis.__eventHandles = globalThis.__eventHandles || new Map();
+globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 
 const event_target_exports = {
-    addEventListener(target: bigint, eventType: string, useCapture: boolean): bigint | string {
+    addEventListener(target, eventType, useCapture) {
         try {
-            const element = _elementHandles.get(target) as EventTarget | undefined;
+            const element = globalThis.__elementHandles.get(target);
             if (!element) {
-                return `Target handle ${target} not found`;
+                return "Target handle " + target + " not found";
             }
 
-            const listener: EventListener = (event: Event) => {
-                const eventHandle = _nextEventHandle++;
-                _eventHandles.set(eventHandle, event);
+            const listener = function(event) {
+                const eventHandle = globalThis.__nextEventHandle++;
+                globalThis.__eventHandles.set(eventHandle, event);
             };
 
             element.addEventListener(eventType, listener, useCapture);
 
-            const listenerId = _nextListenerId++;
-            _listeners.set(listenerId, {
+            const listenerId = globalThis.__nextListenerId++;
+            globalThis.__listeners.set(listenerId, {
                 target: element,
                 type: eventType,
-                listener,
-                useCapture,
+                listener: listener,
+                useCapture: useCapture,
             });
 
             return listenerId;
@@ -141,23 +167,23 @@ const event_target_exports = {
             return String(e);
         }
     },
-    removeEventListener(_target: bigint, listenerId: bigint): void | string {
+    removeEventListener(_target, listenerId) {
         try {
-            const info = _listeners.get(listenerId);
+            const info = globalThis.__listeners.get(listenerId);
             if (!info) {
-                return `Listener ID ${listenerId} not found`;
+                return "Listener ID " + listenerId + " not found";
             }
             info.target.removeEventListener(info.type, info.listener, info.useCapture);
-            _listeners.delete(listenerId);
+            globalThis.__listeners.delete(listenerId);
         } catch (e) {
             return String(e);
         }
     },
-    preventDefault(event: bigint): void {
-        _eventHandles.get(event)?.preventDefault();
+    preventDefault(event) {
+        globalThis.__eventHandles.get(event)?.preventDefault();
     },
-    stopPropagation(event: bigint): void {
-        _eventHandles.get(event)?.stopPropagation();
+    stopPropagation(event) {
+        globalThis.__eventHandles.get(event)?.stopPropagation();
     },
 };
 
@@ -166,15 +192,15 @@ const event_target_exports = {
 // ============================================================================
 
 const document_exports = {
-    createElement(localName: string): bigint | undefined {
+    createElement(localName) {
         const el = document.createElement(localName);
         return storeElement(el);
     },
-    createTextNode(data: string): bigint | undefined {
+    createTextNode(data) {
         const text = document.createTextNode(data);
         return storeText(text);
     },
-    getBody(): bigint | undefined {
+    getBody() {
         return storeElement(document.body);
     },
 };
@@ -184,10 +210,10 @@ const document_exports = {
 // ============================================================================
 
 const element_exports = {
-    setAttribute(self: bigint, qualifiedName: string, value: string): void {
+    setAttribute(self, qualifiedName, value) {
         lookupElement(self).setAttribute(qualifiedName, value);
     },
-    removeAttribute(self: bigint, qualifiedName: string): void {
+    removeAttribute(self, qualifiedName) {
         lookupElement(self).removeAttribute(qualifiedName);
     },
 };
@@ -197,22 +223,22 @@ const element_exports = {
 // ============================================================================
 
 const node_exports = {
-    appendChild(self: bigint, child: bigint): bigint | undefined {
+    appendChild(self, child) {
         const parent = lookupNode(self);
         const childNode = lookupNode(child);
         const result = parent.appendChild(childNode);
         return storeNode(result);
     },
-    removeChild(self: bigint, child: bigint): bigint | undefined {
+    removeChild(self, child) {
         const parent = lookupNode(self);
         const childNode = lookupNode(child);
         const result = parent.removeChild(childNode);
         return storeNode(result);
     },
-    setTextContent(self: bigint, text: string): void {
+    setTextContent(self, text) {
         lookupNode(self).textContent = text;
     },
-    getTextContent(self: bigint): string {
+    getTextContent(self) {
         return lookupNode(self).textContent || "";
     },
 };
@@ -222,9 +248,9 @@ const node_exports = {
 // ============================================================================
 
 const non_element_parent_node_exports = {
-    getElementById(self: bigint, elementId: string): bigint | undefined {
-        const doc = _documentHandles.get(self) || document;
-        const el = (doc as NonElementParentNode).getElementById(elementId);
+    getElementById(self, elementId) {
+        const doc = globalThis.__documentHandles.get(self) || document;
+        const el = doc.getElementById(elementId);
         return storeElement(el);
     },
 };
@@ -234,10 +260,10 @@ const non_element_parent_node_exports = {
 // ============================================================================
 
 const window_exports = {
-    getInnerWidth(): number {
+    getInnerWidth() {
         return window.innerWidth;
     },
-    getInnerHeight(): number {
+    getInnerHeight() {
         return window.innerHeight;
     },
 };
@@ -246,7 +272,7 @@ const window_exports = {
 // Interface Registry
 // ============================================================================
 
-const INTERFACES: Record<string, Record<string, Function>> = {
+const INTERFACES = {
     "tairitsu-browser:full/console": console_exports,
     "tairitsu-browser:full/style": style_exports,
     "tairitsu-browser:full/event-target": event_target_exports,
@@ -261,23 +287,61 @@ const INTERFACES: Record<string, Record<string, Function>> = {
 // Module Generation & Import Map Registration
 // ============================================================================
 
-function generateModuleCode(exports: Record<string, Function>): string {
-    const lines: string[] = [];
+function generateModuleCode(exports) {
+    const lines = [];
+    
+    // Include helper functions needed by exports
+    // IMPORTANT: Always access globalThis directly, never cache in local variables
+    const helpers = `// Helper functions - always use globalThis directly
+function storeElement(el) {
+    if (!el) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__elementHandles.set(handle, el);
+    return handle;
+}
+
+function storeNode(node) {
+    if (!node) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__nodeHandles.set(handle, node);
+    return handle;
+}
+
+function storeText(text) {
+    if (!text) return undefined;
+    const handle = globalThis.__nextHandle++;
+    globalThis.__textHandles.set(handle, text);
+    return handle;
+}
+
+function lookupElement(handle) {
+    const el = globalThis.__elementHandles.get(handle);
+    if (!el) throw new Error("Element handle " + handle + " not found");
+    return el;
+}
+
+function lookupNode(handle) {
+    const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
+    if (!node) throw new Error("Node handle " + handle + " not found");
+    return node;
+}`;
+    
+    lines.push(helpers.trim());
     
     for (const [name, fn] of Object.entries(exports)) {
         let fnStr = fn.toString();
         // Ensure function syntax is complete (shorthand methods don't have 'function' keyword)
         if (!fnStr.startsWith('function')) {
-            fnStr = `function ${fnStr}`;
+            fnStr = 'function ' + fnStr;
         }
-        lines.push(`export const ${name} = ${fnStr};`);
+        lines.push('export const ' + name + ' = ' + fnStr + ';');
     }
     
     return lines.join("\n");
 }
 
-function registerImportMap(): void {
-    const imports: Record<string, string> = {};
+function registerImportMap() {
+    const imports = {};
     
     for (const [ifacePath, exports] of Object.entries(INTERFACES)) {
         const code = generateModuleCode(exports);
@@ -311,7 +375,13 @@ function registerImportMap(): void {
 registerImportMap();
 
 // Export for debugging
-(globalThis as any).__TAIRITSU_GLUE__ = {
+globalThis.__TAIRITSU_GLUE__ = {
     INTERFACES,
-    handles: { _elementHandles, _nodeHandles, _documentHandles, _textHandles },
+    handles: {
+        get elementHandles() { return globalThis.__elementHandles; },
+        get nodeHandles() { return globalThis.__nodeHandles; },
+        get documentHandles() { return globalThis.__documentHandles; },
+        get textHandles() { return globalThis.__textHandles; },
+        get nextHandle() { return globalThis.__nextHandle; },
+    },
 };
