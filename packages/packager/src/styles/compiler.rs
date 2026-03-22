@@ -47,7 +47,17 @@ impl ScssCompiler {
         let scss = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read SCSS file: {:?}", path))?;
 
-        self.compile(&scss)
+        tracing::debug!(
+            "SCSS file content ({} bytes): {}",
+            scss.len(),
+            &scss[..scss.len().min(200)]
+        );
+
+        let result = self.compile(&scss)?;
+
+        tracing::debug!("Compiled CSS ({} bytes)", result.len());
+
+        Ok(result)
     }
 
     fn parse_scss(&self, scss: &str) -> Result<String> {
@@ -60,6 +70,9 @@ impl ScssCompiler {
 
             if trimmed.starts_with("/*") {
                 in_comment = true;
+                if trimmed.ends_with("*/") {
+                    in_comment = false;
+                }
                 continue;
             }
 
