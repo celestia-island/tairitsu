@@ -12,6 +12,7 @@ This is the complete English documentation baseline for Tairitsu.
 - [Build, Test, and Release](./build-test-release.md)
 - [Migration from web-sys to WIT bindings](./migration.md)
 - [Migration from Dioxus to Tairitsu](./migration/dioxus-to-tairitsu.md)
+- [Troubleshooting Guide](./troubleshooting.md)
 - [Glossary](./glossary.md)
 
 ### System
@@ -19,6 +20,7 @@ This is the complete English documentation baseline for Tairitsu.
 - [Runtime and Container Model](../system/runtime.md)
 - [W3C WebIDL to WIT Pipeline](../system/wit-pipeline.md)
 - [Dual Web Backends](../system/web-backends.md)
+- [Browser Glue Architecture](../system/browser-glue.md)
 - [Versioning Strategy](../system/versioning.md)
 
 ### Components
