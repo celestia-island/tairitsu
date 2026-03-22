@@ -4,6 +4,7 @@
   "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
   "license": "MIT OR Apache-2.0",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -78,6 +79,7 @@
   },
   "scripts": {
     "build": "npm run build:glue && swc src -d dist --strip-leading-paths && tsc --emitDeclarationOnly",
+    "build:production": "npm run build:glue && swc src -d dist --strip-leading-paths -C minify.compress=true -C minify.mangle=true && tsc --emitDeclarationOnly",
     "build:watch": "swc src -d dist --strip-leading-paths --watch",
     "build:glue": "python3 ../../scripts/generate_browser_glue.py",
     "typecheck": "tsc --noEmit",

@@ -129,6 +129,18 @@ impl TestHarness {
             report.add_result(result);
         }
 
+        // Test 6: Event Dispatch Latency
+        if self.should_run_test("event-latency") {
+            let result = self.test_event_latency(&page).await;
+            report.add_result(result);
+        }
+
+        // Test 7: High-Frequency Event Stress
+        if self.should_run_test("event-stress") {
+            let result = self.test_event_stress(&page).await;
+            report.add_result(result);
+        }
+
         Ok(report)
     }
 
@@ -311,6 +323,97 @@ impl TestHarness {
                     TestResult::passed(test_name)
                 } else {
                     TestResult::failed(test_name, "Canvas operations failed".to_string())
+                }
+            }
+            Err(e) => TestResult::failed(test_name, format!("Script execution failed: {}", e)),
+        }
+    }
+
+    async fn test_event_latency(&self, page: &Page) -> TestResult {
+        let test_name = "event-latency";
+        info!("Running test: {}", test_name);
+
+        // Test event dispatch latency (< 1ms target)
+        let script = r#"
+            (async () => {
+                const btn = document.createElement('button');
+                btn.id = 'latency-test-btn';
+                let eventTime = 0;
+                let dispatchTime = 0;
+                
+                btn.addEventListener('click', (e) => {
+                    eventTime = e.timeStamp;
+                    dispatchTime = performance.now();
+                });
+                
+                document.body.appendChild(btn);
+                
+                // Trigger click
+                const clickTime = performance.now();
+                btn.click();
+                
+                // Wait for event processing
+                await new Promise(r => setTimeout(r, 10));
+                
+                // Calculate latency
+                const latency = dispatchTime - clickTime;
+                
+                // Should be < 16ms (60fps)
+                return latency < 16;
+            })()
+        "#;
+
+        match page.evaluate(script).await {
+            Ok(result) => {
+                if eval_as_bool(result) {
+                    TestResult::passed(test_name)
+                } else {
+                    TestResult::failed(test_name, "Event latency exceeded 16ms threshold".to_string())
+                }
+            }
+            Err(e) => TestResult::failed(test_name, format!("Script execution failed: {}", e)),
+        }
+    }
+
+    async fn test_event_stress(&self, page: &Page) -> TestResult {
+        let test_name = "event-stress";
+        info!("Running test: {}", test_name);
+
+        // Test high-frequency event handling
+        let script = r#"
+            (async () => {
+                const btn = document.createElement('button');
+                btn.id = 'stress-test-btn';
+                let eventCount = 0;
+                
+                btn.addEventListener('click', () => {
+                    eventCount++;
+                });
+                
+                document.body.appendChild(btn);
+                
+                // Fire 100 events rapidly
+                const startTime = performance.now();
+                for (let i = 0; i < 100; i++) {
+                    btn.click();
+                }
+                const elapsed = performance.now() - startTime;
+                
+                // Wait for all events to process
+                await new Promise(r => setTimeout(r, 50));
+                
+                // All 100 events should be processed
+                // Total time should be < 100ms (< 1ms per event)
+                return eventCount === 100 && elapsed < 100;
+            })()
+        "#;
+
+        match page.evaluate(script).await {
+            Ok(result) => {
+                if eval_as_bool(result) {
+                    TestResult::passed(test_name)
+                } else {
+                    TestResult::failed(test_name, "High-frequency event handling failed".to_string())
                 }
             }
             Err(e) => TestResult::failed(test_name, format!("Script execution failed: {}", e)),
