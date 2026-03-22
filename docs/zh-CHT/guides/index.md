@@ -5,6 +5,7 @@
 - [工作區地圖](./workspace-map.md)
 - [建置、測試與發佈](./build-test-release.md)
 - [從 web 遷移到 wit-bindings](./migration.md)
+- [疑難排解](./troubleshooting.md)
 - [術語表](./glossary.md)
 
 ## System

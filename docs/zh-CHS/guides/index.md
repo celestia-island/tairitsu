@@ -13,6 +13,7 @@
 - [构建、测试与发布](./build-test-release.md)
 - [从 web-sys 迁移到 WIT 绑定](./migration.md)
 - [从 Dioxus 迁移到 Tairitsu](./migration/dioxus-to-tairitsu.md)
+- [故障排除指南](./troubleshooting.md)
 - [术语对照表](./glossary.md)
 
 ### System
@@ -21,6 +22,7 @@
 - [运行时与容器模型](../system/runtime.md)
 - [W3C WebIDL → WIT 生成流水线](../system/wit-pipeline.md)
 - [Web 平台双后端（web / wit-bindings）](../system/web-backends.md)
+- [Browser Glue 架构](../system/browser-glue.md)
 - [版本与兼容性策略](../system/versioning.md)
 
 ### Components
