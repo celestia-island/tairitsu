@@ -18,14 +18,18 @@ USED_INTERFACES = {
     "document": [
         "create-element",
         "create-text-node", 
-        "get-element-by-id",
         "get-body",
+    ],
+    "non-element-parent-node": [
+        "get-element-by-id",
+    ],
+    "element": [
+        "set-attribute",
+        "remove-attribute",
     ],
     "node": [
         "append-child",
         "remove-child",
-        "set-attribute",
-        "remove-attribute",
         "set-text-content",
         "get-text-content",
     ],
@@ -101,7 +105,7 @@ def generate_wrappers(output_dir: Path, glue_dist_dir: Path) -> None:
         import_lines = []
         for domain in sorted(domain_imports.keys()):
             names = sorted(set(domain_imports[domain]))
-            import_lines.append(f"import {{ {', '.join(names)} }} from './{domain}.js';")
+            import_lines.append(f"import {{ {', '.join(names)} }} from '../{domain}.js';")
         
         export_lines = []
         for func in functions:
