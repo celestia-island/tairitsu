@@ -9,16 +9,21 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:full@0.2.0;
 
-/// DOMRect values returned by getBoundingClientRect.
-record dom-rect {
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
+/// Common data types used across browser interfaces.
+interface types {
+    /// DOMRect values returned by getBoundingClientRect.
+    record dom-rect {
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+    }
 }
 
 /// Platform helper functions that return values directly instead of opaque handles.
 interface platform-helpers {
+    use types.{dom-rect};
+    
     get-bounding-client-rect: func(element: u64) -> dom-rect;
     inner-width: func() -> s32;
     inner-height: func() -> s32;
