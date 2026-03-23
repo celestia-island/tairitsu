@@ -127,10 +127,11 @@ mod wasm_impl {
     use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     use tairitsu_vdom::{
-        EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent, KeyboardEvent, MouseEvent,
-        Platform, VNode,
+        CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
+        KeyboardEvent, MouseEvent, Platform, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -141,20 +142,25 @@ mod wasm_impl {
 
     type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
     type EventCallbackMap = HashMap<u64, EventCallback>;
+    type TimeoutCallback = Option<Box<dyn FnOnce()>>;
+    type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
+    type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
+    type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
 
-    // ── Event dispatch tables ────────────────────────────────────────────
+    static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
+
+    fn next_callback_id() -> u64 {
+        NEXT_CALLBACK_ID.fetch_add(1, Ordering::SeqCst)
+    }
 
     thread_local! {
-        /// Maps each WIT `listener-id` to the Rust event callback closure.
-        /// Populated by [`WitPlatform::add_event_listener`]
-        /// and cleared by [`WitPlatform::remove_event_listener`].
         static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
-
-        /// Maps `(node-handle, event-type-string)` → `listener-id`.
-        /// Used by `remove_event_listener` to look up the id from
-        /// the (element, event-name) pair the Platform trait provides.
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
+        static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
+        static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
+        static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
+        static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
     }
 
     // ── WIT binding generation ───────────────────────────────────────────
@@ -267,6 +273,119 @@ mod wasm_impl {
                 log_warning(&msg);
             }
         });
+    }
+
+    impl bindings::exports::tairitsu_browser::full::timer_callbacks::Guest for BrowserComponent {
+        fn on_timeout(callback_id: u64) {
+            TIMEOUT_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    if let Some(cb) = callback {
+                        cb();
+                    }
+                }
+            });
+        }
+
+        fn on_interval(callback_id: u64) {
+            TIMEOUT_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(Some(cb)) = callbacks.get_mut(&callback_id) {
+                    let cb_ptr = cb as *mut Box<dyn FnOnce()>;
+                    drop(std::mem::replace(cb_ptr, None));
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::animation_callbacks::Guest for BrowserComponent {
+        fn on_animation_frame(callback_id: u64, timestamp: f64) {
+            ANIMATION_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    if let Some(cb) = callback {
+                        cb(timestamp);
+                    }
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::resize_observer_callbacks::Guest
+        for BrowserComponent
+    {
+        fn on_resize(callback_id: u64, entries: Vec<u64>) {
+            RESIZE_OBSERVER_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    let converted_entries: Vec<tairitsu_vdom::ResizeObserverEntry> = entries
+                        .into_iter()
+                        .map(|entry_handle| {
+                            let target = bindings::tairitsu_browser::full::resize_observer_entry::get_target(entry_handle);
+                            let content_rect = bindings::tairitsu_browser::full::resize_observer_entry::get_content_rect(entry_handle);
+                            
+                            let border_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_border_box_size(entry_handle);
+                            let border_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = border_box_handles
+                                .into_iter()
+                                .map(|size_handle| tairitsu_vdom::ResizeObserverSize {
+                                    inline_size: bindings::tairitsu_browser::full::resize_observer_size::get_inline_size(size_handle),
+                                    block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
+                                })
+                                .collect();
+                            
+                            let content_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_content_box_size(entry_handle);
+                            let content_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = content_box_handles
+                                .into_iter()
+                                .map(|size_handle| tairitsu_vdom::ResizeObserverSize {
+                                    inline_size: bindings::tairitsu_browser::full::resize_observer_size::get_inline_size(size_handle),
+                                    block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
+                                })
+                                .collect();
+                            
+                            tairitsu_vdom::ResizeObserverEntry {
+                                target,
+                                content_rect: tairitsu_vdom::DomRect {
+                                    x: content_rect.x,
+                                    y: content_rect.y,
+                                    width: content_rect.width,
+                                    height: content_rect.height,
+                                },
+                                border_box_size,
+                                content_box_size,
+                            }
+                        })
+                        .collect();
+                    handler(converted_entries);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::mutation_observer_callbacks::Guest
+        for BrowserComponent
+    {
+        fn on_mutation(callback_id: u64, records: Vec<u64>) {
+            MUTATION_OBSERVER_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    let converted_records: Vec<tairitsu_vdom::MutationRecord> = records
+                        .into_iter()
+                        .map(|record_handle| {
+                            tairitsu_vdom::MutationRecord {
+                                record_type: bindings::tairitsu_browser::full::mutation_record::get_type(record_handle),
+                                target: bindings::tairitsu_browser::full::mutation_record::get_target(record_handle),
+                                added_nodes: vec![],
+                                removed_nodes: vec![],
+                                previous_sibling: bindings::tairitsu_browser::full::mutation_record::get_previous_sibling(record_handle),
+                                next_sibling: bindings::tairitsu_browser::full::mutation_record::get_next_sibling(record_handle),
+                                attribute_name: bindings::tairitsu_browser::full::mutation_record::get_attribute_name(record_handle),
+                                attribute_namespace: bindings::tairitsu_browser::full::mutation_record::get_attribute_namespace(record_handle),
+                                old_value: bindings::tairitsu_browser::full::mutation_record::get_old_value(record_handle),
+                            }
+                        })
+                        .collect();
+                    handler(converted_records);
+                }
+            });
+        }
     }
 
     impl bindings::exports::tairitsu_browser::full::lifecycle::Guest for BrowserComponent {
@@ -430,6 +549,119 @@ mod wasm_impl {
                     event, element.0
                 ));
             }
+        }
+
+        fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect {
+            let rect = bindings::tairitsu_browser::full::platform_helpers::get_bounding_client_rect(
+                element.0,
+            );
+            DomRect {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+            }
+        }
+
+        fn inner_width(&self) -> i32 {
+            bindings::tairitsu_browser::full::platform_helpers::inner_width()
+        }
+
+        fn inner_height(&self) -> i32 {
+            bindings::tairitsu_browser::full::platform_helpers::inner_height()
+        }
+
+        fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
+            let callback_id = next_callback_id();
+            TIMEOUT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
+            bindings::tairitsu_browser::full::platform_helpers::set_timeout(callback_id, ms)
+        }
+
+        fn clear_timeout(&self, id: i32) {
+            bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id)
+        }
+
+        fn request_animation_frame(&self, callback: Box<dyn FnOnce(f64)>) -> u32 {
+            let callback_id = next_callback_id();
+            ANIMATION_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, Some(callback)));
+            bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id)
+        }
+
+        fn cancel_animation_frame(&self, id: u32) {
+            bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id)
+        }
+
+        fn get_canvas_context(
+            &self,
+            element: &Self::Element,
+            context_type: &str,
+        ) -> Option<CanvasContext> {
+            bindings::tairitsu_browser::full::html_canvas_element::get_context(
+                element.0,
+                context_type,
+                None,
+            )
+        }
+
+        fn canvas_set_fill_style(&self, ctx: CanvasContext, color: &str) {
+            bindings::tairitsu_browser::full::canvas_fill_stroke_styles::set_fill_style(ctx, color)
+        }
+
+        fn canvas_fill_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::fill_rect(ctx, x, y, w, h)
+        }
+
+        fn canvas_clear_rect(&self, ctx: CanvasContext, x: f64, y: f64, w: f64, h: f64) {
+            bindings::tairitsu_browser::full::canvas_rect::clear_rect(ctx, x, y, w, h)
+        }
+
+        fn create_resize_observer(
+            &self,
+            callback: Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>,
+        ) -> u64 {
+            let callback_id = next_callback_id();
+            RESIZE_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::create_resize_observer(callback_id)
+        }
+
+        fn observe_resize(&self, observer: u64, element: &Self::Element) {
+            bindings::tairitsu_browser::full::platform_helpers::observe_resize(observer, element.0);
+        }
+
+        fn unobserve_resize(&self, observer: u64, element: &Self::Element) {
+            bindings::tairitsu_browser::full::platform_helpers::unobserve_resize(
+                observer, element.0,
+            );
+        }
+
+        fn disconnect_resize(&self, observer: u64) {
+            bindings::tairitsu_browser::full::platform_helpers::disconnect_resize(observer);
+        }
+
+        fn create_mutation_observer(
+            &self,
+            callback: Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>,
+        ) -> u64 {
+            let callback_id = next_callback_id();
+            MUTATION_OBSERVER_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::create_mutation_observer(
+                callback_id,
+            )
+        }
+
+        fn observe_mutations(
+            &self,
+            observer: u64,
+            element: &Self::Element,
+            _options: Option<tairitsu_vdom::MutationObserverInit>,
+        ) {
+            bindings::tairitsu_browser::full::platform_helpers::observe_mutations(
+                observer, element.0, None,
+            );
+        }
+
+        fn disconnect_mutation(&self, observer: u64) {
+            bindings::tairitsu_browser::full::platform_helpers::disconnect_mutation(observer);
         }
     }
 

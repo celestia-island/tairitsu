@@ -175,17 +175,76 @@ fn remove_script_tags(content: &str) -> String {
 fn remove_event_handlers(content: &str) -> String {
     // List of known event handler attributes
     const EVENT_HANDLERS: &[&str] = &[
-        "onabort", "onafterprint", "onbeforeprint", "onbeforeunload", "onblur", "oncanplay",
-        "oncanplaythrough", "onchange", "onclick", "oncontextmenu", "oncopy", "oncuechange",
-        "oncut", "ondblclick", "ondrag", "ondragend", "ondragenter", "ondragleave", "ondragover",
-        "ondragstart", "ondrop", "ondurationchange", "onemptied", "onended", "onerror",
-        "onfocus", "onhashchange", "oninput", "oninvalid", "onkeydown", "onkeypress", "onkeyup",
-        "onload", "onloadeddata", "onloadedmetadata", "onloadstart", "onmessage", "onmousedown",
-        "onmousemove", "onmouseout", "onmouseover", "onmouseup", "onmousewheel", "onoffline",
-        "ononline", "onpagehide", "onpageshow", "onpaste", "onpause", "onplay", "onplaying",
-        "onpopstate", "onprogress", "onratechange", "onreset", "onresize", "onscroll",
-        "onsearch", "onseeked", "onseeking", "onselect", "onstalled", "onstorage", "onsubmit",
-        "onsuspend", "ontimeupdate", "ontoggle", "onunload", "onvolumechange", "onwaiting",
+        "onabort",
+        "onafterprint",
+        "onbeforeprint",
+        "onbeforeunload",
+        "onblur",
+        "oncanplay",
+        "oncanplaythrough",
+        "onchange",
+        "onclick",
+        "oncontextmenu",
+        "oncopy",
+        "oncuechange",
+        "oncut",
+        "ondblclick",
+        "ondrag",
+        "ondragend",
+        "ondragenter",
+        "ondragleave",
+        "ondragover",
+        "ondragstart",
+        "ondrop",
+        "ondurationchange",
+        "onemptied",
+        "onended",
+        "onerror",
+        "onfocus",
+        "onhashchange",
+        "oninput",
+        "oninvalid",
+        "onkeydown",
+        "onkeypress",
+        "onkeyup",
+        "onload",
+        "onloadeddata",
+        "onloadedmetadata",
+        "onloadstart",
+        "onmessage",
+        "onmousedown",
+        "onmousemove",
+        "onmouseout",
+        "onmouseover",
+        "onmouseup",
+        "onmousewheel",
+        "onoffline",
+        "ononline",
+        "onpagehide",
+        "onpageshow",
+        "onpaste",
+        "onpause",
+        "onplay",
+        "onplaying",
+        "onpopstate",
+        "onprogress",
+        "onratechange",
+        "onreset",
+        "onresize",
+        "onscroll",
+        "onsearch",
+        "onseeked",
+        "onseeking",
+        "onselect",
+        "onstalled",
+        "onstorage",
+        "onsubmit",
+        "onsuspend",
+        "ontimeupdate",
+        "ontoggle",
+        "onunload",
+        "onvolumechange",
+        "onwaiting",
         "onwheel",
     ];
 
@@ -257,8 +316,7 @@ fn find_attr_position(content: &str, attr_name: &str) -> Option<usize> {
                 // Check if it's followed by whitespace, '=', '>', or '/'
                 let after_pos = actual_pos + attr_name.len();
                 let next_char = content.chars().nth(after_pos);
-                if next_char.is_none_or(|c| c.is_whitespace() || c == '=' || c == '>' || c == '/')
-                {
+                if next_char.is_none_or(|c| c.is_whitespace() || c == '=' || c == '>' || c == '/') {
                     return Some(actual_pos);
                 }
             }
@@ -635,10 +693,28 @@ mod tests {
     #[test]
     fn test_sanitize_removes_all_event_handlers() {
         let handlers = [
-            "onabort", "onblur", "onchange", "onclick", "ondblclick", "onerror", "onfocus",
-            "onkeydown", "onkeypress", "onkeyup", "onload", "onmousedown", "onmousemove",
-            "onmouseout", "onmouseover", "onmouseup", "onreset", "onresize", "onscroll",
-            "onselect", "onsubmit", "onunload",
+            "onabort",
+            "onblur",
+            "onchange",
+            "onclick",
+            "ondblclick",
+            "onerror",
+            "onfocus",
+            "onkeydown",
+            "onkeypress",
+            "onkeyup",
+            "onload",
+            "onmousedown",
+            "onmousemove",
+            "onmouseout",
+            "onmouseover",
+            "onmouseup",
+            "onreset",
+            "onresize",
+            "onscroll",
+            "onselect",
+            "onsubmit",
+            "onunload",
         ];
 
         for handler in handlers {
@@ -684,7 +760,8 @@ mod tests {
 
     #[test]
     fn test_sanitize_removes_dangerous_data_urls() {
-        let input = r##"<svg><a href="data:text/html,<script>alert('xss')</script>">Click</a></svg>"##;
+        let input =
+            r##"<svg><a href="data:text/html,<script>alert('xss')</script>">Click</a></svg>"##;
         let safe = SafeSvg::new(input);
         // The data URL with text/html should be removed
         assert!(!safe.content().contains("data:text/html"));
