@@ -9,6 +9,53 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:full@0.2.0;
 
+/// DOMRect values returned by getBoundingClientRect.
+record dom-rect {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+
+/// Platform helper functions that return values directly instead of opaque handles.
+interface platform-helpers {
+    get-bounding-client-rect: func(element: u64) -> dom-rect;
+    inner-width: func() -> s32;
+    inner-height: func() -> s32;
+    set-timeout: func(callback-id: u64, ms: s32) -> s32;
+    clear-timeout: func(id: s32);
+    request-animation-frame: func(callback-id: u64) -> u32;
+    cancel-animation-frame: func(id: u32);
+    create-resize-observer: func(callback-id: u64) -> u64;
+    observe-resize: func(observer: u64, element: u64);
+    unobserve-resize: func(observer: u64, element: u64);
+    disconnect-resize: func(observer: u64);
+    create-mutation-observer: func(callback-id: u64) -> u64;
+    observe-mutations: func(observer: u64, element: u64, options: option<u64>);
+    disconnect-mutation: func(observer: u64);
+}
+
+/// Timer callback interface - implemented by the component, called by host.
+interface timer-callbacks {
+    on-timeout: func(callback-id: u64);
+    on-interval: func(callback-id: u64);
+}
+
+/// Animation callback interface - implemented by the component, called by host.
+interface animation-callbacks {
+    on-animation-frame: func(callback-id: u64, timestamp: f64);
+}
+
+/// ResizeObserver callback interface - implemented by the component, called by host.
+interface resize-observer-callbacks {
+    on-resize: func(callback-id: u64, entries: list<u64>);
+}
+
+/// MutationObserver callback interface - implemented by the component, called by host.
+interface mutation-observer-callbacks {
+    on-mutation: func(callback-id: u64, records: list<u64>);
+}
+
 /// Event callback interface - implemented by the component, called by host.
 ///
 /// The host (browser-glue) calls these functions when DOM events fire.
@@ -11706,8 +11753,8 @@ interface resize-observer-entry {
     /// `target` attribute — getter.
     get-target: func(self: resize-observer-entry-handle) -> u64;
 
-    /// `contentRect` attribute — getter.
-    get-content-rect: func(self: resize-observer-entry-handle) -> u64;
+    /// `contentRect` attribute — getter. Returns dom-rect record directly.
+    get-content-rect: func(self: resize-observer-entry-handle) -> dom-rect;
 
     /// `borderBoxSize` attribute — getter.
     get-border-box-size: func(self: resize-observer-entry-handle) -> list<u64>;
@@ -13800,7 +13847,12 @@ world browser-full {
     import event-target;
     import style;
     import console;
+    import platform-helpers;
     export event-callbacks;
+    export timer-callbacks;
+    export animation-callbacks;
+    export resize-observer-callbacks;
+    export mutation-observer-callbacks;
     export lifecycle;
 }
 

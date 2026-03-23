@@ -14,7 +14,10 @@ pub use events::{
     FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
 };
 pub use patch::Patch;
-pub use platform::{ElementHandle, EventHandle, Platform};
+pub use platform::{
+    CanvasContext, DomRect, ElementHandle, EventHandle, MutationObserverInit, MutationRecord,
+    Platform, ResizeObserverEntry, ResizeObserverSize,
+};
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{batch, create_effect, EffectHandle, Signal};
 pub use svg::SafeSvg;

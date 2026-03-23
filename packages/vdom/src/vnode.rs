@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
-use crate::EventData;
 use crate::svg::SafeSvg;
+use crate::EventData;
 
 /// Trait for attribute values that can be optionally rendered.
 /// This allows `attr` to accept both `T` and `Option<T>` values.
