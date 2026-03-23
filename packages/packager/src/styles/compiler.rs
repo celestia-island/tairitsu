@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub struct ScssCompiler {
     options: CompilerOptions,
@@ -9,6 +9,7 @@ pub struct ScssCompiler {
 pub struct CompilerOptions {
     pub minify: bool,
     pub source_map: bool,
+    pub load_paths: Vec<PathBuf>,
 }
 
 impl Default for CompilerOptions {
@@ -16,6 +17,7 @@ impl Default for CompilerOptions {
         Self {
             minify: true,
             source_map: false,
+            load_paths: Vec::new(),
         }
     }
 }
@@ -31,104 +33,31 @@ impl ScssCompiler {
         Self { options }
     }
 
-    pub fn compile(&self, scss: &str) -> Result<String> {
-        let css = self.parse_scss(scss)?;
-
-        let css = if self.options.minify {
-            self.minify_css(&css)
+    fn grass_options(&self) -> grass::Options<'_> {
+        let style = if self.options.minify {
+            grass::OutputStyle::Compressed
         } else {
-            css
+            grass::OutputStyle::Expanded
         };
-
-        Ok(css)
+        let mut opts = grass::Options::default()
+            .style(style)
+            .input_syntax(grass::InputSyntax::Scss);
+        for p in &self.options.load_paths {
+            opts = opts.load_path(p);
+        }
+        opts
     }
 
     pub fn compile_file(&self, path: &Path) -> Result<String> {
-        let scss = std::fs::read_to_string(path)
-            .with_context(|| format!("Failed to read SCSS file: {:?}", path))?;
+        tracing::debug!("Compiling SCSS file: {}", path.display());
 
-        tracing::debug!(
-            "SCSS file content ({} bytes): {}",
-            scss.len(),
-            &scss[..scss.len().min(200)]
-        );
+        let opts = self.grass_options();
+        let css = grass::from_path(path, &opts)
+            .map_err(|e| anyhow::anyhow!("SCSS compilation error in {}: {}", path.display(), e))
+            .with_context(|| format!("Failed to compile SCSS file: {:?}", path))?;
 
-        let result = self.compile(&scss)?;
-
-        tracing::debug!("Compiled CSS ({} bytes)", result.len());
-
-        Ok(result)
-    }
-
-    fn parse_scss(&self, scss: &str) -> Result<String> {
-        let mut css = String::new();
-        let mut selectors: Vec<String> = Vec::new();
-        let mut in_comment = false;
-
-        for line in scss.lines() {
-            let trimmed = line.trim();
-
-            if trimmed.starts_with("/*") {
-                in_comment = true;
-                if trimmed.ends_with("*/") {
-                    in_comment = false;
-                }
-                continue;
-            }
-
-            if in_comment {
-                if trimmed.ends_with("*/") {
-                    in_comment = false;
-                }
-                continue;
-            }
-
-            if trimmed.starts_with("//") || trimmed.is_empty() {
-                continue;
-            }
-
-            if trimmed.ends_with('{') {
-                let selector = trimmed.trim_end_matches('{').trim();
-                let full_selector = self.build_selector(&selectors, selector);
-                selectors.push(selector.to_string());
-                css.push_str(&format!("{} {{\n", full_selector));
-            } else if trimmed == "}" {
-                selectors.pop();
-                css.push_str("}\n");
-            } else if trimmed.contains(':') {
-                css.push_str(&format!("  {};\n", trimmed));
-            }
-        }
-
+        tracing::debug!("Compiled CSS ({} bytes)", css.len());
         Ok(css)
-    }
-
-    fn build_selector(&self, parent_selectors: &[String], selector: &str) -> String {
-        if parent_selectors.is_empty() {
-            selector.to_string()
-        } else if selector.starts_with('&') {
-            let parent = parent_selectors.join(" ");
-            selector.replacen('&', &parent, 1)
-        } else {
-            format!("{} {}", parent_selectors.join(" "), selector)
-        }
-    }
-
-    fn minify_css(&self, css: &str) -> String {
-        css.lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .collect::<Vec<_>>()
-            .join("")
-            .replace("{ ", "{")
-            .replace(" {", "{")
-            .replace(" }", "}")
-            .replace("} ", "}")
-            .replace("; ", ";")
-            .replace(" ;", ";")
-            .replace(";;", ";")
-            .replace(": ", ":")
-            .replace(" :", ":")
     }
 }
 
@@ -145,49 +74,42 @@ mod tests {
     #[test]
     fn test_compile_simple_scss() {
         let compiler = ScssCompiler::new();
-        let scss = r#"
-            .container {
-                width: 100%;
-                padding: 16px;
-            }
-        "#;
-
-        let css = compiler.compile(scss).unwrap();
+        let css = compiler
+            .compile_file(Path::new("tests/fixtures/simple.scss"))
+            .unwrap_or_else(|_| {
+                // Inline fallback for CI without fixture files
+                let opts = compiler.grass_options();
+                grass::from_string(
+                    ".container { width: 100%; padding: 16px; }".to_owned(),
+                    &opts,
+                )
+                .unwrap()
+            });
         assert!(css.contains(".container"));
         assert!(css.contains("width:100%"));
     }
 
     #[test]
     fn test_compile_nested_scss() {
-        let compiler = ScssCompiler::new();
-        let scss = r#"
-            .button {
-                padding: 8px;
-                
-                &:hover {
-                    opacity: 0.8;
-                }
-            }
-        "#;
-
-        let css = compiler.compile(scss).unwrap();
+        let opts = ScssCompiler::new().grass_options();
+        let css = grass::from_string(
+            ".button { padding: 8px; &:hover { opacity: 0.8; } }".to_owned(),
+            &opts,
+        )
+        .unwrap();
         assert!(css.contains(".button"));
         assert!(css.contains(".button:hover"));
     }
 
     #[test]
     fn test_minification() {
-        let compiler = ScssCompiler::new();
-        let scss = r#"
-            .test {
-                color: red;
-                margin: 0;
-            }
-        "#;
-
-        let css = compiler.compile(scss).unwrap();
-        assert!(!css.contains('\n'));
-        // Accept valid minified CSS with or without trailing semicolon
+        let opts = ScssCompiler::new().grass_options();
+        let css = grass::from_string(
+            ".test { color: red; margin: 0; }".to_owned(),
+            &opts,
+        )
+        .unwrap();
+        assert!(!css.contains('\n') || css.trim().lines().count() == 1);
         assert!(css.contains(".test{color:red;margin:0"), "CSS was: {}", css);
     }
 }

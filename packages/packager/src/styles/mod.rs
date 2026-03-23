@@ -23,8 +23,23 @@ pub fn compile_scss_with_config(
     project_root: &Path,
     output_dir: &Path,
 ) -> Result<Vec<ScssBuildResult>> {
-    let compiler = ScssCompiler::new();
-    let extractor = CssExtractor::new();
+    // Resolve load_paths relative to project root
+    let resolved_load_paths: Vec<PathBuf> = config
+        .load_paths
+        .iter()
+        .map(|p| {
+            let path = project_root.join(p);
+            std::fs::canonicalize(&path).unwrap_or(path)
+        })
+        .collect();
+
+    tracing::info!("SCSS resolved load_paths: {:?}", resolved_load_paths);
+
+    let compiler = ScssCompiler::with_options(compiler::CompilerOptions {
+        minify: true,
+        source_map: false,
+        load_paths: resolved_load_paths,
+    });
     std::fs::create_dir_all(output_dir)?;
 
     let mut results = Vec::new();
@@ -50,7 +65,7 @@ pub fn compile_scss_with_config(
         // Fallback: discover src/styles/ directory
         let styles_dir = project_root.join("src").join("styles");
         if styles_dir.exists() {
-            let result = compile_scss_directory(&styles_dir, output_dir, &compiler, &extractor)?;
+            let result = compile_scss_directory(&styles_dir, output_dir, &compiler)?;
             if let Some(r) = result {
                 results.push(r);
             }
@@ -95,7 +110,7 @@ pub fn compile_scss_with_config(
             }
         };
 
-        let optimized_css = extractor.optimize(&css)?;
+        // Grass already produces minified/optimized CSS
         let output_path = output_dir.join(&entry.output);
 
         // Ensure parent directory exists
@@ -103,10 +118,10 @@ pub fn compile_scss_with_config(
             std::fs::create_dir_all(parent)?;
         }
 
-        std::fs::write(&output_path, &optimized_css)?;
+        std::fs::write(&output_path, &css)?;
 
         results.push(ScssBuildResult {
-            css: optimized_css,
+            css,
             source_map: None,
             output_path: output_path.clone(),
         });
@@ -126,7 +141,6 @@ fn compile_scss_directory(
     input_dir: &Path,
     output_dir: &Path,
     compiler: &ScssCompiler,
-    extractor: &CssExtractor,
 ) -> Result<Option<ScssBuildResult>> {
     let scss_files = find_scss_files(input_dir)?;
 
@@ -141,12 +155,11 @@ fn compile_scss_directory(
         all_css.push('\n');
     }
 
-    let optimized_css = extractor.optimize(&all_css)?;
     let output_path = output_dir.join("styles.css");
-    std::fs::write(&output_path, &optimized_css)?;
+    std::fs::write(&output_path, &all_css)?;
 
     Ok(Some(ScssBuildResult {
-        css: optimized_css,
+        css: all_css,
         source_map: None,
         output_path,
     }))
@@ -158,7 +171,6 @@ pub fn compile_scss_files(
     output_dir: &std::path::Path,
 ) -> Result<ScssBuildResult> {
     let compiler = ScssCompiler::new();
-    let extractor = CssExtractor::new();
 
     let scss_files = find_scss_files(input_dir)?;
     let mut all_css = String::new();
@@ -169,14 +181,12 @@ pub fn compile_scss_files(
         all_css.push('\n');
     }
 
-    let optimized_css = extractor.optimize(&all_css)?;
-
     std::fs::create_dir_all(output_dir)?;
     let output_path = output_dir.join("styles.css");
-    std::fs::write(&output_path, &optimized_css)?;
+    std::fs::write(&output_path, &all_css)?;
 
     Ok(ScssBuildResult {
-        css: optimized_css,
+        css: all_css,
         source_map: None,
         output_path,
     })
