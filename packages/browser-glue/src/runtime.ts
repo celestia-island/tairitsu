@@ -32,34 +32,34 @@ globalThis.__domRectHandles = globalThis.__domRectHandles || new Map();
 globalThis.__nextDomRectHandle = globalThis.__nextDomRectHandle || 1n;
 
 // Helper functions for blob URL modules
-globalThis.__storeElement = function(el) {
+globalThis.__storeElement = function (el) {
     if (!el) return undefined;
     const handle = globalThis.__nextHandle++;
     globalThis.__elementHandles.set(handle, el);
     return handle;
 };
 
-globalThis.__storeNode = function(node) {
+globalThis.__storeNode = function (node) {
     if (!node) return undefined;
     const handle = globalThis.__nextHandle++;
     globalThis.__nodeHandles.set(handle, node);
     return handle;
 };
 
-globalThis.__storeText = function(text) {
+globalThis.__storeText = function (text) {
     if (!text) return undefined;
     const handle = globalThis.__nextHandle++;
     globalThis.__textHandles.set(handle, text);
     return handle;
 };
 
-globalThis.__lookupElement = function(handle) {
+globalThis.__lookupElement = function (handle) {
     const el = globalThis.__elementHandles.get(handle);
     if (!el) throw new Error("Element handle " + handle + " not found");
     return el;
 };
 
-globalThis.__lookupNode = function(handle) {
+globalThis.__lookupNode = function (handle) {
     const node = globalThis.__nodeHandles.get(handle) || globalThis.__elementHandles.get(handle) || globalThis.__textHandles.get(handle);
     if (!node) throw new Error("Node handle " + handle + " not found");
     return node;
@@ -155,7 +155,7 @@ const event_target_exports = {
                 return "Target handle " + target + " not found";
             }
 
-            const listener = function(event) {
+            const listener = function (event) {
                 const eventHandle = globalThis.__nextEventHandle++;
                 globalThis.__eventHandles.set(eventHandle, event);
             };
@@ -346,7 +346,7 @@ const resize_observer_entry_exports = {
         const entry = globalThis.__resizeObserverEntryHandles.get(self);
         if (!entry) return [];
         if (!globalThis.__resizeObserverSizeHandles) { globalThis.__resizeObserverSizeHandles = new Map(); globalThis.__nextResizeObserverSizeHandle = 1n; }
-        return [...entry.borderBoxSize].map(function(size) {
+        return [...entry.borderBoxSize].map(function (size) {
             const handle = globalThis.__nextResizeObserverSizeHandle++;
             globalThis.__resizeObserverSizeHandles.set(handle, size);
             return handle;
@@ -357,7 +357,7 @@ const resize_observer_entry_exports = {
         const entry = globalThis.__resizeObserverEntryHandles.get(self);
         if (!entry) return [];
         if (!globalThis.__resizeObserverSizeHandles) { globalThis.__resizeObserverSizeHandles = new Map(); globalThis.__nextResizeObserverSizeHandle = 1n; }
-        return [...entry.contentBoxSize].map(function(size) {
+        return [...entry.contentBoxSize].map(function (size) {
             const handle = globalThis.__nextResizeObserverSizeHandle++;
             globalThis.__resizeObserverSizeHandles.set(handle, size);
             return handle;
@@ -406,7 +406,7 @@ const INTERFACES = {
 
 function generateModuleCode(exports) {
     const lines = [];
-    
+
     // Include helper functions needed by exports
     // IMPORTANT: Always access globalThis directly, never cache in local variables
     const helpers = `// Helper functions - always use globalThis directly
@@ -442,9 +442,9 @@ function lookupNode(handle) {
     if (!node) throw new Error("Node handle " + handle + " not found");
     return node;
 }`;
-    
+
     lines.push(helpers.trim());
-    
+
     for (const [name, fn] of Object.entries(exports)) {
         let fnStr = fn.toString();
         // Ensure function syntax is complete (shorthand methods don't have 'function' keyword)
@@ -453,23 +453,28 @@ function lookupNode(handle) {
         }
         lines.push('export const ' + name + ' = ' + fnStr + ';');
     }
-    
+
     return lines.join("\n");
 }
 
 function registerImportMap() {
     const imports = {};
-    
+
     for (const [ifacePath, exports] of Object.entries(INTERFACES)) {
         const code = generateModuleCode(exports);
         const blob = new Blob([code], { type: "application/javascript" });
         const blobUrl = URL.createObjectURL(blob);
+        // Add bare module specifier (e.g., "@tairitsu-glue/console")
         imports[ifacePath] = blobUrl;
+        // Also add the full package name for WASM imports (e.g., "tairitsu-browser:full/console@0.2.0")
+        // Extract the interface name from the path
+        const ifaceName = ifacePath.replace("@tairitsu-glue/", "");
+        imports[`tairitsu-browser:full/${ifaceName}@0.2.0`] = blobUrl;
     }
-    
+
     // Create or update import map
     const importMap = { imports };
-    
+
     // Check if there's already an import map
     const existingMap = document.querySelector('script[type="importmap"]');
     if (existingMap) {
