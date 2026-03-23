@@ -22,6 +22,14 @@ globalThis.__documentHandles = globalThis.__documentHandles || new Map();
 globalThis.__nodeHandles = globalThis.__nodeHandles || new Map();
 globalThis.__textHandles = globalThis.__textHandles || new Map();
 globalThis.__nextHandle = globalThis.__nextHandle || 1n;
+globalThis.__mutationRecordHandles = globalThis.__mutationRecordHandles || new Map();
+globalThis.__nextMutationRecord = globalThis.__nextMutationRecord || 1n;
+globalThis.__resizeObserverEntryHandles = globalThis.__resizeObserverEntryHandles || new Map();
+globalThis.__nextResizeObserverEntry = globalThis.__nextResizeObserverEntry || 1n;
+globalThis.__resizeObserverSizeHandles = globalThis.__resizeObserverSizeHandles || new Map();
+globalThis.__nextResizeObserverSizeHandle = globalThis.__nextResizeObserverSizeHandle || 1n;
+globalThis.__domRectHandles = globalThis.__domRectHandles || new Map();
+globalThis.__nextDomRectHandle = globalThis.__nextDomRectHandle || 1n;
 
 // Helper functions for blob URL modules
 globalThis.__storeElement = function(el) {
@@ -269,18 +277,127 @@ const window_exports = {
 };
 
 // ============================================================================
+// Mutation-Record Interface (tairitsu-browser:full/mutation-record)
+// ============================================================================
+
+const mutation_record_exports = {
+    getType(self) {
+        if (!globalThis.__mutationRecordHandles) return '';
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        return rec ? rec.type : '';
+    },
+    getTarget(self) {
+        if (!globalThis.__mutationRecordHandles) return 0n;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        if (!rec || !rec.target) return 0n;
+        return storeElement(rec.target);
+    },
+    getPreviousSibling(self) {
+        if (!globalThis.__mutationRecordHandles) return undefined;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        if (!rec || !rec.previousSibling) return undefined;
+        return storeNode(rec.previousSibling);
+    },
+    getNextSibling(self) {
+        if (!globalThis.__mutationRecordHandles) return undefined;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        if (!rec || !rec.nextSibling) return undefined;
+        return storeNode(rec.nextSibling);
+    },
+    getAttributeName(self) {
+        if (!globalThis.__mutationRecordHandles) return undefined;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        return rec ? (rec.attributeName ?? undefined) : undefined;
+    },
+    getAttributeNamespace(self) {
+        if (!globalThis.__mutationRecordHandles) return undefined;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        return rec ? (rec.attributeNamespace ?? undefined) : undefined;
+    },
+    getOldValue(self) {
+        if (!globalThis.__mutationRecordHandles) return undefined;
+        const rec = globalThis.__mutationRecordHandles.get(self);
+        return rec ? (rec.oldValue ?? undefined) : undefined;
+    },
+};
+
+// ============================================================================
+// Resize-Observer-Entry Interface (tairitsu-browser:full/resize-observer-entry)
+// ============================================================================
+
+const resize_observer_entry_exports = {
+    getTarget(self) {
+        if (!globalThis.__resizeObserverEntryHandles) return 0n;
+        const entry = globalThis.__resizeObserverEntryHandles.get(self);
+        if (!entry) return 0n;
+        return storeElement(entry.target);
+    },
+    getContentRect(self) {
+        if (!globalThis.__resizeObserverEntryHandles) return 0n;
+        const entry = globalThis.__resizeObserverEntryHandles.get(self);
+        if (!entry) return 0n;
+        if (!globalThis.__domRectHandles) { globalThis.__domRectHandles = new Map(); globalThis.__nextDomRectHandle = 1n; }
+        const handle = globalThis.__nextDomRectHandle++;
+        globalThis.__domRectHandles.set(handle, entry.contentRect);
+        return handle;
+    },
+    getBorderBoxSize(self) {
+        if (!globalThis.__resizeObserverEntryHandles) return [];
+        const entry = globalThis.__resizeObserverEntryHandles.get(self);
+        if (!entry) return [];
+        if (!globalThis.__resizeObserverSizeHandles) { globalThis.__resizeObserverSizeHandles = new Map(); globalThis.__nextResizeObserverSizeHandle = 1n; }
+        return [...entry.borderBoxSize].map(function(size) {
+            const handle = globalThis.__nextResizeObserverSizeHandle++;
+            globalThis.__resizeObserverSizeHandles.set(handle, size);
+            return handle;
+        });
+    },
+    getContentBoxSize(self) {
+        if (!globalThis.__resizeObserverEntryHandles) return [];
+        const entry = globalThis.__resizeObserverEntryHandles.get(self);
+        if (!entry) return [];
+        if (!globalThis.__resizeObserverSizeHandles) { globalThis.__resizeObserverSizeHandles = new Map(); globalThis.__nextResizeObserverSizeHandle = 1n; }
+        return [...entry.contentBoxSize].map(function(size) {
+            const handle = globalThis.__nextResizeObserverSizeHandle++;
+            globalThis.__resizeObserverSizeHandles.set(handle, size);
+            return handle;
+        });
+    },
+};
+
+// ============================================================================
+// Resize-Observer-Size Interface (tairitsu-browser:full/resize-observer-size)
+// ============================================================================
+
+const resize_observer_size_exports = {
+    getInlineSize(self) {
+        if (!globalThis.__resizeObserverSizeHandles) return 0;
+        const size = globalThis.__resizeObserverSizeHandles.get(self);
+        return size ? size.inlineSize : 0;
+    },
+    getBlockSize(self) {
+        if (!globalThis.__resizeObserverSizeHandles) return 0;
+        const size = globalThis.__resizeObserverSizeHandles.get(self);
+        return size ? size.blockSize : 0;
+    },
+};
+
+// ============================================================================
 // Interface Registry
 // ============================================================================
 
 const INTERFACES = {
-    "tairitsu-browser:full/console": console_exports,
-    "tairitsu-browser:full/style": style_exports,
-    "tairitsu-browser:full/event-target": event_target_exports,
-    "tairitsu-browser:full/document": document_exports,
-    "tairitsu-browser:full/element": element_exports,
-    "tairitsu-browser:full/node": node_exports,
-    "tairitsu-browser:full/non-element-parent-node": non_element_parent_node_exports,
-    "tairitsu-browser:full/window": window_exports,
+    "@tairitsu-glue/console": console_exports,
+    "@tairitsu-glue/style": style_exports,
+    "@tairitsu-glue/event-target": event_target_exports,
+    "@tairitsu-glue/document": document_exports,
+    "@tairitsu-glue/element": element_exports,
+    "@tairitsu-glue/node": node_exports,
+    "@tairitsu-glue/non-element-parent-node": non_element_parent_node_exports,
+    "@tairitsu-glue/window": window_exports,
+    "@tairitsu-glue/mutation-record": mutation_record_exports,
+    "@tairitsu-glue/resize-observer-entry": resize_observer_entry_exports,
+    "@tairitsu-glue/resize-observer-size": resize_observer_size_exports,
 };
 
 // ============================================================================

@@ -143,6 +143,7 @@ mod wasm_impl {
     type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
     type EventCallbackMap = HashMap<u64, EventCallback>;
     type TimeoutCallback = Option<Box<dyn FnOnce()>>;
+    type IntervalCallback = Option<Box<dyn FnMut()>>;
     type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
     type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
     type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
@@ -158,6 +159,7 @@ mod wasm_impl {
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
         static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
+        static INTERVAL_CALLBACKS: RefCell<HashMap<u64, IntervalCallback>> = RefCell::new(HashMap::new());
         static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
@@ -287,11 +289,10 @@ mod wasm_impl {
         }
 
         fn on_interval(callback_id: u64) {
-            TIMEOUT_CALLBACKS.with(|m| {
+            INTERVAL_CALLBACKS.with(|m| {
                 let mut callbacks = m.borrow_mut();
                 if let Some(Some(cb)) = callbacks.get_mut(&callback_id) {
-                    let cb_ptr = cb as *mut Box<dyn FnOnce()>;
-                    drop(std::mem::replace(cb_ptr, None));
+                    cb();
                 }
             });
         }

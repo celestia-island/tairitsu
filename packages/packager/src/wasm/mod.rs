@@ -566,6 +566,28 @@ fn try_generate_component_wrapper(
                 let has_index = wrapper_dir.join("index.js").exists();
                 let has_named = wrapper_dir.join(format!("{}.js", wasm_stem)).exists();
                 if has_index || has_named {
+                    // Post-process the generated JS to replace tairitsu-browser:full/ imports
+                    // with @tairitsu-glue/ imports which are valid bare module specifiers
+                    let js_files = vec![
+                        wrapper_dir.join("index.js"),
+                        wrapper_dir.join(format!("{}.js", wasm_stem)),
+                    ];
+                    for js_file in js_files {
+                        if js_file.exists() {
+                            if let Ok(mut content) = std::fs::read_to_string(&js_file) {
+                                let original = content.clone();
+                                // Replace import statements
+                                content = content.replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
+                                content = content.replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
+                                // Also replace in interface references (e.g., in comments/strings)
+                                content = content.replace("'tairitsu-browser:full/", "'@tairitsu-glue/");
+                                content = content.replace("\"tairitsu-browser:full/", "\"@tairitsu-glue/");
+                                if content != original {
+                                    std::fs::write(&js_file, content)?;
+                                }
+                            }
+                        }
+                    }
                     return Ok(true);
                 }
                 pb.println(format!(

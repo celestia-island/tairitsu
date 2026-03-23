@@ -9,17 +9,6 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:full@0.2.0;
 
-/// Common data types used across browser interfaces.
-interface types {
-    /// DOMRect values returned by getBoundingClientRect.
-    record dom-rect {
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-    }
-}
-
 /// Platform helper functions that return values directly instead of opaque handles.
 interface platform-helpers {
     use types.{dom-rect};
@@ -5777,6 +5766,13 @@ interface progress-event {
 }
 
 interface types {
+    /// DOMRect values returned by getBoundingClientRect.
+    record dom-rect {
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+    }
     /// WebIDL enum EndingType.
     enum ending-type {
         transparent,
@@ -11752,6 +11748,8 @@ interface resize-observer {
 }
 
 interface resize-observer-entry {
+    use types.{dom-rect};
+    
     /// Opaque handle to a host-side `ResizeObserverEntry` instance.
     type resize-observer-entry-handle = u64;
 
