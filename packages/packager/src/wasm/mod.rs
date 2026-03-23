@@ -83,28 +83,32 @@ pub fn build_component(
     pb.set_prefix("[3/5]");
     pb.set_message("bundle assets");
     let t = Instant::now();
-    
+
     // Resolve output_dir relative to manifest_dir
     let output_dir = if config.build.output_dir.is_relative() {
         config.manifest_dir.join(&config.build.output_dir)
     } else {
         config.build.output_dir.clone()
     };
-    
+
     let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
-    
+
     tracing::info!("Creating output directory: {}", output_dir.display());
     std::fs::create_dir_all(&output_dir)?;
-    
-    tracing::info!("Copying WASM from {} to {}", wasm_path.display(), dest_wasm.display());
+
+    tracing::info!(
+        "Copying WASM from {} to {}",
+        wasm_path.display(),
+        dest_wasm.display()
+    );
     std::fs::copy(&wasm_path, &dest_wasm)?;
-    
+
     tracing::info!("Copying browser glue...");
     copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
-    
+
     tracing::info!("Copying static public assets...");
     copy_static_public_assets_with_output_dir(config, &output_dir)?;
-    
+
     tracing::info!("Compiling SCSS...");
     compile_project_scss_with_output_dir(config, &output_dir)?;
     pb.println(format!(
@@ -231,13 +235,9 @@ fn build_wasm_component(
                                 let crate_name = extract_crate_name(package_id);
                                 // Only update for lib crates (not build scripts)
                                 if let Some(target) = msg.get("target") {
-                                    if target
-                                        .get("kind")
-                                        .and_then(|k| k.as_array())
-                                        .is_some_and(|k| {
-                                            k.iter().any(|kind| kind.as_str() == Some("lib"))
-                                        })
-                                    {
+                                    if target.get("kind").and_then(|k| k.as_array()).is_some_and(
+                                        |k| k.iter().any(|kind| kind.as_str() == Some("lib")),
+                                    ) {
                                         pb_clone.set_message(format!("compile {}", crate_name));
                                     }
                                 }
@@ -305,22 +305,29 @@ mod browser_glue_bundle {
 fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
     let glue_path = config.build.browser_glue_path.trim_start_matches('/');
     let bundle_dest = output_dir.join(glue_path);
-    
+
     if let Some(parent) = bundle_dest.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    
+
     std::fs::write(&bundle_dest, browser_glue_bundle::BROWSER_GLUE_BUNDLE)?;
-    
+
     Ok(())
 }
 
-fn copy_browser_glue_with_output_dir(config: &Config, output_dir: &std::path::Path, _pb: &ProgressBar) -> crate::Result<()> {
+fn copy_browser_glue_with_output_dir(
+    config: &Config,
+    output_dir: &std::path::Path,
+    _pb: &ProgressBar,
+) -> crate::Result<()> {
     write_browser_glue_bundle(config, output_dir)?;
     Ok(())
 }
 
-fn copy_static_public_assets_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+fn copy_static_public_assets_with_output_dir(
+    config: &Config,
+    output_dir: &std::path::Path,
+) -> crate::Result<()> {
     let public_dir = config.manifest_dir.join("public");
 
     if !public_dir.exists() {
@@ -352,18 +359,17 @@ fn copy_static_public_assets_with_output_dir(config: &Config, output_dir: &std::
     Ok(())
 }
 
-fn compile_project_scss_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+fn compile_project_scss_with_output_dir(
+    config: &Config,
+    output_dir: &std::path::Path,
+) -> crate::Result<()> {
     let project_root = &config.manifest_dir;
 
     tracing::info!("SCSS project root: {}", project_root.display());
 
     // Use new SCSS configuration system
-    let results = crate::styles::compile_scss_with_config(
-        &config.scss,
-        project_root,
-        output_dir,
-    )
-    .map_err(|e| {
+    let results = crate::styles::compile_scss_with_config(&config.scss, project_root, output_dir)
+        .map_err(|e| {
         crate::TairitsuPackagerError::BuildError(format!("Failed to compile SCSS: {}", e))
     })?;
 
@@ -577,11 +583,19 @@ fn try_generate_component_wrapper(
                             if let Ok(mut content) = std::fs::read_to_string(&js_file) {
                                 let original = content.clone();
                                 // Replace import statements
-                                content = content.replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
-                                content = content.replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
-                                // Also replace in interface references (e.g., in comments/strings)
-                                content = content.replace("'tairitsu-browser:full/", "'@tairitsu-glue/");
-                                content = content.replace("\"tairitsu-browser:full/", "\"@tairitsu-glue/");
+                                content = content.replace(
+                                    "from 'tairitsu-browser:full/",
+                                    "from '@tairitsu-glue/",
+                                );
+                                content = content.replace(
+                                    "from \"tairitsu-browser:full/",
+                                    "from \"@tairitsu-glue/",
+                                );
+                                // NOTE: Only ES module `from '...'` imports are rewritten above.
+                                // Do NOT blanket-replace all string occurrences — the original
+                                // WIT interface names (e.g. 'tairitsu-browser:full/document@0.2.0')
+                                // must be preserved in WebAssembly.instantiate() import keys,
+                                // because the core WASM binary expects those exact module names.
                                 if content != original {
                                     std::fs::write(&js_file, content)?;
                                 }
@@ -647,7 +661,10 @@ fn try_generate_component_wrapper(
     Ok(false)
 }
 
-fn generate_component_html_with_output_dir(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
+fn generate_component_html_with_output_dir(
+    config: &Config,
+    output_dir: &std::path::Path,
+) -> crate::Result<()> {
     let pkg_name = &config.package.name;
     let wasm_file = format!("{}.wasm", pkg_name.replace('-', "_"));
     // Build-time version stamp so browsers never serve stale cached JS/WASM
@@ -667,7 +684,7 @@ fn generate_component_html_with_output_dir(config: &Config, output_dir: &std::pa
         .as_deref()
         .map(|href| format!("<link rel=\"icon\" href=\"./{}\">", href))
         .unwrap_or_default();
-    
+
     // Browser glue bundle path (relative to output directory)
     let glue_bundle_path = &config.build.browser_glue_path;
 
@@ -683,10 +700,9 @@ fn generate_component_html_with_output_dir(config: &Config, output_dir: &std::pa
 </head>
 <body class="{body_class}">
     <div id="app">Loading...</div>
+    <!-- Load browser glue BEFORE any module script so the import map is registered in time -->
+    <script src="{glue_bundle_path}?v={v}"></script>
     <script type="module">
-        // Load browser API glue first - it will auto-register import map
-        await import('{glue_bundle_path}?v={v}');
-        
         import {{ instantiateWithWrapper }} from './component-wrapper-loader.js?v={v}';
 
         const appRoot = document.getElementById('app');
@@ -785,18 +801,33 @@ fn generate_component_html_with_output_dir(config: &Config, output_dir: &std::pa
 
         let bootInvoked = false;
 
+        // Build imports object from registered browser glue interfaces
+        const buildImports = () => {{
+            const imports = {{}};
+            if (globalThis.__TAIRITSU_GLUE__ && globalThis.__TAIRITSU_GLUE__.INTERFACES) {{
+                // Map @tairitsu-glue/interface names to tairitsu-browser:full/interface@0.2.0
+                // for WASM component imports
+                for (const [shortName, exports] of Object.entries(globalThis.__TAIRITSU_GLUE__.INTERFACES)) {{
+                    const ifaceName = shortName.replace('@tairitsu-glue/', '');
+                    const fullName = `tairitsu-browser:full/${{ifaceName}}@0.2.0`;
+                    imports[fullName] = exports;
+                }}
+            }}
+            return imports;
+        }};
+
         if (isComponent) {{
             if (typeof WebAssembly.Component !== 'function') {{
-                const wrapperResult = await instantiateWithWrapper({{}});
+                const wrapperResult = await instantiateWithWrapper(buildImports());
                 bootInvoked = await tryInvokeBootExports(wrapperResult);
             }} else {{
                 const component = new WebAssembly.Component(bytes);
-                const componentResult = await WebAssembly.instantiate(component, {{}});
+                const componentResult = await WebAssembly.instantiate(component, buildImports());
                 bootInvoked = await tryInvokeBootExports(componentResult);
             }}
         }} else {{
             const module = await WebAssembly.compile(bytes);
-            const moduleResult = await WebAssembly.instantiate(module, {{}});
+            const moduleResult = await WebAssembly.instantiate(module, buildImports());
             bootInvoked = await tryInvokeBootExports(moduleResult);
         }}
 
