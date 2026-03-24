@@ -1,0 +1,19 @@
+[package]
+name = "tairitsu-ssr"
+edition = "2021"
+
+[dependencies]
+tairitsu = { path = "../runtime" }
+tairitsu-vdom = { path = "../vdom" }
+tairitsu-browser-worlds = { path = "../browser-worlds" }
+anyhow = "1"
+wasmtime = { version = "40", features = ["component-model"] }
+wasmtime-wasi = "40"
+wit-parser = "0.201"
+tracing = "0.1"
+bytes = "1"
+
+[build-dependencies]
+tairitsu = { path = "../runtime" }
+wit-parser = "0.201"
+heck = "0.5"
