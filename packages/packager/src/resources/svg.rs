@@ -40,7 +40,8 @@ impl SvgResource {
 
     /// Get the source filename
     pub fn source_filename(&self) -> &str {
-        self.source.rfind('/')
+        self.source
+            .rfind('/')
             .map(|i| &self.source[i + 1..])
             .unwrap_or(&self.source)
     }
@@ -48,9 +49,7 @@ impl SvgResource {
     /// Convert the ID to kebab-case if not already
     pub fn normalized_id(&self) -> String {
         // SVG IDs should be valid identifiers
-        self.id
-            .replace(['_', ' '], "-")
-            .to_lowercase()
+        self.id.replace(['_', ' '], "-").to_lowercase()
     }
 
     /// Get the symbol ID for use in SVG sprites
@@ -71,9 +70,7 @@ pub struct SvgUtils;
 impl SvgUtils {
     /// Check if a file is a valid SVG file
     pub fn is_svg_file(path: &std::path::Path) -> bool {
-        path.extension()
-            .map(|ext| ext == "svg")
-            .unwrap_or(false)
+        path.extension().map(|ext| ext == "svg").unwrap_or(false)
     }
 
     /// Extract the icon ID from a file path
@@ -96,14 +93,21 @@ impl SvgUtils {
         }
 
         // Remaining characters must be alphanumeric, underscore, or hyphen
-        id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+        id.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     }
 
     /// Normalize an ID to a valid CSS identifier
     pub fn normalize_id(id: &str) -> String {
         id.replace(['_', ' '], "-")
             .chars()
-            .map(|c| if c.is_ascii_alphanumeric() || c == '-' { c } else { '-' })
+            .map(|c| {
+                if c.is_ascii_alphanumeric() || c == '-' {
+                    c
+                } else {
+                    '-'
+                }
+            })
             .collect::<String>()
             .to_lowercase()
     }
@@ -115,11 +119,7 @@ mod tests {
 
     #[test]
     fn test_svg_resource_creation() {
-        let resource = SvgResource::new(
-            "src/icons/sun.svg",
-            "def45678",
-            "sun"
-        );
+        let resource = SvgResource::new("src/icons/sun.svg", "def45678", "sun");
         assert_eq!(resource.source, "src/icons/sun.svg");
         assert_eq!(resource.hash, "def45678");
         assert_eq!(resource.id, "sun");
@@ -127,11 +127,7 @@ mod tests {
 
     #[test]
     fn test_svg_resource_paths() {
-        let resource = SvgResource::new(
-            "src/icons/weather/sun.svg",
-            "def45678",
-            "sun"
-        );
+        let resource = SvgResource::new("src/icons/weather/sun.svg", "def45678", "sun");
         assert_eq!(resource.source_dir(), Some("src/icons/weather"));
         assert_eq!(resource.source_filename(), "sun.svg");
         assert_eq!(resource.output_path(), "icons/sun.def45678.svg");
@@ -140,11 +136,7 @@ mod tests {
 
     #[test]
     fn test_svg_resource_normalized_id() {
-        let resource = SvgResource::new(
-            "src/icons/Sun_Icon.svg",
-            "def45678",
-            "Sun_Icon"
-        );
+        let resource = SvgResource::new("src/icons/Sun_Icon.svg", "def45678", "Sun_Icon");
         assert_eq!(resource.normalized_id(), "sun-icon");
         assert_eq!(resource.symbol_id(), "icon-sun-icon");
     }

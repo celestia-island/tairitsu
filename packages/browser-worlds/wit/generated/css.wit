@@ -10,6 +10,28 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:css@0.2.0;
 
+/// Common DOM rectangle type used by multiple interfaces
+
+interface types {
+
+    /// DOMRect values - x, y, width, height
+
+    record dom-rect {
+
+        x: f64,
+
+        y: f64,
+
+        width: f64,
+
+        height: f64,
+
+    }
+
+}
+
+
+
 /// WebIDL interface: `AnimationEvent`
 /// Inherits: `Event`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/css-animations.idl
@@ -1385,6 +1407,9 @@ interface document {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/cssom-view.idl
 interface caret-position {
     /// Opaque handle to a host-side `CaretPosition` instance.
+
+    use types.{dom-rect};
+
     type caret-position-handle = u64;
 
     /// `offsetNode` attribute — getter.

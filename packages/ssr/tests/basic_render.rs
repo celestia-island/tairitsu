@@ -13,7 +13,11 @@ fn test_dom_creation() {
     let dom = SsrDom::new();
     assert_ne!(dom.body_handle(), 0, "body handle should be non-zero");
     assert_ne!(dom.head_handle(), 0, "head handle should be non-zero");
-    assert_ne!(dom.document_handle(), 0, "document handle should be non-zero");
+    assert_ne!(
+        dom.document_handle(),
+        0,
+        "document handle should be non-zero"
+    );
 }
 
 #[test]
@@ -68,7 +72,10 @@ fn test_remove_attribute() {
     dom.get_node_mut(div)
         .unwrap()
         .set_attribute("id", "test-id");
-    assert_eq!(dom.get_node(div).unwrap().get_attribute("id"), Some("test-id"));
+    assert_eq!(
+        dom.get_node(div).unwrap().get_attribute("id"),
+        Some("test-id")
+    );
 
     dom.get_node_mut(div).unwrap().remove_attribute("id");
     assert_eq!(dom.get_node(div).unwrap().get_attribute("id"), None);
@@ -128,7 +135,9 @@ fn test_get_element_by_id() {
     let div2 = dom.create_element("div", None);
 
     dom.get_node_mut(div1).unwrap().set_attribute("id", "first");
-    dom.get_node_mut(div2).unwrap().set_attribute("id", "second");
+    dom.get_node_mut(div2)
+        .unwrap()
+        .set_attribute("id", "second");
 
     assert_eq!(dom.get_element_by_id("first"), Some(div1));
     assert_eq!(dom.get_element_by_id("second"), Some(div2));
@@ -159,9 +168,7 @@ fn test_query_selector_tag() {
 fn test_html_render_simple() {
     let mut dom = SsrDom::new();
     let div = dom.create_element("div", None);
-    dom.get_node_mut(div)
-        .unwrap()
-        .set_attribute("id", "test");
+    dom.get_node_mut(div).unwrap().set_attribute("id", "test");
 
     let html = dom.render_node_html(div);
     assert_eq!(html, r#"<div id="test"></div>"#);
@@ -250,12 +257,18 @@ fn test_void_elements() {
     ] {
         let el = dom.create_element(tag, None);
         if tag == "img" {
-            dom.get_node_mut(el).unwrap().set_attribute("src", "test.png");
+            dom.get_node_mut(el)
+                .unwrap()
+                .set_attribute("src", "test.png");
         } else if tag == "input" {
             dom.get_node_mut(el).unwrap().set_attribute("type", "text");
         }
         let html = dom.render_node_html(el);
-        assert_eq!(html, expected, "Void element {} should render without closing tag", tag);
+        assert_eq!(
+            html, expected,
+            "Void element {} should render without closing tag",
+            tag
+        );
     }
 }
 

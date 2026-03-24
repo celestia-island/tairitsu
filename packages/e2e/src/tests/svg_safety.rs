@@ -33,7 +33,10 @@ impl Test for SvgSafetyTests {
 
             Ok(TestResult::success(
                 "SvgSafetyTests",
-                &format!("SVG safety tests passed in {}ms (unit tests cover sanitization)", duration)
+                &format!(
+                    "SVG safety tests passed in {}ms (unit tests cover sanitization)",
+                    duration
+                ),
             ))
         })
     }

@@ -49,9 +49,14 @@ fn test_remove_style_property() {
     dom.get_node_mut(div)
         .unwrap()
         .set_style_property("color", "red");
-    assert_eq!(dom.get_node(div).unwrap().get_style_property("color"), Some("red"));
+    assert_eq!(
+        dom.get_node(div).unwrap().get_style_property("color"),
+        Some("red")
+    );
 
-    dom.get_node_mut(div).unwrap().remove_style_property("color");
+    dom.get_node_mut(div)
+        .unwrap()
+        .remove_style_property("color");
     assert_eq!(dom.get_node(div).unwrap().get_style_property("color"), None);
 }
 
@@ -154,9 +159,10 @@ fn test_complex_css_values() {
     dom.get_node_mut(div)
         .unwrap()
         .set_style_property("box-shadow", "0 2px 4px rgba(0,0,0,0.1)");
-    dom.get_node_mut(div)
-        .unwrap()
-        .set_style_property("font-family", "\"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif");
+    dom.get_node_mut(div).unwrap().set_style_property(
+        "font-family",
+        "\"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif",
+    );
 
     let html = render_html(&dom, div);
     assert!(html.contains("linear-gradient"));
@@ -192,13 +198,19 @@ fn test_update_style_property() {
     dom.get_node_mut(div)
         .unwrap()
         .set_style_property("color", "red");
-    assert_eq!(dom.get_node(div).unwrap().get_style_property("color"), Some("red"));
+    assert_eq!(
+        dom.get_node(div).unwrap().get_style_property("color"),
+        Some("red")
+    );
 
     // Update the same property
     dom.get_node_mut(div)
         .unwrap()
         .set_style_property("color", "blue");
-    assert_eq!(dom.get_node(div).unwrap().get_style_property("color"), Some("blue"));
+    assert_eq!(
+        dom.get_node(div).unwrap().get_style_property("color"),
+        Some("blue")
+    );
 
     // Should only have one color property
     let html = render_html(&dom, div);

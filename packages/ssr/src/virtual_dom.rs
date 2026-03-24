@@ -346,8 +346,7 @@ impl SsrDom {
         let selector = selector.trim();
 
         // ID selector: #id
-        if selector.starts_with('#') {
-            let id = &selector[1..];
+        if let Some(id) = selector.strip_prefix('#') {
             return self.get_element_by_id(id);
         }
 

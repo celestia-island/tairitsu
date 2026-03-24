@@ -11,8 +11,8 @@ pub mod stubs;
 pub mod virtual_dom;
 
 pub use host_state::{SsrConfig, SsrHostState};
-pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 pub use html_render::FullDocumentConfig;
+pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 
 use anyhow::Result;
 use wasmtime::{Engine, Store};
@@ -89,11 +89,7 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
 ///
 /// # Returns
 /// The complete HTML page with rendered content
-pub fn render_full_page(
-    wasm_bytes: &[u8],
-    config: SsrConfig,
-    template: &str,
-) -> Result<String> {
+pub fn render_full_page(wasm_bytes: &[u8], config: SsrConfig, template: &str) -> Result<String> {
     let body_html = render_to_html(wasm_bytes, config)?;
 
     // Inject the rendered HTML into the template
@@ -119,7 +115,7 @@ fn call_lifecycle_start(
     // Try to get the lifecycle::start function using the standard naming pattern
     // Component Model exports use "interface#function" format
     let func = instance.get_func(&mut *store, "[export-lifecycle]start");
-    
+
     if let Some(func) = func {
         // Call the function (no args, returns result<_, string>)
         let mut results = vec![];

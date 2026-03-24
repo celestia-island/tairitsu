@@ -152,19 +152,29 @@ mod tests {
     fn wit_files_parse_with_wit_parser() {
         use wit_parser::Resolve;
 
+        // Parse all files together in a single Resolve to handle cross-package dependencies
+        // (e.g., canvas.wit uses types.{dom-rect} from observers.wit)
+        let mut resolve = Resolve::default();
+        let mut failed = Vec::new();
+
         for pkg in EMBEDDED_PACKAGES {
             for (filename, bytes) in pkg.files {
                 let content = std::str::from_utf8(bytes).expect("WIT file should be valid UTF-8");
-                let mut resolve = Resolve::default();
                 let result = resolve.push_str(filename, content);
-                assert!(
-                    result.is_ok(),
+                if result.is_err() {
+                    failed.push((pkg.id, filename, result.err()));
+                }
+            }
+        }
+
+        if !failed.is_empty() {
+            for (pkg_id, filename, err) in &failed {
+                eprintln!(
                     "WIT file {} in package {} failed to parse: {:?}",
-                    filename,
-                    pkg.id,
-                    result.err()
+                    filename, pkg_id, err
                 );
             }
+            panic!("{} WIT files failed to parse", failed.len());
         }
     }
 

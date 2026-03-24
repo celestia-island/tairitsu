@@ -37,8 +37,12 @@ impl Platform {
     pub fn executable_relative_path(&self) -> &'static str {
         match self {
             Platform::LinuxX64 => "chrome",
-            Platform::MacosArm64 => "Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-            Platform::MacosX64 => "Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+            Platform::MacosArm64 => {
+                "Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+            }
+            Platform::MacosX64 => {
+                "Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+            }
             Platform::WindowsX64 => "chrome.exe",
         }
     }
@@ -83,7 +87,11 @@ pub fn detect_platform() -> Platform {
         ("macos", "x86_64") => Platform::MacosX64,
         ("windows", "x86_64") => Platform::WindowsX64,
         ("windows", "x86") => Platform::WindowsX64,
-        _ => panic!("Unsupported platform: {}-{}", env::consts::OS, env::consts::ARCH),
+        _ => panic!(
+            "Unsupported platform: {}-{}",
+            env::consts::OS,
+            env::consts::ARCH
+        ),
     }
 }
 

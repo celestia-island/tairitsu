@@ -2,7 +2,7 @@
 //!
 //! Tests for Server-Side Rendering functionality.
 
-use crate::tests::{Test, TestResult, TestStatus};
+use crate::tests::{Test, TestResult};
 use anyhow::Result;
 use std::path::PathBuf;
 use tracing::info;
@@ -26,12 +26,14 @@ impl SsrTests {
             .status()?;
 
         if !status.success() {
-            return Ok(TestResult::error("SSR Basic Render", "Failed to build website example"));
+            return Ok(TestResult::error(
+                "SSR Basic Render",
+                "Failed to build website example",
+            ));
         }
 
         // Find the built WASM file
-        let wasm_path = website_dir
-            .join("../target/wasm32-wasip2/release/tairitsu_website.wasm");
+        let wasm_path = website_dir.join("../target/wasm32-wasip2/release/tairitsu_website.wasm");
 
         if !wasm_path.exists() {
             return Ok(TestResult::error("SSR Basic Render", "WASM file not found"));
@@ -42,12 +44,21 @@ impl SsrTests {
         match tairitsu_ssr::render_to_html(&wasm_bytes, tairitsu_ssr::SsrConfig::default()) {
             Ok(html) => {
                 if html.contains("<") && html.contains(">") {
-                    Ok(TestResult::success("SSR Basic Render", &format!("Successfully rendered HTML ({} bytes)", html.len())))
+                    Ok(TestResult::success(
+                        "SSR Basic Render",
+                        &format!("Successfully rendered HTML ({} bytes)", html.len()),
+                    ))
                 } else {
-                    Ok(TestResult::error("SSR Basic Render", "SSR returned empty or invalid HTML"))
+                    Ok(TestResult::error(
+                        "SSR Basic Render",
+                        "SSR returned empty or invalid HTML",
+                    ))
                 }
             }
-            Err(e) => Ok(TestResult::error("SSR Basic Render", &format!("SSR render failed: {}", e))),
+            Err(e) => Ok(TestResult::error(
+                "SSR Basic Render",
+                &format!("SSR render failed: {}", e),
+            )),
         }
     }
 
@@ -55,7 +66,7 @@ impl SsrTests {
     async fn test_ssr_viewport_config() -> Result<TestResult> {
         info!("Testing SSR viewport configuration...");
 
-        let config = tairitsu_ssr::SsrConfig::new(1280, 720);
+        let _config = tairitsu_ssr::SsrConfig::new(1280, 720);
 
         // Create a simple in-memory DOM and test viewport access
         let dom = tairitsu_ssr::SsrDom::new();
@@ -64,9 +75,15 @@ impl SsrTests {
 
         if width == 1920 && height == 1080 {
             // Default values - not using custom config yet
-            Ok(TestResult::success("SSR Viewport Config", "Default viewport config verified"))
+            Ok(TestResult::success(
+                "SSR Viewport Config",
+                "Default viewport config verified",
+            ))
         } else {
-            Ok(TestResult::error("SSR Viewport Config", &format!("Unexpected viewport: {}x{}", width, height)))
+            Ok(TestResult::error(
+                "SSR Viewport Config",
+                &format!("Unexpected viewport: {}x{}", width, height),
+            ))
         }
     }
 
@@ -102,10 +119,18 @@ impl SsrTests {
         let has_text = html.contains("Hello SSR!");
 
         if has_div && has_class && has_style && has_span && has_text {
-            Ok(TestResult::success("SSR HTML Serialization", "HTML serialization works correctly"))
+            Ok(TestResult::success(
+                "SSR HTML Serialization",
+                "HTML serialization works correctly",
+            ))
         } else {
-            Ok(TestResult::error("SSR HTML Serialization", &format!("HTML incomplete: div={} class={} style={} span={} text={}",
-                has_div, has_class, has_style, has_span, has_text)))
+            Ok(TestResult::error(
+                "SSR HTML Serialization",
+                &format!(
+                    "HTML incomplete: div={} class={} style={} span={} text={}",
+                    has_div, has_class, has_style, has_span, has_text
+                ),
+            ))
         }
     }
 
@@ -142,10 +167,18 @@ impl SsrTests {
         let has_script = full_page.contains("<script");
 
         if has_doctype && has_app_div && has_script {
-            Ok(TestResult::success("SSR Full Page", "Full page template rendering works"))
+            Ok(TestResult::success(
+                "SSR Full Page",
+                "Full page template rendering works",
+            ))
         } else {
-            Ok(TestResult::error("SSR Full Page", &format!("Full page incomplete: doctype={} app={} script={}",
-                has_doctype, has_app_div, has_script)))
+            Ok(TestResult::error(
+                "SSR Full Page",
+                &format!(
+                    "Full page incomplete: doctype={} app={} script={}",
+                    has_doctype, has_app_div, has_script
+                ),
+            ))
         }
     }
 
@@ -159,21 +192,30 @@ impl SsrTests {
         let div = dom.create_element("div", None);
         let node = dom.get_node(div).unwrap();
         if node.tag_name() != Some("div") {
-            return Ok(TestResult::error("SSR DOM Operations", "Element creation failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Element creation failed",
+            ));
         }
 
         // Test create text node
         let text = dom.create_text_node("test");
         let text_node = dom.get_node(text).unwrap();
         if text_node.text_content() != Some("test") {
-            return Ok(TestResult::error("SSR DOM Operations", "Text node creation failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Text node creation failed",
+            ));
         }
 
         // Test append child
         dom.append_child(div, text).unwrap();
         let div_node = dom.get_node(div).unwrap();
         if !div_node.children.contains(&text) {
-            return Ok(TestResult::error("SSR DOM Operations", "Append child failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Append child failed",
+            ));
         }
 
         // Test set/get attribute
@@ -182,29 +224,44 @@ impl SsrTests {
             .set_attribute("id", "test-id");
         let div_node = dom.get_node(div).unwrap();
         if div_node.get_attribute("id") != Some("test-id") {
-            return Ok(TestResult::error("SSR DOM Operations", "Set/get attribute failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Set/get attribute failed",
+            ));
         }
 
         // Test get element by ID
         let found = dom.get_element_by_id("test-id");
         if found != Some(div) {
-            return Ok(TestResult::error("SSR DOM Operations", "Get element by ID failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Get element by ID failed",
+            ));
         }
 
         // Test query selector
         let found_by_selector = dom.query_selector("#test-id");
         if found_by_selector != Some(div) {
-            return Ok(TestResult::error("SSR DOM Operations", "Query selector failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Query selector failed",
+            ));
         }
 
         // Test remove child
         dom.remove_child(div, text).unwrap();
         let div_node = dom.get_node(div).unwrap();
         if div_node.children.contains(&text) {
-            return Ok(TestResult::error("SSR DOM Operations", "Remove child failed"));
+            return Ok(TestResult::error(
+                "SSR DOM Operations",
+                "Remove child failed",
+            ));
         }
 
-        Ok(TestResult::success("SSR DOM Operations", "All DOM operations passed"))
+        Ok(TestResult::success(
+            "SSR DOM Operations",
+            "All DOM operations passed",
+        ))
     }
 }
 

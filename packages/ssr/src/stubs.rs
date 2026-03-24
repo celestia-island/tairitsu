@@ -10,6 +10,9 @@
 //! Implemented via bindgen (in bindings.rs):
 //! - resize-observer-entry, resize-observer-size
 
+#![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
+
 use crate::host_state::SsrHostState;
 use anyhow::Result;
 use wasmtime::component::Linker;

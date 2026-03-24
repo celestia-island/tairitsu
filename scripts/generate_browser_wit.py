@@ -709,10 +709,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
                 continue
 
             # Track record types that need use statements
-            if wit_type == "dom-rect-read-only":
-                # Convert read-only to regular dom-rect for use statement
-                used_types.add("types.{dom-rect}")
-            elif wit_type == "dom-rect":
+            if "dom-rect" in wit_type:
                 used_types.add("types.{dom-rect}")
 
             if getter not in emitted:
@@ -744,10 +741,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
             ret_type = convert_type(member.idl_type)
 
             # Track record types in return types
-            if ret_type == "dom-rect-read-only":
-                # Convert read-only to regular dom-rect for use statement
-                used_types.add("types.{dom-rect}")
-            elif ret_type == "dom-rect":
+            if "dom-rect" in ret_type:
                 used_types.add("types.{dom-rect}")
 
             params: list[str] = []
@@ -766,10 +760,7 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
                 params.append(f"{p_name}: {p_type}")
 
                 # Track record types in parameters
-                if p_type == "dom-rect-read-only":
-                    # Convert read-only to regular dom-rect for use statement
-                    used_types.add("types.{dom-rect}")
-                elif p_type == "dom-rect":
+                if "dom-rect" in p_type:
                     used_types.add("types.{dom-rect}")
 
             if op_name not in emitted:
@@ -806,8 +797,28 @@ def _generate_special_type_defs(interfaces: List[WebIDLInterface], domain: str) 
     """Generate type definitions for special types like event-handler-record."""
     lines = []
 
-    # Special handling for observers domain - always include dom-rect
-    if domain == "observers":
+    # Check if any interface in this domain uses dom-rect
+    uses_dom_rect = False
+    for iface in interfaces:
+        for member in iface.members:
+            # Check return type
+            wit_type = convert_type(member.idl_type)
+            if "dom-rect" in wit_type:
+                uses_dom_rect = True
+                break
+            # Check parameter types
+            for param in member.params:
+                wit_type = convert_type(param.idl_type)
+                if "dom-rect" in wit_type:
+                    uses_dom_rect = True
+                    break
+            if uses_dom_rect:
+                break
+        if uses_dom_rect:
+            break
+
+    # Include dom-rect definition for any domain that uses it
+    if uses_dom_rect or domain == "observers":
         lines.append("/// Common DOM rectangle type used by multiple interfaces")
         lines.append("interface types {")
         lines.append("    /// DOMRect values - x, y, width, height")

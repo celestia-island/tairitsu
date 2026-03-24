@@ -156,7 +156,9 @@ fn test_attribute_with_empty_value() {
     let mut dom = SsrDom::new();
     let div = dom.create_element("div", None);
 
-    dom.get_node_mut(div).unwrap().set_attribute("data-empty", "");
+    dom.get_node_mut(div)
+        .unwrap()
+        .set_attribute("data-empty", "");
 
     let html = render_html(&dom, div);
     assert!(html.contains("data-empty=\"\""));

@@ -103,16 +103,21 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
     {
         use tairitsu_ssr::{render_full_page, SsrConfig};
 
-        let ssr_config = SsrConfig::new(prerender_config.viewport_width, prerender_config.viewport_height);
+        let ssr_config = SsrConfig::new(
+            prerender_config.viewport_width,
+            prerender_config.viewport_height,
+        );
 
         for route in &prerender_config.routes {
             tracing::info!("  Rendering /{}...", route);
 
-            let html = render_full_page(&wasm_bytes, ssr_config.clone(), &template)
-                .map_err(|e| crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to render route '{}': {}",
-                    route, e
-                )))?;
+            let html =
+                render_full_page(&wasm_bytes, ssr_config.clone(), &template).map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to render route '{}': {}",
+                        route, e
+                    ))
+                })?;
 
             // Determine output path
             let output_path = if route.is_empty() {
@@ -137,9 +142,9 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
     #[cfg(not(feature = "ssr"))]
     {
         let _ = (wasm_bytes, template);
-        return Err(crate::TairitsuPackagerError::BuildError(
+        Err(crate::TairitsuPackagerError::BuildError(
             "SSR feature is not enabled. Build with --features ssr".to_string(),
-        ));
+        ))
     }
 
     #[cfg(feature = "ssr")]
@@ -154,11 +159,14 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 }
 
 /// Copy static assets to the prerender output directory
-fn copy_assets(dist_dir: &PathBuf, output_dir: &PathBuf) -> crate::Result<()> {
+#[allow(dead_code)]
+fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crate::Result<()> {
     use std::fs;
     use walkdir::WalkDir;
 
-    let asset_extensions = [".wasm", ".js", ".css", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".webp"];
+    let asset_extensions = [
+        ".wasm", ".js", ".css", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".webp",
+    ];
 
     for entry in WalkDir::new(dist_dir)
         .follow_links(true)

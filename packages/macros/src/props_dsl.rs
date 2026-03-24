@@ -6,11 +6,12 @@ use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Token, Type, Expr, Ident, Visibility, Attribute, Result, Meta,
+    Attribute, Expr, Ident, Meta, Result, Token, Type, Visibility,
 };
 
 /// Parsed props field with optional default value from #[default(...)] attribute
 pub struct PropsField {
+    #[allow(dead_code)]
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub name: Ident,
@@ -177,8 +178,7 @@ pub fn expand_define_props(input: PropsInput) -> TokenStream2 {
                     default_values.push(quote! {
                         #field_name: Default::default()
                     });
-                }
-                else {
+                } else {
                     // Try to use Default trait
                     prop_attrs.push(quote! {
                         #[props(default)]

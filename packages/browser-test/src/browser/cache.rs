@@ -1,8 +1,8 @@
 //! Browser cache management
 
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use tracing::info;
 
 use super::platform::Platform;
@@ -67,8 +67,8 @@ impl BrowserCache {
             return Ok(cached);
         }
 
-        let entries = fs::read_dir(&chromium_dir)
-            .context("Failed to read chromium cache directory")?;
+        let entries =
+            fs::read_dir(&chromium_dir).context("Failed to read chromium cache directory")?;
 
         for entry in entries {
             let entry = entry.context("Reading cache directory entry")?;
@@ -82,13 +82,18 @@ impl BrowserCache {
                 let platform_entries = match fs::read_dir(&version_dir) {
                     Ok(entries) => entries,
                     Err(e) => {
-                        tracing::warn!("Failed to read version directory {}: {}", version_dir.display(), e);
+                        tracing::warn!(
+                            "Failed to read version directory {}: {}",
+                            version_dir.display(),
+                            e
+                        );
                         continue;
                     }
                 };
 
                 for platform_entry in platform_entries {
-                    let platform_entry = platform_entry.context("Reading version directory entry")?;
+                    let platform_entry =
+                        platform_entry.context("Reading version directory entry")?;
                     let file_type = platform_entry.file_type().context("Reading file type")?;
                     if file_type.is_dir() {
                         let platform_name = platform_entry.file_name();
@@ -112,8 +117,7 @@ impl BrowserCache {
     /// Clear the entire browser cache
     pub fn clear(&self) -> Result<()> {
         if self.cache_dir.exists() {
-            fs::remove_dir_all(&self.cache_dir)
-                .context("Clearing browser cache")?;
+            fs::remove_dir_all(&self.cache_dir).context("Clearing browser cache")?;
             info!("Cleared browser cache: {}", self.cache_dir.display());
         }
         Ok(())
@@ -121,8 +125,7 @@ impl BrowserCache {
 
     /// Ensure the cache directory exists
     pub fn ensure_cache_dir(&self) -> Result<()> {
-        fs::create_dir_all(&self.cache_dir)
-            .context("Creating cache directory")?;
+        fs::create_dir_all(&self.cache_dir).context("Creating cache directory")?;
         Ok(())
     }
 }

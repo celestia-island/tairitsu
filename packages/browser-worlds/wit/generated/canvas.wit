@@ -10,6 +10,28 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:canvas@0.2.0;
 
+/// Common DOM rectangle type used by multiple interfaces
+
+interface types {
+
+    /// DOMRect values - x, y, width, height
+
+    record dom-rect {
+
+        x: f64,
+
+        y: f64,
+
+        width: f64,
+
+        height: f64,
+
+    }
+
+}
+
+
+
 /// WebIDL interface: `AudioDecoder`
 /// Inherits: `EventTarget`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/webcodecs.idl
@@ -243,6 +265,9 @@ interface audio-data {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/webcodecs.idl
 interface video-frame {
     /// Opaque handle to a host-side `VideoFrame` instance.
+
+    use types.{dom-rect};
+
     type video-frame-handle = u64;
 
     /// `format` attribute — getter.

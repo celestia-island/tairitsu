@@ -18,8 +18,8 @@ use {
         routing::get,
         Router,
     },
-    tower_http::services::ServeDir,
     tairitsu_ssr::{render_full_page, SsrConfig},
+    tower_http::services::ServeDir,
 };
 
 pub mod prerender;
@@ -122,10 +122,7 @@ pub async fn ssr_dev_server(
     let last_build_line = format_last_build_line(true, initial_elapsed, None);
 
     let port_switched = if actual_port != port {
-        Some(format!(
-            "Port switched: {} -> {}",
-            port, actual_port
-        ))
+        Some(format!("Port switched: {} -> {}", port, actual_port))
     } else {
         None
     };
@@ -210,9 +207,7 @@ fn default_template(package_name: &str) -> String {
 
 /// Bind to the requested port, with fallback to next available port
 #[cfg(feature = "dev-server")]
-async fn bind_listener_with_fallback(
-    port: u16,
-) -> Result<(tokio::net::TcpListener, u16)> {
+async fn bind_listener_with_fallback(port: u16) -> Result<(tokio::net::TcpListener, u16)> {
     use tokio::net::TcpListener;
 
     let try_port = port;
@@ -232,7 +227,10 @@ async fn bind_listener_with_fallback(
 async fn no_cache_headers(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
     let headers = response.headers_mut();
-    headers.insert("Cache-Control", "no-cache, no-store, must-revalidate".parse().unwrap());
+    headers.insert(
+        "Cache-Control",
+        "no-cache, no-store, must-revalidate".parse().unwrap(),
+    );
     headers.insert("Pragma", "no-cache".parse().unwrap());
     headers.insert("Expires", "0".parse().unwrap());
     response
@@ -246,7 +244,11 @@ fn panel_divider() -> String {
 
 /// Format the last build line
 #[cfg(feature = "dev-server")]
-fn format_last_build_line(success: bool, elapsed: std::time::Duration, error: Option<&str>) -> String {
+fn format_last_build_line(
+    success: bool,
+    elapsed: std::time::Duration,
+    error: Option<&str>,
+) -> String {
     if success {
         format!("Built in {:.2}s", elapsed.as_secs_f64())
     } else {
@@ -256,7 +258,12 @@ fn format_last_build_line(success: bool, elapsed: std::time::Duration, error: Op
 
 /// Print the status panel
 #[cfg(feature = "dev-server")]
-fn print_status_panel(port: u16, dist_dir: &PathBuf, build_line: Option<&str>, port_note: Option<&str>) {
+fn print_status_panel(
+    port: u16,
+    dist_dir: &std::path::Path,
+    build_line: Option<&str>,
+    port_note: Option<&str>,
+) {
     println!("  Server:");
     println!("    Local:  http://localhost:{}", port);
     if let Some(note) = port_note {
@@ -280,8 +287,8 @@ pub fn prerender_routes(
 ) -> crate::Result<()> {
     #[cfg(feature = "ssr")]
     {
-        use tairitsu_ssr::{render_full_page, SsrConfig};
         use std::fs;
+        use tairitsu_ssr::{render_full_page, SsrConfig};
 
         info!("Pre-rendering {} routes...", routes.len());
 
@@ -316,11 +323,13 @@ pub fn prerender_routes(
         for route in routes {
             info!("  Rendering /{}...", route);
 
-            let html = render_full_page(&wasm_bytes, ssr_config.clone(), &template)
-                .map_err(|e| crate::TairitsuPackagerError::BuildError(format!(
-                    "Failed to render route '{}': {}",
-                    route, e
-                )))?;
+            let html =
+                render_full_page(&wasm_bytes, ssr_config.clone(), &template).map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to render route '{}': {}",
+                        route, e
+                    ))
+                })?;
 
             // Determine output path
             let output_path = if route.is_empty() {
@@ -335,7 +344,10 @@ pub fn prerender_routes(
             info!("    -> {}", output_path.display());
         }
 
-        info!("Pre-rendering complete! Output in: {}", output_dir.display());
+        info!(
+            "Pre-rendering complete! Output in: {}",
+            output_dir.display()
+        );
         Ok(())
     }
 

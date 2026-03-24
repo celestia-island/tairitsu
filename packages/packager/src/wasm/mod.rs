@@ -447,7 +447,7 @@ fn rewrite_wrapper_imports_to_esm(output_dir: &std::path::Path) -> crate::Result
 }
 
 fn write_component_wrapper_loader(
-    config: &Config,
+    _config: &Config,
     component_wasm_path: &std::path::Path,
     output_dir: &std::path::Path,
 ) -> crate::Result<()> {
@@ -472,7 +472,7 @@ fn write_component_wrapper_loader(
 }
 
 fn try_generate_component_wrapper(
-    config: &Config,
+    _config: &Config,
     component_wasm_path: &std::path::Path,
     output_dir: &std::path::Path,
     pb: &ProgressBar,
@@ -923,14 +923,13 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         let dist = dist_for_spa.clone();
         let pkg = spa_pkg_name.clone();
         async move {
-            let content =
-                std::fs::read_to_string(dist.join("index.html")).unwrap_or_else(|_| {
-                    format!(
-                        "<!DOCTYPE html><html><head><title>{}</title></head>\
+            let content = std::fs::read_to_string(dist.join("index.html")).unwrap_or_else(|_| {
+                format!(
+                    "<!DOCTYPE html><html><head><title>{}</title></head>\
                          <body><div id=\"app\">Loading…</div></body></html>",
-                        pkg
-                    )
-                });
+                    pkg
+                )
+            });
             Html(content)
         }
     }));

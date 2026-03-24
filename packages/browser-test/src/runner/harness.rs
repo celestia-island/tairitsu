@@ -59,16 +59,21 @@ impl TestHarness {
 
     /// Start the browser
     pub async fn start(&mut self) -> Result<()> {
-        info!("Starting Chromium browser at {:?}", self.config.chromium_path);
+        info!(
+            "Starting Chromium browser at {:?}",
+            self.config.chromium_path
+        );
 
-        let mut browser_config = BrowserConfig::builder()
-            .chrome_executable(self.config.chromium_path.clone());
+        let mut browser_config =
+            BrowserConfig::builder().chrome_executable(self.config.chromium_path.clone());
 
         if self.config.headless {
             browser_config = browser_config.no_sandbox();
         }
 
-        let config = browser_config.build().map_err(|e| anyhow::anyhow!("Browser config error: {}", e))?;
+        let config = browser_config
+            .build()
+            .map_err(|e| anyhow::anyhow!("Browser config error: {}", e))?;
 
         let (browser, mut handler) = Browser::launch(config)
             .await
@@ -88,13 +93,17 @@ impl TestHarness {
 
     /// Run all browser-glue tests
     pub async fn run_tests(&self) -> Result<TestReport> {
-        let browser = self.browser.as_ref()
+        let browser = self
+            .browser
+            .as_ref()
             .context("Browser not started. Call start() first.")?;
 
         let mut report = TestReport::new();
 
         // Create a new page
-        let page = browser.new_page("about:blank").await
+        let page = browser
+            .new_page("about:blank")
+            .await
             .context("Failed to create new page")?;
 
         info!("Running browser-glue tests...");
@@ -150,7 +159,7 @@ impl TestHarness {
             Some(filter) => {
                 // Simple wildcard matching
                 if filter.ends_with('*') {
-                    let prefix = &filter[..filter.len()-1];
+                    let prefix = &filter[..filter.len() - 1];
                     test_name.starts_with(prefix)
                 } else {
                     test_name == filter
@@ -368,7 +377,10 @@ impl TestHarness {
                 if eval_as_bool(result) {
                     TestResult::passed(test_name)
                 } else {
-                    TestResult::failed(test_name, "Event latency exceeded 16ms threshold".to_string())
+                    TestResult::failed(
+                        test_name,
+                        "Event latency exceeded 16ms threshold".to_string(),
+                    )
                 }
             }
             Err(e) => TestResult::failed(test_name, format!("Script execution failed: {}", e)),
@@ -413,7 +425,10 @@ impl TestHarness {
                 if eval_as_bool(result) {
                     TestResult::passed(test_name)
                 } else {
-                    TestResult::failed(test_name, "High-frequency event handling failed".to_string())
+                    TestResult::failed(
+                        test_name,
+                        "High-frequency event handling failed".to_string(),
+                    )
                 }
             }
             Err(e) => TestResult::failed(test_name, format!("Script execution failed: {}", e)),

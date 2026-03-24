@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-use crate::browser::{BrowserCache, BrowserDownloader, detect_platform};
+use crate::browser::{detect_platform, BrowserCache, BrowserDownloader};
 use crate::runner::{TestHarness, TestHarnessConfig};
 
 /// Tairitsu Browser Test CLI

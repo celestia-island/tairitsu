@@ -133,7 +133,10 @@ impl ResourceIndexer {
         for file in svg_files {
             match self.process_svg_file(&file) {
                 Ok(resource) => {
-                    debug!("Found SVG: {} -> {} ({})", resource.source, resource.hash, resource.id);
+                    debug!(
+                        "Found SVG: {} -> {} ({})",
+                        resource.source, resource.hash, resource.id
+                    );
                     index.svg.push(resource);
                 }
                 Err(e) => {
@@ -205,7 +208,8 @@ impl ResourceIndexer {
         let source = path_relative_to(&self.root, path)?;
 
         // Generate output filename with hash
-        let stem = path.file_stem()
+        let stem = path
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("styles");
         let output = format!("{}.{}.css", stem, hash);
@@ -224,16 +228,13 @@ impl ResourceIndexer {
         let source = path_relative_to(&self.root, path)?;
 
         // Extract ID from filename (without extension)
-        let id = path.file_stem()
+        let id = path
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
 
-        Ok(SvgResource {
-            source,
-            hash,
-            id,
-        })
+        Ok(SvgResource { source, hash, id })
     }
 
     /// Index resources and save to target directory
@@ -249,18 +250,18 @@ pub fn compute_hash(content: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(content);
     let result = hasher.finalize();
-    format!("{:x}", result)
-        .chars()
-        .take(8)
-        .collect()
+    format!("{:x}", result).chars().take(8).collect()
 }
 
 /// Get relative path from root to target
 fn path_relative_to(root: &Path, target: &Path) -> crate::Result<String> {
-    let relative = target.strip_prefix(root)
-        .map_err(|_| crate::TairitsuPackagerError::ResourceError(
-            format!("Path {} is not relative to {}", target.display(), root.display())
-        ))?;
+    let relative = target.strip_prefix(root).map_err(|_| {
+        crate::TairitsuPackagerError::ResourceError(format!(
+            "Path {} is not relative to {}",
+            target.display(),
+            root.display()
+        ))
+    })?;
     Ok(relative.to_string_lossy().to_string())
 }
 
