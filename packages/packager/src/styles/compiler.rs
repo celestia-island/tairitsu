@@ -91,7 +91,8 @@ mod tests {
 
     #[test]
     fn test_compile_nested_scss() {
-        let opts = ScssCompiler::new().grass_options();
+        let compiler = ScssCompiler::new();
+        let opts = compiler.grass_options();
         let css = grass::from_string(
             ".button { padding: 8px; &:hover { opacity: 0.8; } }".to_owned(),
             &opts,
@@ -103,12 +104,9 @@ mod tests {
 
     #[test]
     fn test_minification() {
-        let opts = ScssCompiler::new().grass_options();
-        let css = grass::from_string(
-            ".test { color: red; margin: 0; }".to_owned(),
-            &opts,
-        )
-        .unwrap();
+        let compiler = ScssCompiler::new();
+        let opts = compiler.grass_options();
+        let css = grass::from_string(".test { color: red; margin: 0; }".to_owned(), &opts).unwrap();
         assert!(!css.contains('\n') || css.trim().lines().count() == 1);
         assert!(css.contains(".test{color:red;margin:0"), "CSS was: {}", css);
     }
