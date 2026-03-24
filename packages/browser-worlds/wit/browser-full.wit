@@ -11843,7 +11843,7 @@ interface resize-observer-entry {
     /// `target` attribute — getter.
     get-target: func(self: resize-observer-entry-handle) -> u64;
 
-    /// `contentRect` attribute — getter.
+    /// `contentRect` attribute — getter. Returns dom-rect record directly.
     get-content-rect: func(self: resize-observer-entry-handle) -> dom-rect;
 
     /// `borderBoxSize` attribute — getter.
