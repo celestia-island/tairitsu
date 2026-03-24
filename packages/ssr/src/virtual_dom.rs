@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 
 /// Server-side DOM node
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SsrNode {
     pub handle: u64,
     pub kind: SsrNodeKind,
@@ -18,7 +18,7 @@ pub struct SsrNode {
 }
 
 /// Node kind - either an element or text node
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SsrNodeKind {
     Element {
         tag: String,

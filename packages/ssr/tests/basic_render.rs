@@ -6,7 +6,7 @@
 //! - Build nested structures
 //! - Serialize to correct HTML
 
-use tairitsu_ssr::{SsrConfig, SsrDom, SsrNode, SsrNodeKind};
+use tairitsu_ssr::{SsrConfig, SsrDom};
 
 #[test]
 fn test_dom_creation() {
@@ -148,7 +148,7 @@ fn test_query_selector_id() {
 #[test]
 fn test_query_selector_tag() {
     let mut dom = SsrDom::new();
-    let div = dom.create_element("div", None);
+    let _div = dom.create_element("div", None);
 
     // Tag selector should find first matching element
     let result = dom.query_selector("div");

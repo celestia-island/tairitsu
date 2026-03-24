@@ -243,5 +243,6 @@ fn register_video_encoder_stubs(linker: &mut Linker<SsrHostState>) -> Result<()>
     Ok(())
 }
 
-// Include auto-generated stub implementations
-include!(concat!(env!("OUT_DIR"), "/ssr_stubs_gen.rs"));
+// Note: Additional stub implementations can be auto-generated from the WIT file
+// using the build.rs script. For now, we include manual stubs for the most
+// common browser-only interfaces.

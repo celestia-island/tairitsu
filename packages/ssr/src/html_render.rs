@@ -143,7 +143,8 @@ mod tests {
     fn test_html_escape() {
         let mut buf = String::new();
         html_escape_into(&mut buf, "Hello <world> & \"friends\"");
-        assert_eq!(buf, "Hello &lt;world&gt; &amp; &quot;friends&quot;");
+        // Quotes don't need to be escaped in text content, only in attributes
+        assert_eq!(buf, "Hello &lt;world&gt; &amp; \"friends\"");
     }
 
     #[test]
