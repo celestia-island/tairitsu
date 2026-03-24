@@ -296,6 +296,7 @@ async fn ssr_handler(
 ```
 
 每次请求时：
+
 1. 加载最新的 `.wasm` 文件
 2. 在 wasmtime 中执行组件
 3. 提取渲染结果注入 HTML 模板
@@ -341,6 +342,7 @@ pub fn mount_vnode_to_app(&self, vnode: &VNode) -> Result<()> {
 ```
 
 Hydration 的核心逻辑：
+
 - 遍历 VNode 树和已有 DOM 的子节点
 - 对每个节点进行匹配（标签名、文本内容）
 - 匹配成功：复用现有 DOM 节点，仅挂载事件监听器
@@ -613,10 +615,12 @@ tairitsu build --ssr --routes /,/docs,/about
 ### ✅ 已完成
 
 #### Phase 0 — 基础设施准备
+
 - ✅ 创建 `packages/ssr` crate 并配置 Cargo.toml
 - ✅ 集成 wasmtime component-model、WASI 支持
 
 #### Phase 1 — 内存虚拟 DOM 宿主
+
 - ✅ 实现 `SsrDom` 数据结构 (`packages/ssr/src/virtual_dom.rs`)
   - SsrNode 类型表示元素和文本节点
   - Handle-based 节点管理（无生命周期开销）
@@ -625,6 +629,7 @@ tairitsu build --ssr --routes /,/docs,/about
   - 树遍历递归渲染
   - 正确处理 void 元素、HTML 转义、属性编码
 - ✅ 核心 WIT 接口实现 (`packages/ssr/src/linker.rs`)
+
   | 接口 | 函数数 | 状态 |
   |------|--------|------|
   | document | 6 | ✅ 完成 (create-element, create-text-node, get-body, get-head, get-element-by-id, query-selector) |
@@ -637,6 +642,7 @@ tairitsu build --ssr --routes /,/docs,/about
   | event-target | 4 | ✅ 完成 (add/remove-event-listener, prevent-default, stop-propagation) |
 
 #### Phase 2 — Stub 层
+
 - ✅ Stub 层基础设施 (`packages/ssr/src/stubs.rs`)
   - ~400+ 个浏览器专有接口的 no-op stub 实现
   - 错误消息指导开发者使用 `use_effect()`
@@ -645,6 +651,7 @@ tairitsu build --ssr --routes /,/docs,/about
   - 最小 stub 生成
 
 #### Phase 3 — SSR 容器集成
+
 - ✅ `render_to_html()` 公开 API (`packages/ssr/src/lib.rs`)
   - Wasmtime Engine 和 Component 初始化
   - Store 和 State 管理
@@ -653,6 +660,7 @@ tairitsu build --ssr --routes /,/docs,/about
 - ✅ 生命周期处理框架 (call_lifecycle_start 函数)
 
 #### 测试和验证
+
 - ✅ 59 个单元测试全部通过
   - 23 个基础渲染测试 (DOM 创建、属性、嵌套、HTML 序列化)
   - 20 个 Stub 错误处理测试 (边界情况、性能)
@@ -664,14 +672,17 @@ tairitsu build --ssr --routes /,/docs,/about
 ### 📋 待处理（后续可选）
 
 #### Phase 2 — Stub 层（可选优化）
+
 - WIT 文件动态解析和代码生成（目前使用最小 stub）
 - 更详细的错误消息（包含接口/函数名称）
 
 #### Phase 4 — Packager 集成
+
 - SSR 开发服务器集成 (`tairitsu dev --ssr`)
 - 静态预渲染 (`tairitsu build --ssr`)
 
 #### Phase 5 — 客户端 Hydration
+
 - 客户端 WASM 与 SSR HTML 的 hydration 机制
 - Hydration 验证和回退处理
 

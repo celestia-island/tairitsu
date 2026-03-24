@@ -10,22 +10,23 @@ use std::path::Path;
 
 fn main() {
     // Only regenerate if the WIT file changes
-    println!("cargo:rerun-if-changed=../../browser-worlds/wit/browser-full.wit");
+    println!("cargo:rerun-if-changed=../../packages/browser-worlds/wit/browser-full.wit");
 
     // Read the WIT file to extract interface names and functions
-    let wit_path = "../../browser-worlds/wit/browser-full.wit";
+    let wit_path = "../../packages/browser-worlds/wit/browser-full.wit";
     let wit_content = match std::fs::read_to_string(wit_path) {
         Ok(content) => content,
         Err(e) => {
             eprintln!("Warning: Could not read WIT file: {}", e);
             eprintln!("SSR stubs will not be generated, using minimal stubs");
-            
+
             // Generate a minimal stub file anyway
             let out_dir = std::env::var("OUT_DIR").unwrap();
             let generated_path = Path::new(&out_dir).join("ssr_stubs_gen.rs");
             let mut file = File::create(&generated_path).expect("Failed to create generated file");
             let minimal_code = "// Minimal SSR stubs (WIT file not found)\n".to_string();
-            file.write_all(minimal_code.as_bytes()).expect("Failed to write generated code");
+            file.write_all(minimal_code.as_bytes())
+                .expect("Failed to write generated code");
             println!("cargo:warning=Generated minimal stub implementations (WIT file not found)");
             return;
         }
@@ -42,6 +43,19 @@ fn main() {
         "element",
         "window",
         "types",
+        // Credential management interfaces (manually implemented in stubs.rs)
+        "credential",
+        "credentials-container",
+        "credential-user-data",
+        "federated-credential",
+        "password-credential",
+        // History interface (manually implemented in stubs.rs)
+        "history",
+        // Media decoder/encoder interfaces (manually implemented in stubs.rs)
+        "audio-decoder",
+        "audio-encoder",
+        "video-decoder",
+        "video-encoder",
         // Callback interfaces (implemented by the component, not the host)
         "timer-callbacks",
         "animation-callbacks",
@@ -66,7 +80,10 @@ fn main() {
     file.write_all(generated_code.as_bytes())
         .expect("Failed to write generated code");
 
-    println!("cargo:warning=Generated {} stub interfaces", interfaces.len());
+    println!(
+        "cargo:warning=Generated {} stub interfaces",
+        interfaces.len()
+    );
 }
 
 /// Represents a function signature in a WIT interface
@@ -165,7 +182,10 @@ fn parse_function(line: &str) -> Option<WitFunction> {
     let params = if params_part.trim() == "()" {
         Vec::new()
     } else {
-        let inner = params_part.trim().trim_start_matches('(').trim_end_matches(')');
+        let inner = params_part
+            .trim()
+            .trim_start_matches('(')
+            .trim_end_matches(')');
         inner
             .split(',')
             .filter_map(|p| {
@@ -226,12 +246,21 @@ fn generate_interface_registration(interface: &WitInterface) -> String {
 
     if interface.functions.is_empty() {
         // Empty interface - just return Ok
-        code.push_str(&format!("fn register_{}_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {{\n", fn_name));
+        code.push_str(&format!(
+            "fn register_{}_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {{\n",
+            fn_name
+        ));
         code.push_str("    Ok(())\n");
         code.push_str("}\n\n");
     } else {
-        code.push_str(&format!("fn register_{}_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {{\n", fn_name));
-        code.push_str(&format!("    let mut instance = linker.instance(\"tairitsu-browser:full/{}@0.2.0\")?;\n", wit_name));
+        code.push_str(&format!(
+            "fn register_{}_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {{\n",
+            fn_name
+        ));
+        code.push_str(&format!(
+            "    let mut instance = linker.instance(\"tairitsu-browser:full/{}@0.2.0\")?;\n",
+            wit_name
+        ));
 
         for func in &interface.functions {
             code.push_str(&generate_function_stub(func, wit_name));
@@ -251,7 +280,9 @@ fn generate_function_stub(func: &WitFunction, _interface_name: &str) -> String {
     let func_name = &func.name;
 
     // Generate parameter names
-    let param_names: Vec<String> = func.params.iter()
+    let param_names: Vec<String> = func
+        .params
+        .iter()
         .enumerate()
         .map(|(i, (name, _))| {
             if name == "_" || name.is_empty() {
@@ -289,10 +320,7 @@ fn generate_function_stub(func: &WitFunction, _interface_name: &str) -> String {
           {}\n\
           }},\n\
           )?;\n",
-        func_name,
-        params_tuple,
-        return_type,
-        return_stmt
+        func_name, params_tuple, return_type, return_stmt
     ));
 
     code
@@ -303,8 +331,11 @@ fn map_wit_return_type_to_rust(wit_type: &str) -> String {
     match wit_type {
         "" => "()".to_string(),
         t if t.starts_with("result<") => {
-            let inner = t.strip_prefix("result<").unwrap_or(t)
-                .strip_suffix(">").unwrap_or(t);
+            let inner = t
+                .strip_prefix("result<")
+                .unwrap_or(t)
+                .strip_suffix(">")
+                .unwrap_or(t);
             if inner == "_" {
                 "Result<(), String>".to_string()
             } else {
@@ -312,8 +343,11 @@ fn map_wit_return_type_to_rust(wit_type: &str) -> String {
             }
         }
         t if t.starts_with("option<") => {
-            let inner = t.strip_prefix("option<").unwrap_or(t)
-                .strip_suffix(">").unwrap_or(t);
+            let inner = t
+                .strip_prefix("option<")
+                .unwrap_or(t)
+                .strip_suffix(">")
+                .unwrap_or(t);
             format!("Option<{}>", map_wit_type_to_rust(inner))
         }
         t => map_wit_type_to_rust(t),
@@ -324,8 +358,9 @@ fn map_wit_return_type_to_rust(wit_type: &str) -> String {
 fn map_wit_type_to_rust(wit_type: &str) -> String {
     // Handle tuple types like "(f64, f64, f64, f64)"
     if wit_type.starts_with('(') && wit_type.ends_with(')') {
-        let inner = &wit_type[1..wit_type.len()-1];
-        let types: Vec<String> = inner.split(',')
+        let inner = &wit_type[1..wit_type.len() - 1];
+        let types: Vec<String> = inner
+            .split(',')
             .map(|t| map_wit_type_to_rust(t.trim()))
             .collect();
         return format!("({})", types.join(", "));
@@ -347,8 +382,11 @@ fn map_wit_type_to_rust(wit_type: &str) -> String {
         "char" => "char".to_string(),
         "_" => "()".to_string(),
         t if t.starts_with("list<") => {
-            let inner = t.strip_prefix("list<").unwrap_or(t)
-                .strip_suffix(">").unwrap_or(t);
+            let inner = t
+                .strip_prefix("list<")
+                .unwrap_or(t)
+                .strip_suffix(">")
+                .unwrap_or(t);
             format!("Vec<{}>", map_wit_type_to_rust(inner))
         }
         t => t.to_string(), // Pass through unknown types (e.g., custom types)
@@ -366,8 +404,11 @@ fn get_stub_return_value(wit_type: &str) -> String {
         return "((None,))".to_string();
     }
 
-    let inner = wit_type.strip_prefix("result<").unwrap_or(wit_type)
-        .strip_suffix(">").unwrap_or(wit_type);
+    let inner = wit_type
+        .strip_prefix("result<")
+        .unwrap_or(wit_type)
+        .strip_suffix(">")
+        .unwrap_or(wit_type);
 
     match inner {
         "bool" => "Ok((false,))".to_string(),
@@ -380,8 +421,9 @@ fn get_stub_return_value(wit_type: &str) -> String {
         t if t.starts_with("list<") => "Ok((Vec::new(),))".to_string(),
         t if t.starts_with('(') && t.ends_with(')') => {
             // Handle tuples
-            let inner = &t[1..t.len()-1];
-            let defaults: Vec<String> = inner.split(',')
+            let inner = &t[1..t.len() - 1];
+            let defaults: Vec<String> = inner
+                .split(',')
                 .map(|typ| get_default_value(typ.trim()))
                 .collect();
             format!("Ok((({},)))", defaults.join(", "))
