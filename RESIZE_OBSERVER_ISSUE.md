@@ -43,33 +43,32 @@ The issue persists despite all rebuild attempts. The error message "expected `u6
 - The WIT file has been updated to define `dom-rect` as a record type
 - Wasmtime is enforcing type safety and rejecting the mismatch
 
-## Latest Update (2026-03-24 20:01)
+## Latest Update (2026-03-24 22:30)
 
-Successfully rebuilt the hikari website WASM component with a clean build:
-- Previous WASM file: 8.5MB (old build with stale WIT bindings)
-- New WASM file: 425KB (fresh build with updated dependencies)
-- Error persists: "expected `u64` found `record`"
+**NEW FINDING**: Error message has changed from "expected `u64` found `record`" to "expected 4-tuple, found 1-tuple". This indicates that:
 
-This confirms that the issue is **NOT** a build caching problem, but a fundamental type mismatch between:
-1. The WIT file definition (expects `dom-rect` record)
-2. The WASM component's WIT bindings (expect `u64`)
+1. The WASM component NOW correctly expects a 4-tuple (matching the flattened `dom-rect` record)
+2. But wasmtime's `func_wrap` is interpreting `Result<(f64, f64, f64, f64)>` as a 1-tuple
 
-## Root Cause
+**Root Cause Identified**:
+- WIT record types are flattened to tuples in the canonical ABI
+- So `dom-rect` (record with 4 f64 fields) becomes `(f64, f64, f64, f64)` in the ABI
+- However, wasmtime's `func_wrap` API wraps the return value in a Result
+- The Result type is being interpreted as a 1-tuple, hiding the 4-tuple inside
 
-The issue appears to be that the `wit-bindgen` macro is generating bindings based on an **old version of the WIT file** or there's a mismatch in how the record types are being interpreted.
+**Attempted Workarounds**:
+1. Nested tuple: `Result<((f64, f64, f64, f64),), wasmtime::Error>` → Error: "expected tuple found record"
+2. Direct tuple: Removed Result wrapper → Compilation error (func_wrap requires Result)
+3. Changed WIT to return tuple instead of record → Same "expected 4-tuple, found 1-tuple" error
 
-The fact that the error says "expected `u64` found `record`" suggests that the WASM component's bindings were generated when `get-content-rect` returned `u64`, but the WIT file has been updated to return `dom-rect` record.
+**Current Understanding**:
+The issue is a fundamental limitation in how wasmtime's `func_wrap` API handles multiple return values from WIT record types. The API appears to interpret the Result type as a 1-tuple, preventing the correct marshalling of multi-value returns.
 
-## Current Status
-
-**BLOCKED**: The SSR test cannot proceed until this fundamental type mismatch is resolved. The issue requires:
-1. Deep investigation of how `wit-bindgen` generates bindings from WIT files
-2. Verification that the WIT file changes are being picked up by `wit-bindgen`
-3. Potential refactoring of how record types are handled in the host implementation
-
-## Workaround Attempted
-
-Tried changing the host implementation to return `u64` to match the WASM component's expectations, but this resulted in error "expected `u64` found `record`", confirming that wasmtime is enforcing the WIT file's type definition over the host implementation.
+**Next Steps Required**:
+1. Investigate wasmtime source code for `func_wrap` implementation
+2. Look for alternative APIs (e.g., `func_wrap_raw`, `func_wrap_async`) that might handle tuples correctly
+3. Consider using wasmtime's lower-level APIs to manually handle the type marshalling
+4. Or temporarily stub out `resize-observer-entry` to unblock other SSR testing
 
 ## Workaround
 
