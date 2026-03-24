@@ -64,19 +64,31 @@
 
 ---
 
-### P2 — 完善 HTML 渲染质量
+### P2 — 完善 HTML 渲染质量 ✅ 已完成
 
-**场景**：`render_body_html()` 当前只输出 `<body>` 子树。完整 SSR 页面需要：
+**实现内容**：
 
-- `<!DOCTYPE html>` 声明
-- `<head>` 内的 `<title>`、`<meta charset>`、`<meta name="viewport">`、CSS `<link>` 标签
-- 正确的 `<html lang="...">` 属性
+- ✅ 添加了 `FullDocumentConfig` 结构体，包含 lang、charset、viewport、title、css_links 字段
+- ✅ 实现了 `render_full_document_html()` 方法，生成完整的 HTML 文档
+- ✅ 支持 `<!DOCTYPE html>` 声明
+- ✅ 支持 `<html lang="...">` 属性
+- ✅ 支持 `<head>` 内的 `<title>`、`<meta charset>`、`<meta name="viewport">`、CSS `<link>` 标签
+- ✅ 添加了 `serde` 依赖用于配置序列化
 
-**实现思路**：
+**API 示例**：
+```rust
+use tairitsu_ssr::{SsrDom, FullDocumentConfig};
 
-1. 在 `html_render.rs` 中新增 `render_full_document_html(&self, config: &FullPageConfig) -> String`
-2. `render_full_page()` 改为填充真实 `<head>` 内容，而非只做字符串替换 `<div id="app">`
-3. CSS 链接列表由调用方（packager）传入 `SsrConfig`
+let config = FullDocumentConfig {
+    lang: "zh-CN".to_string(),
+    charset: "UTF-8".to_string(),
+    viewport_content: "width=device-width, initial-scale=1.0".to_string(),
+    title: "我的网站".to_string(),
+    css_links: vec!["/styles/main.css".to_string()],
+};
+
+let html = dom.render_full_document_html(&config);
+```
 
 ---
 
