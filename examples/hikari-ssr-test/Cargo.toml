@@ -1,0 +1,14 @@
+[package]
+name = "hikari-ssr-test"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "hikari-ssr-test"
+path = "src/main.rs"
+
+[dependencies]
+tairitsu-ssr = { path = "../../packages/ssr" }
+anyhow = "1"
+tracing-subscriber = "0.3"
