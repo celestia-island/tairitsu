@@ -18,10 +18,7 @@ use wasmtime::component::Linker;
 pub fn register_all_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     // Register stub implementations for interfaces that aren't manually implemented
     // This is a simplified version that handles common interfaces
-
-    // Animation and timing interfaces
-    register_animation_stubs(linker)?;
-    register_animation_event_stubs(linker)?;
+    // More interfaces can be added as needed
 
     // Credential management
     register_credential_stubs(linker)?;
@@ -30,14 +27,8 @@ pub fn register_all_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     register_federated_credential_stubs(linker)?;
     register_password_credential_stubs(linker)?;
 
-    // Crypto interfaces
-    register_crypto_stubs(linker)?;
-    register_crypto_key_stubs(linker)?;
-    register_subtle_crypto_stubs(linker)?;
-
     // History and navigation
     register_history_stubs(linker)?;
-    register_location_stubs(linker)?;
 
     // Media interfaces
     register_audio_decoder_stubs(linker)?;
@@ -45,30 +36,12 @@ pub fn register_all_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     register_video_decoder_stubs(linker)?;
     register_video_encoder_stubs(linker)?;
 
-    // Storage
-    register_storage_stubs(linker)?;
-    register_storage_event_stubs(linker)?;
-
     Ok(())
 }
 
 // ============================================================================
 // Stub registration functions for individual interfaces
 // ============================================================================
-
-fn stub_error(interface: &str, function: &str) -> String {
-    format!("{}.{} is not available in SSR. Use use_effect() for browser-only operations.", interface, function)
-}
-
-fn register_animation_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // Animation interface has no functions in the WIT file
-    Ok(())
-}
-
-fn register_animation_event_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // AnimationEvent interface has no functions in the WIT file
-    Ok(())
-}
 
 fn register_credential_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     let mut instance = linker.instance("tairitsu-browser:full/credential@0.2.0")?;
@@ -167,21 +140,6 @@ fn register_password_credential_stubs(linker: &mut Linker<SsrHostState>) -> Resu
     Ok(())
 }
 
-fn register_crypto_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // Crypto interface has no functions in the WIT file
-    Ok(())
-}
-
-fn register_crypto_key_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // CryptoKey interface has no functions in the WIT file
-    Ok(())
-}
-
-fn register_subtle_crypto_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // SubtleCrypto interface has no functions in the WIT file
-    Ok(())
-}
-
 fn register_history_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     let mut instance = linker.instance("tairitsu-browser:full/history@0.2.0")?;
     instance.func_wrap(
@@ -241,11 +199,6 @@ fn register_history_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     Ok(())
 }
 
-fn register_location_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // Location interface has no functions in the WIT file
-    Ok(())
-}
-
 fn register_audio_decoder_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {
     let mut instance = linker.instance("tairitsu-browser:full/audio-decoder@0.2.0")?;
     instance.func_wrap(
@@ -287,15 +240,5 @@ fn register_video_encoder_stubs(linker: &mut Linker<SsrHostState>) -> Result<()>
             Ok((0,))
         },
     )?;
-    Ok(())
-}
-
-fn register_storage_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // Storage interface has no functions in the WIT file
-    Ok(())
-}
-
-fn register_storage_event_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // StorageEvent interface has no functions in the WIT file
     Ok(())
 }
