@@ -94,6 +94,77 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
+    node.func_wrap(
+        "remove-child",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (parent, child): (u64, u64)|
+         -> Result<(Result<u64, String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            match state.dom.remove_child(parent, child) {
+                Ok(()) => Ok((Ok(child),)),
+                Err(e) => Ok((Err(e),)),
+            }
+        },
+    )?;
+
+    node.func_wrap(
+        "set-attribute",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (handle, name, value): (u64, String, String)|
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            if let Some(node) = state.dom.get_node_mut(handle) {
+                node.set_attribute(&name, &value);
+                return Ok((Ok(()),));
+            }
+            Ok((Err("Node not found".to_string()),))
+        },
+    )?;
+
+    node.func_wrap(
+        "get-attribute",
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>, (handle, name): (u64, String)|
+         -> Result<(Option<String>,), wasmtime::Error> {
+            let dom = &caller.data().dom;
+            let value = dom.get_node(handle)
+                .and_then(|n| n.get_attribute(&name).map(|s| s.to_string()));
+            Ok((value,))
+        },
+    )?;
+
+    node.func_wrap(
+        "remove-attribute",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (handle, name): (u64, String)|
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            if let Some(node) = state.dom.get_node_mut(handle) {
+                node.remove_attribute(&name);
+                return Ok((Ok(()),));
+            }
+            Ok((Err("Node not found".to_string()),))
+        },
+    )?;
+
+    node.func_wrap(
+        "set-text-content",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (handle, text): (u64, String)|
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            match state.dom.set_text_content(handle, &text) {
+                Ok(()) => Ok((Ok(()),)),
+                Err(e) => Ok((Err(e),)),
+            }
+        },
+    )?;
+
+    node.func_wrap(
+        "get-text-content",
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>, (handle,): (u64,)|
+         -> Result<(Option<String>,), wasmtime::Error> {
+            let dom = &caller.data().dom;
+            let text = dom.get_text_content(handle);
+            Ok((text,))
+        },
+    )?;
+
     // Element interface
     let mut element = linker.instance("tairitsu-browser:full/element@0.2.0")?;
     element.func_wrap(
@@ -120,6 +191,19 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
+    element.func_wrap(
+        "remove-attribute",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (self_handle, name): (u64, String)|
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            if let Some(node) = state.dom.get_node_mut(self_handle) {
+                node.remove_attribute(&name);
+                return Ok((Ok(()),));
+            }
+            Ok((Err("Element not found".to_string()),))
+        },
+    )?;
+
     // Style interface
     let mut style = linker.instance("tairitsu-browser:full/style@0.2.0")?;
     style.func_wrap(
@@ -129,6 +213,30 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             let state = caller.data_mut();
             if let Some(node) = state.dom.get_node_mut(element) {
                 node.set_style_property(&property, &value);
+                return Ok((Ok(()),));
+            }
+            Ok((Err("Element not found".to_string()),))
+        },
+    )?;
+
+    style.func_wrap(
+        "get-style-property",
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>, (element, property): (u64, String)|
+         -> Result<(Option<String>,), wasmtime::Error> {
+            let dom = &caller.data().dom;
+            let value = dom.get_node(element)
+                .and_then(|n| n.get_style_property(&property).map(|s| s.to_string()));
+            Ok((value,))
+        },
+    )?;
+
+    style.func_wrap(
+        "remove-style-property",
+        |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>, (element, property): (u64, String)|
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            let state = caller.data_mut();
+            if let Some(node) = state.dom.get_node_mut(element) {
+                node.remove_style_property(&property);
                 return Ok((Ok(()),));
             }
             Ok((Err("Element not found".to_string()),))
@@ -182,6 +290,62 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_element,): (u64,)|
          -> Result<(f64, f64, f64, f64), wasmtime::Error> {
             Ok((0.0, 0.0, 0.0, 0.0))
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "create-resize-observer",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_callback_id,): (u64,)|
+         -> Result<(u64,), wasmtime::Error> {
+            Ok((0,))
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "observe-resize",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_observer, _element): (u64, u64)|
+         -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "unobserve-resize",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_observer, _element): (u64, u64)|
+         -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "disconnect-resize",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_observer,): (u64,)|
+         -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "create-mutation-observer",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_callback_id,): (u64,)|
+         -> Result<(u64,), wasmtime::Error> {
+            Ok((0,))
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "observe-mutations",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_observer, _element, _options): (u64, u64, Option<u64>)|
+         -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    platform_helpers.func_wrap(
+        "disconnect-mutation",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (_observer,): (u64,)|
+         -> Result<(), wasmtime::Error> {
+            Ok(())
         },
     )?;
 

@@ -15,9 +15,9 @@ pub struct PrerenderConfig {
     /// Whether to include assets in the output
     pub include_assets: bool,
     /// Viewport width for SSR
-    pub viewport_width: u32,
+    pub viewport_width: i32,
     /// Viewport height for SSR
-    pub viewport_height: u32,
+    pub viewport_height: i32,
 }
 
 impl Default for PrerenderConfig {
@@ -48,7 +48,7 @@ impl PrerenderConfig {
     }
 
     /// Set viewport dimensions
-    pub fn with_viewport(mut self, width: u32, height: u32) -> Self {
+    pub fn with_viewport(mut self, width: i32, height: i32) -> Self {
         self.viewport_width = width;
         self.viewport_height = height;
         self
