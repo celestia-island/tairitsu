@@ -5,19 +5,7 @@
 //! - Stubs don't cause panics
 //! - Error messages are clear
 
-use tairitsu_ssr::{render_to_html, SsrConfig, SsrDom};
-use wasmtime::{Engine, component::Linker};
-use wasmtime_wasi::p2::add_to_linker_sync;
-
-/// Helper to create a minimal test WASM component
-///
-/// Returns a simple WASM component that just creates an element
-fn create_test_component() -> Vec<u8> {
-    // For now, we'll test the stub behavior through direct API calls
-    // A full WASM component test would require compiling a component
-    // which is complex for unit tests
-    Vec::new()
-}
+use tairitsu_ssr::SsrDom;
 
 #[test]
 fn test_dom_viewport_dimensions() {
@@ -40,9 +28,9 @@ fn test_stub_query_selector_complex() {
 
 #[test]
 fn test_get_nonexistent_node() {
-    let dom = SsrDom::new();
-    assert_eq!(dom.get_node(99999), None);
-    assert_eq!(dom.get_node_mut(99999), None);
+    let mut dom = SsrDom::new();
+    assert!(dom.get_node(99999).is_none());
+    assert!(dom.get_node_mut(99999).is_none());
 }
 
 #[test]
