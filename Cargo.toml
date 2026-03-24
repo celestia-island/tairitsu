@@ -19,6 +19,7 @@ members = [
     "examples/wit-native-simple",
     "examples/wit-native-macro",
     "examples/website",
+    "examples/hikari-ssr-test",
 ]
 resolver = "2"
 

@@ -112,12 +112,11 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         "append-child",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (parent, child): (u64, u64)|
-         -> Result<(Result<u64, String>,), wasmtime::Error> {
+         -> Result<(u64,), wasmtime::Error> {
             let state = caller.data_mut();
-            match state.dom.append_child(parent, child) {
-                Ok(()) => Ok((Ok(child),)),
-                Err(e) => Ok((Err(e),)),
-            }
+            state.dom.append_child(parent, child)
+                .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
+            Ok((child,))
         },
     )?;
 
@@ -125,12 +124,11 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         "remove-child",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (parent, child): (u64, u64)|
-         -> Result<(Result<u64, String>,), wasmtime::Error> {
+         -> Result<(u64,), wasmtime::Error> {
             let state = caller.data_mut();
-            match state.dom.remove_child(parent, child) {
-                Ok(()) => Ok((Ok(child),)),
-                Err(e) => Ok((Err(e),)),
-            }
+            state.dom.remove_child(parent, child)
+                .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
+            Ok((child,))
         },
     )?;
 
@@ -138,13 +136,12 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         "set-attribute",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (handle, name, value): (u64, String, String)|
-         -> Result<(Result<(), String>,), wasmtime::Error> {
+         -> Result<(), wasmtime::Error> {
             let state = caller.data_mut();
             if let Some(node) = state.dom.get_node_mut(handle) {
                 node.set_attribute(&name, &value);
-                return Ok((Ok(()),));
             }
-            Ok((Err("Node not found".to_string()),))
+            Ok(())
         },
     )?;
 
@@ -165,26 +162,27 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         "remove-attribute",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (handle, name): (u64, String)|
-         -> Result<(Result<(), String>,), wasmtime::Error> {
+         -> Result<(), wasmtime::Error> {
             let state = caller.data_mut();
             if let Some(node) = state.dom.get_node_mut(handle) {
                 node.remove_attribute(&name);
-                return Ok((Ok(()),));
             }
-            Ok((Err("Node not found".to_string()),))
+            Ok(())
         },
     )?;
 
     node.func_wrap(
         "set-text-content",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (handle, text): (u64, String)|
-         -> Result<(Result<(), String>,), wasmtime::Error> {
+         (handle, text): (u64, Option<String>)|
+         -> Result<(), wasmtime::Error> {
             let state = caller.data_mut();
-            match state.dom.set_text_content(handle, &text) {
-                Ok(()) => Ok((Ok(()),)),
-                Err(e) => Ok((Err(e),)),
+            if let Some(text) = text {
+                let _ = state.dom.set_text_content(handle, &text);
+            } else {
+                let _ = state.dom.set_text_content(handle, "");
             }
+            Ok(())
         },
     )?;
 
