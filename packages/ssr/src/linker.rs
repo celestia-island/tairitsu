@@ -3,6 +3,7 @@
 //! This module registers all WIT interface implementations with the wasmtime Linker.
 
 use crate::host_state::SsrHostState;
+use crate::stubs;
 use anyhow::Result;
 use wasmtime::component::Linker;
 
@@ -11,6 +12,7 @@ use wasmtime::component::Linker;
 /// This version works directly with SsrHostState.
 pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<()> {
     register_core_imports(linker)?;
+    stubs::register_all_stubs(linker)?;
     Ok(())
 }
 
@@ -226,6 +228,9 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             Ok((1080,))
         },
     )?;
+
+    // Register stub implementations for browser-only interfaces
+    crate::stubs::register_all_stubs(linker)?;
 
     Ok(())
 }

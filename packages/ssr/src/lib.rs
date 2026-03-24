@@ -6,6 +6,7 @@
 pub mod host_state;
 pub mod html_render;
 pub mod linker;
+pub mod stubs;
 pub mod virtual_dom;
 
 pub use host_state::{SsrConfig, SsrHostState};
@@ -113,22 +114,28 @@ fn call_lifecycle_start(
     store: &mut Store<SsrHostState>,
     instance: &wasmtime::component::Instance,
 ) -> Result<()> {
-    // Try to get the lifecycle::start function
-    // The function name in the component is "lifecycle[start]"
-    if let Some(func) = instance.get_func(&mut *store, "lifecycle[start]") {
-        // Call the function (no args, returns result)
-        let mut results = vec![wasmtime::component::Val::Bool(false)];
+    // Try to get the lifecycle::start function using the standard naming pattern
+    // Component Model exports use "interface#function" format
+    let func = instance.get_func(&mut *store, "[export-lifecycle]start");
+    
+    if let Some(func) = func {
+        // Call the function (no args, returns result<_, string>)
+        let mut results = vec![];
         func.call(store, &[], &mut results)?;
         return Ok(());
     }
 
-    // Try alternative naming - just "start"
-    if let Some(func) = instance.get_func(&mut *store, "start") {
-        let mut results = vec![wasmtime::component::Val::Bool(false)];
-        func.call(store, &[], &mut results)?;
-        return Ok(());
+    // Try alternative naming patterns
+    for name in &["lifecycle#start", "lifecycle[start]", "start"] {
+        if let Some(func) = instance.get_func(&mut *store, name) {
+            let mut results = vec![];
+            func.call(store, &[], &mut results)?;
+            return Ok(());
+        }
     }
 
+    // If no lifecycle::start is found, that's acceptable - some components might not have it
+    tracing::debug!("No lifecycle::start export found (this is optional)");
     Ok(())
 }
 
