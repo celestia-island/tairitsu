@@ -224,8 +224,8 @@ fn generate_stubs(interfaces: &[WitInterface]) -> String {
     }
 
     // Generate the top-level registration function
-    code.push_str("\n/// Register all stub implementations with the linker\n");
-    code.push_str("pub fn register_all_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {\n");
+    code.push_str("\n/// Register all auto-generated stub implementations with the linker\n");
+    code.push_str("pub fn register_all_auto_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {\n");
 
     for interface in interfaces {
         let fn_name = sanitize_identifier(&interface.name);
@@ -285,10 +285,13 @@ fn generate_function_stub(func: &WitFunction, _interface_name: &str) -> String {
         .iter()
         .enumerate()
         .map(|(i, (name, _))| {
-            if name == "_" || name.is_empty() {
+            if name == "_" || name.is_empty() || name.starts_with('%') {
+                // Handle reserved keywords and special names
                 format!("_arg{}", i)
             } else {
-                format!("_{}", name)
+                // Replace hyphens with underscores to make valid Rust identifiers
+                let sanitized = name.replace('-', "_");
+                format!("_{}", sanitized)
             }
         })
         .collect();
@@ -297,6 +300,19 @@ fn generate_function_stub(func: &WitFunction, _interface_name: &str) -> String {
         "()".to_string()
     } else {
         format!("({},)", param_names.join(", "))
+    };
+
+    // Generate parameter types
+    let param_types: Vec<String> = func
+        .params
+        .iter()
+        .map(|(_, wit_type)| map_wit_type_to_rust(wit_type))
+        .collect();
+
+    let param_types_tuple = if param_types.is_empty() {
+        "()".to_string()
+    } else {
+        format!("({},)", param_types.join(", "))
     };
 
     // Generate the return type based on the function signature
@@ -316,11 +332,11 @@ fn generate_function_stub(func: &WitFunction, _interface_name: &str) -> String {
     code.push_str(&format!(
         "    instance.func_wrap(\n\
           \"{}\",\n\
-          |_caller, {}: ()| -> Result<{}, wasmtime::Error> {{\n\
+          |_caller, {}: {}| -> Result<{}, wasmtime::Error> {{\n\
           {}\n\
           }},\n\
           )?;\n",
-        func_name, params_tuple, return_type, return_stmt
+        func_name, params_tuple, param_types_tuple, return_type, return_stmt
     ));
 
     code
@@ -381,6 +397,8 @@ fn map_wit_type_to_rust(wit_type: &str) -> String {
         "string" => "String".to_string(),
         "char" => "char".to_string(),
         "_" => "()".to_string(),
+        // Handle custom handle types (e.g., mutation-record-handle -> u64)
+        t if t.ends_with("-handle") => "u64".to_string(),
         t if t.starts_with("list<") => {
             let inner = t
                 .strip_prefix("list<")
@@ -389,7 +407,9 @@ fn map_wit_type_to_rust(wit_type: &str) -> String {
                 .unwrap_or(t);
             format!("Vec<{}>", map_wit_type_to_rust(inner))
         }
-        t => t.to_string(), // Pass through unknown types (e.g., custom types)
+        // Pass through unknown types (e.g., custom types)
+        // Replace hyphens with underscores to make valid Rust identifiers
+        t => t.replace('-', "_"),
     }
 }
 
