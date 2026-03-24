@@ -92,21 +92,31 @@ let html = dom.render_full_document_html(&config);
 
 ---
 
-### P3 — Packager 集成（`tairitsu dev --ssr` / `tairitsu build --ssr`）
+### P3 — Packager 集成（`tairitsu dev --ssr` / `tairitsu build --ssr`） ✅ 已完成
 
-现状：`packages/packager` 中已有 `--ssr` 参数骨架（来自 `feat(ssr): add SSR support to packager CLI`）。
+**实现内容**：
 
-**待完成**：
+- ✅ `tairitsu dev --ssr` - SSR 开发服务器，支持实时渲染
+- ✅ `tairitsu build --ssr` - 静态站点生成，预渲染 HTML
+- ✅ 错误页面渲染和友好的错误消息
+- ✅ SPA 回退支持（非根路径）
+- ✅ 无缓存头支持
+- ✅ 自动端口选择和浏览器自动打开
 
-1. `tairitsu build --ssr` 流程：
-   - 编译 wasm
-   - 调用 `render_to_html()` 生成 HTML
-   - 将生成 HTML 写入输出目录
+**功能特性**：
+- 开发服务器模式：监听文件变化，重新编译 WASM，每次请求时调用 SSR
+- 预渲染模式：生成静态 HTML 文件，提高首屏加载速度
+- 错误处理：友好的错误页面显示包名和错误信息
+- 模板回退：当 index.html 不存在时使用默认模板
 
-2. `tairitsu dev --ssr` 流程（开发服务器）：
-   - 监听文件变化，重新编译 wasm
-   - 每次请求时调用 `render_to_html()` 或缓存上次结果
-   - HTTP 响应直接返回 SSR HTML
+**使用示例**：
+```bash
+# 开发服务器模式
+tairitsu dev --ssr
+
+# 预渲染模式
+tairitsu build --ssr
+```
 
 ---
 
