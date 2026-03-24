@@ -11749,7 +11749,7 @@ interface resize-observer {
 
 interface resize-observer-entry {
     use types.{dom-rect};
-    
+
     /// Opaque handle to a host-side `ResizeObserverEntry` instance.
     type resize-observer-entry-handle = u64;
 

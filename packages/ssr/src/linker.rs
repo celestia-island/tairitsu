@@ -114,7 +114,9 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
          (parent, child): (u64, u64)|
          -> Result<(u64,), wasmtime::Error> {
             let state = caller.data_mut();
-            state.dom.append_child(parent, child)
+            state
+                .dom
+                .append_child(parent, child)
                 .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
             Ok((child,))
         },
@@ -126,7 +128,9 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
          (parent, child): (u64, u64)|
          -> Result<(u64,), wasmtime::Error> {
             let state = caller.data_mut();
-            state.dom.remove_child(parent, child)
+            state
+                .dom
+                .remove_child(parent, child)
                 .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
             Ok((child,))
         },
@@ -424,6 +428,59 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (): ()|
          -> Result<(i32,), wasmtime::Error> { Ok((1080,)) },
+    )?;
+
+    // Resize observer entry
+    let mut resize_observer_entry = linker.instance("tairitsu-browser:full/resize-observer-entry@0.2.0")?;
+    resize_observer_entry.func_wrap(
+        "get-target",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
+    )?;
+
+    resize_observer_entry.func_wrap(
+        "get-content-rect",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(f64, f64, f64, f64), wasmtime::Error> { Ok((0.0, 0.0, 0.0, 0.0)) },
+    )?;
+
+    resize_observer_entry.func_wrap(
+        "get-border-box-size",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Vec<u64>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+
+    resize_observer_entry.func_wrap(
+        "get-content-box-size",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Vec<u64>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+
+    resize_observer_entry.func_wrap(
+        "get-device-pixel-content-box-size",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(Vec<u64>,), wasmtime::Error> { Ok((vec![],)) },
+    )?;
+
+    // Resize observer size
+    let mut resize_observer_size = linker.instance("tairitsu-browser:full/resize-observer-size@0.2.0")?;
+    resize_observer_size.func_wrap(
+        "get-inline-size",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
+    )?;
+
+    resize_observer_size.func_wrap(
+        "get-block-size",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (_self,): (u64,)|
+         -> Result<(f64,), wasmtime::Error> { Ok((0.0,)) },
     )?;
 
     Ok(())
