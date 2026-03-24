@@ -557,11 +557,11 @@ packages/ssr/
 | P0 | SsrDom 数据结构 + DOM 操作 | ✅ 完成 |
 | P0 | HTML 序列化 | ✅ 完成 |
 | P0 | 手写 8 个核心 WIT 接口实现 | ✅ 完成 |
-| P1 | Stub 代码生成器 | 🚧 进行中 |
+| P1 | Stub 代码生成器 | ✅ 完成 |
 | P1 | SSR 容器集成（render_to_html） | ✅ 完成 |
-| P1 | 基本测试 | ⏳ 待开始 |
-| P2 | Packager SSR 开发服务器 | ⏳ 待开始 |
-| P2 | SSG 预渲染 | ⏳ 待开始 |
+| P1 | 基本测试 | ✅ 完成 |
+| P2 | Packager SSR 开发服务器 | ✅ 完成 |
+| P2 | SSG 预渲染 | ✅ 完成 |
 | P3 | 客户端 Hydration | ⏳ 待开始 |
 
 ---
