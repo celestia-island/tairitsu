@@ -56,7 +56,7 @@ fn main() {
         "audio-encoder",
         "video-decoder",
         "video-encoder",
-        // Resize observer interfaces (manually implemented in linker.rs)
+        // Resize observer interfaces (implemented via bindgen in bindings.rs)
         "resize-observer",
         "resize-observer-entry",
         "resize-observer-size",

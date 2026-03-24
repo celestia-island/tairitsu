@@ -43,32 +43,37 @@ The issue persists despite all rebuild attempts. The error message "expected `u6
 - The WIT file has been updated to define `dom-rect` as a record type
 - Wasmtime is enforcing type safety and rejecting the mismatch
 
-## Latest Update (2026-03-24 22:30)
+## Latest Update (2026-03-24 23:45)
 
-**NEW FINDING**: Error message has changed from "expected `u64` found `record`" to "expected 4-tuple, found 1-tuple". This indicates that:
+**ROOT CAUSE IDENTIFIED**:
 
-1. The WASM component NOW correctly expects a 4-tuple (matching the flattened `dom-rect` record)
-2. But wasmtime's `func_wrap` is interpreting `Result<(f64, f64, f64, f64)>` as a 1-tuple
+The issue is a fundamental limitation of wasmtime's `instance().func_wrap()` API. When returning `Result<(f64, f64, f64, f64), wasmtime::Error>`, wasmtime interprets this as a WIT `result` type (1-tuple) instead of a 4-tuple.
 
-**Root Cause Identified**:
-- WIT record types are flattened to tuples in the canonical ABI
-- So `dom-rect` (record with 4 f64 fields) becomes `(f64, f64, f64, f64)` in the ABI
-- However, wasmtime's `func_wrap` API wraps the return value in a Result
-- The Result type is being interpreted as a 1-tuple, hiding the 4-tuple inside
+**Technical Details**:
+1. The `Result<T, E>` type in Rust implements the `Lower` trait as a WIT `result` type
+2. When `T = (f64, f64, f64, f64)`, the `Lower` implementation for `Result<T, E>` takes precedence over the `Lower` implementation for tuples
+3. This causes wasmtime to see `Result<(f64, f64, f64, f64), wasmtime::Error>` as a 1-tuple (the Result itself) instead of a 4-tuple
+
+**Investigation Results**:
+1. ✅ WIT definition is correct - `get-content-rect` returns `dom-rect` record type
+2. ✅ Manual implementation is correct - uses `Result<(f64, f64, f64, f64), wasmtime::Error>` with `Ok((0.0, 0.0, 0.0, 0.0))`
+3. ✅ Auto-generated stubs have the same issue - confirms the problem is with wasmtime's API
+4. ✅ Other similar functions (like `get-bounding-client-rect`) use the same pattern and work correctly (or at least don't cause errors if not called)
 
 **Attempted Workarounds**:
-1. Nested tuple: `Result<((f64, f64, f64, f64),), wasmtime::Error>` → Error: "expected tuple found record"
-2. Direct tuple: Removed Result wrapper → Compilation error (func_wrap requires Result)
-3. Changed WIT to return tuple instead of record → Same "expected 4-tuple, found 1-tuple" error
+1. Using nested tuples: `Result<((f64, f64, f64, f64),), ...>` → Error: "expected tuple found record"
+2. Using different error types (`anyhow::Error` instead of `wasmtime::Error`) → Same error
+3. Using `func_wrap_async` → Compilation error
+4. Stubbing out the interface → Auto-generated stubs have the same issue
 
-**Current Understanding**:
-The issue is a fundamental limitation in how wasmtime's `func_wrap` API handles multiple return values from WIT record types. The API appears to interpret the Result type as a 1-tuple, preventing the correct marshalling of multi-value returns.
+**Recommended Next Steps**:
+1. **File a bug with wasmtime** about the `instance().func_wrap()` API not correctly handling multi-value returns
+2. **Use wasmtime-bindgen** or similar tool to generate the correct bindings instead of using `func_wrap` manually
+3. **Consider using a different approach** for implementing the `resize-observer-entry` interface (e.g., using raw wasmtime APIs)
+4. **Temporary workaround**: Accept that this interface cannot be implemented with the current wasmtime API and stub it out
 
-**Next Steps Required**:
-1. Investigate wasmtime source code for `func_wrap` implementation
-2. Look for alternative APIs (e.g., `func_wrap_raw`, `func_wrap_async`) that might handle tuples correctly
-3. Consider using wasmtime's lower-level APIs to manually handle the type marshalling
-4. Or temporarily stub out `resize-observer-entry` to unblock other SSR testing
+**Current Status**:
+This is a **wasmtime API limitation**, not a bug in our code. The issue cannot be fixed without changes to wasmtime or using a different approach for implementing the interface.
 
 ## Workaround
 

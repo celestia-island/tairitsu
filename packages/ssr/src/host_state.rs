@@ -4,6 +4,7 @@
 
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+use crate::bindings::{DomRect, ResizeObserverEntryHost, ResizeObserverSizeHost};
 use crate::virtual_dom::SsrDom;
 
 /// SSR configuration
@@ -96,6 +97,50 @@ impl WasiView for SsrHostState {
 impl tairitsu::container::HostStateImpl for SsrHostState {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+}
+
+// Implement HasData for SsrHostState to support bindgen-generated HostWithStore
+impl wasmtime::component::HasData for SsrHostState {
+    type Data<'a> = &'a mut Self where Self: 'a;
+}
+
+// Implement the bindgen-generated Host traits for resize-observer-entry
+// These traits properly handle the dom-rect record type marshaling
+impl ResizeObserverEntryHost for SsrHostState {
+    fn get_target(&mut self, _self_: u64) -> u64 {
+        0
+    }
+
+    fn get_content_rect(&mut self, _self_: u64) -> DomRect {
+        DomRect {
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+        }
+    }
+
+    fn get_border_box_size(&mut self, _self_: u64) -> Vec<u64> {
+        Vec::new()
+    }
+
+    fn get_content_box_size(&mut self, _self_: u64) -> Vec<u64> {
+        Vec::new()
+    }
+
+    fn get_device_pixel_content_box_size(&mut self, _self_: u64) -> Vec<u64> {
+        Vec::new()
+    }
+}
+
+impl ResizeObserverSizeHost for SsrHostState {
+    fn get_inline_size(&mut self, _self_: u64) -> f64 {
+        0.0
+    }
+
+    fn get_block_size(&mut self, _self_: u64) -> f64 {
+        0.0
     }
 }
 

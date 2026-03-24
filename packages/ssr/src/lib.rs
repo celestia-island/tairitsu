@@ -3,6 +3,7 @@
 //! This crate provides the ability to render Tairitsu components on the server
 //! using Wasmtime, producing HTML that can be sent to the client.
 
+pub mod bindings;
 pub mod host_state;
 pub mod html_render;
 pub mod linker;

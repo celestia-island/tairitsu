@@ -6,6 +6,9 @@
 //!
 //! Manually implemented interfaces (in linker.rs):
 //! - document, node, element, style, console, window, platform-helpers, event-target
+//!
+//! Implemented via bindgen (in bindings.rs):
+//! - resize-observer-entry, resize-observer-size
 
 use crate::host_state::SsrHostState;
 use anyhow::Result;
