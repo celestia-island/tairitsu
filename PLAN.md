@@ -19,22 +19,24 @@
 
 **已知问题** (2026-03-24 更新):
 - `resize-observer-entry` 接口的 `get-content-rect` 方法存在类型编组（marshalling）问题
-- **最新进展**：错误从 "expected `u64` found `record"` 变为 "expected 4-tuple, found 1-tuple"
-- **根本原因**：wasmtime 的 `func_wrap` API 将 `Result<(f64, f64, f64, f64)>` 解释为 1-tuple，而不是展开内部的 4-tuple
+- **根本原因**：wasmtime 的 `instance().func_wrap()` API 存在局限性
+  - `Result<T, E>` 类型实现了 `Lower` trait 作为 WIT `result` 类型（1-tuple）
+  - 当 `T = (f64, f64, f64, f64)` 时，`Result<T, E>` 的 `Lower` 实现优先于元组的 `Lower` 实现
+  - 导致 wasmtime 将 `Result<(f64, f64, f64, f64), wasmtime::Error>` 视为 1-tuple 而非 4-tuple
 - **技术细节**：
   - WIT 记录类型在 canonical ABI 中被展平为元组
   - `dom-rect` (4个 f64 字段) 变成 `(f64, f64, f64, f64)`
-  - 但 `func_wrap` 的 Result 包装导致 wasmtime 看到的是 1-tuple
+  - 但 `func_wrap` 的 Result 包装被解释为 WIT `result` 类型，导致类型不匹配
 - **尝试的解决方案**：
-  - 嵌套元组：`Result<((f64, f64, f64, f64),), ...>` → 错误："expected tuple found record"
-  - 直接元组（移除 Result）→ 编译错误（func_wrap 要求 Result）
-  - WIT 返回元组而非记录 → 同样的 "expected 4-tuple, found 1-tuple" 错误
-- **下一步**：
-  - 研究 wasmtime 源码中的 `func_wrap` 实现
-  - 尝试其他 API（如 `func_wrap_raw`、`func_wrap_async`）
-  - 或暂时 stub `resize-observer-entry` 以解锁其他 SSR 测试
-- 详细分析见 `/mnt/sdb1/tairitsu/RESIZE_OBSERVER_ISSUE.md`
-- 此问题暂时阻止了 P0 任务的完成
+  - 嵌套元组、不同错误类型、`func_wrap_async` 等方法均无效
+  - 自动生成的 stub 也有同样问题，确认是 wasmtime API 的限制
+- **当前状态**：
+  - 这是 wasmtime API 的根本限制，不是代码错误
+  - 需要等待 wasmtime 修复或使用其他方法实现该接口
+  - 详细分析见 `/mnt/sdb1/tairitsu/RESIZE_OBSERVER_ISSUE.md`
+- **对 P0 任务的影响**：
+  - 此问题暂时阻止了完整的 SSR 测试
+  - 需要考虑其他方法来验证 SSR 功能（例如使用不依赖 resize-observer 的测试用例）
 
 ---
 
