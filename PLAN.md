@@ -12,12 +12,18 @@
 - 438 个非核心 WIT 接口由 `build.rs` 自动生成 stub（返回默认值或无操作）
 - in-memory DOM（`SsrDom`）+ HTML 序列化（`html_render.rs`）已实现
 - `call_lifecycle_start()` 通过 `[export-lifecycle]start` 导出名调用组件
+- ✅ 添加了 `platform-helpers` 接口，包含 DOM 辅助函数（get-document, create-element 等）
+- ✅ 添加了 `dom-rect` 记录类型到 `types` 接口
+- ✅ 添加了回调接口（timer-callbacks, animation-callbacks, resize-observer-callbacks 等）
+- ✅ 修复了多个 WIT 接口的类型导入问题
 
 **已知问题** (2026-03-24):
-- `resize-observer-entry` 接口的 `get-content-rect` 方法存在类型不匹配错误
-- 错误信息："expected `u64` found `record`"
+- `resize-observer-entry` 接口的 `get-content-rect` 方法存在类型编组（marshalling）问题
+- 错误信息：`expected 4-tuple, found 1-tuple` 或 `expected tuple found record`
+- host 实现返回 `(f64, f64, f64, f64)`（4-tuple），但 wasmtime 报告类型不匹配
+- 可能是 WIT 记录类型与 wasmtime func_wrap 之间的类型编组问题
 - 详细分析见 `/mnt/sdb1/tairitsu/RESIZE_OBSERVER_ISSUE.md`
-- 此问题阻止了 P0 任务的完成，需要深入研究 WIT 记录类型的处理方式
+- 此问题暂时阻止了 P0 任务的完成
 
 ---
 
