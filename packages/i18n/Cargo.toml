@@ -1,0 +1,13 @@
+[package]
+name = "tairitsu-i18n"
+version = "0.1.0"
+description = "Internationalization (i18n) system for Tairitsu"
+authors = ["Tairitsu Contributors"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[dependencies]
+tairitsu-hooks = { path = "../hooks" }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+anyhow = "1.0"

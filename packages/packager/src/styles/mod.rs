@@ -5,7 +5,7 @@ mod injector;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-pub use compiler::ScssCompiler;
+pub use compiler::{ScssCompiler, CompilerOptions};
 pub use extractor::CssExtractor;
 pub use injector::StyleInjector;
 
