@@ -242,3 +242,6 @@ fn register_video_encoder_stubs(linker: &mut Linker<SsrHostState>) -> Result<()>
     )?;
     Ok(())
 }
+
+// Include auto-generated stub implementations
+include!(concat!(env!("OUT_DIR"), "/ssr_stubs_gen.rs"));
