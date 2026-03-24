@@ -914,6 +914,26 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     // are served immediately without needing a server restart.
     let dist_for_index = dist_dir.clone();
     let pkg_name = config.package.name.clone();
+    // Clone dist_dir for the SPA fallback handler
+    let dist_for_spa = dist_for_index.clone();
+    let spa_pkg_name = pkg_name.clone();
+    // SPA fallback: serve index.html for any path that doesn't match a
+    // static file, so that History API routing works on the client.
+    let spa_fallback = Router::new().fallback(get(move || {
+        let dist = dist_for_spa.clone();
+        let pkg = spa_pkg_name.clone();
+        async move {
+            let content =
+                std::fs::read_to_string(dist.join("index.html")).unwrap_or_else(|_| {
+                    format!(
+                        "<!DOCTYPE html><html><head><title>{}</title></head>\
+                         <body><div id=\"app\">Loading…</div></body></html>",
+                        pkg
+                    )
+                });
+            Html(content)
+        }
+    }));
     let app = Router::new()
         .route(
             "/",
@@ -933,7 +953,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
                 }
             }),
         )
-        .fallback_service(ServeDir::new(dist_dir))
+        .fallback_service(ServeDir::new(dist_dir).fallback(spa_fallback))
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;

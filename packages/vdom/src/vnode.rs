@@ -390,4 +390,110 @@ impl VNode {
     pub fn empty() -> Self {
         VNode::Text(VText::new(""))
     }
+
+    /// Render this VNode tree to an HTML string for server-side rendering.
+    ///
+    /// Event handlers are omitted since they only work in the browser.
+    /// The output can be injected into `<div id="app">…</div>` so the
+    /// client-side WASM can hydrate the pre-rendered markup.
+    pub fn render_to_html(&self) -> String {
+        let mut buf = String::new();
+        self.write_html(&mut buf);
+        buf
+    }
+
+    fn write_html(&self, buf: &mut String) {
+        match self {
+            VNode::Text(t) => {
+                html_escape_into(buf, &t.text);
+            }
+            VNode::Element(el) => {
+                buf.push('<');
+                buf.push_str(&el.tag);
+
+                // id and other attributes
+                for (name, value) in &el.attributes {
+                    buf.push(' ');
+                    buf.push_str(name);
+                    buf.push_str("=\"");
+                    html_escape_attr_into(buf, value);
+                    buf.push('"');
+                }
+
+                // class
+                if !el.class.static_classes.is_empty() {
+                    buf.push_str(" class=\"");
+                    html_escape_attr_into(buf, &el.class.static_classes);
+                    buf.push('"');
+                }
+
+                // style
+                let style_str = el.style.to_string();
+                if !style_str.is_empty() {
+                    buf.push_str(" style=\"");
+                    html_escape_attr_into(buf, &style_str);
+                    buf.push('"');
+                }
+
+                buf.push('>');
+
+                // Void elements have no children / closing tag
+                if is_void_element(&el.tag) {
+                    return;
+                }
+
+                if let Some(inner) = &el.inner_html {
+                    // inner_html is already raw HTML (e.g. sanitized SVG)
+                    buf.push_str(inner);
+                } else {
+                    for child in &el.children {
+                        child.write_html(buf);
+                    }
+                }
+
+                buf.push_str("</");
+                buf.push_str(&el.tag);
+                buf.push('>');
+            }
+            VNode::Fragment(children) => {
+                for child in children {
+                    child.write_html(buf);
+                }
+            }
+        }
+    }
+}
+
+/// HTML-escape text content.
+fn html_escape_into(buf: &mut String, s: &str) {
+    for ch in s.chars() {
+        match ch {
+            '&' => buf.push_str("&amp;"),
+            '<' => buf.push_str("&lt;"),
+            '>' => buf.push_str("&gt;"),
+            _ => buf.push(ch),
+        }
+    }
+}
+
+/// HTML-escape an attribute value.
+fn html_escape_attr_into(buf: &mut String, s: &str) {
+    for ch in s.chars() {
+        match ch {
+            '&' => buf.push_str("&amp;"),
+            '"' => buf.push_str("&quot;"),
+            '<' => buf.push_str("&lt;"),
+            '>' => buf.push_str("&gt;"),
+            _ => buf.push(ch),
+        }
+    }
+}
+
+/// Returns true for HTML void elements that must not have a closing tag.
+fn is_void_element(tag: &str) -> bool {
+    matches!(
+        tag,
+        "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
+            | "link" | "meta" | "param" | "source" | "track" | "wbr"
+    )
 }
