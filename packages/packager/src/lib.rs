@@ -9,6 +9,7 @@ pub mod doctor;
 pub mod i18n;
 pub mod icons;
 pub mod resources;
+pub mod ssr;
 pub mod styles;
 pub mod utils;
 pub mod wasm;

@@ -15,6 +15,7 @@ path = "src/main.rs"
 tairitsu-vdom = { path = "../vdom", optional = true }
 tairitsu-browser-wit-resolver = { path = "../browser-wit-resolver" }
 tairitsu-browser-worlds = { path = "../browser-worlds" }
+tairitsu-ssr = { path = "../ssr", optional = true }
 
 # Basic language and tools
 anyhow = "^1"
@@ -77,6 +78,7 @@ include_dir = "^0.7"
 [features]
 default = ["dev-server"]
 native = []
-dev-server = ["axum", "tower-http", "notify"]
+dev-server = ["axum", "tower-http", "notify", "tairitsu-ssr"]
+ssr = ["tairitsu-ssr"]
 # Enable remote icon fetching from MDI, Lucide, etc.
 icon-fetch = ["reqwest", "zip"]

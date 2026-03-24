@@ -35,6 +35,10 @@ enum Commands {
         /// Watch source files and rebuild automatically on changes
         #[arg(short, long)]
         watch: bool,
+
+        /// Enable server-side rendering
+        #[arg(long)]
+        ssr: bool,
     },
 
     /// Build for production
@@ -46,6 +50,14 @@ enum Commands {
         /// Build in release mode
         #[arg(short, long)]
         release: bool,
+
+        /// Enable server-side rendering (pre-render static HTML)
+        #[arg(long)]
+        ssr: bool,
+
+        /// Routes to pre-render (comma-separated)
+        #[arg(long, value_delimiter = ',')]
+        routes: Vec<String>,
     },
 
     /// Package application for distribution
@@ -85,6 +97,33 @@ enum Commands {
     Resources {
         #[command(subcommand)]
         action: ResourcesCommands,
+    },
+
+    /// Server-Side Rendering commands
+    Ssr {
+        /// Port to listen on for SSR dev server (default: 3000)
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+
+        /// Open browser automatically
+        #[arg(long)]
+        open: bool,
+
+        /// Watch source files and rebuild automatically on changes
+        #[arg(short, long)]
+        watch: bool,
+
+        /// Build pre-rendered static HTML instead of running dev server
+        #[arg(long)]
+        build: bool,
+
+        /// Routes to pre-render (comma-separated, used with --build)
+        #[arg(long, value_delimiter = ',')]
+        routes: Vec<String>,
+
+        /// Output directory for pre-rendered HTML (used with --build)
+        #[arg(long)]
+        output: Option<String>,
     },
 
     /// Check project compatibility and environment setup
@@ -207,17 +246,37 @@ pub async fn run() -> crate::Result<()> {
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
 
     match cli.command {
-        Commands::Dev { port, open, watch } => {
+        Commands::Dev { port, open, watch, ssr } => {
             let config = crate::config::Config::load(&manifest_path)?;
-            info!("{}", t.cli.starting_dev_server);
-            let port = port.unwrap_or(config.dev.port);
-            crate::wasm::dev_server(&config, port, open, watch).await?;
+            if ssr {
+                info!("Starting SSR development server...");
+                let port = port.unwrap_or(3000);
+                crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+            } else {
+                info!("{}", t.cli.starting_dev_server);
+                let port = port.unwrap_or(config.dev.port);
+                crate::wasm::dev_server(&config, port, open, watch).await?;
+            }
         }
-        Commands::Build { target, release } => {
+        Commands::Build { target, release, ssr, routes } => {
             let config = crate::config::Config::load(&manifest_path)?;
             info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
-                "component" => crate::wasm::build_component(&config, release, None)?,
+                "component" => {
+                    crate::wasm::build_component(&config, release, None)?;
+
+                    // Handle SSR pre-rendering if requested
+                    if ssr {
+                        let routes = if routes.is_empty() {
+                            vec!["".to_string()]
+                        } else {
+                            routes
+                        };
+                        let output_dir = std::path::PathBuf::from("dist/prerendered");
+                        info!("Pre-rendering {} routes...", routes.len());
+                        crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                    }
+                }
                 "native" => {
                     eprintln!("{}", t.cli.native_not_implemented);
                     std::process::exit(1);
@@ -369,6 +428,28 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         },
+        Commands::Ssr { port, open, watch, build, routes, output } => {
+            let config = crate::config::Config::load(&manifest_path)?;
+
+            if build {
+                // Pre-render mode
+                let routes = if routes.is_empty() {
+                    vec!["".to_string()]
+                } else {
+                    routes
+                };
+                let output_dir = output
+                    .map(std::path::PathBuf::from)
+                    .unwrap_or_else(|| std::path::PathBuf::from("dist/prerendered"));
+
+                info!("Pre-rendering {} routes to {}...", routes.len(), output_dir.display());
+                crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+            } else {
+                // Dev server mode
+                info!("Starting SSR development server...");
+                crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+            }
+        }
         Commands::Resources { action } => match action {
             ResourcesCommands::Index { format } => {
                 info!("Indexing resources...");

@@ -552,17 +552,17 @@ packages/ssr/
 
 ## 任务优先级
 
-| 优先级 | 任务 | 依赖 |
+| 优先级 | 任务 | 状态 |
 |--------|-----|------|
-| P0 | SsrDom 数据结构 + DOM 操作 | 无 |
-| P0 | HTML 序列化 | SsrDom |
-| P0 | 手写 8 个核心 WIT 接口实现 | SsrDom |
-| P1 | Stub 代码生成器 | WitLoader |
-| P1 | SSR 容器集成（render_to_html） | 以上全部 |
-| P1 | 基本测试 | SSR 容器 |
-| P2 | Packager SSR 开发服务器 | SSR 容器 |
-| P2 | SSG 预渲染 | SSR 容器 |
-| P3 | 客户端 Hydration | SSR + 浏览器端改造 |
+| P0 | SsrDom 数据结构 + DOM 操作 | ✅ 完成 |
+| P0 | HTML 序列化 | ✅ 完成 |
+| P0 | 手写 8 个核心 WIT 接口实现 | ✅ 完成 |
+| P1 | Stub 代码生成器 | 🚧 进行中 |
+| P1 | SSR 容器集成（render_to_html） | ✅ 完成 |
+| P1 | 基本测试 | ⏳ 待开始 |
+| P2 | Packager SSR 开发服务器 | ⏳ 待开始 |
+| P2 | SSG 预渲染 | ⏳ 待开始 |
+| P3 | 客户端 Hydration | ⏳ 待开始 |
 
 ---
 
