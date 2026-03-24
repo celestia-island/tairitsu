@@ -255,10 +255,10 @@ interface video-frame {
     get-coded-height: func(self: video-frame-handle) -> u32;
 
     /// `codedRect` attribute — getter.
-    get-coded-rect: func(self: video-frame-handle) -> option<u64>;
+    get-coded-rect: func(self: video-frame-handle) -> option<dom-rect>;
 
     /// `visibleRect` attribute — getter.
-    get-visible-rect: func(self: video-frame-handle) -> option<u64>;
+    get-visible-rect: func(self: video-frame-handle) -> option<dom-rect>;
 
     /// `rotation` attribute — getter.
     get-rotation: func(self: video-frame-handle) -> f64;

@@ -10,9 +10,10 @@ use wasmtime::component::Linker;
 /// Register all SSR WIT implementations with the linker (direct version)
 ///
 /// This version works directly with SsrHostState.
+/// Auto-generated stubs are registered first, then manual implementations override them.
 pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<()> {
-    register_core_imports(linker)?;
     stubs::register_all_stubs(linker)?;
+    register_core_imports(linker)?;
     Ok(())
 }
 

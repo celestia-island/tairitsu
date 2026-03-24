@@ -330,6 +330,27 @@ def convert_type(type_str: str) -> str:
             return "_"
         return f"option<{result}>" if nullable else result
 
+    # Special record types that should not be converted to u64 handles
+    # These types are defined as records in the WIT interface and should be preserved
+    RECORD_TYPE_OVERRIDES = {
+        "DOMRect": "dom-rect",
+        "DOMRectReadOnly": "dom-rect-read-only",  # Read-only variant
+        "DOMRectInit": "dom-rect",       # Constructor initialization object
+        "TextRectangle": "dom-rect",     # Legacy name for DOMRect
+    }
+
+    # Also map dom-rect-read-only to dom-rect for now
+    RECORD_TYPE_READONLY_TO_MUTABLE = {
+        "dom-rect-read-only": "dom-rect",
+    }
+
+    if type_str in RECORD_TYPE_OVERRIDES:
+        result = RECORD_TYPE_OVERRIDES[type_str]
+        # Convert dom-rect-read-only to dom-rect for function signatures
+        if result == "dom-rect-read-only":
+            result = "dom-rect"
+        return f"option<{result}>" if nullable else result
+
     # Interface reference → opaque u64 handle
     result = "u64"
     return f"option<{result}>" if nullable else result
@@ -662,9 +683,17 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
         f"/// Source: https://github.com/w3c/webref/tree/main/ed/idl/{iface.source_spec}.idl"
     )
     lines.append(f"interface {wit_name} {{")
+
+    # We'll add use statements here after processing all members
+    # For now, add a placeholder comment
+    use_statement_index = len(lines)
+
     lines.append(
         f"    /// Opaque handle to a host-side `{iface.name}` instance.")
     lines.append(f"    type {handle_type} = u64;")
+
+    # Collect all types used in this interface to add necessary use statements
+    used_types: Set[str] = set()
 
     emitted: Set[str] = set()
     has_non_handle = False
@@ -678,6 +707,13 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
 
             if wit_type == "_":
                 continue
+
+            # Track record types that need use statements
+            if wit_type == "dom-rect-read-only":
+                # Convert read-only to regular dom-rect for use statement
+                used_types.add("types.{dom-rect}")
+            elif wit_type == "dom-rect":
+                used_types.add("types.{dom-rect}")
 
             if getter not in emitted:
                 lines.append("")
@@ -707,6 +743,13 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
                 continue
             ret_type = convert_type(member.idl_type)
 
+            # Track record types in return types
+            if ret_type == "dom-rect-read-only":
+                # Convert read-only to regular dom-rect for use statement
+                used_types.add("types.{dom-rect}")
+            elif ret_type == "dom-rect":
+                used_types.add("types.{dom-rect}")
+
             params: list[str] = []
             if not member.static and not is_singleton:
                 params.append(f"self: {handle_type}")
@@ -721,6 +764,13 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
                 if p.variadic and not p_type.startswith("list<"):
                     p_type = f"list<{p_type}>"
                 params.append(f"{p_name}: {p_type}")
+
+                # Track record types in parameters
+                if p_type == "dom-rect-read-only":
+                    # Convert read-only to regular dom-rect for use statement
+                    used_types.add("types.{dom-rect}")
+                elif p_type == "dom-rect":
+                    used_types.add("types.{dom-rect}")
 
             if op_name not in emitted:
                 sig = f"    {op_name}: func({', '.join(params)})"
@@ -738,12 +788,38 @@ def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
     if not has_non_handle:
         return None
 
+    # Insert use statements at the beginning of the interface if any record types are used
+    if used_types:
+        use_lines = []
+        for use_type in sorted(used_types):
+            use_lines.append(f"    use {use_type};")
+        if use_lines:
+            # Insert use statements right after the interface declaration
+            lines.insert(use_statement_index + 1, "")
+            for i, use_line in enumerate(reversed(use_lines)):
+                lines.insert(use_statement_index + 2 + i, use_line)
+            lines.insert(use_statement_index + 2 + len(use_lines), "")
+
     return "\n".join(lines)
 
-def _generate_special_type_defs(interfaces: List[WebIDLInterface]) -> List[str]:
+def _generate_special_type_defs(interfaces: List[WebIDLInterface], domain: str) -> List[str]:
     """Generate type definitions for special types like event-handler-record."""
     lines = []
-    
+
+    # Special handling for observers domain - always include dom-rect
+    if domain == "observers":
+        lines.append("/// Common DOM rectangle type used by multiple interfaces")
+        lines.append("interface types {")
+        lines.append("    /// DOMRect values - x, y, width, height")
+        lines.append("    record dom-rect {")
+        lines.append("        x: f64,")
+        lines.append("        y: f64,")
+        lines.append("        width: f64,")
+        lines.append("        height: f64,")
+        lines.append("    }")
+        lines.append("}")
+        lines.append("")
+
     # Find the global-event-handlers interface
     global_event_handlers_iface = next(
         (iface for iface in interfaces if iface.name == "global-event-handlers"),
@@ -817,7 +893,7 @@ def generate_domain_wit(
     ]
 
     # Generate type definitions for special types (e.g., event handlers)
-    type_defs_lines = _generate_special_type_defs(interfaces)
+    type_defs_lines = _generate_special_type_defs(interfaces, domain)
 
     # Build world block
     world_imports = "\n".join(
@@ -834,7 +910,7 @@ def generate_domain_wit(
     sections = (
         "\n".join(header_lines)
         + "\n"
-        + "\n\n".join(interface_blocks)
+        + "\n\n".join(type_defs_lines + interface_blocks)
         + "\n\n"
         + world_block
         + "\n"

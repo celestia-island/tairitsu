@@ -1247,6 +1247,11 @@ interface html-media-element {
     /// `defaultMuted` attribute — setter.
     set-default-muted: func(self: html-media-element-handle, value: bool);
 
+    /// `loading` attribute — getter.
+    get-loading: func(self: html-media-element-handle) -> string;
+    /// `loading` attribute — setter.
+    set-loading: func(self: html-media-element-handle, value: string);
+
     /// `audioTracks` attribute — getter.
     get-audio-tracks: func(self: html-media-element-handle) -> u64;
 

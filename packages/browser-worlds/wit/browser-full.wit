@@ -9,47 +9,6 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:full@0.2.0;
 
-/// Platform helper functions that return values directly instead of opaque handles.
-interface platform-helpers {
-    use types.{dom-rect};
-    
-    get-bounding-client-rect: func(element: u64) -> dom-rect;
-    inner-width: func() -> s32;
-    inner-height: func() -> s32;
-    set-timeout: func(callback-id: u64, ms: s32) -> s32;
-    clear-timeout: func(id: s32);
-    request-animation-frame: func(callback-id: u64) -> u32;
-    cancel-animation-frame: func(id: u32);
-    create-resize-observer: func(callback-id: u64) -> u64;
-    observe-resize: func(observer: u64, element: u64);
-    unobserve-resize: func(observer: u64, element: u64);
-    disconnect-resize: func(observer: u64);
-    create-mutation-observer: func(callback-id: u64) -> u64;
-    observe-mutations: func(observer: u64, element: u64, options: option<u64>);
-    disconnect-mutation: func(observer: u64);
-}
-
-/// Timer callback interface - implemented by the component, called by host.
-interface timer-callbacks {
-    on-timeout: func(callback-id: u64);
-    on-interval: func(callback-id: u64);
-}
-
-/// Animation callback interface - implemented by the component, called by host.
-interface animation-callbacks {
-    on-animation-frame: func(callback-id: u64, timestamp: f64);
-}
-
-/// ResizeObserver callback interface - implemented by the component, called by host.
-interface resize-observer-callbacks {
-    on-resize: func(callback-id: u64, entries: list<u64>);
-}
-
-/// MutationObserver callback interface - implemented by the component, called by host.
-interface mutation-observer-callbacks {
-    on-mutation: func(callback-id: u64, records: list<u64>);
-}
-
 /// Event callback interface - implemented by the component, called by host.
 ///
 /// The host (browser-glue) calls these functions when DOM events fire.
@@ -106,6 +65,45 @@ interface event-callbacks {
     on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
     /// Called for any other event type.
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
+}
+
+/// Resize observer callback interface.
+interface resize-observer-callbacks {
+    /// Callback identifier.
+    type callback-id = u64;
+
+    /// Called when resize is observed.
+    on-resize: func(callback-id: callback-id, entries: list<u64>);
+}
+
+/// Mutation observer callback interface.
+interface mutation-observer-callbacks {
+    /// Callback identifier.
+    type callback-id = u64;
+
+    /// Called when mutations are observed.
+    on-mutation: func(callback-id: callback-id, mutations: list<u64>);
+}
+
+/// Timer callback interface.
+interface timer-callbacks {
+    /// Callback identifier.
+    type callback-id = u64;
+
+    /// Called when interval expires.
+    on-interval: func(callback-id: callback-id);
+
+    /// Called when timeout expires.
+    on-timeout: func(callback-id: callback-id);
+}
+
+/// Animation frame callback interface.
+interface animation-callbacks {
+    /// Callback identifier.
+    type callback-id = u64;
+
+    /// Called when animation frame is ready.
+    on-animation-frame: func(callback-id: callback-id, timestamp: f64);
 }
 
 /// Component lifecycle interface - implemented by the component.
@@ -425,6 +423,8 @@ interface video-frame {
     /// Opaque handle to a host-side `VideoFrame` instance.
     type video-frame-handle = u64;
 
+    use types.{dom-rect};
+
     /// `format` attribute — getter.
     get-format: func(self: video-frame-handle) -> option<u64>;
 
@@ -435,10 +435,10 @@ interface video-frame {
     get-coded-height: func(self: video-frame-handle) -> u32;
 
     /// `codedRect` attribute — getter.
-    get-coded-rect: func(self: video-frame-handle) -> option<u64>;
+    get-coded-rect: func(self: video-frame-handle) -> option<dom-rect>;
 
     /// `visibleRect` attribute — getter.
-    get-visible-rect: func(self: video-frame-handle) -> option<u64>;
+    get-visible-rect: func(self: video-frame-handle) -> option<dom-rect>;
 
     /// `rotation` attribute — getter.
     get-rotation: func(self: video-frame-handle) -> f64;
@@ -2416,6 +2416,73 @@ interface window {
     get-speech-synthesis: func() -> u64;
 }
 
+interface platform-helpers {
+    /// Window inner width.
+    inner-width: func() -> s32;
+
+    /// Window inner height.
+    inner-height: func() -> s32;
+
+    /// Set timeout callback.
+    set-timeout: func(callback-id: u64, ms: s32) -> s32;
+
+    /// Clear timeout.
+    clear-timeout: func(id: s32);
+
+    /// Request animation frame.
+    request-animation-frame: func(callback-id: u64) -> u32;
+
+    /// Cancel animation frame.
+    cancel-animation-frame: func(id: u32);
+
+    use types.{dom-rect};
+
+    /// Get bounding client rect for element.
+    get-bounding-client-rect: func(element: u64) -> dom-rect;
+
+    /// Create resize observer.
+    create-resize-observer: func(callback-id: u64) -> u64;
+
+    /// Observe element for resize.
+    observe-resize: func(observer: u64, element: u64);
+
+    /// Unobserve element for resize.
+    unobserve-resize: func(observer: u64, element: u64);
+
+    /// Disconnect resize observer.
+    disconnect-resize: func(observer: u64);
+
+    /// Create mutation observer.
+    create-mutation-observer: func(callback-id: u64) -> u64;
+
+    /// Observe mutations.
+    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
+
+    /// Disconnect mutation observer.
+    disconnect-mutation: func(observer: u64);
+
+    /// Get document.
+    get-document: func() -> u64;
+
+    /// Get element by id.
+    get-element-by-id: func(id: string) -> u64;
+
+    /// Create element.
+    create-element: func(tag-name: string) -> u64;
+
+    /// Create text node.
+    create-text-node: func(text: string) -> u64;
+
+    /// Append child.
+    append-child: func(parent: u64, child: u64) -> u64;
+
+    /// Set text content.
+    set-text-content: func(node: u64, text: option<string>);
+
+    /// Set attribute.
+    set-attribute: func(element: u64, name: string, value: string);
+}
+
 interface media-query-list {
     /// Opaque handle to a host-side `MediaQueryList` instance.
     type media-query-list-handle = u64;
@@ -2769,6 +2836,8 @@ interface caret-position {
     /// Opaque handle to a host-side `CaretPosition` instance.
     type caret-position-handle = u64;
 
+    use types.{dom-rect};
+
     /// `offsetNode` attribute — getter.
     get-offset-node: func(self: caret-position-handle) -> u64;
 
@@ -2776,18 +2845,21 @@ interface caret-position {
     get-offset: func(self: caret-position-handle) -> u32;
 
     /// `getClientRect()` operation.
-    get-client-rect: func(self: caret-position-handle) -> option<u64>;
+    get-client-rect: func(self: caret-position-handle) -> option<dom-rect>;
 }
 
 interface element {
     /// Opaque handle to a host-side `Element` instance.
+
+    use types.{dom-rect};
+
     type element-handle = u64;
 
     /// `getClientRects()` operation.
     get-client-rects: func(self: element-handle) -> u64;
 
     /// `getBoundingClientRect()` operation.
-    get-bounding-client-rect: func(self: element-handle) -> u64;
+    get-bounding-client-rect: func(self: element-handle) -> dom-rect;
 
     /// `checkVisibility()` operation.
     check-visibility: func(self: element-handle, options: option<u64>) -> bool;
@@ -3245,13 +3317,16 @@ interface html-image-element {
 
 interface range {
     /// Opaque handle to a host-side `Range` instance.
+
+    use types.{dom-rect};
+
     type range-handle = u64;
 
     /// `getClientRects()` operation.
     get-client-rects: func(self: range-handle) -> u64;
 
     /// `getBoundingClientRect()` operation.
-    get-bounding-client-rect: func(self: range-handle) -> u64;
+    get-bounding-client-rect: func(self: range-handle) -> dom-rect;
 
     /// `commonAncestorContainer` attribute — getter.
     get-common-ancestor-container: func(self: range-handle) -> u64;
@@ -3390,6 +3465,9 @@ interface mouse-event {
 
 interface geometry-utils {
     /// Opaque handle to a host-side `GeometryUtils` instance.
+
+    use types.{dom-rect};
+
     type geometry-utils-handle = u64;
 
     /// `getBoxQuads()` operation.
@@ -3399,7 +3477,7 @@ interface geometry-utils {
     convert-quad-from-node: func(self: geometry-utils-handle, quad: u64, %from: u64, options: option<u64>) -> u64;
 
     /// `convertRectFromNode()` operation.
-    convert-rect-from-node: func(self: geometry-utils-handle, rect: u64, %from: u64, options: option<u64>) -> u64;
+    convert-rect-from-node: func(self: geometry-utils-handle, rect: dom-rect, %from: u64, options: option<u64>) -> u64;
 
     /// `convertPointFromNode()` operation.
     convert-point-from-node: func(self: geometry-utils-handle, point: u64, %from: u64, options: option<u64>) -> u64;
@@ -5766,13 +5844,6 @@ interface progress-event {
 }
 
 interface types {
-    /// DOMRect values returned by getBoundingClientRect.
-    record dom-rect {
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-    }
     /// WebIDL enum EndingType.
     enum ending-type {
         transparent,
@@ -5786,6 +5857,13 @@ interface types {
     /// WebIDL dictionary FilePropertyBag.
     record file-property-bag {
         last-modified: s64,
+    }
+    /// WebIDL dictionary DOMRect.
+    record dom-rect {
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
     }
 }
 
@@ -6951,6 +7029,11 @@ interface html-media-element {
     get-default-muted: func(self: html-media-element-handle) -> bool;
     /// `defaultMuted` attribute — setter.
     set-default-muted: func(self: html-media-element-handle, value: bool);
+
+    /// `loading` attribute — getter.
+    get-loading: func(self: html-media-element-handle) -> string;
+    /// `loading` attribute — setter.
+    set-loading: func(self: html-media-element-handle, value: string);
 
     /// `audioTracks` attribute — getter.
     get-audio-tracks: func(self: html-media-element-handle) -> u64;
@@ -11706,19 +11789,22 @@ interface service-worker-global-scope {
 
 interface intersection-observer-entry {
     /// Opaque handle to a host-side `IntersectionObserverEntry` instance.
+
+    use types.{dom-rect};
+
     type intersection-observer-entry-handle = u64;
 
     /// `time` attribute — getter.
     get-time: func(self: intersection-observer-entry-handle) -> f64;
 
     /// `rootBounds` attribute — getter.
-    get-root-bounds: func(self: intersection-observer-entry-handle) -> option<u64>;
+    get-root-bounds: func(self: intersection-observer-entry-handle) -> option<dom-rect>;
 
     /// `boundingClientRect` attribute — getter.
-    get-bounding-client-rect: func(self: intersection-observer-entry-handle) -> u64;
+    get-bounding-client-rect: func(self: intersection-observer-entry-handle) -> dom-rect;
 
     /// `intersectionRect` attribute — getter.
-    get-intersection-rect: func(self: intersection-observer-entry-handle) -> u64;
+    get-intersection-rect: func(self: intersection-observer-entry-handle) -> dom-rect;
 
     /// `isIntersecting` attribute — getter.
     get-is-intersecting: func(self: intersection-observer-entry-handle) -> bool;
@@ -11748,15 +11834,16 @@ interface resize-observer {
 }
 
 interface resize-observer-entry {
+    /// Opaque handle to a host-side `ResizeObserverEntry` instance.
+
     use types.{dom-rect};
 
-    /// Opaque handle to a host-side `ResizeObserverEntry` instance.
     type resize-observer-entry-handle = u64;
 
     /// `target` attribute — getter.
     get-target: func(self: resize-observer-entry-handle) -> u64;
 
-    /// `contentRect` attribute — getter. Returns dom-rect record directly.
+    /// `contentRect` attribute — getter.
     get-content-rect: func(self: resize-observer-entry-handle) -> dom-rect;
 
     /// `borderBoxSize` attribute — getter.
@@ -13708,6 +13795,7 @@ world browser-full {
     import performance-resource-timing;
     import performance-timing;
     import performance-timing-confidence;
+    import platform-helpers;
     import permission-status;
     import permissions;
     import plugin;
@@ -13850,12 +13938,11 @@ world browser-full {
     import event-target;
     import style;
     import console;
-    import platform-helpers;
     export event-callbacks;
-    export timer-callbacks;
-    export animation-callbacks;
+    export lifecycle;
     export resize-observer-callbacks;
     export mutation-observer-callbacks;
-    export lifecycle;
+    export timer-callbacks;
+    export animation-callbacks;
 }
 

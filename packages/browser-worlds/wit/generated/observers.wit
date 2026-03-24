@@ -10,6 +10,28 @@
 /// Status: auto-generated (Phase A) — review before use in production
 package tairitsu-browser:observers@0.2.0;
 
+/// Common DOM rectangle type used by multiple interfaces
+
+interface types {
+
+    /// DOMRect values - x, y, width, height
+
+    record dom-rect {
+
+        x: f64,
+
+        y: f64,
+
+        width: f64,
+
+        height: f64,
+
+    }
+
+}
+
+
+
 /// WebIDL interface: `IntersectionObserver`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/intersection-observer.idl
 interface intersection-observer {
@@ -51,19 +73,22 @@ interface intersection-observer {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/intersection-observer.idl
 interface intersection-observer-entry {
     /// Opaque handle to a host-side `IntersectionObserverEntry` instance.
+
+    use types.{dom-rect};
+
     type intersection-observer-entry-handle = u64;
 
     /// `time` attribute — getter.
     get-time: func(self: intersection-observer-entry-handle) -> f64;
 
     /// `rootBounds` attribute — getter.
-    get-root-bounds: func(self: intersection-observer-entry-handle) -> option<u64>;
+    get-root-bounds: func(self: intersection-observer-entry-handle) -> option<dom-rect>;
 
     /// `boundingClientRect` attribute — getter.
-    get-bounding-client-rect: func(self: intersection-observer-entry-handle) -> u64;
+    get-bounding-client-rect: func(self: intersection-observer-entry-handle) -> dom-rect;
 
     /// `intersectionRect` attribute — getter.
-    get-intersection-rect: func(self: intersection-observer-entry-handle) -> u64;
+    get-intersection-rect: func(self: intersection-observer-entry-handle) -> dom-rect;
 
     /// `isIntersecting` attribute — getter.
     get-is-intersecting: func(self: intersection-observer-entry-handle) -> bool;
@@ -98,13 +123,16 @@ interface resize-observer {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/resize-observer.idl
 interface resize-observer-entry {
     /// Opaque handle to a host-side `ResizeObserverEntry` instance.
+
+    use types.{dom-rect};
+
     type resize-observer-entry-handle = u64;
 
     /// `target` attribute — getter.
     get-target: func(self: resize-observer-entry-handle) -> u64;
 
     /// `contentRect` attribute — getter.
-    get-content-rect: func(self: resize-observer-entry-handle) -> u64;
+    get-content-rect: func(self: resize-observer-entry-handle) -> dom-rect;
 
     /// `borderBoxSize` attribute — getter.
     get-border-box-size: func(self: resize-observer-entry-handle) -> list<u64>;
