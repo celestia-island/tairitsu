@@ -17,11 +17,22 @@
 - ✅ 添加了回调接口（timer-callbacks, animation-callbacks, resize-observer-callbacks 等）
 - ✅ 修复了多个 WIT 接口的类型导入问题
 
-**已知问题** (2026-03-24):
+**已知问题** (2026-03-24 更新):
 - `resize-observer-entry` 接口的 `get-content-rect` 方法存在类型编组（marshalling）问题
-- 错误信息：`expected 4-tuple, found 1-tuple` 或 `expected tuple found record`
-- host 实现返回 `(f64, f64, f64, f64)`（4-tuple），但 wasmtime 报告类型不匹配
-- 可能是 WIT 记录类型与 wasmtime func_wrap 之间的类型编组问题
+- **最新进展**：错误从 "expected `u64` found `record"` 变为 "expected 4-tuple, found 1-tuple"
+- **根本原因**：wasmtime 的 `func_wrap` API 将 `Result<(f64, f64, f64, f64)>` 解释为 1-tuple，而不是展开内部的 4-tuple
+- **技术细节**：
+  - WIT 记录类型在 canonical ABI 中被展平为元组
+  - `dom-rect` (4个 f64 字段) 变成 `(f64, f64, f64, f64)`
+  - 但 `func_wrap` 的 Result 包装导致 wasmtime 看到的是 1-tuple
+- **尝试的解决方案**：
+  - 嵌套元组：`Result<((f64, f64, f64, f64),), ...>` → 错误："expected tuple found record"
+  - 直接元组（移除 Result）→ 编译错误（func_wrap 要求 Result）
+  - WIT 返回元组而非记录 → 同样的 "expected 4-tuple, found 1-tuple" 错误
+- **下一步**：
+  - 研究 wasmtime 源码中的 `func_wrap` 实现
+  - 尝试其他 API（如 `func_wrap_raw`、`func_wrap_async`）
+  - 或暂时 stub `resize-observer-entry` 以解锁其他 SSR 测试
 - 详细分析见 `/mnt/sdb1/tairitsu/RESIZE_OBSERVER_ISSUE.md`
 - 此问题暂时阻止了 P0 任务的完成
 
