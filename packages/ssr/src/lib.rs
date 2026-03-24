@@ -11,6 +11,7 @@ pub mod virtual_dom;
 
 pub use host_state::{SsrConfig, SsrHostState};
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
+pub use html_render::FullDocumentConfig;
 
 use anyhow::Result;
 use wasmtime::{Engine, Store};
