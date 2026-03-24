@@ -1394,20 +1394,23 @@ interface caret-position {
     get-offset: func(self: caret-position-handle) -> u32;
 
     /// `getClientRect()` operation.
-    get-client-rect: func(self: caret-position-handle) -> option<u64>;
+    get-client-rect: func(self: caret-position-handle) -> option<dom-rect>;
 }
 
 /// WebIDL interface: `Element`
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/cssom-view.idl
 interface element {
     /// Opaque handle to a host-side `Element` instance.
+
+    use types.{dom-rect};
+
     type element-handle = u64;
 
     /// `getClientRects()` operation.
     get-client-rects: func(self: element-handle) -> u64;
 
     /// `getBoundingClientRect()` operation.
-    get-bounding-client-rect: func(self: element-handle) -> u64;
+    get-bounding-client-rect: func(self: element-handle) -> dom-rect;
 
     /// `checkVisibility()` operation.
     check-visibility: func(self: element-handle, options: option<u64>) -> bool;
@@ -1871,13 +1874,16 @@ interface html-image-element {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/cssom-view.idl
 interface range {
     /// Opaque handle to a host-side `Range` instance.
+
+    use types.{dom-rect};
+
     type range-handle = u64;
 
     /// `getClientRects()` operation.
     get-client-rects: func(self: range-handle) -> u64;
 
     /// `getBoundingClientRect()` operation.
-    get-bounding-client-rect: func(self: range-handle) -> u64;
+    get-bounding-client-rect: func(self: range-handle) -> dom-rect;
 
     /// `commonAncestorContainer` attribute — getter.
     get-common-ancestor-container: func(self: range-handle) -> u64;
@@ -2020,6 +2026,9 @@ interface mouse-event {
 /// Source: https://github.com/w3c/webref/tree/main/ed/idl/cssom-view.idl
 interface geometry-utils {
     /// Opaque handle to a host-side `GeometryUtils` instance.
+
+    use types.{dom-rect};
+
     type geometry-utils-handle = u64;
 
     /// `getBoxQuads()` operation.
@@ -2029,7 +2038,7 @@ interface geometry-utils {
     convert-quad-from-node: func(self: geometry-utils-handle, quad: u64, %from: u64, options: option<u64>) -> u64;
 
     /// `convertRectFromNode()` operation.
-    convert-rect-from-node: func(self: geometry-utils-handle, rect: u64, %from: u64, options: option<u64>) -> u64;
+    convert-rect-from-node: func(self: geometry-utils-handle, rect: dom-rect, %from: u64, options: option<u64>) -> u64;
 
     /// `convertPointFromNode()` operation.
     convert-point-from-node: func(self: geometry-utils-handle, point: u64, %from: u64, options: option<u64>) -> u64;

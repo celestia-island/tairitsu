@@ -13,6 +13,12 @@
 - in-memory DOM（`SsrDom`）+ HTML 序列化（`html_render.rs`）已实现
 - `call_lifecycle_start()` 通过 `[export-lifecycle]start` 导出名调用组件
 
+**已知问题** (2026-03-24):
+- `resize-observer-entry` 接口的 `get-content-rect` 方法存在类型不匹配错误
+- 错误信息："expected `u64` found `record`"
+- 详细分析见 `/mnt/sdb1/tairitsu/RESIZE_OBSERVER_ISSUE.md`
+- 此问题阻止了 P0 任务的完成，需要深入研究 WIT 记录类型的处理方式
+
 ---
 
 ## 待完成任务
