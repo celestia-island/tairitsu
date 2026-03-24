@@ -3,6 +3,34 @@
 //! This module converts the in-memory SsrDom into HTML strings.
 
 use crate::virtual_dom::SsrDom;
+use serde::{Deserialize, Serialize};
+
+/// Configuration for rendering a complete HTML document
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FullDocumentConfig {
+    /// Page language (e.g., "zh-CN", "en-US")
+    pub lang: String,
+    /// Character set encoding (e.g., "UTF-8", "GBK")
+    pub charset: String,
+    /// Viewport meta content (e.g., "width=device-width, initial-scale=1.0")
+    pub viewport_content: String,
+    /// Page title
+    pub title: String,
+    /// CSS stylesheet links to include
+    pub css_links: Vec<String>,
+}
+
+impl Default for FullDocumentConfig {
+    fn default() -> Self {
+        Self {
+            lang: "zh-CN".to_string(),
+            charset: "UTF-8".to_string(),
+            viewport_content: "width=device-width, initial-scale=1.0".to_string(),
+            title: String::new(),
+            css_links: Vec::new(),
+        }
+    }
+}
 
 impl SsrDom {
     /// Render the body subtree to HTML
@@ -16,6 +44,69 @@ impl SsrDom {
     pub fn render_head_html(&self) -> String {
         let mut buf = String::new();
         self.render_node(self.head_handle(), &mut buf);
+        buf
+    }
+
+    /// Render a complete HTML document with DOCTYPE, html, head, and body tags
+    pub fn render_full_document_html(&self, config: &FullDocumentConfig) -> String {
+        let mut buf = String::new();
+
+        // DOCTYPE declaration
+        buf.push_str("<!DOCTYPE html>\n");
+
+        // Opening html tag with language attribute
+        buf.push_str("<html lang=\"");
+        buf.push_str(&config.lang);
+        buf.push_str("\">\n");
+
+        // Head section
+        buf.push_str("<head>\n");
+
+        // Meta charset
+        buf.push_str("  <meta charset=\"");
+        buf.push_str(&config.charset);
+        buf.push_str("\">\n");
+
+        // Viewport meta tag
+        buf.push_str("  <meta name=\"viewport\" content=\"");
+        buf.push_str(&config.viewport_content);
+        buf.push_str("\">\n");
+
+        // Page title
+        if !config.title.is_empty() {
+            buf.push_str("  <title>");
+            html_escape_into(&mut buf, &config.title);
+            buf.push_str("</title>\n");
+        }
+
+        // CSS links
+        for css_link in &config.css_links {
+            buf.push_str("  <link rel=\"stylesheet\" href=\"");
+            buf.push_str(css_link);
+            buf.push_str("\">\n");
+        }
+
+        // Render head content from the DOM
+        let head_html = self.render_head_html();
+        if !head_html.is_empty() && head_html != "<head></head>" {
+            buf.push_str(&head_html);
+            buf.push('\n');
+        }
+
+        buf.push_str("</head>\n");
+
+        // Body section
+        buf.push_str("<body>\n");
+
+        // Render body content from the DOM
+        let body_html = self.render_body_html();
+        buf.push_str(&body_html);
+
+        buf.push_str("\n</body>\n");
+
+        // Closing html tag
+        buf.push_str("</html>\n");
+
         buf
     }
 

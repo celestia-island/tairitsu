@@ -12,6 +12,7 @@ wasmtime-wasi = "40"
 wit-parser = "0.201"
 tracing = "0.1"
 bytes = "1"
+serde = { version = "1", features = ["derive"] }
 
 [build-dependencies]
 tairitsu = { path = "../runtime" }
