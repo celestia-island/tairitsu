@@ -246,7 +246,12 @@ pub async fn run() -> crate::Result<()> {
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
 
     match cli.command {
-        Commands::Dev { port, open, watch, ssr } => {
+        Commands::Dev {
+            port,
+            open,
+            watch,
+            ssr,
+        } => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
                 info!("Starting SSR development server...");
@@ -258,7 +263,12 @@ pub async fn run() -> crate::Result<()> {
                 crate::wasm::dev_server(&config, port, open, watch).await?;
             }
         }
-        Commands::Build { target, release, ssr, routes } => {
+        Commands::Build {
+            target,
+            release,
+            ssr,
+            routes,
+        } => {
             let config = crate::config::Config::load(&manifest_path)?;
             info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
@@ -344,7 +354,9 @@ pub async fn run() -> crate::Result<()> {
                 info!("Fetching icons from {}...", source);
                 let target_dir = std::path::PathBuf::from("target");
                 let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
-                let cache_dir = target_dir.join(crate::icons::ICON_CACHE_DIR).join(icon_source.to_string());
+                let cache_dir = target_dir
+                    .join(crate::icons::ICON_CACHE_DIR)
+                    .join(icon_source.to_string());
 
                 if force {
                     crate::icons::force_fetch_icons(&icon_source, &cache_dir)?;
@@ -353,7 +365,11 @@ pub async fn run() -> crate::Result<()> {
                 }
                 info!("Icons cached successfully.");
             }
-            IconsCommands::Build { output, icons, tags } => {
+            IconsCommands::Build {
+                output,
+                icons,
+                tags,
+            } => {
                 info!("Building icon module...");
 
                 // Load Cargo.toml to get configuration
@@ -368,7 +384,9 @@ pub async fn run() -> crate::Result<()> {
                 let icons_config = crate::icons::parse_icons_config(&manifest)?;
 
                 let output_path = output.unwrap_or_else(|| {
-                    icons_config.output.as_ref()
+                    icons_config
+                        .output
+                        .as_ref()
                         .map(std::path::PathBuf::from)
                         .unwrap_or_else(|| std::path::PathBuf::from("src/generated/icons.rs"))
                 });
@@ -382,7 +400,9 @@ pub async fn run() -> crate::Result<()> {
                     .unwrap_or_else(|| icons_config.tags.clone());
 
                 let icon_config = crate::icons::IconConfig {
-                    source: icons_config.source.as_ref()
+                    source: icons_config
+                        .source
+                        .as_ref()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or_default(),
                     names: icon_names,
@@ -394,14 +414,24 @@ pub async fn run() -> crate::Result<()> {
                 let target_dir = std::path::PathBuf::from("target");
                 let result = crate::icons::build_icons(&icon_config, &target_dir)?;
 
-                info!("Generated {} icons to {}", result.icons_count, result.output_path.display());
+                info!(
+                    "Generated {} icons to {}",
+                    result.icons_count,
+                    result.output_path.display()
+                );
             }
-            IconsCommands::List { source, tag, search } => {
+            IconsCommands::List {
+                source,
+                tag,
+                search,
+            } => {
                 info!("Listing icons from {}...", source);
 
                 let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
                 let target_dir = std::path::PathBuf::from("target");
-                let cache_dir = target_dir.join(crate::icons::ICON_CACHE_DIR).join(icon_source.to_string());
+                let cache_dir = target_dir
+                    .join(crate::icons::ICON_CACHE_DIR)
+                    .join(icon_source.to_string());
 
                 let metadata = crate::icons::fetch_icons(&icon_source, &cache_dir)?;
 
@@ -428,7 +458,14 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         },
-        Commands::Ssr { port, open, watch, build, routes, output } => {
+        Commands::Ssr {
+            port,
+            open,
+            watch,
+            build,
+            routes,
+            output,
+        } => {
             let config = crate::config::Config::load(&manifest_path)?;
 
             if build {
@@ -442,7 +479,11 @@ pub async fn run() -> crate::Result<()> {
                     .map(std::path::PathBuf::from)
                     .unwrap_or_else(|| std::path::PathBuf::from("dist/prerendered"));
 
-                info!("Pre-rendering {} routes to {}...", routes.len(), output_dir.display());
+                info!(
+                    "Pre-rendering {} routes to {}...",
+                    routes.len(),
+                    output_dir.display()
+                );
                 crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
             } else {
                 // Dev server mode
@@ -466,12 +507,18 @@ pub async fn run() -> crate::Result<()> {
                     println!();
                     println!("SCSS files ({}):", index.scss.len());
                     for resource in &index.scss {
-                        println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                        println!(
+                            "  {} -> {} (hash: {})",
+                            resource.source, resource.output, resource.hash
+                        );
                     }
                     println!();
                     println!("SVG files ({}):", index.svg.len());
                     for resource in &index.svg {
-                        println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                        println!(
+                            "  {} -> {} (hash: {})",
+                            resource.source, resource.id, resource.hash
+                        );
                     }
                     println!();
                     println!("Total: {} resources indexed", index.count());
@@ -479,7 +526,8 @@ pub async fn run() -> crate::Result<()> {
             }
             ResourcesCommands::List { r#type, format } => {
                 let target_dir = std::path::PathBuf::from("target");
-                let index_path = target_dir.join(crate::resources::RESOURCE_DIR)
+                let index_path = target_dir
+                    .join(crate::resources::RESOURCE_DIR)
                     .join(crate::resources::INDEX_FILE);
 
                 if !index_path.exists() {
@@ -510,24 +558,36 @@ pub async fn run() -> crate::Result<()> {
                         Some("scss") => {
                             println!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                                println!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source, resource.output, resource.hash
+                                );
                             }
                         }
                         Some("svg") => {
                             println!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                                println!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source, resource.id, resource.hash
+                                );
                             }
                         }
                         _ => {
                             println!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                println!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                                println!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source, resource.output, resource.hash
+                                );
                             }
                             println!();
                             println!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                println!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                                println!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source, resource.id, resource.hash
+                                );
                             }
                         }
                     }

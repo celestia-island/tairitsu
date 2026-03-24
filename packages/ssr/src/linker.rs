@@ -18,18 +18,12 @@ pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<
     crate::bindings::tairitsu_browser::full::resize_observer_entry::add_to_linker::<
         SsrHostState,
         HasSelf<SsrHostState>,
-    >(
-        linker,
-        |state| -> &mut SsrHostState { state },
-    )?;
+    >(linker, |state| -> &mut SsrHostState { state })?;
 
     crate::bindings::tairitsu_browser::full::resize_observer_size::add_to_linker::<
         SsrHostState,
         HasSelf<SsrHostState>,
-    >(
-        linker,
-        |state| -> &mut SsrHostState { state },
-    )?;
+    >(linker, |state| -> &mut SsrHostState { state })?;
 
     stubs::register_all_stubs(linker)?;
     register_core_imports(linker)?;
@@ -137,7 +131,7 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             state
                 .dom
                 .append_child(parent, child)
-                .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
+                .map_err(|e| anyhow::anyhow!(e))?;
             Ok((child,))
         },
     )?;
@@ -151,7 +145,7 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             state
                 .dom
                 .remove_child(parent, child)
-                .map_err(|e| wasmtime::Error::from(anyhow::anyhow!(e)))?;
+                .map_err(|e| anyhow::anyhow!(e))?;
             Ok((child,))
         },
     )?;
@@ -452,4 +446,3 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
 
     Ok(())
 }
-

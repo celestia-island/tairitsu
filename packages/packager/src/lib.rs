@@ -21,7 +21,9 @@ pub use icons::{
     IconBuildResult, IconConfig, IconMetadata, IconSource, IconStyle, IconsConfig, MdiIconMeta,
     MdiMetadata,
 };
-pub use resources::{ResourceIndex, ResourceIndexer, ScssResource, ScssUtils, SvgResource, SvgUtils};
+pub use resources::{
+    ResourceIndex, ResourceIndexer, ScssResource, ScssUtils, SvgResource, SvgUtils,
+};
 pub use utils::error::{Result, TairitsuPackagerError};
 
 /// Version of tairitsu-packager

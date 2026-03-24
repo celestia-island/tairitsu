@@ -322,7 +322,7 @@ mod wasm_impl {
                         .map(|entry_handle| {
                             let target = bindings::tairitsu_browser::full::resize_observer_entry::get_target(entry_handle);
                             let content_rect = bindings::tairitsu_browser::full::resize_observer_entry::get_content_rect(entry_handle);
-                            
+
                             let border_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_border_box_size(entry_handle);
                             let border_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = border_box_handles
                                 .into_iter()
@@ -331,7 +331,7 @@ mod wasm_impl {
                                     block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
                                 })
                                 .collect();
-                            
+
                             let content_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_content_box_size(entry_handle);
                             let content_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = content_box_handles
                                 .into_iter()
@@ -340,7 +340,7 @@ mod wasm_impl {
                                     block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
                                 })
                                 .collect();
-                            
+
                             tairitsu_vdom::ResizeObserverEntry {
                                 target,
                                 content_rect: tairitsu_vdom::DomRect {

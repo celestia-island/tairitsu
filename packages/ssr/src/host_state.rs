@@ -53,9 +53,7 @@ impl SsrHostState {
 
     /// Create a new SSR host state with custom config
     pub fn with_config(config: SsrConfig) -> anyhow::Result<Self> {
-        let wasi = WasiCtxBuilder::new()
-            .inherit_stdio()
-            .build();
+        let wasi = WasiCtxBuilder::new().inherit_stdio().build();
 
         let table = ResourceTable::new();
         let dom = SsrDom::new();
@@ -102,7 +100,10 @@ impl tairitsu::container::HostStateImpl for SsrHostState {
 
 // Implement HasData for SsrHostState to support bindgen-generated HostWithStore
 impl wasmtime::component::HasData for SsrHostState {
-    type Data<'a> = &'a mut Self where Self: 'a;
+    type Data<'a>
+        = &'a mut Self
+    where
+        Self: 'a;
 }
 
 // Implement the bindgen-generated Host traits for resize-observer-entry

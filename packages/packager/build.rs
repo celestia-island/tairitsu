@@ -34,7 +34,7 @@ fn main() {
     // Try to compile runtime.ts with SWC
     let bundle_content = if let Some(compiled) = compile_with_swc(&workspace_root) {
         compiled
-    } else if let Some(src) = std::fs::read_to_string(&runtime_ts).ok() {
+    } else if let Ok(src) = std::fs::read_to_string(&runtime_ts) {
         // Fallback: use TypeScript source (browser will handle it)
         src
     } else {
@@ -46,6 +46,7 @@ fn main() {
     let rs_content = format!(
         r#"/// Auto-generated browser glue bundle - DO NOT EDIT
 pub const BROWSER_GLUE_BUNDLE: &str = "{}";
+#[allow(dead_code)]
 pub const BROWSER_GLUE_BUNDLE_SIZE: usize = {};"#,
         escaped,
         bundle_content.len()

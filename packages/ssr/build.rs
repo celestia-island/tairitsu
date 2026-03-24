@@ -118,9 +118,8 @@ fn parse_wit_interfaces(wit_content: &str, manual_interfaces: &HashSet<&str>) ->
         }
 
         // Check for interface definition
-        if line.starts_with("interface ") {
+        if let Some(rest) = line.strip_prefix("interface ") {
             // Extract interface name
-            let rest = &line[10..]; // Skip "interface "
             let name = rest
                 .split_whitespace()
                 .next()

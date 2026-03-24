@@ -164,8 +164,7 @@ fn expand_inline_scss(content: &str, scope: Option<&str>) -> TokenStream2 {
 /// Expand file-based SCSS
 fn expand_file_scss(path: &str, scope: Option<&str>) -> TokenStream2 {
     // Get the crate root directory
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let full_path = std::path::Path::new(&crate_root).join(path);
 

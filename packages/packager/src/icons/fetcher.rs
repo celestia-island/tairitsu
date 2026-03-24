@@ -167,7 +167,11 @@ impl IconFetcher {
         }
 
         metadata.count = metadata.icons.len();
-        info!("Loaded {} icons from {}", metadata.count, icons_dir.display());
+        info!(
+            "Loaded {} icons from {}",
+            metadata.count,
+            icons_dir.display()
+        );
 
         Ok(metadata)
     }
@@ -279,13 +283,9 @@ mod http_fetch {
     /// Fetch URL content asynchronously.
     pub async fn fetch_url_async(url: &str) -> crate::Result<String> {
         let client = get_async_http_client();
-        let response = client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| {
-                crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
-            })?;
+        let response = client.get(url).send().await.map_err(|e| {
+            crate::TairitsuPackagerError::HttpError(format!("Failed to fetch {}: {}", url, e))
+        })?;
 
         if !response.status().is_success() {
             return Err(crate::TairitsuPackagerError::HttpError(format!(
@@ -458,47 +458,33 @@ mod tests {
     fn test_extract_svg_path_complex() {
         let svg = r#"<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>"#;
         let path = extract_svg_path(svg);
-        assert_eq!(
-            path,
-            Some("M4 4h16v16H4V4zm2 2v12h12V6H6z".to_string())
-        );
+        assert_eq!(path, Some("M4 4h16v16H4V4zm2 2v12h12V6H6z".to_string()));
     }
 
     #[test]
     fn test_extract_svg_path_no_path() {
-        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- empty --></svg>"#;
+        let svg =
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- empty --></svg>"#;
         let path = extract_svg_path(svg);
         assert_eq!(path, None);
     }
 
     #[test]
     fn test_icon_fetcher_paths() {
-        let fetcher = IconFetcher::new(
-            PathBuf::from("/tmp/cache"),
-            IconSource::Mdi,
-        );
+        let fetcher = IconFetcher::new(PathBuf::from("/tmp/cache"), IconSource::Mdi);
 
-        assert_eq!(
-            fetcher.source_cache_dir(),
-            PathBuf::from("/tmp/cache/mdi")
-        );
+        assert_eq!(fetcher.source_cache_dir(), PathBuf::from("/tmp/cache/mdi"));
         assert_eq!(
             fetcher.metadata_path(),
             PathBuf::from("/tmp/cache/mdi/metadata.json")
         );
-        assert_eq!(
-            fetcher.svg_dir(),
-            PathBuf::from("/tmp/cache/mdi/svg")
-        );
+        assert_eq!(fetcher.svg_dir(), PathBuf::from("/tmp/cache/mdi/svg"));
     }
 
     #[test]
     fn test_icon_fetcher_with_version() {
-        let fetcher = IconFetcher::new(
-            PathBuf::from("/tmp/cache"),
-            IconSource::Mdi,
-        )
-        .with_version("7.3.67");
+        let fetcher =
+            IconFetcher::new(PathBuf::from("/tmp/cache"), IconSource::Mdi).with_version("7.3.67");
 
         assert_eq!(fetcher.version, "7.3.67");
     }

@@ -14,7 +14,10 @@ fn test_hikari_website() {
             println!("HTML content: {}", html);
 
             // Basic assertions - the main goal is to not crash with type marshaling errors
-            assert!(html.contains("<body>"), "HTML should contain a body element");
+            assert!(
+                html.contains("<body>"),
+                "HTML should contain a body element"
+            );
         }
         Err(e) => {
             println!("SSR failed: {:?}", e);

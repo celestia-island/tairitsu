@@ -29,8 +29,8 @@ mod metadata;
 pub use fetcher::{fetch_icons, force_fetch_icons, IconFetcher};
 pub use generator::{generate_icon_module, IconBuildResult};
 pub use metadata::{
-    IconEntry, IconMetadata, IconsConfig, MdiIconMeta, MdiMetadata, parse_icons_config,
-    parse_mdi_metadata,
+    parse_icons_config, parse_mdi_metadata, IconEntry, IconMetadata, IconsConfig, MdiIconMeta,
+    MdiMetadata,
 };
 
 use serde::{Deserialize, Serialize};
@@ -147,8 +147,13 @@ pub const MDI_META_URL: &str =
 /// 1. Downloads icons if not cached
 /// 2. Filters by names, tags, styles
 /// 3. Generates Rust code
-pub fn build_icons(config: &IconConfig, target_dir: &std::path::Path) -> crate::Result<IconBuildResult> {
-    let cache_dir = target_dir.join(ICON_CACHE_DIR).join(config.source.to_string());
+pub fn build_icons(
+    config: &IconConfig,
+    target_dir: &std::path::Path,
+) -> crate::Result<IconBuildResult> {
+    let cache_dir = target_dir
+        .join(ICON_CACHE_DIR)
+        .join(config.source.to_string());
 
     // Ensure cache directory exists
     std::fs::create_dir_all(&cache_dir)?;

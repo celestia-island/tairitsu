@@ -112,8 +112,7 @@ fn expand_inline_svg(content: &str) -> TokenStream2 {
 /// Expand file-based SVG
 fn expand_file_svg(path: &str) -> TokenStream2 {
     // Get the crate root directory
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let full_path = std::path::Path::new(&crate_root).join(path);
 
@@ -139,8 +138,7 @@ fn expand_file_svg(path: &str) -> TokenStream2 {
 /// Expand SVG by resource ID
 fn expand_id_svg(id: &str) -> TokenStream2 {
     // Get the crate root and target directories
-    let crate_root = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR not set");
+    let crate_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let crate_root_path = std::path::Path::new(&crate_root);
 
@@ -166,7 +164,8 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
                     };
                 }
                 Err(err) => {
-                    let error_msg = format!("Failed to read SVG file '{}': {}", svg_path.display(), err);
+                    let error_msg =
+                        format!("Failed to read SVG file '{}': {}", svg_path.display(), err);
                     return quote! {
                         compile_error!(#error_msg)
                     };
@@ -269,8 +268,11 @@ fn sanitize_svg(content: &str) -> String {
 
     // Remove dangerous data: URLs - replace data: URLs that are not images
     // Simple approach: block data:text/html, data:application, etc.
-    let dangerous_data_pattern = regex::Regex::new(r#"data\s*:\s*(text/html|application|text/javascript)[^,]*,"#).unwrap();
-    result = dangerous_data_pattern.replace_all(&result, "blocked:").to_string();
+    let dangerous_data_pattern =
+        regex::Regex::new(r#"data\s*:\s*(text/html|application|text/javascript)[^,]*,"#).unwrap();
+    result = dangerous_data_pattern
+        .replace_all(&result, "blocked:")
+        .to_string();
 
     result
 }

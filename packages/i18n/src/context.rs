@@ -26,7 +26,6 @@ impl I18nContext {
 /// ```rust,no_run
 /// use tairitsu_i18n::{Language, provide_i18n, loader::load_toml};
 ///
-/// fn main() {
 ///     let toml_content = r#"
 ///         [common.button]
 ///         submit = "Submit"
@@ -133,7 +132,6 @@ impl I18nContext {
 ///     "#;
 ///     let keys = load_toml(toml_content).unwrap();
 ///     provide_i18n(Language::English, keys);
-/// }
 /// ```
 pub fn provide_i18n(language: Language, keys: I18nKeys) {
     provide_context(I18nContext { language, keys });

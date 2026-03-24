@@ -86,7 +86,8 @@ impl Parse for RsxElement {
                 let is_attr = if fork.peek(LitStr) {
                     fork.parse::<LitStr>().is_ok() && fork.peek(Token![:])
                 } else if fork.peek(Ident) {
-                    fork.parse::<Ident>().is_ok() && (fork.peek(Token![:]) || fork.peek(Token![,]) || fork.is_empty())
+                    fork.parse::<Ident>().is_ok()
+                        && (fork.peek(Token![:]) || fork.peek(Token![,]) || fork.is_empty())
                 } else {
                     false
                 };
@@ -115,7 +116,10 @@ impl Parse for RsxElement {
                     let attr = if is_shorthand {
                         // Shorthand: name, means name: name
                         let value: Expr = syn::parse_str(&name).unwrap();
-                        RsxAttr::Other { name: name.clone(), value }
+                        RsxAttr::Other {
+                            name: name.clone(),
+                            value,
+                        }
                     } else {
                         match name.as_str() {
                             "class" => RsxAttr::Class(content.parse()?),
@@ -181,7 +185,12 @@ impl Parse for RsxRoot {
             let first: RsxElement = input.parse()?;
 
             // Check if there are more elements after this one
-            if !input.is_empty() && (input.peek(Ident) || input.peek(Token![if]) || input.peek(Token![match]) || input.peek(Token![for])) {
+            if !input.is_empty()
+                && (input.peek(Ident)
+                    || input.peek(Token![if])
+                    || input.peek(Token![match])
+                    || input.peek(Token![for]))
+            {
                 // Multiple root elements - parse as fragment
                 let mut children = vec![RsxChild::Element(first)];
                 while !input.is_empty() {

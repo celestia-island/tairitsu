@@ -58,7 +58,10 @@ pub fn generate_icon_module(icons: &[&IconEntry], styles: &[IconStyle]) -> crate
     code.push_str("        match self {\n");
     for icon in icons {
         let ident = icon.to_rust_ident();
-        code.push_str(&format!("            Icon::{} => \"{}\",\n", ident, icon.name));
+        code.push_str(&format!(
+            "            Icon::{} => \"{}\",\n",
+            ident, icon.name
+        ));
     }
     code.push_str("        }\n");
     code.push_str("    }\n\n");
@@ -102,7 +105,10 @@ pub fn generate_icon_module(icons: &[&IconEntry], styles: &[IconStyle]) -> crate
         code.push_str(&format!(
             "            Icon::{} => &[{}],\n",
             ident,
-            tags.iter().map(|t| format!("\"{}\"", t)).collect::<Vec<_>>().join(", ")
+            tags.iter()
+                .map(|t| format!("\"{}\"", t))
+                .collect::<Vec<_>>()
+                .join(", ")
         ));
     }
     code.push_str("        }\n");
@@ -123,7 +129,10 @@ pub fn generate_icon_module(icons: &[&IconEntry], styles: &[IconStyle]) -> crate
 
     // ICON_COUNT constant
     code.push_str("/// Total number of icons\n");
-    code.push_str(&format!("pub const ICON_COUNT: usize = {};\n\n", icons.len()));
+    code.push_str(&format!(
+        "pub const ICON_COUNT: usize = {};\n\n",
+        icons.len()
+    ));
 
     // Icon names array for lookup
     code.push_str("/// All icon names\n");
@@ -150,7 +159,10 @@ mod tests {
                 author: Some("Google".to_string()),
                 version: None,
                 deprecated: false,
-                svg_path: Some("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z".to_string()),
+                svg_path: Some(
+                    "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+                        .to_string(),
+                ),
             },
             IconEntry {
                 name: "sun".to_string(),
@@ -159,7 +171,9 @@ mod tests {
                 author: None,
                 version: None,
                 deprecated: false,
-                svg_path: Some("M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z".to_string()),
+                svg_path: Some(
+                    "M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z".to_string(),
+                ),
             },
         ];
 

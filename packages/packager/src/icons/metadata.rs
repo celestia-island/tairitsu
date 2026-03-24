@@ -83,7 +83,12 @@ impl MdiIconMeta {
     pub fn to_rust_ident(&self) -> String {
         let mut ident = self.name.replace('-', "_");
         // Ensure it doesn't start with a number
-        if ident.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+        if ident
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+        {
             ident = format!("Icon{}", ident);
         }
         ident
@@ -174,7 +179,10 @@ impl MdiMetadata {
                         .and_then(|c| c.as_str())
                         .unwrap_or("")
                         .to_string(),
-                    deprecated: entry.get("deprecated").and_then(|d| d.as_bool()).unwrap_or(false),
+                    deprecated: entry
+                        .get("deprecated")
+                        .and_then(|d| d.as_bool())
+                        .unwrap_or(false),
                     path: None, // Path is loaded separately from SVG files
                 };
                 icons.insert(name.to_string(), icon_meta);
@@ -248,8 +256,14 @@ impl MdiMetadata {
             .values()
             .filter(|icon| {
                 icon.name.to_lowercase().contains(&query_lower)
-                    || icon.tags.iter().any(|t| t.to_lowercase().contains(&query_lower))
-                    || icon.aliases.iter().any(|a| a.to_lowercase().contains(&query_lower))
+                    || icon
+                        .tags
+                        .iter()
+                        .any(|t| t.to_lowercase().contains(&query_lower))
+                    || icon
+                        .aliases
+                        .iter()
+                        .any(|a| a.to_lowercase().contains(&query_lower))
             })
             .collect()
     }
@@ -263,7 +277,11 @@ pub fn parse_mdi_metadata(json: &str) -> crate::Result<MdiMetadata> {
 impl IconsConfig {
     /// Convert to IconConfig
     pub fn to_icon_config(&self) -> super::IconConfig {
-        let source = self.source.as_ref().and_then(|s| s.parse().ok()).unwrap_or_default();
+        let source = self
+            .source
+            .as_ref()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_default();
 
         let styles = if self.styles.is_empty() {
             vec![IconStyle::Filled]
@@ -335,7 +353,12 @@ impl IconEntry {
     pub fn to_rust_ident(&self) -> String {
         let mut ident = self.name.replace('-', "_");
         // Ensure it doesn't start with a number
-        if ident.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+        if ident
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+        {
             ident = format!("Icon{}", ident);
         }
         ident
@@ -370,16 +393,33 @@ impl IconMetadata {
                     aliases: entry
                         .get("aliases")
                         .and_then(|a| a.as_array())
-                        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|v| v.as_str().map(String::from))
+                                .collect()
+                        })
                         .unwrap_or_default(),
                     tags: entry
                         .get("tags")
                         .and_then(|t| t.as_array())
-                        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|v| v.as_str().map(String::from))
+                                .collect()
+                        })
                         .unwrap_or_default(),
-                    author: entry.get("author").and_then(|a| a.as_str()).map(String::from),
-                    version: entry.get("version").and_then(|v| v.as_str()).map(String::from),
-                    deprecated: entry.get("deprecated").and_then(|d| d.as_bool()).unwrap_or(false),
+                    author: entry
+                        .get("author")
+                        .and_then(|a| a.as_str())
+                        .map(String::from),
+                    version: entry
+                        .get("version")
+                        .and_then(|v| v.as_str())
+                        .map(String::from),
+                    deprecated: entry
+                        .get("deprecated")
+                        .and_then(|d| d.as_bool())
+                        .unwrap_or(false),
                     svg_path: None,
                 };
                 icons.insert(name.to_string(), icon_entry);
@@ -418,9 +458,9 @@ impl IconMetadata {
 
                 // Check if tag matches
                 let tag_matches = tags.iter().any(|t| {
-                    icon.tags.iter().any(|icon_tag| {
-                        icon_tag.to_lowercase() == t.to_lowercase()
-                    })
+                    icon.tags
+                        .iter()
+                        .any(|icon_tag| icon_tag.to_lowercase() == t.to_lowercase())
                 });
 
                 name_matches || tag_matches
@@ -456,8 +496,14 @@ impl IconMetadata {
             .values()
             .filter(|icon| {
                 icon.name.to_lowercase().contains(&query_lower)
-                    || icon.tags.iter().any(|t| t.to_lowercase().contains(&query_lower))
-                    || icon.aliases.iter().any(|a| a.to_lowercase().contains(&query_lower))
+                    || icon
+                        .tags
+                        .iter()
+                        .any(|t| t.to_lowercase().contains(&query_lower))
+                    || icon
+                        .aliases
+                        .iter()
+                        .any(|a| a.to_lowercase().contains(&query_lower))
             })
             .collect()
     }
@@ -566,7 +612,9 @@ mod tests {
             version: "1.5.54".to_string(),
             codepoint: "F0019".to_string(),
             deprecated: false,
-            path: Some("M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z".to_string()),
+            path: Some(
+                "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z".to_string(),
+            ),
         };
         assert_eq!(icon.to_rust_ident(), "account_circle");
     }
