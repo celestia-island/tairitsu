@@ -5,6 +5,7 @@ members = [
     "packages/vdom",
     "packages/web",
     "packages/hooks",
+    "packages/i18n",
     "packages/packager",
     "packages/e2e",
     "packages/style",
