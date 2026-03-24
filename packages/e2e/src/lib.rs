@@ -84,6 +84,17 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         }
     }
 
+    // SSR Tests (don't require WebDriver)
+    info!("Running SSR Tests...");
+    match tests::Test::run_with_driver(&tests::SsrTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("SSR test suite failed: {}", e);
+            let error_msg: String = e.to_string();
+            results.push(TestResult::error("SsrTests", error_msg.as_str()));
+        }
+    }
+
     info!("\n=== E2E Test Results ===");
     for result in &results {
         info!("{}: {}", result.component, result.message);

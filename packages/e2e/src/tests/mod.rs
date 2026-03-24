@@ -4,6 +4,7 @@ pub mod doctor;
 pub mod error_handling;
 pub mod events;
 pub mod lifecycle;
+pub mod ssr;
 pub mod style_integration;
 pub mod svg_safety;
 
@@ -16,6 +17,7 @@ pub use doctor::DoctorTests;
 pub use error_handling::ErrorHandlingTests;
 pub use events::EventTests;
 pub use lifecycle::LifecycleTests;
+pub use ssr::SsrTests;
 pub use style_integration::StyleIntegrationTests;
 pub use svg_safety::SvgSafetyTests;
 
