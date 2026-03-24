@@ -56,6 +56,10 @@ fn main() {
         "audio-encoder",
         "video-decoder",
         "video-encoder",
+        // Resize observer interfaces (manually implemented in linker.rs)
+        "resize-observer",
+        "resize-observer-entry",
+        "resize-observer-size",
         // Callback interfaces (implemented by the component, not the host)
         "timer-callbacks",
         "animation-callbacks",
@@ -226,7 +230,9 @@ fn generate_stubs(interfaces: &[WitInterface]) -> String {
 
     // Generate the top-level registration function
     code.push_str("\n/// Register all auto-generated stub implementations with the linker\n");
-    code.push_str("pub fn register_all_auto_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {\n");
+    code.push_str(
+        "pub fn register_all_auto_stubs(linker: &mut Linker<SsrHostState>) -> Result<()> {\n",
+    );
 
     for interface in interfaces {
         let fn_name = sanitize_identifier(&interface.name);
@@ -442,7 +448,7 @@ fn map_wit_type_to_rust(wit_type: &str) -> String {
         t if t.ends_with("-handle") => "u64".to_string(),
         // Handle common record types
         "dom-rect" => "(f64, f64, f64, f64)".to_string(),
-        "mouse-event-data" => "u64".to_string(),  // Simplified for SSR
+        "mouse-event-data" => "u64".to_string(), // Simplified for SSR
         "keyboard-event-data" => "u64".to_string(),
         "focus-event-data" => "u64".to_string(),
         "input-event-data" => "u64".to_string(),
