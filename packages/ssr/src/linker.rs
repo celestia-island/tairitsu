@@ -80,6 +80,24 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
+    document.func_wrap(
+        "get-element-by-id",
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>, (id,): (String,)|
+         -> Result<(Option<u64>,), wasmtime::Error> {
+            let dom = &caller.data().dom;
+            Ok((dom.get_element_by_id(&id),))
+        },
+    )?;
+
+    document.func_wrap(
+        "query-selector",
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>, (selector,): (String,)|
+         -> Result<(Option<u64>,), wasmtime::Error> {
+            let dom = &caller.data().dom;
+            Ok((dom.query_selector(&selector),))
+        },
+    )?;
+
     // Node interface
     let mut node = linker.instance("tairitsu-browser:full/node@0.2.0")?;
     node.func_wrap(
