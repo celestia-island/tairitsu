@@ -1,5 +1,6 @@
 pub mod callback;
 pub mod diff;
+pub mod dom_ops;
 pub mod events;
 pub mod patch;
 pub mod platform;
@@ -9,6 +10,7 @@ pub mod svg;
 pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
+pub use dom_ops::{get_bounding_client_rect, register_wit_functions, set_attribute, set_style};
 pub use events::{
     ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FileData, FocusEvent,
     FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,

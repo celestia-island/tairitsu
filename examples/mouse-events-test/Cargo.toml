@@ -1,0 +1,20 @@
+[package]
+name = "mouse-events-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tairitsu-macros = { path = "../../packages/macros" }
+tairitsu-vdom = { path = "../../packages/vdom" }
+tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
+anyhow = "1"
+tracing = "0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.tairitsu]
+name = "Mouse Events Test"
+title = "Mouse Events Test"
+description = "Test mouseenter/mouseleave event handling"
+html.title = "Mouse Events Test"

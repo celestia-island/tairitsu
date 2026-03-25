@@ -3,6 +3,35 @@ use std::{cell::RefCell, rc::Rc};
 #[cfg(feature = "web")]
 use wasm_bindgen::JsCast;
 
+/// Creates a reactive CSS variable binding.
+///
+/// This hook provides a way to read and write CSS custom properties (CSS variables)
+/// on the `:root` element. It returns a tuple containing:
+/// - A `Rc<RefCell<String>>` containing the current value
+/// - A setter function to update the CSS variable
+///
+/// # Arguments
+///
+/// * `name` - The name of the CSS variable (without the `--` prefix)
+///
+/// # Returns
+///
+/// A tuple of `(value, setter)` where:
+/// - `value` is a `Rc<RefCell<String>>` containing the current CSS variable value
+/// - `setter` is a function that takes a `String` and updates the CSS variable
+///
+/// # Platform-specific behavior
+///
+/// - **Web**: The CSS variable is read from and written to the `:root` element
+/// - **Non-web**: The value is stored in memory only (no actual CSS variable is modified)
+///
+/// # Example
+///
+/// ```ignore
+/// let (color, set_color) = use_css_var("primary-color");
+/// set_color("#ff0000".to_string());
+/// println!("Current color: {}", color.borrow());
+/// ```
 #[cfg(feature = "web")]
 pub fn use_css_var(name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
     let value = Rc::new(RefCell::new(get_css_var(name)));
@@ -24,8 +53,8 @@ fn get_css_var(name: &str) -> String {
     if let Some(window) = window() {
         if let Some(document) = window.document() {
             if let Some(root) = document.document_element() {
-                if let Some(style) = root.dyn_ref::<web_sys::Element>() {
-                    let computed = window.get_computed_style(style).ok().flatten();
+                if let Some(element) = root.dyn_ref::<web_sys::Element>() {
+                    let computed = window.get_computed_style(element).ok().flatten();
                     if let Some(computed) = computed {
                         return computed
                             .get_property_value(&format!("--{}", name))
@@ -47,16 +76,25 @@ fn set_css_var(name: &str, value: &str) {
     if let Some(window) = window() {
         if let Some(document) = window.document() {
             if let Some(root) = document.document_element() {
-                root.style()
-                    .set_property(&format!("--{}", name), value)
-                    .ok();
+                if let Some(html_element) = root.dyn_ref::<web_sys::HtmlElement>() {
+                    html_element
+                        .style()
+                        .set_property(&format!("--{}", name), value)
+                        .ok();
+                }
             }
         }
     }
 }
 
+/// Creates a reactive CSS variable binding (non-web implementation).
+///
+/// This is a fallback implementation for non-web platforms. The value is stored
+/// in memory only and does not interact with any actual CSS variables.
+///
+/// See the web-specific implementation for more details.
 #[cfg(not(feature = "web"))]
-pub fn use_css_var(name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
+pub fn use_css_var(_name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
     let value = Rc::new(RefCell::new(String::new()));
     let value_clone = Rc::clone(&value);
 

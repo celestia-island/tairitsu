@@ -64,6 +64,10 @@ impl Default for EventWitHandle {
 
 #[derive(Debug, Clone)]
 pub struct MouseEvent {
+    /// The target element handle that received this event.
+    /// This allows event handlers to directly manipulate the element
+    /// via Platform methods like set_style and get_bounding_client_rect.
+    pub target: Option<u64>,
     pub client_x: i32,
     pub client_y: i32,
     pub screen_x: i32,
@@ -86,6 +90,7 @@ impl EventData for MouseEvent {
 impl MouseEvent {
     pub fn new() -> Self {
         Self {
+            target: None,
             client_x: 0,
             client_y: 0,
             screen_x: 0,
@@ -98,6 +103,11 @@ impl MouseEvent {
             meta_key: false,
             event_handle: EventWitHandle::placeholder(),
         }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
     }
 
     pub fn client_x(mut self, x: i32) -> Self {

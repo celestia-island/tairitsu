@@ -39,6 +39,12 @@ const NAV: &[NavSection] = &[
             ("包清单", "#/packages/list"),
         ],
     },
+    NavSection {
+        label: "Tests",
+        items: &[
+            ("DOM 操作测试 (Phase 0.2)", "#/dom-ops-test"),
+        ],
+    },
 ];
 
 fn txt(s: &str) -> VNode {

@@ -20,6 +20,7 @@ members = [
     "examples/wit-native-macro",
     "examples/website",
     "examples/hikari-ssr-test",
+    "examples/mouse-events-test",
 ]
 resolver = "2"
 

@@ -20,6 +20,8 @@ interface event-callbacks {
 
     /// Mouse event data structure.
     record mouse-event-data {
+        /// The target element that received the event.
+        target: u64,
         client-x: f64,
         client-y: f64,
         offset-x: f64,
@@ -34,6 +36,8 @@ interface event-callbacks {
 
     /// Keyboard event data structure.
     record keyboard-event-data {
+        /// The target element that received the event.
+        target: u64,
         key: string,
         code: string,
         key-code: u32,
@@ -46,11 +50,15 @@ interface event-callbacks {
 
     /// Focus event data structure.
     record focus-event-data {
+        /// The target element that received the event.
+        target: u64,
         related-target: option<u64>,
     }
 
     /// Input event data structure.
     record input-event-data {
+        /// The target element that received the event.
+        target: u64,
         data: option<string>,
         input-type: string,
     }
