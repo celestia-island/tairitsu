@@ -73,7 +73,6 @@ export * as workers from "./workers";
 // Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)
 export * as console from "./console";
 export * as style from "./style";
-export { addEventListener, removeEventListener, preventDefault, stopPropagation } from "./event-target";
 
 // Statistics
 export const GLUE_STATS = {
