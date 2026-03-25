@@ -180,15 +180,21 @@ pub struct MouseEvent {
 
 > 这是 tairitsu 作为完整 UI 框架的基础能力，不仅限于 Glow 组件。
 
-### 3.1 Signal → 重渲染调度 ☐
+### 3.1 Signal → 重渲染调度 ✅
 
 **现状**：`Signal::set()` 通知订阅者，但无机制连接到 VDOM 重渲染。
 
 **需要**：
-1. 组件渲染时自动追踪所读取的 Signal
-2. Signal 变化时标记对应组件为 dirty
-3. 调度 microtask 或 rAF 批量重渲染 dirty 组件
-4. 重新调用组件 render → diff → patch
+1. 组件渲染时自动追踪所读取的 Signal ✅ 已实现 (`runtime::track_signal`)
+2. Signal 变化时标记对应组件为 dirty ✅ 已实现 (`runtime::mark_dirty`)
+3. 调度 microtask 或 rAF 批量重渲染 dirty 组件 ✅ 已实现 (`Scheduler`)
+4. 重新调用组件 render → diff → patch ✅ 已实现
+
+**实现细节**：
+- 新增 `runtime` 模块：提供组件注册、信号追踪、脏标记功能
+- 新增 `scheduler` 模块：提供 rAF 调度的批量渲染
+- `Signal::get()` 自动追踪依赖到当前组件
+- `Signal::set()` 自动通知依赖组件并标记为 dirty
 
 ### 3.2 `apply_patch` 实现 ☐
 
@@ -252,7 +258,7 @@ hikari: 简化 Glow 坐标计算 + 响应式重构
 | **P1** | `EasingFunction::evaluate(t)` 数学实现 | Phase 1 | ✅ 已完成 |
 | **P1** | `use_element_ref` DOM 引用 Hook | Phase 1 | 待实现 |
 | **P2** | `MouseEvent` 补充 offset/page/movement 字段 | Phase 2 | 待实现 |
-| **P0（长期）** | Signal → 重渲染调度循环 | Phase 3 | 待设计 |
+| **P0（长期）** | Signal → 重渲染调度循环 | Phase 3 | ✅ 已完成 |
 | **P0（长期）** | `apply_patch` 实现 | Phase 3 | 待实现 |
 | **P2** | 导出 `css_var`、`style` hooks（已有文件未 re-export） | Phase 1 | 待修复 |
 | **P3** | WheelEvent/TouchEvent/PointerEvent/TransitionEvent/AnimationEvent | Phase 4 | 待实现 |

@@ -72,6 +72,12 @@ pub struct MouseEvent {
     pub client_y: i32,
     pub screen_x: i32,
     pub screen_y: i32,
+    pub offset_x: i32,
+    pub offset_y: i32,
+    pub page_x: i32,
+    pub page_y: i32,
+    pub movement_x: i32,
+    pub movement_y: i32,
     pub button: i16,
     pub buttons: u16,
     pub ctrl_key: bool,
@@ -95,6 +101,12 @@ impl MouseEvent {
             client_y: 0,
             screen_x: 0,
             screen_y: 0,
+            offset_x: 0,
+            offset_y: 0,
+            page_x: 0,
+            page_y: 0,
+            movement_x: 0,
+            movement_y: 0,
             button: 0,
             buttons: 0,
             ctrl_key: false,
@@ -117,6 +129,46 @@ impl MouseEvent {
 
     pub fn client_y(mut self, y: i32) -> Self {
         self.client_y = y;
+        self
+    }
+
+    pub fn screen_x(mut self, x: i32) -> Self {
+        self.screen_x = x;
+        self
+    }
+
+    pub fn screen_y(mut self, y: i32) -> Self {
+        self.screen_y = y;
+        self
+    }
+
+    pub fn offset_x(mut self, x: i32) -> Self {
+        self.offset_x = x;
+        self
+    }
+
+    pub fn offset_y(mut self, y: i32) -> Self {
+        self.offset_y = y;
+        self
+    }
+
+    pub fn page_x(mut self, x: i32) -> Self {
+        self.page_x = x;
+        self
+    }
+
+    pub fn page_y(mut self, y: i32) -> Self {
+        self.page_y = y;
+        self
+    }
+
+    pub fn movement_x(mut self, x: i32) -> Self {
+        self.movement_x = x;
+        self
+    }
+
+    pub fn movement_y(mut self, y: i32) -> Self {
+        self.movement_y = y;
         self
     }
 

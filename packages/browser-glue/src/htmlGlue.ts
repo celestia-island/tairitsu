@@ -4193,7 +4193,7 @@ export function HtmliFrameElementSetReferrerPolicy(self: bigint, value: string):
 /**
  * `get-loading()` operation.
  */
-export function getLoading(self: bigint): string {
+export function HtmliFrameElementGetLoading(self: bigint): string {
   const obj = lookupHTMLIFrameElement(self);
   return obj.loading;
 }
@@ -4201,7 +4201,7 @@ export function getLoading(self: bigint): string {
 /**
  * `set-loading()` operation.
  */
-export function setLoading(self: bigint, value: string): void {
+export function HtmliFrameElementSetLoading(self: bigint, value: string): void {
   const obj = lookupHTMLIFrameElement(self);
   obj.loading = value as any;
 }
@@ -5536,6 +5536,22 @@ export function getDefaultMuted(self: bigint): boolean {
 export function setDefaultMuted(self: bigint, value: boolean): void {
   const obj = lookupHTMLMediaElement(self);
   obj.defaultMuted = value;
+}
+
+/**
+ * `get-loading()` operation.
+ */
+export function HtmlMediaElementGetLoading(self: bigint): string {
+  const obj = lookupHTMLMediaElement(self);
+  return obj.loading;
+}
+
+/**
+ * `set-loading()` operation.
+ */
+export function HtmlMediaElementSetLoading(self: bigint, value: string): void {
+  const obj = lookupHTMLMediaElement(self);
+  obj.loading = value;
 }
 
 /**
@@ -18982,8 +18998,8 @@ export default {
   HtmliFrameElementSetHeight,
   HtmliFrameElementGetReferrerPolicy,
   HtmliFrameElementSetReferrerPolicy,
-  getLoading,
-  setLoading,
+  HtmliFrameElementGetLoading,
+  HtmliFrameElementSetLoading,
   HtmliFrameElementGetContentDocument,
   HtmliFrameElementGetContentWindow,
   HtmliFrameElementGetSvgDocument,
@@ -19122,6 +19138,8 @@ export default {
   setMuted,
   getDefaultMuted,
   setDefaultMuted,
+  HtmlMediaElementGetLoading,
+  HtmlMediaElementSetLoading,
   getAudioTracks,
   getVideoTracks,
   getTextTracks,

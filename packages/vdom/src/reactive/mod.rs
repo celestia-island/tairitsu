@@ -8,6 +8,11 @@ thread_local! {
     static PENDING_UPDATES: RefCell<Vec<Box<dyn FnOnce()>>> = RefCell::new(Vec::new());
 }
 
+// Get the memory address of a RefCell for use as a hash key
+fn refcell_ptr<T>(refcell: &Rc<RefCell<T>>) -> usize {
+    refcell.as_ref() as *const RefCell<T> as usize
+}
+
 #[derive(Clone)]
 pub struct Signal<T> {
     inner: Rc<RefCell<SignalInner<T>>>,
@@ -38,6 +43,13 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     pub fn get(&self) -> T {
+        // Track this signal access in the current component context
+        let signal_ptr = refcell_ptr(&self.inner);
+
+        // Notify the runtime that this signal was accessed
+        // This will be used to establish dependencies
+        crate::runtime::track_signal(signal_ptr);
+
         DEPENDENCIES.with(|deps| {
             deps.borrow_mut()
                 .push(Rc::clone(&self.inner) as Rc<RefCell<dyn Any>>);
@@ -47,11 +59,16 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     pub fn set(&self, value: T) {
+        let signal_ptr = refcell_ptr(&self.inner);
+
         let subscribers = {
             let mut inner = self.inner.borrow_mut();
             inner.value = value;
             inner.subscribers.clone()
         };
+
+        // Notify runtime that this signal changed
+        crate::runtime::notify_signal(signal_ptr);
 
         if BATCHING.with(|b| *b.borrow()) {
             trace!("Signal update batched");
