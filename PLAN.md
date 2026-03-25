@@ -7,6 +7,7 @@
 ## 背景
 
 Hikari 正从 dioxus 迁移到 tairitsu。其中 Glow Wrapper 组件需要：
+
 - 响应 `mouseenter`/`mouseleave`/`mousedown`/`mouseup` 事件
 - 在回调中**命令式**操作 DOM 元素的 inline style（`--glow-x`、`--glow-y`、`--glow-intensity-scale`）
 - 长期需要 `requestAnimationFrame` 驱动的帧循环做缓动插值
@@ -34,23 +35,28 @@ Hikari 正从 dioxus 迁移到 tairitsu。其中 Glow Wrapper 组件需要：
 ## 实现总结
 
 ### Phase 0 — Glow 最小可用 ✅
+
 - 验证 `mouseenter`/`mouseleave` 事件派发
 - 验证事件回调中 DOM 操作可行性
 - 导出 `use_css_var` 和 `use_style` hooks
 
 ### Phase 1 — 动画基础设施 ✅
+
 - `UseAnimation` 连接 rAF 驱动
 - `EasingFunction::evaluate(t)` 数学实现
 - `use_element_ref` DOM 引用 Hook
 
 ### Phase 2 — MouseEvent 扩展 ✅
+
 - 补充 `offset_x/y`、`page_x/y`、`movement_x/y` 字段
 
 ### Phase 3 — 响应式渲染循环 ✅
+
 - Signal → 重渲染调度
 - `apply_patch` 实现
 
 ### Phase 4 — 高级事件类型 ✅
+
 - `WheelEvent` - 滚轮缩放、自定义滚动
 - `TouchEvent` - 移动端触摸交互
 - `PointerEvent` - 统一的指针抽象

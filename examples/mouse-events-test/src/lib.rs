@@ -31,29 +31,35 @@ fn render_parent() -> VNode {
             class: "parent-box",
             style: "width: 300px; height: 300px; background-color: #f0f0f0; padding: 20px; position: relative;",
             onmouseenter: |event: tairitsu_vdom::MouseEvent| {
+                let _ = event; // Suppress unused warning on non-wasm targets
                 COUNTERS.with(|c| {
                     *c.mouseenter_parent.borrow_mut() += 1;
                 });
-
-                // Update background color via inline style manipulation
                 #[cfg(target_family = "wasm")]
                 if let Some(target) = event.target {
                     use tairitsu_web::WitElement;
                     let element = WitElement(target);
-                    let _ = tairitsu_web::WitPlatform::set_style_static(&element, "background-color", "#d0ffd0");
+                    let _ = tairitsu_web::WitPlatform::set_style_static(
+                        &element,
+                        "background-color",
+                        "#d0ffd0",
+                    );
                 }
             },
             onmouseleave: |event: tairitsu_vdom::MouseEvent| {
+                let _ = event; // Suppress unused warning on non-wasm targets
                 COUNTERS.with(|c| {
                     *c.mouseleave_parent.borrow_mut() += 1;
                 });
-
-                // Reset background
                 #[cfg(target_family = "wasm")]
                 if let Some(target) = event.target {
                     use tairitsu_web::WitElement;
                     let element = WitElement(target);
-                    let _ = tairitsu_web::WitPlatform::set_style_static(&element, "background-color", "#f0f0f0");
+                    let _ = tairitsu_web::WitPlatform::set_style_static(
+                        &element,
+                        "background-color",
+                        "#f0f0f0",
+                    );
                 }
             },
             div {
@@ -61,29 +67,35 @@ fn render_parent() -> VNode {
                 class: "child-box",
                 style: "width: 150px; height: 150px; background-color: #ffd0d0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);",
                 onmouseenter: |event: tairitsu_vdom::MouseEvent| {
+                    let _ = event; // Suppress unused warning on non-wasm targets
                     COUNTERS.with(|c| {
                         *c.mouseenter_child.borrow_mut() += 1;
                     });
-
-                    // Update background
                     #[cfg(target_family = "wasm")]
                     if let Some(target) = event.target {
                         use tairitsu_web::WitElement;
                         let element = WitElement(target);
-                        let _ = tairitsu_web::WitPlatform::set_style_static(&element, "background-color", "#a0d0ff");
+                        let _ = tairitsu_web::WitPlatform::set_style_static(
+                            &element,
+                            "background-color",
+                            "#a0d0ff",
+                        );
                     }
                 },
                 onmouseleave: |event: tairitsu_vdom::MouseEvent| {
+                    let _ = event; // Suppress unused warning on non-wasm targets
                     COUNTERS.with(|c| {
                         *c.mouseleave_child.borrow_mut() += 1;
                     });
-
-                    // Reset background
                     #[cfg(target_family = "wasm")]
                     if let Some(target) = event.target {
                         use tairitsu_web::WitElement;
                         let element = WitElement(target);
-                        let _ = tairitsu_web::WitPlatform::set_style_static(&element, "background-color", "#ffd0d0");
+                        let _ = tairitsu_web::WitPlatform::set_style_static(
+                            &element,
+                            "background-color",
+                            "#ffd0d0",
+                        );
                     }
                 },
                 "Hover over me (Child)"
@@ -96,8 +108,7 @@ fn render_parent() -> VNode {
 /// Test instructions component
 fn render_instructions() -> VNode {
     rsx! {
-        div {
-            style: "margin-bottom: 20px; padding: 15px; background-color: #e0e0ff; border-radius: 5px;",
+        div { style: "margin-bottom: 20px; padding: 15px; background-color: #e0e0ff; border-radius: 5px;",
             h2 { style: "margin-top: 0;", "Mouse Events Test" }
             p { "This test verifies mouseenter/mouseleave event handling:" }
             ul {
@@ -107,8 +118,7 @@ fn render_instructions() -> VNode {
                 li { "Move out of parent entirely - both should reset" }
                 li { "Check browser console for event logs and counts" }
             }
-            div {
-                style: "margin-top: 10px; font-family: monospace; font-size: 12px;",
+            div { style: "margin-top: 10px; font-family: monospace; font-size: 12px;",
                 "Note: mouseenter should NOT fire when entering child from parent (no bubbling)"
             }
         }
@@ -122,7 +132,7 @@ fn render_app() -> VNode {
             ..vec![render_instructions()],
             div {
                 style: "display: flex; justify-content: center; align-items: center; min-height: 400px;",
-                ..vec![render_parent()]
+                ..vec![render_parent()],
             }
         }
     }

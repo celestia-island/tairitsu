@@ -17,6 +17,7 @@ static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);
 pub type SchedulerId = usize;
 
 /// Component state tracked by the scheduler
+#[derive(Default)]
 struct ComponentState {
     /// Current rendered VNode
     current_vnode: Option<VNode>,
@@ -26,15 +27,6 @@ struct ComponentState {
     root_element: Option<Rc<RefCell<dyn std::any::Any>>>,
 }
 
-impl Default for ComponentState {
-    fn default() -> Self {
-        Self {
-            current_vnode: None,
-            dirty: false,
-            root_element: None,
-        }
-    }
-}
 
 /// Inner state of the scheduler
 struct SchedulerInner<P: Platform> {
