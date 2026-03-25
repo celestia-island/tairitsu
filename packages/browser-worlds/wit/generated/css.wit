@@ -598,6 +598,16 @@ interface global-event-handlers {
     /// `onlostpointercapture` attribute — setter.
     set-onlostpointercapture: func(self: global-event-handlers-handle, value: u64);
 
+    /// `onselectstart` attribute — getter.
+    get-onselectstart: func(self: global-event-handlers-handle) -> u64;
+    /// `onselectstart` attribute — setter.
+    set-onselectstart: func(self: global-event-handlers-handle, value: u64);
+
+    /// `onselectionchange` attribute — getter.
+    get-onselectionchange: func(self: global-event-handlers-handle) -> u64;
+    /// `onselectionchange` attribute — setter.
+    set-onselectionchange: func(self: global-event-handlers-handle, value: u64);
+
     /// `ontouchstart` attribute — getter.
     get-ontouchstart: func(self: global-event-handlers-handle) -> u64;
     /// `ontouchstart` attribute — setter.
@@ -1038,6 +1048,9 @@ interface window {
     /// `external` attribute — getter.
     get-external: func() -> u64;
 
+    /// `getSelection()` operation.
+    get-selection: func() -> option<u64>;
+
     /// `speechSynthesis` attribute — getter.
     get-speech-synthesis: func() -> u64;
 }
@@ -1108,299 +1121,6 @@ interface screen {
 
     /// `orientation` attribute — getter.
     get-orientation: func() -> u64;
-}
-
-/// WebIDL interface: `Document`
-/// Note: Global singleton - no self parameter needed
-/// Source: https://github.com/w3c/webref/tree/main/ed/idl/cssom-view.idl
-interface document {
-    /// Opaque handle to a host-side `Document` instance.
-    type document-handle = u64;
-
-    /// `elementFromPoint()` operation.
-    element-from-point: func(x: f64, y: f64) -> option<u64>;
-
-    /// `elementsFromPoint()` operation.
-    elements-from-point: func(x: f64, y: f64) -> list<u64>;
-
-    /// `caretPositionFromPoint()` operation.
-    caret-position-from-point: func(x: f64, y: f64, options: option<u64>) -> option<u64>;
-
-    /// `scrollingElement` attribute — getter.
-    get-scrolling-element: func() -> option<u64>;
-
-    /// `implementation` attribute — getter.
-    get-implementation: func() -> u64;
-
-    /// `URL` attribute — getter.
-    get-url: func() -> string;
-
-    /// `documentURI` attribute — getter.
-    get-document-uri: func() -> string;
-
-    /// `compatMode` attribute — getter.
-    get-compat-mode: func() -> string;
-
-    /// `characterSet` attribute — getter.
-    get-character-set: func() -> string;
-
-    /// `charset` attribute — getter.
-    get-charset: func() -> string;
-
-    /// `inputEncoding` attribute — getter.
-    get-input-encoding: func() -> string;
-
-    /// `contentType` attribute — getter.
-    get-content-type: func() -> string;
-
-    /// `doctype` attribute — getter.
-    get-doctype: func() -> option<u64>;
-
-    /// `documentElement` attribute — getter.
-    get-document-element: func() -> option<u64>;
-
-    /// `getElementsByTagName()` operation.
-    get-elements-by-tag-name: func(qualified-name: string) -> u64;
-
-    /// `getElementsByTagNameNS()` operation.
-    get-elements-by-tag-name-ns: func(namespace: option<string>, local-name: string) -> u64;
-
-    /// `getElementsByClassName()` operation.
-    get-elements-by-class-name: func(class-names: string) -> u64;
-
-    /// `createElement()` operation.
-    create-element: func(local-name: string, options: option<string>) -> u64;
-
-    /// `createElementNS()` operation.
-    create-element-ns: func(namespace: option<string>, qualified-name: string, options: option<string>) -> u64;
-
-    /// `createDocumentFragment()` operation.
-    create-document-fragment: func() -> u64;
-
-    /// `createTextNode()` operation.
-    create-text-node: func(data: string) -> u64;
-
-    /// `createCDATASection()` operation.
-    create-cdata-section: func(data: string) -> u64;
-
-    /// `createComment()` operation.
-    create-comment: func(data: string) -> u64;
-
-    /// `createProcessingInstruction()` operation.
-    create-processing-instruction: func(target: string, data: string) -> u64;
-
-    /// `importNode()` operation.
-    import-node: func(node: u64, options: option<bool>) -> u64;
-
-    /// `adoptNode()` operation.
-    adopt-node: func(node: u64) -> u64;
-
-    /// `createAttribute()` operation.
-    create-attribute: func(local-name: string) -> u64;
-
-    /// `createAttributeNS()` operation.
-    create-attribute-ns: func(namespace: option<string>, qualified-name: string) -> u64;
-
-    /// `createEvent()` operation.
-    create-event: func(%interface: string) -> u64;
-
-    /// `createRange()` operation.
-    create-range: func() -> u64;
-
-    /// `createNodeIterator()` operation.
-    create-node-iterator: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
-
-    /// `createTreeWalker()` operation.
-    create-tree-walker: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
-
-    /// `fullscreenEnabled` attribute — getter.
-    get-fullscreen-enabled: func() -> bool;
-
-    /// `fullscreen` attribute — getter.
-    get-fullscreen: func() -> bool;
-
-    /// `exitFullscreen()` operation.
-    exit-fullscreen: func() -> u64;
-
-    /// `onfullscreenchange` attribute — getter.
-    get-onfullscreenchange: func() -> u64;
-    /// `onfullscreenchange` attribute — setter.
-    set-onfullscreenchange: func(value: u64);
-
-    /// `onfullscreenerror` attribute — getter.
-    get-onfullscreenerror: func() -> u64;
-    /// `onfullscreenerror` attribute — setter.
-    set-onfullscreenerror: func(value: u64);
-
-    /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
-
-    /// `location` attribute — getter.
-    get-location: func() -> option<u64>;
-
-    /// `domain` attribute — getter.
-    get-domain: func() -> string;
-    /// `domain` attribute — setter.
-    set-domain: func(value: string);
-
-    /// `referrer` attribute — getter.
-    get-referrer: func() -> string;
-
-    /// `cookie` attribute — getter.
-    get-cookie: func() -> string;
-    /// `cookie` attribute — setter.
-    set-cookie: func(value: string);
-
-    /// `lastModified` attribute — getter.
-    get-last-modified: func() -> string;
-
-    /// `readyState` attribute — getter.
-    get-ready-state: func() -> u64;
-
-    /// `object()` operation.
-    object: func(name: string);
-
-    /// `title` attribute — getter.
-    get-title: func() -> string;
-    /// `title` attribute — setter.
-    set-title: func(value: string);
-
-    /// `dir` attribute — getter.
-    get-dir: func() -> string;
-    /// `dir` attribute — setter.
-    set-dir: func(value: string);
-
-    /// `body` attribute — getter.
-    get-body: func() -> option<u64>;
-    /// `body` attribute — setter.
-    set-body: func(value: option<u64>);
-
-    /// `head` attribute — getter.
-    get-head: func() -> option<u64>;
-
-    /// `images` attribute — getter.
-    get-images: func() -> u64;
-
-    /// `embeds` attribute — getter.
-    get-embeds: func() -> u64;
-
-    /// `plugins` attribute — getter.
-    get-plugins: func() -> u64;
-
-    /// `links` attribute — getter.
-    get-links: func() -> u64;
-
-    /// `forms` attribute — getter.
-    get-forms: func() -> u64;
-
-    /// `scripts` attribute — getter.
-    get-scripts: func() -> u64;
-
-    /// `getElementsByName()` operation.
-    get-elements-by-name: func(element-name: string) -> u64;
-
-    /// `currentScript` attribute — getter.
-    get-current-script: func() -> option<u64>;
-
-    /// `open()` operation.
-    open: func(unused1: option<string>, unused2: option<string>) -> u64;
-
-    /// `close()` operation.
-    close: func();
-
-    /// `write()` operation.
-    write: func(text: list<string>);
-
-    /// `writeln()` operation.
-    writeln: func(text: list<string>);
-
-    /// `defaultView` attribute — getter.
-    get-default-view: func() -> option<u64>;
-
-    /// `hasFocus()` operation.
-    has-focus: func() -> bool;
-
-    /// `designMode` attribute — getter.
-    get-design-mode: func() -> string;
-    /// `designMode` attribute — setter.
-    set-design-mode: func(value: string);
-
-    /// `execCommand()` operation.
-    exec-command: func(command-id: string, show-ui: option<bool>, value: option<string>) -> bool;
-
-    /// `queryCommandEnabled()` operation.
-    query-command-enabled: func(command-id: string) -> bool;
-
-    /// `queryCommandIndeterm()` operation.
-    query-command-indeterm: func(command-id: string) -> bool;
-
-    /// `queryCommandState()` operation.
-    query-command-state: func(command-id: string) -> bool;
-
-    /// `queryCommandSupported()` operation.
-    query-command-supported: func(command-id: string) -> bool;
-
-    /// `queryCommandValue()` operation.
-    query-command-value: func(command-id: string) -> string;
-
-    /// `hidden` attribute — getter.
-    get-hidden: func() -> bool;
-
-    /// `visibilityState` attribute — getter.
-    get-visibility-state: func() -> u64;
-
-    /// `onreadystatechange` attribute — getter.
-    get-onreadystatechange: func() -> u64;
-    /// `onreadystatechange` attribute — setter.
-    set-onreadystatechange: func(value: u64);
-
-    /// `onvisibilitychange` attribute — getter.
-    get-onvisibilitychange: func() -> u64;
-    /// `onvisibilitychange` attribute — setter.
-    set-onvisibilitychange: func(value: u64);
-
-    /// `fgColor` attribute — getter.
-    get-fg-color: func() -> string;
-    /// `fgColor` attribute — setter.
-    set-fg-color: func(value: string);
-
-    /// `linkColor` attribute — getter.
-    get-link-color: func() -> string;
-    /// `linkColor` attribute — setter.
-    set-link-color: func(value: string);
-
-    /// `vlinkColor` attribute — getter.
-    get-vlink-color: func() -> string;
-    /// `vlinkColor` attribute — setter.
-    set-vlink-color: func(value: string);
-
-    /// `alinkColor` attribute — getter.
-    get-alink-color: func() -> string;
-    /// `alinkColor` attribute — setter.
-    set-alink-color: func(value: string);
-
-    /// `bgColor` attribute — getter.
-    get-bg-color: func() -> string;
-    /// `bgColor` attribute — setter.
-    set-bg-color: func(value: string);
-
-    /// `anchors` attribute — getter.
-    get-anchors: func() -> u64;
-
-    /// `applets` attribute — getter.
-    get-applets: func() -> u64;
-
-    /// `clear()` operation.
-    clear: func();
-
-    /// `captureEvents()` operation.
-    capture-events: func();
-
-    /// `releaseEvents()` operation.
-    release-events: func();
-
-    /// `all` attribute — getter.
-    get-all: func() -> u64;
 }
 
 /// WebIDL interface: `CaretPosition`
@@ -2471,7 +2191,7 @@ interface element-css-inline-style {
     get-style: func(self: element-css-inline-style-handle) -> u64;
 }
 
-/// Browser css world — all 44 auto-generated interfaces.
+/// Browser css world — all 43 auto-generated interfaces.
 world css-world {
     import animation-event;
     import css-rule;
@@ -2491,7 +2211,6 @@ world css-world {
     import media-query-list;
     import media-query-list-event;
     import screen;
-    import document;
     import caret-position;
     import element;
     import html-element;

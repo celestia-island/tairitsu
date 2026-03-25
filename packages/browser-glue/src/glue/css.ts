@@ -253,14 +253,6 @@ let _nextBarProp = 1n;
 const _booleanHandles = new Map<bigint, boolean>();
 let _nextBoolean = 1n;
 
-/** Handle table for c-data-section values */
-const _cdataSectionHandles = new Map<bigint, CDATASection>();
-let _nextCdataSection = 1n;
-
-/** Handle table for comment values */
-const _commentHandles = new Map<bigint, Comment>();
-let _nextComment = 1n;
-
 /** Handle table for css-keyframe-rule values */
 const _cssKeyframeRuleHandles = new Map<bigint, CSSKeyframeRule>();
 let _nextCssKeyframeRule = 1n;
@@ -297,14 +289,6 @@ let _nextDocument = 1n;
 const _documentFragmentHandles = new Map<bigint, DocumentFragment>();
 let _nextDocumentFragment = 1n;
 
-/** Handle table for document-type values */
-const _documentTypeHandles = new Map<bigint, DocumentType>();
-let _nextDocumentType = 1n;
-
-/** Handle table for dom-implementation values */
-const _domImplementationHandles = new Map<bigint, DOMImplementation>();
-let _nextDomImplementation = 1n;
-
 /** Handle table for dom-rect values */
 const _domRectHandles = new Map<bigint, DOMRect>();
 let _nextDomRect = 1n;
@@ -324,10 +308,6 @@ let _nextElement = 1n;
 /** Handle table for element-internals values */
 const _elementInternalsHandles = new Map<bigint, ElementInternals>();
 let _nextElementInternals = 1n;
-
-/** Handle table for element-list values */
-const _elementListHandles = new Map<bigint, Element[]>();
-let _nextElementList = 1n;
 
 /** Handle table for event values */
 const _eventHandles = new Map<bigint, Event>();
@@ -353,17 +333,9 @@ let _nextExternal = 1n;
 const _historyHandles = new Map<bigint, History>();
 let _nextHistory = 1n;
 
-/** Handle table for html-all-collection values */
-const _htmlAllCollectionHandles = new Map<bigint, HTMLAllCollection>();
-let _nextHtmlAllCollection = 1n;
-
 /** Handle table for html-collection values */
 const _htmlCollectionHandles = new Map<bigint, HTMLCollection>();
 let _nextHtmlCollection = 1n;
-
-/** Handle table for html-element values */
-const _htmlElementHandles = new Map<bigint, HTMLElement>();
-let _nextHtmlElement = 1n;
 
 /** Handle table for location values */
 const _locationHandles = new Map<bigint, Location>();
@@ -385,25 +357,9 @@ let _nextNavigator = 1n;
 const _nodeHandles = new Map<bigint, Node>();
 let _nextNode = 1n;
 
-/** Handle table for node-filter values */
-const _nodeFilterHandles = new Map<bigint, NodeFilter>();
-let _nextNodeFilter = 1n;
-
-/** Handle table for node-iterator values */
-const _nodeIteratorHandles = new Map<bigint, NodeIterator>();
-let _nextNodeIterator = 1n;
-
-/** Handle table for node-list values */
-const _nodeListHandles = new Map<bigint, NodeList>();
-let _nextNodeList = 1n;
-
 /** Handle table for number values */
 const _numberHandles = new Map<bigint, number>();
 let _nextNumber = 1n;
-
-/** Handle table for processing-instruction values */
-const _processingInstructionHandles = new Map<bigint, ProcessingInstruction>();
-let _nextProcessingInstruction = 1n;
 
 /** Handle table for promise-void values */
 const _promiseVoidHandles = new Map<bigint, Promise<void>>();
@@ -420,6 +376,10 @@ let _nextScreen = 1n;
 /** Handle table for screen-orientation values */
 const _screenOrientationHandles = new Map<bigint, ScreenOrientation>();
 let _nextScreenOrientation = 1n;
+
+/** Handle table for selection values */
+const _selectionHandles = new Map<bigint, Selection>();
+let _nextSelection = 1n;
 
 /** Handle table for shadow-root values */
 const _shadowRootHandles = new Map<bigint, ShadowRoot>();
@@ -440,14 +400,6 @@ let _nextStringList = 1n;
 /** Handle table for style-sheet-list values */
 const _styleSheetListHandles = new Map<bigint, StyleSheetList>();
 let _nextStyleSheetList = 1n;
-
-/** Handle table for text values */
-const _textHandles = new Map<bigint, Text>();
-let _nextText = 1n;
-
-/** Handle table for tree-walker values */
-const _treeWalkerHandles = new Map<bigint, TreeWalker>();
-let _nextTreeWalker = 1n;
 
 /** Handle table for visual-viewport values */
 const _visualViewportHandles = new Map<bigint, VisualViewport>();
@@ -514,40 +466,6 @@ function lookupOptionBoolean(handle: bigint | undefined): boolean | null {
     return null;
   }
   return _booleanHandles.get(handle) ?? null;
-}
-
-/** Lookup a c-data-section value by handle. */
-function lookupCdataSection(handle: bigint): CDATASection {
-  const obj = _cdataSectionHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`c-data-section handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional c-data-section value by handle. */
-function lookupOptionCdataSection(handle: bigint | undefined): CDATASection | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _cdataSectionHandles.get(handle) ?? null;
-}
-
-/** Lookup a comment value by handle. */
-function lookupComment(handle: bigint): Comment {
-  const obj = _commentHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`comment handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional comment value by handle. */
-function lookupOptionComment(handle: bigint | undefined): Comment | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _commentHandles.get(handle) ?? null;
 }
 
 /** Lookup a css-keyframe-rule value by handle. */
@@ -703,40 +621,6 @@ function lookupOptionDocumentFragment(handle: bigint | undefined): DocumentFragm
   return _documentFragmentHandles.get(handle) ?? null;
 }
 
-/** Lookup a document-type value by handle. */
-function lookupDocumentType(handle: bigint): DocumentType {
-  const obj = _documentTypeHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`document-type handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional document-type value by handle. */
-function lookupOptionDocumentType(handle: bigint | undefined): DocumentType | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _documentTypeHandles.get(handle) ?? null;
-}
-
-/** Lookup a dom-implementation value by handle. */
-function lookupDomImplementation(handle: bigint): DOMImplementation {
-  const obj = _domImplementationHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`dom-implementation handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional dom-implementation value by handle. */
-function lookupOptionDomImplementation(handle: bigint | undefined): DOMImplementation | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _domImplementationHandles.get(handle) ?? null;
-}
-
 /** Lookup a dom-rect value by handle. */
 function lookupDomRect(handle: bigint): DOMRect {
   const obj = _domRectHandles.get(handle);
@@ -820,23 +704,6 @@ function lookupOptionElementInternals(handle: bigint | undefined): ElementIntern
     return null;
   }
   return _elementInternalsHandles.get(handle) ?? null;
-}
-
-/** Lookup a element-list value by handle. */
-function lookupElementList(handle: bigint): Element[] {
-  const obj = _elementListHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`element-list handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional element-list value by handle. */
-function lookupOptionElementList(handle: bigint | undefined): Element[] | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _elementListHandles.get(handle) ?? null;
 }
 
 /** Lookup a event value by handle. */
@@ -941,23 +808,6 @@ function lookupOptionHistory(handle: bigint | undefined): History | null {
   return _historyHandles.get(handle) ?? null;
 }
 
-/** Lookup a html-all-collection value by handle. */
-function lookupHtmlAllCollection(handle: bigint): HTMLAllCollection {
-  const obj = _htmlAllCollectionHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`html-all-collection handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional html-all-collection value by handle. */
-function lookupOptionHtmlAllCollection(handle: bigint | undefined): HTMLAllCollection | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _htmlAllCollectionHandles.get(handle) ?? null;
-}
-
 /** Lookup a html-collection value by handle. */
 function lookupHtmlCollection(handle: bigint): HTMLCollection {
   const obj = _htmlCollectionHandles.get(handle);
@@ -973,23 +823,6 @@ function lookupOptionHtmlCollection(handle: bigint | undefined): HTMLCollection 
     return null;
   }
   return _htmlCollectionHandles.get(handle) ?? null;
-}
-
-/** Lookup a html-element value by handle. */
-function lookupHtmlElement(handle: bigint): HTMLElement {
-  const obj = _htmlElementHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`html-element handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional html-element value by handle. */
-function lookupOptionHtmlElement(handle: bigint | undefined): HTMLElement | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _htmlElementHandles.get(handle) ?? null;
 }
 
 /** Lookup a location value by handle. */
@@ -1077,57 +910,6 @@ function lookupOptionNode(handle: bigint | undefined): Node | null {
   return _nodeHandles.get(handle) ?? null;
 }
 
-/** Lookup a node-filter value by handle. */
-function lookupNodeFilter(handle: bigint): NodeFilter {
-  const obj = _nodeFilterHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`node-filter handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional node-filter value by handle. */
-function lookupOptionNodeFilter(handle: bigint | undefined): NodeFilter | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _nodeFilterHandles.get(handle) ?? null;
-}
-
-/** Lookup a node-iterator value by handle. */
-function lookupNodeIterator(handle: bigint): NodeIterator {
-  const obj = _nodeIteratorHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`node-iterator handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional node-iterator value by handle. */
-function lookupOptionNodeIterator(handle: bigint | undefined): NodeIterator | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _nodeIteratorHandles.get(handle) ?? null;
-}
-
-/** Lookup a node-list value by handle. */
-function lookupNodeList(handle: bigint): NodeList {
-  const obj = _nodeListHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`node-list handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional node-list value by handle. */
-function lookupOptionNodeList(handle: bigint | undefined): NodeList | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _nodeListHandles.get(handle) ?? null;
-}
-
 /** Lookup a number value by handle. */
 function lookupNumber(handle: bigint): number {
   const obj = _numberHandles.get(handle);
@@ -1143,23 +925,6 @@ function lookupOptionNumber(handle: bigint | undefined): number | null {
     return null;
   }
   return _numberHandles.get(handle) ?? null;
-}
-
-/** Lookup a processing-instruction value by handle. */
-function lookupProcessingInstruction(handle: bigint): ProcessingInstruction {
-  const obj = _processingInstructionHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`processing-instruction handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional processing-instruction value by handle. */
-function lookupOptionProcessingInstruction(handle: bigint | undefined): ProcessingInstruction | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _processingInstructionHandles.get(handle) ?? null;
 }
 
 /** Lookup a promise-void value by handle. */
@@ -1228,6 +993,23 @@ function lookupOptionScreenOrientation(handle: bigint | undefined): ScreenOrient
     return null;
   }
   return _screenOrientationHandles.get(handle) ?? null;
+}
+
+/** Lookup a selection value by handle. */
+function lookupSelection(handle: bigint): Selection {
+  const obj = _selectionHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`selection handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional selection value by handle. */
+function lookupOptionSelection(handle: bigint | undefined): Selection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _selectionHandles.get(handle) ?? null;
 }
 
 /** Lookup a shadow-root value by handle. */
@@ -1313,40 +1095,6 @@ function lookupOptionStyleSheetList(handle: bigint | undefined): StyleSheetList 
     return null;
   }
   return _styleSheetListHandles.get(handle) ?? null;
-}
-
-/** Lookup a text value by handle. */
-function lookupText(handle: bigint): Text {
-  const obj = _textHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`text handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional text value by handle. */
-function lookupOptionText(handle: bigint | undefined): Text | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _textHandles.get(handle) ?? null;
-}
-
-/** Lookup a tree-walker value by handle. */
-function lookupTreeWalker(handle: bigint): TreeWalker {
-  const obj = _treeWalkerHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`tree-walker handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional tree-walker value by handle. */
-function lookupOptionTreeWalker(handle: bigint | undefined): TreeWalker | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _treeWalkerHandles.get(handle) ?? null;
 }
 
 /** Lookup a visual-viewport value by handle. */
@@ -3246,6 +2994,38 @@ export function setOnlostpointercapture(self: bigint, value: bigint): void {
 }
 
 /**
+ * `get-onselectstart()` operation.
+ */
+export function getOnselectstart(self: bigint): bigint {
+  const obj = lookupGlobalEventrs(self);
+  return (obj as any).onselectstart;
+}
+
+/**
+ * `set-onselectstart()` operation.
+ */
+export function setOnselectstart(self: bigint, value: bigint): void {
+  const obj = lookupGlobalEventrs(self);
+  (obj as any).onselectstart = value;
+}
+
+/**
+ * `get-onselectionchange()` operation.
+ */
+export function getOnselectionchange(self: bigint): bigint {
+  const obj = lookupGlobalEventrs(self);
+  return (obj as any).onselectionchange;
+}
+
+/**
+ * `set-onselectionchange()` operation.
+ */
+export function setOnselectionchange(self: bigint, value: bigint): void {
+  const obj = lookupGlobalEventrs(self);
+  (obj as any).onselectionchange = value;
+}
+
+/**
  * `get-ontouchstart()` operation.
  */
 export function getOntouchstart(self: bigint): bigint {
@@ -4262,7 +4042,7 @@ export function WindowSetName(value: string): void {
 /**
  * `get-location()` operation.
  */
-export function WindowGetLocation(): bigint {
+export function getLocation(): bigint {
   const _callResult = window.location;
   const handle = _nextLocation++;
   _locationHandles.set(handle, _callResult);
@@ -4376,7 +4156,7 @@ export function setStatus(value: string): void {
 /**
  * `close()` operation.
  */
-export function WindowClose(): void {
+export function close(): void {
   window.close();
 }
 
@@ -4478,7 +4258,7 @@ export function getFrameElement(): bigint | undefined {
 /**
  * `open()` operation.
  */
-export function WindowOpen(url: string | undefined, target: string | undefined, features: string | undefined): bigint | undefined {
+export function open(url: string | undefined, target: string | undefined, features: string | undefined): bigint | undefined {
   const _callResult = window.open(url as any, target as any, features as any);
   if (_callResult === null) return undefined;
   const handle = _nextWindow++;
@@ -4489,7 +4269,7 @@ export function WindowOpen(url: string | undefined, target: string | undefined, 
 /**
  * `object()` operation.
  */
-export function WindowObject(name: string): void {
+export function object(name: string): void {
   (window as any).object(name);
 }
 
@@ -4565,14 +4345,14 @@ export function postMessage(message: string, targetOrigin: string, transfer: (bi
 /**
  * `capture-events()` operation.
  */
-export function WindowCaptureEvents(): void {
+export function captureEvents(): void {
   window.captureEvents();
 }
 
 /**
  * `release-events()` operation.
  */
-export function WindowReleaseEvents(): void {
+export function releaseEvents(): void {
   window.releaseEvents();
 }
 
@@ -4583,6 +4363,17 @@ export function getExternal(): bigint {
   const _callResult = window.external;
   const handle = _nextExternal++;
   _externalHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-selection()` operation.
+ */
+export function getSelection(): bigint | undefined {
+  const _callResult = window.getSelection();
+  if (_callResult === null) return undefined;
+  const handle = _nextSelection++;
+  _selectionHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -4782,947 +4573,6 @@ export function getOrientation(): bigint {
   const _callResult = window.screen.orientation;
   const handle = _nextScreenOrientation++;
   _screenOrientationHandles.set(handle, _callResult);
-  return handle;
-}
-
-// ---------------------------------------------------------------------------
-// WIT interface: document
-// ---------------------------------------------------------------------------
-
-/** Type alias */
-export type DocumentHandle = bigint;
-
-/** Handle for global singleton Document (fixed to 0n). */
-const _Document_HANDLE = 0n;
-
-/** Get the global Document object. */
-function getGlobalDocument(): Document {
-  return document;
-}
-
-/**
- * `element-from-point()` operation.
- */
-export function elementFromPoint(x: number, y: number): bigint | undefined {
-  const _callResult = document.elementFromPoint(Number(x), Number(y));
-  if (_callResult === null) return undefined;
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `elements-from-point()` operation.
- */
-export function elementsFromPoint(x: number, y: number): bigint {
-  const _callResult = document.elementsFromPoint(x, y);
-  const handle = _nextElementList++;
-  _elementListHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `caret-position-from-point()` operation.
- */
-export function caretPositionFromPoint(x: number, y: number, options: bigint | undefined): bigint | undefined {
-  const _callResult = document.caretPositionFromPoint(x, y, options as any);
-  if (_callResult === null) return undefined;
-  const handle = _nextCaretPosition++;
-  _caretPositionhandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-scrolling-element()` operation.
- */
-export function getScrollingElement(): bigint | undefined {
-  const _callResult = document.scrollingElement;
-  if (_callResult === null) return undefined;
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-implementation()` operation.
- */
-export function getImplementation(): bigint {
-  const _callResult = document.implementation;
-  const handle = _nextDomImplementation++;
-  _domImplementationHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-url()` operation.
- */
-export function getUrl(): string {
-  return document.URL;
-}
-
-/**
- * `get-document-uri()` operation.
- */
-export function getDocumentUri(): string {
-  return document.documentURI;
-}
-
-/**
- * `get-compat-mode()` operation.
- */
-export function getCompatMode(): string {
-  return document.compatMode;
-}
-
-/**
- * `get-character-set()` operation.
- */
-export function getCharacterSet(): string {
-  return document.characterSet;
-}
-
-/**
- * `get-charset()` operation.
- */
-export function getCharset(): string {
-  return document.charset;
-}
-
-/**
- * `get-input-encoding()` operation.
- */
-export function getInputEncoding(): string {
-  return document.inputEncoding;
-}
-
-/**
- * `get-content-type()` operation.
- */
-export function getContentType(): string {
-  return document.contentType;
-}
-
-/**
- * `get-doctype()` operation.
- */
-export function getDoctype(): bigint | undefined {
-  const _callResult = document.doctype;
-  if (_callResult === null) return undefined;
-  const handle = _nextDocumentType++;
-  _documentTypeHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-document-element()` operation.
- */
-export function getDocumentElement(): bigint | undefined {
-  const _callResult = document.documentElement;
-  if (_callResult === null) return undefined;
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-elements-by-tag-name()` operation.
- */
-export function DocumentGetElementsByTagName(qualifiedName: string): bigint {
-  const _callResult = document.getElementsByTagName(qualifiedName);
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-elements-by-tag-name-ns()` operation.
- */
-export function DocumentGetElementsByTagNameNs(namespace: string | undefined, localName: string): bigint {
-  const _callResult = (document as any).getElementsByTagNameNs(namespace, localName as any);
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-elements-by-class-name()` operation.
- */
-export function DocumentGetElementsByClassName(classNames: string): bigint {
-  const _callResult = document.getElementsByClassName(classNames);
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-element()` operation.
- */
-export function createElement(localName: string, options: string | undefined): bigint {
-  const _callResult = (document as any).createElement(localName, options);
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-element-ns()` operation.
- */
-export function createElementNs(namespace: string | undefined, qualifiedName: string, options: string | undefined): bigint {
-  const _callResult = (document as any).createElementNS(namespace as any, qualifiedName as any, options);
-  const handle = _nextElement++;
-  _elementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-document-fragment()` operation.
- */
-export function createDocumentFragment(): bigint {
-  const _callResult = document.createDocumentFragment();
-  const handle = _nextDocumentFragment++;
-  _documentFragmentHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-text-node()` operation.
- */
-export function createTextNode(data: string): bigint {
-  const _callResult = document.createTextNode(data as any);
-  const handle = _nextText++;
-  _textHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-cdata-section()` operation.
- */
-export function createCdataSection(data: string): bigint {
-  const _callResult = document.createCDATASection(data as any);
-  const handle = _nextCdataSection++;
-  _cdataSectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-comment()` operation.
- */
-export function createComment(data: string): bigint {
-  const _callResult = document.createComment(data as any);
-  const handle = _nextComment++;
-  _commentHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-processing-instruction()` operation.
- */
-export function createProcessingInstruction(target: string, data: string): bigint {
-  const _callResult = document.createProcessingInstruction(target as any, data as any);
-  const handle = _nextProcessingInstruction++;
-  _processingInstructionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `import-node()` operation.
- */
-export function importNode(node: bigint, options: boolean | undefined): bigint {
-  const _callResult = document.importNode(lookupNode(node), options);
-  const handle = _nextNode++;
-  _nodeHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `adopt-node()` operation.
- */
-export function adoptNode(node: bigint): bigint {
-  const _callResult = document.adoptNode(lookupNode(node));
-  const handle = _nextNode++;
-  _nodeHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-attribute()` operation.
- */
-export function createAttribute(localName: string): bigint {
-  const _callResult = document.createAttribute(localName);
-  const handle = _nextAttr++;
-  _attrHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-attribute-ns()` operation.
- */
-export function createAttributeNs(namespace: string | undefined, qualifiedName: string): bigint {
-  const _callResult = document.createAttributeNS(namespace as any, qualifiedName as any);
-  const handle = _nextAttr++;
-  _attrHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-event()` operation.
- */
-export function createEvent(_interface: string): bigint {
-  const _callResult = document.createEvent(_interface);
-  const handle = _nextEvent++;
-  _eventHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-range()` operation.
- */
-export function createRange(): bigint {
-  const _callResult = document.createRange();
-  const handle = _nextRange++;
-  _rangeHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-node-iterator()` operation.
- */
-export function createNodeIterator(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const _callResult = document.createNodeIterator(lookupNode(root), whatToShow, lookupOptionNodeFilter(filter));
-  const handle = _nextNodeIterator++;
-  _nodeIteratorHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `create-tree-walker()` operation.
- */
-export function createTreeWalker(root: bigint, whatToShow: number | undefined, filter: bigint | undefined): bigint {
-  const _callResult = document.createTreeWalker(lookupNode(root), whatToShow, lookupOptionNodeFilter(filter));
-  const handle = _nextTreeWalker++;
-  _treeWalkerHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-fullscreen-enabled()` operation.
- */
-export function getFullscreenEnabled(): boolean {
-  return document.fullscreenEnabled;
-}
-
-/**
- * `get-fullscreen()` operation.
- */
-export function getFullscreen(): boolean {
-  return document.fullscreen;
-}
-
-/**
- * `exit-fullscreen()` operation.
- *
- * Async operation: returns request ID, poll with `pollExitFullscreen()`
- */
-export function exitFullscreen(): bigint {
-  const requestId = _nextAsyncHandle++;
-  const promise = document.exitFullscreen()
-    .then((result: unknown) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `exitFullscreen()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollExitFullscreen(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
-}
-
-/**
- * `get-onfullscreenchange()` operation.
- */
-export function DocumentGetOnfullscreenchange(): bigint {
-  const handler = document.onfullscreenchange;
-  if (handler == null) return 0n;
-  const handle = _nextEventHandler++;
-  _eventHandlerHandles.set(handle, handler);
-  return handle;
-}
-
-/**
- * `set-onfullscreenchange()` operation.
- */
-export function DocumentSetOnfullscreenchange(value: bigint): void {
-  document.onfullscreenchange = value as any;
-}
-
-/**
- * `get-onfullscreenerror()` operation.
- */
-export function DocumentGetOnfullscreenerror(): bigint {
-  const handler = document.onfullscreenerror;
-  if (handler == null) return 0n;
-  const handle = _nextEventHandler++;
-  _eventHandlerHandles.set(handle, handler);
-  return handle;
-}
-
-/**
- * `set-onfullscreenerror()` operation.
- */
-export function DocumentSetOnfullscreenerror(value: bigint): void {
-  document.onfullscreenerror = value as any;
-}
-
-/**
- * `parse-html-unsafe()` operation.
- */
-export function parseHtmlUnsafe(html: string): bigint {
-  return (document as any).parseHtmlUnsafe(html);
-}
-
-/**
- * `get-location()` operation.
- */
-export function DocumentGetLocation(): bigint | undefined {
-  const _callResult = document.location;
-  if (_callResult === null) return undefined;
-  const handle = _nextLocation++;
-  _locationHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-domain()` operation.
- */
-export function getDomain(): bigint {
-  const _callResult = document.domain;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `set-domain()` operation.
- */
-export function setDomain(value: string): void {
-  document.domain = value;
-}
-
-/**
- * `get-referrer()` operation.
- */
-export function getReferrer(): bigint {
-  const _callResult = document.referrer;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-cookie()` operation.
- */
-export function getCookie(): bigint {
-  const _callResult = document.cookie;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `set-cookie()` operation.
- */
-export function setCookie(value: string): void {
-  (document as any).getSetCookie = value;
-}
-
-/**
- * `get-last-modified()` operation.
- */
-export function getLastModified(): bigint {
-  const _callResult = document.lastModified;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-ready-state()` operation.
- */
-export function getReadyState(): bigint {
-  const _callResult = document.readyState;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `object()` operation.
- */
-export function DocumentObject(name: string): void {
-  (document as any).object(name);
-}
-
-/**
- * `get-title()` operation.
- */
-export function DocumentGetTitle(): bigint {
-  const _callResult = document.title;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `set-title()` operation.
- */
-export function DocumentSetTitle(value: string): void {
-  document.title = value;
-}
-
-/**
- * `get-dir()` operation.
- */
-export function DocumentGetDir(): bigint {
-  const _callResult = document.dir;
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `set-dir()` operation.
- */
-export function DocumentSetDir(value: string): void {
-  document.dir = value;
-}
-
-/**
- * `get-body()` operation.
- */
-export function getBody(): bigint | undefined {
-  const _callResult = document.body;
-  if (_callResult === null) return undefined;
-  const handle = _nextHtmlElement++;
-  _htmlElementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `set-body()` operation.
- */
-export function setBody(value: bigint | undefined): void {
-  document.body = lookupOptionHtmlElement(value) as any;
-}
-
-/**
- * `get-head()` operation.
- */
-export function getHead(): bigint | undefined {
-  const _callResult = document.head;
-  if (_callResult === null) return undefined;
-  const handle = _nextHtmlElement++;
-  _htmlElementHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-images()` operation.
- */
-export function getImages(): bigint {
-  const _callResult = document.images;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-embeds()` operation.
- */
-export function getEmbeds(): bigint {
-  const _callResult = document.embeds;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-plugins()` operation.
- */
-export function getPlugins(): bigint {
-  const _callResult = document.plugins;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-links()` operation.
- */
-export function getLinks(): bigint {
-  const _callResult = document.links;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-forms()` operation.
- */
-export function getForms(): bigint {
-  const _callResult = document.forms;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-scripts()` operation.
- */
-export function getScripts(): bigint {
-  const _callResult = document.scripts;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-elements-by-name()` operation.
- */
-export function getElementsByName(elementName: string): bigint {
-  const _callResult = document.getElementsByName(elementName);
-  const handle = _nextNodeList++;
-  _nodeListHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-current-script()` operation.
- */
-export function getCurrentScript(): bigint | undefined {
-  const _callResult = document.currentScript;
-  if (_callResult === null) return undefined;
-  const handle = _nextEventTarget++;
-  _eventTargetHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `open()` operation.
- */
-export function DocumentOpen(unused1: string | undefined, unused2: string | undefined): bigint {
-  const _callResult = document.open(unused1, unused2);
-  const handle = _nextDocument++;
-  _documentHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `close()` operation.
- */
-export function DocumentClose(): void {
-  document.close();
-}
-
-/**
- * `write()` operation.
- */
-export function write(text: (string)[]): void {
-  document.write(text as any);
-}
-
-/**
- * `writeln()` operation.
- */
-export function writeln(text: (string)[]): void {
-  document.writeln(text as any);
-}
-
-/**
- * `get-default-view()` operation.
- */
-export function getDefaultView(): bigint | undefined {
-  const _callResult = document.defaultView;
-  if (_callResult === null) return undefined;
-  const handle = _nextWindow++;
-  _windowHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `has-focus()` operation.
- */
-export function hasFocus(): bigint {
-  const _callResult = document.hasFocus();
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-design-mode()` operation.
- */
-export function getDesignMode(): string {
-  return document.designMode;
-}
-
-/**
- * `set-design-mode()` operation.
- */
-export function setDesignMode(value: string): void {
-  document.designMode = value;
-}
-
-/**
- * `exec-command()` operation.
- */
-export function execCommand(commandId: string, showUi: boolean | undefined, value: string | undefined): bigint {
-  const _callResult = document.execCommand(commandId, showUi, value);
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `query-command-enabled()` operation.
- */
-export function queryCommandEnabled(commandId: string): bigint {
-  const _callResult = document.queryCommandEnabled(commandId);
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `query-command-indeterm()` operation.
- */
-export function queryCommandIndeterm(commandId: string): bigint {
-  const _callResult = document.queryCommandIndeterm(commandId);
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `query-command-state()` operation.
- */
-export function queryCommandState(commandId: string): bigint {
-  const _callResult = document.queryCommandState(commandId);
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `query-command-supported()` operation.
- */
-export function queryCommandSupported(commandId: string): bigint {
-  const _callResult = document.queryCommandSupported(commandId);
-  const handle = _nextBoolean++;
-  _booleanHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `query-command-value()` operation.
- */
-export function queryCommandValue(commandId: string): bigint {
-  const _callResult = document.queryCommandValue(commandId);
-  const handle = _nextString++;
-  _stringHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-hidden()` operation.
- */
-export function DocumentGetHidden(): boolean {
-  return document.hidden;
-}
-
-/**
- * `get-visibility-state()` operation.
- */
-export function getVisibilityState(): bigint {
-  const value = document.visibilityState;
-  switch (value) {
-    case 'visible': return 0n;
-    case 'hidden': return 1n;
-    default: return 0n;
-  }
-}
-
-/**
- * `get-onreadystatechange()` operation.
- */
-export function getOnreadystatechange(): bigint {
-  const handler = document.onreadystatechange;
-  if (handler == null) return 0n;
-  const handle = _nextEventHandler++;
-  _eventHandlerHandles.set(handle, handler);
-  return handle;
-}
-
-/**
- * `set-onreadystatechange()` operation.
- */
-export function setOnreadystatechange(value: bigint): void {
-  document.onreadystatechange = value as any;
-}
-
-/**
- * `get-onvisibilitychange()` operation.
- */
-export function getOnvisibilitychange(): bigint {
-  const handler = document.onvisibilitychange;
-  if (handler == null) return 0n;
-  const handle = _nextEventHandler++;
-  _eventHandlerHandles.set(handle, handler);
-  return handle;
-}
-
-/**
- * `set-onvisibilitychange()` operation.
- */
-export function setOnvisibilitychange(value: bigint): void {
-  document.onvisibilitychange = value as any;
-}
-
-/**
- * `get-fg-color()` operation.
- */
-export function getFgColor(): string {
-  return document.fgColor;
-}
-
-/**
- * `set-fg-color()` operation.
- */
-export function setFgColor(value: string): void {
-  document.fgColor = value;
-}
-
-/**
- * `get-link-color()` operation.
- */
-export function getLinkColor(): string {
-  return document.linkColor;
-}
-
-/**
- * `set-link-color()` operation.
- */
-export function setLinkColor(value: string): void {
-  document.linkColor = value;
-}
-
-/**
- * `get-vlink-color()` operation.
- */
-export function getVlinkColor(): string {
-  return document.vlinkColor;
-}
-
-/**
- * `set-vlink-color()` operation.
- */
-export function setVlinkColor(value: string): void {
-  document.vlinkColor = value;
-}
-
-/**
- * `get-alink-color()` operation.
- */
-export function getAlinkColor(): string {
-  return document.alinkColor;
-}
-
-/**
- * `set-alink-color()` operation.
- */
-export function setAlinkColor(value: string): void {
-  document.alinkColor = value;
-}
-
-/**
- * `get-bg-color()` operation.
- */
-export function getBgColor(): string {
-  return document.bgColor;
-}
-
-/**
- * `set-bg-color()` operation.
- */
-export function setBgColor(value: string): void {
-  document.bgColor = value;
-}
-
-/**
- * `get-anchors()` operation.
- */
-export function getAnchors(): bigint {
-  const _callResult = document.anchors;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-applets()` operation.
- */
-export function getApplets(): bigint {
-  const _callResult = document.applets;
-  const handle = _nextHtmlCollection++;
-  _htmlCollectionHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `clear()` operation.
- */
-export function clear(): void {
-  document.clear();
-}
-
-/**
- * `capture-events()` operation.
- */
-export function DocumentCaptureEvents(): void {
-  document.captureEvents();
-}
-
-/**
- * `release-events()` operation.
- */
-export function DocumentReleaseEvents(): void {
-  document.releaseEvents();
-}
-
-/**
- * `get-all()` operation.
- */
-export function getAll(): bigint {
-  const _callResult = document.all;
-  const handle = _nextHtmlAllCollection++;
-  _htmlAllCollectionHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -6296,7 +5146,7 @@ export function webkitMatchesSelector(self: bigint, selectors: string): bigint {
 /**
  * `get-elements-by-tag-name()` operation.
  */
-export function ElementGetElementsByTagName(self: bigint, qualifiedName: string): bigint {
+export function getElementsByTagName(self: bigint, qualifiedName: string): bigint {
   const obj = lookupElement(self);
   const _callResult = obj.getElementsByTagName(qualifiedName);
   const handle = _nextHtmlCollection++;
@@ -6307,7 +5157,7 @@ export function ElementGetElementsByTagName(self: bigint, qualifiedName: string)
 /**
  * `get-elements-by-tag-name-ns()` operation.
  */
-export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
+export function getElementsByTagNameNs(self: bigint, namespace: string | undefined, localName: string): bigint {
   const obj = lookupElement(self);
   const _callResult = (obj as any).getElementsByTagNameNs(namespace, localName);
   const handle = _nextHtmlCollection++;
@@ -6318,7 +5168,7 @@ export function ElementGetElementsByTagNameNs(self: bigint, namespace: string | 
 /**
  * `get-elements-by-class-name()` operation.
  */
-export function ElementGetElementsByClassName(self: bigint, classNames: string): bigint {
+export function getElementsByClassName(self: bigint, classNames: string): bigint {
   const obj = lookupElement(self);
   const _callResult = obj.getElementsByClassName(classNames);
   const handle = _nextHtmlCollection++;
@@ -6387,7 +5237,7 @@ export function pollRequestFullscreen(requestId: bigint): { ok: true } | { ok: f
 /**
  * `get-onfullscreenchange()` operation.
  */
-export function ElementGetOnfullscreenchange(self: bigint): bigint {
+export function getOnfullscreenchange(self: bigint): bigint {
   const obj = lookupElement(self);
   const handler = obj.onfullscreenchange;
   if (handler == null) return 0n;
@@ -6399,7 +5249,7 @@ export function ElementGetOnfullscreenchange(self: bigint): bigint {
 /**
  * `set-onfullscreenchange()` operation.
  */
-export function ElementSetOnfullscreenchange(self: bigint, value: bigint): void {
+export function setOnfullscreenchange(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
   obj.onfullscreenchange = value as any;
 }
@@ -6407,7 +5257,7 @@ export function ElementSetOnfullscreenchange(self: bigint, value: bigint): void 
 /**
  * `get-onfullscreenerror()` operation.
  */
-export function ElementGetOnfullscreenerror(self: bigint): bigint {
+export function getOnfullscreenerror(self: bigint): bigint {
   const obj = lookupElement(self);
   const handler = obj.onfullscreenerror;
   if (handler == null) return 0n;
@@ -6419,7 +5269,7 @@ export function ElementGetOnfullscreenerror(self: bigint): bigint {
 /**
  * `set-onfullscreenerror()` operation.
  */
-export function ElementSetOnfullscreenerror(self: bigint, value: bigint): void {
+export function setOnfullscreenerror(self: bigint, value: bigint): void {
   const obj = lookupElement(self);
   obj.onfullscreenerror = value as any;
 }
@@ -6594,7 +5444,7 @@ export function HtmlElementGetTitle(self: bigint): string {
 /**
  * `set-title()` operation.
  */
-export function HtmlElementSetTitle(self: bigint, value: string): void {
+export function setTitle(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
   obj.title = value ?? null;
 }
@@ -6634,7 +5484,7 @@ export function setTranslate(self: bigint, value: boolean): void {
 /**
  * `get-dir()` operation.
  */
-export function HtmlElementGetDir(self: bigint): string {
+export function getDir(self: bigint): string {
   const obj = lookupHTMLElement(self);
   return obj.dir;
 }
@@ -6642,7 +5492,7 @@ export function HtmlElementGetDir(self: bigint): string {
 /**
  * `set-dir()` operation.
  */
-export function HtmlElementSetDir(self: bigint, value: string): void {
+export function setDir(self: bigint, value: string): void {
   const obj = lookupHTMLElement(self);
   obj.dir = value ?? null;
 }
@@ -6650,7 +5500,7 @@ export function HtmlElementSetDir(self: bigint, value: string): void {
 /**
  * `get-hidden()` operation.
  */
-export function HtmlElementGetHidden(self: bigint): boolean | undefined {
+export function getHidden(self: bigint): boolean | undefined {
   const obj = lookupHTMLElement(self);
   return obj.hidden ?? undefined;
 }
@@ -9392,6 +8242,10 @@ export default {
   setOngotpointercapture,
   getOnlostpointercapture,
   setOnlostpointercapture,
+  getOnselectstart,
+  setOnselectstart,
+  getOnselectionchange,
+  setOnselectionchange,
   getOntouchstart,
   setOntouchstart,
   getOntouchend,
@@ -9483,7 +8337,7 @@ export default {
   getDocument,
   WindowGetName,
   WindowSetName,
-  WindowGetLocation,
+  getLocation,
   getHistory,
   getNavigation,
   getCustomElements,
@@ -9495,7 +8349,7 @@ export default {
   getToolbar,
   getStatus,
   setStatus,
-  WindowClose,
+  close,
   getClosed,
   stop,
   focus,
@@ -9507,8 +8361,8 @@ export default {
   setOpener,
   getParent,
   getFrameElement,
-  WindowOpen,
-  WindowObject,
+  open,
+  object,
   getNavigator,
   getClientInformation,
   getOriginAgentCluster,
@@ -9517,9 +8371,10 @@ export default {
   prompt,
   print,
   postMessage,
-  WindowCaptureEvents,
-  WindowReleaseEvents,
+  captureEvents,
+  releaseEvents,
   getExternal,
+  getSelection,
   getSpeechSynthesis,
   MediaQueryListGetMedia,
   MediaQueryListGetMatches,
@@ -9536,107 +8391,6 @@ export default {
   getColorDepth,
   getPixelDepth,
   getOrientation,
-  elementFromPoint,
-  elementsFromPoint,
-  caretPositionFromPoint,
-  getScrollingElement,
-  getImplementation,
-  getUrl,
-  getDocumentUri,
-  getCompatMode,
-  getCharacterSet,
-  getCharset,
-  getInputEncoding,
-  getContentType,
-  getDoctype,
-  getDocumentElement,
-  DocumentGetElementsByTagName,
-  DocumentGetElementsByTagNameNs,
-  DocumentGetElementsByClassName,
-  createElement,
-  createElementNs,
-  createDocumentFragment,
-  createTextNode,
-  createCdataSection,
-  createComment,
-  createProcessingInstruction,
-  importNode,
-  adoptNode,
-  createAttribute,
-  createAttributeNs,
-  createEvent,
-  createRange,
-  createNodeIterator,
-  createTreeWalker,
-  getFullscreenEnabled,
-  getFullscreen,
-  exitFullscreen,
-  pollExitFullscreen,
-  DocumentGetOnfullscreenchange,
-  DocumentSetOnfullscreenchange,
-  DocumentGetOnfullscreenerror,
-  DocumentSetOnfullscreenerror,
-  parseHtmlUnsafe,
-  DocumentGetLocation,
-  getDomain,
-  setDomain,
-  getReferrer,
-  getCookie,
-  setCookie,
-  getLastModified,
-  getReadyState,
-  DocumentObject,
-  DocumentGetTitle,
-  DocumentSetTitle,
-  DocumentGetDir,
-  DocumentSetDir,
-  getBody,
-  setBody,
-  getHead,
-  getImages,
-  getEmbeds,
-  getPlugins,
-  getLinks,
-  getForms,
-  getScripts,
-  getElementsByName,
-  getCurrentScript,
-  DocumentOpen,
-  DocumentClose,
-  write,
-  writeln,
-  getDefaultView,
-  hasFocus,
-  getDesignMode,
-  setDesignMode,
-  execCommand,
-  queryCommandEnabled,
-  queryCommandIndeterm,
-  queryCommandState,
-  queryCommandSupported,
-  queryCommandValue,
-  DocumentGetHidden,
-  getVisibilityState,
-  getOnreadystatechange,
-  setOnreadystatechange,
-  getOnvisibilitychange,
-  setOnvisibilitychange,
-  getFgColor,
-  setFgColor,
-  getLinkColor,
-  setLinkColor,
-  getVlinkColor,
-  setVlinkColor,
-  getAlinkColor,
-  setAlinkColor,
-  getBgColor,
-  setBgColor,
-  getAnchors,
-  getApplets,
-  clear,
-  DocumentCaptureEvents,
-  DocumentReleaseEvents,
-  getAll,
   getOffsetNode,
   getOffset,
   getClientRect,
@@ -9692,17 +8446,17 @@ export default {
   closest,
   matches,
   webkitMatchesSelector,
-  ElementGetElementsByTagName,
-  ElementGetElementsByTagNameNs,
-  ElementGetElementsByClassName,
+  getElementsByTagName,
+  getElementsByTagNameNs,
+  getElementsByClassName,
   insertAdjacentElement,
   insertAdjacentText,
   requestFullscreen,
   pollRequestFullscreen,
-  ElementGetOnfullscreenchange,
-  ElementSetOnfullscreenchange,
-  ElementGetOnfullscreenerror,
-  ElementSetOnfullscreenerror,
+  getOnfullscreenchange,
+  setOnfullscreenchange,
+  getOnfullscreenerror,
+  setOnfullscreenerror,
   setHtmlUnsafe,
   getHtml,
   getInnerHtml,
@@ -9720,14 +8474,14 @@ export default {
   getOffsetWidth,
   getOffsetHeight,
   HtmlElementGetTitle,
-  HtmlElementSetTitle,
+  setTitle,
   getLang,
   setLang,
   getTranslate,
   setTranslate,
-  HtmlElementGetDir,
-  HtmlElementSetDir,
-  HtmlElementGetHidden,
+  getDir,
+  setDir,
+  getHidden,
   setHidden,
   getInert,
   setInert,

@@ -300,6 +300,10 @@ let _nextNodeList = 1n;
 const _numberHandles = new Map<bigint, number>();
 let _nextNumber = 1n;
 
+/** Handle table for range values */
+const _rangeHandles = new Map<bigint, Range>();
+let _nextRange = 1n;
+
 /** Handle table for string values */
 const _stringHandles = new Map<bigint, string>();
 let _nextString = 1n;
@@ -628,6 +632,23 @@ function lookupOptionNumber(handle: bigint | undefined): number | null {
     return null;
   }
   return _numberHandles.get(handle) ?? null;
+}
+
+/** Lookup a range value by handle. */
+function lookupRange(handle: bigint): Range {
+  const obj = _rangeHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`range handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional range value by handle. */
+function lookupOptionRange(handle: bigint | undefined): Range | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _rangeHandles.get(handle) ?? null;
 }
 
 /** Lookup a string value by handle. */
@@ -3408,6 +3429,236 @@ export function reset(self: bigint): void {
 }
 
 // ---------------------------------------------------------------------------
+// WIT interface: selection
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type SelectionHandle = bigint;
+
+/** Handle table for Selection instances */
+const _selectionHandles = new Map<bigint, Selection>();
+let _nextSelection = 1n;
+
+/** Lookup a Selection by handle, throwing if not found. */
+function lookupSelection(handle: bigint): Selection {
+  const obj = _selectionHandles.get(handle);
+  if (!obj) {
+    throw new Error(`Selection handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional Selection by handle. */
+function lookupOptionSelection(handle: bigint | undefined): Selection | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _selectionHandles.get(handle) ?? null;
+}
+/**
+ * `get-anchor-node()` operation.
+ */
+export function getAnchorNode(self: bigint): bigint | undefined {
+  const obj = lookupSelection(self);
+  const _callResult = obj.anchorNode;
+  if (_callResult === null) return undefined;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-anchor-offset()` operation.
+ */
+export function getAnchorOffset(self: bigint): number {
+  const obj = lookupSelection(self);
+  return obj.anchorOffset;
+}
+
+/**
+ * `get-focus-node()` operation.
+ */
+export function getFocusNode(self: bigint): bigint | undefined {
+  const obj = lookupSelection(self);
+  const _callResult = obj.focusNode;
+  if (_callResult === null) return undefined;
+  const handle = _nextNode++;
+  _nodeHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-focus-offset()` operation.
+ */
+export function getFocusOffset(self: bigint): number {
+  const obj = lookupSelection(self);
+  return obj.focusOffset;
+}
+
+/**
+ * `get-is-collapsed()` operation.
+ */
+export function getIsCollapsed(self: bigint): boolean {
+  const obj = lookupSelection(self);
+  return obj.isCollapsed;
+}
+
+/**
+ * `get-range-count()` operation.
+ */
+export function getRangeCount(self: bigint): number {
+  const obj = lookupSelection(self);
+  return obj.rangeCount;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function SelectionGetType(self: bigint): string {
+  const obj = lookupSelection(self);
+  return obj.getType();
+}
+
+/**
+ * `get-direction()` operation.
+ */
+export function getDirection(self: bigint): string {
+  const obj = lookupSelection(self);
+  return obj.direction;
+}
+
+/**
+ * `get-range-at()` operation.
+ */
+export function getRangeAt(self: bigint, index: number): bigint {
+  const obj = lookupSelection(self);
+  const _callResult = obj.rangeAt;
+  const handle = _nextRange++;
+  _rangeHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `add-range()` operation.
+ */
+export function addRange(self: bigint, range: bigint): void {
+  const obj = lookupSelection(self);
+  obj.addRange(lookupRange(range));
+}
+
+/**
+ * `remove-range()` operation.
+ */
+export function removeRange(self: bigint, range: bigint): void {
+  const obj = lookupSelection(self);
+  obj.removeRange(lookupRange(range));
+}
+
+/**
+ * `remove-all-ranges()` operation.
+ */
+export function removeAllRanges(self: bigint): void {
+  const obj = lookupSelection(self);
+  obj.removeAllRanges();
+}
+
+/**
+ * `empty()` operation.
+ */
+export function empty(self: bigint): void {
+  const obj = lookupSelection(self);
+  obj.empty();
+}
+
+/**
+ * `get-composed-ranges()` operation.
+ */
+export function getComposedRanges(self: bigint, options: bigint | undefined): (bigint)[] {
+  const obj = lookupSelection(self);
+  return obj.composedRanges;
+}
+
+/**
+ * `collapse()` operation.
+ */
+export function collapse(self: bigint, node: bigint | undefined, offset: number | undefined): void {
+  const obj = lookupSelection(self);
+  obj.collapse(lookupOptionNode(node), Number(offset));
+}
+
+/**
+ * `set-position()` operation.
+ */
+export function setPosition(self: bigint, node: bigint | undefined, offset: number | undefined): void {
+  const obj = lookupSelection(self);
+  obj.position = offset;
+}
+
+/**
+ * `collapse-to-start()` operation.
+ */
+export function collapseToStart(self: bigint): void {
+  const obj = lookupSelection(self);
+  obj.collapseToStart();
+}
+
+/**
+ * `collapse-to-end()` operation.
+ */
+export function collapseToEnd(self: bigint): void {
+  const obj = lookupSelection(self);
+  obj.collapseToEnd();
+}
+
+/**
+ * `extend()` operation.
+ */
+export function extend(self: bigint, node: bigint, offset: number | undefined): void {
+  const obj = lookupSelection(self);
+  obj.extend(lookupNode(node), Number(offset));
+}
+
+/**
+ * `set-base-and-extent()` operation.
+ */
+export function setBaseAndExtent(self: bigint, anchorNode: bigint, anchorOffset: number, focusNode: bigint, focusOffset: number): void {
+  const obj = lookupSelection(self);
+  obj.baseAndExtent = Number(focusOffset);
+}
+
+/**
+ * `select-all-children()` operation.
+ */
+export function selectAllChildren(self: bigint, node: bigint): void {
+  const obj = lookupSelection(self);
+  obj.selectAllChildren(node);
+}
+
+/**
+ * `modify()` operation.
+ */
+export function modify(self: bigint, alter: string | undefined, direction: string | undefined, granularity: string | undefined): void {
+  const obj = lookupSelection(self);
+  obj.modify(alter, direction, granularity);
+}
+
+/**
+ * `delete-from-document()` operation.
+ */
+export function deleteFromDocument(self: bigint): void {
+  const obj = lookupSelection(self);
+  obj.deleteFromDocument();
+}
+
+/**
+ * `contains-node()` operation.
+ */
+export function containsNode(self: bigint, node: bigint, allowPartialContainment: boolean | undefined): boolean {
+  const obj = lookupSelection(self);
+  return obj.containsNode(lookupNode(node), allowPartialContainment);
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
@@ -3617,5 +3868,29 @@ export default {
   getParameter,
   removeParameter,
   clearParameters,
-  reset
+  reset,
+  getAnchorNode,
+  getAnchorOffset,
+  getFocusNode,
+  getFocusOffset,
+  getIsCollapsed,
+  getRangeCount,
+  SelectionGetType,
+  getDirection,
+  getRangeAt,
+  addRange,
+  removeRange,
+  removeAllRanges,
+  empty,
+  getComposedRanges,
+  collapse,
+  setPosition,
+  collapseToStart,
+  collapseToEnd,
+  extend,
+  setBaseAndExtent,
+  selectAllChildren,
+  modify,
+  deleteFromDocument,
+  containsNode
 };

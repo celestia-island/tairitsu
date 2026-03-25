@@ -20,18 +20,10 @@ interface event-callbacks {
 
     /// Mouse event data structure.
     record mouse-event-data {
-        /// The target element that received the event.
-        target: u64,
         client-x: f64,
         client-y: f64,
-        screen-x: f64,
-        screen-y: f64,
         offset-x: f64,
         offset-y: f64,
-        page-x: f64,
-        page-y: f64,
-        movement-x: f64,
-        movement-y: f64,
         button: u8,
         buttons: u8,
         ctrl-key: bool,
@@ -42,8 +34,6 @@ interface event-callbacks {
 
     /// Keyboard event data structure.
     record keyboard-event-data {
-        /// The target element that received the event.
-        target: u64,
         key: string,
         code: string,
         key-code: u32,
@@ -56,112 +46,13 @@ interface event-callbacks {
 
     /// Focus event data structure.
     record focus-event-data {
-        /// The target element that received the event.
-        target: u64,
         related-target: option<u64>,
     }
 
     /// Input event data structure.
     record input-event-data {
-        /// The target element that received the event.
-        target: u64,
         data: option<string>,
         input-type: string,
-    }
-
-    /// Wheel event data structure.
-    record wheel-event-data {
-        /// The target element that received the event.
-        target: u64,
-        delta-x: f64,
-        delta-y: f64,
-        delta-z: f64,
-        delta-mode: u32,
-        client-x: f64,
-        client-y: f64,
-        screen-x: f64,
-        screen-y: f64,
-        ctrl-key: bool,
-        shift-key: bool,
-        alt-key: bool,
-        meta-key: bool,
-    }
-
-    /// Touch point data structure.
-    record touch-point {
-        identifier: s32,
-        client-x: f64,
-        client-y: f64,
-        screen-x: f64,
-        screen-y: f64,
-        page-x: f64,
-        page-y: f64,
-        target: u64,
-        force: f32,
-        radius-x: f32,
-        radius-y: f32,
-        rotation-angle: f32,
-    }
-
-    /// Touch event data structure.
-    record touch-event-data {
-        /// The target element that received the event.
-        target: u64,
-        touches: list<touch-point>,
-        changed-touches: list<touch-point>,
-        target-touches: list<touch-point>,
-        timestamp: f64,
-    }
-
-    /// Pointer event data structure.
-    record pointer-event-data {
-        /// The target element that received the event.
-        target: u64,
-        pointer-id: s32,
-        pointer-type: string,
-        is-primary: bool,
-        client-x: f64,
-        client-y: f64,
-        screen-x: f64,
-        screen-y: f64,
-        offset-x: f64,
-        offset-y: f64,
-        page-x: f64,
-        page-y: f64,
-        movement-x: f64,
-        movement-y: f64,
-        width: f32,
-        height: f32,
-        pressure: f32,
-        tangential-pressure: f32,
-        tilt-x: s32,
-        tilt-y: s32,
-        twist: s32,
-        button: u8,
-        buttons: u8,
-        ctrl-key: bool,
-        shift-key: bool,
-        alt-key: bool,
-        meta-key: bool,
-    }
-
-    /// Transition event data structure.
-    record transition-event-data {
-        /// The target element that received the event.
-        target: u64,
-        property-name: string,
-        elapsed-time: f32,
-        pseudo-element: string,
-    }
-
-    /// Animation event data structure.
-    record animation-event-data {
-        /// The target element that received the event.
-        target: u64,
-        animation-name: string,
-        pseudo-element: string,
-        elapsed-time: f32,
-        iteration: f32,
     }
 
     /// Called when a mouse event fires on a registered listener.
@@ -172,16 +63,6 @@ interface event-callbacks {
     on-focus-event: func(listener-id: listener-id, event: event-handle, data: focus-event-data);
     /// Called when an input event fires on a registered listener.
     on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
-    /// Called when a wheel event fires on a registered listener.
-    on-wheel-event: func(listener-id: listener-id, event: event-handle, data: wheel-event-data);
-    /// Called when a touch event fires on a registered listener.
-    on-touch-event: func(listener-id: listener-id, event: event-handle, data: touch-event-data);
-    /// Called when a pointer event fires on a registered listener.
-    on-pointer-event: func(listener-id: listener-id, event: event-handle, data: pointer-event-data);
-    /// Called when a transition event fires on a registered listener.
-    on-transition-event: func(listener-id: listener-id, event: event-handle, data: transition-event-data);
-    /// Called when an animation event fires on a registered listener.
-    on-animation-event: func(listener-id: listener-id, event: event-handle, data: animation-event-data);
     /// Called for any other event type.
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
@@ -193,77 +74,38 @@ interface lifecycle {
     start: func() -> result<_, string>;
 }
 
-/// Timer callback interface - implemented by the component, called by host.
-interface timer-callbacks {
-    /// Called when a timeout fires.
-    on-timeout: func(callback-id: u64);
-    /// Called when an interval fires.
-    on-interval: func(callback-id: u64);
+/// Console interface for logging.
+interface console {
+    /// Log a message to the console.
+    log: func(message: string);
+    /// Log a warning to the console.
+    warn: func(message: string);
+    /// Log an error to the console.
+    error: func(message: string);
 }
 
-/// Animation callback interface - implemented by the component, called by host.
-interface animation-callbacks {
-    /// Called when an animation frame fires.
-    on-animation-frame: func(callback-id: u64, timestamp: f64);
+/// Event target interface for adding/removing event listeners.
+interface event-target {
+    /// Add an event listener to a target node.
+    /// Returns a listener-id that can be used to remove the listener.
+    add-event-listener: func(target: u64, event-type: string, use-capture: bool) -> result<u64, string>;
+    /// Remove a previously registered event listener.
+    remove-event-listener: func(target: u64, listener-id: u64) -> result<_, string>;
+    /// Prevent the default action for this event.
+    prevent-default: func(event: u64);
+    /// Stop the event from propagating further.
+    stop-propagation: func(event: u64);
 }
 
-/// Resize observer callback interface - implemented by the component, called by host.
-interface resize-observer-callbacks {
-    /// Called when resize observations fire.
-    on-resize: func(callback-id: u64, entries: list<u64>);
-}
-
-/// Mutation observer callback interface - implemented by the component, called by host.
-interface mutation-observer-callbacks {
-    /// Called when mutation observations fire.
-    on-mutation: func(callback-id: u64, records: list<u64>);
-}
-
-/// Platform helpers interface for browser APIs.
-interface platform-helpers {
-    use types.{dom-rect};
-
-    /// Get the inner width of the window.
-    inner-width: func() -> s32;
-
-    /// Get the inner height of the window.
-    inner-height: func() -> s32;
-
-    /// Set a timeout callback.
-    set-timeout: func(callback-id: u64, ms: s32) -> s32;
-
-    /// Clear a timeout.
-    clear-timeout: func(id: s32);
-
-    /// Request an animation frame callback.
-    request-animation-frame: func(callback-id: u64) -> u32;
-
-    /// Cancel an animation frame.
-    cancel-animation-frame: func(id: u32);
-
-    /// Get the bounding client rect of an element.
-    get-bounding-client-rect: func(element: u64) -> dom-rect;
-
-    /// Create a resize observer.
-    create-resize-observer: func(callback-id: u64) -> u64;
-
-    /// Observe element resize.
-    observe-resize: func(observer: u64, element: u64);
-
-    /// Unobserve element resize.
-    unobserve-resize: func(observer: u64, element: u64);
-
-    /// Disconnect resize observer.
-    disconnect-resize: func(observer: u64);
-
-    /// Create a mutation observer.
-    create-mutation-observer: func(callback-id: u64) -> u64;
-
-    /// Observe mutations on an element.
-    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
-
-    /// Disconnect mutation observer.
-    disconnect-mutation: func(observer: u64);
+/// Style interface - convenience wrapper for CSS operations.
+/// This is a simplified interface for the most common style operations.
+interface style {
+    /// Set a CSS property on an element.
+    set-style-property: func(element: u64, property: string, value: string) -> result<_, string>;
+    /// Get a CSS property value from an element.
+    get-style-property: func(element: u64, property: string) -> option<string>;
+    /// Remove a CSS property from an element.
+    remove-style-property: func(element: u64, property: string) -> result<_, string>;
 }
 
 interface credential {
@@ -325,6 +167,92 @@ interface federated-credential {
 
     /// `protocol` attribute — getter.
     get-protocol: func(self: federated-credential-handle) -> option<string>;
+}
+
+interface public-key-credential {
+    /// Opaque handle to a host-side `PublicKeyCredential` instance.
+    type public-key-credential-handle = u64;
+
+    /// `rawId` attribute — getter.
+    get-raw-id: func(self: public-key-credential-handle) -> list<u8>;
+
+    /// `response` attribute — getter.
+    get-response: func(self: public-key-credential-handle) -> u64;
+
+    /// `authenticatorAttachment` attribute — getter.
+    get-authenticator-attachment: func(self: public-key-credential-handle) -> option<string>;
+
+    /// `getClientExtensionResults()` operation.
+    get-client-extension-results: func(self: public-key-credential-handle) -> u64;
+
+    /// `isConditionalMediationAvailable()` operation.
+    is-conditional-mediation-available: func() -> u64;
+
+    /// `toJSON()` operation.
+    to-json: func(self: public-key-credential-handle) -> u64;
+
+    /// `isUserVerifyingPlatformAuthenticatorAvailable()` operation.
+    is-user-verifying-platform-authenticator-available: func() -> u64;
+
+    /// `getClientCapabilities()` operation.
+    get-client-capabilities: func() -> u64;
+
+    /// `parseCreationOptionsFromJSON()` operation.
+    parse-creation-options-from-json: func(options: u64) -> u64;
+
+    /// `parseRequestOptionsFromJSON()` operation.
+    parse-request-options-from-json: func(options: u64) -> u64;
+
+    /// `signalUnknownCredential()` operation.
+    signal-unknown-credential: func(options: u64) -> u64;
+
+    /// `signalAllAcceptedCredentials()` operation.
+    signal-all-accepted-credentials: func(options: u64) -> u64;
+
+    /// `signalCurrentUserDetails()` operation.
+    signal-current-user-details: func(options: u64) -> u64;
+}
+
+interface authenticator-response {
+    /// Opaque handle to a host-side `AuthenticatorResponse` instance.
+    type authenticator-response-handle = u64;
+
+    /// `clientDataJSON` attribute — getter.
+    get-client-data-json: func(self: authenticator-response-handle) -> list<u8>;
+}
+
+interface authenticator-attestation-response {
+    /// Opaque handle to a host-side `AuthenticatorAttestationResponse` instance.
+    type authenticator-attestation-response-handle = u64;
+
+    /// `attestationObject` attribute — getter.
+    get-attestation-object: func(self: authenticator-attestation-response-handle) -> list<u8>;
+
+    /// `getTransports()` operation.
+    get-transports: func(self: authenticator-attestation-response-handle) -> list<string>;
+
+    /// `getAuthenticatorData()` operation.
+    get-authenticator-data: func(self: authenticator-attestation-response-handle) -> list<u8>;
+
+    /// `getPublicKey()` operation.
+    get-public-key: func(self: authenticator-attestation-response-handle) -> option<list<u8>>;
+
+    /// `getPublicKeyAlgorithm()` operation.
+    get-public-key-algorithm: func(self: authenticator-attestation-response-handle) -> u64;
+}
+
+interface authenticator-assertion-response {
+    /// Opaque handle to a host-side `AuthenticatorAssertionResponse` instance.
+    type authenticator-assertion-response-handle = u64;
+
+    /// `authenticatorData` attribute — getter.
+    get-authenticator-data: func(self: authenticator-assertion-response-handle) -> list<u8>;
+
+    /// `signature` attribute — getter.
+    get-signature: func(self: authenticator-assertion-response-handle) -> list<u8>;
+
+    /// `userHandle` attribute — getter.
+    get-user-handle: func(self: authenticator-assertion-response-handle) -> option<list<u8>>;
 }
 
 interface types {
@@ -2139,6 +2067,16 @@ interface global-event-handlers {
     /// `onlostpointercapture` attribute — setter.
     set-onlostpointercapture: func(self: global-event-handlers-handle, value: u64);
 
+    /// `onselectstart` attribute — getter.
+    get-onselectstart: func(self: global-event-handlers-handle) -> u64;
+    /// `onselectstart` attribute — setter.
+    set-onselectstart: func(self: global-event-handlers-handle, value: u64);
+
+    /// `onselectionchange` attribute — getter.
+    get-onselectionchange: func(self: global-event-handlers-handle) -> u64;
+    /// `onselectionchange` attribute — setter.
+    set-onselectionchange: func(self: global-event-handlers-handle, value: u64);
+
     /// `ontouchstart` attribute — getter.
     get-ontouchstart: func(self: global-event-handlers-handle) -> u64;
     /// `ontouchstart` attribute — setter.
@@ -2550,6 +2488,9 @@ interface window {
     /// `external` attribute — getter.
     get-external: func() -> u64;
 
+    /// `getSelection()` operation.
+    get-selection: func() -> option<u64>;
+
     /// `speechSynthesis` attribute — getter.
     get-speech-synthesis: func() -> u64;
 }
@@ -2611,296 +2552,6 @@ interface screen {
 
     /// `orientation` attribute — getter.
     get-orientation: func() -> u64;
-}
-
-interface document {
-    /// Opaque handle to a host-side `Document` instance.
-    type document-handle = u64;
-
-    /// `elementFromPoint()` operation.
-    element-from-point: func(x: f64, y: f64) -> option<u64>;
-
-    /// `elementsFromPoint()` operation.
-    elements-from-point: func(x: f64, y: f64) -> list<u64>;
-
-    /// `caretPositionFromPoint()` operation.
-    caret-position-from-point: func(x: f64, y: f64, options: option<u64>) -> option<u64>;
-
-    /// `scrollingElement` attribute — getter.
-    get-scrolling-element: func() -> option<u64>;
-
-    /// `implementation` attribute — getter.
-    get-implementation: func() -> u64;
-
-    /// `URL` attribute — getter.
-    get-url: func() -> string;
-
-    /// `documentURI` attribute — getter.
-    get-document-uri: func() -> string;
-
-    /// `compatMode` attribute — getter.
-    get-compat-mode: func() -> string;
-
-    /// `characterSet` attribute — getter.
-    get-character-set: func() -> string;
-
-    /// `charset` attribute — getter.
-    get-charset: func() -> string;
-
-    /// `inputEncoding` attribute — getter.
-    get-input-encoding: func() -> string;
-
-    /// `contentType` attribute — getter.
-    get-content-type: func() -> string;
-
-    /// `doctype` attribute — getter.
-    get-doctype: func() -> option<u64>;
-
-    /// `documentElement` attribute — getter.
-    get-document-element: func() -> option<u64>;
-
-    /// `getElementsByTagName()` operation.
-    get-elements-by-tag-name: func(qualified-name: string) -> u64;
-
-    /// `getElementsByTagNameNS()` operation.
-    get-elements-by-tag-name-ns: func(namespace: option<string>, local-name: string) -> u64;
-
-    /// `getElementsByClassName()` operation.
-    get-elements-by-class-name: func(class-names: string) -> u64;
-
-    /// `createElement()` operation.
-    create-element: func(local-name: string, options: option<string>) -> u64;
-
-    /// `createElementNS()` operation.
-    create-element-ns: func(namespace: option<string>, qualified-name: string, options: option<string>) -> u64;
-
-    /// `createDocumentFragment()` operation.
-    create-document-fragment: func() -> u64;
-
-    /// `createTextNode()` operation.
-    create-text-node: func(data: string) -> u64;
-
-    /// `createCDATASection()` operation.
-    create-cdata-section: func(data: string) -> u64;
-
-    /// `createComment()` operation.
-    create-comment: func(data: string) -> u64;
-
-    /// `createProcessingInstruction()` operation.
-    create-processing-instruction: func(target: string, data: string) -> u64;
-
-    /// `importNode()` operation.
-    import-node: func(node: u64, options: option<bool>) -> u64;
-
-    /// `adoptNode()` operation.
-    adopt-node: func(node: u64) -> u64;
-
-    /// `createAttribute()` operation.
-    create-attribute: func(local-name: string) -> u64;
-
-    /// `createAttributeNS()` operation.
-    create-attribute-ns: func(namespace: option<string>, qualified-name: string) -> u64;
-
-    /// `createEvent()` operation.
-    create-event: func(%interface: string) -> u64;
-
-    /// `createRange()` operation.
-    create-range: func() -> u64;
-
-    /// `createNodeIterator()` operation.
-    create-node-iterator: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
-
-    /// `createTreeWalker()` operation.
-    create-tree-walker: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
-
-    /// `fullscreenEnabled` attribute — getter.
-    get-fullscreen-enabled: func() -> bool;
-
-    /// `fullscreen` attribute — getter.
-    get-fullscreen: func() -> bool;
-
-    /// `exitFullscreen()` operation.
-    exit-fullscreen: func() -> u64;
-
-    /// `onfullscreenchange` attribute — getter.
-    get-onfullscreenchange: func() -> u64;
-    /// `onfullscreenchange` attribute — setter.
-    set-onfullscreenchange: func(value: u64);
-
-    /// `onfullscreenerror` attribute — getter.
-    get-onfullscreenerror: func() -> u64;
-    /// `onfullscreenerror` attribute — setter.
-    set-onfullscreenerror: func(value: u64);
-
-    /// `parseHTMLUnsafe()` operation.
-    parse-html-unsafe: func(html: string) -> u64;
-
-    /// `location` attribute — getter.
-    get-location: func() -> option<u64>;
-
-    /// `domain` attribute — getter.
-    get-domain: func() -> string;
-    /// `domain` attribute — setter.
-    set-domain: func(value: string);
-
-    /// `referrer` attribute — getter.
-    get-referrer: func() -> string;
-
-    /// `cookie` attribute — getter.
-    get-cookie: func() -> string;
-    /// `cookie` attribute — setter.
-    set-cookie: func(value: string);
-
-    /// `lastModified` attribute — getter.
-    get-last-modified: func() -> string;
-
-    /// `readyState` attribute — getter.
-    get-ready-state: func() -> u64;
-
-    /// `object()` operation.
-    object: func(name: string);
-
-    /// `title` attribute — getter.
-    get-title: func() -> string;
-    /// `title` attribute — setter.
-    set-title: func(value: string);
-
-    /// `dir` attribute — getter.
-    get-dir: func() -> string;
-    /// `dir` attribute — setter.
-    set-dir: func(value: string);
-
-    /// `body` attribute — getter.
-    get-body: func() -> option<u64>;
-    /// `body` attribute — setter.
-    set-body: func(value: option<u64>);
-
-    /// `head` attribute — getter.
-    get-head: func() -> option<u64>;
-
-    /// `images` attribute — getter.
-    get-images: func() -> u64;
-
-    /// `embeds` attribute — getter.
-    get-embeds: func() -> u64;
-
-    /// `plugins` attribute — getter.
-    get-plugins: func() -> u64;
-
-    /// `links` attribute — getter.
-    get-links: func() -> u64;
-
-    /// `forms` attribute — getter.
-    get-forms: func() -> u64;
-
-    /// `scripts` attribute — getter.
-    get-scripts: func() -> u64;
-
-    /// `getElementsByName()` operation.
-    get-elements-by-name: func(element-name: string) -> u64;
-
-    /// `currentScript` attribute — getter.
-    get-current-script: func() -> option<u64>;
-
-    /// `open()` operation.
-    open: func(unused1: option<string>, unused2: option<string>) -> u64;
-
-    /// `close()` operation.
-    close: func();
-
-    /// `write()` operation.
-    write: func(text: list<string>);
-
-    /// `writeln()` operation.
-    writeln: func(text: list<string>);
-
-    /// `defaultView` attribute — getter.
-    get-default-view: func() -> option<u64>;
-
-    /// `hasFocus()` operation.
-    has-focus: func() -> bool;
-
-    /// `designMode` attribute — getter.
-    get-design-mode: func() -> string;
-    /// `designMode` attribute — setter.
-    set-design-mode: func(value: string);
-
-    /// `execCommand()` operation.
-    exec-command: func(command-id: string, show-ui: option<bool>, value: option<string>) -> bool;
-
-    /// `queryCommandEnabled()` operation.
-    query-command-enabled: func(command-id: string) -> bool;
-
-    /// `queryCommandIndeterm()` operation.
-    query-command-indeterm: func(command-id: string) -> bool;
-
-    /// `queryCommandState()` operation.
-    query-command-state: func(command-id: string) -> bool;
-
-    /// `queryCommandSupported()` operation.
-    query-command-supported: func(command-id: string) -> bool;
-
-    /// `queryCommandValue()` operation.
-    query-command-value: func(command-id: string) -> string;
-
-    /// `hidden` attribute — getter.
-    get-hidden: func() -> bool;
-
-    /// `visibilityState` attribute — getter.
-    get-visibility-state: func() -> u64;
-
-    /// `onreadystatechange` attribute — getter.
-    get-onreadystatechange: func() -> u64;
-    /// `onreadystatechange` attribute — setter.
-    set-onreadystatechange: func(value: u64);
-
-    /// `onvisibilitychange` attribute — getter.
-    get-onvisibilitychange: func() -> u64;
-    /// `onvisibilitychange` attribute — setter.
-    set-onvisibilitychange: func(value: u64);
-
-    /// `fgColor` attribute — getter.
-    get-fg-color: func() -> string;
-    /// `fgColor` attribute — setter.
-    set-fg-color: func(value: string);
-
-    /// `linkColor` attribute — getter.
-    get-link-color: func() -> string;
-    /// `linkColor` attribute — setter.
-    set-link-color: func(value: string);
-
-    /// `vlinkColor` attribute — getter.
-    get-vlink-color: func() -> string;
-    /// `vlinkColor` attribute — setter.
-    set-vlink-color: func(value: string);
-
-    /// `alinkColor` attribute — getter.
-    get-alink-color: func() -> string;
-    /// `alinkColor` attribute — setter.
-    set-alink-color: func(value: string);
-
-    /// `bgColor` attribute — getter.
-    get-bg-color: func() -> string;
-    /// `bgColor` attribute — setter.
-    set-bg-color: func(value: string);
-
-    /// `anchors` attribute — getter.
-    get-anchors: func() -> u64;
-
-    /// `applets` attribute — getter.
-    get-applets: func() -> u64;
-
-    /// `clear()` operation.
-    clear: func();
-
-    /// `captureEvents()` operation.
-    capture-events: func();
-
-    /// `releaseEvents()` operation.
-    release-events: func();
-
-    /// `all` attribute — getter.
-    get-all: func() -> u64;
 }
 
 interface caret-position {
@@ -5018,6 +4669,83 @@ interface xslt-processor {
     reset: func(self: xslt-processor-handle);
 }
 
+interface selection {
+    /// Opaque handle to a host-side `Selection` instance.
+    type selection-handle = u64;
+
+    /// `anchorNode` attribute — getter.
+    get-anchor-node: func(self: selection-handle) -> option<u64>;
+
+    /// `anchorOffset` attribute — getter.
+    get-anchor-offset: func(self: selection-handle) -> u32;
+
+    /// `focusNode` attribute — getter.
+    get-focus-node: func(self: selection-handle) -> option<u64>;
+
+    /// `focusOffset` attribute — getter.
+    get-focus-offset: func(self: selection-handle) -> u32;
+
+    /// `isCollapsed` attribute — getter.
+    get-is-collapsed: func(self: selection-handle) -> bool;
+
+    /// `rangeCount` attribute — getter.
+    get-range-count: func(self: selection-handle) -> u32;
+
+    /// `type` attribute — getter.
+    get-type: func(self: selection-handle) -> string;
+
+    /// `direction` attribute — getter.
+    get-direction: func(self: selection-handle) -> string;
+
+    /// `getRangeAt()` operation.
+    get-range-at: func(self: selection-handle, index: u32) -> u64;
+
+    /// `addRange()` operation.
+    add-range: func(self: selection-handle, range: u64);
+
+    /// `removeRange()` operation.
+    remove-range: func(self: selection-handle, range: u64);
+
+    /// `removeAllRanges()` operation.
+    remove-all-ranges: func(self: selection-handle);
+
+    /// `empty()` operation.
+    empty: func(self: selection-handle);
+
+    /// `getComposedRanges()` operation.
+    get-composed-ranges: func(self: selection-handle, options: option<u64>) -> list<u64>;
+
+    /// `collapse()` operation.
+    collapse: func(self: selection-handle, node: option<u64>, offset: option<u32>);
+
+    /// `setPosition()` operation.
+    set-position: func(self: selection-handle, node: option<u64>, offset: option<u32>);
+
+    /// `collapseToStart()` operation.
+    collapse-to-start: func(self: selection-handle);
+
+    /// `collapseToEnd()` operation.
+    collapse-to-end: func(self: selection-handle);
+
+    /// `extend()` operation.
+    extend: func(self: selection-handle, node: u64, offset: option<u32>);
+
+    /// `setBaseAndExtent()` operation.
+    set-base-and-extent: func(self: selection-handle, anchor-node: u64, anchor-offset: u32, focus-node: u64, focus-offset: u32);
+
+    /// `selectAllChildren()` operation.
+    select-all-children: func(self: selection-handle, node: u64);
+
+    /// `modify()` operation.
+    modify: func(self: selection-handle, alter: option<string>, direction: option<string>, granularity: option<string>);
+
+    /// `deleteFromDocument()` operation.
+    delete-from-document: func(self: selection-handle);
+
+    /// `containsNode()` operation.
+    contains-node: func(self: selection-handle, node: u64, allow-partial-containment: option<bool>) -> bool;
+}
+
 interface clipboard-event {
     /// Opaque handle to a host-side `ClipboardEvent` instance.
     type clipboard-event-handle = u64;
@@ -5333,6 +5061,206 @@ interface text-event {
     init-text-event: func(self: text-event-handle, %type: string, bubbles: option<bool>, cancelable: option<bool>, view: option<u64>, data: option<string>);
 }
 
+interface blob {
+    /// Opaque handle to a host-side `Blob` instance.
+    type blob-handle = u64;
+
+    /// `size` attribute — getter.
+    get-size: func(self: blob-handle) -> u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: blob-handle) -> string;
+
+    /// `slice()` operation.
+    slice: func(self: blob-handle, start: option<s64>, end: option<s64>, content-type: option<string>) -> u64;
+
+    /// `stream()` operation.
+    stream: func(self: blob-handle) -> u64;
+
+    /// `text()` operation.
+    text: func(self: blob-handle) -> u64;
+
+    /// `arrayBuffer()` operation.
+    array-buffer: func(self: blob-handle) -> u64;
+
+    /// `bytes()` operation.
+    bytes: func(self: blob-handle) -> u64;
+}
+
+interface file {
+    /// Opaque handle to a host-side `File` instance.
+    type file-handle = u64;
+
+    /// `name` attribute — getter.
+    get-name: func(self: file-handle) -> string;
+
+    /// `lastModified` attribute — getter.
+    get-last-modified: func(self: file-handle) -> s64;
+}
+
+interface file-list {
+    /// Opaque handle to a host-side `FileList` instance.
+    type file-list-handle = u64;
+
+    /// `item()` operation.
+    item: func(self: file-list-handle, index: u32) -> option<u64>;
+
+    /// `length` attribute — getter.
+    get-length: func(self: file-list-handle) -> u32;
+}
+
+interface file-reader {
+    /// Opaque handle to a host-side `FileReader` instance.
+    type file-reader-handle = u64;
+
+    /// `readAsArrayBuffer()` operation.
+    read-as-array-buffer: func(self: file-reader-handle, blob: u64);
+
+    /// `readAsBinaryString()` operation.
+    read-as-binary-string: func(self: file-reader-handle, blob: u64);
+
+    /// `readAsText()` operation.
+    read-as-text: func(self: file-reader-handle, blob: u64, encoding: option<string>);
+
+    /// `readAsDataURL()` operation.
+    read-as-data-url: func(self: file-reader-handle, blob: u64);
+
+    /// `abort()` operation.
+    abort: func(self: file-reader-handle);
+
+    /// `readyState` attribute — getter.
+    get-ready-state: func(self: file-reader-handle) -> u16;
+
+    /// `result` attribute — getter.
+    get-result: func(self: file-reader-handle) -> option<string>;
+
+    /// `error` attribute — getter.
+    get-error: func(self: file-reader-handle) -> option<u64>;
+
+    /// `onloadstart` attribute — getter.
+    get-onloadstart: func(self: file-reader-handle) -> u64;
+    /// `onloadstart` attribute — setter.
+    set-onloadstart: func(self: file-reader-handle, value: u64);
+
+    /// `onprogress` attribute — getter.
+    get-onprogress: func(self: file-reader-handle) -> u64;
+    /// `onprogress` attribute — setter.
+    set-onprogress: func(self: file-reader-handle, value: u64);
+
+    /// `onload` attribute — getter.
+    get-onload: func(self: file-reader-handle) -> u64;
+    /// `onload` attribute — setter.
+    set-onload: func(self: file-reader-handle, value: u64);
+
+    /// `onabort` attribute — getter.
+    get-onabort: func(self: file-reader-handle) -> u64;
+    /// `onabort` attribute — setter.
+    set-onabort: func(self: file-reader-handle, value: u64);
+
+    /// `onerror` attribute — getter.
+    get-onerror: func(self: file-reader-handle) -> u64;
+    /// `onerror` attribute — setter.
+    set-onerror: func(self: file-reader-handle, value: u64);
+
+    /// `onloadend` attribute — getter.
+    get-onloadend: func(self: file-reader-handle) -> u64;
+    /// `onloadend` attribute — setter.
+    set-onloadend: func(self: file-reader-handle, value: u64);
+}
+
+interface file-reader-sync {
+    /// Opaque handle to a host-side `FileReaderSync` instance.
+    type file-reader-sync-handle = u64;
+
+    /// `readAsArrayBuffer()` operation.
+    read-as-array-buffer: func(self: file-reader-sync-handle, blob: u64) -> list<u8>;
+
+    /// `readAsBinaryString()` operation.
+    read-as-binary-string: func(self: file-reader-sync-handle, blob: u64) -> string;
+
+    /// `readAsText()` operation.
+    read-as-text: func(self: file-reader-sync-handle, blob: u64, encoding: option<string>) -> string;
+
+    /// `readAsDataURL()` operation.
+    read-as-data-url: func(self: file-reader-sync-handle, blob: u64) -> string;
+}
+
+interface url {
+    /// Opaque handle to a host-side `URL` instance.
+    type url-handle = u64;
+
+    /// `createObjectURL()` operation.
+    create-object-url: func(obj: u64) -> string;
+
+    /// `revokeObjectURL()` operation.
+    revoke-object-url: func(url: string);
+
+    /// `parse()` operation.
+    parse: func(url: string, base: option<string>) -> option<u64>;
+
+    /// `canParse()` operation.
+    can-parse: func(url: string, base: option<string>) -> bool;
+
+    /// `href` attribute — getter.
+    get-href: func(self: url-handle) -> string;
+    /// `href` attribute — setter.
+    set-href: func(self: url-handle, value: string);
+
+    /// `origin` attribute — getter.
+    get-origin: func(self: url-handle) -> string;
+
+    /// `protocol` attribute — getter.
+    get-protocol: func(self: url-handle) -> string;
+    /// `protocol` attribute — setter.
+    set-protocol: func(self: url-handle, value: string);
+
+    /// `username` attribute — getter.
+    get-username: func(self: url-handle) -> string;
+    /// `username` attribute — setter.
+    set-username: func(self: url-handle, value: string);
+
+    /// `password` attribute — getter.
+    get-password: func(self: url-handle) -> string;
+    /// `password` attribute — setter.
+    set-password: func(self: url-handle, value: string);
+
+    /// `host` attribute — getter.
+    get-host: func(self: url-handle) -> string;
+    /// `host` attribute — setter.
+    set-host: func(self: url-handle, value: string);
+
+    /// `hostname` attribute — getter.
+    get-hostname: func(self: url-handle) -> string;
+    /// `hostname` attribute — setter.
+    set-hostname: func(self: url-handle, value: string);
+
+    /// `port` attribute — getter.
+    get-port: func(self: url-handle) -> string;
+    /// `port` attribute — setter.
+    set-port: func(self: url-handle, value: string);
+
+    /// `pathname` attribute — getter.
+    get-pathname: func(self: url-handle) -> string;
+    /// `pathname` attribute — setter.
+    set-pathname: func(self: url-handle, value: string);
+
+    /// `search` attribute — getter.
+    get-search: func(self: url-handle) -> string;
+    /// `search` attribute — setter.
+    set-search: func(self: url-handle, value: string);
+
+    /// `searchParams` attribute — getter.
+    get-search-params: func(self: url-handle) -> u64;
+
+    /// `hash` attribute — getter.
+    get-hash: func(self: url-handle) -> string;
+    /// `hash` attribute — setter.
+    set-hash: func(self: url-handle, value: string);
+
+    /// `toJSON()` operation.
+    to-json: func(self: url-handle) -> string;
+}
+
 interface headers {
     /// Opaque handle to a host-side `Headers` instance.
     type headers-handle = u64;
@@ -5477,62 +5405,6 @@ interface response {
 
     /// `clone()` operation.
     clone: func(self: response-handle) -> u64;
-}
-
-interface window-or-worker-global-scope {
-    /// Opaque handle to a host-side `WindowOrWorkerGlobalScope` instance.
-    type window-or-worker-global-scope-handle = u64;
-
-    /// `fetch()` operation.
-    fetch: func(self: window-or-worker-global-scope-handle, input: u64, init: option<u64>) -> u64;
-
-    /// `performance` attribute — getter.
-    get-performance: func(self: window-or-worker-global-scope-handle) -> u64;
-
-    /// `origin` attribute — getter.
-    get-origin: func(self: window-or-worker-global-scope-handle) -> string;
-
-    /// `isSecureContext` attribute — getter.
-    get-is-secure-context: func(self: window-or-worker-global-scope-handle) -> bool;
-
-    /// `crossOriginIsolated` attribute — getter.
-    get-cross-origin-isolated: func(self: window-or-worker-global-scope-handle) -> bool;
-
-    /// `reportError()` operation.
-    report-error: func(self: window-or-worker-global-scope-handle, e: string);
-
-    /// `btoa()` operation.
-    btoa: func(self: window-or-worker-global-scope-handle, data: string) -> string;
-
-    /// `atob()` operation.
-    atob: func(self: window-or-worker-global-scope-handle, data: string) -> string;
-
-    /// `setTimeout()` operation.
-    set-timeout: func(self: window-or-worker-global-scope-handle, handler: u64, timeout: option<s32>, arguments: list<string>) -> s32;
-
-    /// `clearTimeout()` operation.
-    clear-timeout: func(self: window-or-worker-global-scope-handle, id: option<s32>);
-
-    /// `setInterval()` operation.
-    set-interval: func(self: window-or-worker-global-scope-handle, handler: u64, timeout: option<s32>, arguments: list<string>) -> s32;
-
-    /// `clearInterval()` operation.
-    clear-interval: func(self: window-or-worker-global-scope-handle, id: option<s32>);
-
-    /// `queueMicrotask()` operation.
-    queue-microtask: func(self: window-or-worker-global-scope-handle, callback: u64);
-
-    /// `createImageBitmap()` operation.
-    create-image-bitmap: func(self: window-or-worker-global-scope-handle, image: u64, options: option<u64>) -> u64;
-
-    /// `structuredClone()` operation.
-    structured-clone: func(self: window-or-worker-global-scope-handle, value: string, options: option<u64>) -> string;
-
-    /// `caches` attribute — getter.
-    get-caches: func(self: window-or-worker-global-scope-handle) -> u64;
-
-    /// `crypto` attribute — getter.
-    get-crypto: func(self: window-or-worker-global-scope-handle) -> u64;
 }
 
 interface fetch-later-result {
@@ -5913,40 +5785,6 @@ interface progress-event {
 
     /// `total` attribute — getter.
     get-total: func(self: progress-event-handle) -> f64;
-}
-
-interface blob {
-/// Opaque handle to a Blob instance.
-    type blob-handle = u64;
-
-}
-
-interface file {
-/// Opaque handle to a File instance.
-    type file-handle = u64;
-
-}
-
-interface file-reader {
-/// Opaque handle to a FileReader instance.
-    type file-reader-handle = u64;
-
-    new-file-reader: func() -> result<file-reader-handle, string>;
-    // read-as-array-buffer: skipped (unmappable parameter type)
-    // read-as-binary-string: skipped (unmappable parameter type)
-    // read-as-text: skipped (unmappable parameter type)
-    // read-as-data-url: skipped (unmappable parameter type)
-    abort: func(handle: file-reader-handle);
-    ready-state: func(handle: file-reader-handle) -> u16;
-    result-val: func(handle: file-reader-handle) -> option<string>;
-}
-
-interface file-list {
-/// Opaque handle to a FileList instance.
-    type file-list-handle = u64;
-
-    // item: skipped (unmappable return type)
-    length: func(handle: file-list-handle) -> u32;
 }
 
 interface html-all-collection {
@@ -11647,6 +11485,810 @@ interface speech-synthesis-voice {
     get-default: func(self: speech-synthesis-voice-handle) -> bool;
 }
 
+interface base-audio-context {
+    /// Opaque handle to a host-side `BaseAudioContext` instance.
+    type base-audio-context-handle = u64;
+
+    /// `destination` attribute — getter.
+    get-destination: func(self: base-audio-context-handle) -> u64;
+
+    /// `sampleRate` attribute — getter.
+    get-sample-rate: func(self: base-audio-context-handle) -> f32;
+
+    /// `currentTime` attribute — getter.
+    get-current-time: func(self: base-audio-context-handle) -> f64;
+
+    /// `listener` attribute — getter.
+    get-listener: func(self: base-audio-context-handle) -> u64;
+
+    /// `state` attribute — getter.
+    get-state: func(self: base-audio-context-handle) -> u64;
+
+    /// `renderQuantumSize` attribute — getter.
+    get-render-quantum-size: func(self: base-audio-context-handle) -> u32;
+
+    /// `audioWorklet` attribute — getter.
+    get-audio-worklet: func(self: base-audio-context-handle) -> u64;
+
+    /// `onstatechange` attribute — getter.
+    get-onstatechange: func(self: base-audio-context-handle) -> u64;
+    /// `onstatechange` attribute — setter.
+    set-onstatechange: func(self: base-audio-context-handle, value: u64);
+
+    /// `createAnalyser()` operation.
+    create-analyser: func(self: base-audio-context-handle) -> u64;
+
+    /// `createBiquadFilter()` operation.
+    create-biquad-filter: func(self: base-audio-context-handle) -> u64;
+
+    /// `createBuffer()` operation.
+    create-buffer: func(self: base-audio-context-handle, number-of-channels: u32, length: u32, sample-rate: f32) -> u64;
+
+    /// `createBufferSource()` operation.
+    create-buffer-source: func(self: base-audio-context-handle) -> u64;
+
+    /// `createChannelMerger()` operation.
+    create-channel-merger: func(self: base-audio-context-handle, number-of-inputs: option<u32>) -> u64;
+
+    /// `createChannelSplitter()` operation.
+    create-channel-splitter: func(self: base-audio-context-handle, number-of-outputs: option<u32>) -> u64;
+
+    /// `createConstantSource()` operation.
+    create-constant-source: func(self: base-audio-context-handle) -> u64;
+
+    /// `createConvolver()` operation.
+    create-convolver: func(self: base-audio-context-handle) -> u64;
+
+    /// `createDelay()` operation.
+    create-delay: func(self: base-audio-context-handle, max-delay-time: option<f64>) -> u64;
+
+    /// `createDynamicsCompressor()` operation.
+    create-dynamics-compressor: func(self: base-audio-context-handle) -> u64;
+
+    /// `createGain()` operation.
+    create-gain: func(self: base-audio-context-handle) -> u64;
+
+    /// `createIIRFilter()` operation.
+    create-iir-filter: func(self: base-audio-context-handle, feedforward: list<f64>, feedback: list<f64>) -> u64;
+
+    /// `createOscillator()` operation.
+    create-oscillator: func(self: base-audio-context-handle) -> u64;
+
+    /// `createPanner()` operation.
+    create-panner: func(self: base-audio-context-handle) -> u64;
+
+    /// `createPeriodicWave()` operation.
+    create-periodic-wave: func(self: base-audio-context-handle, real: list<f32>, imag: list<f32>, constraints: option<u64>) -> u64;
+
+    /// `createScriptProcessor()` operation.
+    create-script-processor: func(self: base-audio-context-handle, buffer-size: option<u32>, number-of-input-channels: option<u32>, number-of-output-channels: option<u32>) -> u64;
+
+    /// `createStereoPanner()` operation.
+    create-stereo-panner: func(self: base-audio-context-handle) -> u64;
+
+    /// `createWaveShaper()` operation.
+    create-wave-shaper: func(self: base-audio-context-handle) -> u64;
+
+    /// `decodeAudioData()` operation.
+    decode-audio-data: func(self: base-audio-context-handle, audio-data: list<u8>, success-callback: option<u64>, error-callback: option<u64>) -> u64;
+}
+
+interface audio-context {
+    /// Opaque handle to a host-side `AudioContext` instance.
+    type audio-context-handle = u64;
+
+    /// `baseLatency` attribute — getter.
+    get-base-latency: func(self: audio-context-handle) -> f64;
+
+    /// `outputLatency` attribute — getter.
+    get-output-latency: func(self: audio-context-handle) -> f64;
+
+    /// `sinkId` attribute — getter.
+    get-sink-id: func(self: audio-context-handle) -> string;
+
+    /// `onsinkchange` attribute — getter.
+    get-onsinkchange: func(self: audio-context-handle) -> u64;
+    /// `onsinkchange` attribute — setter.
+    set-onsinkchange: func(self: audio-context-handle, value: u64);
+
+    /// `onerror` attribute — getter.
+    get-onerror: func(self: audio-context-handle) -> u64;
+    /// `onerror` attribute — setter.
+    set-onerror: func(self: audio-context-handle, value: u64);
+
+    /// `playbackStats` attribute — getter.
+    get-playback-stats: func(self: audio-context-handle) -> u64;
+
+    /// `getOutputTimestamp()` operation.
+    get-output-timestamp: func(self: audio-context-handle) -> u64;
+
+    /// `resume()` operation.
+    resume: func(self: audio-context-handle) -> u64;
+
+    /// `suspend()` operation.
+    suspend: func(self: audio-context-handle) -> u64;
+
+    /// `close()` operation.
+    close: func(self: audio-context-handle) -> u64;
+
+    /// `setSinkId()` operation.
+    set-sink-id: func(self: audio-context-handle, sink-id: string) -> u64;
+
+    /// `createMediaElementSource()` operation.
+    create-media-element-source: func(self: audio-context-handle, media-element: u64) -> u64;
+
+    /// `createMediaStreamSource()` operation.
+    create-media-stream-source: func(self: audio-context-handle, media-stream: u64) -> u64;
+
+    /// `createMediaStreamTrackSource()` operation.
+    create-media-stream-track-source: func(self: audio-context-handle, media-stream-track: u64) -> u64;
+
+    /// `createMediaStreamDestination()` operation.
+    create-media-stream-destination: func(self: audio-context-handle) -> u64;
+}
+
+interface audio-sink-info {
+    /// Opaque handle to a host-side `AudioSinkInfo` instance.
+    type audio-sink-info-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: audio-sink-info-handle) -> u64;
+}
+
+interface offline-audio-context {
+    /// Opaque handle to a host-side `OfflineAudioContext` instance.
+    type offline-audio-context-handle = u64;
+
+    /// `startRendering()` operation.
+    start-rendering: func(self: offline-audio-context-handle) -> u64;
+
+    /// `resume()` operation.
+    resume: func(self: offline-audio-context-handle) -> u64;
+
+    /// `suspend()` operation.
+    suspend: func(self: offline-audio-context-handle, suspend-time: f64) -> u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: offline-audio-context-handle) -> u32;
+
+    /// `oncomplete` attribute — getter.
+    get-oncomplete: func(self: offline-audio-context-handle) -> u64;
+    /// `oncomplete` attribute — setter.
+    set-oncomplete: func(self: offline-audio-context-handle, value: u64);
+}
+
+interface offline-audio-completion-event {
+    /// Opaque handle to a host-side `OfflineAudioCompletionEvent` instance.
+    type offline-audio-completion-event-handle = u64;
+
+    /// `renderedBuffer` attribute — getter.
+    get-rendered-buffer: func(self: offline-audio-completion-event-handle) -> u64;
+}
+
+interface audio-buffer {
+    /// Opaque handle to a host-side `AudioBuffer` instance.
+    type audio-buffer-handle = u64;
+
+    /// `sampleRate` attribute — getter.
+    get-sample-rate: func(self: audio-buffer-handle) -> f32;
+
+    /// `length` attribute — getter.
+    get-length: func(self: audio-buffer-handle) -> u32;
+
+    /// `duration` attribute — getter.
+    get-duration: func(self: audio-buffer-handle) -> f64;
+
+    /// `numberOfChannels` attribute — getter.
+    get-number-of-channels: func(self: audio-buffer-handle) -> u32;
+
+    /// `getChannelData()` operation.
+    get-channel-data: func(self: audio-buffer-handle, channel: u32) -> list<f32>;
+
+    /// `copyFromChannel()` operation.
+    copy-from-channel: func(self: audio-buffer-handle, destination: list<f32>, channel-number: u32, buffer-offset: option<u32>);
+
+    /// `copyToChannel()` operation.
+    copy-to-channel: func(self: audio-buffer-handle, source: list<f32>, channel-number: u32, buffer-offset: option<u32>);
+}
+
+interface audio-node {
+    /// Opaque handle to a host-side `AudioNode` instance.
+    type audio-node-handle = u64;
+
+    /// `connect()` operation.
+    connect: func(self: audio-node-handle, destination-node: u64, output: option<u32>, input: option<u32>) -> u64;
+
+    /// `disconnect()` operation.
+    disconnect: func(self: audio-node-handle);
+
+    /// `context` attribute — getter.
+    get-context: func(self: audio-node-handle) -> u64;
+
+    /// `numberOfInputs` attribute — getter.
+    get-number-of-inputs: func(self: audio-node-handle) -> u32;
+
+    /// `numberOfOutputs` attribute — getter.
+    get-number-of-outputs: func(self: audio-node-handle) -> u32;
+
+    /// `channelCount` attribute — getter.
+    get-channel-count: func(self: audio-node-handle) -> u32;
+    /// `channelCount` attribute — setter.
+    set-channel-count: func(self: audio-node-handle, value: u32);
+
+    /// `channelCountMode` attribute — getter.
+    get-channel-count-mode: func(self: audio-node-handle) -> u64;
+    /// `channelCountMode` attribute — setter.
+    set-channel-count-mode: func(self: audio-node-handle, value: u64);
+
+    /// `channelInterpretation` attribute — getter.
+    get-channel-interpretation: func(self: audio-node-handle) -> u64;
+    /// `channelInterpretation` attribute — setter.
+    set-channel-interpretation: func(self: audio-node-handle, value: u64);
+}
+
+interface audio-param {
+    /// Opaque handle to a host-side `AudioParam` instance.
+    type audio-param-handle = u64;
+
+    /// `value` attribute — getter.
+    get-value: func(self: audio-param-handle) -> f32;
+    /// `value` attribute — setter.
+    set-value: func(self: audio-param-handle, value: f32);
+
+    /// `automationRate` attribute — getter.
+    get-automation-rate: func(self: audio-param-handle) -> u64;
+    /// `automationRate` attribute — setter.
+    set-automation-rate: func(self: audio-param-handle, value: u64);
+
+    /// `defaultValue` attribute — getter.
+    get-default-value: func(self: audio-param-handle) -> f32;
+
+    /// `minValue` attribute — getter.
+    get-min-value: func(self: audio-param-handle) -> f32;
+
+    /// `maxValue` attribute — getter.
+    get-max-value: func(self: audio-param-handle) -> f32;
+
+    /// `setValueAtTime()` operation.
+    set-value-at-time: func(self: audio-param-handle, value: f32, start-time: f64) -> u64;
+
+    /// `linearRampToValueAtTime()` operation.
+    linear-ramp-to-value-at-time: func(self: audio-param-handle, value: f32, end-time: f64) -> u64;
+
+    /// `exponentialRampToValueAtTime()` operation.
+    exponential-ramp-to-value-at-time: func(self: audio-param-handle, value: f32, end-time: f64) -> u64;
+
+    /// `setTargetAtTime()` operation.
+    set-target-at-time: func(self: audio-param-handle, target: f32, start-time: f64, time-constant: f32) -> u64;
+
+    /// `setValueCurveAtTime()` operation.
+    set-value-curve-at-time: func(self: audio-param-handle, values: list<f32>, start-time: f64, duration: f64) -> u64;
+
+    /// `cancelScheduledValues()` operation.
+    cancel-scheduled-values: func(self: audio-param-handle, cancel-time: f64) -> u64;
+
+    /// `cancelAndHoldAtTime()` operation.
+    cancel-and-hold-at-time: func(self: audio-param-handle, cancel-time: f64) -> u64;
+}
+
+interface audio-scheduled-source-node {
+    /// Opaque handle to a host-side `AudioScheduledSourceNode` instance.
+    type audio-scheduled-source-node-handle = u64;
+
+    /// `onended` attribute — getter.
+    get-onended: func(self: audio-scheduled-source-node-handle) -> u64;
+    /// `onended` attribute — setter.
+    set-onended: func(self: audio-scheduled-source-node-handle, value: u64);
+
+    /// `start()` operation.
+    start: func(self: audio-scheduled-source-node-handle, when: option<f64>);
+
+    /// `stop()` operation.
+    stop: func(self: audio-scheduled-source-node-handle, when: option<f64>);
+}
+
+interface analyser-node {
+    /// Opaque handle to a host-side `AnalyserNode` instance.
+    type analyser-node-handle = u64;
+
+    /// `getFloatFrequencyData()` operation.
+    get-float-frequency-data: func(self: analyser-node-handle, array: list<f32>);
+
+    /// `getByteFrequencyData()` operation.
+    get-byte-frequency-data: func(self: analyser-node-handle, array: list<u8>);
+
+    /// `getFloatTimeDomainData()` operation.
+    get-float-time-domain-data: func(self: analyser-node-handle, array: list<f32>);
+
+    /// `getByteTimeDomainData()` operation.
+    get-byte-time-domain-data: func(self: analyser-node-handle, array: list<u8>);
+
+    /// `fftSize` attribute — getter.
+    get-fft-size: func(self: analyser-node-handle) -> u32;
+    /// `fftSize` attribute — setter.
+    set-fft-size: func(self: analyser-node-handle, value: u32);
+
+    /// `frequencyBinCount` attribute — getter.
+    get-frequency-bin-count: func(self: analyser-node-handle) -> u32;
+
+    /// `minDecibels` attribute — getter.
+    get-min-decibels: func(self: analyser-node-handle) -> f64;
+    /// `minDecibels` attribute — setter.
+    set-min-decibels: func(self: analyser-node-handle, value: f64);
+
+    /// `maxDecibels` attribute — getter.
+    get-max-decibels: func(self: analyser-node-handle) -> f64;
+    /// `maxDecibels` attribute — setter.
+    set-max-decibels: func(self: analyser-node-handle, value: f64);
+
+    /// `smoothingTimeConstant` attribute — getter.
+    get-smoothing-time-constant: func(self: analyser-node-handle) -> f64;
+    /// `smoothingTimeConstant` attribute — setter.
+    set-smoothing-time-constant: func(self: analyser-node-handle, value: f64);
+}
+
+interface audio-buffer-source-node {
+    /// Opaque handle to a host-side `AudioBufferSourceNode` instance.
+    type audio-buffer-source-node-handle = u64;
+
+    /// `buffer` attribute — getter.
+    get-buffer: func(self: audio-buffer-source-node-handle) -> option<u64>;
+    /// `buffer` attribute — setter.
+    set-buffer: func(self: audio-buffer-source-node-handle, value: option<u64>);
+
+    /// `playbackRate` attribute — getter.
+    get-playback-rate: func(self: audio-buffer-source-node-handle) -> u64;
+
+    /// `detune` attribute — getter.
+    get-detune: func(self: audio-buffer-source-node-handle) -> u64;
+
+    /// `loop` attribute — getter.
+    get-loop: func(self: audio-buffer-source-node-handle) -> bool;
+    /// `loop` attribute — setter.
+    set-loop: func(self: audio-buffer-source-node-handle, value: bool);
+
+    /// `loopStart` attribute — getter.
+    get-loop-start: func(self: audio-buffer-source-node-handle) -> f64;
+    /// `loopStart` attribute — setter.
+    set-loop-start: func(self: audio-buffer-source-node-handle, value: f64);
+
+    /// `loopEnd` attribute — getter.
+    get-loop-end: func(self: audio-buffer-source-node-handle) -> f64;
+    /// `loopEnd` attribute — setter.
+    set-loop-end: func(self: audio-buffer-source-node-handle, value: f64);
+
+    /// `start()` operation.
+    start: func(self: audio-buffer-source-node-handle, when: option<f64>, offset: option<f64>, duration: option<f64>);
+}
+
+interface audio-destination-node {
+    /// Opaque handle to a host-side `AudioDestinationNode` instance.
+    type audio-destination-node-handle = u64;
+
+    /// `maxChannelCount` attribute — getter.
+    get-max-channel-count: func(self: audio-destination-node-handle) -> u32;
+}
+
+interface audio-listener {
+    /// Opaque handle to a host-side `AudioListener` instance.
+    type audio-listener-handle = u64;
+
+    /// `positionX` attribute — getter.
+    get-position-x: func(self: audio-listener-handle) -> u64;
+
+    /// `positionY` attribute — getter.
+    get-position-y: func(self: audio-listener-handle) -> u64;
+
+    /// `positionZ` attribute — getter.
+    get-position-z: func(self: audio-listener-handle) -> u64;
+
+    /// `forwardX` attribute — getter.
+    get-forward-x: func(self: audio-listener-handle) -> u64;
+
+    /// `forwardY` attribute — getter.
+    get-forward-y: func(self: audio-listener-handle) -> u64;
+
+    /// `forwardZ` attribute — getter.
+    get-forward-z: func(self: audio-listener-handle) -> u64;
+
+    /// `upX` attribute — getter.
+    get-up-x: func(self: audio-listener-handle) -> u64;
+
+    /// `upY` attribute — getter.
+    get-up-y: func(self: audio-listener-handle) -> u64;
+
+    /// `upZ` attribute — getter.
+    get-up-z: func(self: audio-listener-handle) -> u64;
+
+    /// `setPosition()` operation.
+    set-position: func(self: audio-listener-handle, x: f32, y: f32, z: f32);
+
+    /// `setOrientation()` operation.
+    set-orientation: func(self: audio-listener-handle, x: f32, y: f32, z: f32, x-up: f32, y-up: f32, z-up: f32);
+}
+
+interface audio-processing-event {
+    /// Opaque handle to a host-side `AudioProcessingEvent` instance.
+    type audio-processing-event-handle = u64;
+
+    /// `playbackTime` attribute — getter.
+    get-playback-time: func(self: audio-processing-event-handle) -> f64;
+
+    /// `inputBuffer` attribute — getter.
+    get-input-buffer: func(self: audio-processing-event-handle) -> u64;
+
+    /// `outputBuffer` attribute — getter.
+    get-output-buffer: func(self: audio-processing-event-handle) -> u64;
+}
+
+interface biquad-filter-node {
+    /// Opaque handle to a host-side `BiquadFilterNode` instance.
+    type biquad-filter-node-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: biquad-filter-node-handle) -> u64;
+    /// `type` attribute — setter.
+    set-type: func(self: biquad-filter-node-handle, value: u64);
+
+    /// `frequency` attribute — getter.
+    get-frequency: func(self: biquad-filter-node-handle) -> u64;
+
+    /// `detune` attribute — getter.
+    get-detune: func(self: biquad-filter-node-handle) -> u64;
+
+    /// `Q` attribute — getter.
+    get-q: func(self: biquad-filter-node-handle) -> u64;
+
+    /// `gain` attribute — getter.
+    get-gain: func(self: biquad-filter-node-handle) -> u64;
+
+    /// `getFrequencyResponse()` operation.
+    get-frequency-response: func(self: biquad-filter-node-handle, frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
+}
+
+interface constant-source-node {
+    /// Opaque handle to a host-side `ConstantSourceNode` instance.
+    type constant-source-node-handle = u64;
+
+    /// `offset` attribute — getter.
+    get-offset: func(self: constant-source-node-handle) -> u64;
+}
+
+interface convolver-node {
+    /// Opaque handle to a host-side `ConvolverNode` instance.
+    type convolver-node-handle = u64;
+
+    /// `buffer` attribute — getter.
+    get-buffer: func(self: convolver-node-handle) -> option<u64>;
+    /// `buffer` attribute — setter.
+    set-buffer: func(self: convolver-node-handle, value: option<u64>);
+
+    /// `normalize` attribute — getter.
+    get-normalize: func(self: convolver-node-handle) -> bool;
+    /// `normalize` attribute — setter.
+    set-normalize: func(self: convolver-node-handle, value: bool);
+}
+
+interface delay-node {
+    /// Opaque handle to a host-side `DelayNode` instance.
+    type delay-node-handle = u64;
+
+    /// `delayTime` attribute — getter.
+    get-delay-time: func(self: delay-node-handle) -> u64;
+}
+
+interface dynamics-compressor-node {
+    /// Opaque handle to a host-side `DynamicsCompressorNode` instance.
+    type dynamics-compressor-node-handle = u64;
+
+    /// `threshold` attribute — getter.
+    get-threshold: func(self: dynamics-compressor-node-handle) -> u64;
+
+    /// `knee` attribute — getter.
+    get-knee: func(self: dynamics-compressor-node-handle) -> u64;
+
+    /// `ratio` attribute — getter.
+    get-ratio: func(self: dynamics-compressor-node-handle) -> u64;
+
+    /// `reduction` attribute — getter.
+    get-reduction: func(self: dynamics-compressor-node-handle) -> f32;
+
+    /// `attack` attribute — getter.
+    get-attack: func(self: dynamics-compressor-node-handle) -> u64;
+
+    /// `release` attribute — getter.
+    get-release: func(self: dynamics-compressor-node-handle) -> u64;
+}
+
+interface gain-node {
+    /// Opaque handle to a host-side `GainNode` instance.
+    type gain-node-handle = u64;
+
+    /// `gain` attribute — getter.
+    get-gain: func(self: gain-node-handle) -> u64;
+}
+
+interface iir-filter-node {
+    /// Opaque handle to a host-side `IIRFilterNode` instance.
+    type iir-filter-node-handle = u64;
+
+    /// `getFrequencyResponse()` operation.
+    get-frequency-response: func(self: iir-filter-node-handle, frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
+}
+
+interface media-element-audio-source-node {
+    /// Opaque handle to a host-side `MediaElementAudioSourceNode` instance.
+    type media-element-audio-source-node-handle = u64;
+
+    /// `mediaElement` attribute — getter.
+    get-media-element: func(self: media-element-audio-source-node-handle) -> u64;
+}
+
+interface media-stream-audio-destination-node {
+    /// Opaque handle to a host-side `MediaStreamAudioDestinationNode` instance.
+    type media-stream-audio-destination-node-handle = u64;
+
+    /// `stream` attribute — getter.
+    get-stream: func(self: media-stream-audio-destination-node-handle) -> u64;
+}
+
+interface media-stream-audio-source-node {
+    /// Opaque handle to a host-side `MediaStreamAudioSourceNode` instance.
+    type media-stream-audio-source-node-handle = u64;
+
+    /// `mediaStream` attribute — getter.
+    get-media-stream: func(self: media-stream-audio-source-node-handle) -> u64;
+}
+
+interface oscillator-node {
+    /// Opaque handle to a host-side `OscillatorNode` instance.
+    type oscillator-node-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: oscillator-node-handle) -> u64;
+    /// `type` attribute — setter.
+    set-type: func(self: oscillator-node-handle, value: u64);
+
+    /// `frequency` attribute — getter.
+    get-frequency: func(self: oscillator-node-handle) -> u64;
+
+    /// `detune` attribute — getter.
+    get-detune: func(self: oscillator-node-handle) -> u64;
+
+    /// `setPeriodicWave()` operation.
+    set-periodic-wave: func(self: oscillator-node-handle, periodic-wave: u64);
+}
+
+interface panner-node {
+    /// Opaque handle to a host-side `PannerNode` instance.
+    type panner-node-handle = u64;
+
+    /// `panningModel` attribute — getter.
+    get-panning-model: func(self: panner-node-handle) -> u64;
+    /// `panningModel` attribute — setter.
+    set-panning-model: func(self: panner-node-handle, value: u64);
+
+    /// `positionX` attribute — getter.
+    get-position-x: func(self: panner-node-handle) -> u64;
+
+    /// `positionY` attribute — getter.
+    get-position-y: func(self: panner-node-handle) -> u64;
+
+    /// `positionZ` attribute — getter.
+    get-position-z: func(self: panner-node-handle) -> u64;
+
+    /// `orientationX` attribute — getter.
+    get-orientation-x: func(self: panner-node-handle) -> u64;
+
+    /// `orientationY` attribute — getter.
+    get-orientation-y: func(self: panner-node-handle) -> u64;
+
+    /// `orientationZ` attribute — getter.
+    get-orientation-z: func(self: panner-node-handle) -> u64;
+
+    /// `distanceModel` attribute — getter.
+    get-distance-model: func(self: panner-node-handle) -> u64;
+    /// `distanceModel` attribute — setter.
+    set-distance-model: func(self: panner-node-handle, value: u64);
+
+    /// `refDistance` attribute — getter.
+    get-ref-distance: func(self: panner-node-handle) -> f64;
+    /// `refDistance` attribute — setter.
+    set-ref-distance: func(self: panner-node-handle, value: f64);
+
+    /// `maxDistance` attribute — getter.
+    get-max-distance: func(self: panner-node-handle) -> f64;
+    /// `maxDistance` attribute — setter.
+    set-max-distance: func(self: panner-node-handle, value: f64);
+
+    /// `rolloffFactor` attribute — getter.
+    get-rolloff-factor: func(self: panner-node-handle) -> f64;
+    /// `rolloffFactor` attribute — setter.
+    set-rolloff-factor: func(self: panner-node-handle, value: f64);
+
+    /// `coneInnerAngle` attribute — getter.
+    get-cone-inner-angle: func(self: panner-node-handle) -> f64;
+    /// `coneInnerAngle` attribute — setter.
+    set-cone-inner-angle: func(self: panner-node-handle, value: f64);
+
+    /// `coneOuterAngle` attribute — getter.
+    get-cone-outer-angle: func(self: panner-node-handle) -> f64;
+    /// `coneOuterAngle` attribute — setter.
+    set-cone-outer-angle: func(self: panner-node-handle, value: f64);
+
+    /// `coneOuterGain` attribute — getter.
+    get-cone-outer-gain: func(self: panner-node-handle) -> f64;
+    /// `coneOuterGain` attribute — setter.
+    set-cone-outer-gain: func(self: panner-node-handle, value: f64);
+
+    /// `setPosition()` operation.
+    set-position: func(self: panner-node-handle, x: f32, y: f32, z: f32);
+
+    /// `setOrientation()` operation.
+    set-orientation: func(self: panner-node-handle, x: f32, y: f32, z: f32);
+}
+
+interface script-processor-node {
+    /// Opaque handle to a host-side `ScriptProcessorNode` instance.
+    type script-processor-node-handle = u64;
+
+    /// `onaudioprocess` attribute — getter.
+    get-onaudioprocess: func(self: script-processor-node-handle) -> u64;
+    /// `onaudioprocess` attribute — setter.
+    set-onaudioprocess: func(self: script-processor-node-handle, value: u64);
+
+    /// `bufferSize` attribute — getter.
+    get-buffer-size: func(self: script-processor-node-handle) -> s32;
+}
+
+interface stereo-panner-node {
+    /// Opaque handle to a host-side `StereoPannerNode` instance.
+    type stereo-panner-node-handle = u64;
+
+    /// `pan` attribute — getter.
+    get-pan: func(self: stereo-panner-node-handle) -> u64;
+}
+
+interface wave-shaper-node {
+    /// Opaque handle to a host-side `WaveShaperNode` instance.
+    type wave-shaper-node-handle = u64;
+
+    /// `curve` attribute — getter.
+    get-curve: func(self: wave-shaper-node-handle) -> option<list<f32>>;
+    /// `curve` attribute — setter.
+    set-curve: func(self: wave-shaper-node-handle, value: option<list<f32>>);
+
+    /// `oversample` attribute — getter.
+    get-oversample: func(self: wave-shaper-node-handle) -> u64;
+    /// `oversample` attribute — setter.
+    set-oversample: func(self: wave-shaper-node-handle, value: u64);
+}
+
+interface audio-worklet {
+    /// Opaque handle to a host-side `AudioWorklet` instance.
+    type audio-worklet-handle = u64;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-handle) -> u64;
+}
+
+interface audio-worklet-global-scope {
+    /// Opaque handle to a host-side `AudioWorkletGlobalScope` instance.
+    type audio-worklet-global-scope-handle = u64;
+
+    /// `registerProcessor()` operation.
+    register-processor: func(self: audio-worklet-global-scope-handle, name: string, processor-ctor: u64);
+
+    /// `currentFrame` attribute — getter.
+    get-current-frame: func(self: audio-worklet-global-scope-handle) -> u64;
+
+    /// `currentTime` attribute — getter.
+    get-current-time: func(self: audio-worklet-global-scope-handle) -> f64;
+
+    /// `sampleRate` attribute — getter.
+    get-sample-rate: func(self: audio-worklet-global-scope-handle) -> f32;
+
+    /// `renderQuantumSize` attribute — getter.
+    get-render-quantum-size: func(self: audio-worklet-global-scope-handle) -> u32;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-global-scope-handle) -> u64;
+}
+
+interface audio-worklet-node {
+    /// Opaque handle to a host-side `AudioWorkletNode` instance.
+    type audio-worklet-node-handle = u64;
+
+    /// `parameters` attribute — getter.
+    get-parameters: func(self: audio-worklet-node-handle) -> u64;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-node-handle) -> u64;
+
+    /// `onprocessorerror` attribute — getter.
+    get-onprocessorerror: func(self: audio-worklet-node-handle) -> u64;
+    /// `onprocessorerror` attribute — setter.
+    set-onprocessorerror: func(self: audio-worklet-node-handle, value: u64);
+}
+
+interface audio-worklet-processor {
+    /// Opaque handle to a host-side `AudioWorkletProcessor` instance.
+    type audio-worklet-processor-handle = u64;
+
+    /// `port` attribute — getter.
+    get-port: func(self: audio-worklet-processor-handle) -> u64;
+}
+
+interface audio-playback-stats {
+    /// Opaque handle to a host-side `AudioPlaybackStats` instance.
+    type audio-playback-stats-handle = u64;
+
+    /// `underrunDuration` attribute — getter.
+    get-underrun-duration: func(self: audio-playback-stats-handle) -> f64;
+
+    /// `underrunEvents` attribute — getter.
+    get-underrun-events: func(self: audio-playback-stats-handle) -> u32;
+
+    /// `totalDuration` attribute — getter.
+    get-total-duration: func(self: audio-playback-stats-handle) -> f64;
+
+    /// `averageLatency` attribute — getter.
+    get-average-latency: func(self: audio-playback-stats-handle) -> f64;
+
+    /// `minimumLatency` attribute — getter.
+    get-minimum-latency: func(self: audio-playback-stats-handle) -> f64;
+
+    /// `maximumLatency` attribute — getter.
+    get-maximum-latency: func(self: audio-playback-stats-handle) -> f64;
+
+    /// `resetLatency()` operation.
+    reset-latency: func(self: audio-playback-stats-handle);
+
+    /// `toJSON()` operation.
+    to-json: func(self: audio-playback-stats-handle) -> u64;
+}
+
+interface text-decoder-common {
+    /// Opaque handle to a host-side `TextDecoderCommon` instance.
+    type text-decoder-common-handle = u64;
+
+    /// `encoding` attribute — getter.
+    get-encoding: func(self: text-decoder-common-handle) -> string;
+
+    /// `fatal` attribute — getter.
+    get-fatal: func(self: text-decoder-common-handle) -> bool;
+
+    /// `ignoreBOM` attribute — getter.
+    get-ignore-bom: func(self: text-decoder-common-handle) -> bool;
+}
+
+interface text-decoder {
+    /// Opaque handle to a host-side `TextDecoder` instance.
+    type text-decoder-handle = u64;
+
+    /// `decode()` operation.
+    decode: func(self: text-decoder-handle, input: option<u64>, options: option<u64>) -> string;
+}
+
+interface text-encoder-common {
+    /// Opaque handle to a host-side `TextEncoderCommon` instance.
+    type text-encoder-common-handle = u64;
+
+    /// `encoding` attribute — getter.
+    get-encoding: func(self: text-encoder-common-handle) -> string;
+}
+
+interface text-encoder {
+    /// Opaque handle to a host-side `TextEncoder` instance.
+    type text-encoder-handle = u64;
+
+    /// `encode()` operation.
+    encode: func(self: text-encoder-handle, input: option<string>) -> list<u8>;
+
+    /// `encodeInto()` operation.
+    encode-into: func(self: text-encoder-handle, source: string, destination: list<u8>) -> u64;
+}
+
 interface notification {
     /// Opaque handle to a host-side `Notification` instance.
     type notification-handle = u64;
@@ -12413,6 +13055,145 @@ interface service-worker {
     post-message: func(handle: sw-handle, message: string, transfer: list<list<u8>>);
 }
 
+interface idb-open-db-request {
+    /// Opaque handle to a host-side `IDBOpenDBRequest` instance.
+    type idb-open-db-request-handle = u64;
+
+    /// `onblocked` attribute — getter.
+    get-onblocked: func(self: idb-open-db-request-handle) -> u64;
+    /// `onblocked` attribute — setter.
+    set-onblocked: func(self: idb-open-db-request-handle, value: u64);
+
+    /// `onupgradeneeded` attribute — getter.
+    get-onupgradeneeded: func(self: idb-open-db-request-handle) -> u64;
+    /// `onupgradeneeded` attribute — setter.
+    set-onupgradeneeded: func(self: idb-open-db-request-handle, value: u64);
+}
+
+interface idb-version-change-event {
+    /// Opaque handle to a host-side `IDBVersionChangeEvent` instance.
+    type idb-version-change-event-handle = u64;
+
+    /// `oldVersion` attribute — getter.
+    get-old-version: func(self: idb-version-change-event-handle) -> u64;
+
+    /// `newVersion` attribute — getter.
+    get-new-version: func(self: idb-version-change-event-handle) -> option<u64>;
+}
+
+interface window-or-worker-global-scope {
+    /// Opaque handle to a host-side `WindowOrWorkerGlobalScope` instance.
+    type window-or-worker-global-scope-handle = u64;
+
+    /// `indexedDB` attribute — getter.
+    get-indexed-db: func(self: window-or-worker-global-scope-handle) -> u64;
+
+    /// `fetch()` operation.
+    fetch: func(self: window-or-worker-global-scope-handle, input: u64, init: option<u64>) -> u64;
+
+    /// `performance` attribute — getter.
+    get-performance: func(self: window-or-worker-global-scope-handle) -> u64;
+
+    /// `origin` attribute — getter.
+    get-origin: func(self: window-or-worker-global-scope-handle) -> string;
+
+    /// `isSecureContext` attribute — getter.
+    get-is-secure-context: func(self: window-or-worker-global-scope-handle) -> bool;
+
+    /// `crossOriginIsolated` attribute — getter.
+    get-cross-origin-isolated: func(self: window-or-worker-global-scope-handle) -> bool;
+
+    /// `reportError()` operation.
+    report-error: func(self: window-or-worker-global-scope-handle, e: string);
+
+    /// `btoa()` operation.
+    btoa: func(self: window-or-worker-global-scope-handle, data: string) -> string;
+
+    /// `atob()` operation.
+    atob: func(self: window-or-worker-global-scope-handle, data: string) -> string;
+
+    /// `setTimeout()` operation.
+    set-timeout: func(self: window-or-worker-global-scope-handle, handler: u64, timeout: option<s32>, arguments: list<string>) -> s32;
+
+    /// `clearTimeout()` operation.
+    clear-timeout: func(self: window-or-worker-global-scope-handle, id: option<s32>);
+
+    /// `setInterval()` operation.
+    set-interval: func(self: window-or-worker-global-scope-handle, handler: u64, timeout: option<s32>, arguments: list<string>) -> s32;
+
+    /// `clearInterval()` operation.
+    clear-interval: func(self: window-or-worker-global-scope-handle, id: option<s32>);
+
+    /// `queueMicrotask()` operation.
+    queue-microtask: func(self: window-or-worker-global-scope-handle, callback: u64);
+
+    /// `createImageBitmap()` operation.
+    create-image-bitmap: func(self: window-or-worker-global-scope-handle, image: u64, options: option<u64>) -> u64;
+
+    /// `structuredClone()` operation.
+    structured-clone: func(self: window-or-worker-global-scope-handle, value: string, options: option<u64>) -> string;
+
+    /// `caches` attribute — getter.
+    get-caches: func(self: window-or-worker-global-scope-handle) -> u64;
+
+    /// `crypto` attribute — getter.
+    get-crypto: func(self: window-or-worker-global-scope-handle) -> u64;
+}
+
+interface idb-key-range {
+    /// Opaque handle to a host-side `IDBKeyRange` instance.
+    type idb-key-range-handle = u64;
+
+    /// `lower` attribute — getter.
+    get-lower: func(self: idb-key-range-handle) -> string;
+
+    /// `upper` attribute — getter.
+    get-upper: func(self: idb-key-range-handle) -> string;
+
+    /// `lowerOpen` attribute — getter.
+    get-lower-open: func(self: idb-key-range-handle) -> bool;
+
+    /// `upperOpen` attribute — getter.
+    get-upper-open: func(self: idb-key-range-handle) -> bool;
+
+    /// `only()` operation.
+    only: func(value: string) -> u64;
+
+    /// `lowerBound()` operation.
+    lower-bound: func(lower: string, open: option<bool>) -> u64;
+
+    /// `upperBound()` operation.
+    upper-bound: func(upper: string, open: option<bool>) -> u64;
+
+    /// `bound()` operation.
+    bound: func(lower: string, upper: string, lower-open: option<bool>, upper-open: option<bool>) -> u64;
+
+    /// `includes()` operation.
+    includes: func(self: idb-key-range-handle, key: string) -> bool;
+}
+
+interface idb-record {
+    /// Opaque handle to a host-side `IDBRecord` instance.
+    type idb-record-handle = u64;
+
+    /// `key` attribute — getter.
+    get-key: func(self: idb-record-handle) -> string;
+
+    /// `primaryKey` attribute — getter.
+    get-primary-key: func(self: idb-record-handle) -> string;
+
+    /// `value` attribute — getter.
+    get-value: func(self: idb-record-handle) -> string;
+}
+
+interface idb-cursor-with-value {
+    /// Opaque handle to a host-side `IDBCursorWithValue` instance.
+    type idb-cursor-with-value-handle = u64;
+
+    /// `value` attribute — getter.
+    get-value: func(self: idb-cursor-with-value-handle) -> string;
+}
+
 interface navigator-storage {
     /// Opaque handle to a host-side `NavigatorStorage` instance.
     type navigator-storage-handle = u64;
@@ -12435,74 +13216,1392 @@ interface storage-manager {
     estimate: func(self: storage-manager-handle) -> u64;
 }
 
-interface url {
-    /// Opaque handle to a host-side `URL` instance.
-    type url-handle = u64;
+interface navigator-locks {
+    /// Opaque handle to a host-side `NavigatorLocks` instance.
+    type navigator-locks-handle = u64;
 
-    /// `parse()` operation.
-    parse: func(url: string, base: option<string>) -> option<u64>;
+    /// `locks` attribute — getter.
+    get-locks: func(self: navigator-locks-handle) -> u64;
+}
 
-    /// `canParse()` operation.
-    can-parse: func(url: string, base: option<string>) -> bool;
+interface lock-manager {
+    /// Opaque handle to a host-side `LockManager` instance.
+    type lock-manager-handle = u64;
+
+    /// `request()` operation.
+    request: func(self: lock-manager-handle, name: string, callback: u64) -> u64;
+
+    /// `query()` operation.
+    query: func(self: lock-manager-handle) -> u64;
+}
+
+interface lock {
+    /// Opaque handle to a host-side `Lock` instance.
+    type lock-handle = u64;
+
+    /// `name` attribute — getter.
+    get-name: func(self: lock-handle) -> string;
+
+    /// `mode` attribute — getter.
+    get-mode: func(self: lock-handle) -> u64;
+}
+
+interface svg-element {
+    /// Opaque handle to a host-side `SVGElement` instance.
+    type svg-element-handle = u64;
+
+    /// `className` attribute — getter.
+    get-class-name: func(self: svg-element-handle) -> u64;
+
+    /// `ownerSVGElement` attribute — getter.
+    get-owner-svg-element: func(self: svg-element-handle) -> option<u64>;
+
+    /// `viewportElement` attribute — getter.
+    get-viewport-element: func(self: svg-element-handle) -> option<u64>;
+}
+
+interface svg-graphics-element {
+    /// Opaque handle to a host-side `SVGGraphicsElement` instance.
+
+    use types.{dom-rect};
+
+    type svg-graphics-element-handle = u64;
+
+    /// `transform` attribute — getter.
+    get-transform: func(self: svg-graphics-element-handle) -> u64;
+
+    /// `getBBox()` operation.
+    get-b-box: func(self: svg-graphics-element-handle, options: option<u64>) -> dom-rect;
+
+    /// `getCTM()` operation.
+    get-ctm: func(self: svg-graphics-element-handle) -> option<u64>;
+
+    /// `getScreenCTM()` operation.
+    get-screen-ctm: func(self: svg-graphics-element-handle) -> option<u64>;
+}
+
+interface svg-geometry-element {
+    /// Opaque handle to a host-side `SVGGeometryElement` instance.
+    type svg-geometry-element-handle = u64;
+
+    /// `pathLength` attribute — getter.
+    get-path-length: func(self: svg-geometry-element-handle) -> u64;
+
+    /// `isPointInFill()` operation.
+    is-point-in-fill: func(self: svg-geometry-element-handle, point: option<u64>) -> bool;
+
+    /// `isPointInStroke()` operation.
+    is-point-in-stroke: func(self: svg-geometry-element-handle, point: option<u64>) -> bool;
+
+    /// `getTotalLength()` operation.
+    get-total-length: func(self: svg-geometry-element-handle) -> f32;
+
+    /// `getPointAtLength()` operation.
+    get-point-at-length: func(self: svg-geometry-element-handle, distance: f32) -> u64;
+}
+
+interface svg-number {
+    /// Opaque handle to a host-side `SVGNumber` instance.
+    type svg-number-handle = u64;
+
+    /// `value` attribute — getter.
+    get-value: func(self: svg-number-handle) -> f32;
+    /// `value` attribute — setter.
+    set-value: func(self: svg-number-handle, value: f32);
+}
+
+interface svg-length {
+    /// Opaque handle to a host-side `SVGLength` instance.
+    type svg-length-handle = u64;
+
+    /// `unitType` attribute — getter.
+    get-unit-type: func(self: svg-length-handle) -> u16;
+
+    /// `value` attribute — getter.
+    get-value: func(self: svg-length-handle) -> f32;
+    /// `value` attribute — setter.
+    set-value: func(self: svg-length-handle, value: f32);
+
+    /// `valueInSpecifiedUnits` attribute — getter.
+    get-value-in-specified-units: func(self: svg-length-handle) -> f32;
+    /// `valueInSpecifiedUnits` attribute — setter.
+    set-value-in-specified-units: func(self: svg-length-handle, value: f32);
+
+    /// `valueAsString` attribute — getter.
+    get-value-as-string: func(self: svg-length-handle) -> string;
+    /// `valueAsString` attribute — setter.
+    set-value-as-string: func(self: svg-length-handle, value: string);
+
+    /// `newValueSpecifiedUnits()` operation.
+    new-value-specified-units: func(self: svg-length-handle, unit-type: u16, value-in-specified-units: f32);
+
+    /// `convertToSpecifiedUnits()` operation.
+    convert-to-specified-units: func(self: svg-length-handle, unit-type: u16);
+}
+
+interface svg-angle {
+    /// Opaque handle to a host-side `SVGAngle` instance.
+    type svg-angle-handle = u64;
+
+    /// `unitType` attribute — getter.
+    get-unit-type: func(self: svg-angle-handle) -> u16;
+
+    /// `value` attribute — getter.
+    get-value: func(self: svg-angle-handle) -> f32;
+    /// `value` attribute — setter.
+    set-value: func(self: svg-angle-handle, value: f32);
+
+    /// `valueInSpecifiedUnits` attribute — getter.
+    get-value-in-specified-units: func(self: svg-angle-handle) -> f32;
+    /// `valueInSpecifiedUnits` attribute — setter.
+    set-value-in-specified-units: func(self: svg-angle-handle, value: f32);
+
+    /// `valueAsString` attribute — getter.
+    get-value-as-string: func(self: svg-angle-handle) -> string;
+    /// `valueAsString` attribute — setter.
+    set-value-as-string: func(self: svg-angle-handle, value: string);
+
+    /// `newValueSpecifiedUnits()` operation.
+    new-value-specified-units: func(self: svg-angle-handle, unit-type: u16, value-in-specified-units: f32);
+
+    /// `convertToSpecifiedUnits()` operation.
+    convert-to-specified-units: func(self: svg-angle-handle, unit-type: u16);
+}
+
+interface svg-number-list {
+    /// Opaque handle to a host-side `SVGNumberList` instance.
+    type svg-number-list-handle = u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: svg-number-list-handle) -> u32;
+
+    /// `numberOfItems` attribute — getter.
+    get-number-of-items: func(self: svg-number-list-handle) -> u32;
+
+    /// `clear()` operation.
+    clear: func(self: svg-number-list-handle);
+
+    /// `initialize()` operation.
+    initialize: func(self: svg-number-list-handle, new-item: u64) -> u64;
+
+    /// `getItem()` operation.
+    get-item: func(self: svg-number-list-handle, index: u32) -> u64;
+
+    /// `insertItemBefore()` operation.
+    insert-item-before: func(self: svg-number-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `replaceItem()` operation.
+    replace-item: func(self: svg-number-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `removeItem()` operation.
+    remove-item: func(self: svg-number-list-handle, index: u32) -> u64;
+
+    /// `appendItem()` operation.
+    append-item: func(self: svg-number-list-handle, new-item: u64) -> u64;
+
+    /// `undefined()` operation.
+    undefined: func(self: svg-number-list-handle, index: u32, new-item: u64);
+}
+
+interface svg-length-list {
+    /// Opaque handle to a host-side `SVGLengthList` instance.
+    type svg-length-list-handle = u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: svg-length-list-handle) -> u32;
+
+    /// `numberOfItems` attribute — getter.
+    get-number-of-items: func(self: svg-length-list-handle) -> u32;
+
+    /// `clear()` operation.
+    clear: func(self: svg-length-list-handle);
+
+    /// `initialize()` operation.
+    initialize: func(self: svg-length-list-handle, new-item: u64) -> u64;
+
+    /// `getItem()` operation.
+    get-item: func(self: svg-length-list-handle, index: u32) -> u64;
+
+    /// `insertItemBefore()` operation.
+    insert-item-before: func(self: svg-length-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `replaceItem()` operation.
+    replace-item: func(self: svg-length-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `removeItem()` operation.
+    remove-item: func(self: svg-length-list-handle, index: u32) -> u64;
+
+    /// `appendItem()` operation.
+    append-item: func(self: svg-length-list-handle, new-item: u64) -> u64;
+
+    /// `undefined()` operation.
+    undefined: func(self: svg-length-list-handle, index: u32, new-item: u64);
+}
+
+interface svg-string-list {
+    /// Opaque handle to a host-side `SVGStringList` instance.
+    type svg-string-list-handle = u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: svg-string-list-handle) -> u32;
+
+    /// `numberOfItems` attribute — getter.
+    get-number-of-items: func(self: svg-string-list-handle) -> u32;
+
+    /// `clear()` operation.
+    clear: func(self: svg-string-list-handle);
+
+    /// `initialize()` operation.
+    initialize: func(self: svg-string-list-handle, new-item: string) -> string;
+
+    /// `getItem()` operation.
+    get-item: func(self: svg-string-list-handle, index: u32) -> string;
+
+    /// `insertItemBefore()` operation.
+    insert-item-before: func(self: svg-string-list-handle, new-item: string, index: u32) -> string;
+
+    /// `replaceItem()` operation.
+    replace-item: func(self: svg-string-list-handle, new-item: string, index: u32) -> string;
+
+    /// `removeItem()` operation.
+    remove-item: func(self: svg-string-list-handle, index: u32) -> string;
+
+    /// `appendItem()` operation.
+    append-item: func(self: svg-string-list-handle, new-item: string) -> string;
+
+    /// `undefined()` operation.
+    undefined: func(self: svg-string-list-handle, index: u32, new-item: string);
+}
+
+interface svg-animated-boolean {
+    /// Opaque handle to a host-side `SVGAnimatedBoolean` instance.
+    type svg-animated-boolean-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-boolean-handle) -> bool;
+    /// `baseVal` attribute — setter.
+    set-base-val: func(self: svg-animated-boolean-handle, value: bool);
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-boolean-handle) -> bool;
+}
+
+interface svg-animated-enumeration {
+    /// Opaque handle to a host-side `SVGAnimatedEnumeration` instance.
+    type svg-animated-enumeration-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-enumeration-handle) -> u16;
+    /// `baseVal` attribute — setter.
+    set-base-val: func(self: svg-animated-enumeration-handle, value: u16);
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-enumeration-handle) -> u16;
+}
+
+interface svg-animated-integer {
+    /// Opaque handle to a host-side `SVGAnimatedInteger` instance.
+    type svg-animated-integer-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-integer-handle) -> s32;
+    /// `baseVal` attribute — setter.
+    set-base-val: func(self: svg-animated-integer-handle, value: s32);
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-integer-handle) -> s32;
+}
+
+interface svg-animated-number {
+    /// Opaque handle to a host-side `SVGAnimatedNumber` instance.
+    type svg-animated-number-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-number-handle) -> f32;
+    /// `baseVal` attribute — setter.
+    set-base-val: func(self: svg-animated-number-handle, value: f32);
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-number-handle) -> f32;
+}
+
+interface svg-animated-length {
+    /// Opaque handle to a host-side `SVGAnimatedLength` instance.
+    type svg-animated-length-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-length-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-length-handle) -> u64;
+}
+
+interface svg-animated-angle {
+    /// Opaque handle to a host-side `SVGAnimatedAngle` instance.
+    type svg-animated-angle-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-angle-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-angle-handle) -> u64;
+}
+
+interface svg-animated-string {
+    /// Opaque handle to a host-side `SVGAnimatedString` instance.
+    type svg-animated-string-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-string-handle) -> string;
+    /// `baseVal` attribute — setter.
+    set-base-val: func(self: svg-animated-string-handle, value: string);
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-string-handle) -> string;
+}
+
+interface svg-animated-rect {
+    /// Opaque handle to a host-side `SVGAnimatedRect` instance.
+
+    use types.{dom-rect};
+
+    type svg-animated-rect-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-rect-handle) -> dom-rect;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-rect-handle) -> dom-rect;
+}
+
+interface svg-animated-number-list {
+    /// Opaque handle to a host-side `SVGAnimatedNumberList` instance.
+    type svg-animated-number-list-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-number-list-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-number-list-handle) -> u64;
+}
+
+interface svg-animated-length-list {
+    /// Opaque handle to a host-side `SVGAnimatedLengthList` instance.
+    type svg-animated-length-list-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-length-list-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-length-list-handle) -> u64;
+}
+
+interface svg-tests {
+    /// Opaque handle to a host-side `SVGTests` instance.
+    type svg-tests-handle = u64;
+
+    /// `requiredExtensions` attribute — getter.
+    get-required-extensions: func(self: svg-tests-handle) -> u64;
+
+    /// `systemLanguage` attribute — getter.
+    get-system-language: func(self: svg-tests-handle) -> u64;
+}
+
+interface svg-fit-to-view-box {
+    /// Opaque handle to a host-side `SVGFitToViewBox` instance.
+    type svg-fit-to-view-box-handle = u64;
+
+    /// `viewBox` attribute — getter.
+    get-view-box: func(self: svg-fit-to-view-box-handle) -> u64;
+
+    /// `preserveAspectRatio` attribute — getter.
+    get-preserve-aspect-ratio: func(self: svg-fit-to-view-box-handle) -> u64;
+}
+
+interface svguri-reference {
+    /// Opaque handle to a host-side `SVGURIReference` instance.
+    type svguri-reference-handle = u64;
 
     /// `href` attribute — getter.
-    get-href: func(self: url-handle) -> string;
-    /// `href` attribute — setter.
-    set-href: func(self: url-handle, value: string);
+    get-href: func(self: svguri-reference-handle) -> u64;
+}
 
-    /// `origin` attribute — getter.
-    get-origin: func(self: url-handle) -> string;
+interface document {
+    /// Opaque handle to a host-side `Document` instance.
+    type document-handle = u64;
 
-    /// `protocol` attribute — getter.
-    get-protocol: func(self: url-handle) -> string;
-    /// `protocol` attribute — setter.
-    set-protocol: func(self: url-handle, value: string);
+    /// `rootElement` attribute — getter.
+    get-root-element: func() -> option<u64>;
 
-    /// `username` attribute — getter.
-    get-username: func(self: url-handle) -> string;
-    /// `username` attribute — setter.
-    set-username: func(self: url-handle, value: string);
+    /// `elementFromPoint()` operation.
+    element-from-point: func(x: f64, y: f64) -> option<u64>;
 
-    /// `password` attribute — getter.
-    get-password: func(self: url-handle) -> string;
-    /// `password` attribute — setter.
-    set-password: func(self: url-handle, value: string);
+    /// `elementsFromPoint()` operation.
+    elements-from-point: func(x: f64, y: f64) -> list<u64>;
 
-    /// `host` attribute — getter.
-    get-host: func(self: url-handle) -> string;
-    /// `host` attribute — setter.
-    set-host: func(self: url-handle, value: string);
+    /// `caretPositionFromPoint()` operation.
+    caret-position-from-point: func(x: f64, y: f64, options: option<u64>) -> option<u64>;
 
-    /// `hostname` attribute — getter.
-    get-hostname: func(self: url-handle) -> string;
-    /// `hostname` attribute — setter.
-    set-hostname: func(self: url-handle, value: string);
+    /// `scrollingElement` attribute — getter.
+    get-scrolling-element: func() -> option<u64>;
 
-    /// `port` attribute — getter.
-    get-port: func(self: url-handle) -> string;
-    /// `port` attribute — setter.
-    set-port: func(self: url-handle, value: string);
+    /// `implementation` attribute — getter.
+    get-implementation: func() -> u64;
 
-    /// `pathname` attribute — getter.
-    get-pathname: func(self: url-handle) -> string;
-    /// `pathname` attribute — setter.
-    set-pathname: func(self: url-handle, value: string);
+    /// `URL` attribute — getter.
+    get-url: func() -> string;
 
-    /// `search` attribute — getter.
-    get-search: func(self: url-handle) -> string;
-    /// `search` attribute — setter.
-    set-search: func(self: url-handle, value: string);
+    /// `documentURI` attribute — getter.
+    get-document-uri: func() -> string;
 
-    /// `searchParams` attribute — getter.
-    get-search-params: func(self: url-handle) -> u64;
+    /// `compatMode` attribute — getter.
+    get-compat-mode: func() -> string;
 
-    /// `hash` attribute — getter.
-    get-hash: func(self: url-handle) -> string;
-    /// `hash` attribute — setter.
-    set-hash: func(self: url-handle, value: string);
+    /// `characterSet` attribute — getter.
+    get-character-set: func() -> string;
 
-    /// `toJSON()` operation.
-    to-json: func(self: url-handle) -> string;
+    /// `charset` attribute — getter.
+    get-charset: func() -> string;
+
+    /// `inputEncoding` attribute — getter.
+    get-input-encoding: func() -> string;
+
+    /// `contentType` attribute — getter.
+    get-content-type: func() -> string;
+
+    /// `doctype` attribute — getter.
+    get-doctype: func() -> option<u64>;
+
+    /// `documentElement` attribute — getter.
+    get-document-element: func() -> option<u64>;
+
+    /// `getElementsByTagName()` operation.
+    get-elements-by-tag-name: func(qualified-name: string) -> u64;
+
+    /// `getElementsByTagNameNS()` operation.
+    get-elements-by-tag-name-ns: func(namespace: option<string>, local-name: string) -> u64;
+
+    /// `getElementsByClassName()` operation.
+    get-elements-by-class-name: func(class-names: string) -> u64;
+
+    /// `createElement()` operation.
+    create-element: func(local-name: string, options: option<string>) -> u64;
+
+    /// `createElementNS()` operation.
+    create-element-ns: func(namespace: option<string>, qualified-name: string, options: option<string>) -> u64;
+
+    /// `createDocumentFragment()` operation.
+    create-document-fragment: func() -> u64;
+
+    /// `createTextNode()` operation.
+    create-text-node: func(data: string) -> u64;
+
+    /// `createCDATASection()` operation.
+    create-cdata-section: func(data: string) -> u64;
+
+    /// `createComment()` operation.
+    create-comment: func(data: string) -> u64;
+
+    /// `createProcessingInstruction()` operation.
+    create-processing-instruction: func(target: string, data: string) -> u64;
+
+    /// `importNode()` operation.
+    import-node: func(node: u64, options: option<bool>) -> u64;
+
+    /// `adoptNode()` operation.
+    adopt-node: func(node: u64) -> u64;
+
+    /// `createAttribute()` operation.
+    create-attribute: func(local-name: string) -> u64;
+
+    /// `createAttributeNS()` operation.
+    create-attribute-ns: func(namespace: option<string>, qualified-name: string) -> u64;
+
+    /// `createEvent()` operation.
+    create-event: func(%interface: string) -> u64;
+
+    /// `createRange()` operation.
+    create-range: func() -> u64;
+
+    /// `createNodeIterator()` operation.
+    create-node-iterator: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
+
+    /// `createTreeWalker()` operation.
+    create-tree-walker: func(root: u64, what-to-show: option<u32>, filter: option<u64>) -> u64;
+
+    /// `fullscreenEnabled` attribute — getter.
+    get-fullscreen-enabled: func() -> bool;
+
+    /// `fullscreen` attribute — getter.
+    get-fullscreen: func() -> bool;
+
+    /// `exitFullscreen()` operation.
+    exit-fullscreen: func() -> u64;
+
+    /// `onfullscreenchange` attribute — getter.
+    get-onfullscreenchange: func() -> u64;
+    /// `onfullscreenchange` attribute — setter.
+    set-onfullscreenchange: func(value: u64);
+
+    /// `onfullscreenerror` attribute — getter.
+    get-onfullscreenerror: func() -> u64;
+    /// `onfullscreenerror` attribute — setter.
+    set-onfullscreenerror: func(value: u64);
+
+    /// `parseHTMLUnsafe()` operation.
+    parse-html-unsafe: func(html: string) -> u64;
+
+    /// `location` attribute — getter.
+    get-location: func() -> option<u64>;
+
+    /// `domain` attribute — getter.
+    get-domain: func() -> string;
+    /// `domain` attribute — setter.
+    set-domain: func(value: string);
+
+    /// `referrer` attribute — getter.
+    get-referrer: func() -> string;
+
+    /// `cookie` attribute — getter.
+    get-cookie: func() -> string;
+    /// `cookie` attribute — setter.
+    set-cookie: func(value: string);
+
+    /// `lastModified` attribute — getter.
+    get-last-modified: func() -> string;
+
+    /// `readyState` attribute — getter.
+    get-ready-state: func() -> u64;
+
+    /// `object()` operation.
+    object: func(name: string);
+
+    /// `title` attribute — getter.
+    get-title: func() -> string;
+    /// `title` attribute — setter.
+    set-title: func(value: string);
+
+    /// `dir` attribute — getter.
+    get-dir: func() -> string;
+    /// `dir` attribute — setter.
+    set-dir: func(value: string);
+
+    /// `body` attribute — getter.
+    get-body: func() -> option<u64>;
+    /// `body` attribute — setter.
+    set-body: func(value: option<u64>);
+
+    /// `head` attribute — getter.
+    get-head: func() -> option<u64>;
+
+    /// `images` attribute — getter.
+    get-images: func() -> u64;
+
+    /// `embeds` attribute — getter.
+    get-embeds: func() -> u64;
+
+    /// `plugins` attribute — getter.
+    get-plugins: func() -> u64;
+
+    /// `links` attribute — getter.
+    get-links: func() -> u64;
+
+    /// `forms` attribute — getter.
+    get-forms: func() -> u64;
+
+    /// `scripts` attribute — getter.
+    get-scripts: func() -> u64;
+
+    /// `getElementsByName()` operation.
+    get-elements-by-name: func(element-name: string) -> u64;
+
+    /// `currentScript` attribute — getter.
+    get-current-script: func() -> option<u64>;
+
+    /// `open()` operation.
+    open: func(unused1: option<string>, unused2: option<string>) -> u64;
+
+    /// `close()` operation.
+    close: func();
+
+    /// `write()` operation.
+    write: func(text: list<string>);
+
+    /// `writeln()` operation.
+    writeln: func(text: list<string>);
+
+    /// `defaultView` attribute — getter.
+    get-default-view: func() -> option<u64>;
+
+    /// `hasFocus()` operation.
+    has-focus: func() -> bool;
+
+    /// `designMode` attribute — getter.
+    get-design-mode: func() -> string;
+    /// `designMode` attribute — setter.
+    set-design-mode: func(value: string);
+
+    /// `execCommand()` operation.
+    exec-command: func(command-id: string, show-ui: option<bool>, value: option<string>) -> bool;
+
+    /// `queryCommandEnabled()` operation.
+    query-command-enabled: func(command-id: string) -> bool;
+
+    /// `queryCommandIndeterm()` operation.
+    query-command-indeterm: func(command-id: string) -> bool;
+
+    /// `queryCommandState()` operation.
+    query-command-state: func(command-id: string) -> bool;
+
+    /// `queryCommandSupported()` operation.
+    query-command-supported: func(command-id: string) -> bool;
+
+    /// `queryCommandValue()` operation.
+    query-command-value: func(command-id: string) -> string;
+
+    /// `hidden` attribute — getter.
+    get-hidden: func() -> bool;
+
+    /// `visibilityState` attribute — getter.
+    get-visibility-state: func() -> u64;
+
+    /// `onreadystatechange` attribute — getter.
+    get-onreadystatechange: func() -> u64;
+    /// `onreadystatechange` attribute — setter.
+    set-onreadystatechange: func(value: u64);
+
+    /// `onvisibilitychange` attribute — getter.
+    get-onvisibilitychange: func() -> u64;
+    /// `onvisibilitychange` attribute — setter.
+    set-onvisibilitychange: func(value: u64);
+
+    /// `fgColor` attribute — getter.
+    get-fg-color: func() -> string;
+    /// `fgColor` attribute — setter.
+    set-fg-color: func(value: string);
+
+    /// `linkColor` attribute — getter.
+    get-link-color: func() -> string;
+    /// `linkColor` attribute — setter.
+    set-link-color: func(value: string);
+
+    /// `vlinkColor` attribute — getter.
+    get-vlink-color: func() -> string;
+    /// `vlinkColor` attribute — setter.
+    set-vlink-color: func(value: string);
+
+    /// `alinkColor` attribute — getter.
+    get-alink-color: func() -> string;
+    /// `alinkColor` attribute — setter.
+    set-alink-color: func(value: string);
+
+    /// `bgColor` attribute — getter.
+    get-bg-color: func() -> string;
+    /// `bgColor` attribute — setter.
+    set-bg-color: func(value: string);
+
+    /// `anchors` attribute — getter.
+    get-anchors: func() -> u64;
+
+    /// `applets` attribute — getter.
+    get-applets: func() -> u64;
+
+    /// `clear()` operation.
+    clear: func();
+
+    /// `captureEvents()` operation.
+    capture-events: func();
+
+    /// `releaseEvents()` operation.
+    release-events: func();
+
+    /// `all` attribute — getter.
+    get-all: func() -> u64;
+
+    /// `getSelection()` operation.
+    get-selection: func() -> option<u64>;
+}
+
+interface svgsvg-element {
+    /// Opaque handle to a host-side `SVGSVGElement` instance.
+
+    use types.{dom-rect};
+
+    type svgsvg-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svgsvg-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svgsvg-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svgsvg-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svgsvg-element-handle) -> u64;
+
+    /// `currentScale` attribute — getter.
+    get-current-scale: func(self: svgsvg-element-handle) -> f32;
+    /// `currentScale` attribute — setter.
+    set-current-scale: func(self: svgsvg-element-handle, value: f32);
+
+    /// `currentTranslate` attribute — getter.
+    get-current-translate: func(self: svgsvg-element-handle) -> u64;
+
+    /// `getIntersectionList()` operation.
+    get-intersection-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+
+    /// `getEnclosureList()` operation.
+    get-enclosure-list: func(self: svgsvg-element-handle, rect: dom-rect, reference-element: option<u64>) -> u64;
+
+    /// `checkIntersection()` operation.
+    check-intersection: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+
+    /// `checkEnclosure()` operation.
+    check-enclosure: func(self: svgsvg-element-handle, element: u64, rect: dom-rect) -> bool;
+
+    /// `deselectAll()` operation.
+    deselect-all: func(self: svgsvg-element-handle);
+
+    /// `createSVGNumber()` operation.
+    create-svg-number: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGLength()` operation.
+    create-svg-length: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGAngle()` operation.
+    create-svg-angle: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGPoint()` operation.
+    create-svg-point: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGMatrix()` operation.
+    create-svg-matrix: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGRect()` operation.
+    create-svg-rect: func(self: svgsvg-element-handle) -> dom-rect;
+
+    /// `createSVGTransform()` operation.
+    create-svg-transform: func(self: svgsvg-element-handle) -> u64;
+
+    /// `createSVGTransformFromMatrix()` operation.
+    create-svg-transform-from-matrix: func(self: svgsvg-element-handle, matrix: option<u64>) -> u64;
+
+    /// `getElementById()` operation.
+    get-element-by-id: func(self: svgsvg-element-handle, element-id: string) -> option<u64>;
+
+    /// `suspendRedraw()` operation.
+    suspend-redraw: func(self: svgsvg-element-handle, max-wait-milliseconds: u32) -> u32;
+
+    /// `unsuspendRedraw()` operation.
+    unsuspend-redraw: func(self: svgsvg-element-handle, suspend-handle-id: u32);
+
+    /// `unsuspendRedrawAll()` operation.
+    unsuspend-redraw-all: func(self: svgsvg-element-handle);
+
+    /// `forceRedraw()` operation.
+    force-redraw: func(self: svgsvg-element-handle);
+}
+
+interface svg-use-element {
+    /// Opaque handle to a host-side `SVGUseElement` instance.
+    type svg-use-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-use-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-use-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svg-use-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svg-use-element-handle) -> u64;
+
+    /// `instanceRoot` attribute — getter.
+    get-instance-root: func(self: svg-use-element-handle) -> option<u64>;
+
+    /// `animatedInstanceRoot` attribute — getter.
+    get-animated-instance-root: func(self: svg-use-element-handle) -> option<u64>;
+}
+
+interface svg-element-instance {
+    /// Opaque handle to a host-side `SVGElementInstance` instance.
+    type svg-element-instance-handle = u64;
+
+    /// `correspondingElement` attribute — getter.
+    get-corresponding-element: func(self: svg-element-instance-handle) -> option<u64>;
+
+    /// `correspondingUseElement` attribute — getter.
+    get-corresponding-use-element: func(self: svg-element-instance-handle) -> option<u64>;
+}
+
+interface shadow-animation {
+    /// Opaque handle to a host-side `ShadowAnimation` instance.
+    type shadow-animation-handle = u64;
+
+    /// `sourceAnimation` attribute — getter.
+    get-source-animation: func(self: shadow-animation-handle) -> u64;
+}
+
+interface get-svg-document {
+    /// Opaque handle to a host-side `GetSVGDocument` instance.
+    type get-svg-document-handle = u64;
+
+    /// `getSVGDocument()` operation.
+    get-svg-document: func(self: get-svg-document-handle) -> u64;
+}
+
+interface svg-style-element {
+    /// Opaque handle to a host-side `SVGStyleElement` instance.
+    type svg-style-element-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: svg-style-element-handle) -> string;
+    /// `type` attribute — setter.
+    set-type: func(self: svg-style-element-handle, value: string);
+
+    /// `media` attribute — getter.
+    get-media: func(self: svg-style-element-handle) -> string;
+    /// `media` attribute — setter.
+    set-media: func(self: svg-style-element-handle, value: string);
+
+    /// `title` attribute — getter.
+    get-title: func(self: svg-style-element-handle) -> string;
+    /// `title` attribute — setter.
+    set-title: func(self: svg-style-element-handle, value: string);
+
+    /// `disabled` attribute — getter.
+    get-disabled: func(self: svg-style-element-handle) -> bool;
+    /// `disabled` attribute — setter.
+    set-disabled: func(self: svg-style-element-handle, value: bool);
+}
+
+interface svg-transform {
+    /// Opaque handle to a host-side `SVGTransform` instance.
+    type svg-transform-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: svg-transform-handle) -> u16;
+
+    /// `matrix` attribute — getter.
+    get-matrix: func(self: svg-transform-handle) -> u64;
+
+    /// `angle` attribute — getter.
+    get-angle: func(self: svg-transform-handle) -> f32;
+
+    /// `setMatrix()` operation.
+    set-matrix: func(self: svg-transform-handle, matrix: option<u64>);
+
+    /// `setTranslate()` operation.
+    set-translate: func(self: svg-transform-handle, tx: f32, ty: f32);
+
+    /// `setScale()` operation.
+    set-scale: func(self: svg-transform-handle, sx: f32, sy: f32);
+
+    /// `setRotate()` operation.
+    set-rotate: func(self: svg-transform-handle, angle: f32, cx: f32, cy: f32);
+
+    /// `setSkewX()` operation.
+    set-skew-x: func(self: svg-transform-handle, angle: f32);
+
+    /// `setSkewY()` operation.
+    set-skew-y: func(self: svg-transform-handle, angle: f32);
+}
+
+interface svg-transform-list {
+    /// Opaque handle to a host-side `SVGTransformList` instance.
+    type svg-transform-list-handle = u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: svg-transform-list-handle) -> u32;
+
+    /// `numberOfItems` attribute — getter.
+    get-number-of-items: func(self: svg-transform-list-handle) -> u32;
+
+    /// `clear()` operation.
+    clear: func(self: svg-transform-list-handle);
+
+    /// `initialize()` operation.
+    initialize: func(self: svg-transform-list-handle, new-item: u64) -> u64;
+
+    /// `getItem()` operation.
+    get-item: func(self: svg-transform-list-handle, index: u32) -> u64;
+
+    /// `insertItemBefore()` operation.
+    insert-item-before: func(self: svg-transform-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `replaceItem()` operation.
+    replace-item: func(self: svg-transform-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `removeItem()` operation.
+    remove-item: func(self: svg-transform-list-handle, index: u32) -> u64;
+
+    /// `appendItem()` operation.
+    append-item: func(self: svg-transform-list-handle, new-item: u64) -> u64;
+
+    /// `undefined()` operation.
+    undefined: func(self: svg-transform-list-handle, index: u32, new-item: u64);
+
+    /// `createSVGTransformFromMatrix()` operation.
+    create-svg-transform-from-matrix: func(self: svg-transform-list-handle, matrix: option<u64>) -> u64;
+
+    /// `consolidate()` operation.
+    consolidate: func(self: svg-transform-list-handle) -> option<u64>;
+}
+
+interface svg-animated-transform-list {
+    /// Opaque handle to a host-side `SVGAnimatedTransformList` instance.
+    type svg-animated-transform-list-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-transform-list-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-transform-list-handle) -> u64;
+}
+
+interface svg-preserve-aspect-ratio {
+    /// Opaque handle to a host-side `SVGPreserveAspectRatio` instance.
+    type svg-preserve-aspect-ratio-handle = u64;
+
+    /// `align` attribute — getter.
+    get-align: func(self: svg-preserve-aspect-ratio-handle) -> u16;
+    /// `align` attribute — setter.
+    set-align: func(self: svg-preserve-aspect-ratio-handle, value: u16);
+
+    /// `meetOrSlice` attribute — getter.
+    get-meet-or-slice: func(self: svg-preserve-aspect-ratio-handle) -> u16;
+    /// `meetOrSlice` attribute — setter.
+    set-meet-or-slice: func(self: svg-preserve-aspect-ratio-handle, value: u16);
+}
+
+interface svg-animated-preserve-aspect-ratio {
+    /// Opaque handle to a host-side `SVGAnimatedPreserveAspectRatio` instance.
+    type svg-animated-preserve-aspect-ratio-handle = u64;
+
+    /// `baseVal` attribute — getter.
+    get-base-val: func(self: svg-animated-preserve-aspect-ratio-handle) -> u64;
+
+    /// `animVal` attribute — getter.
+    get-anim-val: func(self: svg-animated-preserve-aspect-ratio-handle) -> u64;
+}
+
+interface svg-rect-element {
+    /// Opaque handle to a host-side `SVGRectElement` instance.
+    type svg-rect-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-rect-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-rect-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svg-rect-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svg-rect-element-handle) -> u64;
+
+    /// `rx` attribute — getter.
+    get-rx: func(self: svg-rect-element-handle) -> u64;
+
+    /// `ry` attribute — getter.
+    get-ry: func(self: svg-rect-element-handle) -> u64;
+}
+
+interface svg-circle-element {
+    /// Opaque handle to a host-side `SVGCircleElement` instance.
+    type svg-circle-element-handle = u64;
+
+    /// `cx` attribute — getter.
+    get-cx: func(self: svg-circle-element-handle) -> u64;
+
+    /// `cy` attribute — getter.
+    get-cy: func(self: svg-circle-element-handle) -> u64;
+
+    /// `r` attribute — getter.
+    get-r: func(self: svg-circle-element-handle) -> u64;
+}
+
+interface svg-ellipse-element {
+    /// Opaque handle to a host-side `SVGEllipseElement` instance.
+    type svg-ellipse-element-handle = u64;
+
+    /// `cx` attribute — getter.
+    get-cx: func(self: svg-ellipse-element-handle) -> u64;
+
+    /// `cy` attribute — getter.
+    get-cy: func(self: svg-ellipse-element-handle) -> u64;
+
+    /// `rx` attribute — getter.
+    get-rx: func(self: svg-ellipse-element-handle) -> u64;
+
+    /// `ry` attribute — getter.
+    get-ry: func(self: svg-ellipse-element-handle) -> u64;
+}
+
+interface svg-line-element {
+    /// Opaque handle to a host-side `SVGLineElement` instance.
+    type svg-line-element-handle = u64;
+
+    /// `x1` attribute — getter.
+    get-x1: func(self: svg-line-element-handle) -> u64;
+
+    /// `y1` attribute — getter.
+    get-y1: func(self: svg-line-element-handle) -> u64;
+
+    /// `x2` attribute — getter.
+    get-x2: func(self: svg-line-element-handle) -> u64;
+
+    /// `y2` attribute — getter.
+    get-y2: func(self: svg-line-element-handle) -> u64;
+}
+
+interface svg-animated-points {
+    /// Opaque handle to a host-side `SVGAnimatedPoints` instance.
+    type svg-animated-points-handle = u64;
+
+    /// `points` attribute — getter.
+    get-points: func(self: svg-animated-points-handle) -> u64;
+
+    /// `animatedPoints` attribute — getter.
+    get-animated-points: func(self: svg-animated-points-handle) -> u64;
+}
+
+interface svg-point-list {
+    /// Opaque handle to a host-side `SVGPointList` instance.
+    type svg-point-list-handle = u64;
+
+    /// `length` attribute — getter.
+    get-length: func(self: svg-point-list-handle) -> u32;
+
+    /// `numberOfItems` attribute — getter.
+    get-number-of-items: func(self: svg-point-list-handle) -> u32;
+
+    /// `clear()` operation.
+    clear: func(self: svg-point-list-handle);
+
+    /// `initialize()` operation.
+    initialize: func(self: svg-point-list-handle, new-item: u64) -> u64;
+
+    /// `getItem()` operation.
+    get-item: func(self: svg-point-list-handle, index: u32) -> u64;
+
+    /// `insertItemBefore()` operation.
+    insert-item-before: func(self: svg-point-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `replaceItem()` operation.
+    replace-item: func(self: svg-point-list-handle, new-item: u64, index: u32) -> u64;
+
+    /// `removeItem()` operation.
+    remove-item: func(self: svg-point-list-handle, index: u32) -> u64;
+
+    /// `appendItem()` operation.
+    append-item: func(self: svg-point-list-handle, new-item: u64) -> u64;
+
+    /// `undefined()` operation.
+    undefined: func(self: svg-point-list-handle, index: u32, new-item: u64);
+}
+
+interface svg-text-content-element {
+    /// Opaque handle to a host-side `SVGTextContentElement` instance.
+
+    use types.{dom-rect};
+
+    type svg-text-content-element-handle = u64;
+
+    /// `textLength` attribute — getter.
+    get-text-length: func(self: svg-text-content-element-handle) -> u64;
+
+    /// `lengthAdjust` attribute — getter.
+    get-length-adjust: func(self: svg-text-content-element-handle) -> u64;
+
+    /// `getNumberOfChars()` operation.
+    get-number-of-chars: func(self: svg-text-content-element-handle) -> s32;
+
+    /// `getComputedTextLength()` operation.
+    get-computed-text-length: func(self: svg-text-content-element-handle) -> f32;
+
+    /// `getSubStringLength()` operation.
+    get-sub-string-length: func(self: svg-text-content-element-handle, charnum: u32, nchars: u32) -> f32;
+
+    /// `getStartPositionOfChar()` operation.
+    get-start-position-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
+
+    /// `getEndPositionOfChar()` operation.
+    get-end-position-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> u64;
+
+    /// `getExtentOfChar()` operation.
+    get-extent-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> dom-rect;
+
+    /// `getRotationOfChar()` operation.
+    get-rotation-of-char: func(self: svg-text-content-element-handle, charnum: u32) -> f32;
+
+    /// `getCharNumAtPosition()` operation.
+    get-char-num-at-position: func(self: svg-text-content-element-handle, point: option<u64>) -> s32;
+
+    /// `selectSubString()` operation.
+    select-sub-string: func(self: svg-text-content-element-handle, charnum: u32, nchars: u32);
+}
+
+interface svg-text-positioning-element {
+    /// Opaque handle to a host-side `SVGTextPositioningElement` instance.
+    type svg-text-positioning-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-text-positioning-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-text-positioning-element-handle) -> u64;
+
+    /// `dx` attribute — getter.
+    get-dx: func(self: svg-text-positioning-element-handle) -> u64;
+
+    /// `dy` attribute — getter.
+    get-dy: func(self: svg-text-positioning-element-handle) -> u64;
+
+    /// `rotate` attribute — getter.
+    get-rotate: func(self: svg-text-positioning-element-handle) -> u64;
+}
+
+interface svg-text-path-element {
+    /// Opaque handle to a host-side `SVGTextPathElement` instance.
+    type svg-text-path-element-handle = u64;
+
+    /// `startOffset` attribute — getter.
+    get-start-offset: func(self: svg-text-path-element-handle) -> u64;
+
+    /// `method` attribute — getter.
+    get-method: func(self: svg-text-path-element-handle) -> u64;
+
+    /// `spacing` attribute — getter.
+    get-spacing: func(self: svg-text-path-element-handle) -> u64;
+}
+
+interface svg-image-element {
+    /// Opaque handle to a host-side `SVGImageElement` instance.
+    type svg-image-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-image-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-image-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svg-image-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svg-image-element-handle) -> u64;
+
+    /// `preserveAspectRatio` attribute — getter.
+    get-preserve-aspect-ratio: func(self: svg-image-element-handle) -> u64;
+
+    /// `crossOrigin` attribute — getter.
+    get-cross-origin: func(self: svg-image-element-handle) -> option<string>;
+    /// `crossOrigin` attribute — setter.
+    set-cross-origin: func(self: svg-image-element-handle, value: option<string>);
+}
+
+interface svg-foreign-object-element {
+    /// Opaque handle to a host-side `SVGForeignObjectElement` instance.
+    type svg-foreign-object-element-handle = u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-foreign-object-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-foreign-object-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svg-foreign-object-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svg-foreign-object-element-handle) -> u64;
+}
+
+interface svg-marker-element {
+    /// Opaque handle to a host-side `SVGMarkerElement` instance.
+    type svg-marker-element-handle = u64;
+
+    /// `refX` attribute — getter.
+    get-ref-x: func(self: svg-marker-element-handle) -> u64;
+
+    /// `refY` attribute — getter.
+    get-ref-y: func(self: svg-marker-element-handle) -> u64;
+
+    /// `markerUnits` attribute — getter.
+    get-marker-units: func(self: svg-marker-element-handle) -> u64;
+
+    /// `markerWidth` attribute — getter.
+    get-marker-width: func(self: svg-marker-element-handle) -> u64;
+
+    /// `markerHeight` attribute — getter.
+    get-marker-height: func(self: svg-marker-element-handle) -> u64;
+
+    /// `orientType` attribute — getter.
+    get-orient-type: func(self: svg-marker-element-handle) -> u64;
+
+    /// `orientAngle` attribute — getter.
+    get-orient-angle: func(self: svg-marker-element-handle) -> u64;
+
+    /// `orient` attribute — getter.
+    get-orient: func(self: svg-marker-element-handle) -> string;
+    /// `orient` attribute — setter.
+    set-orient: func(self: svg-marker-element-handle, value: string);
+
+    /// `setOrientToAuto()` operation.
+    set-orient-to-auto: func(self: svg-marker-element-handle);
+
+    /// `setOrientToAngle()` operation.
+    set-orient-to-angle: func(self: svg-marker-element-handle, angle: u64);
+}
+
+interface svg-gradient-element {
+    /// Opaque handle to a host-side `SVGGradientElement` instance.
+    type svg-gradient-element-handle = u64;
+
+    /// `gradientUnits` attribute — getter.
+    get-gradient-units: func(self: svg-gradient-element-handle) -> u64;
+
+    /// `gradientTransform` attribute — getter.
+    get-gradient-transform: func(self: svg-gradient-element-handle) -> u64;
+
+    /// `spreadMethod` attribute — getter.
+    get-spread-method: func(self: svg-gradient-element-handle) -> u64;
+}
+
+interface svg-linear-gradient-element {
+    /// Opaque handle to a host-side `SVGLinearGradientElement` instance.
+    type svg-linear-gradient-element-handle = u64;
+
+    /// `x1` attribute — getter.
+    get-x1: func(self: svg-linear-gradient-element-handle) -> u64;
+
+    /// `y1` attribute — getter.
+    get-y1: func(self: svg-linear-gradient-element-handle) -> u64;
+
+    /// `x2` attribute — getter.
+    get-x2: func(self: svg-linear-gradient-element-handle) -> u64;
+
+    /// `y2` attribute — getter.
+    get-y2: func(self: svg-linear-gradient-element-handle) -> u64;
+}
+
+interface svg-radial-gradient-element {
+    /// Opaque handle to a host-side `SVGRadialGradientElement` instance.
+    type svg-radial-gradient-element-handle = u64;
+
+    /// `cx` attribute — getter.
+    get-cx: func(self: svg-radial-gradient-element-handle) -> u64;
+
+    /// `cy` attribute — getter.
+    get-cy: func(self: svg-radial-gradient-element-handle) -> u64;
+
+    /// `r` attribute — getter.
+    get-r: func(self: svg-radial-gradient-element-handle) -> u64;
+
+    /// `fx` attribute — getter.
+    get-fx: func(self: svg-radial-gradient-element-handle) -> u64;
+
+    /// `fy` attribute — getter.
+    get-fy: func(self: svg-radial-gradient-element-handle) -> u64;
+
+    /// `fr` attribute — getter.
+    get-fr: func(self: svg-radial-gradient-element-handle) -> u64;
+}
+
+interface svg-stop-element {
+    /// Opaque handle to a host-side `SVGStopElement` instance.
+    type svg-stop-element-handle = u64;
+
+    /// `offset` attribute — getter.
+    get-offset: func(self: svg-stop-element-handle) -> u64;
+}
+
+interface svg-pattern-element {
+    /// Opaque handle to a host-side `SVGPatternElement` instance.
+    type svg-pattern-element-handle = u64;
+
+    /// `patternUnits` attribute — getter.
+    get-pattern-units: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `patternContentUnits` attribute — getter.
+    get-pattern-content-units: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `patternTransform` attribute — getter.
+    get-pattern-transform: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `x` attribute — getter.
+    get-x: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `y` attribute — getter.
+    get-y: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `width` attribute — getter.
+    get-width: func(self: svg-pattern-element-handle) -> u64;
+
+    /// `height` attribute — getter.
+    get-height: func(self: svg-pattern-element-handle) -> u64;
+}
+
+interface svg-script-element {
+    /// Opaque handle to a host-side `SVGScriptElement` instance.
+    type svg-script-element-handle = u64;
+
+    /// `type` attribute — getter.
+    get-type: func(self: svg-script-element-handle) -> string;
+    /// `type` attribute — setter.
+    set-type: func(self: svg-script-element-handle, value: string);
+
+    /// `crossOrigin` attribute — getter.
+    get-cross-origin: func(self: svg-script-element-handle) -> option<string>;
+    /// `crossOrigin` attribute — setter.
+    set-cross-origin: func(self: svg-script-element-handle, value: option<string>);
+}
+
+interface svga-element {
+    /// Opaque handle to a host-side `SVGAElement` instance.
+    type svga-element-handle = u64;
+
+    /// `target` attribute — getter.
+    get-target: func(self: svga-element-handle) -> u64;
+
+    /// `download` attribute — getter.
+    get-download: func(self: svga-element-handle) -> string;
+    /// `download` attribute — setter.
+    set-download: func(self: svga-element-handle, value: string);
+
+    /// `ping` attribute — getter.
+    get-ping: func(self: svga-element-handle) -> string;
+    /// `ping` attribute — setter.
+    set-ping: func(self: svga-element-handle, value: string);
+
+    /// `rel` attribute — getter.
+    get-rel: func(self: svga-element-handle) -> string;
+    /// `rel` attribute — setter.
+    set-rel: func(self: svga-element-handle, value: string);
+
+    /// `relList` attribute — getter.
+    get-rel-list: func(self: svga-element-handle) -> u64;
+
+    /// `hreflang` attribute — getter.
+    get-hreflang: func(self: svga-element-handle) -> string;
+    /// `hreflang` attribute — setter.
+    set-hreflang: func(self: svga-element-handle, value: string);
+
+    /// `type` attribute — getter.
+    get-type: func(self: svga-element-handle) -> string;
+    /// `type` attribute — setter.
+    set-type: func(self: svga-element-handle, value: string);
+
+    /// `referrerPolicy` attribute — getter.
+    get-referrer-policy: func(self: svga-element-handle) -> string;
+    /// `referrerPolicy` attribute — setter.
+    set-referrer-policy: func(self: svga-element-handle, value: string);
 }
 
 interface url-search-params {
@@ -13527,25 +15626,46 @@ interface cache-storage {
     keys: func(self: cache-storage-handle) -> u64;
 }
 
-/// Full browser world — all 458 auto-generated interfaces.
+/// Full browser world — all 562 auto-generated interfaces.
 world browser-full {
     import abort-controller;
     import abort-signal;
     import abstract-range;
     import abstract-worker;
+    import analyser-node;
     import animation;
     import animation-event;
     import animation-frame-provider;
     import animation-timeline;
     import attr;
+    import audio-buffer;
+    import audio-buffer-source-node;
+    import audio-context;
     import audio-data;
     import audio-decoder;
+    import audio-destination-node;
     import audio-encoder;
+    import audio-listener;
+    import audio-node;
+    import audio-param;
+    import audio-playback-stats;
+    import audio-processing-event;
+    import audio-scheduled-source-node;
+    import audio-sink-info;
     import audio-track;
     import audio-track-list;
+    import audio-worklet;
+    import audio-worklet-global-scope;
+    import audio-worklet-node;
+    import audio-worklet-processor;
+    import authenticator-assertion-response;
+    import authenticator-attestation-response;
+    import authenticator-response;
     import bar-prop;
+    import base-audio-context;
     import battery-manager;
     import before-unload-event;
+    import biquad-filter-node;
     import blob;
     import blob-event;
     import body;
@@ -13588,6 +15708,8 @@ world browser-full {
     import close-watcher;
     import command-event;
     import composition-event;
+    import constant-source-node;
+    import convolver-node;
     import count-queuing-strategy;
     import credential;
     import credential-user-data;
@@ -13622,6 +15744,7 @@ world browser-full {
     import data-transfer-item;
     import data-transfer-item-list;
     import dedicated-worker-global-scope;
+    import delay-node;
     import device-change-event;
     import document;
     import document-or-shadow-root;
@@ -13632,6 +15755,7 @@ world browser-full {
     import dom-string-map;
     import dom-token-list;
     import drag-event;
+    import dynamics-compressor-node;
     import element;
     import element-content-editable;
     import element-css-inline-style;
@@ -13652,9 +15776,11 @@ world browser-full {
     import file;
     import file-list;
     import file-reader;
+    import file-reader-sync;
     import focus-event;
     import form-data;
     import form-data-event;
+    import gain-node;
     import gamepad;
     import gamepad-button;
     import gamepad-event;
@@ -13665,6 +15791,7 @@ world browser-full {
     import geolocation-position;
     import geolocation-position-error;
     import geometry-utils;
+    import get-svg-document;
     import global;
     import global-event-handlers;
     import hash-change-event;
@@ -13743,12 +15870,18 @@ world browser-full {
     import htmlu-list-element;
     import hyperlink-element-utils;
     import idb-cursor;
+    import idb-cursor-with-value;
     import idb-database;
     import idb-factory;
     import idb-index;
+    import idb-key-range;
     import idb-object-store;
+    import idb-open-db-request;
+    import idb-record;
     import idb-request;
     import idb-transaction;
+    import idb-version-change-event;
+    import iir-filter-node;
     import image-bitmap;
     import image-bitmap-rendering-context;
     import image-data;
@@ -13765,9 +15898,12 @@ world browser-full {
     import keyframe-effect;
     import link-style;
     import location;
+    import lock;
+    import lock-manager;
     import media-capabilities;
     import media-device-info;
     import media-devices;
+    import media-element-audio-source-node;
     import media-error;
     import media-list;
     import media-metadata;
@@ -13776,6 +15912,8 @@ world browser-full {
     import media-recorder;
     import media-session;
     import media-stream;
+    import media-stream-audio-destination-node;
+    import media-stream-audio-source-node;
     import media-stream-track;
     import media-stream-track-event;
     import memory;
@@ -13805,6 +15943,7 @@ world browser-full {
     import navigator-cookies;
     import navigator-id;
     import navigator-language;
+    import navigator-locks;
     import navigator-on-line;
     import navigator-plugins;
     import navigator-storage;
@@ -13818,13 +15957,17 @@ world browser-full {
     import not-restored-reasons;
     import notification;
     import notification-event;
+    import offline-audio-completion-event;
+    import offline-audio-context;
     import offscreen-canvas;
     import offscreen-canvas-rendering-context2-d;
     import origin;
+    import oscillator-node;
     import overconstrained-error;
     import page-reveal-event;
     import page-swap-event;
     import page-transition-event;
+    import panner-node;
     import parent-node;
     import password-credential;
     import path2-d;
@@ -13843,7 +15986,6 @@ world browser-full {
     import performance-resource-timing;
     import performance-timing;
     import performance-timing-confidence;
-    import platform-helpers;
     import permission-status;
     import permissions;
     import plugin;
@@ -13854,6 +15996,7 @@ world browser-full {
     import processing-instruction;
     import progress-event;
     import promise-rejection-event;
+    import public-key-credential;
     import radio-node-list;
     import range;
     import readable-byte-stream-controller;
@@ -13890,10 +16033,13 @@ world browser-full {
     import rtcdtmf-tone-change-event;
     import screen;
     import screen-orientation;
+    import script-processor-node;
+    import selection;
     import service-worker;
     import service-worker-container;
     import service-worker-global-scope;
     import service-worker-registration;
+    import shadow-animation;
     import shadow-root;
     import shared-worker;
     import shared-worker-global-scope;
@@ -13912,6 +16058,7 @@ world browser-full {
     import speech-synthesis-event;
     import speech-synthesis-utterance;
     import speech-synthesis-voice;
+    import stereo-panner-node;
     import storage;
     import storage-event;
     import storage-manager;
@@ -13919,8 +16066,62 @@ world browser-full {
     import style-sheet-list;
     import submit-event;
     import subtle-crypto;
+    import svg-angle;
+    import svg-animated-angle;
+    import svg-animated-boolean;
+    import svg-animated-enumeration;
+    import svg-animated-integer;
+    import svg-animated-length;
+    import svg-animated-length-list;
+    import svg-animated-number;
+    import svg-animated-number-list;
+    import svg-animated-points;
+    import svg-animated-preserve-aspect-ratio;
+    import svg-animated-rect;
+    import svg-animated-string;
+    import svg-animated-transform-list;
+    import svg-circle-element;
+    import svg-element;
+    import svg-element-instance;
+    import svg-ellipse-element;
+    import svg-fit-to-view-box;
+    import svg-foreign-object-element;
+    import svg-geometry-element;
+    import svg-gradient-element;
+    import svg-graphics-element;
+    import svg-image-element;
+    import svg-length;
+    import svg-length-list;
+    import svg-line-element;
+    import svg-linear-gradient-element;
+    import svg-marker-element;
+    import svg-number;
+    import svg-number-list;
+    import svg-pattern-element;
+    import svg-point-list;
+    import svg-preserve-aspect-ratio;
+    import svg-radial-gradient-element;
+    import svg-rect-element;
+    import svg-script-element;
+    import svg-stop-element;
+    import svg-string-list;
+    import svg-style-element;
+    import svg-tests;
+    import svg-text-content-element;
+    import svg-text-path-element;
+    import svg-text-positioning-element;
+    import svg-transform;
+    import svg-transform-list;
+    import svg-use-element;
+    import svga-element;
+    import svgsvg-element;
+    import svguri-reference;
     import table;
     import text;
+    import text-decoder;
+    import text-decoder-common;
+    import text-encoder;
+    import text-encoder-common;
     import text-event;
     import text-metrics;
     import text-track;
@@ -13951,6 +16152,7 @@ world browser-full {
     import video-track-list;
     import visibility-state-entry;
     import visual-viewport;
+    import wave-shaper-node;
     import web-gl-active-info;
     import web-gl-context-event;
     import web-gl-object;
@@ -13983,11 +16185,10 @@ world browser-full {
     import xml-http-request-event-target;
     import xml-serializer;
     import xslt-processor;
+    import event-target;
+    import style;
+    import console;
     export event-callbacks;
     export lifecycle;
-    export timer-callbacks;
-    export animation-callbacks;
-    export resize-observer-callbacks;
-    export mutation-observer-callbacks;
 }
 
