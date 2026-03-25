@@ -103,7 +103,7 @@ fn cubic_bezier(x1: f32, y1: f32, x2: f32, y2: f32, t: f32) -> f32 {
             break;
         }
         let error = bx - t;
-        x = x - error / dbx;
+        x -= error / dbx;
         // Clamp to valid range
         x = x.clamp(0.0, 1.0);
     }
@@ -284,14 +284,14 @@ impl UseAnimation {
                 AnimationDirection::Normal => iter_progress,
                 AnimationDirection::Reverse => 1.0 - iter_progress,
                 AnimationDirection::Alternate => {
-                    if iter % 2 == 0 {
+                    if iter.is_multiple_of(2) {
                         iter_progress
                     } else {
                         1.0 - iter_progress
                     }
                 }
                 AnimationDirection::AlternateReverse => {
-                    if iter % 2 == 0 {
+                    if iter.is_multiple_of(2) {
                         1.0 - iter_progress
                     } else {
                         iter_progress
@@ -350,7 +350,7 @@ impl UseAnimation {
     /// Stop animation with platform reference (allows cancelling rAF)
     pub fn stop_with_platform<P>(&self, platform: &P)
     where
-        P: Platform + ?Sized,
+        P: Platform,
     {
         *self.state.borrow_mut() = AnimationState::Idle;
         *self.progress.borrow_mut() = 0.0;

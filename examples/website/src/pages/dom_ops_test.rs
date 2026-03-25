@@ -52,7 +52,8 @@ pub fn render() -> VNode {
                     "Hover me!"
                 }
 
-                div { class: "test-output",
+                div {
+                    class: "test-output",
                     id: "output-1",
                     style: "margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-family: monospace; min-height: 20px;",
                     "Output will appear here..."
@@ -73,7 +74,10 @@ pub fn render() -> VNode {
                             // Update the output div with rect info
                             let _output = format!(
                                 "Rect: x={:.1}, y={:.1}, width={:.1}, height={:.1}",
-                                rect.x, rect.y, rect.width, rect.height
+                                rect.x,
+                                rect.y,
+                                rect.width,
+                                rect.height,
                             );
                             set_style(target, "background", "#38a169");
                             set_style(target, "box-shadow", "0 0 20px rgba(72, 187, 120, 0.6)");

@@ -2,6 +2,7 @@
 //!
 //! Tests for PointerEvent structure and functionality.
 
+use std::str::FromStr;
 use tairitsu_vdom::events::{PointerEvent, PointerType};
 
 #[test]
@@ -178,10 +179,10 @@ fn test_pointer_event_default() {
 
 #[test]
 fn test_pointer_type_from_str() {
-    assert_eq!(PointerType::from_str("mouse"), PointerType::Mouse);
-    assert_eq!(PointerType::from_str("pen"), PointerType::Pen);
-    assert_eq!(PointerType::from_str("touch"), PointerType::Touch);
-    assert_eq!(PointerType::from_str("unknown"), PointerType::Mouse); // fallback
+    assert_eq!(PointerType::from_str("mouse"), Ok(PointerType::Mouse));
+    assert_eq!(PointerType::from_str("pen"), Ok(PointerType::Pen));
+    assert_eq!(PointerType::from_str("touch"), Ok(PointerType::Touch));
+    assert_eq!(PointerType::from_str("unknown"), Ok(PointerType::Mouse)); // fallback
 }
 
 #[test]

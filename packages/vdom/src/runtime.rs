@@ -76,7 +76,8 @@ where
         let id = rt.next_id;
         rt.next_id += 1;
 
-        rt.render_functions.insert(id, Rc::new(RefCell::new(render_fn)));
+        rt.render_functions
+            .insert(id, Rc::new(RefCell::new(render_fn)));
 
         trace!("Registered component {}", id);
 
@@ -207,18 +208,13 @@ fn render_component(id: ComponentId) {
             let patches = crate::diff::diff(Some(&old), &new_vnode);
 
             if !patches.is_empty() {
-                trace!(
-                    "Component {} generated {} patches",
-                    id,
-                    patches.len()
-                );
+                trace!("Component {} generated {} patches", id, patches.len());
 
                 // Apply patches through the platform
                 // This requires the platform to be set
                 RUNTIME.with(|runtime| {
                     let rt = runtime.borrow();
-                    if let (Some(platform_weak), Some(root_weak)) =
-                        (&rt.platform, &rt.root_element)
+                    if let (Some(platform_weak), Some(root_weak)) = (&rt.platform, &rt.root_element)
                     {
                         if let (Some(_platform), Some(_root)) =
                             (platform_weak.upgrade(), root_weak.upgrade())
@@ -320,10 +316,7 @@ mod tests {
 
         RUNTIME.with(|runtime| {
             let rt = runtime.borrow();
-            assert_eq!(
-                rt.signal_dependencies.get(&12345),
-                Some(&vec![id])
-            );
+            assert_eq!(rt.signal_dependencies.get(&12345), Some(&vec![id]));
         });
     }
 }

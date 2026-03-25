@@ -1180,20 +1180,24 @@ pub enum PointerType {
 }
 
 impl PointerType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "mouse" => PointerType::Mouse,
-            "pen" => PointerType::Pen,
-            "touch" => PointerType::Touch,
-            _ => PointerType::Mouse,
-        }
-    }
-
     pub fn as_str(&self) -> &'static str {
         match self {
             PointerType::Mouse => "mouse",
             PointerType::Pen => "pen",
             PointerType::Touch => "touch",
+        }
+    }
+}
+
+impl std::str::FromStr for PointerType {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "mouse" => Ok(PointerType::Mouse),
+            "pen" => Ok(PointerType::Pen),
+            "touch" => Ok(PointerType::Touch),
+            _ => Ok(PointerType::Mouse),
         }
     }
 }

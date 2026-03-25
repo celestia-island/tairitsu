@@ -92,10 +92,7 @@ fn test_mouse_event_all_coordinate_fields_exist() {
 
 #[test]
 fn test_mouse_event_clone() {
-    let event = MouseEvent::new()
-        .target(123)
-        .client_x(100)
-        .client_y(200);
+    let event = MouseEvent::new().target(123).client_x(100).client_y(200);
 
     let cloned = event.clone();
 
