@@ -819,15 +819,27 @@ fn generate_component_html_with_output_dir(
         if (isComponent) {{
             if (typeof WebAssembly.Component !== 'function') {{
                 const wrapperResult = await instantiateWithWrapper(buildImports());
+                // Register exports for event callbacks before invoking boot
+                if (globalThis.__setWasmExports && wrapperResult) {{
+                    globalThis.__setWasmExports(wrapperResult);
+                }}
                 bootInvoked = await tryInvokeBootExports(wrapperResult);
             }} else {{
                 const component = new WebAssembly.Component(bytes);
                 const componentResult = await WebAssembly.instantiate(component, buildImports());
+                // Register exports for event callbacks before invoking boot
+                if (globalThis.__setWasmExports && componentResult) {{
+                    globalThis.__setWasmExports(componentResult);
+                }}
                 bootInvoked = await tryInvokeBootExports(componentResult);
             }}
         }} else {{
             const module = await WebAssembly.compile(bytes);
             const moduleResult = await WebAssembly.instantiate(module, buildImports());
+            // Register exports for event callbacks before invoking boot
+            if (globalThis.__setWasmExports && moduleResult) {{
+                globalThis.__setWasmExports(moduleResult);
+            }}
             bootInvoked = await tryInvokeBootExports(moduleResult);
         }}
 

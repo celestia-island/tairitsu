@@ -98,6 +98,21 @@ impl WitPlatform {
         Ok(Self)
     }
 
+    /// Set a style property on an element (static method for use in event handlers).
+    ///
+    /// This is a convenience method that directly calls the WIT style interface
+    /// without requiring a Platform instance.
+    pub fn set_style_static(element: &WitElement, name: &str, value: &str) -> Result<()> {
+        #[cfg(target_family = "wasm")]
+        {
+            wasm_impl::set_style_static_impl(element.0, name, value)
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            Ok(())
+        }
+    }
+
     /// Render a VNode tree into `#app` for WIT-backed browser components.
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
@@ -184,6 +199,12 @@ mod wasm_impl {
         export!(BrowserComponent);
     }
 
+    /// Set a style property on an element (implementation for static method).
+    pub(super) fn set_style_static_impl(element: u64, name: &str, value: &str) -> Result<()> {
+        bindings::tairitsu_browser::full::style::set_style_property(element, name, value)
+            .map_err(|e| anyhow::anyhow!("set_style_property failed: {}", e))
+    }
+
     // ── Component export implementation ─────────────────────────────────
 
     /// Implements the `event-callbacks` WIT export interface.
@@ -204,6 +225,7 @@ mod wasm_impl {
             let wit_handle = EventWitHandle::from_wit(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 MouseEvent::new()
+                    .target(data.target)
                     .client_x(data.client_x as i32)
                     .client_y(data.client_y as i32)
                     .event_handle(wit_handle),
@@ -398,12 +420,49 @@ mod wasm_impl {
                 return Err(msg);
             }
 
+            // Register WIT functions for global DOM operations in event handlers
+            #[cfg(target_family = "wasm")]
+            register_dom_ops_functions();
+
             unsafe {
                 tairitsu_component_bootstrap();
             }
 
             Ok(())
         }
+    }
+
+    /// Register WIT functions for use in event handlers.
+    #[cfg(target_family = "wasm")]
+    fn register_dom_ops_functions() {
+        use tairitsu_vdom::register_wit_functions;
+
+        unsafe {
+            register_wit_functions(
+                |element, property, value| {
+                    bindings::tairitsu_browser::full::style::set_style_property(
+                        element, property, value,
+                    )
+                },
+                |element| {
+                    let rect =
+                        bindings::tairitsu_browser::full::platform_helpers::get_bounding_client_rect(
+                            element,
+                        );
+                    tairitsu_vdom::DomRect {
+                        x: rect.x,
+                        y: rect.y,
+                        width: rect.width,
+                        height: rect.height,
+                    }
+                },
+                |element, name, value| {
+                    bindings::tairitsu_browser::full::element::set_attribute(element, name, value);
+                },
+            );
+        }
+
+        log_info("DOM operations functions registered for event handlers");
     }
 
     /// Validate that the WIT host environment is properly configured.

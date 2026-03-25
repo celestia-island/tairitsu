@@ -147,6 +147,12 @@ globalThis.__listeners = globalThis.__listeners || new Map();
 globalThis.__eventHandles = globalThis.__eventHandles || new Map();
 globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 
+// Store reference to WASM exports for event callbacks
+let wasmExports = null;
+globalThis.__setWasmExports = function(exports) {
+    wasmExports = exports;
+};
+
 const event_target_exports = {
     addEventListener(target, eventType, useCapture) {
         try {
@@ -156,8 +162,99 @@ const event_target_exports = {
             }
 
             const listener = function (event) {
+                // Store the event for later access
                 const eventHandle = globalThis.__nextEventHandle++;
                 globalThis.__eventHandles.set(eventHandle, event);
+
+                // Dispatch to WASM component if exports are available
+                if (wasmExports && wasmExports["tairitsu-browser:full/event-callbacks@0.2.0"]) {
+                    const callbacks = wasmExports["tairitsu-browser:full/event-callbacks@0.2.0"];
+                    const listeners = globalThis.__listeners;
+
+                    // Find the listener ID for this element and event type
+                    let listenerId = 0n;
+                    for (const [id, info] of listeners) {
+                        if (info.target === element && info.type === eventType) {
+                            listenerId = id;
+                            break;
+                        }
+                    }
+
+                    if (listenerId !== 0n) {
+                        // Determine event type and call appropriate callback
+                        if (eventType === "click" || eventType === "mousedown" || eventType === "mouseup" ||
+                            eventType === "mousemove" || eventType === "mouseenter" || eventType === "mouseleave") {
+                            if (callbacks.on_mouse_event) {
+                                const mouseEvent = event;
+                                callbacks.on_mouse_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        client_x: mouseEvent.clientX,
+                                        client_y: mouseEvent.clientY,
+                                        offset_x: mouseEvent.offsetX,
+                                        offset_y: mouseEvent.offsetY,
+                                        button: mouseEvent.button || 0,
+                                        buttons: mouseEvent.buttons || 0,
+                                        ctrl_key: mouseEvent.ctrlKey || false,
+                                        shift_key: mouseEvent.shiftKey || false,
+                                        alt_key: mouseEvent.altKey || false,
+                                        meta_key: mouseEvent.metaKey || false,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "keydown" || eventType === "keyup" || eventType === "keypress") {
+                            if (callbacks.on_keyboard_event) {
+                                const keyboardEvent = event;
+                                callbacks.on_keyboard_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        key: keyboardEvent.key || "",
+                                        code: keyboardEvent.code || "",
+                                        key_code: keyboardEvent.keyCode || 0,
+                                        ctrl_key: keyboardEvent.ctrlKey || false,
+                                        shift_key: keyboardEvent.shiftKey || false,
+                                        alt_key: keyboardEvent.altKey || false,
+                                        meta_key: keyboardEvent.metaKey || false,
+                                        repeat: keyboardEvent.repeat || false,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "focus" || eventType === "blur") {
+                            if (callbacks.on_focus_event) {
+                                callbacks.on_focus_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        related_target: event.relatedElement ?
+                                            (globalThis.__elementHandles.get(event.relatedElement) || 0n) : undefined,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "input") {
+                            if (callbacks.on_input_event) {
+                                const inputEvent = event;
+                                callbacks.on_input_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        data: inputEvent.data,
+                                        input_type: inputEvent.inputType || "",
+                                    }
+                                );
+                            }
+                        } else {
+                            if (callbacks.on_generic_event) {
+                                callbacks.on_generic_event(listenerId, eventHandle, eventType);
+                            }
+                        }
+                    }
+                }
             };
 
             element.addEventListener(eventType, listener, useCapture);
@@ -273,6 +370,136 @@ const window_exports = {
     },
     getInnerHeight() {
         return window.innerHeight;
+    },
+};
+
+// ============================================================================
+// Platform Helpers Interface (tairitsu-browser:full/platform-helpers)
+// ============================================================================
+
+let _timeoutCallbacks = new Map();
+let _nextTimeoutId = 1;
+let _animationCallbacks = new Map();
+let _nextAnimationId = 1;
+
+const platform_helpers_exports = {
+    innerWidth() {
+        return window.innerWidth;
+    },
+    innerHeight() {
+        return window.innerHeight;
+    },
+    setTimeout(callbackId, ms) {
+        const id = _nextTimeoutId++;
+        const timeoutId = setTimeout(() => {
+            if (wasmExports && wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]) {
+                wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"].on_timeout(callbackId);
+            }
+        }, ms);
+        _timeoutCallbacks.set(id, timeoutId);
+        return id;
+    },
+    clearTimeout(id) {
+        if (_timeoutCallbacks.has(id)) {
+            clearTimeout(_timeoutCallbacks.get(id));
+            _timeoutCallbacks.delete(id);
+        }
+    },
+    requestAnimationFrame(callbackId) {
+        const id = _nextAnimationId++;
+        const animationId = requestAnimationFrame((timestamp) => {
+            if (wasmExports && wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]) {
+                wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"].on_animation_frame(callbackId, timestamp);
+            }
+        });
+        _animationCallbacks.set(id, animationId);
+        return id;
+    },
+    cancelAnimationFrame(id) {
+        if (_animationCallbacks.has(id)) {
+            cancelAnimationFrame(_animationCallbacks.get(id));
+            _animationCallbacks.delete(id);
+        }
+    },
+    getBoundingClientRect(element) {
+        const el = globalThis.__elementHandles.get(element);
+        if (!el) {
+            return { x: 0, y: 0, width: 0, height: 0 };
+        }
+        const rect = el.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    },
+    createResizeObserver(callbackId) {
+        const observer = new ResizeObserver((entries) => {
+            if (wasmExports && wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]) {
+                const entryHandles = entries.map(entry => {
+                    if (!globalThis.__resizeObserverEntryHandles) {
+                        globalThis.__resizeObserverEntryHandles = new Map();
+                        globalThis.__nextResizeObserverEntry = 1n;
+                    }
+                    const handle = globalThis.__nextResizeObserverEntry++;
+                    globalThis.__resizeObserverEntryHandles.set(handle, entry);
+                    return handle;
+                });
+                wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"].on_resize(callbackId, entryHandles);
+            }
+        });
+        return storeElement(observer);
+    },
+    observeResize(observer, element) {
+        const obs = globalThis.__elementHandles.get(observer);
+        const el = globalThis.__elementHandles.get(element);
+        if (obs && el) {
+            obs.observe(el);
+        }
+    },
+    unobserveResize(observer, element) {
+        const obs = globalThis.__elementHandles.get(observer);
+        const el = globalThis.__elementHandles.get(element);
+        if (obs && el) {
+            obs.unobserve(el);
+        }
+    },
+    disconnectResize(observer) {
+        const obs = globalThis.__elementHandles.get(observer);
+        if (obs) {
+            obs.disconnect();
+        }
+    },
+    createMutationObserver(callbackId) {
+        const observer = new MutationObserver((records) => {
+            if (wasmExports && wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
+                const recordHandles = records.map(record => {
+                    if (!globalThis.__mutationRecordHandles) {
+                        globalThis.__mutationRecordHandles = new Map();
+                        globalThis.__nextMutationRecord = 1n;
+                    }
+                    const handle = globalThis.__nextMutationRecord++;
+                    globalThis.__mutationRecordHandles.set(handle, record);
+                    return handle;
+                });
+                wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"].on_mutation(callbackId, recordHandles);
+            }
+        });
+        return storeElement(observer);
+    },
+    observeMutations(observer, target, _options) {
+        const obs = globalThis.__elementHandles.get(observer);
+        const el = globalThis.__elementHandles.get(target);
+        if (obs && el) {
+            obs.observe(el, {
+                childList: true,
+                attributes: true,
+                characterData: true,
+                subtree: true,
+            });
+        }
+    },
+    disconnectMutation(observer) {
+        const obs = globalThis.__elementHandles.get(observer);
+        if (obs) {
+            obs.disconnect();
+        }
     },
 };
 
@@ -395,6 +622,7 @@ const INTERFACES = {
     "@tairitsu-glue/node": node_exports,
     "@tairitsu-glue/non-element-parent-node": non_element_parent_node_exports,
     "@tairitsu-glue/window": window_exports,
+    "@tairitsu-glue/platform-helpers": platform_helpers_exports,
     "@tairitsu-glue/mutation-record": mutation_record_exports,
     "@tairitsu-glue/resize-observer-entry": resize_observer_entry_exports,
     "@tairitsu-glue/resize-observer-size": resize_observer_size_exports,
