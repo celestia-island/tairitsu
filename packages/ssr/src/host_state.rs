@@ -5,7 +5,7 @@
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::bindings::{
-    DomRect, PlatformHelpersHost, ResizeObserverEntryHost, ResizeObserverSizeHost,
+    DomRect, /* PlatformHelpersHost, */ ResizeObserverEntryHost, ResizeObserverSizeHost,
 };
 use crate::virtual_dom::SsrDom;
 
@@ -147,11 +147,10 @@ impl ResizeObserverSizeHost for SsrHostState {
     }
 }
 
-// Implement the bindgen-generated Host trait for platform-helpers
-// This properly handles the dom-rect record type marshaling
-impl PlatformHelpersHost for SsrHostState {
-    fn get_bounding_client_rect(&mut self, _element: u64) -> DomRect {
-        DomRect {
+// Implement the platform-helpers Host trait
+impl crate::bindings::PlatformHelpersHost for SsrHostState {
+    fn get_bounding_client_rect(&mut self, _element: u64) -> crate::bindings::DomRect {
+        crate::bindings::DomRect {
             x: 0.0,
             y: 0.0,
             width: 0.0,

@@ -11,9 +11,7 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::atomic::*};
 
-use tairitsu_vdom::{
-    ElementHandle, EventData, EventHandle, Platform, VElement, VNode, VText,
-};
+use tairitsu_vdom::{ElementHandle, EventData, EventHandle, Platform, VElement, VNode, VText};
 
 // ── Mock Platform for Testing ─────────────────────────────────────────────
 
@@ -83,7 +81,9 @@ impl MockPlatform {
 
     /// Set the text content of a mock element.
     pub fn set_text_content(&self, element: MockElement, text: String) {
-        self.element_text_content.borrow_mut().insert(element.0, text);
+        self.element_text_content
+            .borrow_mut()
+            .insert(element.0, text);
     }
 
     /// Get an attribute value of a mock element.
@@ -317,9 +317,7 @@ fn mount_vnode_with_refs(platform: &MockPlatform, vnode: &VNode) -> MockElement 
 
             element
         }
-        VNode::Text(vtext) => {
-            platform.create_text_node(&vtext.text)
-        }
+        VNode::Text(vtext) => platform.create_text_node(&vtext.text),
         VNode::Fragment(children) => {
             // For fragments, create a wrapper element
             let wrapper = platform.create_element("fragment");
@@ -392,21 +390,19 @@ mod test_element_ref_mounting {
             tag: "div".to_string(),
             key: None,
             attributes: HashMap::new(),
-            children: vec![
-                VNode::Element(VElement {
-                    tag: "span".to_string(),
-                    key: None,
-                    attributes: HashMap::new(),
-                    children: vec![VNode::Text(VText {
-                        text: "Hello".to_string(),
-                    })],
-                    style: tairitsu_vdom::Style::default(),
-                    class: tairitsu_vdom::Classes::default(),
-                    event_handlers: HashMap::new(),
-                    inner_html: None,
-                    element_ref: Some(child_any_ref.clone()),
-                }),
-            ],
+            children: vec![VNode::Element(VElement {
+                tag: "span".to_string(),
+                key: None,
+                attributes: HashMap::new(),
+                children: vec![VNode::Text(VText {
+                    text: "Hello".to_string(),
+                })],
+                style: tairitsu_vdom::Style::default(),
+                class: tairitsu_vdom::Classes::default(),
+                event_handlers: HashMap::new(),
+                inner_html: None,
+                element_ref: Some(child_any_ref.clone()),
+            })],
             style: tairitsu_vdom::Style::default(),
             class: tairitsu_vdom::Classes::default(),
             event_handlers: HashMap::new(),
@@ -433,11 +429,18 @@ mod test_element_ref_mounting {
         );
 
         // Verify they're different elements
-        let parent_el = parent_ref_value.as_ref().unwrap().downcast_ref::<MockElement>().unwrap();
-        let child_el = child_ref_value.as_ref().unwrap().downcast_ref::<MockElement>().unwrap();
+        let parent_el = parent_ref_value
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<MockElement>()
+            .unwrap();
+        let child_el = child_ref_value
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<MockElement>()
+            .unwrap();
         assert_ne!(
-            parent_el.0,
-            child_el.0,
+            parent_el.0, child_el.0,
             "parent and child should be different elements"
         );
     }
@@ -474,8 +477,7 @@ mod test_raf_animation {
     use super::*;
     use std::{cell::RefCell, rc::Rc, time::Duration};
     use tairitsu_hooks::{
-        use_simple_animation, AnimationConfig, AnimationDirection, AnimationState,
-        EasingFunction,
+        use_simple_animation, AnimationConfig, AnimationDirection, AnimationState, EasingFunction,
     };
 
     // NOTE: This test is currently failing due to a bug in the animation rAF loop.
@@ -746,29 +748,79 @@ mod test_signal_dom_patch {
 
 #[cfg(test)]
 mod test_button_state_machine {
-    use tairitsu_hooks::{
-        ButtonStateMachine, InteractionEvent, InteractionState,
-    };
+    use tairitsu_hooks::{ButtonStateMachine, InteractionEvent, InteractionState};
 
     #[test]
     fn test_all_valid_transitions_from_table() {
         // Test all valid transitions from PLAN.md Task 4 table
         let test_cases = vec![
             // (initial_state, event, expected_state)
-            (InteractionState::Idle, InteractionEvent::MouseEnter, InteractionState::Hover),
-            (InteractionState::Hover, InteractionEvent::MouseLeave, InteractionState::Idle),
-            (InteractionState::Hover, InteractionEvent::MouseDown, InteractionState::Active),
-            (InteractionState::Hover, InteractionEvent::Focus, InteractionState::Focused),
-            (InteractionState::Active, InteractionEvent::MouseUp, InteractionState::Hover),
-            (InteractionState::Active, InteractionEvent::MouseLeave, InteractionState::Idle),
-            (InteractionState::Focused, InteractionEvent::MouseEnter, InteractionState::Hover),
-            (InteractionState::Focused, InteractionEvent::Blur, InteractionState::Idle),
+            (
+                InteractionState::Idle,
+                InteractionEvent::MouseEnter,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::MouseLeave,
+                InteractionState::Idle,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::MouseDown,
+                InteractionState::Active,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::Focus,
+                InteractionState::Focused,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::MouseUp,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::MouseLeave,
+                InteractionState::Idle,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::MouseEnter,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::Blur,
+                InteractionState::Idle,
+            ),
             // Disable transitions from all states
-            (InteractionState::Idle, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Hover, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Active, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Focused, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Disabled, InteractionEvent::Enable, InteractionState::Idle),
+            (
+                InteractionState::Idle,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Disabled,
+                InteractionEvent::Enable,
+                InteractionState::Idle,
+            ),
         ];
 
         for (initial, event, expected) in test_cases {
@@ -780,12 +832,17 @@ mod test_button_state_machine {
                 result,
                 Some(expected),
                 "Failed: {:?} + {:?} should be {:?}, got {:?}",
-                initial, event, expected, result
+                initial,
+                event,
+                expected,
+                result
             );
             assert_eq!(
-                sm.state(), expected,
+                sm.state(),
+                expected,
                 "State mismatch after transition: {:?} + {:?}",
-                initial, event
+                initial,
+                event
             );
         }
     }
@@ -820,10 +877,12 @@ mod test_button_state_machine {
             assert!(
                 result.is_none(),
                 "Transition {:?} + {:?} should be invalid (returned Some)",
-                original_state, event
+                original_state,
+                event
             );
             assert_eq!(
-                sm.state(), original_state,
+                sm.state(),
+                original_state,
                 "State should not change on invalid transition"
             );
         }
@@ -951,7 +1010,8 @@ mod test_button_state_machine {
                 event
             );
             assert_eq!(
-                sm.state(), InteractionState::Disabled,
+                sm.state(),
+                InteractionState::Disabled,
                 "State should remain Disabled"
             );
         }
@@ -993,10 +1053,22 @@ mod test_button_state_machine {
     fn test_acceptance_criteria_from_plan() {
         // Test the exact acceptance criteria from PLAN.md Task 4
         let mut sm = ButtonStateMachine::new();
-        assert_eq!(sm.transition(InteractionEvent::MouseEnter), Some(InteractionState::Hover));
-        assert_eq!(sm.transition(InteractionEvent::MouseDown), Some(InteractionState::Active));
-        assert_eq!(sm.transition(InteractionEvent::MouseUp), Some(InteractionState::Hover));
-        assert_eq!(sm.transition(InteractionEvent::MouseLeave), Some(InteractionState::Idle));
+        assert_eq!(
+            sm.transition(InteractionEvent::MouseEnter),
+            Some(InteractionState::Hover)
+        );
+        assert_eq!(
+            sm.transition(InteractionEvent::MouseDown),
+            Some(InteractionState::Active)
+        );
+        assert_eq!(
+            sm.transition(InteractionEvent::MouseUp),
+            Some(InteractionState::Hover)
+        );
+        assert_eq!(
+            sm.transition(InteractionEvent::MouseLeave),
+            Some(InteractionState::Idle)
+        );
     }
 }
 

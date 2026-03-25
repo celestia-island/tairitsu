@@ -37,21 +37,24 @@ pub fn init_runtime(root_element: WitElement) {
 
     // Set up the schedule callback for requestAnimationFrame
     tairitsu_vdom::runtime::set_schedule_callback({
-        move |_callback: Box<dyn FnOnce()>| {
+        move |callback: Box<dyn FnOnce()>| {
             // Use the WIT bindings directly for requestAnimationFrame
             #[cfg(target_family = "wasm")]
             {
                 let callback_id = crate::wit_platform::wasm_impl::next_callback_id();
                 crate::wit_platform::wasm_impl::ANIMATION_CALLBACKS.with(|m| {
-                    m.borrow_mut()
-                        .insert(callback_id, Some(Box::new(move |_timestamp| {
+                    m.borrow_mut().insert(
+                        callback_id,
+                        Some(Box::new(move |_timestamp| {
                             callback();
-                        })));
+                        })),
+                    );
                 });
-                crate::bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id);
+                crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id);
             }
             #[cfg(not(target_family = "wasm"))]
             {
+                let _ = callback;
                 tracing::error!("request_animation_frame is only available on wasm32 targets");
             }
         }

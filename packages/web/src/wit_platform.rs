@@ -145,12 +145,12 @@ impl WitPlatform {
     /// # Example
     ///
     /// ```rust
-    /// use tairitsu_vdom::{diff, VNode};
+    /// use tairitsu_vdom::VNode;
     /// use tairitsu_web::WitPlatform;
     ///
     /// # fn example(platform: WitPlatform, parent: tairitsu_web::WitElement, old: VNode, new: VNode) -> anyhow::Result<()> {
     /// // Compute the diff between old and new VNode trees
-    /// let patches = diff(Some(&old), &new);
+    /// let patches = tairitsu_vdom::diff::diff(Some(&old), &new);
     ///
     /// // Apply the patches to update the DOM
     /// platform.apply_patches(&parent, &patches)?;
@@ -182,16 +182,19 @@ impl WitPlatform {
 // emitted by `wit_bindgen::generate!()` never reach the native linker.
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
-mod wasm_impl {
+pub mod wasm_impl {
     use anyhow::Result;
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    // Direct console access via wasm-bindgen (browser-only, wasm32-unknown-unknown)
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    use wasm_bindgen::prelude::*;
+
     use tairitsu_vdom::{
-        AnimationEvent, CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent,
-        GenericEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, PointerEvent, PointerType,
-        TouchEvent, TouchPoint, TransitionEvent, VNode, WheelEvent,
+        CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
+        KeyboardEvent, MouseEvent, Platform, VNode,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -203,15 +206,118 @@ mod wasm_impl {
     type EventCallback = Box<dyn FnMut(Box<dyn EventData>)>;
     type EventCallbackMap = HashMap<u64, EventCallback>;
     type TimeoutCallback = Option<Box<dyn FnOnce()>>;
-    type IntervalCallback = Option<Box<dyn FnMut()>>;
     type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
     type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
     type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
 
     static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
 
-    fn next_callback_id() -> u64 {
+    pub fn next_callback_id() -> u64 {
         NEXT_CALLBACK_ID.fetch_add(1, Ordering::SeqCst)
+    }
+
+    // ── Console helpers (direct browser console access) ─────────────────────
+
+    /// Direct console access via wasm-bindgen (browser-only, wasm32-unknown-unknown).
+    /// These functions bypass the WIT interface and call the browser console directly.
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = console)]
+        fn console_log(s: &str);
+
+        #[wasm_bindgen(js_namespace = console)]
+        fn console_warn(s: &str);
+
+        #[wasm_bindgen(js_namespace = console)]
+        fn console_error(s: &str);
+    }
+
+    /// Log an error to the browser console.
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    fn log_error(message: &str) {
+        let formatted = format!("[WitPlatform ERROR] {}", message);
+        console_error(&formatted);
+    }
+
+    /// Log a warning to the browser console.
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    fn log_warning(message: &str) {
+        let formatted = format!("[WitPlatform WARNING] {}", message);
+        console_warn(&formatted);
+    }
+
+    /// Log diagnostic information to the browser console.
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    fn log_info(message: &str) {
+        let formatted = format!("[WitPlatform] {}", message);
+        console_log(&formatted);
+    }
+
+    // ── Console helpers for wasm32-wasip2 ───────────────────────────────────
+
+    /// Log an error (wasm32-wasip2).
+    ///
+    /// Note: The browser-full.wit window interface does not provide console functions.
+    /// Console output for wasm32-wasip2 should be handled by the host environment
+    /// (browser-glue) or through WASI stdout/stderr when available.
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    fn log_error(message: &str) {
+        // No-op for wasm32-wasip2 - the host environment handles console output
+        // Future: could use WASI stdout/stderr if available
+        let _ = message;
+    }
+
+    /// Log a warning (wasm32-wasip2).
+    ///
+    /// Note: The browser-full.wit window interface does not provide console functions.
+    /// Console output for wasm32-wasip2 should be handled by the host environment
+    /// (browser-glue) or through WASI stdout/stderr when available.
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    fn log_warning(message: &str) {
+        // No-op for wasm32-wasip2 - the host environment handles console output
+        let _ = message;
+    }
+
+    /// Log diagnostic information (wasm32-wasip2).
+    ///
+    /// Note: The browser-full.wit window interface does not provide console functions.
+    /// Console output for wasm32-wasip2 should be handled by the host environment
+    /// (browser-glue) or through WASI stdout/stderr when available.
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    fn log_info(message: &str) {
+        // No-op for wasm32-wasip2 - the host environment handles console output
+        let _ = message;
+    }
+
+    // ── Fallback console implementations for other targets ─────────────────────
+
+    /// Log an error (fallback for targets without console support).
+    #[cfg(not(any(
+        all(target_arch = "wasm32", target_os = "unknown"),
+        all(target_arch = "wasm32", target_os = "wasi")
+    )))]
+    fn log_error(message: &str) {
+        // Fallback to eprintln or no-op for non-wasm targets
+        eprintln!("[WitPlatform ERROR] {}", message);
+    }
+
+    /// Log a warning (fallback for targets without console support).
+    #[cfg(not(any(
+        all(target_arch = "wasm32", target_os = "unknown"),
+        all(target_arch = "wasm32", target_os = "wasi")
+    )))]
+    fn log_warning(message: &str) {
+        eprintln!("[WitPlatform WARNING] {}", message);
+    }
+
+    /// Log diagnostic information (fallback for targets without console support).
+    #[cfg(not(any(
+        all(target_arch = "wasm32", target_os = "unknown"),
+        all(target_arch = "wasm32", target_os = "wasi")
+    )))]
+    fn log_info(message: &str) {
+        eprintln!("[WitPlatform] {}", message);
     }
 
     thread_local! {
@@ -219,8 +325,7 @@ mod wasm_impl {
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
             = RefCell::new(HashMap::new());
         static TIMEOUT_CALLBACKS: RefCell<HashMap<u64, TimeoutCallback>> = RefCell::new(HashMap::new());
-        static INTERVAL_CALLBACKS: RefCell<HashMap<u64, IntervalCallback>> = RefCell::new(HashMap::new());
-        static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
+        pub static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
     }
@@ -233,7 +338,7 @@ mod wasm_impl {
     /// (`packages/web/`).  `wit_bindgen::generate!` emits
     /// `cargo:rerun-if-changed` directives so the crate is rebuilt whenever
     /// the WIT files change.
-    mod bindings {
+    pub mod bindings {
         use super::BrowserComponent;
 
         wit_bindgen::generate!({
@@ -245,9 +350,22 @@ mod wasm_impl {
     }
 
     /// Set a style property on an element (implementation for static method).
+    ///
+    /// Uses the W3C CSSOM standard interface:
+    /// 1. Get the style handle via element-css-inline-style
+    /// 2. Set the property via css-style-declaration
     pub(super) fn set_style_static_impl(element: u64, name: &str, value: &str) -> Result<()> {
-        bindings::tairitsu_browser::full::style::set_style_property(element, name, value)
-            .map_err(|e| anyhow::anyhow!("set_style_property failed: {}", e))
+        // Get the CSS style declaration handle from the element
+        let style_handle =
+            bindings::tairitsu_browser::full::element_css_inline_style::get_style(element);
+        // Set the property using the W3C CSSOM interface
+        bindings::tairitsu_browser::full::css_style_declaration::set_property(
+            style_handle,
+            name,
+            value,
+            None, // priority (e.g., "important")
+        );
+        Ok(())
     }
 
     // ── Component export implementation ─────────────────────────────────
@@ -270,17 +388,16 @@ mod wasm_impl {
             let wit_handle = EventWitHandle::from_wit(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 MouseEvent::new()
-                    .target(data.target)
                     .client_x(data.client_x as i32)
                     .client_y(data.client_y as i32)
-                    .screen_x(data.screen_x as i32)
-                    .screen_y(data.screen_y as i32)
+                    .screen_x(0) // Not provided by WIT
+                    .screen_y(0) // Not provided by WIT
                     .offset_x(data.offset_x as i32)
                     .offset_y(data.offset_y as i32)
-                    .page_x(data.page_x as i32)
-                    .page_y(data.page_y as i32)
-                    .movement_x(data.movement_x as i32)
-                    .movement_y(data.movement_y as i32)
+                    .page_x(0) // Not provided by WIT
+                    .page_y(0) // Not provided by WIT
+                    .movement_x(0) // Not provided by WIT
+                    .movement_y(0) // Not provided by WIT
                     .button(data.button as i16)
                     .buttons(data.buttons as u16)
                     .ctrl_key(data.ctrl_key)
@@ -337,149 +454,11 @@ mod wasm_impl {
             dispatch_event(listener_id, "input", event);
         }
 
-        fn on_wheel_event(
-            listener_id: u64,
-            event_handle: u64,
-            data: bindings::exports::tairitsu_browser::full::event_callbacks::WheelEventData,
-        ) {
-            let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                WheelEvent::new()
-                    .target(data.target)
-                    .delta_x(data.delta_x)
-                    .delta_y(data.delta_y)
-                    .delta_z(data.delta_z)
-                    .delta_mode(data.delta_mode)
-                    .client_x(data.client_x as i32)
-                    .client_y(data.client_y as i32)
-                    .screen_x(data.screen_x as i32)
-                    .screen_y(data.screen_y as i32)
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "wheel", event);
-        }
-
-        fn on_touch_event(
-            listener_id: u64,
-            event_handle: u64,
-            data: bindings::exports::tairitsu_browser::full::event_callbacks::TouchEventData,
-        ) {
-            let wit_handle = EventWitHandle::from_wit(event_handle);
-            let convert_touch_point =
-                |tp: bindings::exports::tairitsu_browser::full::event_callbacks::TouchPoint| {
-                    TouchPoint {
-                        identifier: tp.identifier,
-                        client_x: tp.client_x as i32,
-                        client_y: tp.client_y as i32,
-                        screen_x: tp.screen_x as i32,
-                        screen_y: tp.screen_y as i32,
-                        page_x: tp.page_x as i32,
-                        page_y: tp.page_y as i32,
-                        target: Some(tp.target),
-                        force: tp.force,
-                        radius_x: tp.radius_x,
-                        radius_y: tp.radius_y,
-                        rotation_angle: tp.rotation_angle,
-                    }
-                };
-            let event: Box<dyn EventData> = Box::new(
-                TouchEvent::new()
-                    .target(data.target)
-                    .touches(data.touches.into_iter().map(convert_touch_point).collect())
-                    .changed_touches(
-                        data.changed_touches
-                            .into_iter()
-                            .map(convert_touch_point)
-                            .collect(),
-                    )
-                    .target_touches(
-                        data.target_touches
-                            .into_iter()
-                            .map(convert_touch_point)
-                            .collect(),
-                    )
-                    .timestamp(data.timestamp)
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "touch", event);
-        }
-
-        fn on_pointer_event(
-            listener_id: u64,
-            event_handle: u64,
-            data: bindings::exports::tairitsu_browser::full::event_callbacks::PointerEventData,
-        ) {
-            let wit_handle = EventWitHandle::from_wit(event_handle);
-            let pointer_type = match data.pointer_type.as_str() {
-                "mouse" => PointerType::Mouse,
-                "pen" => PointerType::Pen,
-                "touch" => PointerType::Touch,
-                _ => PointerType::Mouse,
-            };
-            let event: Box<dyn EventData> = Box::new(
-                PointerEvent::new()
-                    .target(data.target)
-                    .pointer_id(data.pointer_id)
-                    .pointer_type(pointer_type)
-                    .is_primary(data.is_primary)
-                    .client_x(data.client_x as i32)
-                    .client_y(data.client_y as i32)
-                    .screen_x(data.screen_x as i32)
-                    .screen_y(data.screen_y as i32)
-                    .offset_x(data.offset_x as i32)
-                    .offset_y(data.offset_y as i32)
-                    .page_x(data.page_x as i32)
-                    .page_y(data.page_y as i32)
-                    .movement_x(data.movement_x as i32)
-                    .movement_y(data.movement_y as i32)
-                    .width(data.width)
-                    .height(data.height)
-                    .pressure(data.pressure)
-                    .tangential_pressure(data.tangential_pressure)
-                    .tilt_x(data.tilt_x)
-                    .tilt_y(data.tilt_y)
-                    .twist(data.twist)
-                    .button(data.button as i16)
-                    .buttons(data.buttons as u16)
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "pointer", event);
-        }
-
-        fn on_transition_event(
-            listener_id: u64,
-            event_handle: u64,
-            data: bindings::exports::tairitsu_browser::full::event_callbacks::TransitionEventData,
-        ) {
-            let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                TransitionEvent::new()
-                    .target(data.target)
-                    .property_name(data.property_name)
-                    .elapsed_time(data.elapsed_time)
-                    .pseudo_element(data.pseudo_element)
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "transition", event);
-        }
-
-        fn on_animation_event(
-            listener_id: u64,
-            event_handle: u64,
-            data: bindings::exports::tairitsu_browser::full::event_callbacks::AnimationEventData,
-        ) {
-            let wit_handle = EventWitHandle::from_wit(event_handle);
-            let event: Box<dyn EventData> = Box::new(
-                AnimationEvent::new()
-                    .target(data.target)
-                    .animation_name(data.animation_name)
-                    .pseudo_element(data.pseudo_element)
-                    .elapsed_time(data.elapsed_time)
-                    .iteration(data.iteration)
-                    .event_handle(wit_handle),
-            );
-            dispatch_event(listener_id, "animation", event);
-        }
+        // NOTE: wheel, touch, pointer, transition, and animation events are handled
+        // through on_generic_event since the WIT event-callbacks interface doesn't
+        // define specialized data structures for them. The event data can be
+        // queried via the respective WIT interfaces (wheel-event, touch-event, etc.)
+        // using the event_handle.
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
@@ -518,19 +497,10 @@ mod wasm_impl {
                 }
             });
         }
-
-        fn on_interval(callback_id: u64) {
-            INTERVAL_CALLBACKS.with(|m| {
-                let mut callbacks = m.borrow_mut();
-                if let Some(Some(cb)) = callbacks.get_mut(&callback_id) {
-                    cb();
-                }
-            });
-        }
     }
 
     impl bindings::exports::tairitsu_browser::full::animation_callbacks::Guest for BrowserComponent {
-        fn on_animation_frame(callback_id: u64, timestamp: f64) {
+        fn on_frame(callback_id: u64, timestamp: f64) {
             ANIMATION_CALLBACKS.with(|m| {
                 if let Some(callback) = m.borrow_mut().remove(&callback_id) {
                     if let Some(cb) = callback {
@@ -544,45 +514,27 @@ mod wasm_impl {
     impl bindings::exports::tairitsu_browser::full::resize_observer_callbacks::Guest
         for BrowserComponent
     {
-        fn on_resize(callback_id: u64, entries: Vec<u64>) {
+        fn on_resize(
+            callback_id: u64,
+            entries: Vec<
+                bindings::exports::tairitsu_browser::full::resize_observer_callbacks::ResizeEntry,
+            >,
+        ) {
             RESIZE_OBSERVER_CALLBACKS.with(|m| {
                 let mut callbacks = m.borrow_mut();
                 if let Some(handler) = callbacks.get_mut(&callback_id) {
                     let converted_entries: Vec<tairitsu_vdom::ResizeObserverEntry> = entries
                         .into_iter()
-                        .map(|entry_handle| {
-                            let target = bindings::tairitsu_browser::full::resize_observer_entry::get_target(entry_handle);
-                            let content_rect = bindings::tairitsu_browser::full::resize_observer_entry::get_content_rect(entry_handle);
-
-                            let border_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_border_box_size(entry_handle);
-                            let border_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = border_box_handles
-                                .into_iter()
-                                .map(|size_handle| tairitsu_vdom::ResizeObserverSize {
-                                    inline_size: bindings::tairitsu_browser::full::resize_observer_size::get_inline_size(size_handle),
-                                    block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
-                                })
-                                .collect();
-
-                            let content_box_handles = bindings::tairitsu_browser::full::resize_observer_entry::get_content_box_size(entry_handle);
-                            let content_box_size: Vec<tairitsu_vdom::ResizeObserverSize> = content_box_handles
-                                .into_iter()
-                                .map(|size_handle| tairitsu_vdom::ResizeObserverSize {
-                                    inline_size: bindings::tairitsu_browser::full::resize_observer_size::get_inline_size(size_handle),
-                                    block_size: bindings::tairitsu_browser::full::resize_observer_size::get_block_size(size_handle),
-                                })
-                                .collect();
-
-                            tairitsu_vdom::ResizeObserverEntry {
-                                target,
-                                content_rect: tairitsu_vdom::DomRect {
-                                    x: content_rect.x,
-                                    y: content_rect.y,
-                                    width: content_rect.width,
-                                    height: content_rect.height,
-                                },
-                                border_box_size,
-                                content_box_size,
-                            }
+                        .map(|entry| tairitsu_vdom::ResizeObserverEntry {
+                            target: entry.target,
+                            content_rect: tairitsu_vdom::DomRect {
+                                x: entry.content_rect.x,
+                                y: entry.content_rect.y,
+                                width: entry.content_rect.width,
+                                height: entry.content_rect.height,
+                            },
+                            border_box_size: vec![],
+                            content_box_size: vec![],
                         })
                         .collect();
                     handler(converted_entries);
@@ -594,24 +546,25 @@ mod wasm_impl {
     impl bindings::exports::tairitsu_browser::full::mutation_observer_callbacks::Guest
         for BrowserComponent
     {
-        fn on_mutation(callback_id: u64, records: Vec<u64>) {
+        fn on_mutate(
+            callback_id: u64,
+            entries: Vec<bindings::exports::tairitsu_browser::full::mutation_observer_callbacks::MutationEntry>,
+        ) {
             MUTATION_OBSERVER_CALLBACKS.with(|m| {
                 let mut callbacks = m.borrow_mut();
                 if let Some(handler) = callbacks.get_mut(&callback_id) {
-                    let converted_records: Vec<tairitsu_vdom::MutationRecord> = records
+                    let converted_records: Vec<tairitsu_vdom::MutationRecord> = entries
                         .into_iter()
-                        .map(|record_handle| {
-                            tairitsu_vdom::MutationRecord {
-                                record_type: bindings::tairitsu_browser::full::mutation_record::get_type(record_handle),
-                                target: bindings::tairitsu_browser::full::mutation_record::get_target(record_handle),
-                                added_nodes: vec![],
-                                removed_nodes: vec![],
-                                previous_sibling: bindings::tairitsu_browser::full::mutation_record::get_previous_sibling(record_handle),
-                                next_sibling: bindings::tairitsu_browser::full::mutation_record::get_next_sibling(record_handle),
-                                attribute_name: bindings::tairitsu_browser::full::mutation_record::get_attribute_name(record_handle),
-                                attribute_namespace: bindings::tairitsu_browser::full::mutation_record::get_attribute_namespace(record_handle),
-                                old_value: bindings::tairitsu_browser::full::mutation_record::get_old_value(record_handle),
-                            }
+                        .map(|entry| tairitsu_vdom::MutationRecord {
+                            record_type: entry.mutation_type,
+                            target: entry.target,
+                            added_nodes: vec![],
+                            removed_nodes: vec![],
+                            previous_sibling: entry.previous_sibling,
+                            next_sibling: entry.next_sibling,
+                            attribute_name: entry.attribute_name,
+                            attribute_namespace: entry.attribute_namespace,
+                            old_value: entry.old_value,
                         })
                         .collect();
                     handler(converted_records);
@@ -649,9 +602,18 @@ mod wasm_impl {
         unsafe {
             register_wit_functions(
                 |element, property, value| {
-                    bindings::tairitsu_browser::full::style::set_style_property(
-                        element, property, value,
-                    )
+                    // Use W3C CSSOM standard interface
+                    let style_handle =
+                        bindings::tairitsu_browser::full::element_css_inline_style::get_style(
+                            element,
+                        );
+                    bindings::tairitsu_browser::full::css_style_declaration::set_property(
+                        style_handle,
+                        property,
+                        value,
+                        None,
+                    );
+                    Ok(())
                 },
                 |element| {
                     let rect =
@@ -682,34 +644,14 @@ mod wasm_impl {
             let _body = bindings::tairitsu_browser::full::document::get_body();
             // Try window operations
             let _width = bindings::tairitsu_browser::full::window::get_inner_width();
-            // Try console operations
-            bindings::tairitsu_browser::full::console::log(
-                "[WitPlatform] Environment validation passed",
-            );
+            // Note: console operations no longer use WIT interface
+            log_info("Environment validation passed");
         });
 
         match result {
             Ok(_) => Ok(()),
             Err(_) => Err("WIT host call failed during validation".to_string()),
         }
-    }
-
-    /// Log an error through the WIT console interface.
-    fn log_error(message: &str) {
-        let formatted = format!("[WitPlatform ERROR] {}", message);
-        bindings::tairitsu_browser::full::console::error(&formatted);
-    }
-
-    /// Log a warning through the WIT console interface.
-    fn log_warning(message: &str) {
-        let formatted = format!("[WitPlatform WARNING] {}", message);
-        bindings::tairitsu_browser::full::console::warn(&formatted);
-    }
-
-    /// Log diagnostic information through the WIT console interface.
-    fn log_info(message: &str) {
-        let formatted = format!("[WitPlatform] {}", message);
-        bindings::tairitsu_browser::full::console::log(&formatted);
     }
 
     // ── Platform trait implementation ────────────────────────────────────
@@ -751,12 +693,15 @@ mod wasm_impl {
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            // New WIT: set-style-property returns result<_, string>
-            if let Err(e) =
-                bindings::tairitsu_browser::full::style::set_style_property(element.0, name, value)
-            {
-                log_warning(&format!("set_style_property failed: {}", e));
-            }
+            // Use W3C CSSOM standard interface
+            let style_handle =
+                bindings::tairitsu_browser::full::element_css_inline_style::get_style(element.0);
+            bindings::tairitsu_browser::full::css_style_declaration::set_property(
+                style_handle,
+                name,
+                value,
+                None,
+            );
         }
 
         fn set_class(&self, element: &Self::Element, class: &str) {
@@ -769,49 +714,50 @@ mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
-            // New WIT: add-event-listener returns result<u64, string>
-            match bindings::tairitsu_browser::full::event_target::add_event_listener(
-                element.0, event, false,
-            ) {
-                Ok(listener_id) => {
-                    EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
-                    ELEMENT_LISTENERS.with(|m| {
-                        m.borrow_mut()
-                            .insert((element.0, event.to_string()), listener_id);
-                    });
-                    log_info(&format!(
-                        "Added event listener: event={}, listener={}",
-                        event, listener_id
-                    ));
-                }
-                Err(e) => {
-                    log_error(&format!(
-                        "add_event_listener({}, {}) failed: {}",
-                        element.0, event, e
-                    ));
-                    panic!("WIT add-event-listener failed: {}", e);
-                }
-            }
+            // W3C interface: generate callback handle first, then pass to add-event-listener
+            let callback_handle = next_callback_id();
+
+            // Store the handler with the callback handle
+            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_handle, handler));
+
+            // Call the W3C add-event-listener with self parameter
+            // The WIT interface returns a listener-id that we need to store for removal
+            let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
+                element.0, event, false, // use_capture
+            )
+            .unwrap_or_else(|e| {
+                log_error(&format!("add_event_listener failed: {}", e));
+                0
+            });
+
+            // Store the mapping from element+event to listener-id for removal
+            ELEMENT_LISTENERS.with(|m| {
+                m.borrow_mut()
+                    .insert((element.0, event.to_string()), listener_id);
+            });
+
+            log_info(&format!(
+                "Added event listener: event={}, listener_id={}",
+                event, listener_id
+            ));
         }
 
         fn remove_event_listener(&self, element: &Self::Element, event: &str) {
             let listener_id =
                 ELEMENT_LISTENERS.with(|m| m.borrow_mut().remove(&(element.0, event.to_string())));
 
-            if let Some(id) = listener_id {
-                EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&id));
-                if let Err(e) =
-                    bindings::tairitsu_browser::full::event_target::remove_event_listener(
-                        element.0, id,
-                    )
-                {
-                    log_warning(&format!("remove_event_listener failed: {}", e));
-                } else {
-                    log_info(&format!(
-                        "Removed event listener: event={}, listener={}",
-                        event, id
-                    ));
-                }
+            if let Some(listener_id) = listener_id {
+                // Remove the callback handler
+                EVENT_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
+                // Call the W3C remove-event-listener with the listener-id
+                let _ = bindings::tairitsu_browser::full::event_target::remove_event_listener(
+                    element.0,
+                    listener_id,
+                );
+                log_info(&format!(
+                    "Removed event listener: event={}, listener_id={}",
+                    event, listener_id
+                ));
             } else {
                 log_warning(&format!(
                     "remove_event_listener: no listener found for event '{}' on element {}",

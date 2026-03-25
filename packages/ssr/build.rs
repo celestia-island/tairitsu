@@ -37,6 +37,7 @@ fn main() {
         "platform-helpers",
         "console",
         "event-target",
+        "event",
         "style",
         "document",
         "node",
