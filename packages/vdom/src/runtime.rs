@@ -4,21 +4,26 @@
 //! dependencies and scheduling re-renders when signals change.
 
 use std::{
-    any::Any,
     cell::RefCell,
     collections::HashMap,
-    rc::{Rc, Weak},
+    rc::Rc,
 };
 
 use tracing::trace;
 
-use crate::VNode;
+use crate::{patch::Patch, VNode};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
 
 /// Render function type - produces a VNode tree
 pub type RenderFn = Rc<RefCell<dyn FnMut() -> VNode>>;
+
+/// Callback type for scheduling renders with requestAnimationFrame
+type ScheduleCallback = Rc<RefCell<dyn FnMut(Box<dyn FnOnce()>)>>;
+
+/// Callback type for applying patches to the DOM
+type ApplyPatchesCallback = Rc<RefCell<dyn FnMut(ComponentId, Vec<Patch>)>>;
 
 /// Inner state of the reactive runtime
 struct RuntimeInner {
@@ -34,12 +39,14 @@ struct RuntimeInner {
     signal_dependencies: HashMap<usize, Vec<ComponentId>>,
     /// Pending re-renders (dirty components)
     dirty_components: Vec<ComponentId>,
-    /// Platform reference for applying patches
-    platform: Option<Weak<dyn Any>>,
-    /// Root element handle for patch application
-    root_element: Option<Weak<dyn Any>>,
+    /// Callback for scheduling renders via requestAnimationFrame
+    schedule_callback: Option<ScheduleCallback>,
+    /// Callback for applying patches to the DOM
+    apply_patches_callback: Option<ApplyPatchesCallback>,
     /// Whether a re-render is scheduled
     scheduled: bool,
+    /// Pending rAF callback ID
+    raf_id: Option<u32>,
 }
 
 impl RuntimeInner {
@@ -51,15 +58,38 @@ impl RuntimeInner {
             render_functions: HashMap::new(),
             signal_dependencies: HashMap::new(),
             dirty_components: Vec::new(),
-            platform: None,
-            root_element: None,
+            schedule_callback: None,
+            apply_patches_callback: None,
             scheduled: false,
+            raf_id: None,
         }
     }
 }
 
 thread_local! {
     static RUNTIME: RefCell<RuntimeInner> = RefCell::new(RuntimeInner::new());
+}
+
+/// Set the callback for scheduling renders via requestAnimationFrame.
+///
+/// This should be called once during initialization with a callback that
+/// wraps the platform's request_animation_frame implementation.
+pub fn set_schedule_callback<F: FnMut(Box<dyn FnOnce()>) + 'static>(callback: F) {
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().schedule_callback = Some(Rc::new(RefCell::new(callback)));
+        trace!("Schedule callback registered");
+    });
+}
+
+/// Set the callback for applying patches to the DOM.
+///
+/// This should be called once during initialization with a callback that
+/// wraps the platform's apply_patches implementation.
+pub fn set_apply_patches_callback<F: FnMut(ComponentId, Vec<Patch>) + 'static>(callback: F) {
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().apply_patches_callback = Some(Rc::new(RefCell::new(callback)));
+        trace!("Apply patches callback registered");
+    });
 }
 
 /// Register a component with the runtime.
@@ -83,6 +113,19 @@ where
 
         id
     })
+}
+
+/// Update a component's render function.
+///
+/// This is useful when the initial render function is a placeholder
+/// and needs to be replaced with the actual implementation.
+pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode + 'static) {
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut()
+            .render_functions
+            .insert(id, Rc::new(RefCell::new(render_fn)));
+        trace!("Updated render function for component {}", id);
+    });
 }
 
 /// Mark a component as dirty and schedule a re-render.
@@ -145,12 +188,16 @@ fn schedule_render(rt: &mut RuntimeInner) {
 
     rt.scheduled = true;
 
-    // Use requestAnimationFrame if available, otherwise use microtask
-    // For now, we'll use a simple timeout-based approach
-    // In a real implementation, this would use the Platform trait
-    trace!("Scheduling re-render");
-
-    // The actual rendering will be triggered by flush_render()
+    if let Some(schedule_cb) = &rt.schedule_callback {
+        let cb = Rc::clone(schedule_cb);
+        let render_fn = Box::new(|| {
+            flush_render();
+        });
+        (cb.borrow_mut())(render_fn);
+        trace!("Scheduled render via callback");
+    } else {
+        trace!("Schedule callback not set, render will be manual");
+    }
 }
 
 /// Flush pending renders and apply patches.
@@ -159,6 +206,7 @@ pub fn flush_render() {
         let mut rt = runtime.borrow_mut();
         let dirty = std::mem::take(&mut rt.dirty_components);
         rt.scheduled = false;
+        rt.raf_id = None;
 
         drop(rt);
 
@@ -203,29 +251,19 @@ fn render_component(id: ComponentId) {
 
         // If we had an old VNode, compute patches
         if let Some(old) = old_vnode {
-            drop(rt);
-
             let patches = crate::diff::diff(Some(&old), &new_vnode);
 
             if !patches.is_empty() {
                 trace!("Component {} generated {} patches", id, patches.len());
 
-                // Apply patches through the platform
-                // This requires the platform to be set
-                RUNTIME.with(|runtime| {
-                    let rt = runtime.borrow();
-                    if let (Some(platform_weak), Some(root_weak)) = (&rt.platform, &rt.root_element)
-                    {
-                        if let (Some(_platform), Some(_root)) =
-                            (platform_weak.upgrade(), root_weak.upgrade())
-                        {
-                            // Apply patches using the platform
-                            trace!("Applying patches for component {}", id);
-                            // Note: This is a simplified version
-                            // In the full implementation, we'd call platform.apply_patches()
-                        }
-                    }
-                });
+                // Apply patches through the callback
+                if let Some(apply_patches_cb) = &rt.apply_patches_callback {
+                    let cb = Rc::clone(apply_patches_cb);
+                    (cb.borrow_mut())(id, patches);
+                    trace!("Applied patches for component {}", id);
+                } else {
+                    trace!("Apply patches callback not set, patches not applied");
+                }
             }
         } else {
             trace!("Initial render for component {}", id);
@@ -279,6 +317,13 @@ pub fn cleanup_component(id: ComponentId) {
     });
 }
 
+/// Get the current VNode for a component (useful for testing).
+pub fn get_current_vnode(id: ComponentId) -> Option<VNode> {
+    RUNTIME.with(|runtime| {
+        runtime.borrow().component_vnodes.get(&id).cloned()
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -318,5 +363,42 @@ mod tests {
             let rt = runtime.borrow();
             assert_eq!(rt.signal_dependencies.get(&12345), Some(&vec![id]));
         });
+    }
+
+    #[test]
+    fn test_schedule_callback() {
+        let called = Rc::new(RefCell::new(false));
+        let called_clone = Rc::clone(&called);
+
+        set_schedule_callback(move |callback| {
+            *called_clone.borrow_mut() = true;
+            // Simulate calling the render callback
+            callback();
+        });
+
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+        mark_dirty(id);
+
+        // The schedule callback should have been called
+        assert!(*called.borrow());
+    }
+
+    #[test]
+    fn test_apply_patches_callback() {
+        let applied_patches = Rc::new(RefCell::new(Vec::new()));
+        let applied_clone = Rc::clone(&applied_patches);
+
+        set_apply_patches_callback(move |component_id, patches| {
+            applied_clone.borrow_mut().push((component_id, patches));
+        });
+
+        // Update a component to generate patches
+        let id = use_component(|| VNode::Text(crate::vnode::VText::new("test")));
+        update_render_function(id, || VNode::Text(crate::vnode::VText::new("updated")));
+        mark_dirty(id);
+        flush_render();
+
+        // Check that patches were applied
+        assert!(!applied_patches.borrow().is_empty());
     }
 }

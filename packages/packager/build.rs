@@ -53,7 +53,7 @@ fn main() {
     // Try to compile runtime.ts with SWC
     let bundle_content = if let Some(compiled) = compile_with_swc(&workspace_root) {
         compiled
-    } else if let Ok(src) = std::fs::read_to_string(&runtime_ts) {
+    } else if let Ok(src) = std::fs::read_to_string(runtime_dir.join("index.ts")) {
         // Fallback: use TypeScript source (browser will handle it)
         src
     } else {
