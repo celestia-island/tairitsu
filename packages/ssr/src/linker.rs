@@ -25,6 +25,11 @@ pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<
         HasSelf<SsrHostState>,
     >(linker, |state| -> &mut SsrHostState { state })?;
 
+    crate::bindings::tairitsu_browser::full::platform_helpers::add_to_linker::<
+        SsrHostState,
+        HasSelf<SsrHostState>,
+    >(linker, |state| -> &mut SsrHostState { state })?;
+
     stubs::register_all_stubs(linker)?;
     register_core_imports(linker)?;
     Ok(())
@@ -298,105 +303,8 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
-    // Platform helpers
-    let mut platform_helpers = linker.instance("tairitsu-browser:full/platform-helpers@0.2.0")?;
-    platform_helpers.func_wrap(
-        "inner-width",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (): ()|
-         -> Result<(i32,), wasmtime::Error> { Ok((1920,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "inner-height",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (): ()|
-         -> Result<(i32,), wasmtime::Error> { Ok((1080,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "set-timeout",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_callback_id, _ms): (u64, i32)|
-         -> Result<(i32,), wasmtime::Error> { Ok((1,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "clear-timeout",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_id,): (i32,)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "request-animation-frame",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_callback_id,): (u64,)|
-         -> Result<(u32,), wasmtime::Error> { Ok((1,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "cancel-animation-frame",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_id,): (u32,)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "get-bounding-client-rect",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_element,): (u64,)|
-         -> Result<(f64, f64, f64, f64), wasmtime::Error> { Ok((0.0, 0.0, 0.0, 0.0)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "create-resize-observer",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_callback_id,): (u64,)|
-         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "observe-resize",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_observer, _element): (u64, u64)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "unobserve-resize",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_observer, _element): (u64, u64)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "disconnect-resize",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_observer,): (u64,)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "create-mutation-observer",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_callback_id,): (u64,)|
-         -> Result<(u64,), wasmtime::Error> { Ok((0,)) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "observe-mutations",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_observer, _element, _options): (u64, u64, Option<u64>)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
-
-    platform_helpers.func_wrap(
-        "disconnect-mutation",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_observer,): (u64,)|
-         -> Result<(), wasmtime::Error> { Ok(()) },
-    )?;
+    // Platform helpers interface - now using bindgen-generated Host trait
+    // The implementation is in host_state.rs (PlatformHelpersHost trait)
 
     // Event target
     let mut event_target = linker.instance("tairitsu-browser:full/event-target@0.2.0")?;

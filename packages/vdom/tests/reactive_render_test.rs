@@ -36,12 +36,16 @@ impl Platform for MockPlatform {
 
     fn create_element(&self, tag: &str) -> Self::Element {
         self.log(&format!("create_element({})", tag));
-        MockElement { tag: tag.to_string() }
+        MockElement {
+            tag: tag.to_string(),
+        }
     }
 
     fn create_text_node(&self, text: &str) -> Self::Element {
         self.log(&format!("create_text_node({})", text));
-        MockElement { tag: text.to_string() }
+        MockElement {
+            tag: text.to_string(),
+        }
     }
 
     fn append_child(&self, parent: &Self::Element, _child: &Self::Element) {
@@ -53,7 +57,10 @@ impl Platform for MockPlatform {
     }
 
     fn set_attribute(&self, element: &Self::Element, name: &str, value: &str) {
-        self.log(&format!("set_attribute({}, {}, {})", element.tag, name, value));
+        self.log(&format!(
+            "set_attribute({}, {}, {})",
+            element.tag, name, value
+        ));
     }
 
     fn remove_attribute(&self, element: &Self::Element, name: &str) {
@@ -78,7 +85,10 @@ impl Platform for MockPlatform {
     }
 
     fn remove_event_listener(&self, element: &Self::Element, event: &str) {
-        self.log(&format!("remove_event_listener({}, {})", element.tag, event));
+        self.log(&format!(
+            "remove_event_listener({}, {})",
+            element.tag, event
+        ));
     }
 
     fn get_bounding_client_rect(&self, _element: &Self::Element) -> tairitsu_vdom::DomRect {
@@ -208,7 +218,10 @@ fn test_signal_triggers_dependency_tracking() {
     let _component_id = tairitsu_vdom::use_component(move || {
         // Access the signal - this should track the dependency
         let value = signal_clone.get();
-        VNode::Text(tairitsu_vdom::vnode::VText::new(&format!("Value: {}", value)))
+        VNode::Text(tairitsu_vdom::vnode::VText::new(&format!(
+            "Value: {}",
+            value
+        )))
     });
 
     // Set a new value - this should mark the component as dirty

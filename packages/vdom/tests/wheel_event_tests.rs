@@ -31,10 +31,7 @@ fn test_wheel_event_builder_target() {
 
 #[test]
 fn test_wheel_event_builder_deltas() {
-    let event = WheelEvent::new()
-        .delta_x(10.5)
-        .delta_y(-20.3)
-        .delta_z(5.0);
+    let event = WheelEvent::new().delta_x(10.5).delta_y(-20.3).delta_z(5.0);
 
     assert_eq!(event.delta_x, 10.5);
     assert_eq!(event.delta_y, -20.3);
@@ -49,9 +46,7 @@ fn test_wheel_event_builder_delta_mode() {
 
 #[test]
 fn test_wheel_event_builder_client_coords() {
-    let event = WheelEvent::new()
-        .client_x(100)
-        .client_y(200);
+    let event = WheelEvent::new().client_x(100).client_y(200);
 
     assert_eq!(event.client_x, 100);
     assert_eq!(event.client_y, 200);
@@ -59,9 +54,7 @@ fn test_wheel_event_builder_client_coords() {
 
 #[test]
 fn test_wheel_event_builder_screen_coords() {
-    let event = WheelEvent::new()
-        .screen_x(300)
-        .screen_y(400);
+    let event = WheelEvent::new().screen_x(300).screen_y(400);
 
     assert_eq!(event.screen_x, 300);
     assert_eq!(event.screen_y, 400);
@@ -83,10 +76,7 @@ fn test_wheel_event_builder_modifiers() {
 
 #[test]
 fn test_wheel_event_clone() {
-    let event = WheelEvent::new()
-        .target(123)
-        .delta_x(10.5)
-        .delta_y(-20.3);
+    let event = WheelEvent::new().target(123).delta_x(10.5).delta_y(-20.3);
 
     let cloned = event.clone();
 

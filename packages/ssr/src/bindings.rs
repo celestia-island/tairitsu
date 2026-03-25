@@ -16,4 +16,5 @@ bindgen!({
 // Re-export the types and traits we need
 pub use self::tairitsu_browser::full::resize_observer_entry::Host as ResizeObserverEntryHost;
 pub use self::tairitsu_browser::full::resize_observer_size::Host as ResizeObserverSizeHost;
+pub use self::tairitsu_browser::full::platform_helpers::Host as PlatformHelpersHost;
 pub use self::tairitsu_browser::full::types::DomRect;

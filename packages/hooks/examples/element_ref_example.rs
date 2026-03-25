@@ -78,9 +78,9 @@ pub fn ref_lifecycle_example() -> VNode {
     assert_eq!(taken, Some(100));
     assert!(ref_handle.get().is_none());
 
-    VNode::Element(VElement::new("div").child(VNode::Text(tairitsu_vdom::VText::new(
-        "Lifecycle demo",
-    ))))
+    VNode::Element(
+        VElement::new("div").child(VNode::Text(tairitsu_vdom::VText::new("Lifecycle demo"))),
+    )
 }
 
 fn main() {

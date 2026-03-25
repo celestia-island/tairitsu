@@ -6,9 +6,9 @@
 //! 3. Events don't bubble (mouseenter doesn't bubble per W3C spec)
 //! 4. Event handlers receive correct MouseEvent data
 
+use std::cell::RefCell;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
-use std::cell::RefCell;
 
 /// Event counter to track how many times each event fired
 #[derive(Default)]
