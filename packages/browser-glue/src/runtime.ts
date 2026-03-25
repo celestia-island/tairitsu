@@ -835,7 +835,8 @@ function registerImportMap() {
     if (existingMap) {
         try {
             const existing = JSON.parse(existingMap.textContent || "{}");
-            Object.assign(existing.imports || {}, importMap.imports);
+            if (!existing.imports) existing.imports = {};
+            Object.assign(existing.imports, importMap.imports);
             existingMap.textContent = JSON.stringify(existing);
         } catch {
             existingMap.textContent = JSON.stringify(importMap);
