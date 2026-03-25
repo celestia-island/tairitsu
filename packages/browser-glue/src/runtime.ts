@@ -254,6 +254,127 @@ const event_target_exports = {
                                     }
                                 );
                             }
+                        } else if (eventType === "wheel") {
+                            if (callbacks.on_wheel_event) {
+                                const wheelEvent = event;
+                                callbacks.on_wheel_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        delta_x: wheelEvent.deltaX || 0,
+                                        delta_y: wheelEvent.deltaY || 0,
+                                        delta_z: wheelEvent.deltaZ || 0,
+                                        delta_mode: wheelEvent.deltaMode || 0,
+                                        client_x: wheelEvent.clientX || 0,
+                                        client_y: wheelEvent.clientY || 0,
+                                        screen_x: wheelEvent.screenX || 0,
+                                        screen_y: wheelEvent.screenY || 0,
+                                        ctrl_key: wheelEvent.ctrlKey || false,
+                                        shift_key: wheelEvent.shiftKey || false,
+                                        alt_key: wheelEvent.altKey || false,
+                                        meta_key: wheelEvent.metaKey || false,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "touchstart" || eventType === "touchmove" || eventType === "touchend" || eventType === "touchcancel") {
+                            if (callbacks.on_touch_event) {
+                                const touchEvent = event;
+                                const toTouchPoint = (touch: any) => ({
+                                    identifier: touch.identifier || 0,
+                                    client_x: touch.clientX || 0,
+                                    client_y: touch.clientY || 0,
+                                    screen_x: touch.screenX || 0,
+                                    screen_y: touch.screenY || 0,
+                                    page_x: touch.pageX || 0,
+                                    page_y: touch.pageY || 0,
+                                    target: target,
+                                    force: touch.force || 0,
+                                    radius_x: touch.radiusX || 0,
+                                    radius_y: touch.radiusY || 0,
+                                    rotation_angle: touch.rotationAngle || 0,
+                                });
+                                callbacks.on_touch_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        touches: Array.from(touchEvent.touches || []).map(toTouchPoint),
+                                        changed_touches: Array.from(touchEvent.changedTouches || []).map(toTouchPoint),
+                                        target_touches: Array.from(touchEvent.targetTouches || []).map(toTouchPoint),
+                                        timestamp: touchEvent.timeStamp || 0,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "pointerdown" || eventType === "pointerup" || eventType === "pointermove" ||
+                                   eventType === "pointercancel" || eventType === "pointerout" || eventType === "pointerleave" ||
+                                   eventType === "pointerover" || eventType === "pointerenter" || eventType === "gotpointercapture" ||
+                                   eventType === "lostpointercapture") {
+                            if (callbacks.on_pointer_event) {
+                                const pointerEvent = event;
+                                callbacks.on_pointer_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        pointer_id: pointerEvent.pointerId || 0,
+                                        pointer_type: pointerEvent.pointerType || "mouse",
+                                        is_primary: pointerEvent.isPrimary || false,
+                                        client_x: pointerEvent.clientX || 0,
+                                        client_y: pointerEvent.clientY || 0,
+                                        screen_x: pointerEvent.screenX || 0,
+                                        screen_y: pointerEvent.screenY || 0,
+                                        offset_x: pointerEvent.offsetX || 0,
+                                        offset_y: pointerEvent.offsetY || 0,
+                                        page_x: pointerEvent.pageX || 0,
+                                        page_y: pointerEvent.pageY || 0,
+                                        movement_x: pointerEvent.movementX || 0,
+                                        movement_y: pointerEvent.movementY || 0,
+                                        width: pointerEvent.width || 0,
+                                        height: pointerEvent.height || 0,
+                                        pressure: pointerEvent.pressure || 0,
+                                        tangential_pressure: pointerEvent.tangentialPressure || 0,
+                                        tilt_x: pointerEvent.tiltX || 0,
+                                        tilt_y: pointerEvent.tiltY || 0,
+                                        twist: pointerEvent.twist || 0,
+                                        button: pointerEvent.button || 0,
+                                        buttons: pointerEvent.buttons || 0,
+                                        ctrl_key: pointerEvent.ctrlKey || false,
+                                        shift_key: pointerEvent.shiftKey || false,
+                                        alt_key: pointerEvent.altKey || false,
+                                        meta_key: pointerEvent.metaKey || false,
+                                    }
+                                );
+                            }
+                        } else if (eventType === "transitionend") {
+                            if (callbacks.on_transition_event) {
+                                const transitionEvent = event;
+                                callbacks.on_transition_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        property_name: transitionEvent.propertyName || "",
+                                        elapsed_time: transitionEvent.elapsedTime || 0,
+                                        pseudo_element: transitionEvent.pseudoElement || "",
+                                    }
+                                );
+                            }
+                        } else if (eventType === "animationstart" || eventType === "animationend" || eventType === "animationiteration") {
+                            if (callbacks.on_animation_event) {
+                                const animationEvent = event;
+                                callbacks.on_animation_event(
+                                    listenerId,
+                                    eventHandle,
+                                    {
+                                        target: target,
+                                        animation_name: animationEvent.animationName || "",
+                                        pseudo_element: animationEvent.pseudoElement || "",
+                                        elapsed_time: animationEvent.elapsedTime || 0,
+                                        iteration: animationEvent.iteration || 0,
+                                    }
+                                );
+                            }
                         } else {
                             if (callbacks.on_generic_event) {
                                 callbacks.on_generic_event(listenerId, eventHandle, eventType);

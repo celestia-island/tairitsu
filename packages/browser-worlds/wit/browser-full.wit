@@ -69,6 +69,101 @@ interface event-callbacks {
         input-type: string,
     }
 
+    /// Wheel event data structure.
+    record wheel-event-data {
+        /// The target element that received the event.
+        target: u64,
+        delta-x: f64,
+        delta-y: f64,
+        delta-z: f64,
+        delta-mode: u32,
+        client-x: f64,
+        client-y: f64,
+        screen-x: f64,
+        screen-y: f64,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    /// Touch point data structure.
+    record touch-point {
+        identifier: s32,
+        client-x: f64,
+        client-y: f64,
+        screen-x: f64,
+        screen-y: f64,
+        page-x: f64,
+        page-y: f64,
+        target: u64,
+        force: f32,
+        radius-x: f32,
+        radius-y: f32,
+        rotation-angle: f32,
+    }
+
+    /// Touch event data structure.
+    record touch-event-data {
+        /// The target element that received the event.
+        target: u64,
+        touches: list<touch-point>,
+        changed-touches: list<touch-point>,
+        target-touches: list<touch-point>,
+        timestamp: f64,
+    }
+
+    /// Pointer event data structure.
+    record pointer-event-data {
+        /// The target element that received the event.
+        target: u64,
+        pointer-id: s32,
+        pointer-type: string,
+        is-primary: bool,
+        client-x: f64,
+        client-y: f64,
+        screen-x: f64,
+        screen-y: f64,
+        offset-x: f64,
+        offset-y: f64,
+        page-x: f64,
+        page-y: f64,
+        movement-x: f64,
+        movement-y: f64,
+        width: f32,
+        height: f32,
+        pressure: f32,
+        tangential-pressure: f32,
+        tilt-x: s32,
+        tilt-y: s32,
+        twist: s32,
+        button: u8,
+        buttons: u8,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    /// Transition event data structure.
+    record transition-event-data {
+        /// The target element that received the event.
+        target: u64,
+        property-name: string,
+        elapsed-time: f32,
+        pseudo-element: string,
+    }
+
+    /// Animation event data structure.
+    record animation-event-data {
+        /// The target element that received the event.
+        target: u64,
+        animation-name: string,
+        pseudo-element: string,
+        elapsed-time: f32,
+        iteration: f32,
+    }
+
     /// Called when a mouse event fires on a registered listener.
     on-mouse-event: func(listener-id: listener-id, event: event-handle, data: mouse-event-data);
     /// Called when a keyboard event fires on a registered listener.
@@ -77,6 +172,16 @@ interface event-callbacks {
     on-focus-event: func(listener-id: listener-id, event: event-handle, data: focus-event-data);
     /// Called when an input event fires on a registered listener.
     on-input-event: func(listener-id: listener-id, event: event-handle, data: input-event-data);
+    /// Called when a wheel event fires on a registered listener.
+    on-wheel-event: func(listener-id: listener-id, event: event-handle, data: wheel-event-data);
+    /// Called when a touch event fires on a registered listener.
+    on-touch-event: func(listener-id: listener-id, event: event-handle, data: touch-event-data);
+    /// Called when a pointer event fires on a registered listener.
+    on-pointer-event: func(listener-id: listener-id, event: event-handle, data: pointer-event-data);
+    /// Called when a transition event fires on a registered listener.
+    on-transition-event: func(listener-id: listener-id, event: event-handle, data: transition-event-data);
+    /// Called when an animation event fires on a registered listener.
+    on-animation-event: func(listener-id: listener-id, event: event-handle, data: animation-event-data);
     /// Called for any other event type.
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
