@@ -172,6 +172,36 @@ impl MouseEvent {
         self
     }
 
+    pub fn button(mut self, button: i16) -> Self {
+        self.button = button;
+        self
+    }
+
+    pub fn buttons(mut self, buttons: u16) -> Self {
+        self.buttons = buttons;
+        self
+    }
+
+    pub fn ctrl_key(mut self, ctrl_key: bool) -> Self {
+        self.ctrl_key = ctrl_key;
+        self
+    }
+
+    pub fn shift_key(mut self, shift_key: bool) -> Self {
+        self.shift_key = shift_key;
+        self
+    }
+
+    pub fn alt_key(mut self, alt_key: bool) -> Self {
+        self.alt_key = alt_key;
+        self
+    }
+
+    pub fn meta_key(mut self, meta_key: bool) -> Self {
+        self.meta_key = meta_key;
+        self
+    }
+
     pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
         self.event_handle = handle;
         self

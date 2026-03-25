@@ -281,6 +281,12 @@ mod wasm_impl {
                     .page_y(data.page_y as i32)
                     .movement_x(data.movement_x as i32)
                     .movement_y(data.movement_y as i32)
+                    .button(data.button as i16)
+                    .buttons(data.buttons as u16)
+                    .ctrl_key(data.ctrl_key)
+                    .shift_key(data.shift_key)
+                    .alt_key(data.alt_key)
+                    .meta_key(data.meta_key)
                     .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "mouse", event);
