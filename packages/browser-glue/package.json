@@ -21,65 +21,66 @@
       "types": "./dist/async.d.ts"
     },
     "./dom": {
-      "import": "./dist/domGlue.js",
-      "types": "./dist/domGlue.d.ts"
+      "import": "./dist/glue/dom.js",
+      "types": "./dist/glue/dom.d.ts"
     },
     "./events": {
-      "import": "./dist/eventsGlue.js",
-      "types": "./dist/eventsGlue.d.ts"
+      "import": "./dist/glue/events.js",
+      "types": "./dist/glue/events.d.ts"
     },
     "./fetch": {
-      "import": "./dist/fetchGlue.js",
-      "types": "./dist/fetchGlue.d.ts"
+      "import": "./dist/glue/fetch.js",
+      "types": "./dist/glue/fetch.d.ts"
     },
     "./canvas": {
-      "import": "./dist/canvasGlue.js",
-      "types": "./dist/canvasGlue.d.ts"
+      "import": "./dist/glue/canvas.js",
+      "types": "./dist/glue/canvas.d.ts"
     },
     "./html": {
-      "import": "./dist/htmlGlue.js",
-      "types": "./dist/htmlGlue.d.ts"
+      "import": "./dist/glue/html.js",
+      "types": "./dist/glue/html.d.ts"
     },
     "./css": {
-      "import": "./dist/cssGlue.js",
-      "types": "./dist/cssGlue.d.ts"
+      "import": "./dist/glue/css.js",
+      "types": "./dist/glue/css.d.ts"
     },
     "./crypto": {
-      "import": "./dist/cryptoGlue.js",
-      "types": "./dist/cryptoGlue.d.ts"
+      "import": "./dist/glue/crypto.js",
+      "types": "./dist/glue/crypto.d.ts"
     },
     "./media": {
-      "import": "./dist/mediaGlue.js",
-      "types": "./dist/mediaGlue.d.ts"
+      "import": "./dist/glue/media.js",
+      "types": "./dist/glue/media.d.ts"
     },
     "./performance": {
-      "import": "./dist/performanceGlue.js",
-      "types": "./dist/performanceGlue.d.ts"
+      "import": "./dist/glue/performance.js",
+      "types": "./dist/glue/performance.d.ts"
     },
     "./storage": {
-      "import": "./dist/storageGlue.js",
-      "types": "./dist/storageGlue.d.ts"
+      "import": "./dist/glue/storage.js",
+      "types": "./dist/glue/storage.d.ts"
     },
     "./url": {
-      "import": "./dist/urlGlue.js",
-      "types": "./dist/urlGlue.d.ts"
+      "import": "./dist/glue/url.js",
+      "types": "./dist/glue/url.d.ts"
     },
     "./workers": {
-      "import": "./dist/workersGlue.js",
-      "types": "./dist/workersGlue.d.ts"
+      "import": "./dist/glue/workers.js",
+      "types": "./dist/glue/workers.d.ts"
     },
     "./webrtc": {
-      "import": "./dist/webrtcGlue.js",
-      "types": "./dist/webrtcGlue.d.ts"
+      "import": "./dist/glue/webrtc.js",
+      "types": "./dist/glue/webrtc.d.ts"
     },
     "./websocket": {
-      "import": "./dist/websocketGlue.js",
-      "types": "./dist/websocketGlue.d.ts"
+      "import": "./dist/glue/websocket.js",
+      "types": "./dist/glue/websocket.d.ts"
     }
   },
   "scripts": {
-    "build": "npm run build:glue && swc src -d dist --strip-leading-paths && tsc --emitDeclarationOnly",
-    "build:production": "npm run build:glue && swc src -d dist --strip-leading-paths -C minify.compress=true -C minify.mangle=true && tsc --emitDeclarationOnly",
+    "build": "npm run build:runtime && npm run build:glue && swc src -d dist --strip-leading-paths && tsc --emitDeclarationOnly",
+    "build:production": "npm run build:runtime && npm run build:glue && swc src -d dist --strip-leading-paths -C minify.compress=true -C minify.mangle=true && tsc --emitDeclarationOnly",
+    "build:runtime": "esbuild src/runtime/index.ts --bundle --outfile=dist/runtime.js --format=esm --platform=browser",
     "build:watch": "swc src -d dist --strip-leading-paths --watch",
     "build:glue": "python3 ../../scripts/generate_browser_glue.py",
     "typecheck": "tsc --noEmit",
@@ -88,6 +89,7 @@
   "devDependencies": {
     "@swc/cli": "^0.3.0",
     "@swc/core": "^1.7.0",
+    "esbuild": "^0.25.0",
     "rimraf": "^5.0.0",
     "typescript": "^5.5.0"
   }

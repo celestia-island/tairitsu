@@ -9,21 +9,40 @@ fn main() {
     let template_js = manifest_dir.join("src/wasm/component-wrapper-loader.template.js");
     println!("cargo:rerun-if-changed={}", template_js.display());
 
-    // Watch for runtime.ts changes
-    let runtime_ts = workspace_root.join("packages/browser-glue/src/runtime.ts");
-    println!("cargo:rerun-if-changed={}", runtime_ts.display());
+    // Watch for runtime changes (all files in the runtime/ folder)
+    let runtime_dir = workspace_root.join("packages/browser-glue/src/runtime");
+    if runtime_dir.is_dir() {
+        for entry in std::fs::read_dir(&runtime_dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+        {
+            println!("cargo:rerun-if-changed={}", entry.path().display());
+        }
+    } else {
+        // Fallback: watch legacy monolithic file if runtime/ dir doesn't exist
+        println!(
+            "cargo:rerun-if-changed={}",
+            runtime_dir.with_extension("ts").display()
+        );
+    }
 
-    // Watch for all glue files
+    // Watch for glue files in src/glue/
     let glue_files = [
-        "consoleGlue.ts",
-        "styleGlue.ts",
-        "eventTargetGlue.ts",
-        "cssGlue.ts",
-        "domGlue.ts",
-        "handles.ts",
-        "async.ts",
+        "console.ts",
+        "style.ts",
+        "event-target.ts",
+        "css.ts",
+        "dom.ts",
     ];
     for file in &glue_files {
+        let path = workspace_root
+            .join("packages/browser-glue/src/glue")
+            .join(file);
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
+    // Also watch the shared helpers
+    for file in &["handles.ts", "async.ts"] {
         let path = workspace_root.join("packages/browser-glue/src").join(file);
         println!("cargo:rerun-if-changed={}", path.display());
     }
@@ -58,28 +77,33 @@ pub const BROWSER_GLUE_BUNDLE_SIZE: usize = {};"#,
 }
 
 fn compile_with_swc(workspace_root: &Path) -> Option<String> {
-    let dist_dir = workspace_root.join("packages/browser-glue/dist/runtime.js");
+    let dist_file = workspace_root.join("packages/browser-glue/dist/runtime.js");
 
-    // Check if SWC already compiled the file
-    if dist_dir.exists() {
-        if let Ok(content) = std::fs::read_to_string(&dist_dir) {
+    // Check if esbuild already produced the bundle
+    if dist_file.exists() {
+        if let Ok(content) = std::fs::read_to_string(&dist_file) {
             return Some(content);
         }
     }
 
-    // Try to run SWC to compile and minify
-    let src_file = workspace_root.join("packages/browser-glue/src/runtime.ts");
-    let out_file = workspace_root.join("packages/browser-glue/dist/runtime.min.js");
+    // Try to bundle runtime/index.ts with esbuild
+    let src_file = workspace_root.join("packages/browser-glue/src/runtime/index.ts");
+    let out_file = workspace_root.join("packages/browser-glue/dist/runtime.js");
 
-    // Try swc CLI
+    // Ensure the dist directory exists
+    if let Some(parent) = out_file.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
     let output = Command::new("npx")
         .args([
-            "swc",
+            "esbuild",
             &src_file.to_string_lossy(),
-            "-o",
-            &out_file.to_string_lossy(),
-            "--config",
-            r#"{"minify":true,"jsc":{"target":"es2020","minify":{"compress":true,"mangle":true}}}"#,
+            "--bundle",
+            &format!("--outfile={}", out_file.to_string_lossy()),
+            "--format=esm",
+            "--platform=browser",
+            "--minify",
         ])
         .current_dir(workspace_root.join("packages/browser-glue"))
         .output();
