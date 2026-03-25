@@ -2,11 +2,10 @@
 
 ## Overview
 
-This document outlines the migration plan for removing hand-written WIT interfaces (`console`, `style`, `event-target`) and replacing them with auto-generated W3C standard interfaces.
+This document outlines the completed migration from hand-written WIT interfaces (`console`, `style`, `event-target`) to W3C standard interfaces.
 
 **Date:** 2026-03-25
-**Status:** Ready for Implementation
-**Priority:** High
+**Status:** Completed
 
 ---
 
@@ -20,235 +19,72 @@ This document outlines the migration plan for removing hand-written WIT interfac
 
 ---
 
-## Affected Files
-
-### Rust Code
-- `packages/web/src/wit_platform.rs` - Uses all three removed interfaces
-- `packages/ssr/src/linker.rs` - Implements all three removed interfaces
-- `packages/ssr/src/interfaces/console.rs` - Console implementation
-- `packages/ssr/src/interfaces/style.rs` - Style implementation
-- `packages/ssr/src/interfaces/event_target.rs` - EventTarget implementation
-
-### TypeScript/JavaScript
-- `packages/browser-glue/src/glue/index.ts` - Removed exports
-- `packages/browser-glue/src/runtime/registry.ts` - Removed registrations
-
----
-
-## Detailed Migration Guide
-
-### 1. Console Interface (`tairitsu-browser:full/console`)
-
-**Removed Functions:**
-```wit
-log(message: string)
-warn(message: string)
-error(message: string)
-```
-
-**Migration Strategy:**
-- **No W3C replacement exists** - Console is a namespace, not an interface
-- **Option 1:** Use browser's `console.log()` directly in glue code
-- **Option 2:** Create a simple `logging` interface for WASM → host logging
-- **Recommended:** For SSR, continue using `tracing` macros directly
-
-**Files to Update:**
-1. `packages/web/src/wit_platform.rs` (lines 686-713)
-2. `packages/ssr/src/linker.rs` (lines 41-64)
-3. `packages/ssr/src/interfaces/console.rs` (entire file)
-
-**Example Migration (Rust):**
-```rust
-// OLD (removed)
-bindings::tairitsu_browser::full::console::log(&message);
-
-// NEW (direct console)
-// In browser glue: console.log(message);
-// In SSR: tracing::info!("{}", message);
-```
-
----
-
-### 2. Style Interface (`tairitsu-browser:full/style`)
-
-**Removed Functions:**
-```wit
-set-style-property(element: u64, property: string, value: string) -> result<_, string>
-get-style-property(element: u64, property: string) -> option<string>
-remove-style-property(element: u64, property: string) -> result<_, string>
-```
-
-**Replacement (W3C Standard):**
-
-```wit
-// Step 1: Get the style object from element
-element-css-inline-style::get-style(element: u64) -> u64
-
-// Step 2: Use CSSStyleDeclaration methods
-css-style-declaration::set-property(style: u64, property: string, value: string, priority: option<string>)
-css-style-declaration::get-property-value(style: u64, property: string) -> string
-css-style-declaration::remove-property(style: u64, property: string) -> string
-```
-
-**Key Differences:**
-1. Two-step process: Get style handle, then operate on it
-2. `set-property` takes optional `priority` parameter (e.g., "important")
-3. `remove-property` returns the old value (not result)
-4. Methods use `self` parameter (OOP style)
-
-**Files to Update:**
-1. `packages/web/src/wit_platform.rs` (lines 753-759)
-2. `packages/ssr/src/linker.rs` (lines 263-304)
-3. `packages/ssr/src/interfaces/style.rs` (entire file)
-
-**Example Migration (Rust):**
-```rust
-// OLD (removed)
-bindings::tairitsu_browser::full::style::set_style_property(element, "color", "red")?;
-
-// NEW (W3C standard)
-let style = bindings::tairitsu_browser::css::element_css_inline_style::get_style(element);
-bindings::tairitsu_browser::css::css_style_declaration::set_property(
-    style, "color", "red", None
-);
-
-// For SSR: update the linker to use new interface names
-// "tairitsu-browser:full/style@0.2.0" → "tairitsu-browser:css/css-style-declaration@0.2.0"
-// AND "tairitsu-browser:css/element-css-inline-style@0.2.0"
-```
-
----
-
-### 3. Event Target Interface (`tairitsu-browser:full/event-target`)
-
-**Removed Functions:**
-```wit
-add-event-listener(target: u64, event-type: string, use-capture: bool) -> result<u64, string>
-remove-event-listener(target: u64, listener-id: u64) -> result<_, string>
-prevent-default(event: u64)
-stop-propagation(event: u64)
-```
-
-**Replacement (W3C Standard):**
-
-```wit
-// EventTarget methods (in dom domain)
-event-target::add-event-listener(
-    self: u64,           // event target handle
-    type: string,        // event type
-    callback: option<u64>, // event listener callback handle
-    options: option<bool>  // use capture
-)
-
-event-target::remove-event-listener(
-    self: u64,
-    type: string,
-    callback: option<u64>,
-    options: option<bool>
-)
-
-event-target::dispatch-event(self: u64, event: u64) -> bool
-
-// Event methods (in events domain)
-event::prevent-default(self: u64)
-event::stop-propagation(self: u64)
-event::stop-immediate-propagation(self: u64)
-```
-
-**Key Differences:**
-1. Uses `self` parameter (OOP style)
-2. Requires callback handle (from `event-callbacks` export)
-3. No listener-id return - use callback handle directly
-4. `prevent-default` and `stop-propagation` are on `Event` interface, not `EventTarget`
-
-**Files to Update:**
-1. `packages/web/src/wit_platform.rs` (lines 766-810)
-2. `packages/ssr/src/linker.rs` (lines 310-337)
-3. `packages/ssr/src/interfaces/event_target.rs` (entire file)
-
-**Example Migration (Rust):**
-```rust
-// OLD (removed)
-let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
-    element, "click", false
-)?;
-bindings::tairitsu_browser::full::event_target::remove_event_listener(element, listener_id)?;
-bindings::tairitsu_browser::full::event_target::prevent_default(event)?;
-
-// NEW (W3C standard)
-// Note: Requires callback registration through event-callbacks export
-bindings::tairitsu_browser::dom::event_target::add_event_listener(
-    element, "click", Some(callback_handle), Some(false)
-);
-bindings::tairitsu_browser::dom::event_target::remove_event_listener(
-    element, "click", Some(callback_handle), Some(false)
-);
-bindings::tairitsu_browser::events::event::prevent_default(event)?;
-```
-
----
-
 ## Implementation Tasks
 
 ### Phase 1: CSS/Style Migration (Low Risk)
-- [ ] Update `packages/web/src/wit_platform.rs` to use W3C style interfaces
-- [ ] Update `packages/ssr/src/linker.rs` style implementation
-- [ ] Update `packages/ssr/src/interfaces/style.rs` or remove if integrated elsewhere
-- [ ] Test style operations in browser
+- [x] Update `packages/web/src/wit_platform.rs` to use W3C style interfaces
+- [x] Update `packages/ssr/src/linker.rs` style implementation
+- [x] Update `packages/ssr/src/interfaces/style.rs` or remove if integrated elsewhere
+- [x] Test style operations in browser
 
 ### Phase 2: Event/EventTarget Migration (High Risk)
-- [ ] Update `packages/web/src/wit_platform.rs` to use W3C event interfaces
-- [ ] Update `packages/ssr/src/linker.rs` event implementation
-- [ ] Update `packages/ssr/src/interfaces/event_target.rs` or remove if integrated elsewhere
-- [ ] Verify callback registration through `event-callbacks`
-- [ ] Test event handling in browser
+- [x] Update `packages/web/src/wit_platform.rs` to use W3C event interfaces
+- [x] Update `packages/ssr/src/linker.rs` event implementation
+- [x] Update `packages/ssr/src/interfaces/event_target.rs` or remove if integrated elsewhere
+- [x] Verify callback registration through `event-callbacks`
+- [x] Test event handling in browser
 
 ### Phase 3: Console Migration (Medium Risk)
-- [ ] Decide on console strategy (direct vs new interface)
-- [ ] Update `packages/web/src/wit_platform.rs` console calls
-- [ ] Update `packages/ssr/src/linker.rs` console implementation
-- [ ] Update `packages/ssr/src/interfaces/console.rs` or remove
-- [ ] Test logging in both browser and SSR
+- [x] Decide on console strategy (direct vs new interface)
+- [x] Update `packages/web/src/wit_platform.rs` console calls
+- [x] Update `packages/ssr/src/linker.rs` console implementation
+- [x] Update `packages/ssr/src/interfaces/console.rs` or remove
+- [x] Test logging in both browser and SSR
 
 ### Phase 4: Cleanup
-- [ ] Remove old interface files if not already done
-- [ ] Update documentation
-- [ ] Run full test suite
-- [ ] Update examples
-
----
-
-## Risk Assessment
-
-| Interface | Risk Level | Reason |
-|-----------|-----------|--------|
-| `style` | **Low** | Direct mechanical translation, well-defined W3C replacement |
-| `console` | **Medium** | No direct W3C replacement, requires architectural decision |
-| `event-target` | **High** | Callback model change, affects core event system |
+- [x] Remove old interface files if not already done
+- [x] Update documentation
+- [x] Run full test suite
+- [x] Update examples
 
 ---
 
 ## Testing Checklist
 
 After migration, verify:
-- [ ] Style properties can be set/get/removed on elements
-- [ ] Event listeners can be added and removed
-- [ ] `prevent-default()` and `stop-propagation()` work correctly
-- [ ] Console logging works in both browser and SSR
-- [ ] All existing tests pass
-- [ ] No regressions in examples
+- [x] Style properties can be set/get/removed on elements
+- [x] Event listeners can be added and removed
+- [x] `prevent-default()` and `stop-propagation()` work correctly
+- [x] Console logging works in both browser and SSR
+- [x] All existing tests pass
+- [x] No regressions in examples
 
 ---
 
-## Notes
+## Migration Details
 
-1. **Event Callbacks**: The new W3C `event-target` interface requires callback handles to be registered through the `event-callbacks` export interface. This is a significant architectural change from the listener-id model.
+### Console Interface
+- **Removed:** `tairitsu-browser:full/console` interface
+- **For wasm32-unknown-unknown:** Uses wasm-bindgen direct console access
+- **For wasm32-wasip2:** Console operations are no-ops (interface removed)
+- **For SSR:** Uses `tracing` macros directly
 
-2. **Interface Naming**: W3C interfaces use kebab-case (e.g., `css-style-declaration`) while the old hand-written interfaces used simple names (e.g., `style`).
+### Style Interface
+- **Migrated to:** W3C CSSOM interfaces
+- `element-css-inline-style::get-style(element) -> style-handle`
+- `css-style-declaration::set-property(style, property, value, priority)`
+- `css-style-declaration::get-property-value(style, property) -> value`
+- `css-style-declaration::remove-property(style, property) -> old-value`
 
-3. **Package Paths**: The new interfaces are in different packages:
-   - `tairitsu-browser:dom/*` - DOM interfaces
-   - `tairitsu-browser:css/*` - CSS interfaces
-   - `tairitsu-browser:events/*` - Event interfaces
+### Event-Target Interface
+- **Migrated to:** W3C standard event-target + event interfaces
+- `event-target::add-event-listener(self, type, callback, options)`
+- `event-target::remove-event-listener(self, type, callback, options)`
+- `event::prevent-default(self)` and `event::stop-propagation(self)`
 
-4. **SSR Compatibility**: The SSR implementations will need to be updated to use the new W3C interface names while maintaining the same functionality.
+### Additional Fixes
+- Fixed WIT reserved keyword `stream` in blob interface (renamed to `get-stream`)
+- Fixed `stream` keyword in fetch.wit
+- Fixed WIT reserved keyword `type` in mutation-entry (renamed to `mutation-type`)
+- Added missing callback interfaces: timer-callbacks, animation-callbacks, resize-observer-callbacks, mutation-observer-callbacks
+- Added platform-helpers interface implementation for SSR
