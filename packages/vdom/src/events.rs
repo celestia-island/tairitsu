@@ -850,3 +850,810 @@ impl Default for DragEvent {
 /// Alias for MouseEvent, providing Dioxus API compatibility.
 /// MouseData is the preferred type name in Dioxus for mouse event handlers.
 pub type MouseData = MouseEvent;
+
+// ============================================================================
+// Wheel Event - Phase 4
+// ============================================================================
+
+/// Wheel event for mouse wheel interactions (zooming, scrolling, etc.).
+///
+/// This event provides information about wheel/scroll interactions, including:
+/// - Scroll deltas (pixel, line, page)
+/// - Modifier keys
+/// - Event target for prevent_default/stop_propagation
+///
+/// # Example
+///
+/// ```ignore
+/// div {
+///     onwheel: |e: WheelEvent| {
+///         if e.delta_y > 0 {
+///             // Scrolling down
+///         }
+///         e.prevent_default(); // Prevent default scrolling
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct WheelEvent {
+    /// The target element handle that received this event.
+    pub target: Option<u64>,
+    /// Horizontal scroll amount (pixels)
+    pub delta_x: f64,
+    /// Vertical scroll amount (pixels)
+    pub delta_y: f64,
+    /// Z-axis scroll amount (pixels)
+    pub delta_z: f64,
+    /// Unit of delta values: 0=pixel, 1=line, 2=page, 3=viewport
+    pub delta_mode: u32,
+    /// Mouse position - client X coordinate
+    pub client_x: i32,
+    /// Mouse position - client Y coordinate
+    pub client_y: i32,
+    /// Mouse position - screen X coordinate
+    pub screen_x: i32,
+    /// Mouse position - screen Y coordinate
+    pub screen_y: i32,
+    /// Whether ctrl key was pressed
+    pub ctrl_key: bool,
+    /// Whether shift key was pressed
+    pub shift_key: bool,
+    /// Whether alt key was pressed
+    pub alt_key: bool,
+    /// Whether meta key was pressed
+    pub meta_key: bool,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for WheelEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl WheelEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            delta_x: 0.0,
+            delta_y: 0.0,
+            delta_z: 0.0,
+            delta_mode: 0,
+            client_x: 0,
+            client_y: 0,
+            screen_x: 0,
+            screen_y: 0,
+            ctrl_key: false,
+            shift_key: false,
+            alt_key: false,
+            meta_key: false,
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    pub fn delta_x(mut self, x: f64) -> Self {
+        self.delta_x = x;
+        self
+    }
+
+    pub fn delta_y(mut self, y: f64) -> Self {
+        self.delta_y = y;
+        self
+    }
+
+    pub fn delta_z(mut self, z: f64) -> Self {
+        self.delta_z = z;
+        self
+    }
+
+    pub fn delta_mode(mut self, mode: u32) -> Self {
+        self.delta_mode = mode;
+        self
+    }
+
+    pub fn client_x(mut self, x: i32) -> Self {
+        self.client_x = x;
+        self
+    }
+
+    pub fn client_y(mut self, y: i32) -> Self {
+        self.client_y = y;
+        self
+    }
+
+    pub fn screen_x(mut self, x: i32) -> Self {
+        self.screen_x = x;
+        self
+    }
+
+    pub fn screen_y(mut self, y: i32) -> Self {
+        self.screen_y = y;
+        self
+    }
+
+    pub fn ctrl_key(mut self, ctrl: bool) -> Self {
+        self.ctrl_key = ctrl;
+        self
+    }
+
+    pub fn shift_key(mut self, shift: bool) -> Self {
+        self.shift_key = shift;
+        self
+    }
+
+    pub fn alt_key(mut self, alt: bool) -> Self {
+        self.alt_key = alt;
+        self
+    }
+
+    pub fn meta_key(mut self, meta: bool) -> Self {
+        self.meta_key = meta;
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for WheelEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
+// Touch Event - Phase 4
+// ============================================================================
+
+/// A single touch point.
+#[derive(Debug, Clone)]
+pub struct TouchPoint {
+    /// Unique identifier for this touch point
+    pub identifier: i32,
+    /// X coordinate relative to the viewport
+    pub client_x: i32,
+    /// Y coordinate relative to the viewport
+    pub client_y: i32,
+    /// X coordinate relative to the screen
+    pub screen_x: i32,
+    /// Y coordinate relative to the screen
+    pub screen_y: i32,
+    /// X coordinate relative to the target element
+    pub page_x: i32,
+    /// Y coordinate relative to the target element
+    pub page_y: i32,
+    /// The target element handle
+    pub target: Option<u64>,
+    /// The force of the touch (0.0 to 1.0)
+    pub force: f32,
+    /// Radius of the touch area
+    pub radius_x: f32,
+    /// Radius of the touch area
+    pub radius_y: f32,
+    /// Rotation angle of the touch ellipse
+    pub rotation_angle: f32,
+}
+
+impl Default for TouchPoint {
+    fn default() -> Self {
+        Self {
+            identifier: 0,
+            client_x: 0,
+            client_y: 0,
+            screen_x: 0,
+            screen_y: 0,
+            page_x: 0,
+            page_y: 0,
+            target: None,
+            force: 0.0,
+            radius_x: 0.0,
+            radius_y: 0.0,
+            rotation_angle: 0.0,
+        }
+    }
+}
+
+/// Touch event for multi-touch interactions on mobile devices.
+///
+/// This event provides information about touch interactions, including:
+/// - All active touch points
+/// - Changed touch points (since last event)
+/// - Touch target information
+///
+/// # Example
+///
+/// ```ignore
+/// div {
+///     ontouchstart: |e: TouchEvent| {
+///         for touch in &e.touches {
+///             println!("Touch at: ({}, {})", touch.client_x, touch.client_y);
+///         }
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct TouchEvent {
+    /// The target element handle that received this event.
+    pub target: Option<u64>,
+    /// All active touch points
+    pub touches: Vec<TouchPoint>,
+    /// Touch points that have changed since the last event
+    pub changed_touches: Vec<TouchPoint>,
+    /// Touch points that were in the target element
+    pub target_touches: Vec<TouchPoint>,
+    /// Timestamp of the event
+    pub timestamp: f64,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for TouchEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl TouchEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            touches: Vec::new(),
+            changed_touches: Vec::new(),
+            target_touches: Vec::new(),
+            timestamp: 0.0,
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    pub fn touches(mut self, touches: Vec<TouchPoint>) -> Self {
+        self.touches = touches;
+        self
+    }
+
+    pub fn changed_touches(mut self, touches: Vec<TouchPoint>) -> Self {
+        self.changed_touches = touches;
+        self
+    }
+
+    pub fn target_touches(mut self, touches: Vec<TouchPoint>) -> Self {
+        self.target_touches = touches;
+        self
+    }
+
+    pub fn timestamp(mut self, timestamp: f64) -> Self {
+        self.timestamp = timestamp;
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for TouchEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
+// Pointer Event - Phase 4
+// ============================================================================
+
+/// Pointer type for unified pointer events.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PointerType {
+    /// Mouse pointer
+    Mouse,
+    /// Pen/stylus pointer
+    Pen,
+    /// Touch pointer
+    Touch,
+}
+
+impl PointerType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "mouse" => PointerType::Mouse,
+            "pen" => PointerType::Pen,
+            "touch" => PointerType::Touch,
+            _ => PointerType::Mouse,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            PointerType::Mouse => "mouse",
+            PointerType::Pen => "pen",
+            PointerType::Touch => "touch",
+        }
+    }
+}
+
+/// Pointer event for unified pointer interactions (mouse, touch, pen).
+///
+/// This event provides a unified abstraction for all pointer input devices,
+/// making it easier to handle interactions across different input methods.
+///
+/// # Example
+///
+/// ```ignore
+/// div {
+///     onpointerdown: |e: PointerEvent| {
+///         match e.pointer_type {
+///             PointerType::Touch => println!("Touch at: ({}, {})", e.client_x, e.client_y),
+///             PointerType::Mouse => println!("Mouse click at: ({}, {})", e.client_x, e.client_y),
+///             PointerType::Pen => println!("Pen at: ({}, {})", e.client_x, e.client_y),
+///         }
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct PointerEvent {
+    /// The target element handle that received this event.
+    pub target: Option<u64>,
+    /// Unique pointer ID for this active pointer
+    pub pointer_id: i32,
+    /// Pointer type (mouse, pen, touch)
+    pub pointer_type: PointerType,
+    /// Whether the pointer is the primary pointer
+    pub is_primary: bool,
+    /// Mouse position - client X coordinate
+    pub client_x: i32,
+    /// Mouse position - client Y coordinate
+    pub client_y: i32,
+    /// Mouse position - screen X coordinate
+    pub screen_x: i32,
+    /// Mouse position - screen Y coordinate
+    pub screen_y: i32,
+    /// Mouse position - offset X coordinate
+    pub offset_x: i32,
+    /// Mouse position - offset Y coordinate
+    pub offset_y: i32,
+    /// Mouse position - page X coordinate
+    pub page_x: i32,
+    /// Mouse position - page Y coordinate
+    pub page_y: i32,
+    /// Movement since last event - X
+    pub movement_x: i32,
+    /// Movement since last event - Y
+    pub movement_y: i32,
+    /// Width of the pointer contact area
+    pub width: f32,
+    /// Height of the pointer contact area
+    pub height: f32,
+    /// Pressure of the pointer (0.0 to 1.0)
+    pub pressure: f32,
+    /// Tangential pressure (0.0 to 1.0)
+    pub tangential_pressure: f32,
+    /// Tilt X angle (-90 to 90)
+    pub tilt_x: i32,
+    /// Tilt Y angle (-90 to 90)
+    pub tilt_y: i32,
+    /// Twist angle (0 to 359)
+    pub twist: i32,
+    /// Which mouse button was pressed (if any)
+    pub button: i16,
+    /// Which mouse buttons are pressed
+    pub buttons: u16,
+    /// Whether ctrl key was pressed
+    pub ctrl_key: bool,
+    /// Whether shift key was pressed
+    pub shift_key: bool,
+    /// Whether alt key was pressed
+    pub alt_key: bool,
+    /// Whether meta key was pressed
+    pub meta_key: bool,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for PointerEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl PointerEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            pointer_id: 0,
+            pointer_type: PointerType::Mouse,
+            is_primary: false,
+            client_x: 0,
+            client_y: 0,
+            screen_x: 0,
+            screen_y: 0,
+            offset_x: 0,
+            offset_y: 0,
+            page_x: 0,
+            page_y: 0,
+            movement_x: 0,
+            movement_y: 0,
+            width: 0.0,
+            height: 0.0,
+            pressure: 0.0,
+            tangential_pressure: 0.0,
+            tilt_x: 0,
+            tilt_y: 0,
+            twist: 0,
+            button: 0,
+            buttons: 0,
+            ctrl_key: false,
+            shift_key: false,
+            alt_key: false,
+            meta_key: false,
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    pub fn pointer_id(mut self, id: i32) -> Self {
+        self.pointer_id = id;
+        self
+    }
+
+    pub fn pointer_type(mut self, pointer_type: PointerType) -> Self {
+        self.pointer_type = pointer_type;
+        self
+    }
+
+    pub fn is_primary(mut self, is_primary: bool) -> Self {
+        self.is_primary = is_primary;
+        self
+    }
+
+    pub fn client_x(mut self, x: i32) -> Self {
+        self.client_x = x;
+        self
+    }
+
+    pub fn client_y(mut self, y: i32) -> Self {
+        self.client_y = y;
+        self
+    }
+
+    pub fn screen_x(mut self, x: i32) -> Self {
+        self.screen_x = x;
+        self
+    }
+
+    pub fn screen_y(mut self, y: i32) -> Self {
+        self.screen_y = y;
+        self
+    }
+
+    pub fn offset_x(mut self, x: i32) -> Self {
+        self.offset_x = x;
+        self
+    }
+
+    pub fn offset_y(mut self, y: i32) -> Self {
+        self.offset_y = y;
+        self
+    }
+
+    pub fn page_x(mut self, x: i32) -> Self {
+        self.page_x = x;
+        self
+    }
+
+    pub fn page_y(mut self, y: i32) -> Self {
+        self.page_y = y;
+        self
+    }
+
+    pub fn movement_x(mut self, x: i32) -> Self {
+        self.movement_x = x;
+        self
+    }
+
+    pub fn movement_y(mut self, y: i32) -> Self {
+        self.movement_y = y;
+        self
+    }
+
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    pub fn height(mut self, height: f32) -> Self {
+        self.height = height;
+        self
+    }
+
+    pub fn pressure(mut self, pressure: f32) -> Self {
+        self.pressure = pressure;
+        self
+    }
+
+    pub fn tangential_pressure(mut self, pressure: f32) -> Self {
+        self.tangential_pressure = pressure;
+        self
+    }
+
+    pub fn tilt_x(mut self, tilt: i32) -> Self {
+        self.tilt_x = tilt;
+        self
+    }
+
+    pub fn tilt_y(mut self, tilt: i32) -> Self {
+        self.tilt_y = tilt;
+        self
+    }
+
+    pub fn twist(mut self, twist: i32) -> Self {
+        self.twist = twist;
+        self
+    }
+
+    pub fn button(mut self, button: i16) -> Self {
+        self.button = button;
+        self
+    }
+
+    pub fn buttons(mut self, buttons: u16) -> Self {
+        self.buttons = buttons;
+        self
+    }
+
+    pub fn ctrl_key(mut self, ctrl: bool) -> Self {
+        self.ctrl_key = ctrl;
+        self
+    }
+
+    pub fn shift_key(mut self, shift: bool) -> Self {
+        self.shift_key = shift;
+        self
+    }
+
+    pub fn alt_key(mut self, alt: bool) -> Self {
+        self.alt_key = alt;
+        self
+    }
+
+    pub fn meta_key(mut self, meta: bool) -> Self {
+        self.meta_key = meta;
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for PointerEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
+// Transition Event - Phase 4
+// ============================================================================
+
+/// Transition event for CSS transition completion callbacks.
+///
+/// This event fires when a CSS transition completes, allowing you to
+/// synchronize animations with application logic.
+///
+/// # Example
+///
+/// ```ignore
+/// div {
+///     style: "transition: opacity 0.3s;",
+///     ontransitionend: |e: TransitionEvent| {
+///         if e.property_name == "opacity" {
+///             println!("Opacity transition complete!");
+///         }
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct TransitionEvent {
+    /// The target element handle that received this event.
+    pub target: Option<u64>,
+    /// The name of the CSS property that completed transitioning
+    pub property_name: String,
+    /// The number of seconds the transition took
+    pub elapsed_time: f32,
+    /// The name of the pseudo-element that was transitioning
+    pub pseudo_element: String,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for TransitionEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl TransitionEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            property_name: String::new(),
+            elapsed_time: 0.0,
+            pseudo_element: String::new(),
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    pub fn property_name(mut self, name: impl Into<String>) -> Self {
+        self.property_name = name.into();
+        self
+    }
+
+    pub fn elapsed_time(mut self, time: f32) -> Self {
+        self.elapsed_time = time;
+        self
+    }
+
+    pub fn pseudo_element(mut self, pseudo: impl Into<String>) -> Self {
+        self.pseudo_element = pseudo.into();
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for TransitionEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
+// Animation Event - Phase 4
+// ============================================================================
+
+/// Animation event for CSS animation lifecycle callbacks.
+///
+/// This event fires at various points during a CSS animation's lifecycle,
+/// allowing you to synchronize animations with application logic.
+///
+/// # Example
+///
+/// ```ignore
+/// div {
+///     style: "animation: fadeIn 0.5s;",
+///     onanimationend: |e: AnimationEvent| {
+///         println!("Animation '{}' complete!", e.animation_name);
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct AnimationEvent {
+    /// The target element handle that received this event.
+    pub target: Option<u64>,
+    /// The name of the animation
+    pub animation_name: String,
+    /// The name of the pseudo-element that was animating
+    pub pseudo_element: String,
+    /// The elapsed time since the animation started
+    pub elapsed_time: f32,
+    /// The current iteration of the animation
+    pub iteration: f32,
+    event_handle: EventWitHandle,
+}
+
+impl EventData for AnimationEvent {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl AnimationEvent {
+    pub fn new() -> Self {
+        Self {
+            target: None,
+            animation_name: String::new(),
+            pseudo_element: String::new(),
+            elapsed_time: 0.0,
+            iteration: 0.0,
+            event_handle: EventWitHandle::placeholder(),
+        }
+    }
+
+    pub fn target(mut self, target: u64) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    pub fn animation_name(mut self, name: impl Into<String>) -> Self {
+        self.animation_name = name.into();
+        self
+    }
+
+    pub fn pseudo_element(mut self, pseudo: impl Into<String>) -> Self {
+        self.pseudo_element = pseudo.into();
+        self
+    }
+
+    pub fn elapsed_time(mut self, time: f32) -> Self {
+        self.elapsed_time = time;
+        self
+    }
+
+    pub fn iteration(mut self, iteration: f32) -> Self {
+        self.iteration = iteration;
+        self
+    }
+
+    pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
+        self.event_handle = handle;
+        self
+    }
+
+    pub fn prevent_default(&self) {
+        self.event_handle.prevent_default();
+    }
+
+    pub fn stop_propagation(&self) {
+        self.event_handle.stop_propagation();
+    }
+}
+
+impl Default for AnimationEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}

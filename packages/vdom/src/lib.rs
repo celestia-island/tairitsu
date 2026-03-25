@@ -14,8 +14,10 @@ pub mod vnode;
 pub use callback::{Callback, EventHandler};
 pub use dom_ops::{get_bounding_client_rect, register_wit_functions, set_attribute, set_style};
 pub use events::{
-    ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle, FileData, FocusEvent,
-    FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent, MouseData, MouseEvent,
+    AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
+    FileData, FocusEvent, FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent,
+    MouseData, MouseEvent, PointerEvent, PointerType, TouchEvent, TouchPoint, TransitionEvent,
+    WheelEvent,
 };
 pub use patch::Patch;
 pub use platform::{

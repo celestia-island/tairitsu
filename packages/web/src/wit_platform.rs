@@ -189,8 +189,9 @@ mod wasm_impl {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use tairitsu_vdom::{
-        CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
-        KeyboardEvent, MouseEvent, Platform, VNode,
+        AnimationEvent, CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent,
+        GenericEvent, InputEvent, KeyboardEvent, MouseEvent, PointerEvent, PointerType,
+        Platform, TouchEvent, TouchPoint, TransitionEvent, VNode, WheelEvent,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -322,6 +323,137 @@ mod wasm_impl {
                     .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "input", event);
+        }
+
+        fn on_wheel_event(
+            listener_id: u64,
+            event_handle: u64,
+            data: bindings::exports::tairitsu_browser::full::event_callbacks::WheelEventData,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                WheelEvent::new()
+                    .target(data.target)
+                    .delta_x(data.delta_x)
+                    .delta_y(data.delta_y)
+                    .delta_z(data.delta_z)
+                    .delta_mode(data.delta_mode)
+                    .client_x(data.client_x as i32)
+                    .client_y(data.client_y as i32)
+                    .screen_x(data.screen_x as i32)
+                    .screen_y(data.screen_y as i32)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "wheel", event);
+        }
+
+        fn on_touch_event(
+            listener_id: u64,
+            event_handle: u64,
+            data: bindings::exports::tairitsu_browser::full::event_callbacks::TouchEventData,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let convert_touch_point = |tp: bindings::exports::tairitsu_browser::full::event_callbacks::TouchPoint| TouchPoint {
+                identifier: tp.identifier,
+                client_x: tp.client_x as i32,
+                client_y: tp.client_y as i32,
+                screen_x: tp.screen_x as i32,
+                screen_y: tp.screen_y as i32,
+                page_x: tp.page_x as i32,
+                page_y: tp.page_y as i32,
+                target: Some(tp.target),
+                force: tp.force,
+                radius_x: tp.radius_x,
+                radius_y: tp.radius_y,
+                rotation_angle: tp.rotation_angle,
+            };
+            let event: Box<dyn EventData> = Box::new(
+                TouchEvent::new()
+                    .target(data.target)
+                    .touches(data.touches.into_iter().map(convert_touch_point).collect())
+                    .changed_touches(data.changed_touches.into_iter().map(convert_touch_point).collect())
+                    .target_touches(data.target_touches.into_iter().map(convert_touch_point).collect())
+                    .timestamp(data.timestamp)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "touch", event);
+        }
+
+        fn on_pointer_event(
+            listener_id: u64,
+            event_handle: u64,
+            data: bindings::exports::tairitsu_browser::full::event_callbacks::PointerEventData,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let pointer_type = match data.pointer_type.as_str() {
+                "mouse" => PointerType::Mouse,
+                "pen" => PointerType::Pen,
+                "touch" => PointerType::Touch,
+                _ => PointerType::Mouse,
+            };
+            let event: Box<dyn EventData> = Box::new(
+                PointerEvent::new()
+                    .target(data.target)
+                    .pointer_id(data.pointer_id)
+                    .pointer_type(pointer_type)
+                    .is_primary(data.is_primary)
+                    .client_x(data.client_x as i32)
+                    .client_y(data.client_y as i32)
+                    .screen_x(data.screen_x as i32)
+                    .screen_y(data.screen_y as i32)
+                    .offset_x(data.offset_x as i32)
+                    .offset_y(data.offset_y as i32)
+                    .page_x(data.page_x as i32)
+                    .page_y(data.page_y as i32)
+                    .movement_x(data.movement_x as i32)
+                    .movement_y(data.movement_y as i32)
+                    .width(data.width)
+                    .height(data.height)
+                    .pressure(data.pressure)
+                    .tangential_pressure(data.tangential_pressure)
+                    .tilt_x(data.tilt_x)
+                    .tilt_y(data.tilt_y)
+                    .twist(data.twist)
+                    .button(data.button as i16)
+                    .buttons(data.buttons)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "pointer", event);
+        }
+
+        fn on_transition_event(
+            listener_id: u64,
+            event_handle: u64,
+            data: bindings::exports::tairitsu_browser::full::event_callbacks::TransitionEventData,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                TransitionEvent::new()
+                    .target(data.target)
+                    .property_name(data.property_name)
+                    .elapsed_time(data.elapsed_time)
+                    .pseudo_element(data.pseudo_element)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "transition", event);
+        }
+
+        fn on_animation_event(
+            listener_id: u64,
+            event_handle: u64,
+            data: bindings::exports::tairitsu_browser::full::event_callbacks::AnimationEventData,
+        ) {
+            let wit_handle = EventWitHandle::from_wit(event_handle);
+            let event: Box<dyn EventData> = Box::new(
+                AnimationEvent::new()
+                    .target(data.target)
+                    .animation_name(data.animation_name)
+                    .pseudo_element(data.pseudo_element)
+                    .elapsed_time(data.elapsed_time)
+                    .iteration(data.iteration)
+                    .event_handle(wit_handle),
+            );
+            dispatch_event(listener_id, "animation", event);
         }
 
         fn on_generic_event(listener_id: u64, event_handle: u64, event_type: String) {

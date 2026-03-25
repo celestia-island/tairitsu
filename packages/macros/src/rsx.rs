@@ -455,6 +455,23 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                             "dragstart" | "dragend" | "dragover" | "dragleave" | "drop" => {
                                 quote! { tairitsu_vdom::DragEvent }
                             }
+                            "wheel" => {
+                                quote! { tairitsu_vdom::WheelEvent }
+                            }
+                            "touchstart" | "touchmove" | "touchend" | "touchcancel" => {
+                                quote! { tairitsu_vdom::TouchEvent }
+                            }
+                            "pointerdown" | "pointerup" | "pointermove" | "pointercancel"
+                            | "pointerout" | "pointerleave" | "pointerover" | "pointerenter"
+                            | "gotpointercapture" | "lostpointercapture" => {
+                                quote! { tairitsu_vdom::PointerEvent }
+                            }
+                            "transitionend" => {
+                                quote! { tairitsu_vdom::TransitionEvent }
+                            }
+                            "animationstart" | "animationend" | "animationiteration" => {
+                                quote! { tairitsu_vdom::AnimationEvent }
+                            }
                             _ => {
                                 // For unknown events, just pass the boxed event
                                 event_handlers.push(quote! {
