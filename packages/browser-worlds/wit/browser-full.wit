@@ -74,6 +74,79 @@ interface lifecycle {
     start: func() -> result<_, string>;
 }
 
+/// Timer callback interface - implemented by the component, called by host.
+interface timer-callbacks {
+    /// Called when a timeout fires.
+    on-timeout: func(callback-id: u64);
+    /// Called when an interval fires.
+    on-interval: func(callback-id: u64);
+}
+
+/// Animation callback interface - implemented by the component, called by host.
+interface animation-callbacks {
+    /// Called when an animation frame fires.
+    on-animation-frame: func(callback-id: u64, timestamp: f64);
+}
+
+/// Resize observer callback interface - implemented by the component, called by host.
+interface resize-observer-callbacks {
+    /// Called when resize observations fire.
+    on-resize: func(callback-id: u64, entries: list<u64>);
+}
+
+/// Mutation observer callback interface - implemented by the component, called by host.
+interface mutation-observer-callbacks {
+    /// Called when mutation observations fire.
+    on-mutation: func(callback-id: u64, records: list<u64>);
+}
+
+/// Platform helpers interface for browser APIs.
+interface platform-helpers {
+    use types.{dom-rect};
+
+    /// Get the inner width of the window.
+    inner-width: func() -> s32;
+
+    /// Get the inner height of the window.
+    inner-height: func() -> s32;
+
+    /// Set a timeout callback.
+    set-timeout: func(callback-id: u64, ms: s32) -> s32;
+
+    /// Clear a timeout.
+    clear-timeout: func(id: s32);
+
+    /// Request an animation frame callback.
+    request-animation-frame: func(callback-id: u64) -> u32;
+
+    /// Cancel an animation frame.
+    cancel-animation-frame: func(id: u32);
+
+    /// Get the bounding client rect of an element.
+    get-bounding-client-rect: func(element: u64) -> dom-rect;
+
+    /// Create a resize observer.
+    create-resize-observer: func(callback-id: u64) -> u64;
+
+    /// Observe element resize.
+    observe-resize: func(observer: u64, element: u64);
+
+    /// Unobserve element resize.
+    unobserve-resize: func(observer: u64, element: u64);
+
+    /// Disconnect resize observer.
+    disconnect-resize: func(observer: u64);
+
+    /// Create a mutation observer.
+    create-mutation-observer: func(callback-id: u64) -> u64;
+
+    /// Observe mutations on an element.
+    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
+
+    /// Disconnect mutation observer.
+    disconnect-mutation: func(observer: u64);
+}
+
 /// Console interface for logging.
 interface console {
     /// Log a message to the console.
@@ -13685,6 +13758,7 @@ world browser-full {
     import performance-resource-timing;
     import performance-timing;
     import performance-timing-confidence;
+    import platform-helpers;
     import permission-status;
     import permissions;
     import plugin;
@@ -13829,5 +13903,9 @@ world browser-full {
     import console;
     export event-callbacks;
     export lifecycle;
+    export timer-callbacks;
+    export animation-callbacks;
+    export resize-observer-callbacks;
+    export mutation-observer-callbacks;
 }
 

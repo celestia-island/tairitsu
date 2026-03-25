@@ -16,6 +16,7 @@ pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 
 use anyhow::Result;
 use wasmtime::{Engine, Store};
+use bindings::BrowserFull;
 
 /// Render a WASM component to HTML
 ///
@@ -64,11 +65,12 @@ pub fn render_to_html(wasm_bytes: &[u8], config: SsrConfig) -> Result<String> {
     // Register SSR-specific imports
     register_ssr_imports(&mut linker)?;
 
-    // Instantiate the component
-    let instance = linker.instantiate(&mut store, &component)?;
+    // Instantiate the component using the bindgen-generated bindings
+    // This gives us type-safe access to all exports including lifecycle::start
+    let browser_full = BrowserFull::instantiate(&mut store, &component, &linker)?;
 
-    // Try to call lifecycle::start if it exists
-    let _ = call_lifecycle_start(&mut store, &instance);
+    // Call lifecycle::start using the generated bindings
+    call_lifecycle_start(&mut store, &browser_full)?;
 
     // Extract HTML from the DOM
     let html = store.data().dom.render_body_html();
@@ -110,31 +112,30 @@ fn register_ssr_imports(linker: &mut wasmtime::component::Linker<SsrHostState>) 
 /// Call the lifecycle::start() export on the component
 fn call_lifecycle_start(
     store: &mut Store<SsrHostState>,
-    instance: &wasmtime::component::Instance,
+    browser_full: &BrowserFull,
 ) -> Result<()> {
-    // Try to get the lifecycle::start function using the standard naming pattern
-    // Component Model exports use "interface#function" format
-    let func = instance.get_func(&mut *store, "[export-lifecycle]start");
+    // Use the bindgen-generated bindings to call lifecycle::start
+    // The bindings provide type-safe access to all exported interfaces
+    let lifecycle = browser_full.tairitsu_browser_full_lifecycle();
 
-    if let Some(func) = func {
-        // Call the function (no args, returns result<_, string>)
-        let mut results = vec![];
-        func.call(store, &[], &mut results)?;
-        return Ok(());
-    }
-
-    // Try alternative naming patterns
-    for name in &["lifecycle#start", "lifecycle[start]", "start"] {
-        if let Some(func) = instance.get_func(&mut *store, name) {
-            let mut results = vec![];
-            func.call(store, &[], &mut results)?;
-            return Ok(());
+    // Call the start function
+    match lifecycle.call_start(store) {
+        Ok(Ok(())) => {
+            println!("lifecycle::start() called successfully");
+            Ok(())
+        }
+        Ok(Err(e)) => {
+            // The start function returned an error
+            let error_msg = e.to_string();
+            Err(anyhow::anyhow!("lifecycle::start returned error: {}", error_msg))
+        }
+        Err(e) => {
+            // Failed to call the function (e.g., the export doesn't exist)
+            // This is acceptable for components that don't have lifecycle::start
+            println!("lifecycle::start not available or failed to call: {}", e);
+            Ok(())
         }
     }
-
-    // If no lifecycle::start is found, that's acceptable - some components might not have it
-    tracing::debug!("No lifecycle::start export found (this is optional)");
-    Ok(())
 }
 
 #[cfg(test)]
