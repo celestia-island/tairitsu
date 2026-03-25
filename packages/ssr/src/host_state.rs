@@ -4,7 +4,7 @@
 
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
-use crate::bindings::{DomRect, ResizeObserverEntryHost, ResizeObserverSizeHost};
+use crate::bindings::{DomRect, PlatformHelpersHost, ResizeObserverEntryHost, ResizeObserverSizeHost};
 use crate::virtual_dom::SsrDom;
 
 /// SSR configuration
@@ -143,6 +143,57 @@ impl ResizeObserverSizeHost for SsrHostState {
     fn get_block_size(&mut self, _self_: u64) -> f64 {
         0.0
     }
+}
+
+// Implement the bindgen-generated Host trait for platform-helpers
+// This properly handles the dom-rect record type marshaling
+impl PlatformHelpersHost for SsrHostState {
+    fn get_bounding_client_rect(&mut self, _element: u64) -> DomRect {
+        DomRect {
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+        }
+    }
+
+    fn inner_width(&mut self) -> i32 {
+        self.dom.viewport_width()
+    }
+
+    fn inner_height(&mut self) -> i32 {
+        self.dom.viewport_height()
+    }
+
+    fn set_timeout(&mut self, _callback_id: u64, _ms: i32) -> i32 {
+        1
+    }
+
+    fn clear_timeout(&mut self, _id: i32) {}
+
+    fn request_animation_frame(&mut self, _callback_id: u64) -> u32 {
+        1
+    }
+
+    fn cancel_animation_frame(&mut self, _id: u32) {}
+
+    fn create_resize_observer(&mut self, _callback_id: u64) -> u64 {
+        1
+    }
+
+    fn observe_resize(&mut self, _observer: u64, _element: u64) {}
+
+    fn unobserve_resize(&mut self, _observer: u64, _element: u64) {}
+
+    fn disconnect_resize(&mut self, _observer: u64) {}
+
+    fn create_mutation_observer(&mut self, _callback_id: u64) -> u64 {
+        1
+    }
+
+    fn observe_mutations(&mut self, _observer: u64, _element: u64, _options: Option<u64>) {}
+
+    fn disconnect_mutation(&mut self, _observer: u64) {}
 }
 
 #[cfg(test)]

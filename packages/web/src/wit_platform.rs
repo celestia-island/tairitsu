@@ -190,8 +190,8 @@ mod wasm_impl {
 
     use tairitsu_vdom::{
         AnimationEvent, CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent,
-        GenericEvent, InputEvent, KeyboardEvent, MouseEvent, PointerEvent, PointerType,
-        Platform, TouchEvent, TouchPoint, TransitionEvent, VNode, WheelEvent,
+        GenericEvent, InputEvent, KeyboardEvent, MouseEvent, Platform, PointerEvent, PointerType,
+        TouchEvent, TouchPoint, TransitionEvent, VNode, WheelEvent,
     };
 
     use super::{WitElement, WitEvent, WitPlatform};
@@ -353,26 +353,39 @@ mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::TouchEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
-            let convert_touch_point = |tp: bindings::exports::tairitsu_browser::full::event_callbacks::TouchPoint| TouchPoint {
-                identifier: tp.identifier,
-                client_x: tp.client_x as i32,
-                client_y: tp.client_y as i32,
-                screen_x: tp.screen_x as i32,
-                screen_y: tp.screen_y as i32,
-                page_x: tp.page_x as i32,
-                page_y: tp.page_y as i32,
-                target: Some(tp.target),
-                force: tp.force,
-                radius_x: tp.radius_x,
-                radius_y: tp.radius_y,
-                rotation_angle: tp.rotation_angle,
-            };
+            let convert_touch_point =
+                |tp: bindings::exports::tairitsu_browser::full::event_callbacks::TouchPoint| {
+                    TouchPoint {
+                        identifier: tp.identifier,
+                        client_x: tp.client_x as i32,
+                        client_y: tp.client_y as i32,
+                        screen_x: tp.screen_x as i32,
+                        screen_y: tp.screen_y as i32,
+                        page_x: tp.page_x as i32,
+                        page_y: tp.page_y as i32,
+                        target: Some(tp.target),
+                        force: tp.force,
+                        radius_x: tp.radius_x,
+                        radius_y: tp.radius_y,
+                        rotation_angle: tp.rotation_angle,
+                    }
+                };
             let event: Box<dyn EventData> = Box::new(
                 TouchEvent::new()
                     .target(data.target)
                     .touches(data.touches.into_iter().map(convert_touch_point).collect())
-                    .changed_touches(data.changed_touches.into_iter().map(convert_touch_point).collect())
-                    .target_touches(data.target_touches.into_iter().map(convert_touch_point).collect())
+                    .changed_touches(
+                        data.changed_touches
+                            .into_iter()
+                            .map(convert_touch_point)
+                            .collect(),
+                    )
+                    .target_touches(
+                        data.target_touches
+                            .into_iter()
+                            .map(convert_touch_point)
+                            .collect(),
+                    )
                     .timestamp(data.timestamp)
                     .event_handle(wit_handle),
             );
@@ -415,7 +428,7 @@ mod wasm_impl {
                     .tilt_y(data.tilt_y)
                     .twist(data.twist)
                     .button(data.button as i16)
-                    .buttons(data.buttons)
+                    .buttons(data.buttons as u16)
                     .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "pointer", event);
@@ -1089,7 +1102,10 @@ mod wasm_impl {
                 remove_child_at(platform, element, *index)?;
             }
 
-            Patch::UpdateChild { index, patches: child_patches } => {
+            Patch::UpdateChild {
+                index,
+                patches: child_patches,
+            } => {
                 // Get the child at the specified index
                 let child = get_child_at(element, *index)?;
                 if let Some(child_element) = child {
@@ -1103,12 +1119,18 @@ mod wasm_impl {
             Patch::AddEvent { name } => {
                 // This is a no-op for patches - event handlers are managed by the VNode
                 // and are not directly applied through patches
-                log_info(&format!("AddEvent patch for '{}': event handler managed by VNode", name));
+                log_info(&format!(
+                    "AddEvent patch for '{}': event handler managed by VNode",
+                    name
+                ));
             }
 
             Patch::UpdateEvent { name } => {
                 // This is a no-op for patches - event handlers are managed by the VNode
-                log_info(&format!("UpdateEvent patch for '{}': event handler managed by VNode", name));
+                log_info(&format!(
+                    "UpdateEvent patch for '{}': event handler managed by VNode",
+                    name
+                ));
             }
 
             Patch::RemoveEvent { name } => {
@@ -1149,9 +1171,7 @@ mod wasm_impl {
 
                 Ok(element)
             }
-            VNode::Text(vtext) => {
-                Ok(platform.create_text_node(&vtext.text))
-            }
+            VNode::Text(vtext) => Ok(platform.create_text_node(&vtext.text)),
             VNode::Fragment(_) => {
                 // Fragments can't be represented as a single element
                 // Create a placeholder div
@@ -1205,7 +1225,10 @@ mod wasm_impl {
                 }
             }
             VNode::Text(vtext) => {
-                bindings::tairitsu_browser::full::node::set_text_content(element.0, Some(&vtext.text));
+                bindings::tairitsu_browser::full::node::set_text_content(
+                    element.0,
+                    Some(&vtext.text),
+                );
             }
             VNode::Fragment(children) => {
                 for child in children {
@@ -1218,7 +1241,11 @@ mod wasm_impl {
     }
 
     /// Apply styles to an element.
-    fn apply_style(platform: &WitPlatform, element: &WitElement, style: &tairitsu_vdom::Style) -> Result<()> {
+    fn apply_style(
+        platform: &WitPlatform,
+        element: &WitElement,
+        style: &tairitsu_vdom::Style,
+    ) -> Result<()> {
         // Apply static styles
         if !style.static_styles.is_empty() {
             for part in style.static_styles.split(';') {
@@ -1252,7 +1279,8 @@ mod wasm_impl {
 
         // Get the current number of children using child-nodes NodeList
         let child_nodes_handle = bindings::tairitsu_browser::full::node::get_child_nodes(parent.0);
-        let child_count = bindings::tairitsu_browser::full::node_list::get_length(child_nodes_handle) as usize;
+        let child_count =
+            bindings::tairitsu_browser::full::node_list::get_length(child_nodes_handle) as usize;
 
         if index >= child_count {
             // Append at the end
@@ -1260,9 +1288,14 @@ mod wasm_impl {
         } else {
             // Insert at the specific position
             // Get the child at the index to use as the reference node
-            let next_sibling = bindings::tairitsu_browser::full::node_list::item(child_nodes_handle, index as u32);
+            let next_sibling =
+                bindings::tairitsu_browser::full::node_list::item(child_nodes_handle, index as u32);
             if let Some(sibling) = next_sibling {
-                let _ = bindings::tairitsu_browser::full::node::insert_before(parent.0, new_element.0, Some(sibling));
+                let _ = bindings::tairitsu_browser::full::node::insert_before(
+                    parent.0,
+                    new_element.0,
+                    Some(sibling),
+                );
             } else {
                 platform.append_child(parent, &new_element);
             }
@@ -1290,7 +1323,8 @@ mod wasm_impl {
     /// Get a child element at a specific index.
     fn get_child_at(parent: &WitElement, index: usize) -> Result<Option<WitElement>> {
         let child_nodes_handle = bindings::tairitsu_browser::full::node::get_child_nodes(parent.0);
-        let child_handle = bindings::tairitsu_browser::full::node_list::item(child_nodes_handle, index as u32);
+        let child_handle =
+            bindings::tairitsu_browser::full::node_list::item(child_nodes_handle, index as u32);
         Ok(child_handle.map(WitElement))
     }
 }
@@ -1299,7 +1333,7 @@ mod wasm_impl {
 
 #[cfg(test)]
 mod tests {
-    use tairitsu_vdom::{Classes, Patch, Style, VElement, VText, VNode};
+    use tairitsu_vdom::{Classes, Patch, Style, VElement, VNode, VText};
 
     /// Test that apply_patches handles an empty patch list correctly.
     #[test]
@@ -1325,7 +1359,9 @@ mod tests {
         }
 
         // Test UpdateText patch
-        let update_text_patch = Patch::UpdateText { text: "World".to_string() };
+        let update_text_patch = Patch::UpdateText {
+            text: "World".to_string(),
+        };
         match update_text_patch {
             Patch::UpdateText { text } => {
                 assert_eq!(text, "World");
@@ -1360,7 +1396,9 @@ mod tests {
         }
 
         // Test RemoveAttribute patch
-        let remove_attr_patch = Patch::RemoveAttribute { name: "disabled".to_string() };
+        let remove_attr_patch = Patch::RemoveAttribute {
+            name: "disabled".to_string(),
+        };
         match remove_attr_patch {
             Patch::RemoveAttribute { name } => {
                 assert_eq!(name, "disabled");
@@ -1370,7 +1408,10 @@ mod tests {
 
         // Test InsertChild patch
         let child = VNode::Text(VText::new("Child"));
-        let insert_child_patch = Patch::InsertChild { index: 0, node: child };
+        let insert_child_patch = Patch::InsertChild {
+            index: 0,
+            node: child,
+        };
         match insert_child_patch {
             Patch::InsertChild { index, node } => {
                 assert_eq!(index, 0);
@@ -1389,8 +1430,13 @@ mod tests {
         }
 
         // Test UpdateChild patch
-        let child_patches = vec![Patch::UpdateText { text: "Updated".to_string() }];
-        let update_child_patch = Patch::UpdateChild { index: 1, patches: child_patches };
+        let child_patches = vec![Patch::UpdateText {
+            text: "Updated".to_string(),
+        }];
+        let update_child_patch = Patch::UpdateChild {
+            index: 1,
+            patches: child_patches,
+        };
         match update_child_patch {
             Patch::UpdateChild { index, patches } => {
                 assert_eq!(index, 1);
@@ -1401,7 +1447,9 @@ mod tests {
 
         // Test ReplaceNode patch
         let new_node = VNode::Element(VElement::new("div"));
-        let replace_patch = Patch::ReplaceNode { node: new_node.clone() };
+        let replace_patch = Patch::ReplaceNode {
+            node: new_node.clone(),
+        };
         match replace_patch {
             Patch::ReplaceNode { node } => {
                 assert_eq!(node, new_node);
@@ -1410,7 +1458,9 @@ mod tests {
         }
 
         // Test event patches
-        let add_event_patch = Patch::AddEvent { name: "click".to_string() };
+        let add_event_patch = Patch::AddEvent {
+            name: "click".to_string(),
+        };
         match add_event_patch {
             Patch::AddEvent { name } => {
                 assert_eq!(name, "click");
@@ -1418,7 +1468,9 @@ mod tests {
             _ => panic!("Expected AddEvent patch"),
         }
 
-        let update_event_patch = Patch::UpdateEvent { name: "click".to_string() };
+        let update_event_patch = Patch::UpdateEvent {
+            name: "click".to_string(),
+        };
         match update_event_patch {
             Patch::UpdateEvent { name } => {
                 assert_eq!(name, "click");
@@ -1426,7 +1478,9 @@ mod tests {
             _ => panic!("Expected UpdateEvent patch"),
         }
 
-        let remove_event_patch = Patch::RemoveEvent { name: "click".to_string() };
+        let remove_event_patch = Patch::RemoveEvent {
+            name: "click".to_string(),
+        };
         match remove_event_patch {
             Patch::RemoveEvent { name } => {
                 assert_eq!(name, "click");
@@ -1439,12 +1493,22 @@ mod tests {
     #[test]
     fn test_nested_patches() {
         let nested_patches = vec![
-            Patch::UpdateAttribute { name: "href".to_string(), value: "#".to_string() },
-            Patch::UpdateClass { class: Classes::new().add("active") },
-            Patch::UpdateStyle { style: Style::new().add("color", "red") },
+            Patch::UpdateAttribute {
+                name: "href".to_string(),
+                value: "#".to_string(),
+            },
+            Patch::UpdateClass {
+                class: Classes::new().add("active"),
+            },
+            Patch::UpdateStyle {
+                style: Style::new().add("color", "red"),
+            },
         ];
 
-        let update_child_patch = Patch::UpdateChild { index: 0, patches: nested_patches };
+        let update_child_patch = Patch::UpdateChild {
+            index: 0,
+            patches: nested_patches,
+        };
 
         match update_child_patch {
             Patch::UpdateChild { index, patches } => {
@@ -1462,17 +1526,24 @@ mod tests {
     /// Test that Patch::is_empty works correctly.
     #[test]
     fn test_patch_is_empty() {
-        let empty_patch = Patch::UpdateChild { index: 0, patches: vec![] };
+        let empty_patch = Patch::UpdateChild {
+            index: 0,
+            patches: vec![],
+        };
         assert!(empty_patch.is_empty());
 
         let non_empty_patch = Patch::UpdateChild {
             index: 0,
-            patches: vec![Patch::UpdateText { text: "test".to_string() }],
+            patches: vec![Patch::UpdateText {
+                text: "test".to_string(),
+            }],
         };
         assert!(!non_empty_patch.is_empty());
 
         // Other patch variants should return false for is_empty
-        let text_patch = Patch::UpdateText { text: "test".to_string() };
+        let text_patch = Patch::UpdateText {
+            text: "test".to_string(),
+        };
         assert!(!text_patch.is_empty());
     }
 

@@ -65,14 +65,12 @@ fn test_touch_event_builder_touches() {
 
 #[test]
 fn test_touch_event_builder_changed_touches() {
-    let changed = vec![
-        TouchPoint {
-            identifier: 1,
-            client_x: 100,
-            client_y: 200,
-            ..Default::default()
-        },
-    ];
+    let changed = vec![TouchPoint {
+        identifier: 1,
+        client_x: 100,
+        client_y: 200,
+        ..Default::default()
+    }];
 
     let event = TouchEvent::new().changed_touches(changed);
 
@@ -82,14 +80,12 @@ fn test_touch_event_builder_changed_touches() {
 
 #[test]
 fn test_touch_event_builder_target_touches() {
-    let target_touches = vec![
-        TouchPoint {
-            identifier: 1,
-            client_x: 100,
-            client_y: 200,
-            ..Default::default()
-        },
-    ];
+    let target_touches = vec![TouchPoint {
+        identifier: 1,
+        client_x: 100,
+        client_y: 200,
+        ..Default::default()
+    }];
 
     let event = TouchEvent::new().target_touches(target_touches);
 
@@ -105,14 +101,12 @@ fn test_touch_event_builder_timestamp() {
 
 #[test]
 fn test_touch_event_clone() {
-    let touches = vec![
-        TouchPoint {
-            identifier: 1,
-            client_x: 100,
-            client_y: 200,
-            ..Default::default()
-        },
-    ];
+    let touches = vec![TouchPoint {
+        identifier: 1,
+        client_x: 100,
+        client_y: 200,
+        ..Default::default()
+    }];
 
     let event = TouchEvent::new()
         .target(123)

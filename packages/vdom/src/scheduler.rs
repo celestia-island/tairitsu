@@ -27,7 +27,6 @@ struct ComponentState {
     root_element: Option<Rc<RefCell<dyn std::any::Any>>>,
 }
 
-
 /// Inner state of the scheduler
 struct SchedulerInner<P: Platform> {
     /// Scheduler ID
@@ -81,11 +80,7 @@ impl<P: Platform> Scheduler<P> {
         let mut inner = self.inner.borrow_mut();
         let id = inner.components.len();
         inner.components.push(ComponentState::default());
-        trace!(
-            "Scheduler {}: Registered component {}",
-            inner.id,
-            id
-        );
+        trace!("Scheduler {}: Registered component {}", inner.id, id);
         id
     }
 
@@ -139,8 +134,9 @@ impl<P: Platform> Scheduler<P> {
         drop(inner);
 
         // Schedule using the platform's request_animation_frame
-        let raf_id = platform_clone.borrow_mut().request_animation_frame(Box::new(
-            move |_timestamp| {
+        let raf_id = platform_clone
+            .borrow_mut()
+            .request_animation_frame(Box::new(move |_timestamp| {
                 trace!("Render callback triggered");
                 {
                     let mut inner = inner_clone.borrow_mut();
@@ -161,14 +157,17 @@ impl<P: Platform> Scheduler<P> {
                 for component_id in dirty_components {
                     Self::render_component_inner(inner_clone.clone(), component_id);
                 }
-            },
-        ));
+            }));
 
         // Re-borrow to set the raf_id
         let mut inner = self.inner.borrow_mut();
         inner.raf_id = Some(raf_id);
 
-        trace!("Scheduler {}: Scheduled render with rAF id {}", inner.id, raf_id);
+        trace!(
+            "Scheduler {}: Scheduled render with rAF id {}",
+            inner.id,
+            raf_id
+        );
     }
 
     /// Render a single component and apply patches.
@@ -339,8 +338,17 @@ mod tests {
             None
         }
         fn canvas_set_fill_style(&self, _ctx: crate::CanvasContext, _color: &str) {}
-        fn canvas_fill_rect(&self, _ctx: crate::CanvasContext, _x: f64, _y: f64, _w: f64, _h: f64) {}
-        fn canvas_clear_rect(&self, _ctx: crate::CanvasContext, _x: f64, _y: f64, _w: f64, _h: f64) {}
+        fn canvas_fill_rect(&self, _ctx: crate::CanvasContext, _x: f64, _y: f64, _w: f64, _h: f64) {
+        }
+        fn canvas_clear_rect(
+            &self,
+            _ctx: crate::CanvasContext,
+            _x: f64,
+            _y: f64,
+            _w: f64,
+            _h: f64,
+        ) {
+        }
         fn create_resize_observer(
             &self,
             _callback: Box<dyn FnMut(Vec<crate::ResizeObserverEntry>)>,

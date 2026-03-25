@@ -15,8 +15,8 @@ pub use html_render::FullDocumentConfig;
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 
 use anyhow::Result;
-use wasmtime::{Engine, Store};
 use bindings::BrowserFull;
+use wasmtime::{Engine, Store};
 
 /// Render a WASM component to HTML
 ///
@@ -110,10 +110,7 @@ fn register_ssr_imports(linker: &mut wasmtime::component::Linker<SsrHostState>) 
 }
 
 /// Call the lifecycle::start() export on the component
-fn call_lifecycle_start(
-    store: &mut Store<SsrHostState>,
-    browser_full: &BrowserFull,
-) -> Result<()> {
+fn call_lifecycle_start(store: &mut Store<SsrHostState>, browser_full: &BrowserFull) -> Result<()> {
     // Use the bindgen-generated bindings to call lifecycle::start
     // The bindings provide type-safe access to all exported interfaces
     let lifecycle = browser_full.tairitsu_browser_full_lifecycle();
@@ -127,7 +124,10 @@ fn call_lifecycle_start(
         Ok(Err(e)) => {
             // The start function returned an error
             let error_msg = e.to_string();
-            Err(anyhow::anyhow!("lifecycle::start returned error: {}", error_msg))
+            Err(anyhow::anyhow!(
+                "lifecycle::start returned error: {}",
+                error_msg
+            ))
         }
         Err(e) => {
             // Failed to call the function (e.g., the export doesn't exist)

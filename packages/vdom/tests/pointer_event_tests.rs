@@ -86,9 +86,7 @@ fn test_pointer_event_builder_coords() {
 
 #[test]
 fn test_pointer_event_builder_movement() {
-    let event = PointerEvent::new()
-        .movement_x(10)
-        .movement_y(20);
+    let event = PointerEvent::new().movement_x(10).movement_y(20);
 
     assert_eq!(event.movement_x, 10);
     assert_eq!(event.movement_y, 20);
@@ -96,9 +94,7 @@ fn test_pointer_event_builder_movement() {
 
 #[test]
 fn test_pointer_event_builder_dimensions() {
-    let event = PointerEvent::new()
-        .width(15.5)
-        .height(20.3);
+    let event = PointerEvent::new().width(15.5).height(20.3);
 
     assert_eq!(event.width, 15.5);
     assert_eq!(event.height, 20.3);
@@ -106,9 +102,7 @@ fn test_pointer_event_builder_dimensions() {
 
 #[test]
 fn test_pointer_event_builder_pressure() {
-    let event = PointerEvent::new()
-        .pressure(0.5)
-        .tangential_pressure(0.3);
+    let event = PointerEvent::new().pressure(0.5).tangential_pressure(0.3);
 
     assert_eq!(event.pressure, 0.5);
     assert_eq!(event.tangential_pressure, 0.3);
@@ -116,9 +110,7 @@ fn test_pointer_event_builder_pressure() {
 
 #[test]
 fn test_pointer_event_builder_tilt() {
-    let event = PointerEvent::new()
-        .tilt_x(30)
-        .tilt_y(-15);
+    let event = PointerEvent::new().tilt_x(30).tilt_y(-15);
 
     assert_eq!(event.tilt_x, 30);
     assert_eq!(event.tilt_y, -15);
@@ -132,9 +124,7 @@ fn test_pointer_event_builder_twist() {
 
 #[test]
 fn test_pointer_event_builder_buttons() {
-    let event = PointerEvent::new()
-        .button(1)
-        .buttons(3);
+    let event = PointerEvent::new().button(1).buttons(3);
 
     assert_eq!(event.button, 1);
     assert_eq!(event.buttons, 3);
