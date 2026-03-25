@@ -812,7 +812,7 @@ export function getReadyState(self: bigint): bigint {
 /**
  * `get-onended()` operation.
  */
-export function getOnended(self: bigint): bigint {
+export function MediaStreamTrackGetOnended(self: bigint): bigint {
   const obj = lookupMediaStreamTrack(self);
   return (obj as any).onended;
 }
@@ -820,7 +820,7 @@ export function getOnended(self: bigint): bigint {
 /**
  * `set-onended()` operation.
  */
-export function setOnended(self: bigint, value: bigint): void {
+export function MediaStreamTrackSetOnended(self: bigint, value: bigint): void {
   const obj = lookupMediaStreamTrack(self);
   (obj as any).onended = value;
 }
@@ -1224,7 +1224,7 @@ export function getGroupId(self: bigint): string {
 /**
  * `to-json()` operation.
  */
-export function toJson(self: bigint): bigint {
+export function MediaDeviceInfoToJson(self: bigint): bigint {
   const obj = lookupMediaDeviceInfo(self);
   return obj.toJSON();
 }
@@ -1609,7 +1609,7 @@ function lookupOptionMediaRecorder(handle: bigint | undefined): MediaRecorder | 
 /**
  * `get-stream()` operation.
  */
-export function getStream(self: bigint): bigint {
+export function MediaRecorderGetStream(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   const _callResult = obj.stream;
   const handle = _nextMediaStream++;
@@ -1628,7 +1628,7 @@ export function getMimeType(self: bigint): string {
 /**
  * `get-state()` operation.
  */
-export function getState(self: bigint): bigint {
+export function MediaRecorderGetState(self: bigint): bigint {
   const obj = lookupMediaRecorder(self);
   const value = obj.state;
   switch (value) {
@@ -3149,6 +3149,2608 @@ export function getDefault(self: bigint): bigint {
 }
 
 // ---------------------------------------------------------------------------
+// WIT interface: base-audio-context
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BaseAudioContextHandle = bigint;
+
+/** Handle table for BaseAudioContext instances */
+const _baseAudioContexthandles = new Map<bigint, BaseAudioContext>();
+let _nextBaseAudioContext = 1n;
+
+/** Register a new BaseAudioContext and return its handle. */
+function registerBaseAudioContext(obj: BaseAudioContext): bigint {
+  const handle = _nextBaseAudioContext++;
+  _baseAudioContexthandles.set(handle, obj);
+  return handle;
+}
+/** Lookup a BaseAudioContext by handle, throwing if not found. */
+function lookupBaseAudioContext(handle: bigint): BaseAudioContext {
+  const obj = _baseAudioContexthandles.get(handle);
+  if (!obj) {
+    throw new Error(`BaseAudioContext handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional BaseAudioContext by handle. */
+function lookupOptionBaseAudioContext(handle: bigint | undefined): BaseAudioContext | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _baseAudioContexthandles.get(handle) ?? null;
+}
+/**
+ * `get-destination()` operation.
+ */
+export function getDestination(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.destination;
+}
+
+/**
+ * `get-sample-rate()` operation.
+ */
+export function BaseAudioContextGetSampleRate(self: bigint): number {
+  const obj = lookupBaseAudioContext(self);
+  return obj.sampleRate;
+}
+
+/**
+ * `get-current-time()` operation.
+ */
+export function BaseAudioContextGetCurrentTime(self: bigint): number {
+  const obj = lookupBaseAudioContext(self);
+  return obj.currentTime;
+}
+
+/**
+ * `get-listener()` operation.
+ */
+export function getListener(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.listener;
+}
+
+/**
+ * `get-state()` operation.
+ */
+export function BaseAudioContextGetState(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.state;
+}
+
+/**
+ * `get-render-quantum-size()` operation.
+ */
+export function BaseAudioContextGetRenderQuantumSize(self: bigint): number {
+  const obj = lookupBaseAudioContext(self);
+  return obj.renderQuantumSize;
+}
+
+/**
+ * `get-audio-worklet()` operation.
+ */
+export function getAudioWorklet(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.audioWorklet;
+}
+
+/**
+ * `get-onstatechange()` operation.
+ */
+export function getOnstatechange(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.onstatechange;
+}
+
+/**
+ * `set-onstatechange()` operation.
+ */
+export function setOnstatechange(self: bigint, value: bigint): void {
+  const obj = lookupBaseAudioContext(self);
+  obj.onstatechange = value;
+}
+
+/**
+ * `create-analyser()` operation.
+ */
+export function createAnalyser(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createAnalyser();
+}
+
+/**
+ * `create-biquad-filter()` operation.
+ */
+export function createBiquadFilter(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createBiquadFilter();
+}
+
+/**
+ * `create-buffer()` operation.
+ */
+export function createBuffer(self: bigint, numberOfChannels: number, length: number, sampleRate: number): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createBuffer(numberOfChannels, length, sampleRate);
+}
+
+/**
+ * `create-buffer-source()` operation.
+ */
+export function createBufferSource(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createBufferSource();
+}
+
+/**
+ * `create-channel-merger()` operation.
+ */
+export function createChannelMerger(self: bigint, numberOfInputs: number | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createChannelMerger(numberOfInputs);
+}
+
+/**
+ * `create-channel-splitter()` operation.
+ */
+export function createChannelSplitter(self: bigint, numberOfOutputs: number | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createChannelSplitter(numberOfOutputs);
+}
+
+/**
+ * `create-constant-source()` operation.
+ */
+export function createConstantSource(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createConstantSource();
+}
+
+/**
+ * `create-convolver()` operation.
+ */
+export function createConvolver(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createConvolver();
+}
+
+/**
+ * `create-delay()` operation.
+ */
+export function createDelay(self: bigint, maxDelayTime: number | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createDelay(maxDelayTime);
+}
+
+/**
+ * `create-dynamics-compressor()` operation.
+ */
+export function createDynamicsCompressor(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createDynamicsCompressor();
+}
+
+/**
+ * `create-gain()` operation.
+ */
+export function createGain(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createGain();
+}
+
+/**
+ * `create-iir-filter()` operation.
+ */
+export function createIirFilter(self: bigint, feedforward: (number)[], feedback: (number)[]): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createIirFilter(feedforward, feedback);
+}
+
+/**
+ * `create-oscillator()` operation.
+ */
+export function createOscillator(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createOscillator();
+}
+
+/**
+ * `create-panner()` operation.
+ */
+export function createPanner(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createPanner();
+}
+
+/**
+ * `create-periodic-wave()` operation.
+ */
+export function createPeriodicWave(self: bigint, real: (number)[], imag: (number)[], constraints: bigint | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createPeriodicWave(real, imag, constraints);
+}
+
+/**
+ * `create-script-processor()` operation.
+ */
+export function createScriptProcessor(self: bigint, bufferSize: number | undefined, numberOfInputChannels: number | undefined, numberOfOutputChannels: number | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOutputChannels);
+}
+
+/**
+ * `create-stereo-panner()` operation.
+ */
+export function createStereoPanner(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createStereoPanner();
+}
+
+/**
+ * `create-wave-shaper()` operation.
+ */
+export function createWaveShaper(self: bigint): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.createWaveShaper();
+}
+
+/**
+ * `decode-audio-data()` operation.
+ */
+export function decodeAudioData(self: bigint, audioData: Uint8Array, successCallback: bigint | undefined, errorCallback: bigint | undefined): bigint {
+  const obj = lookupBaseAudioContext(self);
+  return obj.decodeAudioData(audioData, successCallback, errorCallback);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-context
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioContextHandle = bigint;
+
+/** Handle table for AudioContext instances */
+const _audioContexthandles = new Map<bigint, AudioContext>();
+let _nextAudioContext = 1n;
+
+/** Register a new AudioContext and return its handle. */
+function registerAudioContext(obj: AudioContext): bigint {
+  const handle = _nextAudioContext++;
+  _audioContexthandles.set(handle, obj);
+  return handle;
+}
+/** Lookup a AudioContext by handle, throwing if not found. */
+function lookupAudioContext(handle: bigint): AudioContext {
+  const obj = _audioContexthandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioContext handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioContext by handle. */
+function lookupOptionAudioContext(handle: bigint | undefined): AudioContext | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioContexthandles.get(handle) ?? null;
+}
+/**
+ * `get-base-latency()` operation.
+ */
+export function getBaseLatency(self: bigint): number {
+  const obj = lookupAudioContext(self);
+  return obj.baseLatency;
+}
+
+/**
+ * `get-output-latency()` operation.
+ */
+export function getOutputLatency(self: bigint): number {
+  const obj = lookupAudioContext(self);
+  return obj.outputLatency;
+}
+
+/**
+ * `get-sink-id()` operation.
+ */
+export function getSinkId(self: bigint): string {
+  const obj = lookupAudioContext(self);
+  return obj.sinkId;
+}
+
+/**
+ * `get-onsinkchange()` operation.
+ */
+export function getOnsinkchange(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.onsinkchange;
+}
+
+/**
+ * `set-onsinkchange()` operation.
+ */
+export function setOnsinkchange(self: bigint, value: bigint): void {
+  const obj = lookupAudioContext(self);
+  obj.onsinkchange = value;
+}
+
+/**
+ * `get-onerror()` operation.
+ */
+export function AudioContextGetOnerror(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.onerror;
+}
+
+/**
+ * `set-onerror()` operation.
+ */
+export function AudioContextSetOnerror(self: bigint, value: bigint): void {
+  const obj = lookupAudioContext(self);
+  obj.onerror = value;
+}
+
+/**
+ * `get-playback-stats()` operation.
+ */
+export function getPlaybackStats(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.playbackStats;
+}
+
+/**
+ * `get-output-timestamp()` operation.
+ */
+export function getOutputTimestamp(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.outputTimestamp;
+}
+
+/**
+ * `resume()` operation.
+ */
+export function AudioContextResume(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.resume();
+}
+
+/**
+ * `suspend()` operation.
+ */
+export function AudioContextSuspend(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.suspend();
+}
+
+/**
+ * `close()` operation.
+ */
+export function close(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.close();
+}
+
+/**
+ * `set-sink-id()` operation.
+ */
+export function setSinkId(self: bigint, sinkId: string): bigint {
+  const obj = lookupAudioContext(self);
+  obj.sinkId = sinkId;
+}
+
+/**
+ * `create-media-element-source()` operation.
+ */
+export function createMediaElementSource(self: bigint, mediaElement: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.createMediaElementSource(mediaElement);
+}
+
+/**
+ * `create-media-stream-source()` operation.
+ */
+export function createMediaStreamSource(self: bigint, mediaStream: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.createMediaStreamSource(mediaStream);
+}
+
+/**
+ * `create-media-stream-track-source()` operation.
+ */
+export function createMediaStreamTrackSource(self: bigint, mediaStreamTrack: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.createMediaStreamTrackSource(mediaStreamTrack);
+}
+
+/**
+ * `create-media-stream-destination()` operation.
+ */
+export function createMediaStreamDestination(self: bigint): bigint {
+  const obj = lookupAudioContext(self);
+  return obj.createMediaStreamDestination();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-sink-info
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioSinkInfoHandle = bigint;
+
+/** Handle table for AudioSinkInfo instances */
+const _audioSinkInfohandles = new Map<bigint, AudioSinkInfo>();
+let _nextAudioSinkInfo = 1n;
+
+/** Lookup a AudioSinkInfo by handle, throwing if not found. */
+function lookupAudioSinkInfo(handle: bigint): AudioSinkInfo {
+  const obj = _audioSinkInfohandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioSinkInfo handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioSinkInfo by handle. */
+function lookupOptionAudioSinkInfo(handle: bigint | undefined): AudioSinkInfo | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioSinkInfohandles.get(handle) ?? null;
+}
+/**
+ * `get-type()` operation.
+ */
+export function AudioSinkInfoGetType(self: bigint): bigint {
+  const obj = lookupAudioSinkInfo(self);
+  return obj.getType();
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: offline-audio-context
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OfflineAudioContextHandle = bigint;
+
+/** Handle table for OfflineAudioContext instances */
+const _offlineAudioContexthandles = new Map<bigint, OfflineAudioContext>();
+let _nextOfflineAudioContext = 1n;
+
+/** Lookup a OfflineAudioContext by handle, throwing if not found. */
+function lookupOfflineAudioContext(handle: bigint): OfflineAudioContext {
+  const obj = _offlineAudioContexthandles.get(handle);
+  if (!obj) {
+    throw new Error(`OfflineAudioContext handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional OfflineAudioContext by handle. */
+function lookupOptionOfflineAudioContext(handle: bigint | undefined): OfflineAudioContext | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _offlineAudioContexthandles.get(handle) ?? null;
+}
+/**
+ * `start-rendering()` operation.
+ */
+export function startRendering(self: bigint): bigint {
+  const obj = lookupOfflineAudioContext(self);
+  return obj.startRendering();
+}
+
+/**
+ * `resume()` operation.
+ */
+export function OfflineAudioContextResume(self: bigint): bigint {
+  const obj = lookupOfflineAudioContext(self);
+  return obj.resume();
+}
+
+/**
+ * `suspend()` operation.
+ */
+export function OfflineAudioContextSuspend(self: bigint, suspendTime: number): bigint {
+  const obj = lookupOfflineAudioContext(self);
+  return obj.suspend(suspendTime);
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function OfflineAudioContextGetLength(self: bigint): number {
+  const obj = lookupOfflineAudioContext(self);
+  return obj.length;
+}
+
+/**
+ * `get-oncomplete()` operation.
+ */
+export function getOncomplete(self: bigint): bigint {
+  const obj = lookupOfflineAudioContext(self);
+  return obj.oncomplete;
+}
+
+/**
+ * `set-oncomplete()` operation.
+ */
+export function setOncomplete(self: bigint, value: bigint): void {
+  const obj = lookupOfflineAudioContext(self);
+  obj.oncomplete = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: offline-audio-completion-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OfflineAudioCompletionEventHandle = bigint;
+
+/** Handle table for OfflineAudioCompletionEvent instances */
+const _offlineAudioCompletionEventhandles = new Map<bigint, OfflineAudioCompletionEvent>();
+let _nextOfflineAudioCompletionEvent = 1n;
+
+/** Lookup a OfflineAudioCompletionEvent by handle, throwing if not found. */
+function lookupOfflineAudioCompletionEvent(handle: bigint): OfflineAudioCompletionEvent {
+  const obj = _offlineAudioCompletionEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`OfflineAudioCompletionEvent handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional OfflineAudioCompletionEvent by handle. */
+function lookupOptionOfflineAudioCompletionEvent(handle: bigint | undefined): OfflineAudioCompletionEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _offlineAudioCompletionEventhandles.get(handle) ?? null;
+}
+/**
+ * `get-rendered-buffer()` operation.
+ */
+export function getRenderedBuffer(self: bigint): bigint {
+  const obj = lookupOfflineAudioCompletionEvent(self);
+  return obj.renderedBuffer;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-buffer
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioBufferHandle = bigint;
+
+/** Handle table for AudioBuffer instances */
+const _audioBufferhandles = new Map<bigint, AudioBuffer>();
+let _nextAudioBuffer = 1n;
+
+/** Lookup a AudioBuffer by handle, throwing if not found. */
+function lookupAudioBuffer(handle: bigint): AudioBuffer {
+  const obj = _audioBufferhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioBuffer handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioBuffer by handle. */
+function lookupOptionAudioBuffer(handle: bigint | undefined): AudioBuffer | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioBufferhandles.get(handle) ?? null;
+}
+/**
+ * `get-sample-rate()` operation.
+ */
+export function AudioBufferGetSampleRate(self: bigint): number {
+  const obj = lookupAudioBuffer(self);
+  return obj.sampleRate;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function AudioBufferGetLength(self: bigint): number {
+  const obj = lookupAudioBuffer(self);
+  return obj.length;
+}
+
+/**
+ * `get-duration()` operation.
+ */
+export function getDuration(self: bigint): number {
+  const obj = lookupAudioBuffer(self);
+  return obj.duration;
+}
+
+/**
+ * `get-number-of-channels()` operation.
+ */
+export function getNumberOfChannels(self: bigint): number {
+  const obj = lookupAudioBuffer(self);
+  return obj.numberOfChannels;
+}
+
+/**
+ * `get-channel-data()` operation.
+ */
+export function getChannelData(self: bigint, channel: number): (number)[] {
+  const obj = lookupAudioBuffer(self);
+  return obj.channelData;
+}
+
+/**
+ * `copy-from-channel()` operation.
+ */
+export function copyFromChannel(self: bigint, destination: (number)[], channelNumber: number, bufferOffset: number | undefined): void {
+  const obj = lookupAudioBuffer(self);
+  obj.copyFromChannel(destination, channelNumber, bufferOffset);
+}
+
+/**
+ * `copy-to-channel()` operation.
+ */
+export function copyToChannel(self: bigint, source: (number)[], channelNumber: number, bufferOffset: number | undefined): void {
+  const obj = lookupAudioBuffer(self);
+  obj.copyToChannel(source, channelNumber, bufferOffset);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioNodeHandle = bigint;
+
+/** Handle table for AudioNode instances */
+const _audioNodehandles = new Map<bigint, AudioNode>();
+let _nextAudioNode = 1n;
+
+/** Lookup a AudioNode by handle, throwing if not found. */
+function lookupAudioNode(handle: bigint): AudioNode {
+  const obj = _audioNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioNode by handle. */
+function lookupOptionAudioNode(handle: bigint | undefined): AudioNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioNodehandles.get(handle) ?? null;
+}
+/**
+ * `connect()` operation.
+ */
+export function connect(self: bigint, destinationNode: bigint, output: number | undefined, input: number | undefined): bigint {
+  const obj = lookupAudioNode(self);
+  return obj.connect(destinationNode, output, input);
+}
+
+/**
+ * `disconnect()` operation.
+ */
+export function disconnect(self: bigint): void {
+  const obj = lookupAudioNode(self);
+  obj.disconnect();
+}
+
+/**
+ * `get-context()` operation.
+ */
+export function getContext(self: bigint): bigint {
+  const obj = lookupAudioNode(self);
+  return obj.context;
+}
+
+/**
+ * `get-number-of-inputs()` operation.
+ */
+export function getNumberOfInputs(self: bigint): number {
+  const obj = lookupAudioNode(self);
+  return obj.numberOfInputs;
+}
+
+/**
+ * `get-number-of-outputs()` operation.
+ */
+export function getNumberOfOutputs(self: bigint): number {
+  const obj = lookupAudioNode(self);
+  return obj.numberOfOutputs;
+}
+
+/**
+ * `get-channel-count()` operation.
+ */
+export function getChannelCount(self: bigint): number {
+  const obj = lookupAudioNode(self);
+  return obj.channelCount;
+}
+
+/**
+ * `set-channel-count()` operation.
+ */
+export function setChannelCount(self: bigint, value: number): void {
+  const obj = lookupAudioNode(self);
+  obj.channelCount = value;
+}
+
+/**
+ * `get-channel-count-mode()` operation.
+ */
+export function getChannelCountMode(self: bigint): bigint {
+  const obj = lookupAudioNode(self);
+  return obj.channelCountMode;
+}
+
+/**
+ * `set-channel-count-mode()` operation.
+ */
+export function setChannelCountMode(self: bigint, value: bigint): void {
+  const obj = lookupAudioNode(self);
+  obj.channelCountMode = value;
+}
+
+/**
+ * `get-channel-interpretation()` operation.
+ */
+export function getChannelInterpretation(self: bigint): bigint {
+  const obj = lookupAudioNode(self);
+  return obj.channelInterpretation;
+}
+
+/**
+ * `set-channel-interpretation()` operation.
+ */
+export function setChannelInterpretation(self: bigint, value: bigint): void {
+  const obj = lookupAudioNode(self);
+  obj.channelInterpretation = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-param
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioParamHandle = bigint;
+
+/** Handle table for AudioParam instances */
+const _audioParamhandles = new Map<bigint, AudioParam>();
+let _nextAudioParam = 1n;
+
+/** Lookup a AudioParam by handle, throwing if not found. */
+function lookupAudioParam(handle: bigint): AudioParam {
+  const obj = _audioParamhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioParam handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioParam by handle. */
+function lookupOptionAudioParam(handle: bigint | undefined): AudioParam | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioParamhandles.get(handle) ?? null;
+}
+/**
+ * `get-value()` operation.
+ */
+export function getValue(self: bigint): number {
+  const obj = lookupAudioParam(self);
+  return obj.value;
+}
+
+/**
+ * `set-value()` operation.
+ */
+export function setValue(self: bigint, value: number): void {
+  const obj = lookupAudioParam(self);
+  obj.value = value;
+}
+
+/**
+ * `get-automation-rate()` operation.
+ */
+export function getAutomationRate(self: bigint): bigint {
+  const obj = lookupAudioParam(self);
+  return obj.automationRate;
+}
+
+/**
+ * `set-automation-rate()` operation.
+ */
+export function setAutomationRate(self: bigint, value: bigint): void {
+  const obj = lookupAudioParam(self);
+  obj.automationRate = value;
+}
+
+/**
+ * `get-default-value()` operation.
+ */
+export function getDefaultValue(self: bigint): number {
+  const obj = lookupAudioParam(self);
+  return obj.defaultValue;
+}
+
+/**
+ * `get-min-value()` operation.
+ */
+export function getMinValue(self: bigint): number {
+  const obj = lookupAudioParam(self);
+  return obj.minValue;
+}
+
+/**
+ * `get-max-value()` operation.
+ */
+export function getMaxValue(self: bigint): number {
+  const obj = lookupAudioParam(self);
+  return obj.maxValue;
+}
+
+/**
+ * `set-value-at-time()` operation.
+ */
+export function setValueAtTime(self: bigint, value: number, startTime: number): bigint {
+  const obj = lookupAudioParam(self);
+  obj.valueAtTime = startTime;
+}
+
+/**
+ * `linear-ramp-to-value-at-time()` operation.
+ */
+export function linearRampToValueAtTime(self: bigint, value: number, endTime: number): bigint {
+  const obj = lookupAudioParam(self);
+  return obj.linearRampToValueAtTime(value, endTime);
+}
+
+/**
+ * `exponential-ramp-to-value-at-time()` operation.
+ */
+export function exponentialRampToValueAtTime(self: bigint, value: number, endTime: number): bigint {
+  const obj = lookupAudioParam(self);
+  return obj.exponentialRampToValueAtTime(value, endTime);
+}
+
+/**
+ * `set-target-at-time()` operation.
+ */
+export function setTargetAtTime(self: bigint, target: number, startTime: number, timeConstant: number): bigint {
+  const obj = lookupAudioParam(self);
+  obj.targetAtTime = timeConstant;
+}
+
+/**
+ * `set-value-curve-at-time()` operation.
+ */
+export function setValueCurveAtTime(self: bigint, values: (number)[], startTime: number, duration: number): bigint {
+  const obj = lookupAudioParam(self);
+  obj.valueCurveAtTime = duration;
+}
+
+/**
+ * `cancel-scheduled-values()` operation.
+ */
+export function cancelScheduledValues(self: bigint, cancelTime: number): bigint {
+  const obj = lookupAudioParam(self);
+  return obj.cancelScheduledValues(cancelTime);
+}
+
+/**
+ * `cancel-and-hold-at-time()` operation.
+ */
+export function cancelAndHoldAtTime(self: bigint, cancelTime: number): bigint {
+  const obj = lookupAudioParam(self);
+  return obj.cancelAndHoldAtTime(cancelTime);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-scheduled-source-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioScheduledSourceNodeHandle = bigint;
+
+/** Handle table for AudioScheduledSourceNode instances */
+const _audioScheduledSourceNodehandles = new Map<bigint, AudioScheduledSourceNode>();
+let _nextAudioScheduledSourceNode = 1n;
+
+/** Lookup a AudioScheduledSourceNode by handle, throwing if not found. */
+function lookupAudioScheduledSourceNode(handle: bigint): AudioScheduledSourceNode {
+  const obj = _audioScheduledSourceNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioScheduledSourceNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioScheduledSourceNode by handle. */
+function lookupOptionAudioScheduledSourceNode(handle: bigint | undefined): AudioScheduledSourceNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioScheduledSourceNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-onended()` operation.
+ */
+export function AudioScheduledSourceNodeGetOnended(self: bigint): bigint {
+  const obj = lookupAudioScheduledSourceNode(self);
+  return obj.onended;
+}
+
+/**
+ * `set-onended()` operation.
+ */
+export function AudioScheduledSourceNodeSetOnended(self: bigint, value: bigint): void {
+  const obj = lookupAudioScheduledSourceNode(self);
+  obj.onended = value;
+}
+
+/**
+ * `start()` operation.
+ */
+export function AudioScheduledSourceNodeStart(self: bigint, when: number | undefined): void {
+  const obj = lookupAudioScheduledSourceNode(self);
+  obj.start(when);
+}
+
+/**
+ * `stop()` operation.
+ */
+export function AudioScheduledSourceNodeStop(self: bigint, when: number | undefined): void {
+  const obj = lookupAudioScheduledSourceNode(self);
+  obj.stop(when);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: analyser-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AnalyserNodeHandle = bigint;
+
+/** Handle table for AnalyserNode instances */
+const _analyserNodehandles = new Map<bigint, AnalyserNode>();
+let _nextAnalyserNode = 1n;
+
+/** Lookup a AnalyserNode by handle, throwing if not found. */
+function lookupAnalyserNode(handle: bigint): AnalyserNode {
+  const obj = _analyserNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AnalyserNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AnalyserNode by handle. */
+function lookupOptionAnalyserNode(handle: bigint | undefined): AnalyserNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _analyserNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-float-frequency-data()` operation.
+ */
+export function getFloatFrequencyData(self: bigint, array: (number)[]): void {
+  const obj = lookupAnalyserNode(self);
+  return obj.floatFrequencyData;
+}
+
+/**
+ * `get-byte-frequency-data()` operation.
+ */
+export function getByteFrequencyData(self: bigint, array: Uint8Array): void {
+  const obj = lookupAnalyserNode(self);
+  return obj.byteFrequencyData;
+}
+
+/**
+ * `get-float-time-domain-data()` operation.
+ */
+export function getFloatTimeDomainData(self: bigint, array: (number)[]): void {
+  const obj = lookupAnalyserNode(self);
+  return obj.floatTimeDomainData;
+}
+
+/**
+ * `get-byte-time-domain-data()` operation.
+ */
+export function getByteTimeDomainData(self: bigint, array: Uint8Array): void {
+  const obj = lookupAnalyserNode(self);
+  return obj.byteTimeDomainData;
+}
+
+/**
+ * `get-fft-size()` operation.
+ */
+export function getFftSize(self: bigint): number {
+  const obj = lookupAnalyserNode(self);
+  return obj.fftSize;
+}
+
+/**
+ * `set-fft-size()` operation.
+ */
+export function setFftSize(self: bigint, value: number): void {
+  const obj = lookupAnalyserNode(self);
+  obj.fftSize = value;
+}
+
+/**
+ * `get-frequency-bin-count()` operation.
+ */
+export function getFrequencyBinCount(self: bigint): number {
+  const obj = lookupAnalyserNode(self);
+  return obj.frequencyBinCount;
+}
+
+/**
+ * `get-min-decibels()` operation.
+ */
+export function getMinDecibels(self: bigint): number {
+  const obj = lookupAnalyserNode(self);
+  return obj.minDecibels;
+}
+
+/**
+ * `set-min-decibels()` operation.
+ */
+export function setMinDecibels(self: bigint, value: number): void {
+  const obj = lookupAnalyserNode(self);
+  obj.minDecibels = value;
+}
+
+/**
+ * `get-max-decibels()` operation.
+ */
+export function getMaxDecibels(self: bigint): number {
+  const obj = lookupAnalyserNode(self);
+  return obj.maxDecibels;
+}
+
+/**
+ * `set-max-decibels()` operation.
+ */
+export function setMaxDecibels(self: bigint, value: number): void {
+  const obj = lookupAnalyserNode(self);
+  obj.maxDecibels = value;
+}
+
+/**
+ * `get-smoothing-time-constant()` operation.
+ */
+export function getSmoothingTimeConstant(self: bigint): number {
+  const obj = lookupAnalyserNode(self);
+  return obj.smoothingTimeConstant;
+}
+
+/**
+ * `set-smoothing-time-constant()` operation.
+ */
+export function setSmoothingTimeConstant(self: bigint, value: number): void {
+  const obj = lookupAnalyserNode(self);
+  obj.smoothingTimeConstant = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-buffer-source-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioBufferSourceNodeHandle = bigint;
+
+/** Handle table for AudioBufferSourceNode instances */
+const _audioBufferSourceNodehandles = new Map<bigint, AudioBufferSourceNode>();
+let _nextAudioBufferSourceNode = 1n;
+
+/** Lookup a AudioBufferSourceNode by handle, throwing if not found. */
+function lookupAudioBufferSourceNode(handle: bigint): AudioBufferSourceNode {
+  const obj = _audioBufferSourceNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioBufferSourceNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioBufferSourceNode by handle. */
+function lookupOptionAudioBufferSourceNode(handle: bigint | undefined): AudioBufferSourceNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioBufferSourceNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-buffer()` operation.
+ */
+export function AudioBufferSourceNodeGetBuffer(self: bigint): bigint | undefined {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.buffer ?? undefined;
+}
+
+/**
+ * `set-buffer()` operation.
+ */
+export function AudioBufferSourceNodeSetBuffer(self: bigint, value: bigint | undefined): void {
+  const obj = lookupAudioBufferSourceNode(self);
+  obj.buffer = value;
+}
+
+/**
+ * `get-playback-rate()` operation.
+ */
+export function getPlaybackRate(self: bigint): bigint {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.playbackRate;
+}
+
+/**
+ * `get-detune()` operation.
+ */
+export function AudioBufferSourceNodeGetDetune(self: bigint): bigint {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.detune;
+}
+
+/**
+ * `get-loop()` operation.
+ */
+export function getLoop(self: bigint): boolean {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.loop;
+}
+
+/**
+ * `set-loop()` operation.
+ */
+export function setLoop(self: bigint, value: boolean): void {
+  const obj = lookupAudioBufferSourceNode(self);
+  obj.loop = value;
+}
+
+/**
+ * `get-loop-start()` operation.
+ */
+export function getLoopStart(self: bigint): number {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.loopStart;
+}
+
+/**
+ * `set-loop-start()` operation.
+ */
+export function setLoopStart(self: bigint, value: number): void {
+  const obj = lookupAudioBufferSourceNode(self);
+  obj.loopStart = value;
+}
+
+/**
+ * `get-loop-end()` operation.
+ */
+export function getLoopEnd(self: bigint): number {
+  const obj = lookupAudioBufferSourceNode(self);
+  return obj.loopEnd;
+}
+
+/**
+ * `set-loop-end()` operation.
+ */
+export function setLoopEnd(self: bigint, value: number): void {
+  const obj = lookupAudioBufferSourceNode(self);
+  obj.loopEnd = value;
+}
+
+/**
+ * `start()` operation.
+ */
+export function AudioBufferSourceNodeStart(self: bigint, when: number | undefined, offset: number | undefined, duration: number | undefined): void {
+  const obj = lookupAudioBufferSourceNode(self);
+  obj.start(when, offset, duration);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-destination-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioDestinationNodeHandle = bigint;
+
+/** Handle table for AudioDestinationNode instances */
+const _audioDestinationNodehandles = new Map<bigint, AudioDestinationNode>();
+let _nextAudioDestinationNode = 1n;
+
+/** Lookup a AudioDestinationNode by handle, throwing if not found. */
+function lookupAudioDestinationNode(handle: bigint): AudioDestinationNode {
+  const obj = _audioDestinationNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioDestinationNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioDestinationNode by handle. */
+function lookupOptionAudioDestinationNode(handle: bigint | undefined): AudioDestinationNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioDestinationNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-max-channel-count()` operation.
+ */
+export function getMaxChannelCount(self: bigint): number {
+  const obj = lookupAudioDestinationNode(self);
+  return obj.maxChannelCount;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-listener
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioListenerHandle = bigint;
+
+/** Handle table for AudioListener instances */
+const _audioListenerhandles = new Map<bigint, AudioListener>();
+let _nextAudioListener = 1n;
+
+/** Lookup a AudioListener by handle, throwing if not found. */
+function lookupAudioListener(handle: bigint): AudioListener {
+  const obj = _audioListenerhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioListener handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioListener by handle. */
+function lookupOptionAudioListener(handle: bigint | undefined): AudioListener | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioListenerhandles.get(handle) ?? null;
+}
+/**
+ * `get-position-x()` operation.
+ */
+export function AudioListenerGetPositionX(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.positionX;
+}
+
+/**
+ * `get-position-y()` operation.
+ */
+export function AudioListenerGetPositionY(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.positionY;
+}
+
+/**
+ * `get-position-z()` operation.
+ */
+export function AudioListenerGetPositionZ(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.positionZ;
+}
+
+/**
+ * `get-forward-x()` operation.
+ */
+export function getForwardX(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.forwardX;
+}
+
+/**
+ * `get-forward-y()` operation.
+ */
+export function getForwardY(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.forwardY;
+}
+
+/**
+ * `get-forward-z()` operation.
+ */
+export function getForwardZ(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.forwardZ;
+}
+
+/**
+ * `get-up-x()` operation.
+ */
+export function getUpX(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.upX;
+}
+
+/**
+ * `get-up-y()` operation.
+ */
+export function getUpY(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.upY;
+}
+
+/**
+ * `get-up-z()` operation.
+ */
+export function getUpZ(self: bigint): bigint {
+  const obj = lookupAudioListener(self);
+  return obj.upZ;
+}
+
+/**
+ * `set-position()` operation.
+ */
+export function AudioListenerSetPosition(self: bigint, x: number, y: number, z: number): void {
+  const obj = lookupAudioListener(self);
+  obj.position = z;
+}
+
+/**
+ * `set-orientation()` operation.
+ */
+export function AudioListenerSetOrientation(self: bigint, x: number, y: number, z: number, xUp: number, yUp: number, zUp: number): void {
+  const obj = lookupAudioListener(self);
+  obj.orientation = zUp;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-processing-event
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioProcessingEventHandle = bigint;
+
+/** Handle table for AudioProcessingEvent instances */
+const _audioProcessingEventhandles = new Map<bigint, AudioProcessingEvent>();
+let _nextAudioProcessingEvent = 1n;
+
+/** Lookup a AudioProcessingEvent by handle, throwing if not found. */
+function lookupAudioProcessingEvent(handle: bigint): AudioProcessingEvent {
+  const obj = _audioProcessingEventhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioProcessingEvent handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioProcessingEvent by handle. */
+function lookupOptionAudioProcessingEvent(handle: bigint | undefined): AudioProcessingEvent | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioProcessingEventhandles.get(handle) ?? null;
+}
+/**
+ * `get-playback-time()` operation.
+ */
+export function getPlaybackTime(self: bigint): number {
+  const obj = lookupAudioProcessingEvent(self);
+  return obj.playbackTime;
+}
+
+/**
+ * `get-input-buffer()` operation.
+ */
+export function getInputBuffer(self: bigint): bigint {
+  const obj = lookupAudioProcessingEvent(self);
+  return obj.inputBuffer;
+}
+
+/**
+ * `get-output-buffer()` operation.
+ */
+export function getOutputBuffer(self: bigint): bigint {
+  const obj = lookupAudioProcessingEvent(self);
+  return obj.outputBuffer;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: biquad-filter-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BiquadFilterNodeHandle = bigint;
+
+/** Handle table for BiquadFilterNode instances */
+const _biquadFilterNodehandles = new Map<bigint, BiquadFilterNode>();
+let _nextBiquadFilterNode = 1n;
+
+/** Lookup a BiquadFilterNode by handle, throwing if not found. */
+function lookupBiquadFilterNode(handle: bigint): BiquadFilterNode {
+  const obj = _biquadFilterNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`BiquadFilterNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional BiquadFilterNode by handle. */
+function lookupOptionBiquadFilterNode(handle: bigint | undefined): BiquadFilterNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _biquadFilterNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-type()` operation.
+ */
+export function BiquadFilterNodeGetType(self: bigint): bigint {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.getType();
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function BiquadFilterNodeSetType(self: bigint, value: bigint): void {
+  const obj = lookupBiquadFilterNode(self);
+  obj.type = value;
+}
+
+/**
+ * `get-frequency()` operation.
+ */
+export function BiquadFilterNodeGetFrequency(self: bigint): bigint {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.frequency;
+}
+
+/**
+ * `get-detune()` operation.
+ */
+export function BiquadFilterNodeGetDetune(self: bigint): bigint {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.detune;
+}
+
+/**
+ * `get-q()` operation.
+ */
+export function getQ(self: bigint): bigint {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.q;
+}
+
+/**
+ * `get-gain()` operation.
+ */
+export function BiquadFilterNodeGetGain(self: bigint): bigint {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.gain;
+}
+
+/**
+ * `get-frequency-response()` operation.
+ */
+export function BiquadFilterNodeGetFrequencyResponse(self: bigint, frequencyHz: (number)[], magResponse: (number)[], phaseResponse: (number)[]): void {
+  const obj = lookupBiquadFilterNode(self);
+  return obj.frequencyResponse;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: constant-source-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ConstantSourceNodeHandle = bigint;
+
+/** Handle table for ConstantSourceNode instances */
+const _constantSourceNodehandles = new Map<bigint, ConstantSourceNode>();
+let _nextConstantSourceNode = 1n;
+
+/** Lookup a ConstantSourceNode by handle, throwing if not found. */
+function lookupConstantSourceNode(handle: bigint): ConstantSourceNode {
+  const obj = _constantSourceNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`ConstantSourceNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional ConstantSourceNode by handle. */
+function lookupOptionConstantSourceNode(handle: bigint | undefined): ConstantSourceNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _constantSourceNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-offset()` operation.
+ */
+export function getOffset(self: bigint): bigint {
+  const obj = lookupConstantSourceNode(self);
+  return obj.offset;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: convolver-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ConvolverNodeHandle = bigint;
+
+/** Handle table for ConvolverNode instances */
+const _convolverNodehandles = new Map<bigint, ConvolverNode>();
+let _nextConvolverNode = 1n;
+
+/** Lookup a ConvolverNode by handle, throwing if not found. */
+function lookupConvolverNode(handle: bigint): ConvolverNode {
+  const obj = _convolverNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`ConvolverNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional ConvolverNode by handle. */
+function lookupOptionConvolverNode(handle: bigint | undefined): ConvolverNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _convolverNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-buffer()` operation.
+ */
+export function ConvolverNodeGetBuffer(self: bigint): bigint | undefined {
+  const obj = lookupConvolverNode(self);
+  return obj.buffer ?? undefined;
+}
+
+/**
+ * `set-buffer()` operation.
+ */
+export function ConvolverNodeSetBuffer(self: bigint, value: bigint | undefined): void {
+  const obj = lookupConvolverNode(self);
+  obj.buffer = value;
+}
+
+/**
+ * `get-normalize()` operation.
+ */
+export function getNormalize(self: bigint): boolean {
+  const obj = lookupConvolverNode(self);
+  return obj.normalize;
+}
+
+/**
+ * `set-normalize()` operation.
+ */
+export function setNormalize(self: bigint, value: boolean): void {
+  const obj = lookupConvolverNode(self);
+  obj.normalize = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: delay-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DelayNodeHandle = bigint;
+
+/** Handle table for DelayNode instances */
+const _delayNodehandles = new Map<bigint, DelayNode>();
+let _nextDelayNode = 1n;
+
+/** Lookup a DelayNode by handle, throwing if not found. */
+function lookupDelayNode(handle: bigint): DelayNode {
+  const obj = _delayNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`DelayNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional DelayNode by handle. */
+function lookupOptionDelayNode(handle: bigint | undefined): DelayNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _delayNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-delay-time()` operation.
+ */
+export function getDelayTime(self: bigint): bigint {
+  const obj = lookupDelayNode(self);
+  return obj.delayTime;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: dynamics-compressor-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type DynamicsCompressorNodeHandle = bigint;
+
+/** Handle table for DynamicsCompressorNode instances */
+const _dynamicsCompressorNodehandles = new Map<bigint, DynamicsCompressorNode>();
+let _nextDynamicsCompressorNode = 1n;
+
+/** Lookup a DynamicsCompressorNode by handle, throwing if not found. */
+function lookupDynamicsCompressorNode(handle: bigint): DynamicsCompressorNode {
+  const obj = _dynamicsCompressorNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`DynamicsCompressorNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional DynamicsCompressorNode by handle. */
+function lookupOptionDynamicsCompressorNode(handle: bigint | undefined): DynamicsCompressorNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _dynamicsCompressorNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-threshold()` operation.
+ */
+export function getThreshold(self: bigint): bigint {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.threshold;
+}
+
+/**
+ * `get-knee()` operation.
+ */
+export function getKnee(self: bigint): bigint {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.knee;
+}
+
+/**
+ * `get-ratio()` operation.
+ */
+export function getRatio(self: bigint): bigint {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.ratio;
+}
+
+/**
+ * `get-reduction()` operation.
+ */
+export function getReduction(self: bigint): number {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.reduction;
+}
+
+/**
+ * `get-attack()` operation.
+ */
+export function getAttack(self: bigint): bigint {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.attack;
+}
+
+/**
+ * `get-release()` operation.
+ */
+export function getRelease(self: bigint): bigint {
+  const obj = lookupDynamicsCompressorNode(self);
+  return obj.release;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: gain-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type GainNodeHandle = bigint;
+
+/** Handle table for GainNode instances */
+const _gainNodehandles = new Map<bigint, GainNode>();
+let _nextGainNode = 1n;
+
+/** Lookup a GainNode by handle, throwing if not found. */
+function lookupGainNode(handle: bigint): GainNode {
+  const obj = _gainNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`GainNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional GainNode by handle. */
+function lookupOptionGainNode(handle: bigint | undefined): GainNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _gainNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-gain()` operation.
+ */
+export function GainNodeGetGain(self: bigint): bigint {
+  const obj = lookupGainNode(self);
+  return obj.gain;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: iir-filter-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type IirFilterNodeHandle = bigint;
+
+/** Handle table for IirFilterNode instances */
+const _iirFilterNodehandles = new Map<bigint, IirFilterNode>();
+let _nextIirFilterNode = 1n;
+
+/** Lookup a IirFilterNode by handle, throwing if not found. */
+function lookupIirFilterNode(handle: bigint): IirFilterNode {
+  const obj = _iirFilterNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`IirFilterNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional IirFilterNode by handle. */
+function lookupOptionIirFilterNode(handle: bigint | undefined): IirFilterNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _iirFilterNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-frequency-response()` operation.
+ */
+export function IirFilterNodeGetFrequencyResponse(self: bigint, frequencyHz: (number)[], magResponse: (number)[], phaseResponse: (number)[]): void {
+  const obj = lookupIirFilterNode(self);
+  return obj.frequencyResponse;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: media-element-audio-source-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MediaElementAudioSourceNodeHandle = bigint;
+
+/** Handle table for MediaElementAudioSourceNode instances */
+const _mediaElementAudioSourceNodehandles = new Map<bigint, MediaElementAudioSourceNode>();
+let _nextMediaElementAudioSourceNode = 1n;
+
+/** Lookup a MediaElementAudioSourceNode by handle, throwing if not found. */
+function lookupMediaElementAudioSourceNode(handle: bigint): MediaElementAudioSourceNode {
+  const obj = _mediaElementAudioSourceNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`MediaElementAudioSourceNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional MediaElementAudioSourceNode by handle. */
+function lookupOptionMediaElementAudioSourceNode(handle: bigint | undefined): MediaElementAudioSourceNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mediaElementAudioSourceNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-media-element()` operation.
+ */
+export function getMediaElement(self: bigint): bigint {
+  const obj = lookupMediaElementAudioSourceNode(self);
+  return obj.mediaElement;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: media-stream-audio-destination-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MediaStreamAudioDestinationNodeHandle = bigint;
+
+/** Handle table for MediaStreamAudioDestinationNode instances */
+const _mediaStreamAudioDestinationNodehandles = new Map<bigint, MediaStreamAudioDestinationNode>();
+let _nextMediaStreamAudioDestinationNode = 1n;
+
+/** Lookup a MediaStreamAudioDestinationNode by handle, throwing if not found. */
+function lookupMediaStreamAudioDestinationNode(handle: bigint): MediaStreamAudioDestinationNode {
+  const obj = _mediaStreamAudioDestinationNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`MediaStreamAudioDestinationNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional MediaStreamAudioDestinationNode by handle. */
+function lookupOptionMediaStreamAudioDestinationNode(handle: bigint | undefined): MediaStreamAudioDestinationNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mediaStreamAudioDestinationNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-stream()` operation.
+ */
+export function MediaStreamAudioDestinationNodeGetStream(self: bigint): bigint {
+  const obj = lookupMediaStreamAudioDestinationNode(self);
+  return obj.stream;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: media-stream-audio-source-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type MediaStreamAudioSourceNodeHandle = bigint;
+
+/** Handle table for MediaStreamAudioSourceNode instances */
+const _mediaStreamAudioSourceNodehandles = new Map<bigint, MediaStreamAudioSourceNode>();
+let _nextMediaStreamAudioSourceNode = 1n;
+
+/** Lookup a MediaStreamAudioSourceNode by handle, throwing if not found. */
+function lookupMediaStreamAudioSourceNode(handle: bigint): MediaStreamAudioSourceNode {
+  const obj = _mediaStreamAudioSourceNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`MediaStreamAudioSourceNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional MediaStreamAudioSourceNode by handle. */
+function lookupOptionMediaStreamAudioSourceNode(handle: bigint | undefined): MediaStreamAudioSourceNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _mediaStreamAudioSourceNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-media-stream()` operation.
+ */
+export function getMediaStream(self: bigint): bigint {
+  const obj = lookupMediaStreamAudioSourceNode(self);
+  return obj.mediaStream;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: oscillator-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type OscillatorNodeHandle = bigint;
+
+/** Handle table for OscillatorNode instances */
+const _oscillatorNodehandles = new Map<bigint, OscillatorNode>();
+let _nextOscillatorNode = 1n;
+
+/** Lookup a OscillatorNode by handle, throwing if not found. */
+function lookupOscillatorNode(handle: bigint): OscillatorNode {
+  const obj = _oscillatorNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`OscillatorNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional OscillatorNode by handle. */
+function lookupOptionOscillatorNode(handle: bigint | undefined): OscillatorNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _oscillatorNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-type()` operation.
+ */
+export function OscillatorNodeGetType(self: bigint): bigint {
+  const obj = lookupOscillatorNode(self);
+  return obj.getType();
+}
+
+/**
+ * `set-type()` operation.
+ */
+export function OscillatorNodeSetType(self: bigint, value: bigint): void {
+  const obj = lookupOscillatorNode(self);
+  obj.type = value;
+}
+
+/**
+ * `get-frequency()` operation.
+ */
+export function OscillatorNodeGetFrequency(self: bigint): bigint {
+  const obj = lookupOscillatorNode(self);
+  return obj.frequency;
+}
+
+/**
+ * `get-detune()` operation.
+ */
+export function OscillatorNodeGetDetune(self: bigint): bigint {
+  const obj = lookupOscillatorNode(self);
+  return obj.detune;
+}
+
+/**
+ * `set-periodic-wave()` operation.
+ */
+export function setPeriodicWave(self: bigint, periodicWave: bigint): void {
+  const obj = lookupOscillatorNode(self);
+  obj.periodicWave = periodicWave;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: panner-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PannerNodeHandle = bigint;
+
+/** Handle table for PannerNode instances */
+const _pannerNodehandles = new Map<bigint, PannerNode>();
+let _nextPannerNode = 1n;
+
+/** Lookup a PannerNode by handle, throwing if not found. */
+function lookupPannerNode(handle: bigint): PannerNode {
+  const obj = _pannerNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`PannerNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional PannerNode by handle. */
+function lookupOptionPannerNode(handle: bigint | undefined): PannerNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _pannerNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-panning-model()` operation.
+ */
+export function getPanningModel(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.panningModel;
+}
+
+/**
+ * `set-panning-model()` operation.
+ */
+export function setPanningModel(self: bigint, value: bigint): void {
+  const obj = lookupPannerNode(self);
+  obj.panningModel = value;
+}
+
+/**
+ * `get-position-x()` operation.
+ */
+export function PannerNodeGetPositionX(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.positionX;
+}
+
+/**
+ * `get-position-y()` operation.
+ */
+export function PannerNodeGetPositionY(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.positionY;
+}
+
+/**
+ * `get-position-z()` operation.
+ */
+export function PannerNodeGetPositionZ(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.positionZ;
+}
+
+/**
+ * `get-orientation-x()` operation.
+ */
+export function getOrientationX(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.orientationX;
+}
+
+/**
+ * `get-orientation-y()` operation.
+ */
+export function getOrientationY(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.orientationY;
+}
+
+/**
+ * `get-orientation-z()` operation.
+ */
+export function getOrientationZ(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.orientationZ;
+}
+
+/**
+ * `get-distance-model()` operation.
+ */
+export function getDistanceModel(self: bigint): bigint {
+  const obj = lookupPannerNode(self);
+  return obj.distanceModel;
+}
+
+/**
+ * `set-distance-model()` operation.
+ */
+export function setDistanceModel(self: bigint, value: bigint): void {
+  const obj = lookupPannerNode(self);
+  obj.distanceModel = value;
+}
+
+/**
+ * `get-ref-distance()` operation.
+ */
+export function getRefDistance(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.refDistance;
+}
+
+/**
+ * `set-ref-distance()` operation.
+ */
+export function setRefDistance(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.refDistance = value;
+}
+
+/**
+ * `get-max-distance()` operation.
+ */
+export function getMaxDistance(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.maxDistance;
+}
+
+/**
+ * `set-max-distance()` operation.
+ */
+export function setMaxDistance(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.maxDistance = value;
+}
+
+/**
+ * `get-rolloff-factor()` operation.
+ */
+export function getRolloffFactor(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.rolloffFactor;
+}
+
+/**
+ * `set-rolloff-factor()` operation.
+ */
+export function setRolloffFactor(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.rolloffFactor = value;
+}
+
+/**
+ * `get-cone-inner-angle()` operation.
+ */
+export function getConeInnerAngle(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.coneInnerAngle;
+}
+
+/**
+ * `set-cone-inner-angle()` operation.
+ */
+export function setConeInnerAngle(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.coneInnerAngle = value;
+}
+
+/**
+ * `get-cone-outer-angle()` operation.
+ */
+export function getConeOuterAngle(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.coneOuterAngle;
+}
+
+/**
+ * `set-cone-outer-angle()` operation.
+ */
+export function setConeOuterAngle(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.coneOuterAngle = value;
+}
+
+/**
+ * `get-cone-outer-gain()` operation.
+ */
+export function getConeOuterGain(self: bigint): number {
+  const obj = lookupPannerNode(self);
+  return obj.coneOuterGain;
+}
+
+/**
+ * `set-cone-outer-gain()` operation.
+ */
+export function setConeOuterGain(self: bigint, value: number): void {
+  const obj = lookupPannerNode(self);
+  obj.coneOuterGain = value;
+}
+
+/**
+ * `set-position()` operation.
+ */
+export function PannerNodeSetPosition(self: bigint, x: number, y: number, z: number): void {
+  const obj = lookupPannerNode(self);
+  obj.position = z;
+}
+
+/**
+ * `set-orientation()` operation.
+ */
+export function PannerNodeSetOrientation(self: bigint, x: number, y: number, z: number): void {
+  const obj = lookupPannerNode(self);
+  obj.orientation = z;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: script-processor-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type ScriptProcessorNodeHandle = bigint;
+
+/** Handle table for ScriptProcessorNode instances */
+const _scriptProcessorNodehandles = new Map<bigint, ScriptProcessorNode>();
+let _nextScriptProcessorNode = 1n;
+
+/** Lookup a ScriptProcessorNode by handle, throwing if not found. */
+function lookupScriptProcessorNode(handle: bigint): ScriptProcessorNode {
+  const obj = _scriptProcessorNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`ScriptProcessorNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional ScriptProcessorNode by handle. */
+function lookupOptionScriptProcessorNode(handle: bigint | undefined): ScriptProcessorNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _scriptProcessorNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-onaudioprocess()` operation.
+ */
+export function getOnaudioprocess(self: bigint): bigint {
+  const obj = lookupScriptProcessorNode(self);
+  return obj.onaudioprocess;
+}
+
+/**
+ * `set-onaudioprocess()` operation.
+ */
+export function setOnaudioprocess(self: bigint, value: bigint): void {
+  const obj = lookupScriptProcessorNode(self);
+  obj.onaudioprocess = value;
+}
+
+/**
+ * `get-buffer-size()` operation.
+ */
+export function getBufferSize(self: bigint): number {
+  const obj = lookupScriptProcessorNode(self);
+  return obj.bufferSize;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: stereo-panner-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type StereoPannerNodeHandle = bigint;
+
+/** Handle table for StereoPannerNode instances */
+const _stereoPannerNodehandles = new Map<bigint, StereoPannerNode>();
+let _nextStereoPannerNode = 1n;
+
+/** Lookup a StereoPannerNode by handle, throwing if not found. */
+function lookupStereoPannerNode(handle: bigint): StereoPannerNode {
+  const obj = _stereoPannerNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`StereoPannerNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional StereoPannerNode by handle. */
+function lookupOptionStereoPannerNode(handle: bigint | undefined): StereoPannerNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _stereoPannerNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-pan()` operation.
+ */
+export function getPan(self: bigint): bigint {
+  const obj = lookupStereoPannerNode(self);
+  return obj.pan;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: wave-shaper-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type WaveShaperNodeHandle = bigint;
+
+/** Handle table for WaveShaperNode instances */
+const _waveShaperNodehandles = new Map<bigint, WaveShaperNode>();
+let _nextWaveShaperNode = 1n;
+
+/** Lookup a WaveShaperNode by handle, throwing if not found. */
+function lookupWaveShaperNode(handle: bigint): WaveShaperNode {
+  const obj = _waveShaperNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`WaveShaperNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional WaveShaperNode by handle. */
+function lookupOptionWaveShaperNode(handle: bigint | undefined): WaveShaperNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _waveShaperNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-curve()` operation.
+ */
+export function getCurve(self: bigint): (number)[] | undefined {
+  const obj = lookupWaveShaperNode(self);
+  return obj.curve ?? undefined;
+}
+
+/**
+ * `set-curve()` operation.
+ */
+export function setCurve(self: bigint, value: (number)[] | undefined): void {
+  const obj = lookupWaveShaperNode(self);
+  obj.curve = value;
+}
+
+/**
+ * `get-oversample()` operation.
+ */
+export function getOversample(self: bigint): bigint {
+  const obj = lookupWaveShaperNode(self);
+  return obj.oversample;
+}
+
+/**
+ * `set-oversample()` operation.
+ */
+export function setOversample(self: bigint, value: bigint): void {
+  const obj = lookupWaveShaperNode(self);
+  obj.oversample = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-worklet
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioWorkletHandle = bigint;
+
+/** Handle table for AudioWorklet instances */
+const _audioWorklethandles = new Map<bigint, AudioWorklet>();
+let _nextAudioWorklet = 1n;
+
+/** Lookup a AudioWorklet by handle, throwing if not found. */
+function lookupAudioWorklet(handle: bigint): AudioWorklet {
+  const obj = _audioWorklethandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioWorklet handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioWorklet by handle. */
+function lookupOptionAudioWorklet(handle: bigint | undefined): AudioWorklet | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioWorklethandles.get(handle) ?? null;
+}
+/**
+ * `get-port()` operation.
+ */
+export function AudioWorkletGetPort(self: bigint): bigint {
+  const obj = lookupAudioWorklet(self);
+  return obj.port;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-worklet-global-scope
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioWorkletGlobalScopeHandle = bigint;
+
+/** Handle table for AudioWorkletGlobalScope instances */
+const _audioWorkletGlobalScopehandles = new Map<bigint, AudioWorkletGlobalScope>();
+let _nextAudioWorkletGlobalScope = 1n;
+
+/** Lookup a AudioWorkletGlobalScope by handle, throwing if not found. */
+function lookupAudioWorkletGlobalScope(handle: bigint): AudioWorkletGlobalScope {
+  const obj = _audioWorkletGlobalScopehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioWorkletGlobalScope handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioWorkletGlobalScope by handle. */
+function lookupOptionAudioWorkletGlobalScope(handle: bigint | undefined): AudioWorkletGlobalScope | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioWorkletGlobalScopehandles.get(handle) ?? null;
+}
+/**
+ * `register-processor()` operation.
+ */
+export function registerProcessor(self: bigint, name: string, processorCtor: bigint): void {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  obj.registerProcessor(name, processorCtor);
+}
+
+/**
+ * `get-current-frame()` operation.
+ */
+export function getCurrentFrame(self: bigint): bigint {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  return obj.currentFrame;
+}
+
+/**
+ * `get-current-time()` operation.
+ */
+export function AudioWorkletGlobalScopeGetCurrentTime(self: bigint): number {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  return obj.currentTime;
+}
+
+/**
+ * `get-sample-rate()` operation.
+ */
+export function AudioWorkletGlobalScopeGetSampleRate(self: bigint): number {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  return obj.sampleRate;
+}
+
+/**
+ * `get-render-quantum-size()` operation.
+ */
+export function AudioWorkletGlobalScopeGetRenderQuantumSize(self: bigint): number {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  return obj.renderQuantumSize;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function AudioWorkletGlobalScopeGetPort(self: bigint): bigint {
+  const obj = lookupAudioWorkletGlobalScope(self);
+  return obj.port;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-worklet-node
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioWorkletNodeHandle = bigint;
+
+/** Handle table for AudioWorkletNode instances */
+const _audioWorkletNodehandles = new Map<bigint, AudioWorkletNode>();
+let _nextAudioWorkletNode = 1n;
+
+/** Lookup a AudioWorkletNode by handle, throwing if not found. */
+function lookupAudioWorkletNode(handle: bigint): AudioWorkletNode {
+  const obj = _audioWorkletNodehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioWorkletNode handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioWorkletNode by handle. */
+function lookupOptionAudioWorkletNode(handle: bigint | undefined): AudioWorkletNode | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioWorkletNodehandles.get(handle) ?? null;
+}
+/**
+ * `get-parameters()` operation.
+ */
+export function getParameters(self: bigint): bigint {
+  const obj = lookupAudioWorkletNode(self);
+  return obj.getParameters();
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function AudioWorkletNodeGetPort(self: bigint): bigint {
+  const obj = lookupAudioWorkletNode(self);
+  return obj.port;
+}
+
+/**
+ * `get-onprocessorerror()` operation.
+ */
+export function getOnprocessorerror(self: bigint): bigint {
+  const obj = lookupAudioWorkletNode(self);
+  return obj.onprocessorerror;
+}
+
+/**
+ * `set-onprocessorerror()` operation.
+ */
+export function setOnprocessorerror(self: bigint, value: bigint): void {
+  const obj = lookupAudioWorkletNode(self);
+  obj.onprocessorerror = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-worklet-processor
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioWorkletProcessorHandle = bigint;
+
+/** Handle table for AudioWorkletProcessor instances */
+const _audioWorkletProcessorhandles = new Map<bigint, AudioWorkletProcessor>();
+let _nextAudioWorkletProcessor = 1n;
+
+/** Lookup a AudioWorkletProcessor by handle, throwing if not found. */
+function lookupAudioWorkletProcessor(handle: bigint): AudioWorkletProcessor {
+  const obj = _audioWorkletProcessorhandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioWorkletProcessor handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioWorkletProcessor by handle. */
+function lookupOptionAudioWorkletProcessor(handle: bigint | undefined): AudioWorkletProcessor | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioWorkletProcessorhandles.get(handle) ?? null;
+}
+/**
+ * `get-port()` operation.
+ */
+export function AudioWorkletProcessorGetPort(self: bigint): bigint {
+  const obj = lookupAudioWorkletProcessor(self);
+  return obj.port;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: audio-playback-stats
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AudioPlaybackStatsHandle = bigint;
+
+/** Handle table for AudioPlaybackStats instances */
+const _audioPlaybackStatshandles = new Map<bigint, AudioPlaybackStats>();
+let _nextAudioPlaybackStats = 1n;
+
+/** Lookup a AudioPlaybackStats by handle, throwing if not found. */
+function lookupAudioPlaybackStats(handle: bigint): AudioPlaybackStats {
+  const obj = _audioPlaybackStatshandles.get(handle);
+  if (!obj) {
+    throw new Error(`AudioPlaybackStats handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AudioPlaybackStats by handle. */
+function lookupOptionAudioPlaybackStats(handle: bigint | undefined): AudioPlaybackStats | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _audioPlaybackStatshandles.get(handle) ?? null;
+}
+/**
+ * `get-underrun-duration()` operation.
+ */
+export function getUnderrunDuration(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.underrunDuration;
+}
+
+/**
+ * `get-underrun-events()` operation.
+ */
+export function getUnderrunEvents(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.underrunEvents;
+}
+
+/**
+ * `get-total-duration()` operation.
+ */
+export function getTotalDuration(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.totalDuration;
+}
+
+/**
+ * `get-average-latency()` operation.
+ */
+export function getAverageLatency(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.averageLatency;
+}
+
+/**
+ * `get-minimum-latency()` operation.
+ */
+export function getMinimumLatency(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.minimumLatency;
+}
+
+/**
+ * `get-maximum-latency()` operation.
+ */
+export function getMaximumLatency(self: bigint): number {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.maximumLatency;
+}
+
+/**
+ * `reset-latency()` operation.
+ */
+export function resetLatency(self: bigint): void {
+  const obj = lookupAudioPlaybackStats(self);
+  obj.resetLatency();
+}
+
+/**
+ * `to-json()` operation.
+ */
+export function AudioPlaybackStatsToJson(self: bigint): bigint {
+  const obj = lookupAudioPlaybackStats(self);
+  return obj.toJSON();
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
@@ -3181,8 +5783,8 @@ export default {
   getOnunmute,
   setOnunmute,
   getReadyState,
-  getOnended,
-  setOnended,
+  MediaStreamTrackGetOnended,
+  MediaStreamTrackSetOnended,
   MediaStreamTrackClone,
   MediaStreamTrackStop,
   MediaStreamTrackGetCapabilities,
@@ -3205,7 +5807,7 @@ export default {
   MediaDeviceInfoGetKind,
   MediaDeviceInfoGetLabel,
   getGroupId,
-  toJson,
+  MediaDeviceInfoToJson,
   InputDeviceInfoGetCapabilities,
   getDevices,
   getUserInsertedDevices,
@@ -3230,9 +5832,9 @@ export default {
   ChapterInformationGetTitle,
   getStartTime,
   ChapterInformationGetArtwork,
-  getStream,
+  MediaRecorderGetStream,
   getMimeType,
-  getState,
+  MediaRecorderGetState,
   MediaRecorderGetOnstart,
   MediaRecorderSetOnstart,
   getOnstop,
@@ -3365,5 +5967,214 @@ export default {
   SpeechSynthesisVoiceGetName,
   SpeechSynthesisVoiceGetLang,
   getLocalService,
-  getDefault
+  getDefault,
+  getDestination,
+  BaseAudioContextGetSampleRate,
+  BaseAudioContextGetCurrentTime,
+  getListener,
+  BaseAudioContextGetState,
+  BaseAudioContextGetRenderQuantumSize,
+  getAudioWorklet,
+  getOnstatechange,
+  setOnstatechange,
+  createAnalyser,
+  createBiquadFilter,
+  createBuffer,
+  createBufferSource,
+  createChannelMerger,
+  createChannelSplitter,
+  createConstantSource,
+  createConvolver,
+  createDelay,
+  createDynamicsCompressor,
+  createGain,
+  createIirFilter,
+  createOscillator,
+  createPanner,
+  createPeriodicWave,
+  createScriptProcessor,
+  createStereoPanner,
+  createWaveShaper,
+  decodeAudioData,
+  getBaseLatency,
+  getOutputLatency,
+  getSinkId,
+  getOnsinkchange,
+  setOnsinkchange,
+  AudioContextGetOnerror,
+  AudioContextSetOnerror,
+  getPlaybackStats,
+  getOutputTimestamp,
+  AudioContextResume,
+  AudioContextSuspend,
+  close,
+  setSinkId,
+  createMediaElementSource,
+  createMediaStreamSource,
+  createMediaStreamTrackSource,
+  createMediaStreamDestination,
+  AudioSinkInfoGetType,
+  startRendering,
+  OfflineAudioContextResume,
+  OfflineAudioContextSuspend,
+  OfflineAudioContextGetLength,
+  getOncomplete,
+  setOncomplete,
+  getRenderedBuffer,
+  AudioBufferGetSampleRate,
+  AudioBufferGetLength,
+  getDuration,
+  getNumberOfChannels,
+  getChannelData,
+  copyFromChannel,
+  copyToChannel,
+  connect,
+  disconnect,
+  getContext,
+  getNumberOfInputs,
+  getNumberOfOutputs,
+  getChannelCount,
+  setChannelCount,
+  getChannelCountMode,
+  setChannelCountMode,
+  getChannelInterpretation,
+  setChannelInterpretation,
+  getValue,
+  setValue,
+  getAutomationRate,
+  setAutomationRate,
+  getDefaultValue,
+  getMinValue,
+  getMaxValue,
+  setValueAtTime,
+  linearRampToValueAtTime,
+  exponentialRampToValueAtTime,
+  setTargetAtTime,
+  setValueCurveAtTime,
+  cancelScheduledValues,
+  cancelAndHoldAtTime,
+  AudioScheduledSourceNodeGetOnended,
+  AudioScheduledSourceNodeSetOnended,
+  AudioScheduledSourceNodeStart,
+  AudioScheduledSourceNodeStop,
+  getFloatFrequencyData,
+  getByteFrequencyData,
+  getFloatTimeDomainData,
+  getByteTimeDomainData,
+  getFftSize,
+  setFftSize,
+  getFrequencyBinCount,
+  getMinDecibels,
+  setMinDecibels,
+  getMaxDecibels,
+  setMaxDecibels,
+  getSmoothingTimeConstant,
+  setSmoothingTimeConstant,
+  AudioBufferSourceNodeGetBuffer,
+  AudioBufferSourceNodeSetBuffer,
+  getPlaybackRate,
+  AudioBufferSourceNodeGetDetune,
+  getLoop,
+  setLoop,
+  getLoopStart,
+  setLoopStart,
+  getLoopEnd,
+  setLoopEnd,
+  AudioBufferSourceNodeStart,
+  getMaxChannelCount,
+  AudioListenerGetPositionX,
+  AudioListenerGetPositionY,
+  AudioListenerGetPositionZ,
+  getForwardX,
+  getForwardY,
+  getForwardZ,
+  getUpX,
+  getUpY,
+  getUpZ,
+  AudioListenerSetPosition,
+  AudioListenerSetOrientation,
+  getPlaybackTime,
+  getInputBuffer,
+  getOutputBuffer,
+  BiquadFilterNodeGetType,
+  BiquadFilterNodeSetType,
+  BiquadFilterNodeGetFrequency,
+  BiquadFilterNodeGetDetune,
+  getQ,
+  BiquadFilterNodeGetGain,
+  BiquadFilterNodeGetFrequencyResponse,
+  getOffset,
+  ConvolverNodeGetBuffer,
+  ConvolverNodeSetBuffer,
+  getNormalize,
+  setNormalize,
+  getDelayTime,
+  getThreshold,
+  getKnee,
+  getRatio,
+  getReduction,
+  getAttack,
+  getRelease,
+  GainNodeGetGain,
+  IirFilterNodeGetFrequencyResponse,
+  getMediaElement,
+  MediaStreamAudioDestinationNodeGetStream,
+  getMediaStream,
+  OscillatorNodeGetType,
+  OscillatorNodeSetType,
+  OscillatorNodeGetFrequency,
+  OscillatorNodeGetDetune,
+  setPeriodicWave,
+  getPanningModel,
+  setPanningModel,
+  PannerNodeGetPositionX,
+  PannerNodeGetPositionY,
+  PannerNodeGetPositionZ,
+  getOrientationX,
+  getOrientationY,
+  getOrientationZ,
+  getDistanceModel,
+  setDistanceModel,
+  getRefDistance,
+  setRefDistance,
+  getMaxDistance,
+  setMaxDistance,
+  getRolloffFactor,
+  setRolloffFactor,
+  getConeInnerAngle,
+  setConeInnerAngle,
+  getConeOuterAngle,
+  setConeOuterAngle,
+  getConeOuterGain,
+  setConeOuterGain,
+  PannerNodeSetPosition,
+  PannerNodeSetOrientation,
+  getOnaudioprocess,
+  setOnaudioprocess,
+  getBufferSize,
+  getPan,
+  getCurve,
+  setCurve,
+  getOversample,
+  setOversample,
+  AudioWorkletGetPort,
+  registerProcessor,
+  getCurrentFrame,
+  AudioWorkletGlobalScopeGetCurrentTime,
+  AudioWorkletGlobalScopeGetSampleRate,
+  AudioWorkletGlobalScopeGetRenderQuantumSize,
+  AudioWorkletGlobalScopeGetPort,
+  getParameters,
+  AudioWorkletNodeGetPort,
+  getOnprocessorerror,
+  setOnprocessorerror,
+  AudioWorkletProcessorGetPort,
+  getUnderrunDuration,
+  getUnderrunEvents,
+  getTotalDuration,
+  getAverageLatency,
+  getMinimumLatency,
+  getMaximumLatency,
+  resetLatency,
+  AudioPlaybackStatsToJson
 };

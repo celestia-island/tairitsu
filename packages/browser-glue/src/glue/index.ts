@@ -10,19 +10,20 @@
  *
  * ## Package layout
  *
- * - `./auth` — `tairitsu-browser:auth` (5 interfaces)
+ * - `./auth` — `tairitsu-browser:auth` (9 interfaces)
  * - `./canvas` — `tairitsu-browser:canvas` (20 interfaces)
  * - `./crypto` — `tairitsu-browser:crypto` (3 interfaces)
- * - `./css` — `tairitsu-browser:css` (44 interfaces)
+ * - `./css` — `tairitsu-browser:css` (43 interfaces)
  * - `./device` — `tairitsu-browser:device` (12 interfaces)
- * - `./dom` — `tairitsu-browser:dom` (34 interfaces)
+ * - `./dom` — `tairitsu-browser:dom` (35 interfaces)
  * - `./events` — `tairitsu-browser:events` (15 interfaces)
- * - `./fetch` — `tairitsu-browser:fetch` (25 interfaces)
+ * - `./fetch` — `tairitsu-browser:fetch` (30 interfaces)
  * - `./file-api` — `tairitsu-browser:file-api` (2 interfaces)
  * - `./geolocation` — `tairitsu-browser:geolocation` (1 interfaces)
  * - `./html` — `tairitsu-browser:html` (182 interfaces)
  * - `./indexed-db` — `tairitsu-browser:indexed-db` (7 interfaces)
- * - `./media` — `tairitsu-browser:media` (29 interfaces)
+ * - `./media` — `tairitsu-browser:media` (63 interfaces)
+ * - `./misc` — `tairitsu-browser:misc` (4 interfaces)
  * - `./notifications` — `tairitsu-browser:notifications` (4 interfaces)
  * - `./observers` — `tairitsu-browser:observers` (5 interfaces)
  * - `./payments` — `tairitsu-browser:payments` (4 interfaces)
@@ -30,8 +31,9 @@
  * - `./permissions` — `tairitsu-browser:permissions` (2 interfaces)
  * - `./resize-observer` — `tairitsu-browser:resize-observer` (1 interfaces)
  * - `./service-workers` — `tairitsu-browser:service-workers` (2 interfaces)
- * - `./storage` — `tairitsu-browser:storage` (2 interfaces)
- * - `./url` — `tairitsu-browser:url` (2 interfaces)
+ * - `./storage` — `tairitsu-browser:storage` (18 interfaces)
+ * - `./svg` — `tairitsu-browser:svg` (53 interfaces)
+ * - `./url` — `tairitsu-browser:url` (1 interfaces)
  * - `./wasm` — `tairitsu-browser:wasm` (6 interfaces)
  * - `./web-animations` — `tairitsu-browser:web-animations` (1 interfaces)
  * - `./webrtc` — `tairitsu-browser:webrtc` (20 interfaces)
@@ -54,6 +56,7 @@ export * as geolocation from "./geolocation";
 export * as html from "./html";
 export * as indexedDb from "./indexedDb";
 export * as media from "./media";
+export * as misc from "./misc";
 export * as notifications from "./notifications";
 export * as observers from "./observers";
 export * as payments from "./payments";
@@ -62,6 +65,7 @@ export * as permissions from "./permissions";
 export * as resizeObserver from "./resizeObserver";
 export * as serviceWorkers from "./serviceWorkers";
 export * as storage from "./storage";
+export * as svg from "./svg";
 export * as url from "./url";
 export * as wasm from "./wasm";
 export * as webAnimations from "./webAnimations";
@@ -72,8 +76,8 @@ export * as workers from "./workers";
 
 // Statistics
 export const GLUE_STATS = {
-  totalDomains: 28,
-  totalInterfaces: 454,
-  totalFunctions: 3976,
-  generatedAt: "2026-03-25T18:24:03.722056",
+  totalDomains: 30,
+  totalInterfaces: 569,
+  totalFunctions: 4667,
+  generatedAt: "2026-03-25T23:36:06.390441",
 };

@@ -285,7 +285,7 @@ export function getType(self: bigint): string {
  *
  * Async operation: returns request ID, poll with `pollIsConditionalMediationAvailable()`
  */
-export function isConditionalMediationAvailable(): bigint {
+export function CredentialIsConditionalMediationAvailable(): bigint {
   const requestId = _nextAsyncHandle++;
   const promise = (globalThis as any).Credential.isConditionalMediationAvailable()
     .then((result: unknown) => {
@@ -624,13 +624,289 @@ export function getProtocol(self: bigint): string | undefined {
 }
 
 // ---------------------------------------------------------------------------
+// WIT interface: public-key-credential
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type PublicKeyCredentialHandle = bigint;
+
+/** Handle table for PublicKeyCredential instances */
+const _publicKeyCredentialhandles = new Map<bigint, PublicKeyCredential>();
+let _nextPublicKeyCredential = 1n;
+
+/** Lookup a PublicKeyCredential by handle, throwing if not found. */
+function lookupPublicKeyCredential(handle: bigint): PublicKeyCredential {
+  const obj = _publicKeyCredentialhandles.get(handle);
+  if (!obj) {
+    throw new Error(`PublicKeyCredential handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional PublicKeyCredential by handle. */
+function lookupOptionPublicKeyCredential(handle: bigint | undefined): PublicKeyCredential | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _publicKeyCredentialhandles.get(handle) ?? null;
+}
+/**
+ * `get-raw-id()` operation.
+ */
+export function getRawId(self: bigint): Uint8Array {
+  const obj = lookupPublicKeyCredential(self);
+  return obj.rawId;
+}
+
+/**
+ * `get-response()` operation.
+ */
+export function getResponse(self: bigint): bigint {
+  const obj = lookupPublicKeyCredential(self);
+  return obj.response;
+}
+
+/**
+ * `get-authenticator-attachment()` operation.
+ */
+export function getAuthenticatorAttachment(self: bigint): string | undefined {
+  const obj = lookupPublicKeyCredential(self);
+  return obj.authenticatorAttachment ?? undefined;
+}
+
+/**
+ * `get-client-extension-results()` operation.
+ */
+export function getClientExtensionResults(self: bigint): bigint {
+  const obj = lookupPublicKeyCredential(self);
+  return obj.clientExtensionResults;
+}
+
+/**
+ * `is-conditional-mediation-available()` operation.
+ */
+export function PublicKeyCredentialIsConditionalMediationAvailable(): bigint {
+  return PublicKeyCredential.isConditionalMediationAvailable();
+}
+
+/**
+ * `to-json()` operation.
+ */
+export function toJson(self: bigint): bigint {
+  const obj = lookupPublicKeyCredential(self);
+  return obj.toJSON();
+}
+
+/**
+ * `is-user-verifying-platform-authenticator-available()` operation.
+ */
+export function isUserVerifyingPlatformAuthenticatorAvailable(): bigint {
+  return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+}
+
+/**
+ * `get-client-capabilities()` operation.
+ */
+export function getClientCapabilities(): bigint {
+  return PublicKeyCredential.clientCapabilities;
+}
+
+/**
+ * `parse-creation-options-from-json()` operation.
+ */
+export function parseCreationOptionsFromJson(options: bigint): bigint {
+  return PublicKeyCredential.parseCreationOptionsFromJson(options);
+}
+
+/**
+ * `parse-request-options-from-json()` operation.
+ */
+export function parseRequestOptionsFromJson(options: bigint): bigint {
+  return PublicKeyCredential.parseRequestOptionsFromJson(options);
+}
+
+/**
+ * `signal-unknown-credential()` operation.
+ */
+export function signalUnknownCredential(options: bigint): bigint {
+  return PublicKeyCredential.signalUnknownCredential(options);
+}
+
+/**
+ * `signal-all-accepted-credentials()` operation.
+ */
+export function signalAllAcceptedCredentials(options: bigint): bigint {
+  return PublicKeyCredential.signalAllAcceptedCredentials(options);
+}
+
+/**
+ * `signal-current-user-details()` operation.
+ */
+export function signalCurrentUserDetails(options: bigint): bigint {
+  return PublicKeyCredential.signalCurrentUserDetails(options);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: authenticator-response
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AuthenticatorResponseHandle = bigint;
+
+/** Handle table for AuthenticatorResponse instances */
+const _authenticatorResponsehandles = new Map<bigint, AuthenticatorResponse>();
+let _nextAuthenticatorResponse = 1n;
+
+/** Lookup a AuthenticatorResponse by handle, throwing if not found. */
+function lookupAuthenticatorResponse(handle: bigint): AuthenticatorResponse {
+  const obj = _authenticatorResponsehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AuthenticatorResponse handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AuthenticatorResponse by handle. */
+function lookupOptionAuthenticatorResponse(handle: bigint | undefined): AuthenticatorResponse | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _authenticatorResponsehandles.get(handle) ?? null;
+}
+/**
+ * `get-client-data-json()` operation.
+ */
+export function getClientDataJson(self: bigint): Uint8Array {
+  const obj = lookupAuthenticatorResponse(self);
+  return obj.clientDataJson;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: authenticator-attestation-response
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AuthenticatorAttestationResponseHandle = bigint;
+
+/** Handle table for AuthenticatorAttestationResponse instances */
+const _authenticatorAttestationResponsehandles = new Map<bigint, AuthenticatorAttestationResponse>();
+let _nextAuthenticatorAttestationResponse = 1n;
+
+/** Lookup a AuthenticatorAttestationResponse by handle, throwing if not found. */
+function lookupAuthenticatorAttestationResponse(handle: bigint): AuthenticatorAttestationResponse {
+  const obj = _authenticatorAttestationResponsehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AuthenticatorAttestationResponse handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AuthenticatorAttestationResponse by handle. */
+function lookupOptionAuthenticatorAttestationResponse(handle: bigint | undefined): AuthenticatorAttestationResponse | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _authenticatorAttestationResponsehandles.get(handle) ?? null;
+}
+/**
+ * `get-attestation-object()` operation.
+ */
+export function getAttestationObject(self: bigint): Uint8Array {
+  const obj = lookupAuthenticatorAttestationResponse(self);
+  return obj.attestationObject;
+}
+
+/**
+ * `get-transports()` operation.
+ */
+export function getTransports(self: bigint): (string)[] {
+  const obj = lookupAuthenticatorAttestationResponse(self);
+  return obj.transports;
+}
+
+/**
+ * `get-authenticator-data()` operation.
+ */
+export function AuthenticatorAttestationResponseGetAuthenticatorData(self: bigint): Uint8Array {
+  const obj = lookupAuthenticatorAttestationResponse(self);
+  return obj.authenticatorData;
+}
+
+/**
+ * `get-public-key()` operation.
+ */
+export function getPublicKey(self: bigint): Uint8Array | undefined {
+  const obj = lookupAuthenticatorAttestationResponse(self);
+  return obj.publicKey ?? undefined;
+}
+
+/**
+ * `get-public-key-algorithm()` operation.
+ */
+export function getPublicKeyAlgorithm(self: bigint): bigint {
+  const obj = lookupAuthenticatorAttestationResponse(self);
+  return obj.publicKeyAlgorithm;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: authenticator-assertion-response
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type AuthenticatorAssertionResponseHandle = bigint;
+
+/** Handle table for AuthenticatorAssertionResponse instances */
+const _authenticatorAssertionResponsehandles = new Map<bigint, AuthenticatorAssertionResponse>();
+let _nextAuthenticatorAssertionResponse = 1n;
+
+/** Lookup a AuthenticatorAssertionResponse by handle, throwing if not found. */
+function lookupAuthenticatorAssertionResponse(handle: bigint): AuthenticatorAssertionResponse {
+  const obj = _authenticatorAssertionResponsehandles.get(handle);
+  if (!obj) {
+    throw new Error(`AuthenticatorAssertionResponse handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional AuthenticatorAssertionResponse by handle. */
+function lookupOptionAuthenticatorAssertionResponse(handle: bigint | undefined): AuthenticatorAssertionResponse | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _authenticatorAssertionResponsehandles.get(handle) ?? null;
+}
+/**
+ * `get-authenticator-data()` operation.
+ */
+export function AuthenticatorAssertionResponseGetAuthenticatorData(self: bigint): Uint8Array {
+  const obj = lookupAuthenticatorAssertionResponse(self);
+  return obj.authenticatorData;
+}
+
+/**
+ * `get-signature()` operation.
+ */
+export function getSignature(self: bigint): Uint8Array {
+  const obj = lookupAuthenticatorAssertionResponse(self);
+  return obj.signature;
+}
+
+/**
+ * `get-user-handle()` operation.
+ */
+export function getUserHandle(self: bigint): Uint8Array | undefined {
+  const obj = lookupAuthenticatorAssertionResponse(self);
+  return obj.userHandle ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 
 export default {
   getId,
   getType,
-  isConditionalMediationAvailable,
+  CredentialIsConditionalMediationAvailable,
   pollIsConditionalMediationAvailable,
   getName,
   getIconUrl,
@@ -644,5 +920,27 @@ export default {
   pollPreventSilentAccess,
   getPassword,
   getProvider,
-  getProtocol
+  getProtocol,
+  getRawId,
+  getResponse,
+  getAuthenticatorAttachment,
+  getClientExtensionResults,
+  PublicKeyCredentialIsConditionalMediationAvailable,
+  toJson,
+  isUserVerifyingPlatformAuthenticatorAvailable,
+  getClientCapabilities,
+  parseCreationOptionsFromJson,
+  parseRequestOptionsFromJson,
+  signalUnknownCredential,
+  signalAllAcceptedCredentials,
+  signalCurrentUserDetails,
+  getClientDataJson,
+  getAttestationObject,
+  getTransports,
+  AuthenticatorAttestationResponseGetAuthenticatorData,
+  getPublicKey,
+  getPublicKeyAlgorithm,
+  AuthenticatorAssertionResponseGetAuthenticatorData,
+  getSignature,
+  getUserHandle
 };

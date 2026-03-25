@@ -249,13 +249,9 @@ let _nextAbortSignal = 1n;
 const _anyHandles = new Map<bigint, any>();
 let _nextAny = 1n;
 
-/** Handle table for cache-storage values */
-const _cacheStorageHandles = new Map<bigint, CacheStorage>();
-let _nextCacheStorage = 1n;
-
-/** Handle table for crypto values */
-const _cryptoHandles = new Map<bigint, Crypto>();
-let _nextCrypto = 1n;
+/** Handle table for blob values */
+const _blobHandles = new Map<bigint, Blob>();
+let _nextBlob = 1n;
 
 /** Handle table for document values */
 const _documentHandles = new Map<bigint, Document>();
@@ -269,9 +265,9 @@ let _nextEventHandler = 1n;
 const _headersHandles = new Map<bigint, Headers>();
 let _nextHeaders = 1n;
 
-/** Handle table for performance values */
-const _performanceHandles = new Map<bigint, Performance>();
-let _nextPerformance = 1n;
+/** Handle table for number values */
+const _numberHandles = new Map<bigint, number>();
+let _nextNumber = 1n;
 
 /** Handle table for readable-stream values */
 const _readableStreamHandles = new Map<bigint, ReadableStream>();
@@ -300,6 +296,10 @@ let _nextString = 1n;
 /** Handle table for string-list values */
 const _stringListHandles = new Map<bigint, string[]>();
 let _nextStringList = 1n;
+
+/** Handle table for url-search-params values */
+const _urlSearchParamsHandles = new Map<bigint, URLSearchParams>();
+let _nextUrlSearchParams = 1n;
 
 /** Handle table for writable-stream values */
 const _writableStreamHandles = new Map<bigint, WritableStream>();
@@ -347,38 +347,21 @@ function lookupOptionAny(handle: bigint | undefined): any | null {
   return _anyHandles.get(handle) ?? null;
 }
 
-/** Lookup a cache-storage value by handle. */
-function lookupCacheStorage(handle: bigint): CacheStorage {
-  const obj = _cacheStorageHandles.get(handle);
+/** Lookup a blob value by handle. */
+function lookupBlob(handle: bigint): Blob {
+  const obj = _blobHandles.get(handle);
   if (obj === undefined) {
-    throw new Error(`cache-storage handle ${handle} not found`);
+    throw new Error(`blob handle ${handle} not found`);
   }
   return obj!;
 }
 
-/** Lookup an optional cache-storage value by handle. */
-function lookupOptionCacheStorage(handle: bigint | undefined): CacheStorage | null {
+/** Lookup an optional blob value by handle. */
+function lookupOptionBlob(handle: bigint | undefined): Blob | null {
   if (handle === undefined || handle === 0n) {
     return null;
   }
-  return _cacheStorageHandles.get(handle) ?? null;
-}
-
-/** Lookup a crypto value by handle. */
-function lookupCrypto(handle: bigint): Crypto {
-  const obj = _cryptoHandles.get(handle);
-  if (obj === undefined) {
-    throw new Error(`crypto handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional crypto value by handle. */
-function lookupOptionCrypto(handle: bigint | undefined): Crypto | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _cryptoHandles.get(handle) ?? null;
+  return _blobHandles.get(handle) ?? null;
 }
 
 /** Lookup a document value by handle. */
@@ -432,21 +415,21 @@ function lookupOptionHeaders(handle: bigint | undefined): Headers | null {
   return _headersHandles.get(handle) ?? null;
 }
 
-/** Lookup a performance value by handle. */
-function lookupPerformance(handle: bigint): Performance {
-  const obj = _performanceHandles.get(handle);
+/** Lookup a number value by handle. */
+function lookupNumber(handle: bigint): number {
+  const obj = _numberHandles.get(handle);
   if (obj === undefined) {
-    throw new Error(`performance handle ${handle} not found`);
+    throw new Error(`number handle ${handle} not found`);
   }
   return obj!;
 }
 
-/** Lookup an optional performance value by handle. */
-function lookupOptionPerformance(handle: bigint | undefined): Performance | null {
+/** Lookup an optional number value by handle. */
+function lookupOptionNumber(handle: bigint | undefined): number | null {
   if (handle === undefined || handle === 0n) {
     return null;
   }
-  return _performanceHandles.get(handle) ?? null;
+  return _numberHandles.get(handle) ?? null;
 }
 
 /** Lookup a readable-stream value by handle. */
@@ -568,6 +551,23 @@ function lookupOptionStringList(handle: bigint | undefined): string[] | null {
   return _stringListHandles.get(handle) ?? null;
 }
 
+/** Lookup a url-search-params value by handle. */
+function lookupUrlSearchParams(handle: bigint): URLSearchParams {
+  const obj = _urlSearchParamsHandles.get(handle);
+  if (obj === undefined) {
+    throw new Error(`url-search-params handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional url-search-params value by handle. */
+function lookupOptionUrlSearchParams(handle: bigint | undefined): URLSearchParams | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _urlSearchParamsHandles.get(handle) ?? null;
+}
+
 /** Lookup a writable-stream value by handle. */
 function lookupWritableStream(handle: bigint): WritableStream {
   const obj = _writableStreamHandles.get(handle);
@@ -600,6 +600,775 @@ function lookupOptionXmlHttpRequestUpload(handle: bigint | undefined): XMLHttpRe
     return null;
   }
   return _xmlHttpRequestUploadHandles.get(handle) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: blob
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type BlobHandle = bigint;
+
+/**
+ * `get-size()` operation.
+ */
+export function BlobGetSize(self: bigint): bigint {
+  const obj = lookupBlob(self);
+  return obj.size;
+}
+
+/**
+ * `get-type()` operation.
+ */
+export function BlobGetType(self: bigint): string {
+  const obj = lookupBlob(self);
+  return obj.getType();
+}
+
+/**
+ * `slice()` operation.
+ */
+export function slice(self: bigint, start: bigint | undefined, end: bigint | undefined, contentType: string | undefined): bigint {
+  const obj = lookupBlob(self);
+  const _callResult = (obj as any).slice(start, end, contentType);
+  const handle = _nextBlob++;
+  _blobHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `stream()` operation.
+ */
+export function stream(self: bigint): bigint {
+  const obj = lookupBlob(self);
+  return obj.stream();
+}
+
+/**
+ * `text()` operation.
+ *
+ * Async operation: returns request ID, poll with `BlobPollText()`
+ */
+export function BlobText(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = lookupBlob(self);
+  const promise = obj.text()
+    .then((result: unknown) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `text()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function BlobPollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+}
+
+/**
+ * `array-buffer()` operation.
+ *
+ * Async operation: returns request ID, poll with `BlobPollArrayBuffer()`
+ */
+export function BlobArrayBuffer(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = lookupBlob(self);
+  const promise = obj.arrayBuffer()
+    .then((result: unknown) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `arrayBuffer()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function BlobPollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+}
+
+/**
+ * `bytes()` operation.
+ *
+ * Async operation: returns request ID, poll with `BlobPollBytes()`
+ */
+export function BlobBytes(self: bigint): bigint {
+  const requestId = _nextAsyncHandle++;
+  const obj = lookupBlob(self);
+  const promise = obj.bytes()
+    .then((result: unknown) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: true, value: result };
+      }
+    })
+    .catch((err: Error) => {
+      const entry = _asyncHandles.get(requestId);
+      if (entry) {
+        entry.result = { ok: false, error: err.message };
+      }
+    });
+
+  _asyncHandles.set(requestId, { promise, result: null });
+  return requestId;
+}
+
+/**
+ * Poll an async `bytes()` operation.
+ * Returns undefined if still pending, or the result if complete.
+ */
+export function BlobPollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+  const entry = _asyncHandles.get(requestId);
+  if (!entry) {
+    return { ok: false, error: `Unknown request ID ${requestId}` };
+  }
+  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: file
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type FileHandle = bigint;
+
+/** Handle table for File instances */
+const _fileHandles = new Map<bigint, File>();
+let _nextFile = 1n;
+
+/** Lookup a File by handle, throwing if not found. */
+function lookupFile(handle: bigint): File {
+  const obj = _fileHandles.get(handle);
+  if (!obj) {
+    throw new Error(`File handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional File by handle. */
+function lookupOptionFile(handle: bigint | undefined): File | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileHandles.get(handle) ?? null;
+}
+/**
+ * `get-name()` operation.
+ */
+export function getName(self: bigint): bigint {
+  const obj = lookupFile(self);
+  const _callResult = obj.name;
+  const handle = _nextString++;
+  _stringHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-last-modified()` operation.
+ */
+export function getLastModified(self: bigint): bigint {
+  const obj = lookupFile(self);
+  const _callResult = obj.lastModified;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, _callResult);
+  return handle;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: file-list
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type FileListHandle = bigint;
+
+/** Handle table for FileList instances */
+const _fileListhandles = new Map<bigint, FileList>();
+let _nextFileList = 1n;
+
+/** Lookup a FileList by handle, throwing if not found. */
+function lookupFileList(handle: bigint): FileList {
+  const obj = _fileListhandles.get(handle);
+  if (!obj) {
+    throw new Error(`FileList handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional FileList by handle. */
+function lookupOptionFileList(handle: bigint | undefined): FileList | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileListhandles.get(handle) ?? null;
+}
+/**
+ * `item()` operation.
+ */
+export function item(self: bigint, index: number): bigint | undefined {
+  const obj = lookupFileList(self);
+  const _callResult = obj.item(index);
+  if (_callResult === null) return undefined;
+  const handle = _nextFile++;
+  _fileHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-length()` operation.
+ */
+export function getLength(self: bigint): number {
+  const obj = lookupFileList(self);
+  return (obj as any).length;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: file-reader
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type FileReaderHandle = bigint;
+
+/** Handle table for FileReader instances */
+const _fileReaderhandles = new Map<bigint, FileReader>();
+let _nextFileReader = 1n;
+
+/** Lookup a FileReader by handle, throwing if not found. */
+function lookupFileReader(handle: bigint): FileReader {
+  const obj = _fileReaderhandles.get(handle);
+  if (!obj) {
+    throw new Error(`FileReader handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional FileReader by handle. */
+function lookupOptionFileReader(handle: bigint | undefined): FileReader | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileReaderhandles.get(handle) ?? null;
+}
+/**
+ * `read-as-array-buffer()` operation.
+ */
+export function FileReaderReadAsArrayBuffer(self: bigint, blob: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.readAsArrayBuffer(blob);
+}
+
+/**
+ * `read-as-binary-string()` operation.
+ */
+export function FileReaderReadAsBinaryString(self: bigint, blob: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.readAsBinaryString(blob);
+}
+
+/**
+ * `read-as-text()` operation.
+ */
+export function FileReaderReadAsText(self: bigint, blob: bigint, encoding: string | undefined): void {
+  const obj = lookupFileReader(self);
+  obj.readAsText(blob, encoding as any);
+}
+
+/**
+ * `read-as-data-url()` operation.
+ */
+export function FileReaderReadAsDataUrl(self: bigint, blob: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.readAsDataUrl(blob);
+}
+
+/**
+ * `abort()` operation.
+ */
+export function FileReaderAbort(self: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.abort();
+}
+
+/**
+ * `get-ready-state()` operation.
+ */
+export function FileReaderGetReadyState(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  const _callResult = (obj as any).readyState;
+  const handle = _nextNumber++;
+  _numberHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-result()` operation.
+ */
+export function getResult(self: bigint): bigint | undefined {
+  const obj = lookupFileReader(self);
+  const _callResult = (obj as any).result;
+  if (_callResult === null) return undefined;
+  const handle = _nextAny++;
+  _anyHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-error()` operation.
+ */
+export function getError(self: bigint): bigint | undefined {
+  const obj = lookupFileReader(self);
+  return obj.error ?? undefined;
+}
+
+/**
+ * `get-onloadstart()` operation.
+ */
+export function FileReaderGetOnloadstart(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onloadstart;
+}
+
+/**
+ * `set-onloadstart()` operation.
+ */
+export function FileReaderSetOnloadstart(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onloadstart = value;
+}
+
+/**
+ * `get-onprogress()` operation.
+ */
+export function FileReaderGetOnprogress(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onprogress;
+}
+
+/**
+ * `set-onprogress()` operation.
+ */
+export function FileReaderSetOnprogress(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onprogress = value;
+}
+
+/**
+ * `get-onload()` operation.
+ */
+export function FileReaderGetOnload(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onload;
+}
+
+/**
+ * `set-onload()` operation.
+ */
+export function FileReaderSetOnload(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onload = value;
+}
+
+/**
+ * `get-onabort()` operation.
+ */
+export function FileReaderGetOnabort(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onabort;
+}
+
+/**
+ * `set-onabort()` operation.
+ */
+export function FileReaderSetOnabort(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onabort = value;
+}
+
+/**
+ * `get-onerror()` operation.
+ */
+export function FileReaderGetOnerror(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onerror;
+}
+
+/**
+ * `set-onerror()` operation.
+ */
+export function FileReaderSetOnerror(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onerror = value;
+}
+
+/**
+ * `get-onloadend()` operation.
+ */
+export function FileReaderGetOnloadend(self: bigint): bigint {
+  const obj = lookupFileReader(self);
+  return obj.onloadend;
+}
+
+/**
+ * `set-onloadend()` operation.
+ */
+export function FileReaderSetOnloadend(self: bigint, value: bigint): void {
+  const obj = lookupFileReader(self);
+  obj.onloadend = value;
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: file-reader-sync
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type FileReaderSyncHandle = bigint;
+
+/** Handle table for FileReaderSync instances */
+const _fileReaderSynchandles = new Map<bigint, FileReaderSync>();
+let _nextFileReaderSync = 1n;
+
+/** Lookup a FileReaderSync by handle, throwing if not found. */
+function lookupFileReaderSync(handle: bigint): FileReaderSync {
+  const obj = _fileReaderSynchandles.get(handle);
+  if (!obj) {
+    throw new Error(`FileReaderSync handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional FileReaderSync by handle. */
+function lookupOptionFileReaderSync(handle: bigint | undefined): FileReaderSync | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _fileReaderSynchandles.get(handle) ?? null;
+}
+/**
+ * `read-as-array-buffer()` operation.
+ */
+export function FileReaderSyncReadAsArrayBuffer(self: bigint, blob: bigint): Uint8Array {
+  const obj = lookupFileReaderSync(self);
+  return obj.readAsArrayBuffer(blob);
+}
+
+/**
+ * `read-as-binary-string()` operation.
+ */
+export function FileReaderSyncReadAsBinaryString(self: bigint, blob: bigint): string {
+  const obj = lookupFileReaderSync(self);
+  return obj.readAsBinaryString(blob);
+}
+
+/**
+ * `read-as-text()` operation.
+ */
+export function FileReaderSyncReadAsText(self: bigint, blob: bigint, encoding: string | undefined): string {
+  const obj = lookupFileReaderSync(self);
+  return obj.readAsText(blob, encoding);
+}
+
+/**
+ * `read-as-data-url()` operation.
+ */
+export function FileReaderSyncReadAsDataUrl(self: bigint, blob: bigint): string {
+  const obj = lookupFileReaderSync(self);
+  return obj.readAsDataUrl(blob);
+}
+
+// ---------------------------------------------------------------------------
+// WIT interface: url
+// ---------------------------------------------------------------------------
+
+/** Type alias */
+export type UrlHandle = bigint;
+
+/** Handle table for URL instances */
+const _urlHandles = new Map<bigint, URL>();
+let _nextURL = 1n;
+
+/** Register a new URL and return its handle. */
+function registerURL(obj: URL): bigint {
+  const handle = _nextURL++;
+  _urlHandles.set(handle, obj);
+  return handle;
+}
+/** Lookup a URL by handle, throwing if not found. */
+function lookupURL(handle: bigint): URL {
+  const obj = _urlHandles.get(handle);
+  if (!obj) {
+    throw new Error(`URL handle ${handle} not found`);
+  }
+  return obj!;
+}
+
+/** Lookup an optional URL by handle. */
+function lookupOptionURL(handle: bigint | undefined): URL | null {
+  if (handle === undefined || handle === 0n) {
+    return null;
+  }
+  return _urlHandles.get(handle) ?? null;
+}
+/**
+ * `create-object-url()` operation.
+ */
+export function createObjectUrl(obj: bigint): string {
+  return URL.createObjectUrl(obj);
+}
+
+/**
+ * `revoke-object-url()` operation.
+ */
+export function revokeObjectUrl(url: string): void {
+  return URL.revokeObjectUrl(url);
+}
+
+/**
+ * `parse()` operation.
+ */
+export function parse(url: string, base: string | undefined): bigint | undefined {
+  const _callResult = URL.parse(url, base as any);
+  if (_callResult === null) return undefined;
+  const handle = _nextURL++;
+  _urlHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `can-parse()` operation.
+ */
+export function canParse(url: string, base: string | undefined): bigint {
+  return URL.canParse(url as any, base as any) ? 1n : 0n;
+}
+
+/**
+ * `get-href()` operation.
+ */
+export function getHref(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.href;
+}
+
+/**
+ * `set-href()` operation.
+ */
+export function setHref(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.href = value;
+}
+
+/**
+ * `get-origin()` operation.
+ */
+export function getOrigin(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.origin;
+}
+
+/**
+ * `get-protocol()` operation.
+ */
+export function getProtocol(self: bigint): bigint {
+  const obj = lookupURL(self);
+  const value = obj.protocol;
+  switch ((value as any)) {
+    case '': return 0n;
+    default: return 0n;
+  }
+}
+
+/**
+ * `set-protocol()` operation.
+ */
+export function setProtocol(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.protocol = value;
+}
+
+/**
+ * `get-username()` operation.
+ */
+export function getUsername(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.username;
+}
+
+/**
+ * `set-username()` operation.
+ */
+export function setUsername(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.username = value as any;
+}
+
+/**
+ * `get-password()` operation.
+ */
+export function getPassword(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.password;
+}
+
+/**
+ * `set-password()` operation.
+ */
+export function setPassword(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.password = value;
+}
+
+/**
+ * `get-host()` operation.
+ */
+export function getHost(self: bigint): bigint {
+  const obj = lookupURL(self);
+  const value = obj.host;
+  switch ((value as any)) {
+    case '': return 0n;
+    default: return 0n;
+  }
+}
+
+/**
+ * `set-host()` operation.
+ */
+export function setHost(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.host = value as any;
+}
+
+/**
+ * `get-hostname()` operation.
+ */
+export function getHostname(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.hostname;
+}
+
+/**
+ * `set-hostname()` operation.
+ */
+export function setHostname(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.hostname = value;
+}
+
+/**
+ * `get-port()` operation.
+ */
+export function getPort(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.port;
+}
+
+/**
+ * `set-port()` operation.
+ */
+export function setPort(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.port = value as any;
+}
+
+/**
+ * `get-pathname()` operation.
+ */
+export function getPathname(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.pathname;
+}
+
+/**
+ * `set-pathname()` operation.
+ */
+export function setPathname(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.pathname = value;
+}
+
+/**
+ * `get-search()` operation.
+ */
+export function getSearch(self: bigint): bigint {
+  const obj = lookupURL(self);
+  const value = obj.search;
+  switch ((value as any)) {
+    case '': return 0n;
+    default: return 0n;
+  }
+}
+
+/**
+ * `set-search()` operation.
+ */
+export function setSearch(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.search = value as any;
+}
+
+/**
+ * `get-search-params()` operation.
+ */
+export function getSearchParams(self: bigint): bigint {
+  const obj = lookupURL(self);
+  const _callResult = obj.searchParams;
+  const handle = _nextUrlSearchParams++;
+  _urlSearchParamsHandles.set(handle, _callResult);
+  return handle;
+}
+
+/**
+ * `get-hash()` operation.
+ */
+export function getHash(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.hash;
+}
+
+/**
+ * `set-hash()` operation.
+ */
+export function setHash(self: bigint, value: string): void {
+  const obj = lookupURL(self);
+  obj.hash = value;
+}
+
+/**
+ * `to-json()` operation.
+ */
+export function toJson(self: bigint): string {
+  const obj = lookupURL(self);
+  return obj.toJSON();
 }
 
 // ---------------------------------------------------------------------------
@@ -714,9 +1483,9 @@ export function getBodyUsed(self: bigint): bigint {
 /**
  * `array-buffer()` operation.
  *
- * Async operation: returns request ID, poll with `pollArrayBuffer()`
+ * Async operation: returns request ID, poll with `BodyPollArrayBuffer()`
  */
-export function arrayBuffer(self: bigint): bigint {
+export function BodyArrayBuffer(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupBody(self);
   const promise = obj.arrayBuffer()
@@ -741,7 +1510,7 @@ export function arrayBuffer(self: bigint): bigint {
  * Poll an async `arrayBuffer()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function BodyPollArrayBuffer(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -790,9 +1559,9 @@ export function pollBlob(requestId: bigint): { ok: true; value: bigint } | { ok:
 /**
  * `bytes()` operation.
  *
- * Async operation: returns request ID, poll with `pollBytes()`
+ * Async operation: returns request ID, poll with `BodyPollBytes()`
  */
-export function bytes(self: bigint): bigint {
+export function BodyBytes(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupBody(self);
   const promise = obj.bytes()
@@ -817,7 +1586,7 @@ export function bytes(self: bigint): bigint {
  * Poll an async `bytes()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function BodyPollBytes(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -904,9 +1673,9 @@ export function pollJson(requestId: bigint): { ok: true; value: bigint } | { ok:
 /**
  * `text()` operation.
  *
- * Async operation: returns request ID, poll with `pollText()`
+ * Async operation: returns request ID, poll with `BodyPollText()`
  */
-export function text(self: bigint): bigint {
+export function BodyText(self: bigint): bigint {
   const requestId = _nextAsyncHandle++;
   const obj = lookupBody(self);
   const promise = obj.text()
@@ -931,7 +1700,7 @@ export function text(self: bigint): bigint {
  * Poll an async `text()` operation.
  * Returns undefined if still pending, or the result if complete.
  */
-export function pollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
+export function BodyPollText(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
   const entry = _asyncHandles.get(requestId);
   if (!entry) {
     return { ok: false, error: `Unknown request ID ${requestId}` };
@@ -1211,7 +1980,7 @@ export function ResponseJson(data: string, init: bigint | undefined): bigint {
 /**
  * `get-type()` operation.
  */
-export function getType(self: bigint): bigint {
+export function ResponseGetType(self: bigint): bigint {
   const obj = lookupResponse(self);
   const value = (obj as any).getType();
   switch (value) {
@@ -1288,244 +2057,6 @@ export function ResponseClone(self: bigint): bigint {
   const _callResult = obj.clone();
   const handle = _nextResponse++;
   _responseHandles.set(handle, _callResult);
-  return handle;
-}
-
-// ---------------------------------------------------------------------------
-// WIT interface: window-or-worker-global-scope
-// ---------------------------------------------------------------------------
-
-/** Type alias */
-export type WindowOrWorkerGlobalScopeHandle = bigint;
-
-/** Handle table for WindowOrWorkerGlobalScope instances */
-const _windowOrWorkerGlobalScopehandles = new Map<bigint, WindowOrWorkerGlobalScope>();
-let _nextWindowOrWorkerGlobalScope = 1n;
-
-/** Register a new WindowOrWorkerGlobalScope and return its handle. */
-function registerWindowOrWorkerGlobalScope(obj: WindowOrWorkerGlobalScope): bigint {
-  const handle = _nextWindowOrWorkerGlobalScope++;
-  _windowOrWorkerGlobalScopehandles.set(handle, obj);
-  return handle;
-}
-/** Lookup a WindowOrWorkerGlobalScope by handle, throwing if not found. */
-function lookupWindowOrWorkerGlobalScope(handle: bigint): WindowOrWorkerGlobalScope {
-  const obj = _windowOrWorkerGlobalScopehandles.get(handle);
-  if (!obj) {
-    throw new Error(`WindowOrWorkerGlobalScope handle ${handle} not found`);
-  }
-  return obj!;
-}
-
-/** Lookup an optional WindowOrWorkerGlobalScope by handle. */
-function lookupOptionWindowOrWorkerGlobalScope(handle: bigint | undefined): WindowOrWorkerGlobalScope | null {
-  if (handle === undefined || handle === 0n) {
-    return null;
-  }
-  return _windowOrWorkerGlobalScopehandles.get(handle) ?? null;
-}
-/**
- * `fetch()` operation.
- *
- * Async operation: returns request ID, poll with `pollFetch()`
- */
-export function fetch(self: bigint, input: bigint, init: bigint | undefined): bigint {
-  const requestId = _nextAsyncHandle++;
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  const promise = obj.fetch(input as any, init as any)
-    .then((result: unknown) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `fetch()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollFetch(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
-}
-
-/**
- * `get-performance()` operation.
- */
-export function getPerformance(self: bigint): bigint {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  const _callResult = obj.performance;
-  const handle = _nextPerformance++;
-  _performanceHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-origin()` operation.
- */
-export function getOrigin(self: bigint): string {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.origin;
-}
-
-/**
- * `get-is-secure-context()` operation.
- */
-export function getIsSecureContext(self: bigint): bigint {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.isSecureContext ? 1n : 0n;
-}
-
-/**
- * `get-cross-origin-isolated()` operation.
- */
-export function getCrossOriginIsolated(self: bigint): bigint {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.crossOriginIsolated ? 1n : 0n;
-}
-
-/**
- * `report-error()` operation.
- */
-export function reportError(self: bigint, e: string): void {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  obj.reportError(e);
-}
-
-/**
- * `btoa()` operation.
- */
-export function btoa(self: bigint, data: string): string {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.btoa(data);
-}
-
-/**
- * `atob()` operation.
- */
-export function atob(self: bigint, data: string): string {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.atob(data as any);
-}
-
-/**
- * `set-timeout()` operation.
- */
-export function WindowOrWorkerGlobalScopeSetTimeout(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return (obj as any).setTimeout(handler, timeout, _arguments);
-}
-
-/**
- * `clear-timeout()` operation.
- */
-export function clearTimeout(self: bigint, id: number | undefined): void {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  obj.clearTimeout(Number(id));
-}
-
-/**
- * `set-interval()` operation.
- */
-export function setInterval(self: bigint, handler: bigint, timeout: number | undefined, _arguments: (string)[]): number {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return (obj as any).setInterval(handler, timeout, _arguments);
-}
-
-/**
- * `clear-interval()` operation.
- */
-export function clearInterval(self: bigint, id: number | undefined): void {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  obj.clearInterval(Number(id));
-}
-
-/**
- * `queue-microtask()` operation.
- */
-export function queueMicrotask(self: bigint, callback: bigint): void {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  obj.queueMicrotask(callback as any);
-}
-
-/**
- * `create-image-bitmap()` operation.
- *
- * Async operation: returns request ID, poll with `pollCreateImageBitmap()`
- */
-export function createImageBitmap(self: bigint, image: bigint, options: bigint | undefined): bigint {
-  const requestId = _nextAsyncHandle++;
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  const promise = obj.createImageBitmap(image as any, options as any)
-    .then((result: unknown) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: true, value: result };
-      }
-    })
-    .catch((err: Error) => {
-      const entry = _asyncHandles.get(requestId);
-      if (entry) {
-        entry.result = { ok: false, error: err.message };
-      }
-    });
-
-  _asyncHandles.set(requestId, { promise, result: null });
-  return requestId;
-}
-
-/**
- * Poll an async `createImageBitmap()` operation.
- * Returns undefined if still pending, or the result if complete.
- */
-export function pollCreateImageBitmap(requestId: bigint): { ok: true; value: bigint } | { ok: false; error: string } | undefined {
-  const entry = _asyncHandles.get(requestId);
-  if (!entry) {
-    return { ok: false, error: `Unknown request ID ${requestId}` };
-  }
-  return entry.result as { ok: true; value: bigint } | { ok: false; error: string } | null ?? undefined;
-}
-
-/**
- * `structured-clone()` operation.
- */
-export function structuredClone(self: bigint, value: string, options: bigint | undefined): string {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  return obj.structuredClone(value as any, options as any);
-}
-
-/**
- * `get-caches()` operation.
- */
-export function getCaches(self: bigint): bigint {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  const _callResult = obj.caches;
-  const handle = _nextCacheStorage++;
-  _cacheStorageHandles.set(handle, _callResult);
-  return handle;
-}
-
-/**
- * `get-crypto()` operation.
- */
-export function getCrypto(self: bigint): bigint {
-  const obj = lookupWindowOrWorkerGlobalScope(self);
-  const _callResult = obj.crypto;
-  const handle = _nextCrypto++;
-  _cryptoHandles.set(handle, _callResult);
   return handle;
 }
 
@@ -2757,7 +3288,7 @@ function lookupOptionXMLHttpRequestEventTarget(handle: bigint | undefined): XMLH
 /**
  * `get-onloadstart()` operation.
  */
-export function getOnloadstart(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnloadstart(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onloadstart;
   if (handler == null) return 0n;
@@ -2769,7 +3300,7 @@ export function getOnloadstart(self: bigint): bigint {
 /**
  * `set-onloadstart()` operation.
  */
-export function setOnloadstart(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnloadstart(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onloadstart = value as any;
 }
@@ -2777,7 +3308,7 @@ export function setOnloadstart(self: bigint, value: bigint): void {
 /**
  * `get-onprogress()` operation.
  */
-export function getOnprogress(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnprogress(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onprogress;
   if (handler == null) return 0n;
@@ -2789,7 +3320,7 @@ export function getOnprogress(self: bigint): bigint {
 /**
  * `set-onprogress()` operation.
  */
-export function setOnprogress(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnprogress(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onprogress = value as any;
 }
@@ -2797,7 +3328,7 @@ export function setOnprogress(self: bigint, value: bigint): void {
 /**
  * `get-onabort()` operation.
  */
-export function getOnabort(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnabort(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onabort;
   if (handler == null) return 0n;
@@ -2809,7 +3340,7 @@ export function getOnabort(self: bigint): bigint {
 /**
  * `set-onabort()` operation.
  */
-export function setOnabort(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnabort(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onabort = value as any;
 }
@@ -2817,7 +3348,7 @@ export function setOnabort(self: bigint, value: bigint): void {
 /**
  * `get-onerror()` operation.
  */
-export function getOnerror(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnerror(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onerror;
   if (handler == null) return 0n;
@@ -2829,7 +3360,7 @@ export function getOnerror(self: bigint): bigint {
 /**
  * `set-onerror()` operation.
  */
-export function setOnerror(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnerror(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onerror = value as any;
 }
@@ -2837,7 +3368,7 @@ export function setOnerror(self: bigint, value: bigint): void {
 /**
  * `get-onload()` operation.
  */
-export function getOnload(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnload(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onload;
   if (handler == null) return 0n;
@@ -2849,7 +3380,7 @@ export function getOnload(self: bigint): bigint {
 /**
  * `set-onload()` operation.
  */
-export function setOnload(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnload(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onload = value as any;
 }
@@ -2877,7 +3408,7 @@ export function setOntimeout(self: bigint, value: bigint): void {
 /**
  * `get-onloadend()` operation.
  */
-export function getOnloadend(self: bigint): bigint {
+export function XmlHttpRequestEventTargetGetOnloadend(self: bigint): bigint {
   const obj = lookupXMLHttpRequestEventTarget(self);
   const handler = obj.onloadend;
   if (handler == null) return 0n;
@@ -2889,7 +3420,7 @@ export function getOnloadend(self: bigint): bigint {
 /**
  * `set-onloadend()` operation.
  */
-export function setOnloadend(self: bigint, value: bigint): void {
+export function XmlHttpRequestEventTargetSetOnloadend(self: bigint, value: bigint): void {
   const obj = lookupXMLHttpRequestEventTarget(self);
   obj.onloadend = value as any;
 }
@@ -2944,7 +3475,7 @@ export function setOnreadystatechange(self: bigint, value: bigint): void {
 /**
  * `get-ready-state()` operation.
  */
-export function getReadyState(self: bigint): number {
+export function XmlHttpRequestGetReadyState(self: bigint): number {
   const obj = lookupXMLHttpRequest(self);
   return obj.readyState;
 }
@@ -2976,7 +3507,7 @@ export function getTimeout(self: bigint): number {
 /**
  * `set-timeout()` operation.
  */
-export function XmlHttpRequestSetTimeout(self: bigint, value: number): void {
+export function setTimeout(self: bigint, value: number): void {
   const obj = lookupXMLHttpRequest(self);
   obj.timeout = value;
 }
@@ -3273,6 +3804,71 @@ export function getTotal(self: bigint): number {
 // ---------------------------------------------------------------------------
 
 export default {
+  BlobGetSize,
+  BlobGetType,
+  slice,
+  stream,
+  BlobText,
+  BlobPollText,
+  BlobArrayBuffer,
+  BlobPollArrayBuffer,
+  BlobBytes,
+  BlobPollBytes,
+  getName,
+  getLastModified,
+  item,
+  getLength,
+  FileReaderReadAsArrayBuffer,
+  FileReaderReadAsBinaryString,
+  FileReaderReadAsText,
+  FileReaderReadAsDataUrl,
+  FileReaderAbort,
+  FileReaderGetReadyState,
+  getResult,
+  getError,
+  FileReaderGetOnloadstart,
+  FileReaderSetOnloadstart,
+  FileReaderGetOnprogress,
+  FileReaderSetOnprogress,
+  FileReaderGetOnload,
+  FileReaderSetOnload,
+  FileReaderGetOnabort,
+  FileReaderSetOnabort,
+  FileReaderGetOnerror,
+  FileReaderSetOnerror,
+  FileReaderGetOnloadend,
+  FileReaderSetOnloadend,
+  FileReaderSyncReadAsArrayBuffer,
+  FileReaderSyncReadAsBinaryString,
+  FileReaderSyncReadAsText,
+  FileReaderSyncReadAsDataUrl,
+  createObjectUrl,
+  revokeObjectUrl,
+  parse,
+  canParse,
+  getHref,
+  setHref,
+  getOrigin,
+  getProtocol,
+  setProtocol,
+  getUsername,
+  setUsername,
+  getPassword,
+  setPassword,
+  getHost,
+  setHost,
+  getHostname,
+  setHostname,
+  getPort,
+  setPort,
+  getPathname,
+  setPathname,
+  getSearch,
+  setSearch,
+  getSearchParams,
+  getHash,
+  setHash,
+  toJson,
   HeadersAppend,
   HeadersDelete,
   HeadersGet,
@@ -3281,18 +3877,18 @@ export default {
   HeadersSet,
   getBody,
   getBodyUsed,
-  arrayBuffer,
-  pollArrayBuffer,
+  BodyArrayBuffer,
+  BodyPollArrayBuffer,
   blob,
   pollBlob,
-  bytes,
-  pollBytes,
+  BodyBytes,
+  BodyPollBytes,
   formData,
   pollFormData,
   BodyJson,
   pollJson,
-  text,
-  pollText,
+  BodyText,
+  BodyPollText,
   getMethod,
   RequestGetUrl,
   RequestGetHeaders,
@@ -3313,7 +3909,7 @@ export default {
   ResponseError,
   redirect,
   ResponseJson,
-  getType,
+  ResponseGetType,
   ResponseGetUrl,
   getRedirected,
   ResponseGetStatus,
@@ -3321,25 +3917,6 @@ export default {
   ResponseGetStatusText,
   ResponseGetHeaders,
   ResponseClone,
-  fetch,
-  pollFetch,
-  getPerformance,
-  getOrigin,
-  getIsSecureContext,
-  getCrossOriginIsolated,
-  reportError,
-  btoa,
-  atob,
-  WindowOrWorkerGlobalScopeSetTimeout,
-  clearTimeout,
-  setInterval,
-  clearInterval,
-  queueMicrotask,
-  createImageBitmap,
-  pollCreateImageBitmap,
-  structuredClone,
-  getCaches,
-  getCrypto,
   getActivated,
   from,
   ReadableStreamGetLocked,
@@ -3403,27 +3980,27 @@ export default {
   CountQueuingStrategyGetSize,
   GenericTransformStreamGetReadable,
   GenericTransformStreamGetWritable,
-  getOnloadstart,
-  setOnloadstart,
-  getOnprogress,
-  setOnprogress,
-  getOnabort,
-  setOnabort,
-  getOnerror,
-  setOnerror,
-  getOnload,
-  setOnload,
+  XmlHttpRequestEventTargetGetOnloadstart,
+  XmlHttpRequestEventTargetSetOnloadstart,
+  XmlHttpRequestEventTargetGetOnprogress,
+  XmlHttpRequestEventTargetSetOnprogress,
+  XmlHttpRequestEventTargetGetOnabort,
+  XmlHttpRequestEventTargetSetOnabort,
+  XmlHttpRequestEventTargetGetOnerror,
+  XmlHttpRequestEventTargetSetOnerror,
+  XmlHttpRequestEventTargetGetOnload,
+  XmlHttpRequestEventTargetSetOnload,
   getOntimeout,
   setOntimeout,
-  getOnloadend,
-  setOnloadend,
+  XmlHttpRequestEventTargetGetOnloadend,
+  XmlHttpRequestEventTargetSetOnloadend,
   getOnreadystatechange,
   setOnreadystatechange,
-  getReadyState,
+  XmlHttpRequestGetReadyState,
   open,
   setRequestHeader,
   getTimeout,
-  XmlHttpRequestSetTimeout,
+  setTimeout,
   getWithCredentials,
   setWithCredentials,
   getUpload,
