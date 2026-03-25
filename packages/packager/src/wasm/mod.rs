@@ -700,18 +700,9 @@ fn generate_component_html_with_output_dir(
 </head>
 <body class="{body_class}">
     <div id="app">Loading...</div>
-    <!-- Import map for WASI preview2-shim (required by jco-transpiled wrapper) -->
-    <script type="importmap">
-    {{
-        "imports": {{
-            "@bytecodealliance/preview2-shim/cli": "https://esm.sh/@bytecodealliance/preview2-shim/cli",
-            "@bytecodealliance/preview2-shim/filesystem": "https://esm.sh/@bytecodealliance/preview2-shim/filesystem",
-            "@bytecodealliance/preview2-shim/io": "https://esm.sh/@bytecodealliance/preview2-shim/io",
-            "@bytecodealliance/preview2-shim/random": "https://esm.sh/@bytecodealliance/preview2-shim/random"
-        }}
-    }}
-    </script>
-    <!-- Load browser glue AFTER import map so it can extend it -->
+    <!-- Import map (WASI preview2-shim + tairitsu-glue interfaces) is created
+         dynamically by __tairitsu_glue__.js, which runs synchronously before
+         any module scripts, guaranteeing a single complete import map. -->
     <script src="{glue_bundle_path}?v={v}"></script>
     <script type="module">
         import {{ instantiateWithWrapper }} from './component-wrapper-loader.js?v={v}';

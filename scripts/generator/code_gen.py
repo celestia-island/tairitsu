@@ -820,14 +820,14 @@ class CodeGenerator:
         lines.append("// Re-export all generated modules")
 
         for domain in domains:
-            lines.append(f"export * as {domain.export_name} from \"./{domain.export_name}Glue\";")
+            lines.append(f"export * as {domain.export_name} from \"./{domain.export_name}\";")
 
-        # Add manual modules (not generated from WIT)
+        # Add manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)
         lines.append("")
         lines.append("// Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)")
-        lines.append("export * as console from \"./consoleGlue\";")
-        lines.append("export * as style from \"./styleGlue\";")
-        lines.append("export { addEventListener, removeEventListener, preventDefault, stopPropagation } from \"./eventTargetGlue\";")
+        lines.append("export * as console from \"./console\";")
+        lines.append("export * as style from \"./style\";")
+        lines.append("export { addEventListener, removeEventListener, preventDefault, stopPropagation } from \"./event-target\";")
 
         lines.append("")
         lines.append("// Statistics")

@@ -3,7 +3,7 @@
 Parse generated WIT files and produce TypeScript glue code.
 
 Reads from  : packages/browser-worlds/wit/generated/*.wit
-Writes to   : packages/browser-glue/src/generated/*-glue.ts
+Writes to   : packages/browser-glue/src/glue/*.ts
 
 This generator creates TypeScript modules that implement WIT import
 interfaces by bridging to actual browser DOM/Web APIs.
@@ -97,7 +97,7 @@ def run_generate(
     for gen_domain in generated_domains:
         wit_path = wit_dir / f"{gen_domain.name}.wit"
         content = code_gen.render_module(gen_domain, str(wit_path))
-        dest = output_dir / f"{gen_domain.export_name}Glue.ts"
+        dest = output_dir / f"{gen_domain.export_name}.ts"
 
         if dry_run:
             log_info(f"dry-run: {dest.name} ({len(content):,} bytes)")
@@ -165,7 +165,7 @@ def main() -> None:
     output_dir = (
         Path(args.output_dir)
         if args.output_dir
-        else project_root / "packages" / "browser-glue" / "src"
+        else project_root / "packages" / "browser-glue" / "src" / "glue"
     )
 
     print("=" * 64)
