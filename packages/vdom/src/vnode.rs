@@ -3,6 +3,12 @@ use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 use crate::svg::SafeSvg;
 use crate::EventData;
 
+/// Type-erased element ref that can be stored in VNode.
+///
+/// This wraps an `Rc<RefCell<Option<Box<dyn Any>>>>` to allow
+/// storing refs of any platform-specific element type.
+pub type AnyElementRef = Rc<RefCell<Option<Box<dyn std::any::Any>>>>;
+
 /// Trait for attribute values that can be optionally rendered.
 /// This allows `attr` to accept both `T` and `Option<T>` values.
 pub trait IntoAttrValue {
@@ -115,11 +121,14 @@ pub struct VElement {
     pub event_handlers: HashMap<String, EventHandler>,
     /// Raw HTML to be set as inner_html (for dangerouslySetInnerHTML equivalent)
     pub inner_html: Option<String>,
+    /// Element reference that will be populated with the DOM element handle
+    /// when this VElement is mounted to the DOM.
+    pub element_ref: Option<AnyElementRef>,
 }
 
 impl PartialEq for VElement {
     fn eq(&self, other: &Self) -> bool {
-        // Compare all fields except event_handlers (which can't be compared)
+        // Compare all fields except event_handlers and element_ref (which can't be compared)
         self.tag == other.tag
             && self.key == other.key
             && self.attributes == other.attributes
@@ -127,7 +136,7 @@ impl PartialEq for VElement {
             && self.style == other.style
             && self.class == other.class
             && self.inner_html == other.inner_html
-        // Note: event_handlers are intentionally not compared
+        // Note: event_handlers and element_ref are intentionally not compared
     }
 }
 
@@ -159,6 +168,9 @@ impl Clone for VElement {
             class: self.class.clone(),
             event_handlers: self.event_handlers.clone(),
             inner_html: self.inner_html.clone(),
+            // Note: element_ref is intentionally NOT cloned
+            // When cloning a VElement, we create a new element without a ref
+            element_ref: None,
         }
     }
 }
@@ -249,6 +261,7 @@ impl VElement {
             class: Classes::new(),
             event_handlers: HashMap::new(),
             inner_html: None,
+            element_ref: None,
         }
     }
 
@@ -331,6 +344,25 @@ impl VElement {
     /// ```
     pub fn safe_svg(mut self, svg: SafeSvg) -> Self {
         self.inner_html = Some(svg.into_content());
+        self
+    }
+
+    /// Set an element reference that will be populated when this element is mounted.
+    ///
+    /// The ref must be an `Rc<RefCell<Option<Box<dyn Any>>>>` which will be
+    /// populated with the element handle when the element is created in the DOM.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::{cell::RefCell, rc::Rc};
+    /// use tairitsu_vdom::VElement;
+    ///
+    /// let ref_handle: Rc<RefCell<Option<Box<dyn std::any::Any>>>> = Rc::new(RefCell::new(None));
+    /// let element = VElement::new("div").ref_(ref_handle);
+    /// ```
+    pub fn ref_(mut self, element_ref: AnyElementRef) -> Self {
+        self.element_ref = Some(element_ref);
         self
     }
 }

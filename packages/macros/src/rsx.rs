@@ -17,6 +17,7 @@ pub enum RsxAttr {
     Id(Expr),
     Onclick(Expr),
     InnerHtml(Expr), // dangerous_inner_html attribute
+    Ref(Expr),       // ref_ attribute for element references
     Other { name: String, value: Expr },
 }
 
@@ -127,6 +128,7 @@ impl Parse for RsxElement {
                             "id" => RsxAttr::Id(content.parse()?),
                             "onclick" => RsxAttr::Onclick(content.parse()?),
                             "dangerous_inner_html" => RsxAttr::InnerHtml(content.parse()?),
+                            "ref_" => RsxAttr::Ref(content.parse()?),
                             _ => RsxAttr::Other {
                                 name,
                                 value: content.parse()?,
@@ -377,6 +379,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     let mut class_code = quote! { tairitsu_vdom::Classes::new() };
     let mut style_code = quote! { tairitsu_vdom::Style::new() };
     let mut event_handlers = Vec::new();
+    let mut ref_attr = None;
     let mut other_attrs = Vec::new();
     let mut children_code = Vec::new();
 
@@ -423,6 +426,9 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::InnerHtml(expr) => {
                 other_attrs.push(quote! { .inner_html(#expr) });
+            }
+            RsxAttr::Ref(expr) => {
+                ref_attr = Some(expr);
             }
             RsxAttr::Other { name, value } => {
                 // Only treat on_* as event handlers for known HTML elements
@@ -494,11 +500,18 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
         children_code.push(expand_child_method(child));
     }
 
+    // Generate the ref attachment code if present
+    let ref_code = match ref_attr {
+        Some(ref_expr) => quote! { .ref_(#ref_expr.as_any_ref()) },
+        None => quote! {},
+    };
+
     quote! {
         tairitsu_vdom::VNode::Element(
             tairitsu_vdom::VElement::new(#tag_str)
                 .class(#class_code)
                 .style(#style_code)
+                #ref_code
                 #(#other_attrs)*
                 #(#event_handlers)*
                 #(#children_code)*
@@ -629,6 +642,10 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::InnerHtml(expr) => {
                 props_fields.push(quote! { dangerous_inner_html: #expr });
+            }
+            RsxAttr::Ref(expr) => {
+                // For custom components, pass ref_ as a prop
+                props_fields.push(quote! { ref_: #expr });
             }
             RsxAttr::Other { name, value } => {
                 // Convert attribute name to Rust field name

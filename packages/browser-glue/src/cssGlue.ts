@@ -7816,7 +7816,7 @@ export function convertQuadFromNode(self: bigint, quad: bigint, from: bigint, op
 /**
  * `convert-rect-from-node()` operation.
  */
-export function convertRectFromNode(self: bigint, rect: bigint, from: bigint, options: bigint | undefined): bigint {
+export function convertRectFromNode(self: bigint, rect: DomRect, from: bigint, options: bigint | undefined): bigint {
   const obj = lookupGeometryUtils(self);
   return obj.convertRectFromNode(rect, from, options);
 }

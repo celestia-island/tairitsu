@@ -6,6 +6,8 @@ pub mod patch;
 pub mod platform;
 pub mod portal;
 pub mod reactive;
+pub mod runtime;
+pub mod scheduler;
 pub mod svg;
 pub mod vnode;
 
@@ -22,5 +24,10 @@ pub use platform::{
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{batch, create_effect, EffectHandle, Signal};
+pub use runtime::{
+    cleanup_component, flush_render, mark_dirty, notify_signal, subscribe_component,
+    use_component, with_component, ComponentId,
+};
+pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
 pub use vnode::{empty_vnode, Classes, IntoAttrValue, Style, VElement, VNode, VText};
