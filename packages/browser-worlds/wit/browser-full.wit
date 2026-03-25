@@ -266,40 +266,6 @@ interface platform-helpers {
     disconnect-mutation: func(observer: u64);
 }
 
-/// Console interface for logging.
-interface console {
-    /// Log a message to the console.
-    log: func(message: string);
-    /// Log a warning to the console.
-    warn: func(message: string);
-    /// Log an error to the console.
-    error: func(message: string);
-}
-
-/// Event target interface for adding/removing event listeners.
-interface event-target {
-    /// Add an event listener to a target node.
-    /// Returns a listener-id that can be used to remove the listener.
-    add-event-listener: func(target: u64, event-type: string, use-capture: bool) -> result<u64, string>;
-    /// Remove a previously registered event listener.
-    remove-event-listener: func(target: u64, listener-id: u64) -> result<_, string>;
-    /// Prevent the default action for this event.
-    prevent-default: func(event: u64);
-    /// Stop the event from propagating further.
-    stop-propagation: func(event: u64);
-}
-
-/// Style interface - convenience wrapper for CSS operations.
-/// This is a simplified interface for the most common style operations.
-interface style {
-    /// Set a CSS property on an element.
-    set-style-property: func(element: u64, property: string, value: string) -> result<_, string>;
-    /// Get a CSS property value from an element.
-    get-style-property: func(element: u64, property: string) -> option<string>;
-    /// Remove a CSS property from an element.
-    remove-style-property: func(element: u64, property: string) -> result<_, string>;
-}
-
 interface credential {
     /// Opaque handle to a host-side `Credential` instance.
     type credential-handle = u64;
@@ -14017,9 +13983,6 @@ world browser-full {
     import xml-http-request-event-target;
     import xml-serializer;
     import xslt-processor;
-    import event-target;
-    import style;
-    import console;
     export event-callbacks;
     export lifecycle;
     export timer-callbacks;

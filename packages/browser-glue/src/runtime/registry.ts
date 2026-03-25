@@ -1,6 +1,4 @@
 // @ts-nocheck
-import { console_exports } from "./console";
-import { style_exports } from "./style";
 import { document_exports } from "./document";
 import { element_exports } from "./element";
 import { node_exports } from "./node";
@@ -12,8 +10,6 @@ import { resize_observer_entry_exports } from "./resize-observer-entry";
 import { resize_observer_size_exports } from "./resize-observer-size";
 
 export const INTERFACES = {
-  "@tairitsu-glue/console": console_exports,
-  "@tairitsu-glue/style": style_exports,
   "@tairitsu-glue/document": document_exports,
   "@tairitsu-glue/element": element_exports,
   "@tairitsu-glue/node": node_exports,
