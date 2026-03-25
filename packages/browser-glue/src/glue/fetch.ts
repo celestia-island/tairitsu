@@ -637,11 +637,11 @@ export function slice(self: bigint, start: bigint | undefined, end: bigint | und
 }
 
 /**
- * `stream()` operation.
+ * `get-stream()` operation.
  */
-export function stream(self: bigint): bigint {
+export function getStream(self: bigint): bigint {
   const obj = lookupBlob(self);
-  return obj.stream();
+  return obj.stream;
 }
 
 /**
@@ -3807,7 +3807,7 @@ export default {
   BlobGetSize,
   BlobGetType,
   slice,
-  stream,
+  getStream,
   BlobText,
   BlobPollText,
   BlobArrayBuffer,

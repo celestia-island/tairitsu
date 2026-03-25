@@ -37,31 +37,8 @@ pub fn register_ssr_imports_direct(linker: &mut Linker<SsrHostState>) -> Result<
 
 /// Register core DOM imports that SSR actually needs
 fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
-    // Console interface
-    let mut console = linker.instance("tairitsu-browser:full/console@0.2.0")?;
-    console.func_wrap(
-        "log",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (msg,): (String,)| {
-            tracing::info!("{}", msg);
-            Ok(())
-        },
-    )?;
-
-    console.func_wrap(
-        "warn",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (msg,): (String,)| {
-            tracing::warn!("{}", msg);
-            Ok(())
-        },
-    )?;
-
-    console.func_wrap(
-        "error",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>, (msg,): (String,)| {
-            tracing::error!("{}", msg);
-            Ok(())
-        },
-    )?;
+    // Note: Console interface removed - console operations now use direct browser console
+    // via wasm-bindgen in the web package, not WIT interface
 
     // Document interface
     let mut document = linker.instance("tairitsu-browser:full/document@0.2.0")?;
@@ -260,15 +237,32 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
-    // Style interface
-    let mut style = linker.instance("tairitsu-browser:full/style@0.2.0")?;
-    style.func_wrap(
-        "set-style-property",
+    // W3C CSSOM interfaces - ElementCSSInlineStyle and CSSStyleDeclaration
+
+    // ElementCSSInlineStyle: get-style
+    let mut element_css_inline_style =
+        linker.instance("tairitsu-browser:css/element-css-inline-style@0.2.0")?;
+    element_css_inline_style.func_wrap(
+        "get-style",
+        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+         (element_handle,): (u64,)|
+         -> Result<(u64,), wasmtime::Error> {
+            // In SSR, we return the element handle itself as the style handle
+            // The style declaration is stored as part of the element node
+            Ok((element_handle,))
+        },
+    )?;
+
+    // CSSStyleDeclaration: set-property
+    let mut css_style_declaration =
+        linker.instance("tairitsu-browser:css/css-style-declaration@0.2.0")?;
+    css_style_declaration.func_wrap(
+        "set-property",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (element, property, value): (u64, String, String)|
+         (style_handle, property, value, _priority): (u64, String, String, Option<String>)|
          -> Result<(Result<(), String>,), wasmtime::Error> {
             let state = caller.data_mut();
-            if let Some(node) = state.dom.get_node_mut(element) {
+            if let Some(node) = state.dom.get_node_mut(style_handle) {
                 node.set_style_property(&property, &value);
                 return Ok((Ok(()),));
             }
@@ -276,63 +270,79 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         },
     )?;
 
-    style.func_wrap(
-        "get-style-property",
+    // CSSStyleDeclaration: get-property-value
+    css_style_declaration.func_wrap(
+        "get-property-value",
         |caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (element, property): (u64, String)|
-         -> Result<(Option<String>,), wasmtime::Error> {
+         (style_handle, property): (u64, String)|
+         -> Result<(String,), wasmtime::Error> {
             let dom = &caller.data().dom;
             let value = dom
-                .get_node(element)
-                .and_then(|n| n.get_style_property(&property).map(|s| s.to_string()));
+                .get_node(style_handle)
+                .and_then(|n| n.get_style_property(&property))
+                .unwrap_or_default()
+                .to_string();
             Ok((value,))
         },
     )?;
 
-    style.func_wrap(
-        "remove-style-property",
+    // CSSStyleDeclaration: remove-property
+    css_style_declaration.func_wrap(
+        "remove-property",
         |mut caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (element, property): (u64, String)|
-         -> Result<(Result<(), String>,), wasmtime::Error> {
+         (style_handle, property): (u64, String)|
+         -> Result<(String,), wasmtime::Error> {
             let state = caller.data_mut();
-            if let Some(node) = state.dom.get_node_mut(element) {
+            let old_value = state
+                .dom
+                .get_node(style_handle)
+                .and_then(|n| n.get_style_property(&property))
+                .unwrap_or_default()
+                .to_string();
+            if let Some(node) = state.dom.get_node_mut(style_handle) {
                 node.remove_style_property(&property);
-                return Ok((Ok(()),));
             }
-            Ok((Err("Element not found".to_string()),))
+            Ok((old_value,))
         },
     )?;
 
     // Platform helpers interface - now using bindgen-generated Host trait
     // The implementation is in host_state.rs (PlatformHelpersHost trait)
 
-    // Event target
+    // Event target interface
     let mut event_target = linker.instance("tairitsu-browser:full/event-target@0.2.0")?;
     event_target.func_wrap(
         "add-event-listener",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (_target, _event_type, _use_capture): (u64, String, bool)|
-         -> Result<(Result<u64, String>,), wasmtime::Error> { Ok((Ok(1u64),)) },
+         -> Result<(Result<u64, String>,), wasmtime::Error> {
+            // Return a dummy listener ID
+            Ok((Ok(1),))
+        },
     )?;
 
     event_target.func_wrap(
         "remove-event-listener",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (_target, _listener_id): (u64, u64)|
-         -> Result<(Result<(), String>,), wasmtime::Error> { Ok((Ok(()),)) },
+         -> Result<(Result<(), String>,), wasmtime::Error> {
+            Ok((Ok(()),))
+        },
     )?;
 
-    event_target.func_wrap(
+    // Event methods
+    let mut event = linker.instance("tairitsu-browser:full/event@0.2.0")?;
+    event.func_wrap(
         "prevent-default",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_event,): (u64,)|
+         (_self,): (u64,)|
          -> Result<(), wasmtime::Error> { Ok(()) },
     )?;
 
-    event_target.func_wrap(
+    event.func_wrap(
         "stop-propagation",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
-         (_event,): (u64,)|
+         (_self,): (u64,)|
          -> Result<(), wasmtime::Error> { Ok(()) },
     )?;
 

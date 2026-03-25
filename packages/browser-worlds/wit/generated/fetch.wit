@@ -26,7 +26,7 @@ interface blob {
     slice: func(self: blob-handle, start: option<s64>, end: option<s64>, content-type: option<string>) -> u64;
 
     /// `stream()` operation.
-    stream: func(self: blob-handle) -> u64;
+    get-stream: func(self: blob-handle) -> u64;
 
     /// `text()` operation.
     text: func(self: blob-handle) -> u64;
