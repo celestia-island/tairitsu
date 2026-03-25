@@ -132,6 +132,15 @@ SPEC_TO_DOMAIN: Dict[str, str] = {
     "credential-management": "auth",
     "payment-request": "payments",
     "wasm-js-api": "wasm",
+    # Additional specs
+    "IndexedDB": "storage",
+    "FileAPI": "fetch",
+    "webaudio": "media",
+    "webauthn": "auth",
+    "web-locks": "storage",
+    "encoding": "misc",
+    "selection-api": "dom",
+    "SVG": "svg",
 }
 
 # Desired output order for domains in the "full" world.
@@ -139,7 +148,7 @@ DOMAIN_ORDER = [
     "dom", "events", "html", "css", "fetch", "url", "storage",
     "websocket", "workers", "crypto", "canvas", "media", "webrtc",
     "observers", "performance", "notifications", "permissions",
-    "device", "auth", "payments", "wasm",
+    "device", "auth", "payments", "wasm", "svg", "misc",
 ]
 
 # ---------------------------------------------------------------------------

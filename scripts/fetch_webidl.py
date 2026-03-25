@@ -149,6 +149,22 @@ TARGET_SPECS: Dict[str, str] = {
     "webmidi": "device",
     # WASM JS API
     "wasm-js-api": "wasm",
+    # IndexedDB
+    "IndexedDB": "storage",
+    # File API (alternate name - already have fileapi)
+    "FileAPI": "fetch",
+    # Web Audio
+    "webaudio": "media",
+    # Web Authentication
+    "webauthn": "auth",
+    # Web Locks
+    "web-locks": "storage",
+    # Encoding API
+    "encoding": "misc",
+    # Selection API
+    "selection-api": "dom",
+    # SVG
+    "SVG": "svg",
 }
 
 

@@ -70,10 +70,6 @@ export * as websocket from "./websocket";
 export * as websockets from "./websockets";
 export * as workers from "./workers";
 
-// Manual modules (interfaces defined in browser-full.wit but not in generated/*.wit)
-export * as console from "./console";
-export * as style from "./style";
-
 // Statistics
 export const GLUE_STATS = {
   totalDomains: 28,
