@@ -48,7 +48,7 @@ pub enum AnimationDirection {
     AlternateReverse,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EasingFunction {
     Linear,
     Ease,
@@ -217,24 +217,121 @@ impl UseAnimation {
     }
 
     /// Internal method to start the requestAnimationFrame loop
-    /// Note: This is a simplified implementation that only processes one frame.
-    /// The callback should handle scheduling the next frame if needed.
+    /// This method sets up a self-continuing animation loop that reschedules
+    /// each frame until the animation completes or is cancelled.
     fn start_raf_loop<P>(&self, platform: &P)
     where
         P: Platform + ?Sized,
     {
-        // Capture all necessary state
-        let state = Rc::clone(&self.state);
-        let progress = Rc::clone(&self.progress);
-        let config = self.config.clone();
-        let on_update = Rc::clone(&self.on_update);
-        let raf_id = Rc::clone(&self.raf_id);
-        let start_time = Rc::clone(&self.start_time);
-        let paused_time = Rc::clone(&self.paused_time);
-        let current_iteration = Rc::clone(&self.current_iteration);
+        // We need to store a pointer to the platform to use in subsequent frames.
+        // Since we can't capture &P in the closure (lifetime issues), we use
+        // a raw pointer and ensure the platform outlives the animation.
+        let platform_ptr = platform as *const P as usize;
 
-        // Create the first frame callback
-        let first_callback = Box::new(move |timestamp: f64| {
+        // Use weak references to avoid circular references
+        let state_weak = Rc::downgrade(&self.state);
+        let progress_weak = Rc::downgrade(&self.progress);
+        let on_update_weak = Rc::downgrade(&self.on_update);
+        let raf_id_weak = Rc::downgrade(&self.raf_id);
+        let start_time_weak = Rc::downgrade(&self.start_time);
+        let paused_time_weak = Rc::downgrade(&self.paused_time);
+        let current_iteration_weak = Rc::downgrade(&self.current_iteration);
+
+        let config = self.config.clone();
+
+        // Schedule the first frame
+        self.schedule_frame::<P>(
+            platform_ptr,
+            state_weak,
+            progress_weak,
+            on_update_weak,
+            raf_id_weak,
+            start_time_weak,
+            paused_time_weak,
+            current_iteration_weak,
+            config,
+        );
+    }
+
+    /// Schedule a single animation frame and handle the continuation logic.
+    /// This is an internal helper that manages the rAF loop continuation.
+    #[allow(clippy::too_many_arguments)]
+    fn schedule_frame<P>(
+        &self,
+        platform_ptr: usize,
+        state_weak: std::rc::Weak<RefCell<AnimationState>>,
+        progress_weak: std::rc::Weak<RefCell<f32>>,
+        on_update_weak: std::rc::Weak<RefCell<Option<AnimationCallback>>>,
+        raf_id_weak: std::rc::Weak<RefCell<Option<u32>>>,
+        start_time_weak: std::rc::Weak<RefCell<Option<f64>>>,
+        paused_time_weak: std::rc::Weak<RefCell<f64>>,
+        current_iteration_weak: std::rc::Weak<RefCell<u32>>,
+        config: AnimationConfig,
+    ) where
+        P: Platform + ?Sized,
+    {
+        // SAFETY: The platform pointer is valid for the duration of the animation
+        // because the caller (start_with_platform) holds a reference to the platform.
+        // We use this pattern to work around the lifetime restrictions of FnOnce.
+        let platform_ref = unsafe { &*(platform_ptr as *const P) };
+
+        let raf_id = Rc::clone(&self.raf_id);
+
+        // Create a self-referential callback structure
+        // We use Rc<RefCell<Option<...>>> to allow the callback to reference itself
+        type RafCallback = Box<dyn FnOnce(f64)>;
+        let next_callback: Rc<RefCell<Option<RafCallback>>> = Rc::new(RefCell::new(None));
+
+        // Clone all the weak references for the closure
+        let state_weak_cb = state_weak.clone();
+        let progress_weak_cb = progress_weak.clone();
+        let on_update_weak_cb = on_update_weak.clone();
+        let raf_id_weak_cb = raf_id_weak.clone();
+        let start_time_weak_cb = start_time_weak.clone();
+        let paused_time_weak_cb = paused_time_weak.clone();
+        let current_iteration_weak_cb = current_iteration_weak.clone();
+        let config_cb = config.clone();
+        let next_callback_cb = next_callback.clone();
+
+        // Create the actual callback logic
+        let callback_logic = move |timestamp: f64| {
+            // Try to upgrade weak references - if any are gone, animation is cancelled
+            let state = match state_weak_cb.upgrade() {
+                Some(s) => s,
+                None => return,
+            };
+            let progress = match progress_weak_cb.upgrade() {
+                Some(p) => p,
+                None => return,
+            };
+            let on_update = match on_update_weak_cb.upgrade() {
+                Some(o) => o,
+                None => return,
+            };
+            let raf_id_cell = match raf_id_weak_cb.upgrade() {
+                Some(r) => r,
+                None => return,
+            };
+            let start_time = match start_time_weak_cb.upgrade() {
+                Some(s) => s,
+                None => return,
+            };
+            let paused_time = match paused_time_weak_cb.upgrade() {
+                Some(p) => p,
+                None => return,
+            };
+            let current_iteration = match current_iteration_weak_cb.upgrade() {
+                Some(c) => c,
+                None => return,
+            };
+
+            // Check if animation was cancelled
+            let current_state = *state.borrow();
+            if current_state == AnimationState::Idle {
+                *raf_id_cell.borrow_mut() = None;
+                return;
+            }
+
             // Initialize start time on first frame
             if start_time.borrow().is_none() {
                 *start_time.borrow_mut() = Some(timestamp);
@@ -242,30 +339,34 @@ impl UseAnimation {
 
             let start = start_time.borrow().unwrap();
             let elapsed = timestamp - start - *paused_time.borrow();
-            let delay_ms = config.delay.as_millis() as f64;
+            let delay_ms = config_cb.delay.as_millis() as f64;
 
             // Check if we're still in the delay period
             if elapsed < delay_ms {
-                // Still in delay, don't update progress yet
+                // Still in delay, schedule next frame
+                let platform_ref = unsafe { &*(platform_ptr as *const P) };
+                if let Some(cb) = next_callback_cb.borrow_mut().take() {
+                    let id = platform_ref.request_animation_frame(cb);
+                    *raf_id_cell.borrow_mut() = Some(id);
+                }
                 return;
             }
 
             // Calculate actual animation progress (after delay)
             let animation_elapsed = elapsed - delay_ms;
-            let duration_ms = config.duration.as_millis() as f64;
+            let duration_ms = config_cb.duration.as_millis() as f64;
             let raw_progress = (animation_elapsed / duration_ms) as f32;
 
             // Handle iterations
             let iteration_duration = 1.0;
-            let total_iterations = config.iterations as f32;
+            let total_iterations = config_cb.iterations as f32;
 
             if raw_progress >= total_iterations * iteration_duration {
                 // Animation complete
                 *progress.borrow_mut() = 1.0;
                 *state.borrow_mut() = AnimationState::Finished;
-                *raf_id.borrow_mut() = None;
+                *raf_id_cell.borrow_mut() = None;
 
-                // Call update callback with final progress
                 if let Some(cb) = on_update.borrow().as_ref() {
                     cb(1.0);
                 }
@@ -280,18 +381,18 @@ impl UseAnimation {
             let iter_progress = raw_progress % iteration_duration;
 
             // Apply direction
-            let adjusted_progress = match config.direction {
+            let adjusted_progress = match config_cb.direction {
                 AnimationDirection::Normal => iter_progress,
                 AnimationDirection::Reverse => 1.0 - iter_progress,
                 AnimationDirection::Alternate => {
-                    if iter.is_multiple_of(2) {
+                    if iter % 2 == 0 {
                         iter_progress
                     } else {
                         1.0 - iter_progress
                     }
                 }
                 AnimationDirection::AlternateReverse => {
-                    if iter.is_multiple_of(2) {
+                    if iter % 2 == 0 {
                         1.0 - iter_progress
                     } else {
                         iter_progress
@@ -300,7 +401,7 @@ impl UseAnimation {
             };
 
             // Apply easing function
-            let eased_progress = config.easing.evaluate(adjusted_progress);
+            let eased_progress = config_cb.easing.evaluate(adjusted_progress);
 
             // Update progress
             *progress.borrow_mut() = eased_progress;
@@ -309,11 +410,29 @@ impl UseAnimation {
             if let Some(cb) = on_update.borrow().as_ref() {
                 cb(eased_progress);
             }
-        });
+
+            // Check if we should continue before scheduling next frame
+            let current_state = *state.borrow();
+            if current_state != AnimationState::Running {
+                *raf_id_cell.borrow_mut() = None;
+                return;
+            }
+
+            // Schedule next frame
+            let platform_ref = unsafe { &*(platform_ptr as *const P) };
+            if let Some(cb) = next_callback_cb.borrow_mut().take() {
+                let id = platform_ref.request_animation_frame(cb);
+                *raf_id_cell.borrow_mut() = Some(id);
+            }
+        };
+
+        // Store the callback in the Rc<RefCell>
+        *next_callback.borrow_mut() = Some(Box::new(callback_logic));
 
         // Schedule the first frame
-        let id = platform.request_animation_frame(first_callback);
-        *self.raf_id.borrow_mut() = Some(id);
+        let callback = next_callback.borrow_mut().take().unwrap();
+        let id = platform_ref.request_animation_frame(callback);
+        *raf_id.borrow_mut() = Some(id);
     }
 
     pub fn pause(&self) {
@@ -409,6 +528,115 @@ pub fn use_simple_animation(duration_ms: u64) -> UseAnimation {
         duration: Duration::from_millis(duration_ms),
         ..Default::default()
     }))
+}
+
+/// Linear interpolation helper for animation values
+/// Commonly used for CSS variable animations
+///
+/// # Arguments
+/// * `from` - Starting value
+/// * `to` - Ending value
+/// * `t` - Progress value in [0.0, 1.0]
+///
+/// # Returns
+/// The interpolated value between `from` and `to`
+///
+/// # Example
+/// ```rust
+/// let value = lerp_f32(0.0, 100.0, 0.5); // Returns 50.0
+/// ```
+pub fn lerp_f32(from: f32, to: f32, t: f32) -> f32 {
+    from + (to - from) * t
+}
+
+/// Builder for creating AnimationConfig with a fluent API
+///
+/// Provides a more intuitive interface for constructing animations
+/// compared to directly using AnimationConfig struct.
+///
+/// # Example
+/// ```rust
+/// let animation = AnimationBuilder::new()
+///     .duration(200)
+///     .easing(EasingFunction::EaseOut)
+///     .delay(50)
+///     .iterations(3)
+///     .direction(AnimationDirection::Alternate)
+///     .build();
+/// ```
+pub struct AnimationBuilder {
+    duration_ms: u64,
+    delay_ms: u64,
+    iterations: u32,
+    direction: AnimationDirection,
+    easing: EasingFunction,
+}
+
+impl Default for AnimationBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AnimationBuilder {
+    /// Create a new AnimationBuilder with default values
+    ///
+    /// Defaults:
+    /// - duration: 300ms
+    /// - delay: 0ms
+    /// - iterations: 1
+    /// - direction: Normal
+    /// - easing: Ease
+    pub fn new() -> Self {
+        Self {
+            duration_ms: 300,
+            delay_ms: 0,
+            iterations: 1,
+            direction: AnimationDirection::Normal,
+            easing: EasingFunction::Ease,
+        }
+    }
+
+    /// Set the animation duration in milliseconds
+    pub fn duration(mut self, ms: u64) -> Self {
+        self.duration_ms = ms;
+        self
+    }
+
+    /// Set the easing function for the animation
+    pub fn easing(mut self, f: EasingFunction) -> Self {
+        self.easing = f;
+        self
+    }
+
+    /// Set the animation delay in milliseconds
+    pub fn delay(mut self, ms: u64) -> Self {
+        self.delay_ms = ms;
+        self
+    }
+
+    /// Set the number of animation iterations
+    pub fn iterations(mut self, count: u32) -> Self {
+        self.iterations = count;
+        self
+    }
+
+    /// Set the animation direction
+    pub fn direction(mut self, dir: AnimationDirection) -> Self {
+        self.direction = dir;
+        self
+    }
+
+    /// Build the AnimationConfig from the builder settings
+    pub fn build(self) -> AnimationConfig {
+        AnimationConfig {
+            duration: Duration::from_millis(self.duration_ms),
+            delay: Duration::from_millis(self.delay_ms),
+            iterations: self.iterations,
+            direction: self.direction,
+            easing: self.easing,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -576,5 +804,223 @@ mod tests {
         let y2 = easing.evaluate(0.75);
         // y2 should be approximately 1 - y1
         assert!((y2 - (1.0 - y1)).abs() < 0.01);
+    }
+
+    // AnimationBuilder tests
+
+    #[test]
+    fn test_builder_default() {
+        let builder = AnimationBuilder::new();
+        let config = builder.build();
+
+        assert_eq!(config.duration, Duration::from_millis(300));
+        assert_eq!(config.delay, Duration::from_millis(0));
+        assert_eq!(config.iterations, 1);
+        assert_eq!(config.direction, AnimationDirection::Normal);
+        assert_eq!(config.easing, EasingFunction::Ease);
+    }
+
+    #[test]
+    fn test_builder_duration() {
+        let config = AnimationBuilder::new().duration(500).build();
+
+        assert_eq!(config.duration, Duration::from_millis(500));
+        // Other defaults should remain
+        assert_eq!(config.delay, Duration::from_millis(0));
+        assert_eq!(config.iterations, 1);
+    }
+
+    #[test]
+    fn test_builder_delay() {
+        let config = AnimationBuilder::new().delay(100).build();
+
+        assert_eq!(config.delay, Duration::from_millis(100));
+    }
+
+    #[test]
+    fn test_builder_easing() {
+        let config = AnimationBuilder::new()
+            .easing(EasingFunction::EaseOut)
+            .build();
+
+        assert_eq!(config.easing, EasingFunction::EaseOut);
+    }
+
+    #[test]
+    fn test_builder_iterations() {
+        let config = AnimationBuilder::new().iterations(5).build();
+
+        assert_eq!(config.iterations, 5);
+    }
+
+    #[test]
+    fn test_builder_direction() {
+        let config = AnimationBuilder::new()
+            .direction(AnimationDirection::Alternate)
+            .build();
+
+        assert_eq!(config.direction, AnimationDirection::Alternate);
+    }
+
+    #[test]
+    fn test_builder_chaining() {
+        let config = AnimationBuilder::new()
+            .duration(200)
+            .easing(EasingFunction::EaseInOut)
+            .delay(50)
+            .iterations(3)
+            .direction(AnimationDirection::Alternate)
+            .build();
+
+        assert_eq!(config.duration, Duration::from_millis(200));
+        assert_eq!(config.delay, Duration::from_millis(50));
+        assert_eq!(config.iterations, 3);
+        assert_eq!(config.direction, AnimationDirection::Alternate);
+        assert_eq!(config.easing, EasingFunction::EaseInOut);
+    }
+
+    #[test]
+    fn test_builder_with_custom_easing() {
+        let config = AnimationBuilder::new()
+            .easing(EasingFunction::CubicBezier(0.42, 0.0, 0.58, 1.0))
+            .build();
+
+        match config.easing {
+            EasingFunction::CubicBezier(x1, y1, x2, y2) => {
+                assert!((x1 - 0.42).abs() < f32::EPSILON);
+                assert!((y1 - 0.0).abs() < f32::EPSILON);
+                assert!((x2 - 0.58).abs() < f32::EPSILON);
+                assert!((y2 - 1.0).abs() < f32::EPSILON);
+            }
+            _ => panic!("Expected CubicBezier easing"),
+        }
+    }
+
+    #[test]
+    fn test_builder_default_trait() {
+        let config1 = AnimationBuilder::default().build();
+        let config2 = AnimationBuilder::new().build();
+
+        assert_eq!(config1.duration, config2.duration);
+        assert_eq!(config1.delay, config2.delay);
+        assert_eq!(config1.iterations, config2.iterations);
+        assert_eq!(config1.direction, config2.direction);
+        assert_eq!(config1.easing, config2.easing);
+    }
+
+    // lerp_f32 tests
+
+    #[test]
+    fn test_lerp_f32_basic() {
+        assert_eq!(lerp_f32(0.0, 100.0, 0.0), 0.0);
+        assert_eq!(lerp_f32(0.0, 100.0, 0.5), 50.0);
+        assert_eq!(lerp_f32(0.0, 100.0, 1.0), 100.0);
+    }
+
+    #[test]
+    fn test_lerp_f32_negative_range() {
+        assert_eq!(lerp_f32(-100.0, 100.0, 0.5), 0.0);
+        assert_eq!(lerp_f32(-50.0, 50.0, 0.5), 0.0);
+    }
+
+    #[test]
+    fn test_lerp_f32_clamped_values() {
+        // Test values outside [0, 1] range - lerp doesn't clamp
+        assert_eq!(lerp_f32(0.0, 100.0, -0.5), -50.0);
+        assert_eq!(lerp_f32(0.0, 100.0, 1.5), 150.0);
+    }
+
+    #[test]
+    fn test_lerp_f32_reverse() {
+        assert_eq!(lerp_f32(100.0, 0.0, 0.0), 100.0);
+        assert_eq!(lerp_f32(100.0, 0.0, 0.5), 50.0);
+        assert_eq!(lerp_f32(100.0, 0.0, 1.0), 0.0);
+    }
+
+    #[test]
+    fn test_lerp_f32_css_variable_scenario() {
+        // Simulating a CSS variable animation for glow intensity
+        let from = 0.0;
+        let to = 0.5;
+
+        let t1 = 0.0;
+        let t2 = 0.25;
+        let t3 = 0.5;
+        let t4 = 1.0;
+
+        assert_eq!(lerp_f32(from, to, t1), 0.0);
+        assert_eq!(lerp_f32(from, to, t2), 0.125);
+        assert_eq!(lerp_f32(from, to, t3), 0.25);
+        assert_eq!(lerp_f32(from, to, t4), 0.5);
+    }
+
+    #[test]
+    fn test_builder_integration_with_use_animation() {
+        let config = AnimationBuilder::new()
+            .duration(250)
+            .easing(EasingFunction::EaseOut)
+            .build();
+
+        let anim = use_animation(Some(config));
+
+        assert_eq!(anim.config().duration, Duration::from_millis(250));
+        assert_eq!(anim.config().easing, EasingFunction::EaseOut);
+    }
+
+    #[test]
+    fn test_builder_all_directions() {
+        let directions = [
+            AnimationDirection::Normal,
+            AnimationDirection::Reverse,
+            AnimationDirection::Alternate,
+            AnimationDirection::AlternateReverse,
+        ];
+
+        for direction in directions {
+            let config = AnimationBuilder::new().direction(direction).build();
+            assert_eq!(config.direction, direction);
+        }
+    }
+
+    #[test]
+    fn test_builder_all_easing_functions() {
+        let easings = [
+            EasingFunction::Linear,
+            EasingFunction::Ease,
+            EasingFunction::EaseIn,
+            EasingFunction::EaseOut,
+            EasingFunction::EaseInOut,
+        ];
+
+        for easing in easings {
+            let config = AnimationBuilder::new().easing(easing).build();
+            assert_eq!(config.easing, easing);
+        }
+    }
+
+    #[test]
+    fn test_builder_zero_values() {
+        let config = AnimationBuilder::new()
+            .duration(0)
+            .delay(0)
+            .iterations(0)
+            .build();
+
+        assert_eq!(config.duration, Duration::from_millis(0));
+        assert_eq!(config.delay, Duration::from_millis(0));
+        assert_eq!(config.iterations, 0);
+    }
+
+    #[test]
+    fn test_builder_large_values() {
+        let config = AnimationBuilder::new()
+            .duration(u64::MAX)
+            .delay(u64::MAX)
+            .iterations(u32::MAX)
+            .build();
+
+        assert_eq!(config.duration, Duration::from_millis(u64::MAX));
+        assert_eq!(config.delay, Duration::from_millis(u64::MAX));
+        assert_eq!(config.iterations, u32::MAX);
     }
 }

@@ -41,7 +41,7 @@ use tairitsu_vdom::{ElementHandle, EventHandle};
 /// The inner `u64` is the `node-handle` value assigned by the host via the
 /// `tairitsu-browser:full` WIT import.
 #[cfg(feature = "wit-bindings")]
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WitElement(pub u64);
 
 #[cfg(feature = "wit-bindings")]
@@ -302,6 +302,12 @@ mod wasm_impl {
                 KeyboardEvent::new()
                     .key(data.key)
                     .code(data.code)
+                    .key_code(data.key_code)
+                    .ctrl_key(data.ctrl_key)
+                    .shift_key(data.shift_key)
+                    .alt_key(data.alt_key)
+                    .meta_key(data.meta_key)
+                    .repeat(data.repeat)
                     .event_handle(wit_handle),
             );
             dispatch_event(listener_id, "keyboard", event);
@@ -1153,6 +1159,13 @@ mod wasm_impl {
         match vnode {
             VNode::Element(velement) => {
                 let element = platform.create_element(&velement.tag);
+
+                // Populate element_ref if present (for patch-created elements)
+                if let Some(ref element_ref) = velement.element_ref {
+                    use std::any::Any;
+                    let mut ref_mut = element_ref.borrow_mut();
+                    *ref_mut = Some(Box::new(element.clone()) as Box<dyn Any>);
+                }
 
                 for (name, value) in &velement.attributes {
                     platform.set_attribute(&element, name, value);

@@ -7,6 +7,7 @@ pub mod memo;
 pub mod ref_;
 pub mod signal;
 pub mod state;
+pub mod state_machine;
 
 pub use animation::{
     use_animation, use_simple_animation, AnimationCallback, AnimationConfig, AnimationDirection,
@@ -21,8 +22,12 @@ pub use effect::use_effect;
 pub use memo::{use_memo, use_memo_with, use_memo_with_deps, Memo};
 pub use provide_context as use_context_provider;
 pub use ref_::{use_ref, UseRef};
-pub use signal::use_signal;
+pub use signal::{use_signal, ReactiveSignal};
 pub use state::use_state;
+pub use state_machine::{
+    use_interaction_state, ButtonStateMachine, InteractionCallback, InteractionEvent,
+    InteractionState,
+};
 
 // Re-export Event types from vdom for convenience
 pub use tairitsu_vdom::{Event, GenericEvent};

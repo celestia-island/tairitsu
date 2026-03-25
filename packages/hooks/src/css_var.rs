@@ -1,8 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
 
-#[cfg(feature = "web")]
-use wasm_bindgen::JsCast;
-
 /// Creates a reactive CSS variable binding.
 ///
 /// This hook provides a way to read and write CSS custom properties (CSS variables)
@@ -22,8 +19,8 @@ use wasm_bindgen::JsCast;
 ///
 /// # Platform-specific behavior
 ///
-/// - **Web**: The CSS variable is read from and written to the `:root` element
-/// - **Non-web**: The value is stored in memory only (no actual CSS variable is modified)
+/// - **Wasm**: The CSS variable is read from and written to the `:root` element using web-sys
+/// - **Non-wasm**: The value is stored in memory only (no actual CSS variable is modified)
 ///
 /// # Example
 ///
@@ -32,7 +29,7 @@ use wasm_bindgen::JsCast;
 /// set_color("#ff0000".to_string());
 /// println!("Current color: {}", color.borrow());
 /// ```
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", target_arch = "wasm32"))]
 pub fn use_css_var(name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
     let value = Rc::new(RefCell::new(get_css_var(name)));
     let name = name.to_string();
@@ -46,8 +43,9 @@ pub fn use_css_var(name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
     (value, setter)
 }
 
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", target_arch = "wasm32"))]
 fn get_css_var(name: &str) -> String {
+    use wasm_bindgen::JsCast;
     use web_sys::window;
 
     if let Some(window) = window() {
@@ -69,8 +67,9 @@ fn get_css_var(name: &str) -> String {
     String::new()
 }
 
-#[cfg(feature = "web")]
+#[cfg(all(feature = "web", target_arch = "wasm32"))]
 fn set_css_var(name: &str, value: &str) {
+    use wasm_bindgen::JsCast;
     use web_sys::window;
 
     if let Some(window) = window() {
@@ -87,13 +86,13 @@ fn set_css_var(name: &str, value: &str) {
     }
 }
 
-/// Creates a reactive CSS variable binding (non-web implementation).
+/// Creates a reactive CSS variable binding (non-wasm implementation).
 ///
-/// This is a fallback implementation for non-web platforms. The value is stored
+/// This is a fallback implementation for non-wasm platforms. The value is stored
 /// in memory only and does not interact with any actual CSS variables.
 ///
-/// See the web-specific implementation for more details.
-#[cfg(not(feature = "web"))]
+/// See the wasm-specific implementation for more details.
+#[cfg(not(all(feature = "web", target_arch = "wasm32")))]
 pub fn use_css_var(_name: &str) -> (Rc<RefCell<String>>, impl Fn(String)) {
     let value = Rc::new(RefCell::new(String::new()));
     let value_clone = Rc::clone(&value);

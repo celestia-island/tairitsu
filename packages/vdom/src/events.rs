@@ -266,6 +266,36 @@ impl KeyboardEvent {
         self
     }
 
+    pub fn key_code(mut self, key_code: u32) -> Self {
+        self.key_code = key_code;
+        self
+    }
+
+    pub fn ctrl_key(mut self, ctrl_key: bool) -> Self {
+        self.ctrl_key = ctrl_key;
+        self
+    }
+
+    pub fn shift_key(mut self, shift_key: bool) -> Self {
+        self.shift_key = shift_key;
+        self
+    }
+
+    pub fn alt_key(mut self, alt_key: bool) -> Self {
+        self.alt_key = alt_key;
+        self
+    }
+
+    pub fn meta_key(mut self, meta_key: bool) -> Self {
+        self.meta_key = meta_key;
+        self
+    }
+
+    pub fn repeat(mut self, repeat: bool) -> Self {
+        self.repeat = repeat;
+        self
+    }
+
     pub fn event_handle(mut self, handle: EventWitHandle) -> Self {
         self.event_handle = handle;
         self
@@ -560,7 +590,7 @@ impl std::str::FromStr for Key {
 
 impl KeyboardEvent {
     /// Get the Key enum for this keyboard event
-    pub fn key_code(&self) -> Key {
+    pub fn get_key(&self) -> Key {
         Key::from_str(&self.key)
     }
 }
