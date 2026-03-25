@@ -8,6 +8,7 @@ edition = "2021"
 
 [dependencies]
 tairitsu-vdom = { path = "../vdom" }
+tairitsu-hooks = { path = "../hooks" }
 
 # Basic language and tools
 anyhow = "^1"

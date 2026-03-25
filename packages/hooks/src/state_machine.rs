@@ -167,6 +167,12 @@ impl ButtonStateMachine {
         self.state
     }
 
+    /// Sets the state directly (primarily for testing purposes).
+    #[inline]
+    pub fn set_state(&mut self, state: InteractionState) {
+        self.state = state;
+    }
+
     /// Returns true if the element is interactive (not disabled).
     #[inline]
     pub fn is_interactive(&self) -> bool {
