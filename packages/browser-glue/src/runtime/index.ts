@@ -16,7 +16,7 @@
 // Side-effect imports that initialize globalThis handle tables and helpers
 import "./handles";
 import "./helpers";
-import "./wasm-exports";
+import "./wasmExports";
 
 import { INTERFACES, registerImportMap } from "./registry";
 

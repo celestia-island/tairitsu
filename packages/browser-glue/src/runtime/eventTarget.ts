@@ -1,11 +1,14 @@
 // @ts-nocheck
 import { lookupElement } from "./helpers";
 
-// Handle tables for event listeners
-const _listenerHandles = new Map<bigint, { element: Element; type: string; listener: EventListener }>();
-let _nextListenerHandle = 1n;
+// Initialize global handle tables for event listeners
+globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
+globalThis.__nextListenerHandle = globalThis.__nextListenerHandle || 1n;
+// Event handles
+globalThis.__eventHandles = globalThis.__eventHandles || new Map();
+globalThis.__nextEventHandle = globalThis.__nextEventHandle || 1n;
 
-export const event_target_exports = {
+export const eventTarget_exports = {
   /**
    * Add an event listener to an element.
    * @param target Handle to the element
@@ -29,7 +32,7 @@ export const event_target_exports = {
 
             // Find the listener ID
             let listenerId = 0n;
-            for (const [id, info] of _listenerHandles) {
+            for (const [id, info] of globalThis.__listenerHandles) {
               if (info.element === element && info.type === eventType) {
                 listenerId = id;
                 break;
@@ -46,8 +49,8 @@ export const event_target_exports = {
       element.addEventListener(eventType, listener, useCapture);
 
       // Store the listener for later reference
-      const handle = _nextListenerHandle++;
-      _listenerHandles.set(handle, { element, type: eventType, listener });
+      const handle = globalThis.__nextListenerHandle++;
+      globalThis.__listenerHandles.set(handle, { element, type: eventType, listener });
 
       return handle;
     } catch (error) {
@@ -64,11 +67,11 @@ export const event_target_exports = {
   removeEventListener(target: bigint, eventType: string, listenerHandle: bigint): void {
     try {
       const element = lookupElement(target);
-      const listenerInfo = _listenerHandles.get(listenerHandle);
+      const listenerInfo = globalThis.__listenerHandles.get(listenerHandle);
 
       if (listenerInfo && listenerInfo.element === element && listenerInfo.type === eventType) {
         element.removeEventListener(eventType, listenerInfo.listener);
-        _listenerHandles.delete(listenerHandle);
+        globalThis.__listenerHandles.delete(listenerHandle);
       }
     } catch (error) {
       console.error(`Error removing event listener: ${error}`);

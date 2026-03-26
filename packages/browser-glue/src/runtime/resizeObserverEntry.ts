@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { storeElement } from "./helpers";
 
-export const resize_observer_entry_exports = {
+export const resizeObserverEntry_exports = {
   getTarget(self) {
     if (!globalThis.__resizeObserverEntryHandles) return 0n;
     const entry = globalThis.__resizeObserverEntryHandles.get(self);

@@ -1,13 +1,13 @@
 // @ts-nocheck
 import { storeElement } from "./helpers";
-import { wasmExports } from "./wasm-exports";
+import { wasmExports } from "./wasmExports";
 
 let _timeoutCallbacks = new Map();
 let _nextTimeoutId = 1;
 let _animationCallbacks = new Map();
 let _nextAnimationId = 1;
 
-export const platform_helpers_exports = {
+export const platformHelpers_exports = {
   innerWidth() {
     return window.innerWidth;
   },

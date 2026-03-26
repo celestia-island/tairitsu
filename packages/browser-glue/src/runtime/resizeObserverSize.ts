@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-export const resize_observer_size_exports = {
+export const resizeObserverSize_exports = {
   getInlineSize(self) {
     if (!globalThis.__resizeObserverSizeHandles) return 0;
     const size = globalThis.__resizeObserverSizeHandles.get(self);
