@@ -8,6 +8,9 @@ import { platform_helpers_exports } from "./platform-helpers";
 import { mutation_record_exports } from "./mutation-record";
 import { resize_observer_entry_exports } from "./resize-observer-entry";
 import { resize_observer_size_exports } from "./resize-observer-size";
+import { css_style_declaration_exports } from "./css-style-declaration";
+import { element_css_inline_style_exports } from "./element-css-inline-style";
+import { event_target_exports } from "./event-target";
 
 export const INTERFACES = {
   "@tairitsu-glue/document": document_exports,
@@ -19,6 +22,9 @@ export const INTERFACES = {
   "@tairitsu-glue/mutation-record": mutation_record_exports,
   "@tairitsu-glue/resize-observer-entry": resize_observer_entry_exports,
   "@tairitsu-glue/resize-observer-size": resize_observer_size_exports,
+  "@tairitsu-glue/css-style-declaration": css_style_declaration_exports,
+  "@tairitsu-glue/element-css-inline-style": element_css_inline_style_exports,
+  "@tairitsu-glue/event-target": event_target_exports,
 };
 
 export function generateModuleCode(exports) {
