@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { storeElement, storeNode } from "./helpers";
 
-export const mutation_record_exports = {
+export const mutationRecord_exports = {
   getType(self) {
     if (!globalThis.__mutationRecordHandles) return '';
     const rec = globalThis.__mutationRecordHandles.get(self);

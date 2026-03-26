@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { storeText } from "./helpers";
-import { storeCssStyleDeclaration, lookupCssStyleDeclaration } from "./element-css-inline-style";
+import { storeCssStyleDeclaration, lookupCssStyleDeclaration } from "./elementCssInlineStyle";
 
-export const css_style_declaration_exports = {
+export const cssStyleDeclaration_exports = {
   /**
    * `cssText` attribute — getter.
    */

@@ -1,5 +1,10 @@
 // @ts-nocheck
-import "./handles";
+// Initialize global handle tables
+globalThis.__elementHandles = globalThis.__elementHandles || new Map();
+globalThis.__documentHandles = globalThis.__documentHandles || new Map();
+globalThis.__nodeHandles = globalThis.__nodeHandles || new Map();
+globalThis.__textHandles = globalThis.__textHandles || new Map();
+globalThis.__nextHandle = globalThis.__nextHandle || 1n;
 
 // Set globalThis helper functions (for use in generated blob URL modules)
 // IMPORTANT: Always access globalThis directly, never cache in local variables

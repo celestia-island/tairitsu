@@ -2,29 +2,29 @@
 import { document_exports } from "./document";
 import { element_exports } from "./element";
 import { node_exports } from "./node";
-import { non_element_parent_node_exports } from "./non-element-parent-node";
+import { nonElementParentNode_exports } from "./nonElementParentNode";
 import { window_exports } from "./window";
-import { platform_helpers_exports } from "./platform-helpers";
-import { mutation_record_exports } from "./mutation-record";
-import { resize_observer_entry_exports } from "./resize-observer-entry";
-import { resize_observer_size_exports } from "./resize-observer-size";
-import { css_style_declaration_exports } from "./css-style-declaration";
-import { element_css_inline_style_exports } from "./element-css-inline-style";
-import { event_target_exports } from "./event-target";
+import { platformHelpers_exports } from "./platformHelpers";
+import { mutationRecord_exports } from "./mutationRecord";
+import { resizeObserverEntry_exports } from "./resizeObserverEntry";
+import { resizeObserverSize_exports } from "./resizeObserverSize";
+import { cssStyleDeclaration_exports } from "./cssStyleDeclaration";
+import { elementCssInlineStyle_exports } from "./elementCssInlineStyle";
+import { eventTarget_exports } from "./eventTarget";
 
 export const INTERFACES = {
   "@tairitsu-glue/document": document_exports,
   "@tairitsu-glue/element": element_exports,
   "@tairitsu-glue/node": node_exports,
-  "@tairitsu-glue/non-element-parent-node": non_element_parent_node_exports,
+  "@tairitsu-glue/non-element-parent-node": nonElementParentNode_exports,
   "@tairitsu-glue/window": window_exports,
-  "@tairitsu-glue/platform-helpers": platform_helpers_exports,
-  "@tairitsu-glue/mutation-record": mutation_record_exports,
-  "@tairitsu-glue/resize-observer-entry": resize_observer_entry_exports,
-  "@tairitsu-glue/resize-observer-size": resize_observer_size_exports,
-  "@tairitsu-glue/css-style-declaration": css_style_declaration_exports,
-  "@tairitsu-glue/element-css-inline-style": element_css_inline_style_exports,
-  "@tairitsu-glue/event-target": event_target_exports,
+  "@tairitsu-glue/platform-helpers": platformHelpers_exports,
+  "@tairitsu-glue/mutation-record": mutationRecord_exports,
+  "@tairitsu-glue/resize-observer-entry": resizeObserverEntry_exports,
+  "@tairitsu-glue/resize-observer-size": resizeObserverSize_exports,
+  "@tairitsu-glue/css-style-declaration": cssStyleDeclaration_exports,
+  "@tairitsu-glue/element-css-inline-style": elementCssInlineStyle_exports,
+  "@tairitsu-glue/event-target": eventTarget_exports,
 };
 
 export function generateModuleCode(exports) {
