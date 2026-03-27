@@ -39,7 +39,7 @@ wasm-bindgen = ["dep:wasm-bindgen"]
 wit-bindings = ["dep:wit-bindgen"]
 
 [dev-dependencies]
-tokio = { workspace = true }
+tokio = { workspace = true, default-features = false, features = ["sync", "macros", "io-util", "rt", "time"] }
 
 [build-dependencies]
 toml = "^0.8"

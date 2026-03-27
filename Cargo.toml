@@ -27,6 +27,10 @@ resolver = "2"
 [patch.crates-io]
 # Local development version for easier debugging
 tairitsu-macros = { path = "packages/macros" }
+# Force wasm-compatible tokio features for all crates
+tokio = { version = "^1", default-features = false, features = ["sync", "macros", "io-util", "rt", "time", "signal"] }
+# Patch crates with wasip2 compatibility issues
+which = { git = "https://github.com/harryfei/which-rs.git", rev = "4b84c2c" }
 
 [profile.release]
 lto = true
@@ -35,4 +39,6 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.dependencies]
-tokio = { version = "1.40", features = ["full"] }
+# Tokio - only wasm-compatible features (sync,macros,io-util,rt,time,signal)
+# All packages should use: tokio = { workspace = true }
+tokio = { version = "^1", default-features = false, features = ["sync", "macros", "io-util", "rt", "time", "signal"] }
