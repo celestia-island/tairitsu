@@ -125,17 +125,6 @@ enum Commands {
         #[arg(long)]
         output: Option<String>,
     },
-
-    /// Check project compatibility and environment setup
-    Doctor {
-        /// Fix issues automatically (experimental)
-        #[arg(long)]
-        fix: bool,
-
-        /// Output format (text, json)
-        #[arg(short, long, default_value = "text")]
-        format: String,
-    },
 }
 
 #[derive(Subcommand)]
@@ -330,25 +319,6 @@ pub async fn run() -> crate::Result<()> {
                 crate::wit_cmd::cmd_list(&manifest_path)?;
             }
         },
-        Commands::Doctor { fix, format } => {
-            info!("Running diagnostics...");
-            let report = crate::doctor::run_doctor(&manifest_path)?;
-
-            if format == "json" {
-                let json = serde_json::to_string_pretty(&report)?;
-                println!("{}", json);
-            } else {
-                println!("{}", crate::doctor::format_report(&report));
-            }
-
-            if fix {
-                eprintln!("{}", t.cli.autofix_not_implemented);
-            }
-
-            if !report.summary.is_healthy() {
-                std::process::exit(1);
-            }
-        }
         Commands::Icons { action } => match action {
             IconsCommands::Fetch { source, force } => {
                 info!("Fetching icons from {}...", source);

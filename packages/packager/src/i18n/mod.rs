@@ -98,22 +98,6 @@ yuuka::derive_struct!(
             shortcuts_compact: String,
             stopping: String,
         },
-        doctor: Doctor {
-            running: String,
-            check_complete: String,
-            project_healthy: String,
-            project_has_issues: String,
-            summary: String,
-            checks_passed: String,
-            warnings_count: String,
-            errors_count: String,
-            report_header: String,
-            category_dependencies: String,
-            category_environment: String,
-            category_configuration: String,
-            category_build: String,
-            category_migration: String,
-        },
         icons: Icons {
             fetching: String,
             cached: String,
@@ -128,45 +112,36 @@ yuuka::derive_struct!(
 
 const EN_CLI: &str = include_str!("../../res/locales/en/cli.toml");
 const EN_DEV: &str = include_str!("../../res/locales/en/dev.toml");
-const EN_DOCTOR: &str = include_str!("../../res/locales/en/doctor.toml");
 const EN_ICONS: &str = include_str!("../../res/locales/en/icons.toml");
 const CHS_CLI: &str = include_str!("../../res/locales/chs/cli.toml");
 const CHS_DEV: &str = include_str!("../../res/locales/chs/dev.toml");
-const CHS_DOCTOR: &str = include_str!("../../res/locales/chs/doctor.toml");
 const CHS_ICONS: &str = include_str!("../../res/locales/chs/icons.toml");
 const CHT_CLI: &str = include_str!("../../res/locales/cht/cli.toml");
 const CHT_DEV: &str = include_str!("../../res/locales/cht/dev.toml");
-const CHT_DOCTOR: &str = include_str!("../../res/locales/cht/doctor.toml");
 const JA_CLI: &str = include_str!("../../res/locales/ja/cli.toml");
 const JA_DEV: &str = include_str!("../../res/locales/ja/dev.toml");
-const JA_DOCTOR: &str = include_str!("../../res/locales/ja/doctor.toml");
 const KO_CLI: &str = include_str!("../../res/locales/ko/cli.toml");
 const KO_DEV: &str = include_str!("../../res/locales/ko/dev.toml");
-const KO_DOCTOR: &str = include_str!("../../res/locales/ko/doctor.toml");
 const FR_CLI: &str = include_str!("../../res/locales/fr/cli.toml");
 const FR_DEV: &str = include_str!("../../res/locales/fr/dev.toml");
-const FR_DOCTOR: &str = include_str!("../../res/locales/fr/doctor.toml");
 const ES_CLI: &str = include_str!("../../res/locales/es/cli.toml");
 const ES_DEV: &str = include_str!("../../res/locales/es/dev.toml");
-const ES_DOCTOR: &str = include_str!("../../res/locales/es/doctor.toml");
 const RU_CLI: &str = include_str!("../../res/locales/ru/cli.toml");
 const RU_DEV: &str = include_str!("../../res/locales/ru/dev.toml");
-const RU_DOCTOR: &str = include_str!("../../res/locales/ru/doctor.toml");
 const AR_CLI: &str = include_str!("../../res/locales/ar/cli.toml");
 const AR_DEV: &str = include_str!("../../res/locales/ar/dev.toml");
-const AR_DOCTOR: &str = include_str!("../../res/locales/ar/doctor.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
-        Language::CHS => [CHS_CLI, CHS_DEV, CHS_DOCTOR, CHS_ICONS].join("\n"),
-        Language::CHT => [CHT_CLI, CHT_DEV, CHT_DOCTOR, EN_ICONS].join("\n"),
-        Language::Ja => [JA_CLI, JA_DEV, JA_DOCTOR, EN_ICONS].join("\n"),
-        Language::Ko => [KO_CLI, KO_DEV, KO_DOCTOR, EN_ICONS].join("\n"),
-        Language::Fr => [FR_CLI, FR_DEV, FR_DOCTOR, EN_ICONS].join("\n"),
-        Language::Es => [ES_CLI, ES_DEV, ES_DOCTOR, EN_ICONS].join("\n"),
-        Language::Ru => [RU_CLI, RU_DEV, RU_DOCTOR, EN_ICONS].join("\n"),
-        Language::Ar => [AR_CLI, AR_DEV, AR_DOCTOR, EN_ICONS].join("\n"),
-        _ => [EN_CLI, EN_DEV, EN_DOCTOR, EN_ICONS].join("\n"),
+        Language::CHS => [CHS_CLI, CHS_DEV, CHS_ICONS].join("\n"),
+        Language::CHT => [CHT_CLI, CHT_DEV, EN_ICONS].join("\n"),
+        Language::Ja => [JA_CLI, JA_DEV, EN_ICONS].join("\n"),
+        Language::Ko => [KO_CLI, KO_DEV, EN_ICONS].join("\n"),
+        Language::Fr => [FR_CLI, FR_DEV, EN_ICONS].join("\n"),
+        Language::Es => [ES_CLI, ES_DEV, EN_ICONS].join("\n"),
+        Language::Ru => [RU_CLI, RU_DEV, EN_ICONS].join("\n"),
+        Language::Ar => [AR_CLI, AR_DEV, EN_ICONS].join("\n"),
+        _ => [EN_CLI, EN_DEV, EN_ICONS].join("\n"),
     }
 }
 
