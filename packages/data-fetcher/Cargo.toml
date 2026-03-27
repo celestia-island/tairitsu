@@ -1,0 +1,31 @@
+[package]
+name = "tairitsu-data-fetcher"
+version = "0.1.0"
+edition.workspace = true
+description = "Server-side data fetching utilities for Tairitsu"
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+tairitsu-vdom = { path = "../vdom" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+
+# Use tokio for async runtime (will be optional for WASM)
+tokio = { version = "1.41", features = ["full"], optional = true }
+reqwest = { version = "0.12", features = ["json"], optional = true }
+
+# WASM dependencies
+wasm-bindgen-futures = { version = "0.4", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", features = ["Request", "RequestInit", "RequestMode", "Response", "Window", "Headers"], optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[features]
+default = ["server"]
+server = ["tokio", "reqwest"]
+client = ["wasm-bindgen-futures", "wasm-bindgen", "js-sys", "web-sys"]

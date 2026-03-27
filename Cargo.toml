@@ -11,6 +11,7 @@ members = [
     "packages/style",
     "packages/css-values",
     "packages/router",
+    "packages/data-fetcher",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
     "packages/browser-test",

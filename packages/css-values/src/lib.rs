@@ -37,7 +37,6 @@ pub use error::{CssValueParseError, ParseResult};
 pub use length::{CssBinOp, CssExpression, CssLength, LengthUnit};
 // Macros are exported at root via #[macro_export]
 
-
 #[cfg(feature = "parse")]
 pub mod parser;
 
@@ -118,7 +117,10 @@ mod tests {
     fn test_content_keywords() {
         assert_eq!(CssLength::MinContent.to_css_string(), "min-content");
         assert_eq!(CssLength::MaxContent.to_css_string(), "max-content");
-        assert_eq!(CssLength::FitContent(100.0).to_css_string(), "fit-content(100px)");
+        assert_eq!(
+            CssLength::FitContent(100.0).to_css_string(),
+            "fit-content(100px)"
+        );
     }
 
     #[test]
@@ -135,31 +137,23 @@ mod tests {
 
     #[test]
     fn test_calc_expression() {
-        let calc = CssLength::calc(
-            CssExpression::Binary {
-                left: Box::new(CssExpression::Value(CssLength::percent(100))),
-                op: CssBinOp::Sub,
-                right: Box::new(CssExpression::Value(CssLength::px(40))),
-            }
-        );
+        let calc = CssLength::calc(CssExpression::Binary {
+            left: Box::new(CssExpression::Value(CssLength::percent(100))),
+            op: CssBinOp::Sub,
+            right: Box::new(CssExpression::Value(CssLength::px(40))),
+        });
         assert_eq!(calc.to_css_string(), "calc(100% - 40px)");
     }
 
     #[test]
     fn test_min_function() {
-        let min_val = CssLength::min(vec![
-            CssLength::px(100),
-            CssLength::percent(50),
-        ]);
+        let min_val = CssLength::min(vec![CssLength::px(100), CssLength::percent(50)]);
         assert_eq!(min_val.to_css_string(), "min(100px, 50%)");
     }
 
     #[test]
     fn test_max_function() {
-        let max_val = CssLength::max(vec![
-            CssLength::vw(100),
-            CssLength::px(1200),
-        ]);
+        let max_val = CssLength::max(vec![CssLength::vw(100), CssLength::px(1200)]);
         assert_eq!(max_val.to_css_string(), "max(100vw, 1200px)");
     }
 
