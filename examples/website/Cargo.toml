@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Tairitsu framework website - documentation and demo"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

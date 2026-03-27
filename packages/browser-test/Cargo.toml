@@ -5,6 +5,7 @@ edition = "2021"
 description = "Browser testing infrastructure for Tairitsu browser-glue"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/anthropics/tairitsu"
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [[bin]]
 name = "tairitsu-browser-test"
@@ -19,7 +20,11 @@ chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
 futures = "0.3"
 
 # HTTP client for downloads
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "rustls-tls",
+  "stream",
+  "json",
+] }
 
 # Archive extraction
 zip = { version = "2", default-features = false, features = ["deflate"] }

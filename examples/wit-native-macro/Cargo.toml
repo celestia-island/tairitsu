@@ -3,6 +3,7 @@ name = "tairitsu-example-wit-native-macro"
 version = "0.1.0"
 edition = "2021"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 # This example demonstrates proc-macro based automatic WIT enum generation
 # Includes both standalone demos and full WASM bidirectional communication

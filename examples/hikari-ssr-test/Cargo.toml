@@ -3,6 +3,7 @@ name = "hikari-ssr-test"
 version = "0.1.0"
 edition = "2021"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [[bin]]
 name = "hikari-ssr-test"

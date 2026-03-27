@@ -3,7 +3,7 @@ name = "tairitsu-browser-worlds"
 version = "0.1.0"
 edition = "2021"
 description = "WIT world definitions for browser/W3C APIs (DOM, Events, Fetch, Canvas)"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 
 # Include WIT files in published crate.

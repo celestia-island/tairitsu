@@ -2,13 +2,20 @@
 name = "tairitsu-hooks"
 version = "0.1.0"
 description = "Hooks system for Tairitsu"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [features]
 default = []
-web = ["wasm-bindgen", "web-sys/Window", "web-sys/Element", "web-sys/Document", "web-sys/HtmlElement", "web-sys/CssStyleDeclaration"]
+web = [
+  "wasm-bindgen",
+  "web-sys/Window",
+  "web-sys/Element",
+  "web-sys/Document",
+  "web-sys/HtmlElement",
+  "web-sys/CssStyleDeclaration",
+]
 
 [dependencies]
 tairitsu-vdom = { path = "../vdom" }
@@ -24,5 +31,11 @@ wasm-bindgen = { version = "^0.2", optional = true }
 web-sys = { version = "^0.3", optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, default-features = false, features = ["sync", "macros", "io-util", "rt", "time"] }
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
 tairitsu-macros = { path = "../macros" }

@@ -3,7 +3,7 @@ name = "tairitsu-packager"
 version = "0.1.0"
 edition = "2021"
 description = "Build and packaging tool for Tairitsu applications"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 
 [[bin]]
@@ -27,7 +27,13 @@ serde_json = "^1"
 toml = "^0.8"
 
 # Async runtime
-tokio = { workspace = true, default-features = false, features = ["sync", "macros", "io-util", "rt", "time"] }
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
 futures = "^0.3"
 
 # Logging and tracing
@@ -67,10 +73,16 @@ crossterm = "0.28"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 # HTTP client for icon fetching (optional)
-reqwest = { version = "^0.12", features = ["blocking", "json", "stream"], optional = true }
+reqwest = { version = "^0.12", features = [
+  "blocking",
+  "json",
+  "stream",
+], optional = true }
 
 # ZIP file handling for icon packages (optional)
-zip = { version = "^2", default-features = false, features = ["deflate"], optional = true }
+zip = { version = "^2", default-features = false, features = [
+  "deflate",
+], optional = true }
 
 # Embed browser-glue at compile time
 include_dir = "^0.7"
