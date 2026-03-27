@@ -20,19 +20,11 @@ serde_json = "^1"
 # Logging and tracing
 tracing = "^0.1"
 
-# Web APIs (only for wasm32 target)
-# wasm-bindgen for wasm32-unknown-unknown target (optional)
-wasm-bindgen = { version = "^0.2", optional = true }
-
 # WIT component-model binding generator (wasm32-wasip2 target, optional)
 wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
 
 [features]
 default = []
-
-# wasm-bindgen bindings (wasm32-unknown-unknown target)
-# Enable this feature and target wasm32-unknown-unknown to use wasm-bindgen.
-wasm-bindgen = ["dep:wasm-bindgen"]
 
 # WIT component-model bindings (wasm32-wasip2 target)
 # Enable this feature and target wasm32-wasip2 to use WIT-generated bindings.

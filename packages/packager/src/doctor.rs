@@ -236,16 +236,29 @@ impl DoctorChecker {
             });
         }
 
-        // Check for wasm-bindgen (legacy)
+        // Check for wasm-bindgen (legacy - not needed for WIT component-model)
         if dep_names.contains("wasm-bindgen") {
             diagnostics.push(Diagnostic {
-                severity: Severity::Warning,
+                severity: Severity::Info,
                 category: DiagnosticCategory::Dependencies,
-                message: "wasm-bindgen dependency detected (legacy WASM)".to_string(),
+                message: "wasm-bindgen dependency detected (not required for WIT component-model)".to_string(),
                 suggestion: Some(
-                    "Tairitsu uses component-model WASM. wasm-bindgen is not required.".to_string(),
+                    "Tairitsu uses WIT component-model WASM. wasm-bindgen is optional and only needed for specific interop scenarios.".to_string(),
                 ),
-                help_url: Some("https://docs.tairitsu.dev/migration/from-wasm-bindgen".to_string()),
+                help_url: None,
+            });
+        }
+
+        // Check for web-sys (legacy - not needed for WIT component-model)
+        if dep_names.contains("web-sys") {
+            diagnostics.push(Diagnostic {
+                severity: Severity::Info,
+                category: DiagnosticCategory::Dependencies,
+                message: "web-sys dependency detected (not required for WIT component-model)".to_string(),
+                suggestion: Some(
+                    "Tairitsu uses WIT component-model WASM. web-sys is optional and only needed for specific interop scenarios.".to_string(),
+                ),
+                help_url: None,
             });
         }
 
@@ -522,14 +535,13 @@ impl DoctorChecker {
 
         if has_wasm_bindgen {
             diagnostics.push(Diagnostic {
-                severity: Severity::Warning,
+                severity: Severity::Info,
                 category: DiagnosticCategory::Migration,
-                message: "Migration from wasm-bindgen may be needed".to_string(),
+                message: "wasm-bindgen dependency found".to_string(),
                 suggestion: Some(
-                    "See migration guide: https://docs.tairitsu.dev/migration/from-wasm-bindgen"
-                        .to_string(),
+                    "Tairitsu uses WIT component-model by default. wasm-bindgen is optional for specific interop scenarios.".to_string(),
                 ),
-                help_url: Some("https://docs.tairitsu.dev/migration/from-wasm-bindgen".to_string()),
+                help_url: None,
             });
         }
 

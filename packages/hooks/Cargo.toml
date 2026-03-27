@@ -8,14 +8,6 @@ edition.workspace = true
 
 [features]
 default = []
-web = [
-  "wasm-bindgen",
-  "web-sys/Window",
-  "web-sys/Element",
-  "web-sys/Document",
-  "web-sys/HtmlElement",
-  "web-sys/CssStyleDeclaration",
-]
 
 [dependencies]
 tairitsu-vdom = { path = "../vdom" }
@@ -25,10 +17,6 @@ anyhow = "^1"
 
 # Logging and tracing
 tracing = "^0.1"
-
-# Web-specific dependencies (optional)
-wasm-bindgen = { version = "^0.2", optional = true }
-web-sys = { version = "^0.3", optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, default-features = false, features = [

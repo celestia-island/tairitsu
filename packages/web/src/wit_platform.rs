@@ -188,10 +188,6 @@ pub mod wasm_impl {
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    // Direct console access via wasm-bindgen (browser-only, wasm32-unknown-unknown)
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-    use wasm_bindgen::prelude::*;
-
     use tairitsu_vdom::{
         CanvasContext, DomRect, EventData, EventWitHandle, FocusEvent, GenericEvent, InputEvent,
         KeyboardEvent, MouseEvent, Platform, VNode,
@@ -216,106 +212,44 @@ pub mod wasm_impl {
         NEXT_CALLBACK_ID.fetch_add(1, Ordering::SeqCst)
     }
 
-    // ── Console helpers (direct browser console access) ─────────────────────
+    // ── Console helpers ─────────────────────────────────────────────────────
 
-    /// Direct console access via wasm-bindgen (browser-only, wasm32-unknown-unknown).
-    /// These functions bypass the WIT interface and call the browser console directly.
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = console)]
-        fn console_log(s: &str);
-
-        #[wasm_bindgen(js_namespace = console)]
-        fn console_warn(s: &str);
-
-        #[wasm_bindgen(js_namespace = console)]
-        fn console_error(s: &str);
-    }
-
-    /// Log an error to the browser console.
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    /// Log an error.
+    ///
+    /// For wasm32: The host environment (browser-glue) handles console output.
+    /// For native targets: Falls back to stderr.
+    #[cfg(target_family = "wasm")]
     fn log_error(message: &str) {
-        let formatted = format!("[WitPlatform ERROR] {}", message);
-        console_error(&formatted);
+        // No-op for wasm32 - the host environment handles console output
+        let _ = message;
     }
 
-    /// Log a warning to the browser console.
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    /// Log a warning.
+    #[cfg(target_family = "wasm")]
     fn log_warning(message: &str) {
-        let formatted = format!("[WitPlatform WARNING] {}", message);
-        console_warn(&formatted);
+        let _ = message;
     }
 
-    /// Log diagnostic information to the browser console.
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    /// Log diagnostic information.
+    #[cfg(target_family = "wasm")]
     fn log_info(message: &str) {
-        let formatted = format!("[WitPlatform] {}", message);
-        console_log(&formatted);
+        let _ = message;
     }
 
-    // ── Console helpers for wasm32-wasip2 ───────────────────────────────────
-
-    /// Log an error (wasm32-wasip2).
-    ///
-    /// Note: The browser-full.wit window interface does not provide console functions.
-    /// Console output for wasm32-wasip2 should be handled by the host environment
-    /// (browser-glue) or through WASI stdout/stderr when available.
-    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    /// Log an error (native fallback).
+    #[cfg(not(target_family = "wasm"))]
     fn log_error(message: &str) {
-        // No-op for wasm32-wasip2 - the host environment handles console output
-        // Future: could use WASI stdout/stderr if available
-        let _ = message;
-    }
-
-    /// Log a warning (wasm32-wasip2).
-    ///
-    /// Note: The browser-full.wit window interface does not provide console functions.
-    /// Console output for wasm32-wasip2 should be handled by the host environment
-    /// (browser-glue) or through WASI stdout/stderr when available.
-    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
-    fn log_warning(message: &str) {
-        // No-op for wasm32-wasip2 - the host environment handles console output
-        let _ = message;
-    }
-
-    /// Log diagnostic information (wasm32-wasip2).
-    ///
-    /// Note: The browser-full.wit window interface does not provide console functions.
-    /// Console output for wasm32-wasip2 should be handled by the host environment
-    /// (browser-glue) or through WASI stdout/stderr when available.
-    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
-    fn log_info(message: &str) {
-        // No-op for wasm32-wasip2 - the host environment handles console output
-        let _ = message;
-    }
-
-    // ── Fallback console implementations for other targets ─────────────────────
-
-    /// Log an error (fallback for targets without console support).
-    #[cfg(not(any(
-        all(target_arch = "wasm32", target_os = "unknown"),
-        all(target_arch = "wasm32", target_os = "wasi")
-    )))]
-    fn log_error(message: &str) {
-        // Fallback to eprintln or no-op for non-wasm targets
         eprintln!("[WitPlatform ERROR] {}", message);
     }
 
-    /// Log a warning (fallback for targets without console support).
-    #[cfg(not(any(
-        all(target_arch = "wasm32", target_os = "unknown"),
-        all(target_arch = "wasm32", target_os = "wasi")
-    )))]
+    /// Log a warning (native fallback).
+    #[cfg(not(target_family = "wasm"))]
     fn log_warning(message: &str) {
         eprintln!("[WitPlatform WARNING] {}", message);
     }
 
-    /// Log diagnostic information (fallback for targets without console support).
-    #[cfg(not(any(
-        all(target_arch = "wasm32", target_os = "unknown"),
-        all(target_arch = "wasm32", target_os = "wasi")
-    )))]
+    /// Log diagnostic information (native fallback).
+    #[cfg(not(target_family = "wasm"))]
     fn log_info(message: &str) {
         eprintln!("[WitPlatform] {}", message);
     }
