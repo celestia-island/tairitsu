@@ -125,11 +125,11 @@ mod tests {
             FetchError::serialization("parse error").to_string(),
             "Serialization error: parse error"
         );
-        assert_eq!(
-            FetchError::cache("miss").to_string(),
-            "Cache error: miss"
-        );
+        assert_eq!(FetchError::cache("miss").to_string(), "Cache error: miss");
         assert_eq!(FetchError::Cancelled.to_string(), "Request cancelled");
-        assert_eq!(FetchError::Other("unknown".to_string()).to_string(), "Error: unknown");
+        assert_eq!(
+            FetchError::Other("unknown".to_string()).to_string(),
+            "Error: unknown"
+        );
     }
 }
