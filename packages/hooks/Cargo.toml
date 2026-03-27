@@ -8,7 +8,7 @@ edition = "2021"
 
 [features]
 default = []
-web = ["wasm-bindgen", "web-sys/Window", "web-sys/Element", "web-sys/Document", "web-sys/HtmlElement", "web-sys/CssStyleDeclaration", "web-sys/CssStyleDeclaration"]
+web = ["wasm-bindgen", "web-sys/Window", "web-sys/Element", "web-sys/Document", "web-sys/HtmlElement", "web-sys/CssStyleDeclaration"]
 
 [dependencies]
 tairitsu-vdom = { path = "../vdom" }
