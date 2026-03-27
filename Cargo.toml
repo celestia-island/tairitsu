@@ -9,6 +9,7 @@ members = [
     "packages/packager",
     "packages/e2e",
     "packages/style",
+    "packages/css-values",
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
     "packages/browser-test",

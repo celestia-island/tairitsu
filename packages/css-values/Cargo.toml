@@ -1,0 +1,26 @@
+[package]
+name = "tairitsu-css-values"
+version = "0.1.0"
+edition.workspace = true
+description = "Type-safe CSS value types for Tairitsu framework"
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+# serde for serialization support
+serde = { version = "1.0", features = ["derive"], optional = true }
+# thiserror for error types
+thiserror = "^2"
+# pest for parsing
+pest = { version = "2.7", optional = true }
+pest_derive = { version = "2.7", optional = true }
+
+[dev-dependencies]
+# pest for testing
+pest = "2.7"
+pest_derive = "2.7"
+
+[features]
+default = ["parse", "serde"]
+parse = ["pest", "pest_derive"]
+serde = ["dep:serde"]
