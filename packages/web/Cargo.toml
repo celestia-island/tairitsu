@@ -39,7 +39,7 @@ wasm-bindgen = ["dep:wasm-bindgen"]
 wit-bindings = ["dep:wit-bindgen"]
 
 [dev-dependencies]
-tokio = { version = "^1", features = ["full"] }
+tokio = { workspace = true }
 
 [build-dependencies]
 toml = "^0.8"
