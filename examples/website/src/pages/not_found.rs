@@ -9,12 +9,8 @@ pub fn render() -> VNode {
             div { class: "not-found",
                 h1 { "404" }
                 p { "页面未找到" }
-                p {
-                    "请求的页面不存在。请检查 URL 或返回首页。"
-                }
-                a { href: "/", class: "ts-btn ts-btn--primary",
-                    "返回首页"
-                }
+                p { "请求的页面不存在。请检查 URL 或返回首页。" }
+                a { href: "/", class: "ts-btn ts-btn--primary", "返回首页" }
             }
         }
     }
