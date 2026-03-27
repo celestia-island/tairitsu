@@ -1,18 +1,2 @@
-[patch.'file:///mnt/sdb1/tairitsu']
-tairitsu-vdom = { path = "packages/vdom" }
-tairitsu-web = { path = "packages/web" }
-tairitsu-hooks = { path = "packages/hooks" }
-tairitsu-macros = { path = "packages/macros" }
-tairitsu-e2e = { path = "packages/e2e" }
-tairitsu-testing = { path = "packages/testing" }
-
-# 如果需要将 Tairitsu 集成到 Hikari，在 Hikari 的 Cargo.toml 中添加以下配置：
-# [dependencies]
-# tairitsu-vdom = "0.1"
-# tairitsu-hooks = "0.1"
-# tairitsu-macros = "0.1"
-# 
-# [patch.'file:///mnt/sdb1/tairitsu']
-# tairitsu-vdom = { path = "../tairitsu/packages/vdom" }
-# tairitsu-hooks = { path = "../tairitsu/packages/hooks" }
-# tairitsu-macros = { path = "../tairitsu/packages/macros" }
+[net]
+git-fetch-with-cli = true

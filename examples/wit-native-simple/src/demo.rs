@@ -306,9 +306,9 @@ fn test_random_operations() -> anyhow::Result<()> {
     info!("Testing file operations with random data...");
 
     for i in 1..=5 {
-        let random_id: u32 = rng.gen();
+        let random_id: u32 = rand::random();
         let random_size: usize = rng.gen_range(10..100);
-        let random_data: Vec<u8> = (0..random_size).map(|_| rng.gen()).collect();
+        let random_data: Vec<u8> = (0..random_size).map(|_| rand::random()).collect();
 
         let path = format!("/random/test_{}.dat", random_id);
         let write_cmd = FileSystemBasicCommands::Write {

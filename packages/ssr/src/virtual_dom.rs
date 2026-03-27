@@ -93,10 +93,7 @@ impl SsrNode {
 
     /// Set text content (for text nodes)
     pub fn set_text_content(&mut self, data: impl Into<String>) {
-        if let SsrNodeKind::Text {
-            data: ref mut existing,
-        } = &mut self.kind
-        {
+        if let SsrNodeKind::Text { data: existing } = &mut self.kind {
             *existing = data.into();
         }
     }
