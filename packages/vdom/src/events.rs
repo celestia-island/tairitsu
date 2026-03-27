@@ -35,7 +35,7 @@ impl EventWitHandle {
             unsafe {
                 // The actual implementation is provided by browser-glue
                 // These are weak symbols that will be resolved at link time
-                extern "C" {
+                unsafe extern "C" {
                     fn tairitsu_prevent_default(event_handle: u64);
                 }
                 tairitsu_prevent_default(handle);
@@ -47,7 +47,7 @@ impl EventWitHandle {
     pub fn stop_propagation(&self) {
         if let Some(handle) = self.handle {
             unsafe {
-                extern "C" {
+                unsafe extern "C" {
                     fn tairitsu_stop_propagation(event_handle: u64);
                 }
                 tairitsu_stop_propagation(handle);

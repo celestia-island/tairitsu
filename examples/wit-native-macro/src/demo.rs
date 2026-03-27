@@ -6,7 +6,7 @@
 use log::info;
 use rand::Rng;
 
-use tairitsu::{wit_interface, wit_registry::WitCommandHandler, WitCommand};
+use tairitsu::{WitCommand, wit_interface, wit_registry::WitCommandHandler};
 
 // Automatically generate FilesystemCommands and FilesystemResponse from WIT-like syntax
 wit_interface! {
@@ -168,11 +168,11 @@ fn test_random_operations(handler: &mut FilesystemHandler) -> Result<(), String>
     info!("Testing filesystem operations with random data...");
 
     for i in 1..=5 {
-        let random_id: u32 = rng.gen();
+        let random_id: u32 = rand::random();
         let random_size: usize = rng.gen_range(10..100);
 
         let path = format!("/random/test_{}.dat", random_id);
-        let random_data: Vec<u8> = (0..random_size).map(|_| rng.gen()).collect();
+        let random_data: Vec<u8> = (0..random_size).map(|_| rand::random()).collect();
 
         let write_cmd = FilesystemCommands::Write {
             path: path.clone(),

@@ -32,9 +32,10 @@ fn render_parent() -> VNode {
             style: "width: 300px; height: 300px; background-color: #f0f0f0; padding: 20px; position: relative;",
             onmouseenter: |event: tairitsu_vdom::MouseEvent| {
                 let _ = event; // Suppress unused warning on non-wasm targets
-                COUNTERS.with(|c| {
-                    *c.mouseenter_parent.borrow_mut() += 1;
-                });
+                COUNTERS
+                    .with(|c| {
+                        *c.mouseenter_parent.borrow_mut() += 1;
+                    });
                 #[cfg(target_family = "wasm")]
                 if let Some(target) = event.target {
                     use tairitsu_web::WitElement;
@@ -48,9 +49,10 @@ fn render_parent() -> VNode {
             },
             onmouseleave: |event: tairitsu_vdom::MouseEvent| {
                 let _ = event; // Suppress unused warning on non-wasm targets
-                COUNTERS.with(|c| {
-                    *c.mouseleave_parent.borrow_mut() += 1;
-                });
+                COUNTERS
+                    .with(|c| {
+                        *c.mouseleave_parent.borrow_mut() += 1;
+                    });
                 #[cfg(target_family = "wasm")]
                 if let Some(target) = event.target {
                     use tairitsu_web::WitElement;
@@ -68,9 +70,10 @@ fn render_parent() -> VNode {
                 style: "width: 150px; height: 150px; background-color: #ffd0d0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);",
                 onmouseenter: |event: tairitsu_vdom::MouseEvent| {
                     let _ = event; // Suppress unused warning on non-wasm targets
-                    COUNTERS.with(|c| {
-                        *c.mouseenter_child.borrow_mut() += 1;
-                    });
+                    COUNTERS
+                        .with(|c| {
+                            *c.mouseenter_child.borrow_mut() += 1;
+                        });
                     #[cfg(target_family = "wasm")]
                     if let Some(target) = event.target {
                         use tairitsu_web::WitElement;
@@ -84,9 +87,10 @@ fn render_parent() -> VNode {
                 },
                 onmouseleave: |event: tairitsu_vdom::MouseEvent| {
                     let _ = event; // Suppress unused warning on non-wasm targets
-                    COUNTERS.with(|c| {
-                        *c.mouseleave_child.borrow_mut() += 1;
-                    });
+                    COUNTERS
+                        .with(|c| {
+                            *c.mouseleave_child.borrow_mut() += 1;
+                        });
                     #[cfg(target_family = "wasm")]
                     if let Some(target) = event.target {
                         use tairitsu_web::WitElement;
@@ -145,7 +149,7 @@ pub fn run_app() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn run() {
     if let Err(err) = run_app() {
         // Error logging would go here
@@ -153,7 +157,7 @@ pub extern "C" fn run() {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn tairitsu_component_bootstrap() {
     run();
 }
