@@ -17,7 +17,7 @@ chromiumoxide = { version = "^0.8", features = ["tokio-runtime"] }
 scraper = "^0.20"
 
 # Async runtime
-tokio = { version = "^1", features = ["full"] }
+tokio = { workspace = true }
 async-trait = "^0.1"
 
 # Logging and tracing
