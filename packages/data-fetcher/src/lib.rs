@@ -5,10 +5,7 @@
 
 #![warn(missing_docs)]
 
-use std::{
-    collections::HashMap,
-    time::Duration,
-};
+use std::{collections::HashMap, time::Duration};
 
 // Re-exports for convenience
 pub use cache::Cache;
@@ -19,8 +16,8 @@ pub use http_fetcher::HttpFetcher;
 mod cache;
 mod error;
 mod fetcher;
-mod http_fetcher;
 mod hooks;
+mod http_fetcher;
 
 /// A resource that represents the state of an async data fetch
 ///
