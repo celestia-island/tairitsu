@@ -1,6 +1,6 @@
 [package]
 name = "tairitsu-ssr"
-edition = "2021"
+edition.workspace = true
 authors.workspace = true
 
 [dependencies]

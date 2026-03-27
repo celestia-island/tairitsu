@@ -3,8 +3,8 @@ name = "tairitsu-testing"
 version = "0.1.0"
 description = "Testing utilities for Tairitsu"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
-edition = "2021"
+license.workspace = true
+edition.workspace = true
 
 [dependencies]
 tairitsu-vdom = { path = "../vdom" }

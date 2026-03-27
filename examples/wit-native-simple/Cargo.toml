@@ -2,8 +2,8 @@
 name = "tairitsu-example-wit-native-simple"
 version = "0.1.0"
 edition = "2021"
-authors.workspace = true
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 # This example demonstrates simple trait-based composable WIT interfaces
 # without runtime serialization
