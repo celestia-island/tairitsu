@@ -2,7 +2,7 @@
 name = "tairitsu-web"
 version = "0.1.0"
 description = "Web platform implementation for Tairitsu"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 

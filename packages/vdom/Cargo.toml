@@ -2,7 +2,7 @@
 name = "tairitsu-vdom"
 version = "0.1.0"
 description = "Virtual DOM core for Tairitsu - Platform abstraction, reactive system, and VNode"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 
@@ -17,5 +17,11 @@ serde = { version = "^1", features = ["derive"] }
 tracing = "^0.1"
 
 [dev-dependencies]
-tokio = { workspace = true, default-features = false, features = ["sync", "macros", "io-util", "rt", "time"] }
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
 tairitsu-macros = { path = "../macros" }

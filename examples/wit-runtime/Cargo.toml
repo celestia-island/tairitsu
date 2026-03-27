@@ -3,6 +3,7 @@ name = "tairitsu-example-wit-runtime"
 version = "0.1.0"
 edition = "2021"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 # Workspace dependencies

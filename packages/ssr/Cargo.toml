@@ -1,6 +1,7 @@
 [package]
 name = "tairitsu-ssr"
 edition = "2021"
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 tairitsu = { path = "../runtime" }

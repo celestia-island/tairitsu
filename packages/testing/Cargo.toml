@@ -2,7 +2,7 @@
 name = "tairitsu-testing"
 version = "0.1.0"
 description = "Testing utilities for Tairitsu"
-authors = ["Tairitsu Contributors"]
+authors = ["langyo <langyo.china@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 
