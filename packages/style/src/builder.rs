@@ -19,6 +19,14 @@ impl StyleStringBuilder {
         self
     }
 
+    /// Add a CSS custom property (CSS variable).
+    /// This is the preferred method for setting --custom-properties.
+    pub fn add_var(mut self, name: &str, value: &str) -> Self {
+        self.0
+            .push((Property::Custom(format!("--{}", name.trim_start_matches("--"))), value.to_string()));
+        self
+    }
+
     pub fn add_px(mut self, property: CssProperty, pixels: u32) -> Self {
         self.0
             .push((Property::Known(property), format!("{}px", pixels)));
@@ -165,6 +173,14 @@ impl StyleBuilder {
     pub fn add_custom(mut self, property: &str, value: &str) -> Self {
         self.properties
             .push((Property::Custom(property.to_string()), value.to_string()));
+        self
+    }
+
+    /// Add a CSS custom property (CSS variable).
+    /// This is the preferred method for setting --custom-properties.
+    pub fn add_var(mut self, name: &str, value: &str) -> Self {
+        self.properties
+            .push((Property::Custom(format!("--{}", name.trim_start_matches("--"))), value.to_string()));
         self
     }
 
