@@ -1,9 +1,9 @@
 [package]
 name = "tairitsu-style"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "Type-safe CSS property builders for Tairitsu framework"
-license = "MIT"
+license.workspace = true
 authors.workspace = true
 
 [dependencies]

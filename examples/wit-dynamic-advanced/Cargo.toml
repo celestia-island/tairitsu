@@ -3,7 +3,7 @@ name = "tairitsu-example-wit-dynamic-advanced"
 version = "0.1.0"
 edition = "2021"
 publish = false
-authors.workspace = true
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 # Workspace dependencies

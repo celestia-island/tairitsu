@@ -1,10 +1,10 @@
 [package]
 name = "tairitsu-browser-wit-resolver"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "WIT package version resolution, cloud fetch, and local cache for Tairitsu browser worlds"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 [dependencies]
 # Workspace dependencies

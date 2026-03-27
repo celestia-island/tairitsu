@@ -1,10 +1,10 @@
 [package]
 name = "tairitsu-browser-worlds"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "WIT world definitions for browser/W3C APIs (DOM, Events, Fetch, Canvas)"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 # Include WIT files in published crate.
 include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md"]

@@ -3,8 +3,8 @@ name = "tairitsu-vdom"
 version = "0.1.0"
 description = "Virtual DOM core for Tairitsu - Platform abstraction, reactive system, and VNode"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
-edition = "2021"
+license.workspace = true
+edition.workspace = true
 
 [dependencies]
 # Basic language and tools

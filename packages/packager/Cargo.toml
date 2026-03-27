@@ -1,10 +1,10 @@
 [package]
 name = "tairitsu-packager"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 description = "Build and packaging tool for Tairitsu applications"
 authors.workspace = true
-license = "MIT OR Apache-2.0"
+license.workspace = true
 
 [[bin]]
 name = "tairitsu"
