@@ -53,17 +53,17 @@ fn txt(s: &str) -> VNode {
 pub fn top_nav() -> VNode {
     rsx! {
         header { class: "tairitsu-topnav",
-            a { href: "/", class: "tairitsu-topnav__brand",
-                "Tairitsu"
-            }
+            a { href: "/", class: "tairitsu-topnav__brand", "Tairitsu" }
             nav { class: "tairitsu-topnav__links",
-                a { href: "/guides/quick-start", class: "tairitsu-topnav__link",
+                a {
+                    href: "/guides/quick-start",
+                    class: "tairitsu-topnav__link",
                     "Guides"
                 }
-                a { href: "/system/overview", class: "tairitsu-topnav__link",
-                    "System"
-                }
-                a { href: "/packages/overview", class: "tairitsu-topnav__link",
+                a { href: "/system/overview", class: "tairitsu-topnav__link", "System" }
+                a {
+                    href: "/packages/overview",
+                    class: "tairitsu-topnav__link",
                     "Packages"
                 }
             }
