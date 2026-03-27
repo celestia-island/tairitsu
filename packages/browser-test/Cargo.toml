@@ -5,7 +5,7 @@ edition = "2021"
 description = "Browser testing infrastructure for Tairitsu browser-glue"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/anthropics/tairitsu"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 
 [[bin]]
 name = "tairitsu-browser-test"

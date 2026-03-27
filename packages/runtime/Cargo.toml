@@ -4,7 +4,7 @@ version = "0.3.0"
 edition = "2021"
 
 publish = true
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 description = "A WebAssembly runtime for running component-model based WASM modules"
 license = "Apache-2.0"
 repository = "https://github.com/celestia-island/tairitsu"

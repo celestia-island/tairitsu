@@ -3,7 +3,7 @@ name = "tairitsu-packager"
 version = "0.1.0"
 edition = "2021"
 description = "Build and packaging tool for Tairitsu applications"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 license = "MIT OR Apache-2.0"
 
 [[bin]]

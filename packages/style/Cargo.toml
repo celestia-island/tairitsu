@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Type-safe CSS property builders for Tairitsu framework"
 license = "MIT"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 
 [dependencies]
 # Workspace dependencies
