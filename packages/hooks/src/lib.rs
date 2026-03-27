@@ -9,6 +9,7 @@ pub mod signal;
 pub mod state;
 pub mod state_machine;
 pub mod store;
+pub mod suspense;
 
 pub use animation::{
     use_animation, use_simple_animation, AnimationCallback, AnimationConfig, AnimationDirection,
@@ -30,6 +31,9 @@ pub use state_machine::{
     InteractionState,
 };
 pub use store::{register_store, Store, StoreId};
+pub use suspense::{
+    use_resource, use_suspense, Resource, ResourceState, SuspenseBoundary,
+};
 
 // Re-export Event types from vdom for convenience
 pub use tairitsu_vdom::{Event, GenericEvent};

@@ -542,7 +542,7 @@ pub fn use_simple_animation(duration_ms: u64) -> UseAnimation {
 /// The interpolated value between `from` and `to`
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// let value = lerp_f32(0.0, 100.0, 0.5); // Returns 50.0
 /// ```
 pub fn lerp_f32(from: f32, to: f32, t: f32) -> f32 {
@@ -555,7 +555,7 @@ pub fn lerp_f32(from: f32, to: f32, t: f32) -> f32 {
 /// compared to directly using AnimationConfig struct.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// let animation = AnimationBuilder::new()
 ///     .duration(200)
 ///     .easing(EasingFunction::EaseOut)

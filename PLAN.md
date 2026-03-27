@@ -7,6 +7,7 @@
 ## 已完成 ✅
 
 ### 核心
+
 - [x] VDOM 系统
 - [x] 组件系统 (`rsx!` 宏)
 - [x] Hooks 系统 (`use_signal`, `use_effect` 等)
@@ -17,11 +18,13 @@
 - [x] 全局状态管理
 
 ### 平台支持
+
 - [x] WASI (wasm32-wasip2) 统一目标
 - [x] 浏览器平台
 - [x] 服务端渲染
 
 ### 子包
+
 - [x] `tairitsu-runtime` - 核心运行时
 - [x] `tairitsu-hooks` - Hooks 原语
 - [x] `tairitsu-style` - CSS 生成系统
@@ -31,6 +34,13 @@
 - [x] `tairitsu-cli` - 命令行工具
 - [x] `tairitsu-css-values` - 类型安全的 CSS 值系统
 - [x] `tairitsu-router` - 文件系统路由
+- [x] `tairitsu-data-fetcher` - 服务端数据获取
+
+### 异步支持
+
+- [x] 异步组件 (`<Suspense>`)
+- [x] 服务端数据获取
+- [x] 流式 SSR
 
 ---
 
@@ -38,12 +48,8 @@
 
 ## 未来规划 🔮
 
-### Phase 2: 异步资源加载
-- [ ] 异步组件 (`<Suspense>`)
-- [ ] 服务端数据获取
-- [ ] 流式 SSR
-
 ### Phase 5: 开发体验
+
 - [ ] 热模块替换 (HMR)
 - [ ] 快速刷新
 - [ ] 错误 overlay
