@@ -8,6 +8,7 @@ pub mod ref_;
 pub mod signal;
 pub mod state;
 pub mod state_machine;
+pub mod store;
 
 pub use animation::{
     use_animation, use_simple_animation, AnimationCallback, AnimationConfig, AnimationDirection,
@@ -28,6 +29,7 @@ pub use state_machine::{
     use_interaction_state, ButtonStateMachine, InteractionCallback, InteractionEvent,
     InteractionState,
 };
+pub use store::{register_store, Store, StoreId};
 
 // Re-export Event types from vdom for convenience
 pub use tairitsu_vdom::{Event, GenericEvent};
