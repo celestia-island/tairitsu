@@ -1,0 +1,17 @@
+[package]
+name = "tairitsu-hmr"
+version = "0.1.0"
+edition.workspace = true
+description = "Hot Module Replacement for Tairitsu development"
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+tairitsu-vdom = { path = "../vdom" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.11", features = ["v4"] }
+log = "0.4"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

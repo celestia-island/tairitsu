@@ -35,6 +35,9 @@
 - [x] `tairitsu-css-values` - 类型安全的 CSS 值系统
 - [x] `tairitsu-router` - 文件系统路由
 - [x] `tairitsu-data-fetcher` - 服务端数据获取
+- [x] `tairitsu-hmr` - 热模块替换
+- [x] `tairitsu-fast-refresh` - 快速刷新
+- [x] `tairitsu-error-overlay` - 错误覆盖层
 
 ### 异步支持
 
@@ -47,9 +50,3 @@
 ## 计划中 📋
 
 ## 未来规划 🔮
-
-### Phase 5: 开发体验
-
-- [ ] 热模块替换 (HMR)
-- [ ] 快速刷新
-- [ ] 错误 overlay
