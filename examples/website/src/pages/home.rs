@@ -18,10 +18,10 @@ pub fn render() -> VNode {
                         "采用 Docker-like 架构的通用运行时。支持镜像/容器模型管理 WASM 模块，提供灵活的构建器模式和 WIT-based 类型安全通信。"
                     }
                     div { class: "page-hero__actions",
-                        a { href: "#/guides/quick-start", class: "ts-btn ts-btn--primary ts-btn--lg",
+                        a { href: "/guides/quick-start", class: "ts-btn ts-btn--primary ts-btn--lg",
                             "快速开始"
                         }
-                        a { href: "#/system/overview", class: "ts-btn ts-btn--secondary ts-btn--lg",
+                        a { href: "/system/overview", class: "ts-btn ts-btn--secondary ts-btn--lg",
                             "系统架构"
                         }
                     }
