@@ -2,7 +2,7 @@
 name = "tairitsu-macros"
 version = "0.3.0"
 edition = "2021"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 
 [lib]
 proc-macro = true

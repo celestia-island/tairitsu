@@ -38,6 +38,9 @@ opt-level = 'z'
 codegen-units = 1
 panic = "abort"
 
+[workspace.package]
+authors = ["langyo <langyo.china@gmail.com>"]
+
 [workspace.dependencies]
 # Tokio - only wasm-compatible features (sync,macros,io-util,rt,time,signal)
 # All packages should use: tokio = { workspace = true }

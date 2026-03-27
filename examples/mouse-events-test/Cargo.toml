@@ -2,7 +2,7 @@
 name = "mouse-events-test"
 version = "0.1.0"
 edition = "2021"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 
 [dependencies]
 tairitsu-macros = { path = "../../packages/macros" }
