@@ -1,0 +1,79 @@
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+
+// Main rule - CSS length value
+length = {
+    px | inch | cm | mm | pt | pc
+    | em | rem | ex | ch
+    | vw | vh | vmin | vmax
+    | percent
+    | calc_expr
+    | min_expr
+    | max_expr
+    | clamp_expr
+    | keyword
+}
+
+// === Absolute units ===
+px = @{ number ~ "px" }
+inch = @{ number ~ "in" }
+cm = @{ number ~ "cm" }
+mm = @{ number ~ "mm" }
+pt = @{ number ~ "pt" }
+pc = @{ number ~ "pc" }
+
+// === Relative units ===
+em = @{ number ~ "em" }
+rem = @{ number ~ "rem" }
+ex = @{ number ~ "ex" }
+ch = @{ number ~ "ch" }
+
+// === Viewport units ===
+vw = @{ number ~ "vw" }
+vh = @{ number ~ "vh" }
+vmin = @{ number ~ "vmin" }
+vmax = @{ number ~ "vmax" }
+
+// === Percentage ===
+percent = @{ number ~ "%" }
+
+// === Number ===
+number = @{ "-"? ~ digit+ ~ ("." ~ digit+)? | "-"? ~ "." ~ digit+ }
+digit = { '0'..'9' }
+
+// === Functions ===
+calc_expr = { "calc(" ~ expression ~ ")" }
+min_expr = { "min(" ~ expression ~ ("," ~ expression)* ~ ")" }
+max_expr = { "max(" ~ expression ~ ("," ~ expression)* ~ ")" }
+clamp_expr = { "clamp(" ~ expression ~ "," ~ expression ~ "," ~ expression ~ ")" }
+
+// === Expressions ===
+expression = _{
+    term ~ (binary_op ~ term)*
+}
+
+term = @{
+    length
+    | "(" ~ expression ~ ")"
+    | unary
+}
+
+unary = {
+    unary_op ~ term
+}
+
+unary_op = { "+" | "-" }
+
+binary_op = _{ add | sub | mul | div }
+
+add = { "+" }
+sub = { "-" }
+mul = { "*" }
+div = { "/" }
+
+// === Keywords ===
+keyword = @{
+    "auto"
+    | "min-content"
+    | "max-content"
+    | "fit-content(" ~ number? ~ ")"
+}

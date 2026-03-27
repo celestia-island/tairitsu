@@ -1,6 +1,9 @@
 use super::properties::{CssProperty, Property};
 use super::values::CssValue;
 
+#[cfg(feature = "css-values")]
+use tairitsu_css_values::CssLength;
+
 pub struct StyleStringBuilder(Vec<(Property, String)>);
 
 impl StyleStringBuilder {
@@ -120,6 +123,26 @@ impl StyleStringBuilder {
     pub fn add_vh_f64(mut self, property: CssProperty, value: f64) -> Self {
         self.0
             .push((Property::Known(property), format!("{}vh", value)));
+        self
+    }
+
+    #[cfg(feature = "css-values")]
+    /// Add a CSS property with a type-safe `CssLength` value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tairitsu_style::{CssProperty, StyleStringBuilder};
+    /// use tairitsu_css_values::CssLength;
+    ///
+    /// let style = StyleStringBuilder::new()
+    ///     .add_length(CssProperty::Width, CssLength::px(100))
+    ///     .add_length(CssProperty::Height, CssLength::vh(100))
+    ///     .build_clean();
+    /// ```
+    pub fn add_length(mut self, property: CssProperty, length: CssLength) -> Self {
+        self.0
+            .push((Property::Known(property), length.to_css_string()));
         self
     }
 
@@ -277,6 +300,26 @@ impl StyleBuilder {
     pub fn add_vh_f64(mut self, property: CssProperty, value: f64) -> Self {
         self.properties
             .push((Property::Known(property), format!("{}vh", value)));
+        self
+    }
+
+    #[cfg(feature = "css-values")]
+    /// Add a CSS property with a type-safe `CssLength` value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tairitsu_style::{CssProperty, StyleBuilder};
+    /// use tairitsu_css_values::CssLength;
+    ///
+    /// let style = StyleBuilder::new()
+    ///     .add_length(CssProperty::Width, CssLength::px(100))
+    ///     .add_length(CssProperty::Height, CssLength::vh(100))
+    ///     .to_vdom_style();
+    /// ```
+    pub fn add_length(mut self, property: CssProperty, length: CssLength) -> Self {
+        self.properties
+            .push((Property::Known(property), length.to_css_string()));
         self
     }
 
