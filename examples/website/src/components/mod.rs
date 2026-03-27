@@ -15,33 +15,33 @@ const NAV: &[NavSection] = &[
     NavSection {
         label: "Guides",
         items: &[
-            ("快速开始", "#/guides/quick-start"),
-            ("工作区地图", "#/guides/workspace-map"),
-            ("构建/测试/发布", "#/guides/build-test-release"),
-            ("迁移指南", "#/guides/migration"),
-            ("术语对照表", "#/guides/glossary"),
+            ("快速开始", "/guides/quick-start"),
+            ("工作区地图", "/guides/workspace-map"),
+            ("构建/测试/发布", "/guides/build-test-release"),
+            ("迁移指南", "/guides/migration"),
+            ("术语对照表", "/guides/glossary"),
         ],
     },
     NavSection {
         label: "System",
         items: &[
-            ("系统总览", "#/system/overview"),
-            ("运行时", "#/system/runtime"),
-            ("WIT 流水线", "#/system/wit-pipeline"),
-            ("Web 后端", "#/system/web-backends"),
-            ("版本策略", "#/system/versioning"),
+            ("系统总览", "/system/overview"),
+            ("运行时", "/system/runtime"),
+            ("WIT 流水线", "/system/wit-pipeline"),
+            ("Web 后端", "/system/web-backends"),
+            ("版本策略", "/system/versioning"),
         ],
     },
     NavSection {
         label: "Packages",
         items: &[
-            ("包总览", "#/packages/overview"),
-            ("包清单", "#/packages/list"),
+            ("包总览", "/packages/overview"),
+            ("包清单", "/packages/list"),
         ],
     },
     NavSection {
         label: "Tests",
-        items: &[("DOM 操作测试 (Phase 0.2)", "#/dom-ops-test")],
+        items: &[("DOM 操作测试 (Phase 0.2)", "/dom-ops-test")],
     },
 ];
 
@@ -53,17 +53,17 @@ fn txt(s: &str) -> VNode {
 pub fn top_nav() -> VNode {
     rsx! {
         header { class: "tairitsu-topnav",
-            a { href: "#/", class: "tairitsu-topnav__brand",
+            a { href: "/", class: "tairitsu-topnav__brand",
                 "Tairitsu"
             }
             nav { class: "tairitsu-topnav__links",
-                a { href: "#/guides/quick-start", class: "tairitsu-topnav__link",
+                a { href: "/guides/quick-start", class: "tairitsu-topnav__link",
                     "Guides"
                 }
-                a { href: "#/system/overview", class: "tairitsu-topnav__link",
+                a { href: "/system/overview", class: "tairitsu-topnav__link",
                     "System"
                 }
-                a { href: "#/packages/overview", class: "tairitsu-topnav__link",
+                a { href: "/packages/overview", class: "tairitsu-topnav__link",
                     "Packages"
                 }
             }
@@ -78,7 +78,7 @@ pub fn sidebar() -> VNode {
     // Home link
     sections.push(VNode::Element(
         VElement::new("a")
-            .attr("href", "#/")
+            .attr("href", "/")
             .class("sidebar-link sidebar-link--home")
             .child(txt("Home")),
     ));

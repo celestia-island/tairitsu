@@ -12,7 +12,7 @@ pub fn render() -> VNode {
                 p {
                     "请求的页面不存在。请检查 URL 或返回首页。"
                 }
-                a { href: "#/", class: "ts-btn ts-btn--primary",
+                a { href: "/", class: "ts-btn ts-btn--primary",
                     "返回首页"
                 }
             }
