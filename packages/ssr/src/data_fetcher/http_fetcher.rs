@@ -1,6 +1,6 @@
 //! HTTP fetcher implementation
 
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 
@@ -10,12 +10,12 @@ use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
 #[derive(Clone)]
 pub struct HttpFetcher {
     /// HTTP client (only available on server side)
-    #[cfg(feature = "server")]
+    #[cfg(feature = "data-fetcher")]
     client: Option<reqwest::Client>,
     /// Cache for responses
     cache: Arc<Cache>,
     /// Fetch configuration (only available on server side)
-    #[cfg(feature = "server")]
+    #[cfg(feature = "data-fetcher")]
     config: FetchConfig,
 }
 
@@ -27,40 +27,40 @@ impl HttpFetcher {
 
     /// Create a new HTTP fetcher with the given configuration
     pub fn with_config(config: FetchConfig) -> Self {
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         let client = reqwest::Client::builder()
             .timeout(config.timeout)
             .build()
             .ok();
 
-        #[cfg(not(feature = "server"))]
+        #[cfg(not(feature = "data-fetcher"))]
         let _ = config; // Suppress unused warning
 
         Self {
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
             client,
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
             cache: Arc::new(Cache::new(config.cache_ttl)),
-            #[cfg(not(feature = "server"))]
+            #[cfg(not(feature = "data-fetcher"))]
             cache: Arc::new(Cache::new(FetchConfig::default().cache_ttl)),
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
             config,
         }
     }
 
     /// Create a new HTTP fetcher with a custom cache
     pub fn with_cache(config: FetchConfig, cache: Arc<Cache>) -> Self {
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         let client = reqwest::Client::builder()
             .timeout(config.timeout)
             .build()
             .ok();
 
         Self {
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
             client,
             cache,
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
             config,
         }
     }
@@ -88,7 +88,7 @@ impl HttpFetcher {
     }
 
     /// Build headers for the request
-    #[cfg(feature = "server")]
+    #[cfg(feature = "data-fetcher")]
     fn build_headers(&self, additional: &HashMap<String, String>) -> reqwest::header::HeaderMap {
         let mut headers = reqwest::header::HeaderMap::new();
 
@@ -99,7 +99,7 @@ impl HttpFetcher {
         );
 
         // Add custom headers from config
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         for (key, value) in &self.config.headers {
             if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
                 && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
@@ -129,8 +129,8 @@ impl Default for HttpFetcher {
 impl Fetcher for HttpFetcher {
     async fn get(&self, url: &str) -> Result<Vec<u8>, FetchError> {
         // Check cache first
-        #[cfg(feature = "server")]
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
+        #[cfg(feature = "data-fetcher")]
         if self.config.cache {
             let cache_key = Self::cache_key("GET", url, &[]);
             if let Some(data) = self.cache.get(&cache_key) {
@@ -138,7 +138,7 @@ impl Fetcher for HttpFetcher {
             }
         }
 
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         {
             let client = self
                 .client
@@ -170,7 +170,7 @@ impl Fetcher for HttpFetcher {
             let data = bytes.to_vec();
 
             // Store in cache
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
         if self.config.cache {
                 let cache_key = Self::cache_key("GET", url, &[]);
                 self.cache.insert(cache_key, data.clone());
@@ -179,7 +179,7 @@ impl Fetcher for HttpFetcher {
             Ok(data)
         }
 
-        #[cfg(not(feature = "server"))]
+        #[cfg(not(feature = "data-fetcher"))]
         {
             Err(FetchError::network(
                 "HTTP client not available (server feature required)",
@@ -189,7 +189,7 @@ impl Fetcher for HttpFetcher {
 
     async fn post(&self, url: &str, body: Vec<u8>) -> Result<Vec<u8>, FetchError> {
         // Check cache first (for POST with same body)
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         if self.config.cache {
             let cache_key = Self::cache_key("POST", url, &body);
             if let Some(data) = self.cache.get(&cache_key) {
@@ -197,7 +197,7 @@ impl Fetcher for HttpFetcher {
             }
         }
 
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         {
             let client = self
                 .client
@@ -230,7 +230,7 @@ impl Fetcher for HttpFetcher {
             let data = bytes.to_vec();
 
             // Store in cache
-            #[cfg(feature = "server")]
+            #[cfg(feature = "data-fetcher")]
         if self.config.cache {
                 let cache_key = Self::cache_key("POST", url, &[]);
                 self.cache.insert(cache_key, data.clone());
@@ -239,7 +239,7 @@ impl Fetcher for HttpFetcher {
             Ok(data)
         }
 
-        #[cfg(not(feature = "server"))]
+        #[cfg(not(feature = "data-fetcher"))]
         {
             Err(FetchError::network(
                 "HTTP client not available (server feature required)",
@@ -266,7 +266,7 @@ mod tests {
             .with_cache(false);
 
         let fetcher = HttpFetcher::with_config(config);
-        #[cfg(feature = "server")]
+        #[cfg(feature = "data-fetcher")]
         {
             assert_eq!(fetcher.config.timeout, Duration::from_secs(60));
             assert!(!fetcher.config.cache);
@@ -286,7 +286,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "server")]
+    #[cfg(feature = "data-fetcher")]
     async fn test_http_fetcher_cache_integration() {
         // This test requires a mock server or would be integration test
         // For now, we test the cache integration logic
@@ -302,7 +302,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "server")]
+    #[cfg(feature = "data-fetcher")]
     async fn test_http_fetcher_no_client_error() {
         // Create a fetcher without a valid client
         let fetcher = HttpFetcher {

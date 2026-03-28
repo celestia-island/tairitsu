@@ -242,51 +242,51 @@ packages/
 - [ ] 提交当前代码到 dev
 
 ### Step 2: css-values → style
-- [ ] 将 `css-values/src/*` 复制到 `style/src/values/`
-- [ ] 更新 `style/src/lib.rs` 导出 values 模块
-- [ ] 更新 `style/Cargo.toml`，移除 css-values 依赖
-- [ ] 更新 `style/build.rs`（如有）
-- [ ] 删除 `packages/css-values/`
+- [x] 将 `css-values/src/*` 复制到 `style/src/values/`
+- [x] 更新 `style/src/lib.rs` 导出 values 模块
+- [x] 更新 `style/Cargo.toml`，移除 css-values 依赖
+- [x] 更新 `style/build.rs`（如有）
+- [x] 删除 `packages/css-values/`
 
 ### Step 3: router → web
-- [ ] 将 `router/src/*` 复制到 `web/src/router/`
-- [ ] 更新 `web/src/lib.rs` 导出 router 模块
-- [ ] 更新 `web/Cargo.toml`，移除 router 依赖
-- [ ] 删除 `packages/router/`
+- [x] 将 `router/src/*` 复制到 `web/src/router/`
+- [x] 更新 `web/src/lib.rs` 导出 router 模块
+- [x] 更新 `web/Cargo.toml`，移除 router 依赖
+- [x] 删除 `packages/router/`
 
 ### Step 4: i18n → web
-- [ ] 将 `i18n/src/*` 复制到 `web/src/i18n/`
-- [ ] 更新 `web/src/lib.rs` 导出 i18n 模块
-- [ ] 更新 `web/Cargo.toml`，移除 i18n 依赖
-- [ ] 删除 `packages/i18n/`
+- [x] 将 `i18n/src/*` 复制到 `web/src/i18n/`
+- [x] 更新 `web/src/lib.rs` 导出 i18n 模块
+- [x] 更新 `web/Cargo.toml`，移除 i18n 依赖
+- [x] 删除 `packages/i18n/`
 
 ### Step 5: hmr → ssr
-- [ ] 将 `hmr/src/*` 复制到 `ssr/src/hmr/`
-- [ ] 更新 `ssr/src/lib.rs` 导出 hmr 模块
-- [ ] 更新 `ssr/Cargo.toml`，添加 hmr features
-- [ ] 删除 `packages/hmr/`
+- [x] 将 `hmr/src/*` 复制到 `ssr/src/hmr/`
+- [x] 更新 `ssr/src/lib.rs` 导出 hmr 模块
+- [x] 更新 `ssr/Cargo.toml`，添加 hmr features
+- [x] 删除 `packages/hmr/`
 
 ### Step 6: fast-refresh → ssr
-- [ ] 将 `fast-refresh/src/*` 复制到 `ssr/src/fast_refresh/`
-- [ ] 更新 `ssr/src/lib.rs` 导出 fast_refresh 模块
-- [ ] 更新 `ssr/Cargo.toml`，添加 fast-refresh feature
-- [ ] 删除 `packages/fast-refresh/`
+- [x] 将 `fast-refresh/src/*` 复制到 `ssr/src/fast_refresh/`
+- [x] 更新 `ssr/src/lib.rs` 导出 fast_refresh 模块
+- [x] 更新 `ssr/Cargo.toml`，添加 fast-refresh feature
+- [x] 删除 `packages/fast-refresh/`
 
 ### Step 7: error-overlay → ssr
-- [ ] 将 `error-overlay/src/*` 复制到 `ssr/src/error_overlay/`
-- [ ] 更新 `ssr/src/lib.rs` 导出 error_overlay 模块
-- [ ] 更新 `ssr/Cargo.toml`，添加 error-overlay feature
-- [ ] 删除 `packages/error-overlay/`
+- [x] 将 `error-overlay/src/*` 复制到 `ssr/src/error_overlay/`
+- [x] 更新 `ssr/src/lib.rs` 导出 error_overlay 模块
+- [x] 更新 `ssr/Cargo.toml`，添加 error-overlay feature
+- [x] 删除 `packages/error-overlay/`
 
 ### Step 8: data-fetcher → ssr
-- [ ] 将 `data-fetcher/src/*` 复制到 `ssr/src/data_fetcher/`
-- [ ] 更新 `ssr/src/lib.rs` 导出 data_fetcher 模块
-- [ ] 更新 `ssr/Cargo.toml`，添加 data-fetcher feature
-- [ ] 删除 `packages/data-fetcher/`
+- [x] 将 `data-fetcher/src/*` 复制到 `ssr/src/data_fetcher/`
+- [x] 更新 `ssr/src/lib.rs` 导出 data_fetcher 模块
+- [x] 更新 `ssr/Cargo.toml`，添加 data-fetcher feature
+- [x] 删除 `packages/data-fetcher/`
 
 ### Step 9: 更新 workspace
-- [ ] 更新根 `Cargo.toml` members
-- [ ] 删除废弃包的 entries
+- [x] 更新根 `Cargo.toml` members
+- [x] 删除废弃包的 entries
 
 ### Step 10: 更新 examples
 - [ ] 更新所有 examples 的 Cargo.toml

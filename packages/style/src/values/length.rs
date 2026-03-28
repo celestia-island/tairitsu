@@ -7,7 +7,7 @@ use std::fmt;
 /// # Example
 ///
 /// ```rust
-/// use tairitsu_css_values::CssLength;
+/// use tairitsu_style::CssLength;
 ///
 /// let width = CssLength::px(100);
 /// assert_eq!(width.to_css_string(), "100px");
@@ -19,7 +19,6 @@ use std::fmt;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum CssLength {
     // === Absolute units ===
-
     /// Pixels (1px = 1/96th of 1in)
     Px(f64),
 
@@ -39,7 +38,6 @@ pub enum CssLength {
     Pc(f64),
 
     // === Relative units ===
-
     /// Font size of the element
     Em(f64),
 
@@ -53,7 +51,6 @@ pub enum CssLength {
     Ch(f64),
 
     // === Viewport units ===
-
     /// 1% of viewport's width
     Vw(f64),
 
@@ -67,12 +64,10 @@ pub enum CssLength {
     Vmax(f64),
 
     // === Percentage ===
-
     /// Percentage value
     Percent(f64),
 
     // === Functions ===
-
     /// `calc()` expression
     Calc(Box<CssExpression>),
 
@@ -93,7 +88,6 @@ pub enum CssLength {
     },
 
     // === Keywords ===
-
     /// `auto` keyword
     Auto,
 
@@ -247,9 +241,22 @@ impl CssLength {
     /// Get the numeric value if this is a simple unit length.
     pub fn as_numeric_value(&self) -> Option<f64> {
         match self {
-            Self::Px(v) | Self::In(v) | Self::Cm(v) | Self::Mm(v) | Self::Pt(v) | Self::Pc(v)
-            | Self::Em(v) | Self::Rem(v) | Self::Ex(v) | Self::Ch(v) | Self::Vw(v) | Self::Vh(v)
-            | Self::Vmin(v) | Self::Vmax(v) | Self::Percent(v) | Self::FitContent(v) => Some(*v),
+            Self::Px(v)
+            | Self::In(v)
+            | Self::Cm(v)
+            | Self::Mm(v)
+            | Self::Pt(v)
+            | Self::Pc(v)
+            | Self::Em(v)
+            | Self::Rem(v)
+            | Self::Ex(v)
+            | Self::Ch(v)
+            | Self::Vw(v)
+            | Self::Vh(v)
+            | Self::Vmin(v)
+            | Self::Vmax(v)
+            | Self::Percent(v)
+            | Self::FitContent(v) => Some(*v),
             _ => None,
         }
     }
@@ -308,7 +315,11 @@ impl fmt::Display for CssLength {
                 }
                 write!(f, ")")
             }
-            Self::Clamp { min, preferred, max } => {
+            Self::Clamp {
+                min,
+                preferred,
+                max,
+            } => {
                 write!(f, "clamp({}, {}, {})", min, preferred, max)
             }
 
@@ -378,7 +389,7 @@ impl fmt::Display for CssBinOp {
 /// # Example
 ///
 /// ```rust
-/// use tairitsu_css_values::{CssExpression, CssLength, CssBinOp};
+/// use tairitsu_style::{CssExpression, CssLength, CssBinOp};
 ///
 /// let expr = CssExpression::Binary {
 ///     left: Box::new(CssExpression::Value(CssLength::percent(100))),
@@ -454,7 +465,11 @@ impl fmt::Display for CssExpression {
                 }
                 write!(f, ")")
             }
-            Self::Clamp { min, preferred, max } => {
+            Self::Clamp {
+                min,
+                preferred,
+                max,
+            } => {
                 write!(f, "clamp({}, {}, {})", min, preferred, max)
             }
         }
@@ -622,7 +637,10 @@ mod tests {
         assert_eq!(CssLength::px(100).as_numeric_value(), Some(100.0));
         assert_eq!(CssLength::em(1.5).as_numeric_value(), Some(1.5));
         assert_eq!(CssLength::Auto.as_numeric_value(), None);
-        assert_eq!(CssLength::calc(CssExpression::Value(CssLength::px(100))).as_numeric_value(), None);
+        assert_eq!(
+            CssLength::calc(CssExpression::Value(CssLength::px(100))).as_numeric_value(),
+            None
+        );
     }
 
     #[test]

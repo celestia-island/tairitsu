@@ -28,7 +28,7 @@ impl RouteSegment {
     /// # Example
     ///
     /// ```
-    /// use tairitsu_router::RouteSegment;
+    /// use tairitsu_web::router::RouteSegment;
     ///
     /// let segments = RouteSegment::parse_path("/users/:id/posts");
     /// assert_eq!(segments.len(), 3);

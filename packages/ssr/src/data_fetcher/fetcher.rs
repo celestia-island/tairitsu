@@ -33,20 +33,13 @@ pub trait Fetcher: Send + Sync {
     }
 
     /// Fetch JSON and deserialize it
-    async fn get_json<T: serde::de::DeserializeOwned>(
-        &self,
-        url: &str,
-    ) -> Result<T, FetchError> {
+    async fn get_json<T: serde::de::DeserializeOwned>(&self, url: &str) -> Result<T, FetchError> {
         let data = self.get(url).await?;
         serde_json::from_slice(&data).map_err(|e| FetchError::Serialization(e.to_string()))
     }
 
     /// Post JSON and deserialize the response
-    async fn post_json<T, U>(
-        &self,
-        url: &str,
-        body: &T,
-    ) -> Result<U, FetchError>
+    async fn post_json<T, U>(&self, url: &str, body: &T) -> Result<U, FetchError>
     where
         T: serde::Serialize + Sync,
         U: serde::de::DeserializeOwned,
@@ -58,7 +51,7 @@ pub trait Fetcher: Send + Sync {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "data-fetcher"))]
 mod tests {
     use super::*;
 
@@ -167,7 +160,9 @@ mod tests {
             should_fail: false,
         };
 
-        let result = fetcher.get_json::<serde_json::Value>("http://example.com").await;
+        let result = fetcher
+            .get_json::<serde_json::Value>("http://example.com")
+            .await;
         assert!(result.is_err());
         assert!(result.unwrap_err().is_serialization());
     }

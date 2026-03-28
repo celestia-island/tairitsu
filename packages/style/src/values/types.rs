@@ -238,6 +238,7 @@ pub enum CursorValue {
     Help,
     Progress,
     NotAllowed,
+    Grab,
 }
 
 impl CursorValue {
@@ -253,6 +254,7 @@ impl CursorValue {
             CursorValue::Help => "help",
             CursorValue::Progress => "progress",
             CursorValue::NotAllowed => "not-allowed",
+            CursorValue::Grab => "grab",
         }
     }
 }

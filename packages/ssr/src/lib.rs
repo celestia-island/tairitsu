@@ -24,6 +24,9 @@ pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
 #[cfg(feature = "streaming")]
 pub use streaming::{HtmlChunk, HtmlStream, hydration_script, render_suspense_boundary, render_to_stream, render_vnode_to_stream};
 
+// Re-export sign_component for the sign_component_macro! to work
+pub use fast_refresh::sign_component;
+
 use anyhow::Result;
 use bindings::BrowserFull;
 use wasmtime::{Engine, Store};
