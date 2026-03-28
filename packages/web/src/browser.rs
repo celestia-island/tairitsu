@@ -12,6 +12,12 @@ pub struct BrowserPlatform {
     next_animation_id: Rc<RefCell<u32>>,
 }
 
+impl Default for BrowserPlatform {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BrowserPlatform {
     pub fn new() -> Self {
         Self {
