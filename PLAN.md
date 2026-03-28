@@ -15,37 +15,17 @@
   }
   ```
 
-### 待添加的 WIT 接口支持
+- [x] `matchMedia` API 支持
+  - 添加 `Platform::match_media()` 方法
+  - 添加 `Platform::media_query_list_get_media()` 方法
+  - 添加 `Platform::media_query_list_get_matches()` 方法
+  - 在 WIT 接口中定义 `media-query-list-callbacks` 回调接口
+  - 在 browser-glue 中实现 MediaQueryList 事件监听机制
 
-以下功能需要添加到 tairitsu WIT 接口中，以支持完整的动画系统功能：
-
-#### 1. prefers-reduced-motion 检测
-
-需要 `window.matchMedia()` API 支持：
-
-```wit
-/// 检测用户是否偏好减少动画
-match-media: func(query: string) -> bool
-```
-
-#### 2. MediaQueryList 事件监听
-
-需要 `MediaQueryList.addEventListener()` 支持，用于监听媒体查询变化：
-
-```wit
-/// 媒体查询列表监听器
-interface media-query-list {
-    /// 添加媒体查询变化监听器
-    add-change-listener: func(callback: func()) -> listener
-    /// 移除监听器
-    remove-listener: func(listener: listener)
-}
-```
-
-### 优先级
-
-- **高优先级**: `matchMedia` API - 许多无障碍功能依赖此功能
-- **中优先级**: `MediaQueryList` 事件监听 - 动态响应系统偏好设置变化
+- [x] MediaQueryList 事件监听
+  - 添加 `Platform::media_query_list_add_listener()` 方法
+  - 添加 `Platform::media_query_list_remove_listener()` 方法
+  - 实现媒体查询变化的回调机制
 
 ---
 
