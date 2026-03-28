@@ -34,3 +34,6 @@ wasmtime = { version = "^40", features = ["component-model"] }
 wasmtime-wasi = "^40"
 wit-component = "^0.243"
 wit-parser = "^0.243"
+
+[build-dependencies]
+wit-parser = "^0.243"
