@@ -8,6 +8,7 @@ pub type AnimationCallback = Rc<dyn Fn(f32)>;
 /// Handle for managing an active animation
 pub struct AnimationHandle {
     state: Rc<RefCell<AnimationState>>,
+    #[allow(dead_code)]
     raf_id: Rc<RefCell<Option<u32>>>,
 }
 
@@ -201,7 +202,7 @@ impl UseAnimation {
     /// This initiates the requestAnimationFrame loop
     pub fn start_with_platform<P>(&self, platform: &P) -> AnimationHandle
     where
-        P: Platform + ?Sized,
+        P: Platform,
     {
         *self.state.borrow_mut() = AnimationState::Running;
         *self.start_time.borrow_mut() = None;
@@ -221,7 +222,7 @@ impl UseAnimation {
     /// each frame until the animation completes or is cancelled.
     fn start_raf_loop<P>(&self, platform: &P)
     where
-        P: Platform + ?Sized,
+        P: Platform,
     {
         // We need to store a pointer to the platform to use in subsequent frames.
         // Since we can't capture &P in the closure (lifetime issues), we use
@@ -268,7 +269,7 @@ impl UseAnimation {
         current_iteration_weak: std::rc::Weak<RefCell<u32>>,
         config: AnimationConfig,
     ) where
-        P: Platform + ?Sized,
+        P: Platform,
     {
         // SAFETY: The platform pointer is valid for the duration of the animation
         // because the caller (start_with_platform) holds a reference to the platform.
@@ -450,7 +451,7 @@ impl UseAnimation {
     /// Resume animation with platform reference
     pub fn resume_with_platform<P>(&self, platform: &P)
     where
-        P: Platform + ?Sized,
+        P: Platform,
     {
         if *self.state.borrow() == AnimationState::Paused {
             *self.state.borrow_mut() = AnimationState::Running;
