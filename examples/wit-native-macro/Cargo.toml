@@ -25,6 +25,7 @@ log = { version = "^0.4", features = ["std"] }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # For WASM guest builds
 [target.'cfg(target_family = "wasm")'.dependencies]

@@ -26,6 +26,7 @@ log = { version = "^0.4", features = ["std"] }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # MCP / network and protocols
 wit-bindgen = "^0.50"

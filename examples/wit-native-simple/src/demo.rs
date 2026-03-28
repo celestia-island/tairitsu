@@ -7,7 +7,7 @@ use log::info;
 use rand::Rng;
 use std::collections::HashMap;
 
-use tairitsu::{
+use tairitsu_web::{
     CompositeWitInterface, WitCommand, WitCommandDispatcher, WitCommandHandler, WitInterface,
 };
 

@@ -4,7 +4,6 @@ members = [
     "packages/macros",
     "packages/vdom",
     "packages/web",
-    "packages/web-next",
     "packages/hooks",
     "packages/i18n",
     "packages/packager",
