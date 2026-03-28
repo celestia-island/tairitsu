@@ -432,8 +432,8 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
             }
             RsxAttr::Other { name, value } => {
                 // Only treat on_* as event handlers for known HTML elements
-                if is_known_html {
-                    if let Some(event_name) = name.strip_prefix("on") {
+                if is_known_html
+                    && let Some(event_name) = name.strip_prefix("on") {
                         // Map event names to their types
                         let event_type = match event_name {
                             "click" | "mousedown" | "mouseup" | "mousemove" | "mouseenter"
@@ -499,7 +499,6 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                         });
                         continue;
                     }
-                }
 
                 // For custom components or non-event attributes, pass as regular attribute
                 if name == "children" {

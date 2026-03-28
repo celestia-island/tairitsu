@@ -199,11 +199,10 @@ pub fn derive_wit_command(input: TokenStream) -> TokenStream {
 
 fn extract_response_type(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     for attr in attrs {
-        if attr.path().is_ident("wit_response") {
-            if let Ok(ty) = attr.parse_args::<syn::Type>() {
+        if attr.path().is_ident("wit_response")
+            && let Ok(ty) = attr.parse_args::<syn::Type>() {
                 return quote! { #ty };
             }
-        }
     }
     quote! { String }
 }
@@ -631,11 +630,10 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
 
 fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
     for attr in attrs {
-        if attr.path().is_ident("tool_name") {
-            if let Ok(lit) = attr.parse_args::<syn::LitStr>() {
+        if attr.path().is_ident("tool_name")
+            && let Ok(lit) = attr.parse_args::<syn::LitStr>() {
                 return quote! { #lit };
             }
-        }
     }
     quote! { #default_name }
 }

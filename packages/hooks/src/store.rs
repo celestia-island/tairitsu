@@ -47,8 +47,8 @@ pub struct SubscriptionHandle {
 /// Global store registry
 thread_local! {
     static STORE_REGISTRY: RefCell<HashMap<StoreId, Box<dyn AnyStore>>> = RefCell::new(HashMap::new());
-    static NEXT_STORE_ID: RefCell<StoreId> = RefCell::new(1);
-    static NEXT_SUBSCRIBER_ID: RefCell<usize> = RefCell::new(1);
+    static NEXT_STORE_ID: RefCell<StoreId> = const { RefCell::new(1) };
+    static NEXT_SUBSCRIBER_ID: RefCell<usize> = const { RefCell::new(1) };
 }
 
 /// Trait for type-erased store operations

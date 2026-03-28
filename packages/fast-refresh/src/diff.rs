@@ -335,15 +335,14 @@ fn diff_properties(old: &[PropertyInfo], new: &[PropertyInfo]) -> Option<Propert
 
     // Check for type changes
     for new_prop in new {
-        if let Some(old_prop) = old.iter().find(|p| p.name == new_prop.name) {
-            if old_prop.type_name != new_prop.type_name {
+        if let Some(old_prop) = old.iter().find(|p| p.name == new_prop.name)
+            && old_prop.type_name != new_prop.type_name {
                 return Some(PropertyChange::PropertyTypeChanged {
                     name: new_prop.name.clone(),
                     old_type: old_prop.type_name.clone(),
                     new_type: new_prop.type_name.clone(),
                 });
             }
-        }
     }
 
     None

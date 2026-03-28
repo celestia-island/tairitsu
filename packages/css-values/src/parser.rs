@@ -30,11 +30,8 @@ impl CssLength {
             .map_err(|e| CssValueParseError::ParseError(e.to_string()))?;
 
         for pair in pairs {
-            match pair.as_rule() {
-                Rule::length => {
-                    return parse_length(pair);
-                }
-                _ => {}
+            if pair.as_rule() == Rule::length {
+                return parse_length(pair);
             }
         }
 

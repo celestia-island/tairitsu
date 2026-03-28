@@ -163,7 +163,9 @@ impl FastRefreshRuntime {
         // Check if this component ID was previously registered with a different signature
         let old_signature = signatures.get(&component_id);
 
-        let result = if let Some(old_sig) = old_signature {
+        
+
+        if let Some(old_sig) = old_signature {
             if old_sig != &signature {
                 // Component signature changed - check if we can preserve state
                 if self.can_preserve_state_internal(old_sig, &signature) {
@@ -202,9 +204,7 @@ impl FastRefreshRuntime {
             components.insert(signature.clone(), info);
             signatures.insert(component_id, signature);
             RegistrationResult::Registered
-        };
-
-        result
+        }
     }
 
     /// Unregister a component from the runtime

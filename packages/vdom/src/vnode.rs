@@ -384,11 +384,10 @@ impl From<&str> for Style {
         let mut style = Style::new();
         for part in s.split(';') {
             let part = part.trim();
-            if !part.is_empty() {
-                if let Some((name, value)) = part.split_once(':') {
+            if !part.is_empty()
+                && let Some((name, value)) = part.split_once(':') {
                     style = style.add(name.trim(), value.trim());
                 }
-            }
         }
         style
     }

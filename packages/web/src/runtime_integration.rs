@@ -110,7 +110,7 @@ impl ComponentRenderer {
 
     /// Initialize the runtime with this renderer's root element.
     pub fn init_runtime(&self) {
-        let root = self.root_element.borrow().clone();
+        let root = *self.root_element.borrow();
         init_runtime(root);
     }
 

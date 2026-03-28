@@ -145,8 +145,8 @@ impl IconFetcher {
             let entry = entry?;
             let path = entry.path();
 
-            if path.extension().map(|e| e == "svg").unwrap_or(false) {
-                if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
+            if path.extension().map(|e| e == "svg").unwrap_or(false)
+                && let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
                     let content = std::fs::read_to_string(&path)?;
                     let svg_path = extract_svg_path(&content);
 
@@ -163,7 +163,6 @@ impl IconFetcher {
                         },
                     );
                 }
-            }
         }
 
         metadata.count = metadata.icons.len();
@@ -191,11 +190,10 @@ impl IconFetcher {
         // Load SVG paths for each icon
         for (name, icon) in &mut metadata.icons {
             let svg_path = svg_dir.join(format!("{}.svg", name));
-            if svg_path.exists() {
-                if let Ok(content) = std::fs::read_to_string(&svg_path) {
+            if svg_path.exists()
+                && let Ok(content) = std::fs::read_to_string(&svg_path) {
                     icon.svg_path = extract_svg_path(&content);
                 }
-            }
         }
 
         Ok(metadata)

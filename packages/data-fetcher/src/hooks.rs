@@ -74,7 +74,7 @@ where
     {
         let state_sync = Arc::new(std::sync::Mutex::new(Resource::Loading));
         let url = url.to_string();
-        let component_id = runtime::use_component(|| tairitsu_vdom::VNode::empty());
+        let component_id = runtime::use_component(tairitsu_vdom::VNode::empty);
 
         // Initialize the Rc state with Loading
         // The actual async update will happen in the tokio task
@@ -205,7 +205,7 @@ where
 {
     let state = Rc::new(RefCell::new(Resource::Loading));
     let url = url.to_string();
-    let component_id = runtime::use_component(|| tairitsu_vdom::VNode::empty());
+    let component_id = runtime::use_component(tairitsu_vdom::VNode::empty);
 
     let trigger = move || {
         let url = url.clone();

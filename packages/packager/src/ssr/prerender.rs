@@ -174,9 +174,9 @@ fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crat
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        if path.is_file() {
-            if let Some(ext) = path.extension() {
-                if asset_extensions.contains(&ext.to_string_lossy().as_ref()) {
+        if path.is_file()
+            && let Some(ext) = path.extension()
+                && asset_extensions.contains(&ext.to_string_lossy().as_ref()) {
                     let relative = path.strip_prefix(dist_dir).map_err(|e| {
                         crate::TairitsuPackagerError::BuildError(format!(
                             "Failed to get relative path: {}",
@@ -193,8 +193,6 @@ fn copy_assets(dist_dir: &std::path::Path, output_dir: &std::path::Path) -> crat
                     fs::copy(path, &dest)?;
                     tracing::debug!("  Copied asset: {}", relative.display());
                 }
-            }
-        }
     }
 
     Ok(())
