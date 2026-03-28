@@ -15,13 +15,11 @@ tairitsu-vdom = { path = "../vdom", optional = true }
 tairitsu-hooks = { path = "../hooks", optional = true }
 tairitsu-macros = { path = "../macros", optional = true }
 tairitsu-style = { path = "../style", optional = true }
-tairitsu-router = { path = "../router", optional = true }
 tairitsu-data-fetcher = { path = "../data-fetcher", optional = true }
 tairitsu-hmr = { path = "../hmr", optional = true }
 tairitsu-fast-refresh = { path = "../fast-refresh", optional = true }
 tairitsu-ssr = { path = "../ssr", optional = true }
 tairitsu-error-overlay = { path = "../error-overlay", optional = true }
-tairitsu-i18n = { path = "../i18n", optional = true }
 tairitsu-packager = { path = "../packager", optional = true }
 
 # Basic language and tools
@@ -47,16 +45,16 @@ vdom = ["dep:tairitsu-vdom"]
 hooks = ["dep:tairitsu-hooks"]
 macros = ["dep:tairitsu-macros"]
 style = ["dep:tairitsu-style"]
-router = ["dep:tairitsu-router"]
+router = []
 data-fetcher = ["dep:tairitsu-data-fetcher"]
 hmr = ["dep:tairitsu-hmr"]
 fast-refresh = ["dep:tairitsu-fast-refresh"]
 ssr = ["dep:tairitsu-ssr"]
 error-overlay = ["dep:tairitsu-error-overlay"]
-i18n = ["dep:tairitsu-i18n"]
+i18n = []
 packager = ["dep:tairitsu-packager"]
 browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay"]
-server = ["ssr", "i18n", "packager"]
+server = ["ssr", "packager"]
 full = ["browser", "server"]
 wit-bindings = ["dep:wit-bindgen"]
 

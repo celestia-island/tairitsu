@@ -11,6 +11,12 @@ pub mod ssr;
 #[cfg(feature = "wit-bindings")]
 pub mod wit_platform;
 
+#[cfg(feature = "router")]
+pub mod router;
+
+#[cfg(feature = "i18n")]
+pub mod i18n;
+
 #[cfg(feature = "browser")]
 pub use browser::BrowserPlatform;
 
@@ -19,3 +25,9 @@ pub use ssr::SsrPlatform;
 
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{WitElement, WitEvent, WitPlatform};
+
+#[cfg(feature = "router")]
+pub use router::*;
+
+#[cfg(feature = "i18n")]
+pub use i18n::*;
