@@ -147,16 +147,16 @@ interface platform-helpers {
     use types.{dom-rect};
 
     /// Get the inner width of the window.
-    inner-width: func() -> i32;
+    inner-width: func() -> s32;
 
     /// Get the inner height of the window.
-    inner-height: func() -> i32;
+    inner-height: func() -> s32;
 
     /// Set a timeout with the given callback ID.
-    set-timeout: func(callback-id: u64, ms: i32) -> i32;
+    set-timeout: func(callback-id: u64, ms: s32) -> s32;
 
     /// Clear a timeout.
-    clear-timeout: func(id: i32);
+    clear-timeout: func(id: s32);
 
     /// Request an animation frame with the given callback ID.
     request-animation-frame: func(callback-id: u64) -> u32;
