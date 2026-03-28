@@ -25,8 +25,10 @@ impl StyleStringBuilder {
     /// Add a CSS custom property (CSS variable).
     /// This is the preferred method for setting --custom-properties.
     pub fn add_var(mut self, name: &str, value: &str) -> Self {
-        self.0
-            .push((Property::Custom(format!("--{}", name.trim_start_matches("--"))), value.to_string()));
+        self.0.push((
+            Property::Custom(format!("--{}", name.trim_start_matches("--"))),
+            value.to_string(),
+        ));
         self
     }
 
@@ -146,6 +148,28 @@ impl StyleStringBuilder {
         self
     }
 
+    #[cfg(feature = "css-values")]
+    /// Add a CSS custom property (CSS variable) with a type-safe `CssLength` value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tairitsu_style::StyleStringBuilder;
+    /// use tairitsu_css_values::CssLength;
+    ///
+    /// let style = StyleStringBuilder::new()
+    ///     .add_var_with_length("glow-x", CssLength::percent(50))
+    ///     .add_var_with_length("glow-y", CssLength::percent(50))
+    ///     .build_clean();
+    /// ```
+    pub fn add_var_with_length(mut self, name: &str, length: CssLength) -> Self {
+        self.0.push((
+            Property::Custom(format!("--{}", name.trim_start_matches("--"))),
+            length.to_css_string(),
+        ));
+        self
+    }
+
     pub fn build(self) -> String {
         let mut result = String::new();
         for (property, value) in self.0 {
@@ -202,8 +226,10 @@ impl StyleBuilder {
     /// Add a CSS custom property (CSS variable).
     /// This is the preferred method for setting --custom-properties.
     pub fn add_var(mut self, name: &str, value: &str) -> Self {
-        self.properties
-            .push((Property::Custom(format!("--{}", name.trim_start_matches("--"))), value.to_string()));
+        self.properties.push((
+            Property::Custom(format!("--{}", name.trim_start_matches("--"))),
+            value.to_string(),
+        ));
         self
     }
 
@@ -320,6 +346,28 @@ impl StyleBuilder {
     pub fn add_length(mut self, property: CssProperty, length: CssLength) -> Self {
         self.properties
             .push((Property::Known(property), length.to_css_string()));
+        self
+    }
+
+    #[cfg(feature = "css-values")]
+    /// Add a CSS custom property (CSS variable) with a type-safe `CssLength` value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tairitsu_style::StyleBuilder;
+    /// use tairitsu_css_values::CssLength;
+    ///
+    /// let style = StyleBuilder::new()
+    ///     .add_var_with_length("glow-x", CssLength::percent(50))
+    ///     .add_var_with_length("glow-y", CssLength::percent(50))
+    ///     .to_vdom_style();
+    /// ```
+    pub fn add_var_with_length(mut self, name: &str, length: CssLength) -> Self {
+        self.properties.push((
+            Property::Custom(format!("--{}", name.trim_start_matches("--"))),
+            length.to_css_string(),
+        ));
         self
     }
 
