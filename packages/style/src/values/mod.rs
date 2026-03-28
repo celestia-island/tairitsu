@@ -18,5 +18,3 @@ pub use types::{
 };
 // Macros are exported at root via #[macro_export]
 
-#[cfg(feature = "parse")]
-pub use parser::parse_css_value;

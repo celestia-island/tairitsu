@@ -1,0 +1,118 @@
+/// CSS value grammar for Pest parser.
+///
+/// This grammar defines the syntax for CSS length values, expressions,
+/// and functions like calc(), min(), max(), and clamp().
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+
+// Top-level rule for parsing a CSS length
+length = {
+    calc_expr
+  | min_expr
+  | max_expr
+  | clamp_expr
+  | px | inch | cm | mm | pt | pc
+  | em | rem | ex | ch
+  | vw | vh | vmin | vmax
+  | percent
+  | keyword
+}
+
+// CSS function expressions
+calc_expr = { "calc(" ~ expression ~ ")" }
+min_expr = { "min(" ~ min_args ~ ")" }
+max_expr = { "max(" ~ max_args ~ ")" }
+clamp_expr = { "clamp(" ~ clamp_args ~ ")" }
+
+// Function arguments (comma-separated for min/max/clamp)
+min_args = { term ~ ("," ~ term)* }
+max_args = { term ~ ("," ~ term)* }
+clamp_args = { term ~ "," ~ term ~ "," ~ term }
+
+// Mathematical expressions
+expression = {
+    term ~ (
+        add ~ term
+      | sub ~ term
+      | mul ~ term
+      | div ~ term
+    )*
+}
+
+// Terms can be values, unitless numbers, expressions in parentheses, or unary operations
+term = {
+    simple_length
+  | unitless_number
+  | "(" ~ expression ~ ")"
+  | unary
+  | min_expr
+  | max_expr
+  | clamp_expr
+  | calc_expr
+}
+
+// Unary operations (+value, -value)
+unary = { ("+" | "-") ~ term }
+
+// Operators
+add = { "+" }
+sub = { "-" }
+mul = { "*" }
+div = { "/" }
+
+// CSS length units (simple version for use in expressions)
+simple_length = {
+    px | inch | cm | mm | pt | pc
+  | em | rem | ex | ch
+  | vw | vh | vmin | vmax
+  | percent
+}
+
+// Unitless number (for multiplication/division in calc)
+unitless_number = @{ number }
+
+// CSS length units (for top-level parsing)
+px = @{ number ~ "px" }
+inch = @{ number ~ "in" }
+cm = @{ number ~ "cm" }
+mm = @{ number ~ "mm" }
+pt = @{ number ~ "pt" }
+pc = @{ number ~ "pc" }
+
+// Relative units
+em = @{ number ~ "em" }
+rem = @{ number ~ "rem" }
+ex = @{ number ~ "ex" }
+ch = @{ number ~ "ch" }
+
+// Viewport units
+vw = @{ number ~ "vw" }
+vh = @{ number ~ "vh" }
+vmin = @{ number ~ "vmin" }
+vmax = @{ number ~ "vmax" }
+
+// Percentage
+percent = @{ number ~ "%" }
+
+// Number (supports integers and decimals, positive and negative)
+number = @{
+    ("+" | "-")? ~
+    (
+        ("0" | nonzero ~ digit*) ~ ("." ~ digit+)?
+      | "." ~ digit+
+    )
+}
+
+nonzero = @{ '1'..'9' }
+digit = @{ '0'..'9' }
+
+// CSS keywords
+keyword = @{
+    "auto"
+  | "min-content"
+  | "max-content"
+  | fit_content
+}
+
+// fit-content() function (special case, handled separately)
+fit_content = { "fit-content(" ~ number ~ "px)" }

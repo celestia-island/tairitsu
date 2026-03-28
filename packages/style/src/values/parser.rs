@@ -1,13 +1,13 @@
 //! CSS value parsing using Pest grammar.
 
-use crate::error::{CssValueParseError, ParseResult};
-use crate::length::{CssBinOp, CssExpression, CssLength};
+use super::error::{CssValueParseError, ParseResult};
+use super::length::{CssBinOp, CssExpression, CssLength};
 use pest::Parser;
 use pest_derive::Parser;
 
 /// CSS value parser using Pest grammar.
 #[derive(Parser)]
-#[grammar = "grammar.pest"]
+#[grammar = "src/values/grammar.pest"]
 pub struct CssValueParser;
 
 impl CssLength {
@@ -93,14 +93,12 @@ fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
             let inner_pairs = inner.into_inner();
             let mut values = Vec::new();
             for pair in inner_pairs {
-                match pair.as_rule() {
-                    Rule::expression => {
-                        values.push(CssLength::calc(parse_expression(pair)?));
+                if let Rule::min_args = pair.as_rule() {
+                    for inner_arg in pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            values.push(parse_term_to_length(inner_arg)?);
+                        }
                     }
-                    Rule::term => {
-                        values.push(CssLength::calc(parse_term(pair)?));
-                    }
-                    _ => {}
                 }
             }
             Ok(CssLength::min(values))
@@ -109,14 +107,12 @@ fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
             let inner_pairs = inner.into_inner();
             let mut values = Vec::new();
             for pair in inner_pairs {
-                match pair.as_rule() {
-                    Rule::expression => {
-                        values.push(CssLength::calc(parse_expression(pair)?));
+                if let Rule::max_args = pair.as_rule() {
+                    for inner_arg in pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            values.push(parse_term_to_length(inner_arg)?);
+                        }
                     }
-                    Rule::term => {
-                        values.push(CssLength::calc(parse_term(pair)?));
-                    }
-                    _ => {}
                 }
             }
             Ok(CssLength::max(values))
@@ -125,14 +121,12 @@ fn parse_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
             let inner_pairs = inner.into_inner();
             let mut args = Vec::new();
             for pair in inner_pairs {
-                match pair.as_rule() {
-                    Rule::expression => {
-                        args.push(CssLength::calc(parse_expression(pair)?));
+                if let Rule::clamp_args = pair.as_rule() {
+                    for inner_arg in pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            args.push(parse_term_to_length(inner_arg)?);
+                        }
                     }
-                    Rule::term => {
-                        args.push(CssLength::calc(parse_term(pair)?));
-                    }
-                    _ => {}
                 }
             }
             if args.len() == 3 {
@@ -204,10 +198,16 @@ fn parse_term(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssExpression> {
     let first = inner.next().ok_or_else(|| CssValueParseError::ParseError("Empty term".to_string()))?;
 
     match first.as_rule() {
-        Rule::length => {
+        Rule::length | Rule::simple_length => {
             // Parse length directly from the pair
             let length = parse_length_from_pair(first)?;
             Ok(CssExpression::Value(length))
+        }
+        Rule::unitless_number => {
+            // Parse unitless number (for multiplication/division)
+            let s = first.as_str();
+            let num: f64 = s.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
+            Ok(CssExpression::Value(CssLength::px(num)))
         }
         Rule::expression => parse_expression(first),
         Rule::unary => {
@@ -241,6 +241,61 @@ fn parse_term(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssExpression> {
                 _ => Ok(term),
             }
         }
+        Rule::min_expr => {
+            let mut args = Vec::new();
+            for arg_pair in first.into_inner() {
+                if let Rule::min_args = arg_pair.as_rule() {
+                    for inner_arg in arg_pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            args.push(parse_term(inner_arg)?);
+                        }
+                    }
+                }
+            }
+            Ok(CssExpression::Min(args))
+        }
+        Rule::max_expr => {
+            let mut args = Vec::new();
+            for arg_pair in first.into_inner() {
+                if let Rule::max_args = arg_pair.as_rule() {
+                    for inner_arg in arg_pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            args.push(parse_term(inner_arg)?);
+                        }
+                    }
+                }
+            }
+            Ok(CssExpression::Max(args))
+        }
+        Rule::clamp_expr => {
+            let mut args = Vec::new();
+            for arg_pair in first.into_inner() {
+                if let Rule::clamp_args = arg_pair.as_rule() {
+                    for inner_arg in arg_pair.into_inner() {
+                        if matches!(inner_arg.as_rule(), Rule::term | Rule::expression) {
+                            args.push(parse_term(inner_arg)?);
+                        }
+                    }
+                }
+            }
+            if args.len() == 3 {
+                Ok(CssExpression::Clamp {
+                    min: Box::new(args.remove(0)),
+                    preferred: Box::new(args.remove(0)),
+                    max: Box::new(args.remove(0)),
+                })
+            } else {
+                Err(CssValueParseError::ParseError(format!("clamp requires 3 arguments, got {}", args.len())))
+            }
+        }
+        Rule::calc_expr => {
+            for inner_pair in first.into_inner() {
+                if matches!(inner_pair.as_rule(), Rule::expression) {
+                    return parse_expression(inner_pair);
+                }
+            }
+            Err(CssValueParseError::ParseError("Empty calc expression".to_string()))
+        }
         _ => Err(CssValueParseError::ParseError(format!(
             "Unexpected term: {:?}",
             first.as_rule()
@@ -251,100 +306,50 @@ fn parse_term(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssExpression> {
 /// Parse a length directly from a Pest pair (without going through parse_length which expects Rule::length wrapper)
 fn parse_length_from_pair(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
     match pair.as_rule() {
-        Rule::px => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("px").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::px(num))
-        }
-        Rule::inch => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("in").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::inches(num))
-        }
-        Rule::cm => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("cm").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::cm(num))
-        }
-        Rule::mm => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("mm").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::mm(num))
-        }
-        Rule::pt => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("pt").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::pt(num))
-        }
-        Rule::pc => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("pc").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::pc(num))
-        }
-        Rule::em => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("em").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::em(num))
-        }
-        Rule::rem => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("rem").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::rem(num))
-        }
-        Rule::ex => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("ex").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::ex(num))
-        }
-        Rule::ch => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("ch").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::ch(num))
-        }
-        Rule::vw => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("vw").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::vw(num))
-        }
-        Rule::vh => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("vh").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::vh(num))
-        }
-        Rule::vmin => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("vmin").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::vmin(num))
-        }
-        Rule::vmax => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("vmax").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::vmax(num))
-        }
-        Rule::percent => {
-            let s = pair.as_str();
-            let num_str = s.strip_suffix("%").ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
-            let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
-            Ok(CssLength::percent(num))
+        Rule::px => parse_unit_value(pair, "px", CssLength::px),
+        Rule::inch => parse_unit_value(pair, "in", CssLength::inches),
+        Rule::cm => parse_unit_value(pair, "cm", CssLength::cm),
+        Rule::mm => parse_unit_value(pair, "mm", CssLength::mm),
+        Rule::pt => parse_unit_value(pair, "pt", CssLength::pt),
+        Rule::pc => parse_unit_value(pair, "pc", CssLength::pc),
+        Rule::em => parse_unit_value(pair, "em", CssLength::em),
+        Rule::rem => parse_unit_value(pair, "rem", CssLength::rem),
+        Rule::ex => parse_unit_value(pair, "ex", CssLength::ex),
+        Rule::ch => parse_unit_value(pair, "ch", CssLength::ch),
+        Rule::vw => parse_unit_value(pair, "vw", CssLength::vw),
+        Rule::vh => parse_unit_value(pair, "vh", CssLength::vh),
+        Rule::vmin => parse_unit_value(pair, "vmin", CssLength::vmin),
+        Rule::vmax => parse_unit_value(pair, "vmax", CssLength::vmax),
+        Rule::percent => parse_unit_value(pair, "%", CssLength::percent),
+        Rule::simple_length => {
+            // For simple_length, we need to check the inner rule
+            let inner_pair = pair.into_inner().next().unwrap();
+            parse_length_from_pair(inner_pair)
         }
         _ => Err(CssValueParseError::ParseError(format!(
             "Unknown length rule: {:?}",
             pair.as_rule()
         ))),
+    }
+}
+
+/// Helper function to parse a unit value from a Pest pair
+fn parse_unit_value<F>(pair: pest::iterators::Pair<Rule>, unit: &str, constructor: F) -> ParseResult<CssLength>
+where
+    F: FnOnce(f64) -> CssLength,
+{
+    let s = pair.as_str();
+    let num_str = s.strip_suffix(unit).ok_or_else(|| CssValueParseError::InvalidUnit(s.to_string()))?;
+    let num: f64 = num_str.parse().map_err(|e: std::num::ParseFloatError| CssValueParseError::InvalidNumber(e.to_string()))?;
+    Ok(constructor(num))
+}
+
+/// Parse a term to a CssLength (simplifies conversion from expression to length)
+fn parse_term_to_length(pair: pest::iterators::Pair<Rule>) -> ParseResult<CssLength> {
+    let expr = parse_term(pair)?;
+    match expr {
+        CssExpression::Value(length) => Ok(length),
+        _ => Ok(CssLength::calc(expr)),
     }
 }
 
@@ -418,35 +423,111 @@ mod tests {
 
     #[test]
     fn test_parse_calc() {
-        // TODO: Fix calc expression parsing
-        let calc = CssLength::from_css_str("calc(100% - 40px)");
-        // assert!(matches!(calc, CssLength::Calc(_)));
-        // assert_eq!(calc.to_css_string(), "calc(100% - 40px)");
-        assert!(calc.is_err() || matches!(calc, Ok(_)));
+        // Test simple calc expression
+        let calc = CssLength::from_css_str("calc(100% - 40px)").unwrap();
+        assert!(matches!(calc, CssLength::Calc(_)));
+        assert_eq!(calc.to_css_string(), "calc(100% - 40px)");
+
+        // Test calc with addition
+        let calc_add = CssLength::from_css_str("calc(100px + 50px)").unwrap();
+        assert_eq!(calc_add.to_css_string(), "calc(100px + 50px)");
+
+        // Test calc with multiplication
+        let calc_mul = CssLength::from_css_str("calc(2 * 50px)").unwrap();
+        assert_eq!(calc_mul.to_css_string(), "calc(2px * 50px)");
+
+        // Test calc with division
+        let calc_div = CssLength::from_css_str("calc(100px / 2)").unwrap();
+        assert_eq!(calc_div.to_css_string(), "calc(100px / 2px)");
+
+        // Test nested calc with min
+        let calc_nested = CssLength::from_css_str("calc(100% - min(20px, 5%))").unwrap();
+        assert!(matches!(calc_nested, CssLength::Calc(_)));
     }
 
     #[test]
     fn test_parse_min() {
-        // TODO: Fix min expression parsing
-        let min_val = CssLength::from_css_str("min(100px, 50%)");
-        // assert!(matches!(min_val, CssLength::Min(_)));
-        assert!(min_val.is_err() || matches!(min_val, Ok(_)));
+        // Test min with two values
+        let min_val = CssLength::from_css_str("min(100px, 50%)").unwrap();
+        assert!(matches!(min_val, CssLength::Min(_)));
+        assert_eq!(min_val.to_css_string(), "min(100px, 50%)");
+
+        // Test min with multiple values
+        let min_multi = CssLength::from_css_str("min(100px, 50%, 20vw)").unwrap();
+        assert!(matches!(min_multi, CssLength::Min(_)));
+        assert_eq!(min_multi.to_css_string(), "min(100px, 50%, 20vw)");
     }
 
     #[test]
     fn test_parse_max() {
-        // TODO: Fix max expression parsing
-        let max_val = CssLength::from_css_str("max(100vw, 1200px)");
-        // assert!(matches!(max_val, CssLength::Max(_)));
-        assert!(max_val.is_err() || matches!(max_val, Ok(_)));
+        // Test max with two values
+        let max_val = CssLength::from_css_str("max(100vw, 1200px)").unwrap();
+        assert!(matches!(max_val, CssLength::Max(_)));
+        assert_eq!(max_val.to_css_string(), "max(100vw, 1200px)");
+
+        // Test max with multiple values
+        let max_multi = CssLength::from_css_str("max(100px, 50%, 20vh)").unwrap();
+        assert!(matches!(max_multi, CssLength::Max(_)));
+        assert_eq!(max_multi.to_css_string(), "max(100px, 50%, 20vh)");
     }
 
     #[test]
     fn test_parse_clamp() {
-        // TODO: Fix clamp expression parsing
-        let clamp_val = CssLength::from_css_str("clamp(300px, 50%, 800px)");
-        // assert!(matches!(clamp_val, CssLength::Clamp { .. }));
-        assert!(clamp_val.is_err() || matches!(clamp_val, Ok(_)));
+        // Test clamp with three values
+        let clamp_val = CssLength::from_css_str("clamp(300px, 50%, 800px)").unwrap();
+        assert!(matches!(clamp_val, CssLength::Clamp { .. }));
+        assert_eq!(clamp_val.to_css_string(), "clamp(300px, 50%, 800px)");
+
+        // Test clamp with different units
+        let clamp_mix = CssLength::from_css_str("clamp(10rem, 50vw, 100vh)").unwrap();
+        assert_eq!(clamp_mix.to_css_string(), "clamp(10rem, 50vw, 100vh)");
+    }
+
+    #[test]
+    fn test_parse_nested_expressions() {
+        // Test calc containing min
+        let calc_min = CssLength::from_css_str("calc(100% - min(20px, 5%))").unwrap();
+        assert!(matches!(calc_min, CssLength::Calc(_)));
+        let css_str = calc_min.to_css_string();
+        assert!(css_str.contains("calc(") && css_str.contains("min("));
+
+        // Test calc containing max
+        let calc_max = CssLength::from_css_str("calc(100vw - max(200px, 20%))").unwrap();
+        assert!(matches!(calc_max, CssLength::Calc(_)));
+
+        // Test min containing calc
+        let min_calc = CssLength::from_css_str("min(calc(100% - 20px), 300px)").unwrap();
+        assert!(matches!(min_calc, CssLength::Min(_)));
+
+        // Test clamp containing expressions
+        let clamp_expr = CssLength::from_css_str("clamp(min(100px, 10%), 50%, max(800px, 80%))").unwrap();
+        assert!(matches!(clamp_expr, CssLength::Clamp { .. }));
+    }
+
+    #[test]
+    fn test_parse_unary_operators() {
+        // Test negative values
+        let neg = CssLength::from_css_str("calc(-10px)").unwrap();
+        assert!(matches!(neg, CssLength::Calc(_)));
+
+        // Test positive values
+        let pos = CssLength::from_css_str("calc(+10px)").unwrap();
+        assert!(matches!(pos, CssLength::Calc(_)));
+
+        // Test negative in expression
+        let neg_expr = CssLength::from_css_str("calc(100% + -10px)").unwrap();
+        assert!(matches!(neg_expr, CssLength::Calc(_)));
+    }
+
+    #[test]
+    fn test_parse_parenthesized_expressions() {
+        // Test parentheses in calc
+        let parens = CssLength::from_css_str("calc((100% - 20px) * 2)").unwrap();
+        assert!(matches!(parens, CssLength::Calc(_)));
+
+        // Test nested parentheses
+        let nested_parens = CssLength::from_css_str("calc(((100% - 20px) * 2) + 10px)").unwrap();
+        assert!(matches!(nested_parens, CssLength::Calc(_)));
     }
 
     #[test]

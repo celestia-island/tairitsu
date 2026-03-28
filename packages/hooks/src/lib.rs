@@ -32,7 +32,7 @@ pub use state_machine::{
 };
 pub use store::{register_store, Store, StoreId};
 pub use suspense::{
-    use_resource, use_suspense, Resource, ResourceState, SuspenseBoundary,
+    use_resource, use_suspense, Resource, ResourceState, Suspense, SuspenseBoundary,
 };
 
 // Re-export Event types from vdom for convenience
