@@ -106,7 +106,11 @@ impl HmrClient {
                 }
             }
 
-            HmrMessage::CssUpdate { url, css: _, media: _ } => {
+            HmrMessage::CssUpdate {
+                url,
+                css: _,
+                media: _,
+            } => {
                 // CSS updates are handled by the browser
                 log::debug!("CSS update received for: {}", url);
                 Ok(())
@@ -292,8 +296,7 @@ pub fn hmr_script(server_url: &str) -> String {
   }});
 }})();
 "#,
-        HMR_PROTOCOL_VERSION,
-        server_url
+        HMR_PROTOCOL_VERSION, server_url
     )
 }
 

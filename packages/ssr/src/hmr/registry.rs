@@ -2,7 +2,7 @@
 //!
 //! Tracks loaded modules and their dependencies for hot replacement.
 
-use crate::protocol::ModuleState;
+use super::protocol::ModuleState;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};

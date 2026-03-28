@@ -6,14 +6,21 @@ authors.workspace = true
 [dependencies]
 tairitsu = { path = "../runtime" }
 tairitsu-vdom = { path = "../vdom" }
+tairitsu-hooks = { path = "../hooks", optional = true }
 tairitsu-browser-worlds = { path = "../browser-worlds" }
 anyhow = "1"
 wasmtime = { version = "40", features = ["component-model"] }
 wasmtime-wasi = "40"
 wit-parser = "0.201"
 tracing = "0.1"
+log = "0.4"
 bytes = "1"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.11", features = ["v4"] }
+regex = { version = "1.11" }
+async-trait = { version = "0.1" }
+reqwest = { version = "0.12", features = ["json"], optional = true }
 futures = { version = "0.3", optional = true }
 async-stream = { version = "0.3", optional = true }
 tokio = { version = "1.41", features = ["full"], optional = true }
@@ -22,6 +29,11 @@ tokio-stream = { version = "0.1", optional = true, default-features = false }
 [features]
 default = []
 streaming = ["tokio", "tokio-stream", "futures", "async-stream"]
+hmr = []
+fast-refresh = ["dep:tairitsu-hooks", "hmr"]
+error-overlay = ["hmr"]
+data-fetcher = ["tokio", "dep:reqwest"]
+dev = ["hmr", "fast-refresh", "error-overlay", "data-fetcher"]
 
 [build-dependencies]
 tairitsu = { path = "../runtime" }
