@@ -11,7 +11,6 @@ tairitsu-browser-worlds = { path = "../browser-worlds" }
 anyhow = "1"
 wasmtime = { version = "40", features = ["component-model"] }
 wasmtime-wasi = "40"
-wit-parser = "0.201"
 tracing = "0.1"
 log = "0.4"
 bytes = "1"

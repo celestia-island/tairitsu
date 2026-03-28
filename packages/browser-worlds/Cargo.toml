@@ -13,8 +13,5 @@ include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md"]
 # Basic language and tools
 anyhow = "^1"
 
-# Data and serialization
-serde = { version = "^1", features = ["derive"] }
-
 [dev-dependencies]
 wit-parser = "^0.243"
