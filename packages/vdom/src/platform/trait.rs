@@ -1,6 +1,7 @@
 use super::{ElementHandle, EventHandle};
 use crate::EventData;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DomRect {
     pub x: f64,
     pub y: f64,
