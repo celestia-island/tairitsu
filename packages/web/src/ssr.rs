@@ -4,6 +4,12 @@ pub struct SsrPlatform {
     // SSR-specific implementation would go here
 }
 
+impl Default for SsrPlatform {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SsrPlatform {
     pub fn new() -> Self {
         Self {}

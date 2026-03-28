@@ -38,6 +38,7 @@
 - [x] `tairitsu-hmr` - 热模块替换
 - [x] `tairitsu-fast-refresh` - 快速刷新
 - [x] `tairitsu-error-overlay` - 错误覆盖层
+- [x] `tairitsu-web` - 统一 Web 平台包（整合了所有 Web 相关功能，使用 feature-gated 模块）
 
 ### 异步支持
 
@@ -52,43 +53,6 @@
 - [x] DOM 几何接口 (DOM Geometry) - `get-bounding-client-rect`, scroll/size 方法
 - [x] ClassList 操作 - `get-class-list`, `DOMTokenList`
 - [x] Document/Window 全局访问 - `get-window`, `get-document`, `get-scroll-x/y`
-
----
-
-## 可选优化 💡
-
-### 包架构重整
-
-**状态**: 未开始执行（可选优化）
-
-当前包结构是合理的，每个包都有明确的职责。以下是一个可选的重整计划，用于改善用户体验（减少需要引入的包数量）。
-
-**目标**: 将多个小包整合到 `tairitsu-web` 中，使用 feature-gated 模块
-
-**当前包结构**:
-```
-packages/
-├── browser-glue/          # TypeScript WIT 实现 ✅
-├── browser-worlds/        # WIT 定义 ✅
-├── browser-wit-resolver/  # WIT 解析器 ✅
-├── vdom/                  # VDOM 核心 ✅
-├── runtime/               # WASM 运行时 ✅
-├── macros/                # 过程宏 ✅
-├── hooks/                 # Hooks 系统 ✅
-├── style/                 # CSS 生成系统 ✅
-├── router/                # 文件系统路由 ✅
-├── ssr/                   # 服务端渲染 ✅
-├── data-fetcher/          # 数据获取 ✅
-├── hmr/                   # 热模块替换 ✅
-├── fast-refresh/          # 快速刷新 ✅
-├── error-overlay/         # 错误覆盖层 ✅
-├── css-values/            # CSS 值类型 ✅
-├── i18n/                  # 国际化 ✅
-├── packager/              # CLI 工具 ✅
-└── web/                   # Web 平台实现 ✅
-```
-
-**如果需要重整**，将创建 `packages/web-next/` 并迁移以上模块。
 
 ---
 
