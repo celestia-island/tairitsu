@@ -21,7 +21,6 @@ tairitsu-hmr = { path = "../hmr", optional = true }
 tairitsu-fast-refresh = { path = "../fast-refresh", optional = true }
 tairitsu-ssr = { path = "../ssr", optional = true }
 tairitsu-error-overlay = { path = "../error-overlay", optional = true }
-tairitsu-css-values = { path = "../css-values", optional = true }
 tairitsu-i18n = { path = "../i18n", optional = true }
 tairitsu-packager = { path = "../packager", optional = true }
 
@@ -54,10 +53,9 @@ hmr = ["dep:tairitsu-hmr"]
 fast-refresh = ["dep:tairitsu-fast-refresh"]
 ssr = ["dep:tairitsu-ssr"]
 error-overlay = ["dep:tairitsu-error-overlay"]
-css-values = ["dep:tairitsu-css-values"]
 i18n = ["dep:tairitsu-i18n"]
 packager = ["dep:tairitsu-packager"]
-browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay", "css-values"]
+browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay"]
 server = ["ssr", "i18n", "packager"]
 full = ["browser", "server"]
 wit-bindings = ["dep:wit-bindgen"]

@@ -1,8 +1,8 @@
 use super::properties::{CssProperty, Property};
 use super::values::CssValue;
 
-#[cfg(feature = "css-values")]
-use tairitsu_css_values::CssLength;
+#[cfg(feature = "parse")]
+use super::values::CssLength;
 
 pub struct StyleStringBuilder(Vec<(Property, String)>);
 
@@ -128,14 +128,14 @@ impl StyleStringBuilder {
         self
     }
 
-    #[cfg(feature = "css-values")]
+    #[cfg(feature = "parse")]
     /// Add a CSS property with a type-safe `CssLength` value.
     ///
     /// # Example
     ///
     /// ```
     /// use tairitsu_style::{CssProperty, StyleStringBuilder};
-    /// use tairitsu_css_values::CssLength;
+    /// use super::values::CssLength;
     ///
     /// let style = StyleStringBuilder::new()
     ///     .add_length(CssProperty::Width, CssLength::px(100))
@@ -148,14 +148,14 @@ impl StyleStringBuilder {
         self
     }
 
-    #[cfg(feature = "css-values")]
+    #[cfg(feature = "parse")]
     /// Add a CSS custom property (CSS variable) with a type-safe `CssLength` value.
     ///
     /// # Example
     ///
     /// ```
     /// use tairitsu_style::StyleStringBuilder;
-    /// use tairitsu_css_values::CssLength;
+    /// use super::values::CssLength;
     ///
     /// let style = StyleStringBuilder::new()
     ///     .add_var_with_length("glow-x", CssLength::percent(50))
@@ -329,14 +329,14 @@ impl StyleBuilder {
         self
     }
 
-    #[cfg(feature = "css-values")]
+    #[cfg(feature = "parse")]
     /// Add a CSS property with a type-safe `CssLength` value.
     ///
     /// # Example
     ///
     /// ```
     /// use tairitsu_style::{CssProperty, StyleBuilder};
-    /// use tairitsu_css_values::CssLength;
+    /// use super::values::CssLength;
     ///
     /// let style = StyleBuilder::new()
     ///     .add_length(CssProperty::Width, CssLength::px(100))
@@ -349,14 +349,14 @@ impl StyleBuilder {
         self
     }
 
-    #[cfg(feature = "css-values")]
+    #[cfg(feature = "parse")]
     /// Add a CSS custom property (CSS variable) with a type-safe `CssLength` value.
     ///
     /// # Example
     ///
     /// ```
     /// use tairitsu_style::StyleBuilder;
-    /// use tairitsu_css_values::CssLength;
+    /// use super::values::CssLength;
     ///
     /// let style = StyleBuilder::new()
     ///     .add_var_with_length("glow-x", CssLength::percent(50))
