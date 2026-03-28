@@ -12,13 +12,13 @@ use tracing::{error, info, warn};
 #[cfg(feature = "dev-server")]
 use {
     axum::{
+        Router,
         extract::Request,
         middleware::{self, Next},
         response::{Html, Response},
         routing::get,
-        Router,
     },
-    tairitsu_ssr::{render_full_page, SsrConfig},
+    tairitsu_ssr::{SsrConfig, render_full_page},
     tower_http::services::ServeDir,
 };
 
@@ -288,7 +288,7 @@ pub fn prerender_routes(
     #[cfg(feature = "ssr")]
     {
         use std::fs;
-        use tairitsu_ssr::{render_full_page, SsrConfig};
+        use tairitsu_ssr::{SsrConfig, render_full_page};
 
         info!("Pre-rendering {} routes...", routes.len());
 

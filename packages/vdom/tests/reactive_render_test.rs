@@ -8,9 +8,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::{
+    Platform, Signal,
     scheduler::Scheduler,
     vnode::{VElement, VNode},
-    Platform, Signal,
 };
 
 // Mock platform for testing

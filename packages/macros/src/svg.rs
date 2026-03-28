@@ -184,32 +184,33 @@ fn expand_id_svg(id: &str) -> TokenStream2 {
 
     if index_path.exists()
         && let Ok(index_content) = std::fs::read_to_string(&index_path)
-            && let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content) {
-                // Find SVG by ID
-                for svg_entry in index.svg {
-                    if svg_entry.id == id {
-                        // Found by ID, read the source file
-                        let svg_path = crate_root_path.join(&svg_entry.source);
-                        match std::fs::read_to_string(&svg_path) {
-                            Ok(content) => {
-                                let sanitized = sanitize_svg(&content);
-                                return quote! {
-                                    tairitsu::SafeSvg::from_static(#sanitized)
-                                };
-                            }
-                            Err(err) => {
-                                let error_msg = format!(
-                                    "Failed to read SVG file '{}' (indexed as '{}'): {}",
-                                    svg_entry.source, id, err
-                                );
-                                return quote! {
-                                    compile_error!(#error_msg)
-                                };
-                            }
-                        }
+        && let Ok(index) = serde_json::from_str::<ResourceIndexJson>(&index_content)
+    {
+        // Find SVG by ID
+        for svg_entry in index.svg {
+            if svg_entry.id == id {
+                // Found by ID, read the source file
+                let svg_path = crate_root_path.join(&svg_entry.source);
+                match std::fs::read_to_string(&svg_path) {
+                    Ok(content) => {
+                        let sanitized = sanitize_svg(&content);
+                        return quote! {
+                            tairitsu::SafeSvg::from_static(#sanitized)
+                        };
+                    }
+                    Err(err) => {
+                        let error_msg = format!(
+                            "Failed to read SVG file '{}' (indexed as '{}'): {}",
+                            svg_entry.source, id, err
+                        );
+                        return quote! {
+                            compile_error!(#error_msg)
+                        };
                     }
                 }
             }
+        }
+    }
 
     // Not found
     let error_msg = format!(

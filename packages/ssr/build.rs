@@ -146,9 +146,10 @@ fn parse_wit_interfaces(wit_content: &str, manual_interfaces: &HashSet<&str>) ->
         } else if in_interface && line.contains(": func") {
             // Parse function definition
             if let Some(interface) = &mut current_interface
-                && let Some(func) = parse_function(line) {
-                    interface.functions.push(func);
-                }
+                && let Some(func) = parse_function(line)
+            {
+                interface.functions.push(func);
+            }
         }
     }
 

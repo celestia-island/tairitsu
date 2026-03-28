@@ -179,16 +179,18 @@ impl ResourceIndexer {
             // Skip hidden files if configured
             if !self.include_hidden
                 && let Some(name) = path.file_name().and_then(|n| n.to_str())
-                    && name.starts_with('.') {
-                        continue;
-                    }
+                && name.starts_with('.')
+            {
+                continue;
+            }
 
             if path.is_dir() {
                 // Check if directory should be excluded
                 if let Some(name) = path.file_name().and_then(|n| n.to_str())
-                    && self.exclude_dirs.contains(&name.to_string()) {
-                        continue;
-                    }
+                    && self.exclude_dirs.contains(&name.to_string())
+                {
+                    continue;
+                }
                 self.scan_dir_recursive(&path, extension, files)?;
             } else if path.extension().map(|e| e == extension).unwrap_or(false) {
                 files.push(path);

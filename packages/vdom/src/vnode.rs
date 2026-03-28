@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
-use crate::svg::SafeSvg;
 use crate::EventData;
+use crate::svg::SafeSvg;
 
 /// Type-erased element ref that can be stored in VNode.
 ///
@@ -385,9 +385,10 @@ impl From<&str> for Style {
         for part in s.split(';') {
             let part = part.trim();
             if !part.is_empty()
-                && let Some((name, value)) = part.split_once(':') {
-                    style = style.add(name.trim(), value.trim());
-                }
+                && let Some((name, value)) = part.split_once(':')
+            {
+                style = style.add(name.trim(), value.trim());
+            }
         }
         style
     }

@@ -26,11 +26,11 @@ mod fetcher;
 mod generator;
 mod metadata;
 
-pub use fetcher::{fetch_icons, force_fetch_icons, IconFetcher};
-pub use generator::{generate_icon_module, IconBuildResult};
+pub use fetcher::{IconFetcher, fetch_icons, force_fetch_icons};
+pub use generator::{IconBuildResult, generate_icon_module};
 pub use metadata::{
-    parse_icons_config, parse_mdi_metadata, IconEntry, IconMetadata, IconsConfig, MdiIconMeta,
-    MdiMetadata,
+    IconEntry, IconMetadata, IconsConfig, MdiIconMeta, MdiMetadata, parse_icons_config,
+    parse_mdi_metadata,
 };
 
 use serde::{Deserialize, Serialize};

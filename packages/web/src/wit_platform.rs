@@ -840,19 +840,21 @@ pub mod wasm_impl {
             bindings::tairitsu_browser::full::media_query_list::get_matches(list)
         }
 
-        fn media_query_list_add_listener(
-            &self,
-            list: u64,
-            callback: Box<dyn FnMut(bool)>,
-        ) -> u64 {
+        fn media_query_list_add_listener(&self, list: u64, callback: Box<dyn FnMut(bool)>) -> u64 {
             let callback_id = next_callback_id();
             MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
-            bindings::tairitsu_browser::full::media_query_list::add_listener(list, Some(callback_id))
+            bindings::tairitsu_browser::full::media_query_list::add_listener(
+                list,
+                Some(callback_id),
+            )
         }
 
         fn media_query_list_remove_listener(&self, list: u64, listener_id: u64) {
             MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
-            bindings::tairitsu_browser::full::media_query_list::remove_listener(list, Some(listener_id));
+            bindings::tairitsu_browser::full::media_query_list::remove_listener(
+                list,
+                Some(listener_id),
+            );
         }
     }
 

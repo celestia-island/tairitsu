@@ -130,19 +130,31 @@ impl ButtonStateMachine {
 
             // From Hover
             (InteractionState::Hover, InteractionEvent::MouseLeave) => Some(InteractionState::Idle),
-            (InteractionState::Hover, InteractionEvent::MouseDown) => Some(InteractionState::Active),
+            (InteractionState::Hover, InteractionEvent::MouseDown) => {
+                Some(InteractionState::Active)
+            }
             (InteractionState::Hover, InteractionEvent::Focus) => Some(InteractionState::Focused),
-            (InteractionState::Hover, InteractionEvent::Disable) => Some(InteractionState::Disabled),
+            (InteractionState::Hover, InteractionEvent::Disable) => {
+                Some(InteractionState::Disabled)
+            }
 
             // From Active
             (InteractionState::Active, InteractionEvent::MouseUp) => Some(InteractionState::Hover),
-            (InteractionState::Active, InteractionEvent::MouseLeave) => Some(InteractionState::Idle),
-            (InteractionState::Active, InteractionEvent::Disable) => Some(InteractionState::Disabled),
+            (InteractionState::Active, InteractionEvent::MouseLeave) => {
+                Some(InteractionState::Idle)
+            }
+            (InteractionState::Active, InteractionEvent::Disable) => {
+                Some(InteractionState::Disabled)
+            }
 
             // From Focused
             (InteractionState::Focused, InteractionEvent::Blur) => Some(InteractionState::Idle),
-            (InteractionState::Focused, InteractionEvent::MouseEnter) => Some(InteractionState::Hover),
-            (InteractionState::Focused, InteractionEvent::Disable) => Some(InteractionState::Disabled),
+            (InteractionState::Focused, InteractionEvent::MouseEnter) => {
+                Some(InteractionState::Hover)
+            }
+            (InteractionState::Focused, InteractionEvent::Disable) => {
+                Some(InteractionState::Disabled)
+            }
 
             // From Disabled
             (InteractionState::Disabled, InteractionEvent::Enable) => Some(InteractionState::Idle),
@@ -152,10 +164,11 @@ impl ButtonStateMachine {
         };
 
         if let Some(new_state) = new_state
-            && new_state != self.state {
-                self.state = new_state;
-                return Some(new_state);
-            }
+            && new_state != self.state
+        {
+            self.state = new_state;
+            return Some(new_state);
+        }
 
         None
     }
@@ -513,20 +526,76 @@ mod tests {
         // Test all possible valid transitions from the table
         let test_cases = vec![
             // (initial_state, event, expected_state)
-            (InteractionState::Idle, InteractionEvent::MouseEnter, InteractionState::Hover),
-            (InteractionState::Idle, InteractionEvent::Focus, InteractionState::Focused),
-            (InteractionState::Idle, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Hover, InteractionEvent::MouseLeave, InteractionState::Idle),
-            (InteractionState::Hover, InteractionEvent::MouseDown, InteractionState::Active),
-            (InteractionState::Hover, InteractionEvent::Focus, InteractionState::Focused),
-            (InteractionState::Hover, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Active, InteractionEvent::MouseUp, InteractionState::Hover),
-            (InteractionState::Active, InteractionEvent::MouseLeave, InteractionState::Idle),
-            (InteractionState::Active, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Focused, InteractionEvent::Blur, InteractionState::Idle),
-            (InteractionState::Focused, InteractionEvent::MouseEnter, InteractionState::Hover),
-            (InteractionState::Focused, InteractionEvent::Disable, InteractionState::Disabled),
-            (InteractionState::Disabled, InteractionEvent::Enable, InteractionState::Idle),
+            (
+                InteractionState::Idle,
+                InteractionEvent::MouseEnter,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Idle,
+                InteractionEvent::Focus,
+                InteractionState::Focused,
+            ),
+            (
+                InteractionState::Idle,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::MouseLeave,
+                InteractionState::Idle,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::MouseDown,
+                InteractionState::Active,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::Focus,
+                InteractionState::Focused,
+            ),
+            (
+                InteractionState::Hover,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::MouseUp,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::MouseLeave,
+                InteractionState::Idle,
+            ),
+            (
+                InteractionState::Active,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::Blur,
+                InteractionState::Idle,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::MouseEnter,
+                InteractionState::Hover,
+            ),
+            (
+                InteractionState::Focused,
+                InteractionEvent::Disable,
+                InteractionState::Disabled,
+            ),
+            (
+                InteractionState::Disabled,
+                InteractionEvent::Enable,
+                InteractionState::Idle,
+            ),
         ];
 
         for (initial, event, expected) in test_cases {
@@ -537,12 +606,17 @@ mod tests {
                 result,
                 Some(expected),
                 "Failed: {:?} + {:?} should be {:?}, got {:?}",
-                initial, event, expected, result
+                initial,
+                event,
+                expected,
+                result
             );
             assert_eq!(
-                sm.state(), expected,
+                sm.state(),
+                expected,
                 "State mismatch after transition: {:?} + {:?}",
-                initial, event
+                initial,
+                event
             );
         }
     }

@@ -1,4 +1,4 @@
-use tairitsu_vdom::{runtime, Signal};
+use tairitsu_vdom::{Signal, runtime};
 
 /// Creates a new Signal with the given initial value.
 /// Takes a closure that returns the initial value (Dioxus-compatible API).

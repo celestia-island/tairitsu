@@ -76,8 +76,12 @@ fn main() -> Result<()> {
             info!("WASM file not found: {}", e);
             info!("This example requires a WASM guest module.");
             info!("To build it, run:");
-            info!("  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib");
-            info!("For now, this example will demonstrate the API usage without actual WASM execution.");
+            info!(
+                "  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib"
+            );
+            info!(
+                "For now, this example will demonstrate the API usage without actual WASM execution."
+            );
 
             info!("See the top of this file for detailed API usage examples.");
             info!("Key advantages:");

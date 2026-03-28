@@ -28,7 +28,7 @@ use tairitsu_vdom::ComponentId;
 
 pub use diff::{
     ComponentChange, ComponentMetadata, DiffResult, FunctionChange, HookChange, HookInfo, HookType,
-    PropertyInfo, PropertyChange, diff_components,
+    PropertyChange, PropertyInfo, diff_components,
 };
 
 /// Signature for identifying components across updates
@@ -162,8 +162,6 @@ impl FastRefreshRuntime {
 
         // Check if this component ID was previously registered with a different signature
         let old_signature = signatures.get(&component_id);
-
-        
 
         if let Some(old_sig) = old_signature {
             if old_sig != &signature {
@@ -347,10 +345,7 @@ pub fn sign_component(name: &str, file: &str, line: u32) -> ComponentSignature {
 /// Check if state can be preserved between updates
 ///
 /// This is a convenience function that creates a runtime and checks compatibility.
-pub fn can_preserve_state(
-    old_sig: &ComponentSignature,
-    new_sig: &ComponentSignature,
-) -> bool {
+pub fn can_preserve_state(old_sig: &ComponentSignature, new_sig: &ComponentSignature) -> bool {
     let runtime = FastRefreshRuntime::new();
     runtime.can_preserve_state(old_sig, new_sig)
 }

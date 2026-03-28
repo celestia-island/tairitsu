@@ -7,10 +7,10 @@ mod svg;
 use component::expand_component;
 use proc_macro::TokenStream;
 use quote::quote;
-use rsx::{expand_rsx_root, RsxRoot};
+use rsx::{RsxRoot, expand_rsx_root};
 use scss::expand_scss;
 use svg::expand_svg;
-use syn::{parse_macro_input, Data, DeriveInput};
+use syn::{Data, DeriveInput, parse_macro_input};
 
 /// Component macro for automatic Props generation
 ///
@@ -200,9 +200,10 @@ pub fn derive_wit_command(input: TokenStream) -> TokenStream {
 fn extract_response_type(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     for attr in attrs {
         if attr.path().is_ident("wit_response")
-            && let Ok(ty) = attr.parse_args::<syn::Type>() {
-                return quote! { #ty };
-            }
+            && let Ok(ty) = attr.parse_args::<syn::Type>()
+        {
+            return quote! { #ty };
+        }
     }
     quote! { String }
 }
@@ -631,9 +632,10 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
 fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
     for attr in attrs {
         if attr.path().is_ident("tool_name")
-            && let Ok(lit) = attr.parse_args::<syn::LitStr>() {
-                return quote! { #lit };
-            }
+            && let Ok(lit) = attr.parse_args::<syn::LitStr>()
+        {
+            return quote! { #lit };
+        }
     }
     quote! { #default_name }
 }

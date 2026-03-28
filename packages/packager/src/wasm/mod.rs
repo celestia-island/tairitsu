@@ -212,9 +212,10 @@ fn build_wasm_component(
     fn extract_crate_name(package_id: &str) -> &str {
         // Try to find the part after '#' and before '@'
         if let Some(after_hash) = package_id.split('#').nth(1)
-            && let Some(name) = after_hash.split('@').next() {
-                return name;
-            }
+            && let Some(name) = after_hash.split('@').next()
+        {
+            return name;
+        }
         // Fallback: return the whole thing
         package_id
     }
@@ -225,46 +226,49 @@ fn build_wasm_component(
             let Ok(line) = line else { continue };
             // Try to parse as cargo JSON message
             if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line)
-                && let Some(reason) = msg.get("reason").and_then(|r| r.as_str()) {
-                    match reason {
-                        "compiler-artifact" => {
-                            // A crate is being compiled
-                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
+                && let Some(reason) = msg.get("reason").and_then(|r| r.as_str())
+            {
+                match reason {
+                    "compiler-artifact" => {
+                        // A crate is being compiled
+                        if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str()) {
+                            let crate_name = extract_crate_name(package_id);
+                            // Only update for lib crates (not build scripts)
+                            if let Some(target) = msg.get("target")
+                                && target
+                                    .get("kind")
+                                    .and_then(|k| k.as_array())
+                                    .is_some_and(|k| {
+                                        k.iter().any(|kind| kind.as_str() == Some("lib"))
+                                    })
                             {
-                                let crate_name = extract_crate_name(package_id);
-                                // Only update for lib crates (not build scripts)
-                                if let Some(target) = msg.get("target")
-                                    && target.get("kind").and_then(|k| k.as_array()).is_some_and(
-                                        |k| k.iter().any(|kind| kind.as_str() == Some("lib")),
-                                    ) {
-                                        pb_clone.set_message(format!("compile {}", crate_name));
-                                    }
+                                pb_clone.set_message(format!("compile {}", crate_name));
                             }
                         }
-                        "compiler-message" => {
-                            // This contains actual compiler output (errors, warnings)
-                            if let Some(rendered) = msg
-                                .get("message")
-                                .and_then(|m| m.get("rendered"))
-                                .and_then(|r| r.as_str())
-                            {
-                                // Print the rendered diagnostic above the progress bar
-                                pb_clone.println(rendered);
-                            }
-                        }
-                        "build-script-executed" => {
-                            if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str())
-                            {
-                                let crate_name = extract_crate_name(package_id);
-                                pb_clone.set_message(format!("build script {}", crate_name));
-                            }
-                        }
-                        "build-finished" => {
-                            // Keep the original message
-                        }
-                        _ => {}
                     }
+                    "compiler-message" => {
+                        // This contains actual compiler output (errors, warnings)
+                        if let Some(rendered) = msg
+                            .get("message")
+                            .and_then(|m| m.get("rendered"))
+                            .and_then(|r| r.as_str())
+                        {
+                            // Print the rendered diagnostic above the progress bar
+                            pb_clone.println(rendered);
+                        }
+                    }
+                    "build-script-executed" => {
+                        if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str()) {
+                            let crate_name = extract_crate_name(package_id);
+                            pb_clone.set_message(format!("build script {}", crate_name));
+                        }
+                    }
+                    "build-finished" => {
+                        // Keep the original message
+                    }
+                    _ => {}
                 }
+            }
         }
     });
 
@@ -504,20 +508,17 @@ fn try_generate_component_wrapper(
         Some(wrapper_dir.join("index.js"))
     } else {
         let named = wrapper_dir.join(format!("{}.js", wasm_stem));
-        if named.exists() {
-            Some(named)
-        } else {
-            None
-        }
+        if named.exists() { Some(named) } else { None }
     };
 
     if let Some(main) = wrapper_main {
         let wrapper_mtime = std::fs::metadata(&main)?.modified().ok();
         let wasm_mtime = std::fs::metadata(component_wasm_path)?.modified().ok();
         if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime)
-            && w >= c {
-                return Ok(true);
-            }
+            && w >= c
+        {
+            return Ok(true);
+        }
     }
 
     #[allow(unused_mut)]
@@ -576,26 +577,23 @@ fn try_generate_component_wrapper(
                     ];
                     for js_file in js_files {
                         if js_file.exists()
-                            && let Ok(mut content) = std::fs::read_to_string(&js_file) {
-                                let original = content.clone();
-                                // Replace import statements
-                                content = content.replace(
-                                    "from 'tairitsu-browser:full/",
-                                    "from '@tairitsu-glue/",
-                                );
-                                content = content.replace(
-                                    "from \"tairitsu-browser:full/",
-                                    "from \"@tairitsu-glue/",
-                                );
-                                // NOTE: Only ES module `from '...'` imports are rewritten above.
-                                // Do NOT blanket-replace all string occurrences — the original
-                                // WIT interface names (e.g. 'tairitsu-browser:full/document@0.2.0')
-                                // must be preserved in WebAssembly.instantiate() import keys,
-                                // because the core WASM binary expects those exact module names.
-                                if content != original {
-                                    std::fs::write(&js_file, content)?;
-                                }
+                            && let Ok(mut content) = std::fs::read_to_string(&js_file)
+                        {
+                            let original = content.clone();
+                            // Replace import statements
+                            content = content
+                                .replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
+                            content = content
+                                .replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
+                            // NOTE: Only ES module `from '...'` imports are rewritten above.
+                            // Do NOT blanket-replace all string occurrences — the original
+                            // WIT interface names (e.g. 'tairitsu-browser:full/document@0.2.0')
+                            // must be preserved in WebAssembly.instantiate() import keys,
+                            // because the core WASM binary expects those exact module names.
+                            if content != original {
+                                std::fs::write(&js_file, content)?;
                             }
+                        }
                     }
                     return Ok(true);
                 }
@@ -891,7 +889,7 @@ async fn no_cache_headers(
 }
 
 pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
-    use axum::{middleware, response::Html, routing::get, Router};
+    use axum::{Router, middleware, response::Html, routing::get};
     use tower_http::services::ServeDir;
 
     let divider = panel_divider();
@@ -1167,9 +1165,10 @@ async fn run_watch_loop(
                 _ => None,
             };
             if let Some(c) = cmd
-                && cmd_tx.blocking_send(c).is_err() {
-                    break;
-                }
+                && cmd_tx.blocking_send(c).is_err()
+            {
+                break;
+            }
         }
     });
 

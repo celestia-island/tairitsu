@@ -1,4 +1,4 @@
-use tairitsu_vdom::{create_effect, EffectHandle};
+use tairitsu_vdom::{EffectHandle, create_effect};
 
 pub type Effect = EffectHandle;
 

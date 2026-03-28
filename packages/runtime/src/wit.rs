@@ -35,21 +35,22 @@ impl WitLoader {
                 // If that fails, try with absolute path
                 match std::fs::canonicalize(path) {
                     Ok(absolute_path) => {
-                        resolve.push_path(&absolute_path)
-                            .map_err(|e2| {
-                                anyhow::anyhow!(
-                                    "Failed to parse WIT from '{}': {}\nAbsolute path '{}': {}",
-                                    path, e, absolute_path.display(), e2
-                                )
-                            })?;
+                        resolve.push_path(&absolute_path).map_err(|e2| {
+                            anyhow::anyhow!(
+                                "Failed to parse WIT from '{}': {}\nAbsolute path '{}': {}",
+                                path,
+                                e,
+                                absolute_path.display(),
+                                e2
+                            )
+                        })?;
                         Ok(Self { resolve })
                     }
-                    Err(_) => {
-                        Err(anyhow::anyhow!(
-                            "Failed to parse WIT from '{}': {}\nNote: Path may not exist or be inaccessible",
-                            path, e
-                        ))
-                    }
+                    Err(_) => Err(anyhow::anyhow!(
+                        "Failed to parse WIT from '{}': {}\nNote: Path may not exist or be inaccessible",
+                        path,
+                        e
+                    )),
                 }
             }
         }
@@ -65,26 +66,25 @@ impl WitLoader {
         // Try direct path first, then absolute path
         match resolve.push_path(path) {
             Ok(_) => Ok(Self { resolve }),
-            Err(e) => {
-                match std::fs::canonicalize(path) {
-                    Ok(absolute_path) => {
-                        resolve.push_path(&absolute_path)
-                            .map_err(|e2| {
-                                anyhow::anyhow!(
-                                    "Failed to parse WIT file '{}': {}\nWith absolute path '{}': {}",
-                                    path, e, absolute_path.display(), e2
-                                )
-                            })?;
-                        Ok(Self { resolve })
-                    }
-                    Err(_) => {
-                        Err(anyhow::anyhow!(
-                            "Failed to parse WIT file '{}': {}\nNote: File may not exist or be inaccessible",
-                            path, e
-                        ))
-                    }
+            Err(e) => match std::fs::canonicalize(path) {
+                Ok(absolute_path) => {
+                    resolve.push_path(&absolute_path).map_err(|e2| {
+                        anyhow::anyhow!(
+                            "Failed to parse WIT file '{}': {}\nWith absolute path '{}': {}",
+                            path,
+                            e,
+                            absolute_path.display(),
+                            e2
+                        )
+                    })?;
+                    Ok(Self { resolve })
                 }
-            }
+                Err(_) => Err(anyhow::anyhow!(
+                    "Failed to parse WIT file '{}': {}\nNote: File may not exist or be inaccessible",
+                    path,
+                    e
+                )),
+            },
         }
     }
 
