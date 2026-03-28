@@ -22,7 +22,9 @@ fn test_real_wasm_component_dynamic_invocation() {
     if !wasm_path.exists() {
         eprintln!("WASM component not found at: {:?}", wasm_path);
         eprintln!("Please build it first:");
-        eprintln!("  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib");
+        eprintln!(
+            "  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib"
+        );
         return; // Skip test if WASM not built
     }
 

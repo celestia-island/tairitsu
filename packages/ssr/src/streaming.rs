@@ -92,10 +92,7 @@ impl HtmlChunk {
         match self {
             HtmlChunk::Content(html) => html.clone(),
             HtmlChunk::SuspensePlaceholder { id, html } => {
-                format!(
-                    "<template data-suspense-id=\"{}\">{}</template>",
-                    id, html
-                )
+                format!("<template data-suspense-id=\"{}\">{}</template>", id, html)
             }
             HtmlChunk::SuspenseResolution { id, html } => {
                 format!(
@@ -175,10 +172,7 @@ pub type HtmlStream = Pin<Box<dyn Stream<Item = HtmlChunk>>>;
 /// # Ok(())
 /// # }
 /// ```
-pub async fn render_to_stream(
-    wasm_bytes: &[u8],
-    config: SsrConfig,
-) -> Result<HtmlStream> {
+pub async fn render_to_stream(wasm_bytes: &[u8], config: SsrConfig) -> Result<HtmlStream> {
     // First, render the initial HTML
     let initial_html = render_to_html(wasm_bytes, config.clone())?;
 
@@ -326,7 +320,8 @@ pub fn hydration_script() -> String {
     };
 })();
 </script>
-"#.to_string()
+"#
+    .to_string()
 }
 
 #[cfg(test)]
@@ -367,10 +362,13 @@ mod tests {
     fn test_html_chunk_is_complete() {
         assert!(HtmlChunk::Complete.is_complete());
         assert!(!HtmlChunk::Content("test".to_string()).is_complete());
-        assert!(!HtmlChunk::SuspensePlaceholder {
-            id: "test".to_string(),
-            html: "test".to_string(),
-        }.is_complete());
+        assert!(
+            !HtmlChunk::SuspensePlaceholder {
+                id: "test".to_string(),
+                html: "test".to_string(),
+            }
+            .is_complete()
+        );
     }
 
     #[test]
@@ -384,12 +382,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_render_suspense_boundary() {
-        let fallback = VNode::Element(VElement::new("div").child(VNode::Text(VText::new(
-            "Loading...",
-        ))));
-        let content = VNode::Element(VElement::new("div").child(VNode::Text(VText::new(
-            "Hello, World!",
-        ))));
+        let fallback =
+            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Loading..."))));
+        let content =
+            VNode::Element(VElement::new("div").child(VNode::Text(VText::new("Hello, World!"))));
 
         let chunks = render_suspense_boundary("test-suspense", fallback, content).await;
 

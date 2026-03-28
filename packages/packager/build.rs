@@ -81,9 +81,10 @@ fn compile_with_swc(workspace_root: &Path) -> Option<String> {
 
     // Check if esbuild already produced the bundle
     if dist_file.exists()
-        && let Ok(content) = std::fs::read_to_string(&dist_file) {
-            return Some(content);
-        }
+        && let Ok(content) = std::fs::read_to_string(&dist_file)
+    {
+        return Some(content);
+    }
 
     // Try to bundle runtime/index.ts with esbuild
     let src_file = workspace_root.join("packages/browser-glue/src/runtime/index.ts");
@@ -109,9 +110,10 @@ fn compile_with_swc(workspace_root: &Path) -> Option<String> {
 
     if let Ok(output) = output
         && output.status.success()
-            && let Ok(content) = std::fs::read_to_string(&out_file) {
-                return Some(content);
-            }
+        && let Ok(content) = std::fs::read_to_string(&out_file)
+    {
+        return Some(content);
+    }
 
     None
 }
@@ -135,9 +137,10 @@ fn find_workspace_root(manifest_dir: &Path) -> PathBuf {
     while let Some(dir) = current {
         if dir.join("Cargo.toml").exists()
             && let Ok(cargo_toml) = std::fs::read_to_string(dir.join("Cargo.toml"))
-                && cargo_toml.contains("[workspace]") {
-                    return dir.to_path_buf();
-                }
+            && cargo_toml.contains("[workspace]")
+        {
+            return dir.to_path_buf();
+        }
         current = dir.parent();
     }
     manifest_dir.parent().unwrap().to_path_buf()

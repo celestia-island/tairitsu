@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 
-use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
+use super::{FetchConfig, cache::Cache, error::FetchError, fetcher::Fetcher};
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]
@@ -107,17 +107,19 @@ impl HttpFetcher {
         #[cfg(feature = "data-fetcher")]
         for (key, value) in &self.config.headers {
             if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
-                    headers.insert(header_name, header_value);
-                }
+                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
+            {
+                headers.insert(header_name, header_value);
+            }
         }
 
         // Add additional headers
         for (key, value) in additional {
             if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
-                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
-                    headers.insert(header_name, header_value);
-                }
+                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value)
+            {
+                headers.insert(header_name, header_value);
+            }
         }
 
         headers
@@ -177,7 +179,7 @@ impl Fetcher for HttpFetcher {
 
             // Store in cache
             #[cfg(feature = "data-fetcher")]
-        if self.config.cache {
+            if self.config.cache {
                 let cache_key = Self::cache_key("GET", url, &[]);
                 self.cache.insert(cache_key, data.clone());
             }
@@ -238,7 +240,7 @@ impl Fetcher for HttpFetcher {
 
             // Store in cache
             #[cfg(feature = "data-fetcher")]
-        if self.config.cache {
+            if self.config.cache {
                 let cache_key = Self::cache_key("POST", url, &[]);
                 self.cache.insert(cache_key, data.clone());
             }
@@ -305,7 +307,10 @@ mod tests {
 
         // Verify cache is accessible
         assert_eq!(fetcher.cache().len(), 1);
-        assert_eq!(fetcher.cache().get("test:key"), Some(b"cached data".to_vec()));
+        assert_eq!(
+            fetcher.cache().get("test:key"),
+            Some(b"cached data".to_vec())
+        );
     }
 
     #[tokio::test]

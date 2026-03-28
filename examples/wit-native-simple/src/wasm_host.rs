@@ -51,7 +51,9 @@ fn main() -> Result<()> {
             info!("WASM file not found: {}", e);
             info!("This example requires a WASM guest module.");
             info!("To build it, run:");
-            info!("  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib");
+            info!(
+                "  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-simple --lib"
+            );
             info!("For now, showing API usage demonstration.");
 
             demonstrate_api_usage();

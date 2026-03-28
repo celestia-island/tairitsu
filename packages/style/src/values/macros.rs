@@ -17,9 +17,7 @@
 #[macro_export]
 macro_rules! calc {
     // String literal - parse at runtime
-    ($lit:literal) => {{
-        $crate::CssLength::from_css_str($lit).expect("Invalid CSS length")
-    }};
+    ($lit:literal) => {{ $crate::CssLength::from_css_str($lit).expect("Invalid CSS length") }};
 
     // Direct value passthrough
     ($expr:expr) => {
@@ -108,7 +106,11 @@ mod tests {
 
     #[test]
     fn test_css_clamp_macro() {
-        let clamp_val = css_clamp!(CssLength::px(300), CssLength::percent(50), CssLength::px(800));
+        let clamp_val = css_clamp!(
+            CssLength::px(300),
+            CssLength::percent(50),
+            CssLength::px(800)
+        );
         assert!(matches!(clamp_val, CssLength::Clamp { .. }));
     }
 }

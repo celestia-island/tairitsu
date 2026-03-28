@@ -1,9 +1,9 @@
 //! Browser-specific platform implementation
 
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::AddAssign;
+use std::rc::Rc;
 
 pub struct BrowserPlatform {
     timeout_callbacks: Rc<RefCell<HashMap<u32, u32>>>,

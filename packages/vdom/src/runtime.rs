@@ -3,15 +3,11 @@
 //! This module provides the runtime infrastructure for tracking signal
 //! dependencies and scheduling re-renders when signals change.
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use tracing::trace;
 
-use crate::{patch::Patch, VNode};
+use crate::{VNode, patch::Patch};
 
 /// Component ID - unique identifier for each component instance
 pub type ComponentId = usize;
@@ -121,7 +117,8 @@ where
 /// and needs to be replaced with the actual implementation.
 pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode + 'static) {
     RUNTIME.with(|runtime| {
-        runtime.borrow_mut()
+        runtime
+            .borrow_mut()
             .render_functions
             .insert(id, Rc::new(RefCell::new(render_fn)));
         trace!("Updated render function for component {}", id);
@@ -172,8 +169,7 @@ pub fn track_signal(signal_ptr: usize) {
                     .push(component_id);
                 trace!(
                     "Component {} now depends on signal {:?}",
-                    component_id,
-                    signal_ptr
+                    component_id, signal_ptr
                 );
             });
         }
@@ -281,8 +277,7 @@ pub fn subscribe_component(signal_ptr: usize, component_id: ComponentId) {
             .push(component_id);
         trace!(
             "Component {} subscribed to signal {:?}",
-            component_id,
-            signal_ptr
+            component_id, signal_ptr
         );
     });
 }
@@ -319,9 +314,7 @@ pub fn cleanup_component(id: ComponentId) {
 
 /// Get the current VNode for a component (useful for testing).
 pub fn get_current_vnode(id: ComponentId) -> Option<VNode> {
-    RUNTIME.with(|runtime| {
-        runtime.borrow().component_vnodes.get(&id).cloned()
-    })
+    RUNTIME.with(|runtime| runtime.borrow().component_vnodes.get(&id).cloned())
 }
 
 #[cfg(test)]

@@ -10,9 +10,9 @@ use anyhow::Result;
 use log::{debug, error, info, warn};
 
 use tairitsu_web::{
-    dynamic::host_imports::HostImportRegistry,
-    ron::{typed_ron_tool, RonBinding, RonToolRegistry},
     Container, Image,
+    dynamic::host_imports::HostImportRegistry,
+    ron::{RonBinding, RonToolRegistry, typed_ron_tool},
 };
 
 // ============================================================================

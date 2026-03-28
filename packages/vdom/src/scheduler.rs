@@ -7,8 +7,8 @@ use std::{cell::RefCell, rc::Rc, sync::atomic::AtomicUsize, sync::atomic::Orderi
 
 use tracing::trace;
 
-use crate::platform::Platform;
 use crate::VNode;
+use crate::platform::Platform;
 
 /// Global scheduler ID counter
 static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);
@@ -93,8 +93,7 @@ impl<P: Platform> Scheduler<P> {
             component.root_element = Some(element);
             trace!(
                 "Scheduler {}: Set root element for component {}",
-                inner.id,
-                component_id
+                inner.id, component_id
             );
         }
     }
@@ -106,8 +105,7 @@ impl<P: Platform> Scheduler<P> {
             component.dirty = true;
             trace!(
                 "Scheduler {}: Marked component {} as dirty",
-                inner.id,
-                component_id
+                inner.id, component_id
             );
         }
         drop(inner);
@@ -165,8 +163,7 @@ impl<P: Platform> Scheduler<P> {
 
         trace!(
             "Scheduler {}: Scheduled render with rAF id {}",
-            inner.id,
-            raf_id
+            inner.id, raf_id
         );
     }
 
@@ -180,8 +177,7 @@ impl<P: Platform> Scheduler<P> {
             component.dirty = false;
             trace!(
                 "Scheduler {}: Rendered component {}",
-                inner_ref.id,
-                component_id
+                inner_ref.id, component_id
             );
         }
     }
@@ -218,8 +214,7 @@ impl<P: Platform> Scheduler<P> {
                     // Initial render - mount the VNode
                     trace!(
                         "Scheduler {}: Initial render for component {}",
-                        inner.id,
-                        component_id
+                        inner.id, component_id
                     );
                 }
             }

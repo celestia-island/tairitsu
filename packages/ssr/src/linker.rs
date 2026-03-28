@@ -325,9 +325,7 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
         "remove-event-listener",
         |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (_target, _listener_id): (u64, u64)|
-         -> Result<(Result<(), String>,), wasmtime::Error> {
-            Ok((Ok(()),))
-        },
+         -> Result<(Result<(), String>,), wasmtime::Error> { Ok((Ok(()),)) },
     )?;
 
     // Event methods

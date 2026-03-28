@@ -1,4 +1,4 @@
-use tairitsu_ssr::{render_to_html, SsrConfig};
+use tairitsu_ssr::{SsrConfig, render_to_html};
 
 #[test]
 fn test_hikari_website() {

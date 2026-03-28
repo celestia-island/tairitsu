@@ -28,11 +28,7 @@
 //! }
 //! ```
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 /// Unique identifier for a store instance
 pub type StoreId = usize;
@@ -163,7 +159,11 @@ impl<T: Clone + 'static> Store<T> {
     ///     |count| println!("Count is now: {}", count),
     /// );
     /// ```
-    pub fn subscribe_selector<S: PartialEq + Clone + 'static, F: Fn(&T) -> S + 'static, C: Fn(S) + 'static>(
+    pub fn subscribe_selector<
+        S: PartialEq + Clone + 'static,
+        F: Fn(&T) -> S + 'static,
+        C: Fn(S) + 'static,
+    >(
         &self,
         selector: F,
         callback: C,
@@ -285,7 +285,8 @@ macro_rules! store {
 
         #[allow(dead_code)]
         fn $name() -> $crate::Store<$ty> {
-            $name.get_or_init(|| $crate::register_store($crate::Store::new($initial)))
+            $name
+                .get_or_init(|| $crate::register_store($crate::Store::new($initial)))
                 .clone()
         }
     };
@@ -302,9 +303,7 @@ macro_rules! store {
 /// ```
 #[macro_export]
 macro_rules! use_store {
-    ($store:expr) => {{
-        $store.get()
-    }};
+    ($store:expr) => {{ $store.get() }};
 }
 
 #[cfg(test)]
@@ -390,9 +389,12 @@ mod tests {
         let results = Rc::new(RefCell::new(Vec::new()));
         let results_clone = Rc::clone(&results);
 
-        store.subscribe_selector(|s| s.count, move |count| {
-            results_clone.borrow_mut().push(count);
-        });
+        store.subscribe_selector(
+            |s| s.count,
+            move |count| {
+                results_clone.borrow_mut().push(count);
+            },
+        );
 
         // First update - should trigger
         store.update(|s| {

@@ -20,11 +20,7 @@
 //! let vnode = router.render("/users/123");
 //! ```
 
-use std::{
-    collections::HashMap,
-    fmt,
-    sync::Arc,
-};
+use std::{collections::HashMap, fmt, sync::Arc};
 
 use tairitsu_vdom::VNode;
 
@@ -325,16 +321,14 @@ impl Router {
         VNode::Element(
             tairitsu_vdom::VElement::new("div")
                 .attr("class", "error-page")
-                .child(VNode::Element(
-                    tairitsu_vdom::VElement::new("h1").child(VNode::Text(
-                        tairitsu_vdom::VText::new(&format!("Error: {}", message)),
+                .child(VNode::Element(tairitsu_vdom::VElement::new("h1").child(
+                    VNode::Text(tairitsu_vdom::VText::new(&format!("Error: {}", message))),
+                )))
+                .child(VNode::Element(tairitsu_vdom::VElement::new("p").child(
+                    VNode::Text(tairitsu_vdom::VText::new(
+                        "An error occurred while processing your request.",
                     )),
-                ))
-                .child(VNode::Element(
-                    tairitsu_vdom::VElement::new("p").child(VNode::Text(
-                        tairitsu_vdom::VText::new("An error occurred while processing your request."),
-                    )),
-                )),
+                ))),
         )
     }
 
@@ -344,11 +338,12 @@ impl Router {
             tairitsu_vdom::VElement::new("div")
                 .attr("class", "error-404")
                 .child(VNode::Element(
-                    tairitsu_vdom::VElement::new("h1").child(VNode::Text(tairitsu_vdom::VText::new("404"))),
+                    tairitsu_vdom::VElement::new("h1")
+                        .child(VNode::Text(tairitsu_vdom::VText::new("404"))),
                 ))
-                .child(VNode::Element(
-                    tairitsu_vdom::VElement::new("p").child(VNode::Text(tairitsu_vdom::VText::new("Page not found"))),
-                )),
+                .child(VNode::Element(tairitsu_vdom::VElement::new("p").child(
+                    VNode::Text(tairitsu_vdom::VText::new("Page not found")),
+                ))),
         )
     }
 
@@ -422,7 +417,10 @@ mod tests {
 
     #[test]
     fn test_router_multiple_params() {
-        let router = Router::new().route("/posts/:post_id/comments/:comment_id", wrap_handler(mock_handler));
+        let router = Router::new().route(
+            "/posts/:post_id/comments/:comment_id",
+            wrap_handler(mock_handler),
+        );
 
         let matched = router.match_route("/posts/abc/comments/xyz");
         assert!(matched.is_some());

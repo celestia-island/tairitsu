@@ -29,7 +29,10 @@ pub enum ComponentChange {
     /// Properties/props interface changed
     PropertiesChanged(PropertyChange),
     /// Added new imports or dependencies
-    ImportsChanged { added: Vec<String>, removed: Vec<String> },
+    ImportsChanged {
+        added: Vec<String>,
+        removed: Vec<String>,
+    },
 }
 
 /// Hook-related changes
@@ -40,9 +43,17 @@ pub enum HookChange {
     /// Hook removed (might be safe if at end)
     HookRemoved { name: String, position: usize },
     /// Hook order changed (unsafe)
-    HookOrderChanged { hook: String, old_pos: usize, new_pos: usize },
+    HookOrderChanged {
+        hook: String,
+        old_pos: usize,
+        new_pos: usize,
+    },
     /// Hook type changed (e.g., useState -> useReducer)
-    HookTypeChanged { position: usize, old_type: String, new_type: String },
+    HookTypeChanged {
+        position: usize,
+        old_type: String,
+        new_type: String,
+    },
 }
 
 /// Function-related changes
@@ -51,7 +62,10 @@ pub enum FunctionChange {
     /// Function body changed but signature is the same
     BodyChanged,
     /// Function signature changed (unsafe)
-    SignatureChanged { old_params: usize, new_params: usize },
+    SignatureChanged {
+        old_params: usize,
+        new_params: usize,
+    },
     /// Function became async or sync changed
     AsyncChanged { became_async: bool },
 }
@@ -64,7 +78,11 @@ pub enum PropertyChange {
     /// Property removed (unsafe)
     PropertyRemoved { name: String },
     /// Property type changed (unsafe)
-    PropertyTypeChanged { name: String, old_type: String, new_type: String },
+    PropertyTypeChanged {
+        name: String,
+        old_type: String,
+        new_type: String,
+    },
     /// Property renamed (unsafe)
     PropertyRenamed { old_name: String, new_name: String },
 }
@@ -200,7 +218,8 @@ pub fn diff_components(old: &ComponentMetadata, new: &ComponentMetadata) -> Diff
 
     if has_incompatible_change {
         DiffResult::Incompatible {
-            reason: "Component has incompatible changes that prevent state preservation".to_string(),
+            reason: "Component has incompatible changes that prevent state preservation"
+                .to_string(),
         }
     } else if changes.is_empty() {
         DiffResult::Identical
@@ -270,9 +289,13 @@ fn is_hook_change_incompatible(change: &HookChange) -> bool {
 fn diff_function(old: &ComponentMetadata, new: &ComponentMetadata) -> Option<FunctionChange> {
     // If we're comparing empty metadata, assume no function change
     // (this is the case when both components are newly created)
-    if old.hooks.is_empty() && new.hooks.is_empty()
-        && old.properties.is_empty() && new.properties.is_empty()
-        && old.imports.is_empty() && new.imports.is_empty() {
+    if old.hooks.is_empty()
+        && new.hooks.is_empty()
+        && old.properties.is_empty()
+        && new.properties.is_empty()
+        && old.imports.is_empty()
+        && new.imports.is_empty()
+    {
         return None;
     }
 
@@ -291,9 +314,13 @@ fn diff_function(old: &ComponentMetadata, new: &ComponentMetadata) -> Option<Fun
 
     // If we have actual content (hooks, properties, imports) and they differ,
     // assume the function body changed
-    if !old.hooks.is_empty() || !new.hooks.is_empty()
-        || !old.properties.is_empty() || !new.properties.is_empty()
-        || !old.imports.is_empty() || !new.imports.is_empty() {
+    if !old.hooks.is_empty()
+        || !new.hooks.is_empty()
+        || !old.properties.is_empty()
+        || !new.properties.is_empty()
+        || !old.imports.is_empty()
+        || !new.imports.is_empty()
+    {
         Some(FunctionChange::BodyChanged)
     } else {
         None
@@ -336,13 +363,14 @@ fn diff_properties(old: &[PropertyInfo], new: &[PropertyInfo]) -> Option<Propert
     // Check for type changes
     for new_prop in new {
         if let Some(old_prop) = old.iter().find(|p| p.name == new_prop.name)
-            && old_prop.type_name != new_prop.type_name {
-                return Some(PropertyChange::PropertyTypeChanged {
-                    name: new_prop.name.clone(),
-                    old_type: old_prop.type_name.clone(),
-                    new_type: new_prop.type_name.clone(),
-                });
-            }
+            && old_prop.type_name != new_prop.type_name
+        {
+            return Some(PropertyChange::PropertyTypeChanged {
+                name: new_prop.name.clone(),
+                old_type: old_prop.type_name.clone(),
+                new_type: new_prop.type_name.clone(),
+            });
+        }
     }
 
     None
@@ -462,8 +490,8 @@ impl HookInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::ComponentSignature;
+    use super::*;
 
     fn make_signature(name: &str) -> ComponentSignature {
         ComponentSignature::new(name, "src/test.rs", 10)
@@ -517,10 +545,8 @@ mod tests {
     #[test]
     fn test_diff_hook_type_changed() {
         let sig = make_signature("Test");
-        let meta1 = ComponentMetadata::new(sig.clone())
-            .with_hook("useState", HookType::State);
-        let meta2 = ComponentMetadata::new(sig)
-            .with_hook("useRef", HookType::Ref);
+        let meta1 = ComponentMetadata::new(sig.clone()).with_hook("useState", HookType::State);
+        let meta2 = ComponentMetadata::new(sig).with_hook("useRef", HookType::Ref);
 
         let result = diff_components(&meta1, &meta2);
         assert!(matches!(result, DiffResult::Incompatible { .. }));
@@ -530,9 +556,7 @@ mod tests {
     fn test_diff_property_added_with_default() {
         let sig = make_signature("Test");
         let meta1 = ComponentMetadata::new(sig.clone());
-        let meta2 = meta1
-            .clone()
-            .with_property("label", "string", true, false);
+        let meta2 = meta1.clone().with_property("label", "string", true, false);
 
         let result = diff_components(&meta1, &meta2);
         assert!(matches!(result, DiffResult::Compatible { .. }));
@@ -542,9 +566,7 @@ mod tests {
     fn test_diff_property_added_without_default() {
         let sig = make_signature("Test");
         let meta1 = ComponentMetadata::new(sig.clone());
-        let meta2 = meta1
-            .clone()
-            .with_property("label", "string", false, true);
+        let meta2 = meta1.clone().with_property("label", "string", false, true);
 
         let result = diff_components(&meta1, &meta2);
         assert!(matches!(result, DiffResult::Incompatible { .. }));
@@ -553,8 +575,8 @@ mod tests {
     #[test]
     fn test_diff_property_removed() {
         let sig = make_signature("Test");
-        let meta1 = ComponentMetadata::new(sig.clone())
-            .with_property("label", "string", true, false);
+        let meta1 =
+            ComponentMetadata::new(sig.clone()).with_property("label", "string", true, false);
         let meta2 = ComponentMetadata::new(sig);
 
         let result = diff_components(&meta1, &meta2);
@@ -564,10 +586,9 @@ mod tests {
     #[test]
     fn test_diff_property_type_changed() {
         let sig = make_signature("Test");
-        let meta1 = ComponentMetadata::new(sig.clone())
-            .with_property("count", "number", true, false);
-        let meta2 = ComponentMetadata::new(sig)
-            .with_property("count", "string", true, false);
+        let meta1 =
+            ComponentMetadata::new(sig.clone()).with_property("count", "number", true, false);
+        let meta2 = ComponentMetadata::new(sig).with_property("count", "string", true, false);
 
         let result = diff_components(&meta1, &meta2);
         assert!(matches!(result, DiffResult::Incompatible { .. }));
@@ -577,10 +598,7 @@ mod tests {
     fn test_diff_imports_changed() {
         let sig = make_signature("Test");
         let meta1 = ComponentMetadata::new(sig.clone()).with_import("react");
-        let meta2 = meta1
-            .clone()
-            .with_import("react")
-            .with_import("lodash");
+        let meta2 = meta1.clone().with_import("react").with_import("lodash");
 
         let result = diff_components(&meta1, &meta2);
         assert!(matches!(result, DiffResult::Compatible { .. }));
@@ -595,26 +613,11 @@ mod tests {
 
     #[test]
     fn test_hook_info_detect_type() {
-        assert_eq!(
-            HookInfo::detect_type("useState"),
-            HookType::State
-        );
-        assert_eq!(
-            HookInfo::detect_type("useEffect"),
-            HookType::Effect
-        );
-        assert_eq!(
-            HookInfo::detect_type("useCallback"),
-            HookType::Callback
-        );
-        assert_eq!(
-            HookInfo::detect_type("useRef"),
-            HookType::Ref
-        );
-        assert_eq!(
-            HookInfo::detect_type("useContext"),
-            HookType::Context
-        );
+        assert_eq!(HookInfo::detect_type("useState"), HookType::State);
+        assert_eq!(HookInfo::detect_type("useEffect"), HookType::Effect);
+        assert_eq!(HookInfo::detect_type("useCallback"), HookType::Callback);
+        assert_eq!(HookInfo::detect_type("useRef"), HookType::Ref);
+        assert_eq!(HookInfo::detect_type("useContext"), HookType::Context);
         assert_eq!(
             HookInfo::detect_type("useCustomHook"),
             HookType::Custom("CustomHook".to_string())

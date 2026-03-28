@@ -1,6 +1,6 @@
 //! Chromium browser downloader
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;

@@ -25,11 +25,11 @@ pub use platform::{
     Platform, ResizeObserverEntry, ResizeObserverSize,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
-pub use reactive::{batch, create_effect, EffectHandle, Signal};
+pub use reactive::{EffectHandle, Signal, batch, create_effect};
 pub use runtime::{
-    cleanup_component, flush_render, mark_dirty, notify_signal, subscribe_component, use_component,
-    with_component, ComponentId,
+    ComponentId, cleanup_component, flush_render, mark_dirty, notify_signal, subscribe_component,
+    use_component, with_component,
 };
 pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
-pub use vnode::{empty_vnode, Classes, IntoAttrValue, Style, VElement, VNode, VText};
+pub use vnode::{Classes, IntoAttrValue, Style, VElement, VNode, VText, empty_vnode};

@@ -53,7 +53,7 @@ use std::{
     sync::Arc,
 };
 
-use tairitsu_vdom::{runtime, VNode};
+use tairitsu_vdom::{VNode, runtime};
 
 /// State of an async resource.
 #[derive(Clone, Debug, PartialEq)]
@@ -150,13 +150,21 @@ impl ResourceRegistry {
         id
     }
 
-    fn update_resource(&mut self, id: ResourceId, state: ResourceStateOp) -> Vec<runtime::ComponentId> {
+    fn update_resource(
+        &mut self,
+        id: ResourceId,
+        state: ResourceStateOp,
+    ) -> Vec<runtime::ComponentId> {
         if let Some(resource_state) = self.resources.get(&id) {
             *resource_state.lock().unwrap() = state;
         }
 
         // Get all components that depend on this resource
-        let dependents = self.resource_dependencies.get(&id).cloned().unwrap_or_default();
+        let dependents = self
+            .resource_dependencies
+            .get(&id)
+            .cloned()
+            .unwrap_or_default();
 
         // Also check suspense boundaries that might be tracking this resource
         let mut affected_boundaries = Vec::new();
@@ -222,7 +230,10 @@ impl ResourceRegistry {
     }
 
     #[allow(dead_code)]
-    fn get_boundary_mut(&mut self, component_id: runtime::ComponentId) -> Option<&mut SuspenseBoundaryState> {
+    fn get_boundary_mut(
+        &mut self,
+        component_id: runtime::ComponentId,
+    ) -> Option<&mut SuspenseBoundaryState> {
         let _ = component_id; // Suppress unused warning
         None
     }
@@ -386,7 +397,9 @@ impl<T> Resource<T> {
         };
 
         let affected = RESOURCE_REGISTRY.with(|registry| {
-            registry.borrow_mut().update_resource(self.resource_id, registry_state)
+            registry
+                .borrow_mut()
+                .update_resource(self.resource_id, registry_state)
         });
 
         // Notify affected components
@@ -427,9 +440,7 @@ where
     let component_id = runtime::use_component(VNode::empty);
 
     // Register the resource in the global registry
-    let resource_id = RESOURCE_REGISTRY.with(|registry| {
-        registry.borrow_mut().register_resource()
-    });
+    let resource_id = RESOURCE_REGISTRY.with(|registry| registry.borrow_mut().register_resource());
 
     // Track the dependency
     track_resource_dependency(resource_id, component_id);
@@ -491,7 +502,9 @@ where
                 };
 
                 let affected = RESOURCE_REGISTRY.with(|registry| {
-                    registry.borrow_mut().update_resource(resource_id, registry_state)
+                    registry
+                        .borrow_mut()
+                        .update_resource(resource_id, registry_state)
                 });
 
                 // Mark the component as dirty so it will re-render
@@ -570,7 +583,9 @@ impl Suspense {
     pub fn render(self) -> VNode {
         // Set this as the active boundary
         RESOURCE_REGISTRY.with(|registry| {
-            registry.borrow_mut().set_active_boundary(Some(self.component_id));
+            registry
+                .borrow_mut()
+                .set_active_boundary(Some(self.component_id));
         });
 
         // First, render the children to track resource access
@@ -674,7 +689,9 @@ pub fn trigger_resource_update<T: Clone + Send + Sync + 'static>(
     };
 
     let affected = RESOURCE_REGISTRY.with(|registry| {
-        registry.borrow_mut().update_resource(resource_id, registry_state)
+        registry
+            .borrow_mut()
+            .update_resource(resource_id, registry_state)
     });
 
     notify_resource_update(resource_id, affected);
@@ -745,9 +762,7 @@ mod tests {
     #[test]
     fn test_use_resource_sync() {
         // Test with an immediately-ready future
-        let resource = use_resource(|| async {
-            Ok::<_, String>("immediate")
-        });
+        let resource = use_resource(|| async { Ok::<_, String>("immediate") });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
@@ -761,9 +776,7 @@ mod tests {
 
     #[test]
     fn test_use_resource_error() {
-        let resource = use_resource(|| async {
-            Err::<(), _>("fetch failed".to_string())
-        });
+        let resource = use_resource(|| async { Err::<(), _>("fetch failed".to_string()) });
 
         // Give the thread a moment to complete
         std::thread::sleep(Duration::from_millis(500));
@@ -788,9 +801,7 @@ mod tests {
 
     #[test]
     fn test_resource_clone() {
-        let resource = use_resource(|| async {
-            Ok::<_, String>(42)
-        });
+        let resource = use_resource(|| async { Ok::<_, String>(42) });
 
         let resource_clone = resource.clone();
 
@@ -805,13 +816,9 @@ mod tests {
 
     #[test]
     fn test_resource_id() {
-        let resource1 = use_resource(|| async {
-            Ok::<_, String>(1)
-        });
+        let resource1 = use_resource(|| async { Ok::<_, String>(1) });
 
-        let resource2 = use_resource(|| async {
-            Ok::<_, String>(2)
-        });
+        let resource2 = use_resource(|| async { Ok::<_, String>(2) });
 
         // Resources should have different IDs
         assert_ne!(resource1.id(), resource2.id());
@@ -878,9 +885,7 @@ mod tests {
 
     #[test]
     fn test_multiple_reads_same_resource() {
-        let resource = use_resource(|| async {
-            Ok::<_, String>(42)
-        });
+        let resource = use_resource(|| async { Ok::<_, String>(42) });
 
         std::thread::sleep(Duration::from_millis(500));
 
