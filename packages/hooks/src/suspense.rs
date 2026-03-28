@@ -139,6 +139,7 @@ impl<T> Resource<T> {
     }
 
     /// Update the resource state and trigger a re-render.
+    #[allow(dead_code)]
     fn update_state(&self, new_state: ResourceState<T>)
     where
         T: Clone,

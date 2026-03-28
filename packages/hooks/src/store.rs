@@ -44,7 +44,7 @@ pub struct SubscriptionHandle {
     store_id: StoreId,
 }
 
-/// Global store registry
+// Global store registry
 thread_local! {
     static STORE_REGISTRY: RefCell<HashMap<StoreId, Box<dyn AnyStore>>> = RefCell::new(HashMap::new());
     static NEXT_STORE_ID: RefCell<StoreId> = const { RefCell::new(1) };
@@ -55,6 +55,7 @@ thread_local! {
 trait AnyStore {
     fn as_any(&self) -> &dyn std::any::Any;
     fn unsubscribe(&self, subscriber_id: usize);
+    #[allow(dead_code)]
     fn subscriber_count(&self) -> usize;
 }
 
