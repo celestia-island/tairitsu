@@ -2,6 +2,8 @@
 //!
 //! This module re-exports all packages based on feature flags
 
+#![allow(ambiguous_glob_reexports)]
+
 // Core runtime
 pub use tairitsu::*;
 

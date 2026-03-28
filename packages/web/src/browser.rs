@@ -28,6 +28,7 @@ impl BrowserPlatform {
         }
     }
 
+    #[allow(unused_variables)]
     pub fn set_timeout<F>(&self, callback: F, delay_ms: u32) -> u32
     where
         F: Fn() + 'static,
@@ -42,6 +43,7 @@ impl BrowserPlatform {
         id
     }
 
+    #[allow(unused_variables)]
     pub fn request_animation_frame<F>(&self, callback: F) -> u32
     where
         F: Fn() + 'static,
