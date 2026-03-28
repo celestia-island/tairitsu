@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
 
-use crate::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
+use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
 
 /// HTTP fetcher for making HTTP requests with caching support
 #[derive(Clone)]
@@ -14,7 +14,8 @@ pub struct HttpFetcher {
     client: Option<reqwest::Client>,
     /// Cache for responses
     cache: Arc<Cache>,
-    /// Fetch configuration
+    /// Fetch configuration (only available on server side)
+    #[cfg(feature = "server")]
     config: FetchConfig,
 }
 
@@ -33,12 +34,16 @@ impl HttpFetcher {
             .ok();
 
         #[cfg(not(feature = "server"))]
-        let client = None;
+        let _ = config; // Suppress unused warning
 
         Self {
             #[cfg(feature = "server")]
             client,
+            #[cfg(feature = "server")]
             cache: Arc::new(Cache::new(config.cache_ttl)),
+            #[cfg(not(feature = "server"))]
+            cache: Arc::new(Cache::new(FetchConfig::default().cache_ttl)),
+            #[cfg(feature = "server")]
             config,
         }
     }
@@ -51,13 +56,11 @@ impl HttpFetcher {
             .build()
             .ok();
 
-        #[cfg(not(feature = "server"))]
-        let client = None;
-
         Self {
             #[cfg(feature = "server")]
             client,
             cache,
+            #[cfg(feature = "server")]
             config,
         }
     }
@@ -96,6 +99,7 @@ impl HttpFetcher {
         );
 
         // Add custom headers from config
+        #[cfg(feature = "server")]
         for (key, value) in &self.config.headers {
             if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
                 && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
@@ -125,6 +129,8 @@ impl Default for HttpFetcher {
 impl Fetcher for HttpFetcher {
     async fn get(&self, url: &str) -> Result<Vec<u8>, FetchError> {
         // Check cache first
+        #[cfg(feature = "server")]
+        #[cfg(feature = "server")]
         if self.config.cache {
             let cache_key = Self::cache_key("GET", url, &[]);
             if let Some(data) = self.cache.get(&cache_key) {
@@ -164,7 +170,8 @@ impl Fetcher for HttpFetcher {
             let data = bytes.to_vec();
 
             // Store in cache
-            if self.config.cache {
+            #[cfg(feature = "server")]
+        if self.config.cache {
                 let cache_key = Self::cache_key("GET", url, &[]);
                 self.cache.insert(cache_key, data.clone());
             }
@@ -182,6 +189,7 @@ impl Fetcher for HttpFetcher {
 
     async fn post(&self, url: &str, body: Vec<u8>) -> Result<Vec<u8>, FetchError> {
         // Check cache first (for POST with same body)
+        #[cfg(feature = "server")]
         if self.config.cache {
             let cache_key = Self::cache_key("POST", url, &body);
             if let Some(data) = self.cache.get(&cache_key) {
@@ -222,7 +230,8 @@ impl Fetcher for HttpFetcher {
             let data = bytes.to_vec();
 
             // Store in cache
-            if self.config.cache {
+            #[cfg(feature = "server")]
+        if self.config.cache {
                 let cache_key = Self::cache_key("POST", url, &[]);
                 self.cache.insert(cache_key, data.clone());
             }
@@ -257,8 +266,11 @@ mod tests {
             .with_cache(false);
 
         let fetcher = HttpFetcher::with_config(config);
-        assert_eq!(fetcher.config.timeout, Duration::from_secs(60));
-        assert!(!fetcher.config.cache);
+        #[cfg(feature = "server")]
+        {
+            assert_eq!(fetcher.config.timeout, Duration::from_secs(60));
+            assert!(!fetcher.config.cache);
+        }
     }
 
     #[test]

@@ -15,11 +15,7 @@ tairitsu-vdom = { path = "../vdom", optional = true }
 tairitsu-hooks = { path = "../hooks", optional = true }
 tairitsu-macros = { path = "../macros", optional = true }
 tairitsu-style = { path = "../style", optional = true }
-tairitsu-data-fetcher = { path = "../data-fetcher", optional = true }
-tairitsu-hmr = { path = "../hmr", optional = true }
-tairitsu-fast-refresh = { path = "../fast-refresh", optional = true }
 tairitsu-ssr = { path = "../ssr", optional = true }
-tairitsu-error-overlay = { path = "../error-overlay", optional = true }
 tairitsu-packager = { path = "../packager", optional = true }
 
 # Basic language and tools
@@ -46,12 +42,12 @@ hooks = ["dep:tairitsu-hooks"]
 macros = ["dep:tairitsu-macros"]
 style = ["dep:tairitsu-style"]
 router = []
-data-fetcher = ["dep:tairitsu-data-fetcher"]
-hmr = ["dep:tairitsu-hmr"]
-fast-refresh = ["dep:tairitsu-fast-refresh"]
-ssr = ["dep:tairitsu-ssr"]
-error-overlay = ["dep:tairitsu-error-overlay"]
+data-fetcher = ["ssr"]
+hmr = ["ssr"]
+fast-refresh = ["ssr", "hmr"]
+error-overlay = ["ssr", "hmr"]
 i18n = []
+ssr = ["dep:tairitsu-ssr"]
 packager = ["dep:tairitsu-packager"]
 browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay"]
 server = ["ssr", "packager"]

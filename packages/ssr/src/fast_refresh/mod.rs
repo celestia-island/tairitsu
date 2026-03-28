@@ -7,7 +7,7 @@
 //!
 //! ```rust
 //! use tairitsu_fast_refresh::{sign_component, FastRefreshRuntime};
-//!
+//! ```
 //! // Sign your component at declaration site
 //! let sig = sign_component("MyComponent", "src/app.rs", 42);
 //!

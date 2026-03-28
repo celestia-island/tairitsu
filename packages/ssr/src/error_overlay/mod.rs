@@ -270,9 +270,7 @@ fn render_error_location(error: &ErrorInfo) -> VNode {
                 .child(VNode::Element(
                     VElement::new("span")
                         .attr("data-location-text", "")
-                        .child(VNode::Text(tairitsu_vdom::VText {
-                            text: loc.format(),
-                        })),
+                        .child(VNode::Text(tairitsu_vdom::VText { text: loc.format() })),
                 )),
         ),
         None => VNode::Element(
@@ -372,13 +370,15 @@ impl ErrorDisplay {
     fn render_inline(&self) -> VNode {
         VNode::Element(
             VElement::new("div")
-                .class(format!("error-display {}", self.error.error_type.css_class()))
-                .child(VNode::Element(
-                    VElement::new("strong")
-                        .child(VNode::Text(tairitsu_vdom::VText {
-                            text: format!("{}:", self.error.error_type.title()),
-                        })),
+                .class(format!(
+                    "error-display {}",
+                    self.error.error_type.css_class()
                 ))
+                .child(VNode::Element(VElement::new("strong").child(VNode::Text(
+                    tairitsu_vdom::VText {
+                        text: format!("{}:", self.error.error_type.title()),
+                    },
+                ))))
                 .child(VNode::Text(tairitsu_vdom::VText {
                     text: format!(" {}", self.error.message),
                 })),
@@ -568,10 +568,7 @@ mod tests {
 
         assert_eq!(deserialized.message, "Test");
         assert_eq!(deserialized.error_type, ErrorType::RuntimeError);
-        assert_eq!(
-            deserialized.location.as_ref().unwrap().file,
-            "file.rs"
-        );
+        assert_eq!(deserialized.location.as_ref().unwrap().file, "file.rs");
     }
 
     #[test]

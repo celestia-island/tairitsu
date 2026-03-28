@@ -4,6 +4,10 @@
 //! using Wasmtime, producing HTML that can be sent to the client.
 
 pub mod bindings;
+pub mod data_fetcher;
+pub mod error_overlay;
+pub mod fast_refresh;
+pub mod hmr;
 pub mod host_state;
 pub mod html_render;
 pub mod linker;

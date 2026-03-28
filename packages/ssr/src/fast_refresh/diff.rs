@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::ComponentSignature;
+use super::ComponentSignature;
 
 /// Result of diffing two components
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -463,7 +463,7 @@ impl HookInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ComponentSignature;
+    use super::ComponentSignature;
 
     fn make_signature(name: &str) -> ComponentSignature {
         ComponentSignature::new(name, "src/test.rs", 10)

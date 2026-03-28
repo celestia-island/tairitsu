@@ -4,7 +4,8 @@ use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 use tairitsu_vdom::runtime;
 
-use crate::{Fetcher, Resource, HttpFetcher};
+use super::{Fetcher, Resource};
+use super::http_fetcher::HttpFetcher;
 
 /// Hook for fetching data from a URL
 ///
@@ -204,6 +205,7 @@ where
     F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
 {
     let state = Rc::new(RefCell::new(Resource::Loading));
+    let state_clone = Rc::clone(&state);
     let url = url.to_string();
     let component_id = runtime::use_component(tairitsu_vdom::VNode::empty);
 
@@ -238,7 +240,7 @@ where
 
         #[cfg(not(feature = "server"))]
         {
-            *state.borrow_mut() = Resource::Error("Server feature required".to_string());
+            *state_clone.borrow_mut() = Resource::Error("Server feature required".to_string());
             runtime::mark_dirty(component_id);
             runtime::flush_render();
         }

@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use crate::FetchError;
+use super::error::FetchError;
 
 /// Trait for async data fetching operations
 ///
