@@ -148,7 +148,7 @@ impl ErrorType {
 /// # Example
 ///
 /// ```
-/// use tairitsu_error_overlay::overlay_script;
+/// use tairitsu_ssr::error_overlay::overlay_script;
 ///
 /// let script = overlay_script();
 /// // Inject into HTML:
@@ -172,7 +172,7 @@ pub fn overlay_script() -> String {
 /// # Example
 ///
 /// ```no_run
-/// use tairitsu_error_overlay::{ErrorInfo, ErrorType, render_error_overlay};
+/// use tairitsu_ssr::error_overlay::{ErrorInfo, ErrorType, render_error_overlay};
 ///
 /// let error = ErrorInfo::runtime("Something went wrong");
 /// let vnode = render_error_overlay(error);

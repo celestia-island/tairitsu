@@ -134,8 +134,8 @@ pub struct PropertyInfo {
 /// # Example
 ///
 /// ```
-/// # use tairitsu_fast_refresh::{ComponentSignature, ComponentMetadata, diff_components};
-/// # use tairitsu_fast_refresh::HookType;
+/// # use tairitsu_ssr::fast_refresh::{ComponentSignature, ComponentMetadata, diff_components};
+/// # use tairitsu_ssr::fast_refresh::HookType;
 /// let sig = ComponentSignature::new("Test", "src/test.rs", 10);
 /// let old_meta = ComponentMetadata::new(sig.clone());
 /// let new_meta = ComponentMetadata::new(sig);

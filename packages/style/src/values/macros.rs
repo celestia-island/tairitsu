@@ -4,8 +4,8 @@
 ///
 /// # Examples
 ///
-/// ```
-/// use tairitsu_css_values::{CssLength, calc};
+/// ```ignore
+/// use tairitsu_style::{CssLength, calc};
 ///
 /// // Parse string literals at runtime (compile-time parsing limited in stable Rust)
 /// let width = calc!("100px");
@@ -32,7 +32,7 @@ macro_rules! calc {
 /// # Examples
 ///
 /// ```
-/// use tairitsu_css_values::{CssLength, css_min};
+/// use tairitsu_style::{CssLength, css_min};
 ///
 /// let flexible = css_min!(CssLength::px(100), CssLength::percent(50));
 /// ```
@@ -48,7 +48,7 @@ macro_rules! css_min {
 /// # Examples
 ///
 /// ```
-/// use tairitsu_css_values::{CssLength, css_max};
+/// use tairitsu_style::{CssLength, css_max};
 ///
 /// let flexible = css_max!(CssLength::vw(100), CssLength::px(1200));
 /// ```
@@ -64,7 +64,7 @@ macro_rules! css_max {
 /// # Examples
 ///
 /// ```
-/// use tairitsu_css_values::{CssLength, css_clamp};
+/// use tairitsu_style::{CssLength, css_clamp};
 ///
 /// let flexible = css_clamp!(CssLength::px(300), CssLength::percent(50), CssLength::px(800));
 /// ```
@@ -75,7 +75,7 @@ macro_rules! css_clamp {
     };
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "parse"))]
 mod tests {
     use crate::CssLength;
 

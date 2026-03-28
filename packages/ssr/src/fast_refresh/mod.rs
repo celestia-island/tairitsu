@@ -6,7 +6,7 @@
 //! # Example
 //!
 //! ```rust
-//! use tairitsu_fast_refresh::{sign_component, FastRefreshRuntime};
+//! use tairitsu_ssr::fast_refresh::{sign_component, FastRefreshRuntime};
 //! ```
 //! // Sign your component at declaration site
 //! let sig = sign_component("MyComponent", "src/app.rs", 42);
@@ -337,7 +337,7 @@ impl FastRefreshRuntime {
 /// # Example
 ///
 /// ```
-/// # use tairitsu_fast_refresh::sign_component;
+/// # use tairitsu_ssr::fast_refresh::sign_component;
 /// let sig = sign_component("MyComponent", "src/app.rs", 42);
 /// ```
 pub fn sign_component(name: &str, file: &str, line: u32) -> ComponentSignature {
@@ -360,7 +360,7 @@ pub fn can_preserve_state(
 /// # Example
 ///
 /// ```
-/// # use tairitsu_fast_refresh::sign_component_macro;
+/// # use tairitsu_ssr::sign_component_macro;
 /// let sig = sign_component_macro!("MyComponent");
 /// ```
 #[macro_export]
