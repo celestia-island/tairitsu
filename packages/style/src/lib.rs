@@ -54,10 +54,23 @@ pub use utility::{
     UtilityClass, UtilityRegistry, Variant,
 };
 pub use values::{
-    AlignItemsValue, CssValue, CursorValue, DisplayValue, FlexDirectionValue, FlexWrapValue,
-    JustifyContentValue, LengthUnit, OverflowValue, PositionValue, TextAlignValue,
+    AlignItemsValue,
+    CssBinOp,
+    CssExpression,
     // CSS values exports
-    CssLength, CssExpression, CssBinOp, ParseResult, CssValueParseError,
+    CssLength,
+    CssValue,
+    CssValueParseError,
+    CursorValue,
+    DisplayValue,
+    FlexDirectionValue,
+    FlexWrapValue,
+    JustifyContentValue,
+    LengthUnit,
+    OverflowValue,
+    ParseResult,
+    PositionValue,
+    TextAlignValue,
 };
 
 #[cfg(test)]

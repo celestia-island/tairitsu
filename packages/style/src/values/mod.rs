@@ -5,10 +5,10 @@
 
 mod error;
 mod length;
-mod types;
+mod macros;
 #[cfg(feature = "parse")]
 mod parser;
-mod macros;
+mod types;
 
 pub use error::{CssValueParseError, ParseResult};
 pub use length::{CssBinOp, CssExpression, CssLength, LengthUnit};
