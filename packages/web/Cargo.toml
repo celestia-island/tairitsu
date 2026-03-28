@@ -1,14 +1,29 @@
 [package]
 name = "tairitsu-web"
 version = "0.1.0"
-description = "Web platform implementation for Tairitsu"
+description = "Tairitsu Web Framework - Modular WebAssembly-first framework with SSR, CSR, SSG support"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
 
 [dependencies]
-tairitsu-vdom = { path = "../vdom" }
-tairitsu-hooks = { path = "../hooks" }
+# Core Tairitsu runtime
+tairitsu = { path = "../runtime" }
+
+# Optional dependencies based on features
+tairitsu-vdom = { path = "../vdom", optional = true }
+tairitsu-hooks = { path = "../hooks", optional = true }
+tairitsu-macros = { path = "../macros", optional = true }
+tairitsu-style = { path = "../style", optional = true }
+tairitsu-router = { path = "../router", optional = true }
+tairitsu-data-fetcher = { path = "../data-fetcher", optional = true }
+tairitsu-hmr = { path = "../hmr", optional = true }
+tairitsu-fast-refresh = { path = "../fast-refresh", optional = true }
+tairitsu-ssr = { path = "../ssr", optional = true }
+tairitsu-error-overlay = { path = "../error-overlay", optional = true }
+tairitsu-css-values = { path = "../css-values", optional = true }
+tairitsu-i18n = { path = "../i18n", optional = true }
+tairitsu-packager = { path = "../packager", optional = true }
 
 # Basic language and tools
 anyhow = "^1"
@@ -23,11 +38,28 @@ tracing = "^0.1"
 # WIT component-model binding generator (wasm32-wasip2 target, optional)
 wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
 
-[features]
-default = []
+# TypeScript bindings integration (optional)
+wasm-bindgen = { version = "^0.2", optional = true }
+wasm-bindgen-futures = { version = "^0.4", optional = true }
 
-# WIT component-model bindings (wasm32-wasip2 target)
-# Enable this feature and target wasm32-wasip2 to use WIT-generated bindings.
+[features]
+default = ["vdom", "hooks", "macros", "style", "ssr"]
+vdom = ["dep:tairitsu-vdom"]
+hooks = ["dep:tairitsu-hooks"]
+macros = ["dep:tairitsu-macros"]
+style = ["dep:tairitsu-style"]
+router = ["dep:tairitsu-router"]
+data-fetcher = ["dep:tairitsu-data-fetcher"]
+hmr = ["dep:tairitsu-hmr"]
+fast-refresh = ["dep:tairitsu-fast-refresh"]
+ssr = ["dep:tairitsu-ssr"]
+error-overlay = ["dep:tairitsu-error-overlay"]
+css-values = ["dep:tairitsu-css-values"]
+i18n = ["dep:tairitsu-i18n"]
+packager = ["dep:tairitsu-packager"]
+browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay", "css-values"]
+server = ["ssr", "i18n", "packager"]
+full = ["browser", "server"]
 wit-bindings = ["dep:wit-bindgen"]
 
 [dev-dependencies]
@@ -37,4 +69,4 @@ tokio = { workspace = true, default-features = false, features = ["sync", "macro
 toml = "^0.8"
 
 [package.metadata.docs.rs]
-features = ["wit-bindings"]
+features = ["full"]

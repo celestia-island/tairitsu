@@ -8,7 +8,7 @@ use anyhow::Result;
 use log::info;
 use std::collections::HashMap;
 
-use tairitsu::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
+use tairitsu_web::{CompositeWitInterface, WitCommand, WitCommandHandler, WitInterface};
 
 // ============================================================================
 // Define WIT-Compatible Command Types (Zero Serialization)

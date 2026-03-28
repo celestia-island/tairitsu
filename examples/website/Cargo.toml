@@ -14,7 +14,7 @@ crate-type = ["cdylib", "rlib"]
 tairitsu-vdom = { path = "../../packages/vdom" }
 tairitsu-hooks = { path = "../../packages/hooks" }
 tairitsu-macros = { path = "../../packages/macros" }
-tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
+tairitsu-web = { path = "../../packages/web", features = ["full", "wit-bindings"] }
 
 # Hikari design system (direct path to hikari workspace)
 hikari-palette = { path = "../../../hikari/packages/palette" }

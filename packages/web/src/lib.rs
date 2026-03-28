@@ -1,18 +1,21 @@
-pub mod platform;
-pub mod portal;
-#[cfg(feature = "wit-bindings")]
-pub mod runtime_integration;
+pub mod prelude;
+
+pub use prelude::*;
+
+#[cfg(feature = "browser")]
+pub mod browser;
+
+#[cfg(feature = "ssr")]
+pub mod ssr;
+
 #[cfg(feature = "wit-bindings")]
 pub mod wit_platform;
 
-// Integration tests are available in non-wasm environments
-#[cfg(test)]
-#[cfg(target_arch = "x86_64")]
-pub mod integration_tests;
+#[cfg(feature = "browser")]
+pub use browser::BrowserPlatform;
 
-pub use platform::WebPlatform;
-pub use portal::PortalRenderer;
-#[cfg(feature = "wit-bindings")]
-pub use runtime_integration::{init_runtime, ComponentRenderer};
+#[cfg(feature = "ssr")]
+pub use ssr::SsrPlatform;
+
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{WitElement, WitEvent, WitPlatform};

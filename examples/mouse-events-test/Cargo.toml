@@ -8,7 +8,7 @@ authors = ["langyo <langyo.china@gmail.com>"]
 [dependencies]
 tairitsu-macros = { path = "../../packages/macros" }
 tairitsu-vdom = { path = "../../packages/vdom" }
-tairitsu-web = { path = "../../packages/web", features = ["wit-bindings"] }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 anyhow = "1"
 tracing = "0.1"
 

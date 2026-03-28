@@ -53,7 +53,7 @@ use anyhow::Result;
 use log::info;
 use std::path::PathBuf;
 
-use tairitsu::{Container, Registry};
+use tairitsu_web::{Container, Registry};
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()

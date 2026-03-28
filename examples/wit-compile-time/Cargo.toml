@@ -8,6 +8,7 @@ authors = ["langyo <langyo.china@gmail.com>"]
 [dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # Basic language and tools
 anyhow = "^1"
