@@ -350,41 +350,18 @@ packages/
 
 ### 待实现功能
 
-#### CSS 表达式解析 ✅ 已完成
-**位置**: `packages/style/src/values/parser.rs`, `packages/style/src/values/grammar.pest`
-
-已实现以下 CSS 函数的解析逻辑：
-- [x] `calc()` - CSS 计算表达式
-- [x] `min()` - 最小值函数
-- [x] `max()` - 最大值函数
-- [x] `clamp()` - 限制范围函数
-
-**实现细节**：
-- 使用 Pest 解析库实现表达式语法
-- 支持嵌套表达式 (如 `calc(100% - min(20px, 5%))`)
-- 支持数学运算符: +, -, *, /
-- 支持所有 CSS 单位: px, %, em, rem, vw, vh, vmin, vmax
-- 142 个测试全部通过
-
-#### Suspense 资源追踪 ✅ 已完成
-**位置**: `packages/hooks/src/suspense.rs`
-
-已实现完整功能：
-- [x] 跟踪子组件渲染期间访问的所有资源
-- [x] 检测资源加载状态
-- [x] 在资源加载时显示 fallback UI
-- [x] 资源就绪后自动重新渲染
-
-**实现细节**：
-- 全局资源注册表 (ResourceRegistry) 使用 thread_local
-- Resource<T> 支持 Loading/Ready/Error 三种状态
-- Suspense 边界组件和 use_suspense Hook
-- 14 个测试全部通过
-
-#### E2E 测试框架增强 ✅ 已完成
+#### E2E 测试框架增强
 **位置**: `packages/e2e/`
 
-已实现功能：
-- [x] 内嵌浏览器运行时（而非依赖外部 Selenium）
-- [x] 原生 WASM 组件测试支持
-- [x] 视觉回归测试
+当前实现：
+- [x] 基于 Selenium WebDriver 的浏览器自动化 (thirtyfour)
+- [x] 组件生命周期测试
+- [x] 事件处理测试
+- [x] SSR 测试
+- [x] SVG 安全测试
+- [x] 样式集成测试
+
+待实现功能：
+- [ ] 内嵌浏览器运行时 (chromiumoxide 依赖已添加但未使用)
+- [ ] 视觉回归测试 (screenshot_path 当前均为 None)
+- [ ] WASM 组件原生测试支持
