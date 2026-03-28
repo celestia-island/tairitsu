@@ -26,8 +26,6 @@ pub use tairitsu_fast_refresh::*;
 pub use tairitsu_ssr::*;
 #[cfg(feature = "error-overlay")]
 pub use tairitsu_error_overlay::*;
-#[cfg(feature = "css-values")]
-pub use tairitsu_css_values::*;
 #[cfg(feature = "i18n")]
 pub use tairitsu_i18n::*;
 #[cfg(feature = "packager")]

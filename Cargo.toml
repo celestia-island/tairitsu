@@ -9,7 +9,6 @@ members = [
     "packages/packager",
     "packages/e2e",
     "packages/style",
-    "packages/css-values",
     "packages/router",
     "packages/data-fetcher",
     "packages/hmr",

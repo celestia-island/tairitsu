@@ -56,6 +56,8 @@ pub use utility::{
 pub use values::{
     AlignItemsValue, CssValue, CursorValue, DisplayValue, FlexDirectionValue, FlexWrapValue,
     JustifyContentValue, LengthUnit, OverflowValue, PositionValue, TextAlignValue,
+    // CSS values exports
+    CssLength, CssExpression, CssBinOp, ParseResult, CssValueParseError,
 };
 
 #[cfg(test)]

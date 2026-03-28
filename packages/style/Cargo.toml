@@ -9,15 +9,16 @@ authors.workspace = true
 [dependencies]
 # Workspace dependencies
 tairitsu-vdom = { path = "../vdom" }
-tairitsu-css-values = { path = "../css-values", optional = true }
 
 # Basic language and tools
 thiserror = "^2"
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 [features]
-default = ["css-values"]
-css-values = ["tairitsu-css-values"]
+default = ["serde"]
+parse = []
+serde = ["dep:serde"]
