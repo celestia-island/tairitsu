@@ -289,14 +289,14 @@ packages/
 - [x] 删除废弃包的 entries
 
 ### Step 10: 更新 examples
-- [ ] 更新所有 examples 的 Cargo.toml
-- [ ] 更新导入路径
-- [ ] 验证编译通过
+- [x] 更新所有 examples 的 Cargo.toml (无需更改，examples 已使用 web 包)
+- [x] 更新导入路径 (无需更改，未直接使用已删除包)
+- [x] 验证编译通过
 
 ### Step 11: 测试
-- [ ] 运行 `cargo test --workspace`
-- [ ] 运行 `cargo clippy --workspace`
-- [ ] 验证 examples 正常工作
+- [x] 运行 `cargo test --workspace`
+- [x] 运行 `cargo clippy --workspace`
+- [x] 验证 examples 正常工作
 
 ---
 
