@@ -1,0 +1,73 @@
+[package]
+name = "tairitsu-web-next"
+version = "0.1.0"
+edition = "2021"
+description = "Tairitsu Web Framework - Unified Web Platform"
+license = "MIT"
+repository = "https://github.com/skiptests/tairitsu"
+homepage = "https://github.com/skiptests/tairitsu"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tairitsu-runtime = { path = "../runtime" }
+tairitsu-vdom = { path = "../vdom", optional = true }
+tairitsu-hooks = { path = "../hooks", optional = true }
+tairitsu-macros = { path = "../macros", optional = true }
+tairitsu-style = { path = "../style", optional = true }
+tairitsu-router = { path = "../router", optional = true }
+tairitsu-ssr = { path = "../ssr", optional = true }
+tairitsu-data-fetcher = { path = "../data-fetcher", optional = true }
+tairitsu-hmr = { path = "../hmr", optional = true }
+tairitsu-fast-refresh = { path = "../fast-refresh", optional = true }
+tairitsu-error-overlay = { path = "../error-overlay", optional = true }
+tairitsu-css-values = { path = "../css-values", optional = true }
+tairitsu-i18n = { path = "../i18n", optional = true }
+tairitsu-packager = { path = "../packager", optional = true }
+
+# External dependencies
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[features]
+default = ["vdom", "hooks", "macros", "style", "ssr"]
+
+# Core features
+vdom = ["tairitsu-vdom"]
+hooks = ["tairitsu-hooks"]
+macros = ["tairitsu-macros"]
+style = ["tairitsu-style"]
+router = ["tairitsu-router"]
+ssr = ["tairitsu-ssr"]
+data-fetcher = ["tairitsu-data-fetcher"]
+hmr = ["tairitsu-hmr"]
+fast-refresh = ["tairitsu-fast-refresh"]
+error-overlay = ["tairitsu-error-overlay"]
+css-values = ["tairitsu-css-values"]
+i18n = ["tairitsu-i18n"]
+packager = ["tairitsu-packager"]
+
+# Browser features
+browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay", "css-values"]
+server = ["ssr", "i18n", "packager"]
+full = ["browser", "server"]
+
+[dev-dependencies]
+tairitsu-testing = { path = "../testing" }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+
+[[example]]
+name = "minimal"
+required-features = ["vdom", "hooks", "macros"]
+path = "examples/minimal/src/main.rs"
+
+[[example]]
+name = "full-featured"
+required-features = ["full"]
+path = "examples/full-featured/src/main.rs"
