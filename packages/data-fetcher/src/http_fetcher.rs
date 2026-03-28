@@ -97,20 +97,18 @@ impl HttpFetcher {
 
         // Add custom headers from config
         for (key, value) in &self.config.headers {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
-                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
+                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
                     headers.insert(header_name, header_value);
                 }
-            }
         }
 
         // Add additional headers
         for (key, value) in additional {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes()) {
-                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(key.as_bytes())
+                && let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
                     headers.insert(header_name, header_value);
                 }
-            }
         }
 
         headers

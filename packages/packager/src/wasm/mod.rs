@@ -211,11 +211,10 @@ fn build_wasm_component(
     // or: "path+file:///path#name@version"
     fn extract_crate_name(package_id: &str) -> &str {
         // Try to find the part after '#' and before '@'
-        if let Some(after_hash) = package_id.split('#').nth(1) {
-            if let Some(name) = after_hash.split('@').next() {
+        if let Some(after_hash) = package_id.split('#').nth(1)
+            && let Some(name) = after_hash.split('@').next() {
                 return name;
             }
-        }
         // Fallback: return the whole thing
         package_id
     }
@@ -225,8 +224,8 @@ fn build_wasm_component(
         for line in std::io::BufReader::new(stdout).lines() {
             let Ok(line) = line else { continue };
             // Try to parse as cargo JSON message
-            if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line) {
-                if let Some(reason) = msg.get("reason").and_then(|r| r.as_str()) {
+            if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line)
+                && let Some(reason) = msg.get("reason").and_then(|r| r.as_str()) {
                     match reason {
                         "compiler-artifact" => {
                             // A crate is being compiled
@@ -234,13 +233,12 @@ fn build_wasm_component(
                             {
                                 let crate_name = extract_crate_name(package_id);
                                 // Only update for lib crates (not build scripts)
-                                if let Some(target) = msg.get("target") {
-                                    if target.get("kind").and_then(|k| k.as_array()).is_some_and(
+                                if let Some(target) = msg.get("target")
+                                    && target.get("kind").and_then(|k| k.as_array()).is_some_and(
                                         |k| k.iter().any(|kind| kind.as_str() == Some("lib")),
                                     ) {
                                         pb_clone.set_message(format!("compile {}", crate_name));
                                     }
-                                }
                             }
                         }
                         "compiler-message" => {
@@ -267,7 +265,6 @@ fn build_wasm_component(
                         _ => {}
                     }
                 }
-            }
         }
     });
 
@@ -517,11 +514,10 @@ fn try_generate_component_wrapper(
     if let Some(main) = wrapper_main {
         let wrapper_mtime = std::fs::metadata(&main)?.modified().ok();
         let wasm_mtime = std::fs::metadata(component_wasm_path)?.modified().ok();
-        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime) {
-            if w >= c {
+        if let (Some(w), Some(c)) = (wrapper_mtime, wasm_mtime)
+            && w >= c {
                 return Ok(true);
             }
-        }
     }
 
     #[allow(unused_mut)]
@@ -579,8 +575,8 @@ fn try_generate_component_wrapper(
                         wrapper_dir.join(format!("{}.js", wasm_stem)),
                     ];
                     for js_file in js_files {
-                        if js_file.exists() {
-                            if let Ok(mut content) = std::fs::read_to_string(&js_file) {
+                        if js_file.exists()
+                            && let Ok(mut content) = std::fs::read_to_string(&js_file) {
                                 let original = content.clone();
                                 // Replace import statements
                                 content = content.replace(
@@ -600,7 +596,6 @@ fn try_generate_component_wrapper(
                                     std::fs::write(&js_file, content)?;
                                 }
                             }
-                        }
                     }
                     return Ok(true);
                 }
@@ -1171,11 +1166,10 @@ async fn run_watch_loop(
                 "c" | "C" => Some(DevCmd::Clear),
                 _ => None,
             };
-            if let Some(c) = cmd {
-                if cmd_tx.blocking_send(c).is_err() {
+            if let Some(c) = cmd
+                && cmd_tx.blocking_send(c).is_err() {
                     break;
                 }
-            }
         }
     });
 

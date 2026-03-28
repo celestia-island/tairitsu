@@ -385,14 +385,14 @@ impl UseAnimation {
                 AnimationDirection::Normal => iter_progress,
                 AnimationDirection::Reverse => 1.0 - iter_progress,
                 AnimationDirection::Alternate => {
-                    if iter % 2 == 0 {
+                    if iter.is_multiple_of(2) {
                         iter_progress
                     } else {
                         1.0 - iter_progress
                     }
                 }
                 AnimationDirection::AlternateReverse => {
-                    if iter % 2 == 0 {
+                    if iter.is_multiple_of(2) {
                         1.0 - iter_progress
                     } else {
                         iter_progress

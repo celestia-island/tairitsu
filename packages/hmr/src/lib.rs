@@ -92,7 +92,7 @@ impl HmrClient {
             } => {
                 let registry = self.module_registry.read().unwrap();
 
-                if let Some(_) = registry.get(module_id) {
+                if registry.get(module_id).is_some() {
                     // Module exists, trigger reload
                     if let Some(deps) = dependencies {
                         for dep in deps {

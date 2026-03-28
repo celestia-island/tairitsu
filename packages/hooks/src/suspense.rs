@@ -176,7 +176,7 @@ where
     F: FnOnce() -> Fut + 'static + std::marker::Send,
     Fut: Future<Output = Result<T, String>> + 'static + std::marker::Send,
 {
-    let component_id = runtime::use_component(|| VNode::empty());
+    let component_id = runtime::use_component(VNode::empty);
 
     let inner = Rc::new(ResourceInner {
         state: RefCell::new(ResourceState::Loading),
