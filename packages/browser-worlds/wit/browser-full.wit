@@ -67,13 +67,6 @@ interface event-callbacks {
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
 
-/// Component lifecycle interface - implemented by the component.
-interface lifecycle {
-    /// Called by the host after the component is instantiated.
-    /// This is the entry point for the component's main logic.
-    start: func() -> result<_, string>;
-}
-
 /// Timer callback interface - implemented by the component, called by host.
 ///
 /// The host (browser-glue) calls these functions when timers expire.
@@ -139,6 +132,80 @@ interface mutation-observer-callbacks {
     on-mutate: func(callback-id: u64, entries: list<mutation-entry>);
 }
 
+/// MediaQueryList callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when media query state changes.
+interface media-query-list-callbacks {
+    /// Callback invoked when a media query's matches state changes.
+    on-change: func(callback-id: u64, matches: bool);
+}
+
+/// Platform helpers interface - helper functions for platform-specific operations.
+///
+/// These are convenience functions that wrap complex browser APIs.
+interface platform-helpers {
+    use types.{dom-rect};
+
+    /// Get the inner width of the window.
+    inner-width: func() -> i32;
+
+    /// Get the inner height of the window.
+    inner-height: func() -> i32;
+
+    /// Set a timeout with the given callback ID.
+    set-timeout: func(callback-id: u64, ms: i32) -> i32;
+
+    /// Clear a timeout.
+    clear-timeout: func(id: i32);
+
+    /// Request an animation frame with the given callback ID.
+    request-animation-frame: func(callback-id: u64) -> u32;
+
+    /// Cancel an animation frame.
+    cancel-animation-frame: func(id: u32);
+
+    /// Get the bounding client rectangle of an element.
+    get-bounding-client-rect: func(element: u64) -> dom-rect;
+
+    /// Create a resize observer with the given callback ID.
+    create-resize-observer: func(callback-id: u64) -> u64;
+
+    /// Observe element resizes.
+    observe-resize: func(observer: u64, element: u64);
+
+    /// Unobserve element resizes.
+    unobserve-resize: func(observer: u64, element: u64);
+
+    /// Disconnect a resize observer.
+    disconnect-resize: func(observer: u64);
+
+    /// Create a mutation observer with the given callback ID.
+    create-mutation-observer: func(callback-id: u64) -> u64;
+
+    /// Observe DOM mutations.
+    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
+
+    /// Disconnect a mutation observer.
+    disconnect-mutation: func(observer: u64);
+}
+
+/// Component lifecycle interface - implemented by the component.
+interface lifecycle {
+    /// Called by the host after the component is instantiated.
+    /// This is the entry point for the component's main logic.
+    start: func() -> result<_, string>;
+}
+
+/// Console interface for logging.
+interface console {
+    /// Log a message to the console.
+    log: func(message: string);
+    /// Log a warning to the console.
+    warn: func(message: string);
+    /// Log an error to the console.
+    error: func(message: string);
+}
+
 /// Event target interface for adding/removing event listeners.
 interface event-target {
     /// Add an event listener to a target node.
@@ -161,53 +228,6 @@ interface style {
     get-style-property: func(element: u64, property: string) -> option<string>;
     /// Remove a CSS property from an element.
     remove-style-property: func(element: u64, property: string) -> result<_, string>;
-}
-
-/// Platform helpers interface for browser APIs.
-interface platform-helpers {
-    use types.{dom-rect};
-
-    /// Get the inner width of the window.
-    inner-width: func() -> s32;
-
-    /// Get the inner height of the window.
-    inner-height: func() -> s32;
-
-    /// Set a timeout callback.
-    set-timeout: func(callback-id: u64, ms: s32) -> s32;
-
-    /// Clear a timeout.
-    clear-timeout: func(id: s32);
-
-    /// Request an animation frame callback.
-    request-animation-frame: func(callback-id: u64) -> u32;
-
-    /// Cancel an animation frame.
-    cancel-animation-frame: func(id: u32);
-
-    /// Get the bounding client rect of an element.
-    get-bounding-client-rect: func(element: u64) -> dom-rect;
-
-    /// Create a resize observer.
-    create-resize-observer: func(callback-id: u64) -> u64;
-
-    /// Observe element resize.
-    observe-resize: func(observer: u64, element: u64);
-
-    /// Unobserve element resize.
-    unobserve-resize: func(observer: u64, element: u64);
-
-    /// Disconnect resize observer.
-    disconnect-resize: func(observer: u64);
-
-    /// Create a mutation observer.
-    create-mutation-observer: func(callback-id: u64) -> u64;
-
-    /// Observe mutations on an element.
-    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
-
-    /// Disconnect mutation observer.
-    disconnect-mutation: func(observer: u64);
 }
 
 interface credential {
@@ -15728,7 +15748,7 @@ interface cache-storage {
     keys: func(self: cache-storage-handle) -> u64;
 }
 
-/// Full browser world — all 562 auto-generated interfaces.
+/// Full browser world — all 568 auto-generated interfaces.
 world browser-full {
     import abort-controller;
     import abort-signal;
@@ -16088,7 +16108,6 @@ world browser-full {
     import performance-resource-timing;
     import performance-timing;
     import performance-timing-confidence;
-    import platform-helpers;
     import permission-status;
     import permissions;
     import plugin;
@@ -16290,13 +16309,14 @@ world browser-full {
     import xslt-processor;
     import event-target;
     import style;
-    // Note: console interface removed - console operations now use direct browser console
-    // via wasm-bindgen in the web package, not WIT interface
+    import console;
+    import platform-helpers;
     export event-callbacks;
     export lifecycle;
     export timer-callbacks;
     export animation-callbacks;
     export resize-observer-callbacks;
     export mutation-observer-callbacks;
+    export media-query-list-callbacks;
 }
 

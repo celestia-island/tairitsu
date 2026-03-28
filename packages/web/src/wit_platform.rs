@@ -205,6 +205,7 @@ pub mod wasm_impl {
     type AnimationCallback = Option<Box<dyn FnOnce(f64)>>;
     type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
     type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
+    type MediaQueryListCallback = Box<dyn FnMut(bool)>;
 
     static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -262,6 +263,7 @@ pub mod wasm_impl {
         pub static ANIMATION_CALLBACKS: RefCell<HashMap<u64, AnimationCallback>> = RefCell::new(HashMap::new());
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
+        static MEDIA_QUERY_LIST_CALLBACKS: RefCell<HashMap<u64, MediaQueryListCallback>> = RefCell::new(HashMap::new());
     }
 
     // ── WIT binding generation ───────────────────────────────────────────
@@ -502,6 +504,19 @@ pub mod wasm_impl {
                         })
                         .collect();
                     handler(converted_records);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::media_query_list_callbacks::Guest
+        for BrowserComponent
+    {
+        fn on_change(callback_id: u64, matches: bool) {
+            MEDIA_QUERY_LIST_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    handler(matches);
                 }
             });
         }
@@ -811,6 +826,33 @@ pub mod wasm_impl {
 
         fn disconnect_mutation(&self, observer: u64) {
             bindings::tairitsu_browser::full::platform_helpers::disconnect_mutation(observer);
+        }
+
+        fn match_media(&self, query: &str) -> u64 {
+            bindings::tairitsu_browser::full::window::match_media(query)
+        }
+
+        fn media_query_list_get_media(&self, list: u64) -> String {
+            bindings::tairitsu_browser::full::media_query_list::get_media(list)
+        }
+
+        fn media_query_list_get_matches(&self, list: u64) -> bool {
+            bindings::tairitsu_browser::full::media_query_list::get_matches(list)
+        }
+
+        fn media_query_list_add_listener(
+            &self,
+            list: u64,
+            callback: Box<dyn FnMut(bool)>,
+        ) -> u64 {
+            let callback_id = next_callback_id();
+            MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::media_query_list::add_listener(list, Some(callback_id))
+        }
+
+        fn media_query_list_remove_listener(&self, list: u64, listener_id: u64) {
+            MEDIA_QUERY_LIST_CALLBACKS.with(|m| m.borrow_mut().remove(&listener_id));
+            bindings::tairitsu_browser::full::media_query_list::remove_listener(list, Some(listener_id));
         }
     }
 

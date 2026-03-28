@@ -4398,6 +4398,9 @@ export type MediaQueryListHandle = bigint;
 const _mediaQueryListhandles = new Map<bigint, MediaQueryList>();
 let _nextMediaQueryList = 1n;
 
+/** Handle table for MediaQueryList listeners */
+const _mediaQueryListListeners = new Map<bigint, (matches: boolean) => void>();
+
 /** Lookup a MediaQueryList by handle, throwing if not found. */
 function lookupMediaQueryList(handle: bigint): MediaQueryList {
   const obj = _mediaQueryListhandles.get(handle);
@@ -4435,7 +4438,24 @@ export function MediaQueryListGetMatches(self: bigint): boolean {
  */
 export function addListener(self: bigint, callback: bigint | undefined): void {
   const obj = lookupMediaQueryList(self);
-  obj.addListener(callback !== undefined ? lookupEventListener(callback) : null);
+  if (callback !== undefined) {
+    // Create a listener function that calls the WIT callback
+    const listener = (matches: boolean) => {
+      const wasmExports = (globalThis as any).__wasmExports;
+      if (wasmExports) {
+        const callbacks = wasmExports["tairitsu-browser:full/media-query-list-callbacks@0.2.0"];
+        if (callbacks && callbacks.on_change) {
+          callbacks.on_change(callback, matches);
+        }
+      }
+    };
+    // Store the listener for later removal
+    _mediaQueryListListeners.set(callback, listener);
+    // Add the listener to the MediaQueryList
+    obj.addListener(listener);
+  } else {
+    obj.addListener(null);
+  }
 }
 
 /**
@@ -4443,7 +4463,15 @@ export function addListener(self: bigint, callback: bigint | undefined): void {
  */
 export function removeListener(self: bigint, callback: bigint | undefined): void {
   const obj = lookupMediaQueryList(self);
-  obj.removeListener(callback !== undefined ? lookupEventListener(callback) : null);
+  if (callback !== undefined) {
+    const listener = _mediaQueryListListeners.get(callback);
+    if (listener) {
+      obj.removeListener(listener);
+      _mediaQueryListListeners.delete(callback);
+    }
+  } else {
+    obj.removeListener(null);
+  }
 }
 
 /**

@@ -1102,7 +1102,7 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
     domain_files = sorted(generated_dir.glob("*.wit"))
     
     # Interfaces we define manually - skip these from collected interfaces
-    manual_interfaces = {"event-callbacks", "lifecycle", "event-target"}
+    manual_interfaces = {"event-callbacks", "lifecycle", "event-target", "timer-callbacks", "animation-callbacks", "resize-observer-callbacks", "mutation-observer-callbacks", "media-query-list-callbacks", "platform-helpers"}
     
     for domain_file in domain_files:
         if domain_file.name == "browser-full.wit":
@@ -1231,6 +1231,128 @@ interface event-callbacks {
     on-generic-event: func(listener-id: listener-id, event: event-handle, event-type: string);
 }
 
+/// Timer callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when timers expire.
+interface timer-callbacks {
+    /// Callback invoked when a timeout expires.
+    on-timeout: func(callback-id: u64);
+}
+
+/// Animation callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when animation frames are ready.
+interface animation-callbacks {
+    /// Callback invoked when an animation frame is ready.
+    /// The timestamp is the number of milliseconds since the time origin.
+    on-frame: func(callback-id: u64, timestamp: f64);
+}
+
+/// Resize observer callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when observed elements are resized.
+interface resize-observer-callbacks {
+    use types.{dom-rect};
+
+    /// Resize observer entry data passed to the callback.
+    record resize-entry {
+        /// The element being resized.
+        target: u64,
+        /// The content rectangle of the target element.
+        content-rect: dom-rect,
+    }
+
+    /// Callback invoked when observed elements are resized.
+    on-resize: func(callback-id: u64, entries: list<resize-entry>);
+}
+
+/// Mutation observer callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when DOM mutations occur.
+interface mutation-observer-callbacks {
+    /// Mutation record data passed to the callback.
+    record mutation-entry {
+        /// The type of mutation ("attributes", "characterData", or "childList").
+        mutation-type: string,
+        /// The target node for the mutation.
+        target: u64,
+        /// The added nodes (handle to NodeList).
+        added-nodes: option<u64>,
+        /// The removed nodes (handle to NodeList).
+        removed-nodes: option<u64>,
+        /// The previous sibling node.
+        previous-sibling: option<u64>,
+        /// The next sibling node.
+        next-sibling: option<u64>,
+        /// The attribute name (for attribute mutations).
+        attribute-name: option<string>,
+        /// The attribute namespace (for attribute mutations).
+        attribute-namespace: option<string>,
+        /// The old value (for attribute or characterData mutations).
+        old-value: option<string>,
+    }
+
+    /// Callback invoked when DOM mutations occur.
+    on-mutate: func(callback-id: u64, entries: list<mutation-entry>);
+}
+
+/// MediaQueryList callback interface - implemented by the component, called by host.
+///
+/// The host (browser-glue) calls these functions when media query state changes.
+interface media-query-list-callbacks {
+    /// Callback invoked when a media query's matches state changes.
+    on-change: func(callback-id: u64, matches: bool);
+}
+
+/// Platform helpers interface - helper functions for platform-specific operations.
+///
+/// These are convenience functions that wrap complex browser APIs.
+interface platform-helpers {
+    use types.{dom-rect};
+
+    /// Get the inner width of the window.
+    inner-width: func() -> i32;
+
+    /// Get the inner height of the window.
+    inner-height: func() -> i32;
+
+    /// Set a timeout with the given callback ID.
+    set-timeout: func(callback-id: u64, ms: i32) -> i32;
+
+    /// Clear a timeout.
+    clear-timeout: func(id: i32);
+
+    /// Request an animation frame with the given callback ID.
+    request-animation-frame: func(callback-id: u64) -> u32;
+
+    /// Cancel an animation frame.
+    cancel-animation-frame: func(id: u32);
+
+    /// Get the bounding client rectangle of an element.
+    get-bounding-client-rect: func(element: u64) -> dom-rect;
+
+    /// Create a resize observer with the given callback ID.
+    create-resize-observer: func(callback-id: u64) -> u64;
+
+    /// Observe element resizes.
+    observe-resize: func(observer: u64, element: u64);
+
+    /// Unobserve element resizes.
+    unobserve-resize: func(observer: u64, element: u64);
+
+    /// Disconnect a resize observer.
+    disconnect-resize: func(observer: u64);
+
+    /// Create a mutation observer with the given callback ID.
+    create-mutation-observer: func(callback-id: u64) -> u64;
+
+    /// Observe DOM mutations.
+    observe-mutations: func(observer: u64, target: u64, options: option<u64>);
+
+    /// Disconnect a mutation observer.
+    disconnect-mutation: func(observer: u64);
+}
+
 /// Component lifecycle interface - implemented by the component.
 interface lifecycle {
     /// Called by the host after the component is instantiated.
@@ -1280,11 +1402,16 @@ interface style {
     import_interface_names.sort()
     
     # Add special interfaces (including style wrapper and console)
-    all_interface_names = import_interface_names + ["event-callbacks", "lifecycle", "event-target", "style", "console"]
-    
+    all_interface_names = import_interface_names + ["event-callbacks", "lifecycle", "event-target", "timer-callbacks", "animation-callbacks", "resize-observer-callbacks", "mutation-observer-callbacks", "media-query-list-callbacks", "platform-helpers", "style", "console"]
+
     world_imports = "\n".join(f"    import {name};" for name in import_interface_names)
     world_exports = """    export event-callbacks;
-    export lifecycle;"""
+    export lifecycle;
+    export timer-callbacks;
+    export animation-callbacks;
+    export resize-observer-callbacks;
+    export mutation-observer-callbacks;
+    export media-query-list-callbacks;"""
     
     world_block = f"""
 /// Full browser world — all {len(all_interface_names)} auto-generated interfaces.
@@ -1293,6 +1420,7 @@ world browser-full {{
     import event-target;
     import style;
     import console;
+    import platform-helpers;
 {world_exports}
 }}
 """
