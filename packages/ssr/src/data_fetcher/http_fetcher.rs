@@ -2,6 +2,9 @@
 
 use std::sync::Arc;
 
+#[cfg(feature = "data-fetcher")]
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 
 use super::{cache::Cache, error::FetchError, fetcher::Fetcher, FetchConfig};
@@ -49,6 +52,7 @@ impl HttpFetcher {
     }
 
     /// Create a new HTTP fetcher with a custom cache
+    #[allow(unused_variables)]
     pub fn with_cache(config: FetchConfig, cache: Arc<Cache>) -> Self {
         #[cfg(feature = "data-fetcher")]
         let client = reqwest::Client::builder()
@@ -76,6 +80,7 @@ impl HttpFetcher {
     }
 
     /// Create a cache key for a request
+    #[allow(dead_code)]
     fn cache_key(method: &str, url: &str, body: &[u8]) -> String {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -127,6 +132,7 @@ impl Default for HttpFetcher {
 
 #[async_trait]
 impl Fetcher for HttpFetcher {
+    #[allow(unused_variables)]
     async fn get(&self, url: &str) -> Result<Vec<u8>, FetchError> {
         // Check cache first
         #[cfg(feature = "data-fetcher")]
@@ -187,6 +193,7 @@ impl Fetcher for HttpFetcher {
         }
     }
 
+    #[allow(unused_variables)]
     async fn post(&self, url: &str, body: Vec<u8>) -> Result<Vec<u8>, FetchError> {
         // Check cache first (for POST with same body)
         #[cfg(feature = "data-fetcher")]

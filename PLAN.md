@@ -348,7 +348,29 @@ packages/
 
 ## 未来规划 🔮
 
-### E2E 测试框架增强
+### 待实现功能
+
+#### CSS 表达式解析
+**位置**: `packages/style/src/values/parser.rs`
+
+需要实现以下 CSS 函数的解析逻辑：
+- [ ] `calc()` - CSS 计算表达式
+- [ ] `min()` - 最小值函数
+- [ ] `max()` - 最大值函数
+- [ ] `clamp()` - 限制范围函数
+
+这些功能在 `CssLength` 类型中已有占位定义，但解析逻辑尚未实现。
+
+#### Suspense 资源追踪
+**位置**: `packages/hooks/src/suspense.rs`
+
+当前的 `use_suspense` 函数是简化实现，需要实现：
+- [ ] 跟踪子组件渲染期间访问的所有资源
+- [ ] 检测资源加载状态
+- [ ] 在资源加载时显示 fallback UI
+- [ ] 资源就绪后自动重新渲染
+
+#### E2E 测试框架增强
 - [ ] 内嵌浏览器运行时（而非依赖外部 Selenium）
 - [ ] 原生 WASM 组件测试支持
 - [ ] 视觉回归测试

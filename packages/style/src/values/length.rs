@@ -522,6 +522,7 @@ impl LengthUnit {
     }
 
     /// Parse a unit from its string representation.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "px" => Some(Self::Px),
