@@ -168,15 +168,35 @@ pub fn kill_daemon() -> std::io::Result<bool> {
 
 /// Fork the process to run as a daemon
 pub fn fork_daemon() -> std::io::Result<()> {
+    fork_daemon_with_args(std::env::args())
+}
+
+/// Fork the process to run as a daemon with specific arguments
+pub fn fork_daemon_with_args<I, S>(args: I) -> std::io::Result<()>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
     #[cfg(unix)]
     {
         let exe = env::current_exe()?;
+        let args: Vec<String> = args.into_iter()
+            .skip(1) // Skip argv[0] which is the program name
+            .map(|s| s.as_ref().to_string_lossy().into_owned())
+            .collect();
+
+        // Ensure parent directory exists for log files
+        let log_path = daemon_log_path();
+        if let Some(parent) = log_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
 
         // Set environment variable to mark as daemon
         Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
-            .stdout(File::create(daemon_log_path().with_extension("stdout"))?)
-            .stderr(File::create(daemon_log_path().with_extension("stderr"))?)
+            .args(&args)
+            .stdout(File::create(log_path.with_extension("stdout"))?)
+            .stderr(File::create(log_path.with_extension("stderr"))?)
             .spawn()?;
 
         Ok(())
@@ -184,15 +204,28 @@ pub fn fork_daemon() -> std::io::Result<()> {
 
     #[cfg(windows)]
     {
+        let exe = env::current_exe()?;
+        let args: Vec<String> = args.into_iter()
+            .skip(1) // Skip argv[0] which is the program name
+            .map(|s| s.as_ref().to_string_lossy().into_owned())
+            .collect();
+
+        // Ensure parent directory exists for log files
+        let log_path = daemon_log_path();
+        if let Some(parent) = log_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
         // On Windows, use START to create a detached process
         let _ = Command::new("cmd")
             .args(&[
                 "/C",
                 "start",
                 "/B",
-                &env::current_exe()?.to_string_lossy(),
-                &format!("TAIRITSU_DAEMON=1"),
+                &exe.to_string_lossy(),
             ])
+            .args(&args)
+            .env("TAIRITSU_DAEMON", "1")
             .spawn()?;
 
         Ok(())
