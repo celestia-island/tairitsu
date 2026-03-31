@@ -3,11 +3,12 @@
 //! This module provides a generic container implementation that can run any WASM component.
 //! Users need to implement WIT interface bindings and initialization themselves.
 
-use anyhow::{Context, Result};
+use anyhow::{Context as AnyhowContext, Result};
 
 use wasmtime::{
     Store,
     component::{Component, Linker},
+    error::Context,
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 

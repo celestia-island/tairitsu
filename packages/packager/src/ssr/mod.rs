@@ -7,7 +7,10 @@
 use crate::config::Config;
 use anyhow::Result;
 use std::path::PathBuf;
-use tracing::{error, info, warn};
+use tracing::{error, warn};
+
+#[cfg(feature = "ssr")]
+use tracing::info;
 
 #[cfg(feature = "dev-server")]
 use {

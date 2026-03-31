@@ -846,7 +846,8 @@ pub mod wasm_impl {
             bindings::tairitsu_browser::full::media_query_list::add_listener(
                 list,
                 Some(callback_id),
-            )
+            );
+            callback_id
         }
 
         fn media_query_list_remove_listener(&self, list: u64, listener_id: u64) {

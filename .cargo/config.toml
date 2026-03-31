@@ -1,2 +1,6 @@
 [net]
 git-fetch-with-cli = true
+
+# Enable wasip2 feature for wasm32-wasip2 target
+[target.wasm32-wasip2]
+rustflags = ["--cfg=unstable_wasi_extension"]
