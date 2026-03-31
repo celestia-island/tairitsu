@@ -14,7 +14,11 @@ crate-type = ["cdylib", "rlib"]
 tairitsu-vdom = { path = "../../packages/vdom" }
 tairitsu-hooks = { path = "../../packages/hooks" }
 tairitsu-macros = { path = "../../packages/macros" }
-tairitsu-web = { path = "../../packages/web", features = ["full", "wit-bindings"] }
+# For wasm builds, use only browser features (not server-side features like ssr/packager)
+tairitsu-web = { path = "../../packages/web", features = [
+    "browser",
+    "wit-bindings",
+], default-features = false }
 
 # Hikari design system (direct path to hikari workspace)
 hikari-palette = { path = "../../../hikari/packages/palette" }

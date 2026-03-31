@@ -1,9 +1,9 @@
 //! Image - Represents a compiled WASM component (like a Docker image)
 
-use anyhow::{Context, Result};
+use anyhow::{Context as AnyhowContext, Result};
 use bytes::Bytes;
 
-use wasmtime::{Config, Engine, component::Component};
+use wasmtime::{Config, Engine, component::Component, error::Context};
 use wit_component::ComponentEncoder;
 
 // Include the WASI adapter binary at compile time
@@ -29,7 +29,6 @@ impl Image {
     pub fn new(wasm_binary: Bytes) -> Result<Self> {
         let mut config = Config::new();
         config.wasm_component_model(true);
-        config.async_support(false);
 
         let engine = Engine::new(&config).context("Failed to create WASM engine")?;
 
@@ -56,7 +55,6 @@ impl Image {
     pub fn from_component(component_binary: Bytes) -> Result<Self> {
         let mut config = Config::new();
         config.wasm_component_model(true);
-        config.async_support(false);
 
         let engine = Engine::new(&config).context("Failed to create WASM engine")?;
 

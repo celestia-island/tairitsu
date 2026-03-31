@@ -7,8 +7,8 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-# Core Tairitsu runtime
-tairitsu = { path = "../runtime" }
+# Core Tairitsu runtime (optional - only needed for host-side code)
+tairitsu = { path = "../runtime", optional = true }
 
 # Optional dependencies based on features
 tairitsu-vdom = { path = "../vdom", optional = true }
@@ -47,15 +47,34 @@ hmr = ["ssr"]
 fast-refresh = ["ssr", "hmr"]
 error-overlay = ["ssr", "hmr"]
 i18n = []
-ssr = ["dep:tairitsu-ssr"]
-packager = ["dep:tairitsu-packager"]
-browser = ["vdom", "hooks", "macros", "style", "router", "data-fetcher", "hmr", "fast-refresh", "error-overlay"]
+ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
+packager = ["dep:tairitsu", "dep:tairitsu-packager"]
+# Browser-only features (without SSR/server dependencies)
+browser = ["vdom", "hooks", "macros", "style", "router"]
+browser-full = [
+  "vdom",
+  "hooks",
+  "macros",
+  "style",
+  "router",
+  "data-fetcher",
+  "hmr",
+  "fast-refresh",
+  "error-overlay",
+]
 server = ["ssr", "packager"]
-full = ["browser", "server"]
+full = ["browser-full", "server"]
 wit-bindings = ["dep:wit-bindgen"]
+runtime = ["dep:tairitsu"]
 
 [dev-dependencies]
-tokio = { workspace = true, default-features = false, features = ["sync", "macros", "io-util", "rt", "time"] }
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
 
 [build-dependencies]
 toml = "^0.8"
