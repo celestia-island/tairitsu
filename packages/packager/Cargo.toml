@@ -70,7 +70,13 @@ sha2 = "^0.10"
 yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = "0.28"
-chrono = { version = "0.4", default-features = false, features = ["clock"] }
+chrono = { version = "0.4", default-features = false, features = [
+  "clock",
+  "serde",
+] }
+
+# TTY detection
+atty = "0.2"
 
 # HTTP client for icon fetching (optional)
 reqwest = { version = "^0.12", features = [
