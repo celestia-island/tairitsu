@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use tracing::info;
 
+use crate::daemon::{self, is_daemon, is_tty};
+
 #[derive(Parser)]
 #[command(name = "tairitsu")]
 #[command(about = "Build and packaging tool for Tairitsu applications", long_about = None)]
@@ -18,6 +20,26 @@ struct Cli {
     /// Verbosity level (-v, -vv, -vvv)
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+
+    /// Run in daemon mode (background service)
+    #[arg(long, global = true)]
+    daemon: bool,
+
+    /// Force restart daemon (kill existing and start new)
+    #[arg(long, global = true, requires = "daemon")]
+    force: bool,
+
+    /// Shutdown daemon (stop background service)
+    #[arg(long, global = true, requires = "daemon")]
+    shutdown: bool,
+
+    /// Force TTY interactive mode
+    #[arg(long, global = true)]
+    tty: bool,
+
+    /// Force non-interactive mode
+    #[arg(long, global = true)]
+    no_tty: bool,
 }
 
 #[derive(Subcommand)]
@@ -219,6 +241,75 @@ pub async fn run() -> crate::Result<()> {
     let cli = Cli::parse();
     let t = crate::i18n::translations();
 
+    // Determine TTY mode
+    let is_interactive = if cli.tty {
+        true
+    } else if cli.no_tty {
+        false
+    } else {
+        is_tty()
+    };
+
+    // Handle daemon mode
+    if cli.daemon {
+        // Check if we're already the daemon
+        if is_daemon() {
+            // We're the daemon child, continue with normal execution
+            // Write initial status
+            daemon::write_pid_file(std::process::id())?;
+            let status = daemon::DaemonStatus {
+                pid: std::process::id(),
+                start_time: chrono::Utc::now(),
+                build_logs: Vec::new(),
+            };
+            daemon::write_daemon_status(&status)?;
+        } else {
+            // We're the parent, handle daemon management
+            if cli.shutdown {
+                // Shutdown mode: kill existing daemon and exit
+                if daemon::is_daemon_running() {
+                    println!("Stopping daemon...");
+                    if daemon::kill_daemon()? {
+                        println!("Daemon stopped successfully.");
+                    } else {
+                        println!("No daemon was running.");
+                    }
+                    daemon::print_daemon_status()?;
+                } else {
+                    println!("No daemon is currently running.");
+                }
+                return Ok(());
+            }
+
+            if cli.force {
+                // Force mode: kill existing and start new
+                if daemon::is_daemon_running() {
+                    println!("Restarting daemon...");
+                    daemon::kill_daemon()?;
+                }
+                daemon::fork_daemon()?;
+                println!("Daemon started.");
+                return Ok(());
+            }
+
+            // Normal daemon mode: show status if running, or start new
+            if daemon::is_daemon_running() {
+                println!("Daemon is already running.");
+                println!();
+                daemon::print_daemon_status()?;
+                println!();
+                println!("Use --force to restart, or --shutdown to stop.");
+                return Ok(());
+            }
+
+            // Start new daemon
+            daemon::fork_daemon()?;
+            println!("Daemon started in background.");
+            println!("Use 'tairitsu dev --daemon' to check status.");
+            return Ok(());
+        }
+    }
+
     // Setup logging
     let log_level = match cli.verbose {
         0 => tracing::Level::INFO,
@@ -230,6 +321,28 @@ pub async fn run() -> crate::Result<()> {
         .with_max_level(log_level)
         .with_target(false)
         .init();
+
+    // Check for non-interactive mode
+    let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
+
+    if !is_interactive && !is_daemon() && is_dev_command {
+        daemon::print_non_tty_hint();
+        // Run a single build then exit
+        let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
+        if let Commands::Dev { .. } | Commands::Ssr { .. } = cli.command {
+            let config = crate::config::Config::load(&manifest_path)?;
+            info!("Running single build in non-interactive mode...");
+            let result = crate::wasm::build_component(&config, false, None);
+            match result {
+                Ok(()) => info!("Build complete. Exiting."),
+                Err(e) => {
+                    eprintln!("Build failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        return Ok(());
+    }
 
     // Load configuration
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));

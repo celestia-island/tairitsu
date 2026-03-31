@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::config::Config;
+use crate::daemon;
 
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
@@ -151,6 +152,11 @@ pub fn build_component(
     );
     println!();
 
+    // Log successful build if in daemon mode
+    if daemon::is_daemon() {
+        let _ = daemon::append_build_log("component", true, None);
+    }
+
     Ok(())
 }
 
@@ -276,6 +282,14 @@ fn build_wasm_component(
     // Don't finish/clear here - the caller manages the progress bar lifecycle
 
     if !status.success() {
+        // Log failed build if in daemon mode
+        if daemon::is_daemon() {
+            let _ = daemon::append_build_log(
+                "component",
+                false,
+                Some("cargo build --target wasm32-wasip2 failed"),
+            );
+        }
         return Err(crate::TairitsuPackagerError::BuildError(
             "cargo build --target wasm32-wasip2 failed".to_string(),
         ));
@@ -1290,12 +1304,22 @@ async fn run_watch_loop(
                     locale().dev.rebuilt,
                     port
                 );
+
+                // Log successful rebuild if in daemon mode
+                if daemon::is_daemon() {
+                    let _ = daemon::append_build_log("component", true, None);
+                }
             }
             Err(e) => {
                 let hint = extract_error_hint(e.to_string());
                 *last_build_line = format_last_build_line(false, elapsed, Some(&hint));
                 print_status_panel(port, output_dir, Some(last_build_line), None);
                 eprintln!("  ✗  {}", e);
+
+                // Log failed build if in daemon mode
+                if daemon::is_daemon() {
+                    let _ = daemon::append_build_log("component", false, Some(&e.to_string()));
+                }
             }
         }
     }
