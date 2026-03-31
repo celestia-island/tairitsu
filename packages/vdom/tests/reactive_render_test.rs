@@ -184,6 +184,28 @@ impl Platform for MockPlatform {
     }
 
     fn disconnect_mutation(&self, _observer: u64) {}
+
+    fn match_media(&self, _query: &str) -> u64 {
+        0
+    }
+
+    fn media_query_list_get_media(&self, _list: u64) -> String {
+        String::new()
+    }
+
+    fn media_query_list_get_matches(&self, _list: u64) -> bool {
+        false
+    }
+
+    fn media_query_list_add_listener(
+        &self,
+        _list: u64,
+        _callback: Box<dyn FnMut(bool)>,
+    ) -> u64 {
+        0
+    }
+
+    fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
 }
 
 #[derive(Clone, Debug)]
