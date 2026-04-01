@@ -1528,4 +1528,232 @@ mod tests {
             _ => panic!("Expected RemoveNode patch"),
         }
     }
+
+    // ── WitElement and WitEvent tests ───────────────────────────────────────
+
+    /// Test WitElement clone behavior.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_clone() {
+        let element1 = super::WitElement(42);
+        let element2 = element1;
+        let element3 = element2; // WitElement is Copy, so this works
+
+        assert_eq!(element3.0, 42);
+    }
+
+    /// Test WitElement equality and comparison.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_equality() {
+        let elem1 = super::WitElement(100);
+        let elem2 = super::WitElement(100);
+        let elem3 = super::WitElement(200);
+
+        assert_eq!(elem1, elem2);
+        assert_ne!(elem1, elem3);
+    }
+
+    /// Test WitEvent clone behavior.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_event_clone() {
+        let event1 = super::WitEvent(123);
+        let event2 = event1.clone();
+
+        assert_eq!(event1.0, 123);
+        assert_eq!(event2.0, 123);
+    }
+
+    /// Test WitElement implements ElementHandle trait.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_element_handle() {
+        use tairitsu_vdom::ElementHandle;
+        use std::any::Any;
+
+        let element = super::WitElement(42);
+        let any_ref = element.as_any();
+
+        // Should be able to downcast back to WitElement
+        assert!(any_ref.is::<super::WitElement>());
+        if let Some(downcasted) = any_ref.downcast_ref::<super::WitElement>() {
+            assert_eq!(downcasted.0, 42);
+        } else {
+            panic!("Failed to downcast to WitElement");
+        }
+    }
+
+    /// Test WitEvent implements EventHandle trait.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_event_event_handle() {
+        use tairitsu_vdom::EventHandle;
+        use std::any::Any;
+
+        let event = super::WitEvent(999);
+        let any_ref = event.as_any();
+
+        // Should be able to downcast back to WitEvent
+        assert!(any_ref.is::<super::WitEvent>());
+        if let Some(downcasted) = any_ref.downcast_ref::<super::WitEvent>() {
+            assert_eq!(downcasted.0, 999);
+        } else {
+            panic!("Failed to downcast to WitEvent");
+        }
+    }
+
+    // ── WitPlatform tests ───────────────────────────────────────────────────
+
+    /// Test WitPlatform::new() on native targets (should fail).
+    #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
+    #[test]
+    fn test_wit_platform_new_native() {
+        let result = super::WitPlatform::new();
+        assert!(result.is_err(), "WitPlatform::new should fail on native targets");
+
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("wasm32"), "Error should mention wasm32");
+    }
+
+    /// Test WitPlatform::new() on wasm targets (should succeed).
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    #[test]
+    fn test_wit_platform_new_wasm() {
+        let result = super::WitPlatform::new();
+        assert!(result.is_ok(), "WitPlatform::new should succeed on wasm targets");
+    }
+
+    /// Test WitPlatform::set_style_static on native targets.
+    #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
+    #[test]
+    fn test_set_style_static_native() {
+        let element = super::WitElement(42);
+        let result = super::WitPlatform::set_style_static(&element, "color", "red");
+
+        // On native targets, this should return Ok(()) as a no-op
+        assert!(result.is_ok(), "set_style_static should return Ok on native targets");
+    }
+
+    /// Test WitPlatform::set_style_static with various inputs.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_set_style_static_inputs() {
+        let element = super::WitElement(1);
+
+        // Test with empty values
+        let result = super::WitPlatform::set_style_static(&element, "", "");
+        #[cfg(target_family = "wasm")]
+        {
+            // On wasm, this would try to call WIT functions
+            // We can't test actual behavior without a host, but we verify it compiles
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            assert!(result.is_ok(), "Empty style values should be handled");
+        }
+
+        // Test with CSS variable
+        let result = super::WitPlatform::set_style_static(&element, "--my-var", "blue");
+        #[cfg(not(target_family = "wasm"))]
+        {
+            assert!(result.is_ok(), "CSS variables should be handled");
+        }
+    }
+
+    // ── wasm_impl module tests ─────────────────────────────────────────────
+
+    /// Test next_callback_id increments.
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    #[test]
+    fn test_next_callback_id() {
+        use super::wasm_impl;
+
+        let id1 = wasm_impl::next_callback_id();
+        let id2 = wasm_impl::next_callback_id();
+        let id3 = wasm_impl::next_callback_id();
+
+        assert!(id2 > id1, "Callback IDs should increment");
+        assert!(id3 > id2, "Callback IDs should increment");
+        assert_eq!(id2, id1 + 1, "IDs should increment by 1");
+        assert_eq!(id3, id2 + 1, "IDs should increment by 1");
+    }
+
+    /// Test that log functions don't crash.
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    #[test]
+    fn test_log_functions_no_crash() {
+        use super::wasm_impl::{log_error, log_warning, log_info};
+
+        // These should not panic - they're no-ops on wasm
+        log_error("test error message");
+        log_warning("test warning message");
+        log_info("test info message");
+    }
+
+    /// Test log functions on native targets (stderr fallback).
+    #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
+    #[test]
+    fn test_log_functions_native() {
+        use super::wasm_impl::{log_error, log_warning, log_info};
+
+        // On native, these print to stderr
+        log_error("test error message");
+        log_warning("test warning message");
+        log_info("test info message");
+    }
+
+    /// Test WitElement Debug output.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_debug() {
+        let element = super::WitElement(42);
+        let debug_str = format!("{:?}", element);
+
+        assert!(debug_str.contains("42"), "Debug output should contain the handle value");
+    }
+
+    /// Test WitEvent can be cloned multiple times.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_event_multiple_clones() {
+        let event1 = super::WitEvent(100);
+        let event2 = event1.clone();
+        let event3 = event2.clone();
+
+        assert_eq!(event1.0, 100);
+        assert_eq!(event2.0, 100);
+        assert_eq!(event3.0, 100);
+    }
+
+    /// Test WitElement Copy trait behavior.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_copy() {
+        let elem1 = super::WitElement(55);
+        let elem2 = elem1; // WitElement is Copy
+
+        // Both should have the same value
+        assert_eq!(elem1.0, 55);
+        assert_eq!(elem2.0, 55);
+    }
+
+    /// Test WitElement as_any with different Any operations.
+    #[cfg(feature = "wit-bindings")]
+    #[test]
+    fn test_wit_element_any_operations() {
+        use tairitsu_vdom::ElementHandle;
+        use std::any::{Any, TypeId};
+
+        let element = super::WitElement(777);
+        let any_ref = element.as_any();
+
+        // Check TypeId
+        assert_eq!(any_ref.type_id(), TypeId::of::<super::WitElement>());
+
+        // Verify is<T>() works
+        assert!(any_ref.is::<super::WitElement>());
+        assert!(!any_ref.is::<String>());
+        assert!(!any_ref.is::<i32>());
+    }
 }

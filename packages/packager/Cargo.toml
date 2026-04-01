@@ -93,6 +93,9 @@ zip = { version = "^2", default-features = false, features = [
 # Embed browser-glue at compile time
 include_dir = "^0.7"
 
+[dev-dependencies]
+tempfile = "3"
+
 [features]
 default = ["tokio", "native", "cli"]
 native = ["tokio", "crossterm"]

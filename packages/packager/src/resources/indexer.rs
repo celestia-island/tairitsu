@@ -277,10 +277,60 @@ mod tests {
     }
 
     #[test]
+    fn test_compute_hash_consistent() {
+        let content = b"consistent content";
+        let hash1 = compute_hash(content);
+        let hash2 = compute_hash(content);
+        assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_compute_hash_different_content() {
+        let hash1 = compute_hash(b"content1");
+        let hash2 = compute_hash(b"content2");
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_compute_hash_empty() {
+        let content = b"";
+        let hash = compute_hash(content);
+        assert_eq!(hash.len(), 8);
+    }
+
+    #[test]
     fn test_resource_index_empty() {
         let index = ResourceIndex::new();
         assert!(index.is_empty());
         assert_eq!(index.count(), 0);
+    }
+
+    #[test]
+    fn test_resource_index_with_scss() {
+        let mut index = ResourceIndex::new();
+        index.scss.push(ScssResource {
+            source: "styles/main.scss".to_string(),
+            hash: "abc12345".to_string(),
+            output: "main.abc12345.css".to_string(),
+        });
+
+        assert!(!index.is_empty());
+        assert_eq!(index.count(), 1);
+        assert_eq!(index.scss.len(), 1);
+    }
+
+    #[test]
+    fn test_resource_index_with_svg() {
+        let mut index = ResourceIndex::new();
+        index.svg.push(SvgResource {
+            source: "icons/home.svg".to_string(),
+            hash: "def67890".to_string(),
+            id: "home".to_string(),
+        });
+
+        assert!(!index.is_empty());
+        assert_eq!(index.count(), 1);
+        assert_eq!(index.svg.len(), 1);
     }
 
     #[test]
@@ -303,5 +353,301 @@ mod tests {
         index1.merge(index2);
         assert_eq!(index1.scss.len(), 1);
         assert_eq!(index1.svg.len(), 1);
+        assert_eq!(index1.count(), 2);
+    }
+
+    #[test]
+    fn test_resource_index_save_and_load() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let index_path = temp_dir.path().join("index.json");
+
+        let mut index = ResourceIndex::new();
+        index.scss.push(ScssResource {
+            source: "test.scss".to_string(),
+            hash: "testhash".to_string(),
+            output: "test.testhash.css".to_string(),
+        });
+        index.svg.push(SvgResource {
+            source: "test.svg".to_string(),
+            hash: "svghash".to_string(),
+            id: "test".to_string(),
+        });
+
+        // Save
+        index.save(&index_path).unwrap();
+        assert!(index_path.exists());
+
+        // Load
+        let loaded = ResourceIndex::load(&index_path).unwrap();
+        assert_eq!(loaded.scss.len(), 1);
+        assert_eq!(loaded.svg.len(), 1);
+        assert_eq!(loaded.scss[0].source, "test.scss");
+        assert_eq!(loaded.svg[0].id, "test");
+    }
+
+    #[test]
+    fn test_resource_index_save_creates_directory() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let nested_path = temp_dir.path().join("nested/dir/index.json");
+
+        let index = ResourceIndex::new();
+        index.save(&nested_path).unwrap();
+
+        assert!(nested_path.exists());
+        assert!(nested_path.parent().unwrap().exists());
+    }
+
+    #[test]
+    fn test_resource_index_save_to_target() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let mut index = ResourceIndex::new();
+        index.scss.push(ScssResource {
+            source: "main.scss".to_string(),
+            hash: "aaaa1111".to_string(),
+            output: "main.aaaa1111.css".to_string(),
+        });
+
+        let output_path = index.save_to_target(temp_dir.path()).unwrap();
+
+        assert!(output_path.exists());
+        assert!(output_path.ends_with("tairitsu/resources/index.json"));
+    }
+
+    #[test]
+    fn test_resource_indexer_new() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let indexer = ResourceIndexer::new(temp_dir.path());
+
+        assert_eq!(indexer.root, temp_dir.path());
+        assert_eq!(indexer.exclude_dirs.len(), 4);
+        assert!(indexer.exclude_dirs.contains(&"target".to_string()));
+        assert!(indexer.exclude_dirs.contains(&"node_modules".to_string()));
+        assert!(indexer.exclude_dirs.contains(&".git".to_string()));
+        assert!(indexer.exclude_dirs.contains(&"dist".to_string()));
+        assert!(!indexer.include_hidden);
+    }
+
+    #[test]
+    fn test_resource_indexer_exclude() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let indexer = ResourceIndexer::new(temp_dir.path()).exclude("custom_exclude");
+
+        assert!(indexer.exclude_dirs.contains(&"custom_exclude".to_string()));
+    }
+
+    #[test]
+    fn test_resource_indexer_include_hidden() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let indexer = ResourceIndexer::new(temp_dir.path()).include_hidden(true);
+
+        assert!(indexer.include_hidden);
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_empty_directory() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let indexer = ResourceIndexer::new(temp_dir.path());
+
+        let index = indexer.scan().unwrap();
+        assert!(index.is_empty());
+        assert_eq!(index.count(), 0);
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_with_scss_files() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create SCSS directory and file
+        let scss_dir = temp_dir.path().join("scss");
+        std::fs::create_dir_all(&scss_dir).unwrap();
+        std::fs::write(scss_dir.join("main.scss"), b".test { color: red; }").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let index = indexer.scan().unwrap();
+
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, "scss/main.scss");
+        assert!(index.scss[0].output.starts_with("main."));
+        assert!(!index.scss[0].hash.is_empty());
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_with_svg_files() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create SVG directory and file
+        let svg_dir = temp_dir.path().join("icons");
+        std::fs::create_dir_all(&svg_dir).unwrap();
+        std::fs::write(svg_dir.join("home.svg"), b"<svg></svg>").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let index = indexer.scan().unwrap();
+
+        assert_eq!(index.svg.len(), 1);
+        assert_eq!(index.svg[0].source, "icons/home.svg");
+        assert_eq!(index.svg[0].id, "home");
+        assert!(!index.svg[0].hash.is_empty());
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_excludes_directories() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create files in excluded directories
+        let target_dir = temp_dir.path().join("target");
+        std::fs::create_dir_all(&target_dir).unwrap();
+        std::fs::write(target_dir.join("test.scss"), b".test {}").unwrap();
+
+        let node_modules_dir = temp_dir.path().join("node_modules");
+        std::fs::create_dir_all(&node_modules_dir).unwrap();
+        std::fs::write(node_modules_dir.join("test.scss"), b".test {}").unwrap();
+
+        // Create file in non-excluded directory
+        let src_dir = temp_dir.path().join("src");
+        std::fs::create_dir_all(&src_dir).unwrap();
+        std::fs::write(src_dir.join("main.scss"), b".test {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let index = indexer.scan().unwrap();
+
+        // Should only find the file in src, not in target or node_modules
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, "src/main.scss");
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_hidden_files() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create hidden file
+        std::fs::write(temp_dir.path().join(".hidden.scss"), b".test {}").unwrap();
+
+        // Create regular file
+        std::fs::write(temp_dir.path().join("visible.scss"), b".test {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let index = indexer.scan().unwrap();
+
+        // Should only find visible file
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, "visible.scss");
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_hidden_files_when_enabled() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create hidden file
+        std::fs::write(temp_dir.path().join(".hidden.scss"), b".test {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path()).include_hidden(true);
+        let index = indexer.scan().unwrap();
+
+        // Should find hidden file
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, ".hidden.scss");
+    }
+
+    #[test]
+    fn test_resource_indexer_scan_nested_directories() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create nested structure
+        let nested_dir = temp_dir.path().join("styles/components");
+        std::fs::create_dir_all(&nested_dir).unwrap();
+        std::fs::write(nested_dir.join("button.scss"), b".btn {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let index = indexer.scan().unwrap();
+
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, "styles/components/button.scss");
+    }
+
+    #[test]
+    fn test_resource_indexer_index_to_target() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let target_dir = tempfile::tempdir().unwrap();
+
+        // Create a test file
+        std::fs::write(temp_dir.path().join("test.scss"), b".test {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path());
+        let (index, output_path) = indexer.index_to_target(target_dir.path()).unwrap();
+
+        assert_eq!(index.scss.len(), 1);
+        assert!(output_path.exists());
+        assert!(output_path.starts_with(target_dir));
+    }
+
+    #[test]
+    fn test_resource_indexer_custom_exclude() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create directory to be excluded
+        let exclude_dir = temp_dir.path().join("vendor");
+        std::fs::create_dir_all(&exclude_dir).unwrap();
+        std::fs::write(exclude_dir.join("test.scss"), b".test {}").unwrap();
+
+        // Create regular directory
+        let src_dir = temp_dir.path().join("src");
+        std::fs::create_dir_all(&src_dir).unwrap();
+        std::fs::write(src_dir.join("main.scss"), b".test {}").unwrap();
+
+        let indexer = ResourceIndexer::new(temp_dir.path()).exclude("vendor");
+        let index = indexer.scan().unwrap();
+
+        // Should only find the file in src
+        assert_eq!(index.scss.len(), 1);
+        assert_eq!(index.scss[0].source, "src/main.scss");
+    }
+
+    #[test]
+    fn test_path_relative_to() {
+        let root = tempfile::tempdir().unwrap();
+        let file_path = root.path().join("subdir").join("file.txt");
+
+        // Create the file so it exists
+        std::fs::create_dir_all(file_path.parent().unwrap()).unwrap();
+        std::fs::write(&file_path, b"content").unwrap();
+
+        let relative = path_relative_to(root.path(), &file_path).unwrap();
+        assert_eq!(relative, "subdir/file.txt");
+    }
+
+    #[test]
+    fn test_path_relative_to_not_relative() {
+        let root = tempfile::tempdir().unwrap();
+        let other_root = tempfile::tempdir().unwrap();
+        let file_path = other_root.path().join("file.txt");
+
+        let result = path_relative_to(root.path(), &file_path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_resource_index_serialization() {
+        let index = ResourceIndex {
+            scss: vec![ScssResource {
+                source: "test.scss".to_string(),
+                hash: "12345678".to_string(),
+                output: "test.12345678.css".to_string(),
+            }],
+            svg: vec![SvgResource {
+                source: "test.svg".to_string(),
+                hash: "abcdefgh".to_string(),
+                id: "test".to_string(),
+            }],
+        };
+
+        let json = serde_json::to_string(&index).unwrap();
+        assert!(json.contains("\"scss\""));
+        assert!(json.contains("\"svg\""));
+        assert!(json.contains("test.scss"));
+
+        let deserialized: ResourceIndex = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.scss.len(), 1);
+        assert_eq!(deserialized.svg.len(), 1);
     }
 }
