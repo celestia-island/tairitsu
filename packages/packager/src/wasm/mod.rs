@@ -879,6 +879,7 @@ fn generate_component_html_with_output_dir(
 
 /// Middleware that prevents browsers from caching JS/WASM/HTML assets in dev mode.
 /// Without this, browsers serve stale cached modules even after a file changes.
+#[cfg(feature = "dev-server")]
 async fn no_cache_headers(
     request: axum::extract::Request,
     next: axum::middleware::Next,
@@ -902,6 +903,7 @@ async fn no_cache_headers(
     response
 }
 
+#[cfg(feature = "dev-server")]
 pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
     use axum::{Router, middleware, response::Html, routing::get};
     use tower_http::services::ServeDir;

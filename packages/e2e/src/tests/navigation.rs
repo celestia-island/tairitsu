@@ -27,7 +27,9 @@ impl NavigationTests {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Click on "Guides" link in top nav
-        let guides_link = driver.find(By::Css("a[href=\"/guides/quick-start\"]")).await?;
+        let guides_link = driver
+            .find(By::Css("a[href=\"/guides/quick-start\"]"))
+            .await?;
         guides_link.click().await?;
         tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -99,7 +101,10 @@ impl NavigationTests {
         Ok(TestResult {
             component: "Sidebar Navigation".to_string(),
             status: crate::tests::TestStatus::Success,
-            message: format!("Clicked {} sidebar links successfully", 3.min(sidebar_links.len())),
+            message: format!(
+                "Clicked {} sidebar links successfully",
+                3.min(sidebar_links.len())
+            ),
             duration_ms: duration,
             screenshot_path: None,
         })
@@ -117,7 +122,9 @@ impl NavigationTests {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Navigate to a few pages
-        let guides_link = driver.find(By::Css("a[href=\"/guides/quick-start\"]")).await?;
+        let guides_link = driver
+            .find(By::Css("a[href=\"/guides/quick-start\"]"))
+            .await?;
         guides_link.click().await?;
         tokio::time::sleep(Duration::from_millis(200)).await;
 

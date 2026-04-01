@@ -58,6 +58,7 @@ export TAIRITSU_WIT_OFFLINE=1
 ```
 
 When offline mode is enabled:
+
 - Network requests are skipped
 - Only cached/embedded packages are used
 - Fails fast if package not available

@@ -17,6 +17,7 @@ tairitsu build
 ```
 
 Options:
+
 - `--release`: Build with optimizations
 - `--target`: Specify target directory
 - `--features`: Enable cargo features
@@ -30,6 +31,7 @@ tairitsu doctor
 ```
 
 Checks for:
+
 - Rust toolchain
 - WASM target
 - WIT dependencies
@@ -53,6 +55,7 @@ tairitsu dev
 ```
 
 Features:
+
 - Hot module reloading
 - Fast rebuilds
 - Local development server
@@ -120,6 +123,7 @@ let styles = tairitsu_style::css!(
 ### Resource Indexing
 
 Automatic asset discovery and bundling:
+
 - Images
 - Fonts
 - Static files

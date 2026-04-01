@@ -13,6 +13,7 @@ Web platform implementations and browser integration for Tairitsu.
 WIT-backed platform using the WebAssembly Component Model.
 
 **Features:**
+
 - Type-safe WIT bindings
 - Opaque handle pattern (u64)
 - Efficient handle caching
@@ -32,6 +33,7 @@ platform.mount_vnode_to_app(&vnode)?;
 Direct web-sys bindings for native-feeling browser interaction.
 
 **Features:**
+
 - Direct DOM access via web-sys
 - Event handling
 - CSS manipulation
@@ -44,6 +46,7 @@ Direct web-sys bindings for native-feeling browser interaction.
 ### wit_platform
 
 WIT-backed platform implementation with:
+
 - Opaque handles (`WitElement`, `WitEvent`)
 - Handle caching for performance
 - Event callbacks
@@ -52,6 +55,7 @@ WIT-backed platform implementation with:
 ### handle_cache
 
 Performance optimization for caching DOM handles:
+
 - Style handle caching
 - Cache statistics
 - Thread-local storage
@@ -59,6 +63,7 @@ Performance optimization for caching DOM handles:
 ### batch_ops
 
 Batch DOM operations for performance:
+
 - Group style updates
 - Group attribute updates
 - Reduce WIT round-trips
@@ -66,6 +71,7 @@ Batch DOM operations for performance:
 ### router
 
 File-system based routing:
+
 - Static routes
 - Dynamic routes (`:id`)
 - Wildcard routes (`*`)
@@ -74,6 +80,7 @@ File-system based routing:
 ### i18n
 
 Internationalization support:
+
 - Multi-language resources
 - Context-based translation
 - Pluralization
