@@ -91,6 +91,16 @@ impl Default for HandleCache {
     }
 }
 
+impl Clone for HandleCache {
+    fn clone(&self) -> Self {
+        Self {
+            style_handles: RefCell::new(self.style_handles.borrow().clone()),
+            hits: RefCell::new(*self.hits.borrow()),
+            misses: RefCell::new(*self.misses.borrow()),
+        }
+    }
+}
+
 /// Cache statistics.
 #[derive(Debug, Clone, Copy)]
 pub struct CacheStats {
