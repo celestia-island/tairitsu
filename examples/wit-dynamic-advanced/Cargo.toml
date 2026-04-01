@@ -18,8 +18,8 @@ bytes = "^1"
 serde = { version = "^1", features = ["derive"] }
 
 # WASM dependencies (re-exported by tairitsu, but needed for direct use)
-wasmtime = { version = "^42", features = ["component-model"] }
-wasmtime-wasi = "^42"
+wasmtime = { version = "^43", features = ["component-model"] }
+wasmtime-wasi = "^43"
 
 # Logging
 env_logger = "^0.11"
