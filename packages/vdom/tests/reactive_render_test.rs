@@ -197,11 +197,7 @@ impl Platform for MockPlatform {
         false
     }
 
-    fn media_query_list_add_listener(
-        &self,
-        _list: u64,
-        _callback: Box<dyn FnMut(bool)>,
-    ) -> u64 {
+    fn media_query_list_add_listener(&self, _list: u64, _callback: Box<dyn FnMut(bool)>) -> u64 {
         0
     }
 

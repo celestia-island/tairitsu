@@ -146,7 +146,7 @@ impl<R> Callback<(), R> {
     where
         F: Fn() -> R + 'static,
     {
-        Self::new(move |_| f())
+        Self::new(move |()| f())
     }
 }
 

@@ -180,7 +180,8 @@ where
     #[cfg(unix)]
     {
         let exe = env::current_exe()?;
-        let args: Vec<String> = args.into_iter()
+        let args: Vec<String> = args
+            .into_iter()
             .skip(1) // Skip argv[0] which is the program name
             .map(|s| s.as_ref().to_string_lossy().into_owned())
             .collect();
@@ -205,7 +206,8 @@ where
     #[cfg(windows)]
     {
         let exe = env::current_exe()?;
-        let args: Vec<String> = args.into_iter()
+        let args: Vec<String> = args
+            .into_iter()
             .skip(1) // Skip argv[0] which is the program name
             .map(|s| s.as_ref().to_string_lossy().into_owned())
             .collect();
@@ -218,12 +220,7 @@ where
 
         // On Windows, use START to create a detached process
         let _ = Command::new("cmd")
-            .args(&[
-                "/C",
-                "start",
-                "/B",
-                &exe.to_string_lossy(),
-            ])
+            .args(&["/C", "start", "/B", &exe.to_string_lossy()])
             .args(&args)
             .env("TAIRITSU_DAEMON", "1")
             .spawn()?;

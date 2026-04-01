@@ -11,16 +11,20 @@
 - **WIT 生成**: `scripts/generate_browser_wit.py` 生成 26 个领域
 - **多语言文档**: 7 种语言文档完整
 - **justfile 命令**: 完整的 WIT 生成命令集
+- **单元测试**: 270+ 个测试用例
+  - WIT Resolver: 16 个测试 ✅
+  - WIT Platform: 完整测试覆盖 ✅
+  - WebIDL 解析器: 159 个 Python 测试 ✅
+  - 构建工具: 92 个测试 ✅
 
 ### 进行中 🔄
-- 测试覆盖率提升 (当前 ~4.7%)
+- 代码质量检查和修复
 
 ### 待办 📋
-- WIT Resolver 单元测试
-- WIT Platform 单元测试
-- WebIDL 解析器单元测试
-- 构建工具单元测试
 - 宏系统单元测试
+- VDOM 渲染核心测试
+- E2E 测试增强
+- 性能优化
 
 ---
 

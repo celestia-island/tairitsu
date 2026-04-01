@@ -116,7 +116,8 @@ mod tests {
     #[test]
     fn test_inject_into_html_with_existing_head_content() {
         let injector = StyleInjector::new();
-        let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>"#;
+        let html =
+            r#"<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>"#;
         let css = "body { margin: 0; }";
 
         let result = injector.inject_into_html(html, css).unwrap();
