@@ -98,7 +98,7 @@ include_dir = "^0.7"
 tempfile = "3"
 
 [features]
-default = ["tokio", "native", "cli"]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch"]
 native = ["tokio", "crossterm"]
 dev-server = ["axum", "tower-http", "notify", "tairitsu-ssr", "tokio"]
 ssr = ["tairitsu-ssr", "tokio"]
