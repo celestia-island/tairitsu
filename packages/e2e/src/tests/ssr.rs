@@ -2,10 +2,12 @@
 //!
 //! Tests for Server-Side Rendering functionality.
 
-use crate::tests::{Test, TestResult};
 use anyhow::Result;
 use std::path::PathBuf;
+
 use tracing::info;
+
+use crate::tests::{Test, TestResult};
 
 // Import WebDriver for the trait - we don't use it but need it for the impl
 use thirtyfour::WebDriver;

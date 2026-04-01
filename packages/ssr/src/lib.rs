@@ -13,14 +13,12 @@ pub mod html_render;
 pub mod linker;
 pub mod stubs;
 pub mod virtual_dom;
-
 #[cfg(feature = "streaming")]
 pub mod streaming;
 
 pub use host_state::{SsrConfig, SsrHostState};
 pub use html_render::FullDocumentConfig;
 pub use virtual_dom::{SsrDom, SsrNode, SsrNodeKind};
-
 #[cfg(feature = "streaming")]
 pub use streaming::{
     HtmlChunk, HtmlStream, hydration_script, render_suspense_boundary, render_to_stream,

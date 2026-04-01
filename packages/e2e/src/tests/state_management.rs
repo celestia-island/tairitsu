@@ -99,7 +99,10 @@ impl StateManagementTests {
         if !display_text.contains(test_text) {
             return Ok(TestResult::failure(
                 "Input State Binding",
-                &format!("Input binding failed: expected '{}', got '{}'", test_text, display_text),
+                &format!(
+                    "Input binding failed: expected '{}', got '{}'",
+                    test_text, display_text
+                ),
             ));
         }
 
@@ -159,7 +162,10 @@ impl StateManagementTests {
         Ok(TestResult {
             component: "Checkbox State".to_string(),
             status: crate::tests::TestStatus::Success,
-            message: format!("Checkbox toggled: {} -> {} -> {}", initial_text, new_text, final_text),
+            message: format!(
+                "Checkbox toggled: {} -> {} -> {}",
+                initial_text, new_text, final_text
+            ),
             duration_ms: duration,
             screenshot_path: None,
         })
@@ -226,7 +232,10 @@ impl StateManagementTests {
         Ok(TestResult {
             component: "List State".to_string(),
             status: crate::tests::TestStatus::Success,
-            message: format!("List state management: {} -> {} items", initial_count, new_count),
+            message: format!(
+                "List state management: {} -> {} items",
+                initial_count, new_count
+            ),
             duration_ms: duration,
             screenshot_path: None,
         })
@@ -264,7 +273,8 @@ impl StateManagementTests {
             info!("Computed area: {}", area_text);
 
             // Should be 200 (10 * 20)
-            if !area_text.contains("200") && !area_text.contains("10") && !area_text.contains("20") {
+            if !area_text.contains("200") && !area_text.contains("10") && !area_text.contains("20")
+            {
                 return Ok(TestResult::failure(
                     "Reactive Updates",
                     &format!("Computed value did not update: {}", area_text),

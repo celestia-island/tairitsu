@@ -4,10 +4,12 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::env;
-use std::fs::{self, File};
-use std::path::PathBuf;
-use std::process::Command;
+use std::{
+    env,
+    fs::{self, File},
+    path::PathBuf,
+    process::Command,
+};
 
 /// Path to the daemon log file in target directory
 const DAEMON_LOG_PATH: &str = "target/tairitsu-packager.log";

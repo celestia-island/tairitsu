@@ -2,16 +2,18 @@
 
 use anyhow::{Context, Result, bail};
 use futures::StreamExt;
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
+
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
 use tracing::info;
 
-use super::cache::BrowserCache;
-use super::platform::Platform;
+use super::{cache::BrowserCache, platform::Platform};
 
 /// Chrome for Testing version (stable)
 pub const CHROME_VERSION: &str = "146.0.7680.153";

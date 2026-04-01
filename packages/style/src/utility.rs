@@ -4,8 +4,9 @@
 //! that can be registered with the ClassesBuilder and used to generate
 //! CSS classes with variants (responsive, state, etc.).
 
-use crate::properties::{CssCategory, CssProperty, Property};
 use std::sync::Arc;
+
+use crate::properties::{CssCategory, CssProperty, Property};
 
 /// Responsive breakpoint variants
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

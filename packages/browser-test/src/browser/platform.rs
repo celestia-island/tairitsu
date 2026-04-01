@@ -1,7 +1,6 @@
 //! Platform detection for browser downloads
 
-use std::env;
-use std::fmt;
+use std::{env, fmt};
 
 /// Supported platforms for browser downloads
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

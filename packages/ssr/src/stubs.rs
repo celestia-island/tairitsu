@@ -13,9 +13,11 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 
-use crate::host_state::SsrHostState;
 use anyhow::Result;
+
 use wasmtime::component::Linker;
+
+use crate::host_state::SsrHostState;
 
 // Include auto-generated stub implementations
 // The generated file contains register_all_auto_stubs() function

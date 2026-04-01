@@ -7,10 +7,11 @@
 //! - List state (add/remove items)
 //! - Computed/reactive values
 
+use std::{cell::RefCell, rc::Rc};
+
 use tairitsu_hooks::use_signal;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{InputEvent, VNode, VText};
-use std::{cell::RefCell, rc::Rc};
 
 /// Render the state management test page.
 pub fn render() -> VNode {

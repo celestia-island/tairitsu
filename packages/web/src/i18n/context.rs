@@ -2,9 +2,9 @@
 //!
 //! I18n context using Tairitsu hooks for dependency injection.
 
-use crate::keys::I18nKeys;
-use crate::language::Language;
 use tairitsu_hooks::{consume_context, provide_context};
+
+use crate::{keys::I18nKeys, language::Language};
 
 /// I18n context containing language data
 #[derive(Clone)]

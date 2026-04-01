@@ -20,13 +20,12 @@
 //! let vnode = router.render("/users/123");
 //! ```
 
-use std::{collections::HashMap, fmt, sync::Arc};
-
-use tairitsu_vdom::VNode;
-
 pub mod segment;
 
+use std::{collections::HashMap, fmt, sync::Arc};
+
 pub use segment::{RouteSegment, SegmentType};
+use tairitsu_vdom::VNode;
 
 /// A route in the router
 #[derive(Clone)]

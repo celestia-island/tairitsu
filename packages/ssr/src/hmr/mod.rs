@@ -8,10 +8,10 @@
 mod protocol;
 mod registry;
 
+use std::sync::{Arc, RwLock};
+
 pub use protocol::{HmrMessage, ModuleState};
 pub use registry::{ModuleInfo, ModuleRegistry};
-
-use std::sync::{Arc, RwLock};
 
 /// Default HMR server port
 pub const DEFAULT_HMR_PORT: u16 = 24678;

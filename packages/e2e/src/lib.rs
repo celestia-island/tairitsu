@@ -89,7 +89,10 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         Ok(result) => results.push(result),
         Err(e) => {
             eprintln!("State management test suite failed: {}", e);
-            results.push(TestResult::error("StateManagementTests", e.to_string().as_str()));
+            results.push(TestResult::error(
+                "StateManagementTests",
+                e.to_string().as_str(),
+            ));
         }
     }
 
@@ -99,7 +102,10 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         Ok(result) => results.push(result),
         Err(e) => {
             eprintln!("Form validation test suite failed: {}", e);
-            results.push(TestResult::error("FormValidationTests", e.to_string().as_str()));
+            results.push(TestResult::error(
+                "FormValidationTests",
+                e.to_string().as_str(),
+            ));
         }
     }
 
@@ -109,7 +115,10 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         Ok(result) => results.push(result),
         Err(e) => {
             eprintln!("Async operations test suite failed: {}", e);
-            results.push(TestResult::error("AsyncOperationsTests", e.to_string().as_str()));
+            results.push(TestResult::error(
+                "AsyncOperationsTests",
+                e.to_string().as_str(),
+            ));
         }
     }
 

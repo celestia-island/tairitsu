@@ -9,8 +9,9 @@
 //! Before using these functions in a WIT environment, you must call
 //! [`register_wit_functions`] to provide the WIT binding functions.
 
-use crate::platform::DomRect;
 use std::sync::Mutex;
+
+use crate::platform::DomRect;
 
 // Global function pointers for WIT operations
 static WIT_FUNCS: Mutex<Option<WitFuncs>> = Mutex::new(None);

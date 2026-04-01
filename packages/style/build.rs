@@ -5,10 +5,7 @@
 //! 2. Generates Rust code for the CssProperty enum
 //! 3. Writes the generated code to src/properties/generated.rs
 
-use std::collections::BTreeMap;
-use std::env;
-use std::fs;
-use std::path::Path;
+use std::{collections::BTreeMap, env, fs, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-changed=css_data/css_properties.json");

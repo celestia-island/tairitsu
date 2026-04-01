@@ -7,6 +7,7 @@
 //! 4. Event handlers receive correct MouseEvent data
 
 use std::cell::RefCell;
+
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 

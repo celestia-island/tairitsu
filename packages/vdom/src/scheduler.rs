@@ -3,12 +3,15 @@
 //! This module provides the scheduler that batches re-render requests and
 //! applies them using requestAnimationFrame for optimal performance.
 
-use std::{cell::RefCell, rc::Rc, sync::atomic::AtomicUsize, sync::atomic::Ordering};
+use std::{
+    cell::RefCell,
+    rc::Rc,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use tracing::trace;
 
-use crate::VNode;
-use crate::platform::Platform;
+use crate::{VNode, platform::Platform};
 
 /// Global scheduler ID counter
 static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);

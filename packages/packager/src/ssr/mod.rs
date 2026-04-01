@@ -4,14 +4,14 @@
 //! - Development server with server-side rendering
 //! - Static site generation (pre-rendering)
 
-use crate::config::Config;
+pub mod prerender;
+
 use anyhow::Result;
 use std::path::PathBuf;
-use tracing::{error, warn};
 
 #[cfg(feature = "ssr")]
 use tracing::info;
-
+use tracing::{error, warn};
 #[cfg(feature = "dev-server")]
 use {
     axum::{
@@ -25,7 +25,7 @@ use {
     tower_http::services::ServeDir,
 };
 
-pub mod prerender;
+use crate::config::Config;
 
 /// Start the SSR development server
 ///

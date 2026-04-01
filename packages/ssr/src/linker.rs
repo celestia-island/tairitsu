@@ -2,10 +2,11 @@
 //!
 //! This module registers all WIT interface implementations with the wasmtime Linker.
 
-use crate::host_state::SsrHostState;
-use crate::stubs;
 use anyhow::Result;
+
 use wasmtime::component::{HasSelf, Linker};
+
+use crate::{host_state::SsrHostState, stubs};
 
 /// Register all SSR WIT implementations with the linker (direct version)
 ///

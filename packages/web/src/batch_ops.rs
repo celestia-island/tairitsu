@@ -2,8 +2,7 @@
 //!
 //! Groups multiple DOM operations together to reduce WIT round-trips.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
 use crate::wit_platform::WitElement;
 
@@ -126,7 +125,12 @@ impl BatchOps {
 
     /// Get the number of operations in the batch.
     pub fn len(&self) -> usize {
-        let styles_count = self.styles.borrow().values().map(|v| v.len()).sum::<usize>();
+        let styles_count = self
+            .styles
+            .borrow()
+            .values()
+            .map(|v| v.len())
+            .sum::<usize>();
         let attrs_count = self.attrs.borrow().values().map(|v| v.len()).sum::<usize>();
         let removals_count = self.removals.borrow().len();
         styles_count + attrs_count + removals_count

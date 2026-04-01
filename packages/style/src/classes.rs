@@ -1,5 +1,6 @@
-use super::utility::{UtilityClass, UtilityRegistry};
 use std::sync::{Arc, RwLock};
+
+use super::utility::{UtilityClass, UtilityRegistry};
 
 pub struct ClassesBuilder {
     classes: Vec<String>,
