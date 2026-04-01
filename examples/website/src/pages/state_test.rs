@@ -9,7 +9,7 @@
 
 use tairitsu_hooks::use_signal;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{InputEvent, MouseEvent, VNode, VText};
+use tairitsu_vdom::{InputEvent, VNode, VText};
 use std::{cell::RefCell, rc::Rc};
 
 /// Render the state management test page.
@@ -139,7 +139,7 @@ pub fn render() -> VNode {
                             .borrow()
                             .iter()
                             .enumerate()
-                            .map(|(i, item)| {
+                            .map(|(_i, item)| {
                                 rsx! {
                                     li {
                                         style: "margin: 5px 0; display: flex; align-items: center; gap: 10px;",

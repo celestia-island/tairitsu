@@ -54,7 +54,7 @@ fn test_mouse_event_builder_client_y() {
 #[test]
 fn test_mouse_event_builder_event_handle() {
     let handle = EventWitHandle::from_wit(999);
-    let event = MouseEvent::new().event_handle(handle);
+    let _event = MouseEvent::new().event_handle(handle);
 
     // The handle should be set internally
 }

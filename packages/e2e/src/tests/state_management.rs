@@ -9,7 +9,7 @@
 use anyhow::Result;
 use std::time::{Duration, Instant};
 
-use thirtyfour::{By, WebDriver, WebElement};
+use thirtyfour::{By, WebDriver};
 use tracing::info;
 
 use crate::tests::{Test, TestResult};

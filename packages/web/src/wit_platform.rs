@@ -77,6 +77,7 @@ impl EventHandle for WitEvent {
 ///
 /// [`tairitsu_vdom::Platform`] is only implemented on `wasm32` targets.
 /// On native hosts [`WitPlatform::new`] returns `Err`.
+#[derive(Debug)]
 #[cfg(feature = "wit-bindings")]
 pub struct WitPlatform;
 
@@ -1660,7 +1661,6 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_element_element_handle() {
-        use std::any::Any;
         use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement(42);
@@ -1679,7 +1679,6 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_event_event_handle() {
-        use std::any::Any;
         use tairitsu_vdom::EventHandle;
 
         let event = super::WitEvent(999);
@@ -1791,18 +1790,6 @@ mod tests {
         log_info("test info message");
     }
 
-    /// Test log functions on native targets (stderr fallback).
-    #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
-    #[test]
-    fn test_log_functions_native() {
-        use super::wasm_impl::{log_error, log_info, log_warning};
-
-        // On native, these print to stderr
-        log_error("test error message");
-        log_warning("test warning message");
-        log_info("test info message");
-    }
-
     /// Test WitElement Debug output.
     #[cfg(feature = "wit-bindings")]
     #[test]
@@ -1845,7 +1832,7 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_element_any_operations() {
-        use std::any::{Any, TypeId};
+        use std::any::TypeId;
         use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement(777);
