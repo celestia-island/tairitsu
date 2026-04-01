@@ -26,8 +26,13 @@ import argparse
 import re
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
+
+
+# WIT package version (bump this when breaking changes occur)
+WIT_VERSION = "0.2.0"
 
 
 def log_info(message: str) -> None:
@@ -75,6 +80,14 @@ class WebIDLInterface:
     members: List[WebIDLMember]
     is_partial: bool = False
     is_mixin: bool = False
+    source_spec: str = ""
+
+
+@dataclass
+class WebIDLTypedef:
+    """Represents a WebIDL typedef (type alias)."""
+    name: str
+    target_type: str
     source_spec: str = ""
 
 
@@ -271,6 +284,12 @@ def sanitize_wit_ident(name: str) -> str:
 def convert_type(type_str: str) -> str:
     """Convert a WebIDL type string to a WIT type string."""
     type_str = re.sub(r"\[[^\]]*\]\s*", "", type_str).strip()
+
+    # Resolve type alias (typedef)
+    if type_str in TYPE_ALIASES:
+        original = type_str
+        type_str = TYPE_ALIASES[type_str]
+        log_info(f"Resolved type alias: {original} -> {type_str}")
 
     # Nullable: T?
     nullable = type_str.endswith("?")
@@ -588,6 +607,30 @@ def parse_webidl_file(
     interfaces: Dict[str, WebIDLInterface] = {}
     pos = 0
 
+    # First pass: collect all typedefs
+    TYPE_ALIASES.clear()
+    while pos < len(text):
+        # Find 'typedef' keyword
+        typedef_m = re.search(r"\btypedef\s+", text[pos:])
+        if typedef_m:
+            typedef_start = pos + typedef_m.start()
+            typedef_end = text.find(";", typedef_start)
+            if typedef_end != -1:
+                typedef_text = text[typedef_start:typedef_end]
+                # Parse: typedef target_type alias_name;
+                typedef_parts = typedef_text[7:].strip().rsplit(None, 1)
+                if len(typedef_parts) == 2:
+                    target_type, alias_name = typedef_parts
+                    target_type = target_type.strip()
+                    alias_name = alias_name.strip()
+                    TYPE_ALIASES[alias_name] = target_type
+                    log_info(f"Found typedef: {alias_name} = {target_type}")
+            pos = typedef_end + 1
+        else:
+            break
+
+    # Second pass: parse interfaces
+    pos = 0
     while pos < len(text):
         # Find 'interface' keyword (may be preceded by 'partial')
         m = re.search(r"\b(partial\s+)?interface(\s+mixin)?\s+", text[pos:])
@@ -664,7 +707,7 @@ def parse_webidl_file(
 # because they represent global browser objects (window, document, navigator)
 GLOBAL_SINGLETON_INTERFACES = {
     "window",
-    "document", 
+    "document",
     "navigator",
     "location",
     "history",
@@ -674,6 +717,10 @@ GLOBAL_SINGLETON_INTERFACES = {
     "crypto",
     "fetch",
 }
+
+# Global type alias registry (typedefs)
+# Maps alias name to target WebIDL type
+TYPE_ALIASES: Dict[str, str] = {}
 
 
 def _wit_interface_block(iface: WebIDLInterface) -> Optional[str]:
@@ -904,11 +951,14 @@ def generate_domain_wit(
         f"/// Source specs: {', '.join(source_specs)}",
         "/// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)",
         "///",
+        f"/// Version: {WIT_VERSION}",
+        f"/// Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        "///",
         "/// All browser objects are represented as opaque u64 handles.",
         "/// Regenerate with: just wit-gen",
         "///",
         "/// Status: auto-generated (Phase A) — review before use in production",
-        f"package tairitsu-browser:{domain}@0.2.0;",
+        f"package tairitsu-browser:{domain}@{WIT_VERSION};",
         "",
     ]
 

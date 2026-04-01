@@ -3,18 +3,23 @@
 //! A unified build tool for Tairitsu applications with component-model-first flow.
 //! Uses Cargo.toml metadata for configuration instead of HTML templates.
 
+#[cfg(feature = "cli")]
 pub mod cli;
 pub mod config;
+#[cfg(feature = "tokio")]
 pub mod daemon;
 pub mod i18n;
 pub mod icons;
 pub mod resources;
+#[cfg(feature = "ssr")]
 pub mod ssr;
 pub mod styles;
 pub mod utils;
+#[cfg(feature = "tokio")]
 pub mod wasm;
 pub mod wit_cmd;
 
+#[cfg(feature = "cli")]
 pub use cli::run;
 pub use config::{Config, TairitsuMetadata};
 pub use icons::{
