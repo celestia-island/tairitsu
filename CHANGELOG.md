@@ -1,6 +1,14 @@
-# Changes since v0.3.0
+# [Unreleased]
 
-Generated on 2026-04-01
+## Features
+
+### Build
+
+- Add automated changelog generation from git history
+- Add semantic version management script
+- Initialize version tracking system
+
+## [0.3.0] - 2026-04-01
 
 ## Features
 
@@ -775,3 +783,6 @@ Generated on 2026-04-01
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+[Unreleased]: https://github.com/tairitsu/tairitsu/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tairitsu/tairitsu/releases/tag/v0.3.0
