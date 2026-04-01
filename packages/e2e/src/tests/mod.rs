@@ -1,23 +1,31 @@
+pub mod async_operations;
 pub mod basic_components;
 pub mod build;
 pub mod doctor;
 pub mod error_handling;
 pub mod events;
+pub mod form_validation;
 pub mod lifecycle;
+pub mod navigation;
 pub mod ssr;
+pub mod state_management;
 pub mod style_integration;
 pub mod svg_safety;
 
 use anyhow::Result;
 use thirtyfour::WebDriver;
 
+pub use async_operations::AsyncOperationsTests;
 pub use basic_components::BasicComponentsTests;
 pub use build::BuildTests;
 pub use doctor::DoctorTests;
 pub use error_handling::ErrorHandlingTests;
 pub use events::EventTests;
+pub use form_validation::FormValidationTests;
 pub use lifecycle::LifecycleTests;
+pub use navigation::NavigationTests;
 pub use ssr::SsrTests;
+pub use state_management::StateManagementTests;
 pub use style_integration::StyleIntegrationTests;
 pub use svg_safety::SvgSafetyTests;
 

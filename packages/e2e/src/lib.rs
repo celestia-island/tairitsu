@@ -73,6 +73,46 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         }
     }
 
+    // Navigation Tests
+    info!("Running Navigation Tests...");
+    match tests::Test::run_with_driver(&tests::NavigationTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("Navigation test suite failed: {}", e);
+            results.push(TestResult::error("NavigationTests", e.to_string().as_str()));
+        }
+    }
+
+    // State Management Tests
+    info!("Running State Management Tests...");
+    match tests::Test::run_with_driver(&tests::StateManagementTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("State management test suite failed: {}", e);
+            results.push(TestResult::error("StateManagementTests", e.to_string().as_str()));
+        }
+    }
+
+    // Form Validation Tests
+    info!("Running Form Validation Tests...");
+    match tests::Test::run_with_driver(&tests::FormValidationTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("Form validation test suite failed: {}", e);
+            results.push(TestResult::error("FormValidationTests", e.to_string().as_str()));
+        }
+    }
+
+    // Async Operations Tests
+    info!("Running Async Operations Tests...");
+    match tests::Test::run_with_driver(&tests::AsyncOperationsTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("Async operations test suite failed: {}", e);
+            results.push(TestResult::error("AsyncOperationsTests", e.to_string().as_str()));
+        }
+    }
+
     // SVG Safety Tests (don't require WebDriver)
     info!("Running SVG Safety Tests...");
     match tests::Test::run_with_driver(&tests::SvgSafetyTests, driver).await {
