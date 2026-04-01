@@ -346,15 +346,7 @@ dev: init
     @echo "Starting Tairitsu dev server  (watch mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    @cd examples/website && cargo run --package tairitsu-packager -- dev --watch
-
-# Start old web-demo (deprecated)
-dev-old:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "⚠️  Starting OLD web-demo (deprecated, use 'just dev' instead)"
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo ""
-    cd examples/web-demo && cargo run --package tairitsu-packager -- dev
+    @cd examples/website && cargo run --package tairitsu-packager --features dev-server -- dev --watch
 
 # Build web demo for production (using tairitsu-packager)
 build-web: init
@@ -511,7 +503,6 @@ info:
     @echo ""
     @echo "Available examples:"
     @echo "  - website:           New website demo (run with 'just dev')"
-    @echo "  - web-demo:          Old web demo (deprecated, run with 'just dev-old')"
     @echo "  - wit-native-simple: trait-based composable WIT interfaces"
     @echo "  - wit-native-macro: macro-generated WIT interfaces"
     @echo ""
