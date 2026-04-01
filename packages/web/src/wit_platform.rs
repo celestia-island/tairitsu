@@ -170,6 +170,65 @@ impl WitPlatform {
             wasm_impl::apply_patches(self, _parent, _patches)
         }
     }
+
+    /// Clear the handle cache.
+    ///
+    /// Call this when doing large-scale DOM updates or navigation to
+    /// invalidate all cached handles.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tairitsu_web::WitPlatform;
+    ///
+    /// // After navigation or major DOM update
+    /// WitPlatform::clear_cache();
+    /// ```
+    pub fn clear_cache() {
+        #[cfg(target_family = "wasm")]
+        {
+            crate::handle_cache::HandleCache::with(|cache| cache.clear());
+        }
+    }
+
+    /// Get cache statistics for debugging and monitoring.
+    ///
+    /// # Returns
+    ///
+    /// Returns cache statistics including hit rate, number of entries, etc.
+    pub fn cache_stats() -> crate::handle_cache::CacheStats {
+        #[cfg(target_family = "wasm")]
+        {
+            crate::handle_cache::HandleCache::with(|cache| cache.stats())
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            crate::handle_cache::CacheStats {
+                hits: 0,
+                misses: 0,
+                total: 0,
+                hit_rate: 0.0,
+                size: 0,
+            }
+        }
+    }
+
+    /// Invalidate cached handles for a specific element.
+    ///
+    /// Call this when an element's style declaration is replaced or
+    /// the element is otherwise modified in a way that invalidates cached handles.
+    ///
+    /// # Arguments
+    ///
+    /// * `element` - The element to invalidate caches for
+    pub fn invalidate_element_cache(_element: &WitElement) {
+        #[cfg(target_family = "wasm")]
+        {
+            crate::handle_cache::HandleCache::with(|cache| {
+                cache.invalidate_style_handle(_element.0);
+            });
+        }
+    }
 }
 
 // ── wasm32 Platform implementation ────────────────────────────────────────
@@ -288,12 +347,25 @@ pub mod wasm_impl {
     /// Set a style property on an element (implementation for static method).
     ///
     /// Uses the W3C CSSOM standard interface:
-    /// 1. Get the style handle via element-css-inline-style
+    /// 1. Get the style handle via element-css-inline-style (cached)
     /// 2. Set the property via css-style-declaration
     pub(super) fn set_style_static_impl(element: u64, name: &str, value: &str) -> Result<()> {
-        // Get the CSS style declaration handle from the element
-        let style_handle =
-            bindings::tairitsu_browser::full::element_css_inline_style::get_style(element);
+        // Try to get style handle from cache first
+        let style_handle = crate::handle_cache::HandleCache::with(|cache| {
+            if let Some(cached_handle) = cache.get_style_handle(element) {
+                return cached_handle;
+            }
+
+            // Cache miss - get style handle from WIT interface
+            let style_handle =
+                bindings::tairitsu_browser::full::element_css_inline_style::get_style(element);
+
+            // Cache it for future use
+            cache.set_style_handle(element, style_handle);
+
+            style_handle
+        });
+
         // Set the property using the W3C CSSOM interface
         bindings::tairitsu_browser::full::css_style_declaration::set_property(
             style_handle,
@@ -627,6 +699,11 @@ pub mod wasm_impl {
         }
 
         fn remove_child(&self, parent: &Self::Element, child: &Self::Element) {
+            // Invalidate cache for the child element being removed
+            crate::handle_cache::HandleCache::with(|cache| {
+                cache.invalidate_style_handle(child.0);
+            });
+
             // New WIT: remove-child returns u64 (the removed node)
             let _ = bindings::tairitsu_browser::full::node::remove_child(parent.0, child.0);
         }
@@ -642,9 +719,23 @@ pub mod wasm_impl {
         }
 
         fn set_style(&self, element: &Self::Element, name: &str, value: &str) {
-            // Use W3C CSSOM standard interface
-            let style_handle =
-                bindings::tairitsu_browser::full::element_css_inline_style::get_style(element.0);
+            // Try to get style handle from cache first
+            let style_handle = crate::handle_cache::HandleCache::with(|cache| {
+                if let Some(cached_handle) = cache.get_style_handle(element.0) {
+                    return cached_handle;
+                }
+
+                // Cache miss - get style handle from WIT interface
+                let style_handle =
+                    bindings::tairitsu_browser::full::element_css_inline_style::get_style(element.0);
+
+                // Cache it for future use
+                cache.set_style_handle(element.0, style_handle);
+
+                style_handle
+            });
+
+            // Set the property using the W3C CSSOM interface
             bindings::tairitsu_browser::full::css_style_declaration::set_property(
                 style_handle,
                 name,

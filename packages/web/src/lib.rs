@@ -9,6 +9,9 @@ pub mod browser;
 pub mod ssr;
 
 #[cfg(feature = "wit-bindings")]
+pub mod handle_cache;
+
+#[cfg(feature = "wit-bindings")]
 pub mod wit_platform;
 
 #[cfg(feature = "router")]
