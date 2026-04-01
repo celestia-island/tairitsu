@@ -35,10 +35,11 @@ impl NavigationTests {
 
         // Verify URL changed to hash
         let current_url = driver.current_url().await?;
-        if !current_url.contains("#") && !current_url.contains("/guides/quick-start") {
+        let url_str = current_url.as_str();
+        if !url_str.contains("#") && !url_str.contains("/guides/quick-start") {
             return Ok(TestResult::failure(
                 "Hash Navigation",
-                &format!("URL did not update after navigation: {}", current_url),
+                &format!("URL did not update after navigation: {}", url_str),
             ));
         }
 

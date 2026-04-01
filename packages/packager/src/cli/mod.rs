@@ -348,6 +348,7 @@ pub async fn run() -> crate::Result<()> {
     let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
 
     match cli.command {
+        #[allow(unused_variables)]
         Commands::Dev {
             port,
             open,
@@ -356,15 +357,32 @@ pub async fn run() -> crate::Result<()> {
         } => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
-                info!("Starting SSR development server...");
-                let port = port.unwrap_or(3000);
-                crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+                #[cfg(feature = "ssr")]
+                {
+                    info!("Starting SSR development server...");
+                    let port = port.unwrap_or(3000);
+                    crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+                }
+                #[cfg(not(feature = "ssr"))]
+                {
+                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    std::process::exit(1);
+                }
             } else {
                 info!("{}", t.cli.starting_dev_server);
                 let port = port.unwrap_or(config.dev.port);
-                crate::wasm::dev_server(&config, port, open, watch).await?;
+                #[cfg(feature = "dev-server")]
+                {
+                    crate::wasm::dev_server(&config, port, open, watch).await?;
+                }
+                #[cfg(not(feature = "dev-server"))]
+                {
+                    eprintln!("Dev server feature is not enabled. Please enable the 'dev-server' feature.");
+                    std::process::exit(1);
+                }
             }
         }
+        #[allow(unused_variables)]
         Commands::Build {
             target,
             release,
@@ -379,14 +397,22 @@ pub async fn run() -> crate::Result<()> {
 
                     // Handle SSR pre-rendering if requested
                     if ssr {
-                        let routes = if routes.is_empty() {
-                            vec!["".to_string()]
-                        } else {
-                            routes
-                        };
-                        let output_dir = std::path::PathBuf::from("dist/prerendered");
-                        info!("Pre-rendering {} routes...", routes.len());
-                        crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                        #[cfg(feature = "ssr")]
+                        {
+                            let routes = if routes.is_empty() {
+                                vec!["".to_string()]
+                            } else {
+                                routes
+                            };
+                            let output_dir = std::path::PathBuf::from("dist/prerendered");
+                            info!("Pre-rendering {} routes...", routes.len());
+                            crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                        }
+                        #[cfg(not(feature = "ssr"))]
+                        {
+                            eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                            std::process::exit(1);
+                        }
                     }
                 }
                 "native" => {
@@ -541,6 +567,7 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         },
+        #[allow(unused_variables)]
         Commands::Ssr {
             port,
             open,
@@ -549,6 +576,7 @@ pub async fn run() -> crate::Result<()> {
             routes,
             output,
         } => {
+            #[allow(unused_variables)]
             let config = crate::config::Config::load(&manifest_path)?;
 
             if build {
@@ -567,11 +595,27 @@ pub async fn run() -> crate::Result<()> {
                     routes.len(),
                     output_dir.display()
                 );
-                crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                #[cfg(feature = "ssr")]
+                {
+                    crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                }
+                #[cfg(not(feature = "ssr"))]
+                {
+                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    std::process::exit(1);
+                }
             } else {
                 // Dev server mode
                 info!("Starting SSR development server...");
-                crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+                #[cfg(feature = "ssr")]
+                {
+                    crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
+                }
+                #[cfg(not(feature = "ssr"))]
+                {
+                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    std::process::exit(1);
+                }
             }
         }
         Commands::Resources { action } => match action {

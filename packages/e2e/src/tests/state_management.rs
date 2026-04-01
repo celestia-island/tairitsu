@@ -150,7 +150,7 @@ impl StateManagementTests {
 
         // Click again to toggle back
         checkbox.click().await?;
-        tokio::time::sleep(Duration::from_millis(100)).await);
+        tokio::time::sleep(Duration::from_millis(100)).await;
 
         let final_text = toggle_display.text().await?;
         info!("Toggle state after second click: {}", final_text);
@@ -175,7 +175,7 @@ impl StateManagementTests {
         let test_url = format!("{}/components/state", base_url);
 
         driver.goto(&test_url).await?;
-        tokio::time::sleep(Duration::from_millis(500)).await);
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Find add button and list
         let add_button = driver.find(By::Css("#list-add")).await?;
@@ -242,7 +242,7 @@ impl StateManagementTests {
         let test_url = format!("{}/components/state", base_url);
 
         driver.goto(&test_url).await?;
-        tokio::time::sleep(Duration::from_millis(500)).await);
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         // Find input for a computed value test
         let width_input = driver.find(By::Css("#rect-width")).await.ok();
@@ -251,12 +251,12 @@ impl StateManagementTests {
 
         if let (Some(width), Some(height), Some(area)) = (width_input, height_input, area_display) {
             // Clear and set values
-            width_input.clear().await?;
-            width_input.send_keys("10").await?;
+            width.clear().await?;
+            width.send_keys("10").await?;
             tokio::time::sleep(Duration::from_millis(50)).await;
 
-            height_input.clear().await?;
-            height_input.send_keys("20").await?;
+            height.clear().await?;
+            height.send_keys("20").await?;
             tokio::time::sleep(Duration::from_millis(50)).await;
 
             // Check computed area

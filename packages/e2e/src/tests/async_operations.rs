@@ -304,7 +304,7 @@ impl AsyncOperationsTests {
         let raf_button = driver.find(By::Css("#raf-button")).await.ok();
         let raf_counter = driver.find(By::Css("#raf-counter")).await.ok();
 
-        if let (Some(button), Some(counter) = (raf_button, raf_counter) {
+        if let (Some(button), Some(counter)) = (raf_button, raf_counter) {
             // Click to start animation
             button.click().await?;
 
