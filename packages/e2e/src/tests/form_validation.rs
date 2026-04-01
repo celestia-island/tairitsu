@@ -127,7 +127,7 @@ impl FormValidationTests {
 
             // Error should be gone or show success
             let success_element = driver.find(By::Css("#email-success")).await.ok();
-            if let Some(success) = success_element {
+            if let Some(_success) = success_element {
                 info!("Email validation passed");
             }
         } else {

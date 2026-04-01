@@ -165,6 +165,7 @@ impl BatchOps {
                         *element, name, value,
                     );
                 }
+                let _ = (element, name, value);
                 count += 1;
             }
         }
@@ -174,7 +175,7 @@ impl BatchOps {
         let styles = self.styles.borrow();
         for (element, style_list) in styles.iter() {
             // Try to get style handle from cache once per element
-            let style_handle = crate::handle_cache::HandleCache::with(|cache| {
+            let _style_handle = crate::handle_cache::HandleCache::with(|cache| {
                 if let Some(cached_handle) = cache.get_style_handle(*element) {
                     return cached_handle;
                 }
@@ -196,9 +197,10 @@ impl BatchOps {
                 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
                 {
                     crate::wit_platform::wasm_impl::bindings::tairitsu_browser::full::css_style_declaration::set_property(
-                        style_handle, name, value, None,
+                        _style_handle, name, value, None,
                     );
                 }
+                let _ = (name, value);
                 count += 1;
             }
         }
@@ -217,6 +219,7 @@ impl BatchOps {
                 // Remove from parent (assuming parent is known or using a default)
                 // In practice, you'd need to track parent relationships
             }
+            let _ = element;
             count += 1;
         }
 
@@ -227,7 +230,7 @@ impl BatchOps {
     ///
     /// This is a convenience method that applies the batch and returns
     /// the number of operations applied, clearing the batch afterward.
-    pub fn apply_and_clear(self) -> usize {
+    pub fn apply_and_clear(&self) -> usize {
         let count = self.apply();
         self.clear();
         count

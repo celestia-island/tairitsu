@@ -274,11 +274,11 @@ mod tests {
             .with_timeout(Duration::from_secs(60))
             .with_cache(false);
 
-        let fetcher = HttpFetcher::with_config(config);
+        let _fetcher = HttpFetcher::with_config(config);
         #[cfg(feature = "data-fetcher")]
         {
-            assert_eq!(fetcher.config.timeout, Duration::from_secs(60));
-            assert!(!fetcher.config.cache);
+            assert_eq!(_fetcher.config.timeout, Duration::from_secs(60));
+            assert!(!_fetcher.config.cache);
         }
     }
 
