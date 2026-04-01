@@ -9,8 +9,8 @@ tairitsu-vdom = { path = "../vdom" }
 tairitsu-hooks = { path = "../hooks", optional = true }
 tairitsu-browser-worlds = { path = "../browser-worlds" }
 anyhow = "1"
-wasmtime = { version = "42", features = ["component-model"] }
-wasmtime-wasi = "42"
+wasmtime = { version = "43", features = ["component-model"] }
+wasmtime-wasi = "43"
 tracing = "0.1"
 log = "0.4"
 bytes = "1"

@@ -5,6 +5,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use crate::config::Config;
 use crate::daemon;
 
+#[cfg(feature = "dev-server")]
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
 }
@@ -1028,6 +1029,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     Ok(())
 }
 
+#[cfg(feature = "dev-server")]
 fn print_status_panel(
     port: u16,
     output_dir: &std::path::Path,
@@ -1048,6 +1050,7 @@ fn print_status_panel(
     println!();
 }
 
+#[cfg(feature = "dev-server")]
 fn panel_divider() -> String {
     let width = crossterm::terminal::size()
         .map(|(w, _)| w as usize)
@@ -1056,6 +1059,7 @@ fn panel_divider() -> String {
     "━".repeat(len)
 }
 
+#[cfg(feature = "dev-server")]
 fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>) -> String {
     let status = if ok { "成功" } else { "失败" };
     let mut line = format!("{} | 用时 {:.1?}", status, elapsed);
@@ -1066,6 +1070,7 @@ fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>)
     line
 }
 
+#[cfg(feature = "dev-server")]
 fn format_building_line() -> String {
     locale().dev.build_rebuilding.clone()
 }
@@ -1100,6 +1105,7 @@ async fn bind_listener_with_fallback(
     )))
 }
 
+#[cfg(feature = "dev-server")]
 #[derive(Debug, Clone, Copy)]
 enum DevCmd {
     Rebuild,
@@ -1332,6 +1338,7 @@ async fn run_watch_loop(
 }
 
 /// Extract a concise one-line description from a build error for the TUI status bar.
+#[cfg(feature = "dev-server")]
 fn extract_error_hint(msg: String) -> String {
     // Prefer lines beginning with rustc-style "error[…]" or "error: …"
     for line in msg.lines() {
