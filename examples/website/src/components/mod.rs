@@ -41,7 +41,10 @@ const NAV: &[NavSection] = &[
     },
     NavSection {
         label: "Tests",
-        items: &[("DOM 操作测试 (Phase 0.2)", "/dom-ops-test")],
+        items: &[
+            ("DOM 操作测试 (Phase 0.2)", "/dom-ops-test"),
+            ("状态管理测试", "/state-test"),
+        ],
     },
 ];
 

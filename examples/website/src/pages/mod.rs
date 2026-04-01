@@ -5,4 +5,5 @@ pub mod guides;
 pub mod home;
 pub mod not_found;
 pub mod packages;
+pub mod state_test;
 pub mod system;
