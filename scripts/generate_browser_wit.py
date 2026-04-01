@@ -285,11 +285,28 @@ def convert_type(type_str: str) -> str:
     """Convert a WebIDL type string to a WIT type string."""
     type_str = re.sub(r"\[[^\]]*\]\s*", "", type_str).strip()
 
-    # Resolve type alias (typedef)
-    if type_str in TYPE_ALIASES:
-        original = type_str
-        type_str = TYPE_ALIASES[type_str]
-        log_info(f"Resolved type alias: {original} -> {type_str}")
+    # Resolve type alias (typedef) with circular dependency detection
+    visited: Set[str] = set()
+    max_depth = 10  # Prevent infinite recursion
+    depth = 0
+
+    current_type = type_str
+    while current_type in TYPE_ALIASES and depth < max_depth:
+        if current_type in visited:
+            # Circular dependency detected - log warning and use u64 as fallback
+            log_warn(f"Circular type alias detected for '{current_type}', using u64 fallback")
+            return "u64"
+        visited.add(current_type)
+        original = current_type
+        current_type = TYPE_ALIASES[current_type]
+        log_info(f"Resolved type alias: {original} -> {current_type}")
+        depth += 1
+
+    if depth >= max_depth:
+        log_warn(f"Type alias resolution exceeded max depth for '{type_str}', using u64 fallback")
+        return "u64"
+
+    type_str = current_type
 
     # Nullable: T?
     nullable = type_str.endswith("?")
@@ -301,39 +318,48 @@ def convert_type(type_str: str) -> str:
         inner = type_str[1:-1]
         parts = [p.strip() for p in re.split(r"\bor\b", inner)]
         real = [p for p in parts if p not in ("undefined", "null", "")]
-        
+
+        # Handle empty or null-only unions
+        if not real:
+            log_warn(f"Empty or null-only union type '{type_str}', using string fallback")
+            return f"option<string>" if nullable else "string"
+
         # Priority order for union types:
         # 1. Boolean types (for properties like hidden that can be boolean or string)
         # 2. String types (for properties like setAttribute value)
         # 3. Numeric types
         # 4. First type as fallback
-        
+
         boolean_types = {"boolean", "bool"}
         string_types = {"DOMString", "USVString", "CSSOMString", "ByteString", "string"}
-        numeric_types = {"unrestricted double", "double", "unrestricted float", "float", 
+        numeric_types = {"unrestricted double", "double", "unrestricted float", "float",
                          "long long", "unsigned long long", "long", "unsigned long",
                          "short", "unsigned short", "byte", "octet"}
-        
+
         # Check for boolean types first
         for p in real:
             if p in boolean_types:
                 return f"option<bool>" if nullable else "bool"
-        
+
         # Then check for string types
         for p in real:
             if p in string_types:
                 return f"option<string>" if nullable else "string"
-        
+
         # For numeric types, use f64 as a universal numeric type
         for p in real:
             if p in numeric_types:
                 return f"option<f64>" if nullable else "f64"
-        
-        # Otherwise, use first type
-        converted = convert_type(real[0]) if real else "string"
-        if converted == "_":
-            converted = "string"
-        return f"option<{converted}>" if nullable else converted
+
+        # Otherwise, use first type (with recursion protection)
+        try:
+            converted = convert_type(real[0])
+            if converted == "_":
+                converted = "string"
+            return f"option<{converted}>" if nullable else converted
+        except Exception as e:
+            log_warn(f"Error converting union member '{real[0]}': {e}, using string fallback")
+            return f"option<string>" if nullable else "string"
 
     # sequence<T> / FrozenArray<T> / ObservableArray<T>
     m = re.match(r"(?:sequence|FrozenArray|ObservableArray)<(.+)>$", type_str)
@@ -389,23 +415,49 @@ def convert_type(type_str: str) -> str:
 # ---------------------------------------------------------------------------
 
 def _remove_comments(text: str) -> str:
-    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.DOTALL)
+    """Remove both block comments and line comments with error recovery."""
+    # Remove line comments first (safer)
     text = re.sub(r"//[^\n]*", "", text)
+
+    # Remove block comments with error recovery for unclosed comments
+    def replace_block_comment(match):
+        # If the comment is unclosed, match.group(0) will contain everything
+        # from /* to end of string, which we want to remove
+        return " "
+
+    # Use non-greedy matching for properly closed comments
+    # Then handle unclosed comments by matching /* to end of string
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.DOTALL)
+    text = re.sub(r"/\*.*$", " ", text, flags=re.DOTALL)
+
     return text
 
 
 def _remove_extended_attrs(text: str) -> str:
-    """Strip [ExtendedAttribute] blocks."""
+    """Strip [ExtendedAttribute] blocks with nested bracket handling."""
     result: list[str] = []
     depth = 0
+    max_depth = 100  # Prevent infinite loop with malformed input
     for ch in text:
         if ch == "[":
-            depth += 1
+            if depth < max_depth:
+                depth += 1
+            else:
+                # Malformed input - keep the bracket
+                result.append(ch)
         elif ch == "]":
             if depth > 0:
                 depth -= 1
+            # If depth is 0 and we encounter ], it's unmatched - keep it
+            elif depth == 0:
+                result.append(ch)
         elif depth == 0:
             result.append(ch)
+
+    # If we still have unmatched opening brackets, log a warning
+    if depth > 0:
+        log_warn(f"Unmatched '[' in extended attributes (depth={depth}), output may be incorrect")
+
     return "".join(result)
 
 
@@ -666,22 +718,34 @@ def parse_webidl_file(
 
         brace_open = after_name + brace_m.start()
 
-        # Find matching closing brace
+        # Find matching closing brace with error recovery
         depth = 1
         j = brace_open + 1
-        while j < len(text) and depth > 0:
+        max_iterations = len(text)  # Prevent infinite loop
+        iterations = 0
+        while j < len(text) and depth > 0 and iterations < max_iterations:
             if text[j] == "{":
                 depth += 1
             elif text[j] == "}":
                 depth -= 1
             j += 1
+            iterations += 1
+
+        # If we couldn't find matching brace, log warning and skip
+        if depth > 0:
+            log_warn(f"Unmatched braces in interface {iface_name}, skipping")
+            pos = brace_open + 1
+            continue
 
         body = text[brace_open + 1: j - 1]
         members: List[WebIDLMember] = []
-        for stmt in _split_statements(body):
-            member = _parse_member(stmt)
-            if member:
-                members.append(member)
+        try:
+            for stmt in _split_statements(body):
+                member = _parse_member(stmt)
+                if member:
+                    members.append(member)
+        except Exception as e:
+            log_warn(f"Error parsing members for interface {iface_name}: {e}")
 
         if iface_name not in interfaces:
             interfaces[iface_name] = WebIDLInterface(

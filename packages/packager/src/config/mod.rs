@@ -291,10 +291,16 @@ mod tests {
     fn test_default_build_config() {
         let config = BuildConfig::default();
         assert_eq!(config.target, "component");
-        assert_eq!(config.output_dir.to_str().unwrap(), "../../target/tairitsu-dist");
+        assert_eq!(
+            config.output_dir.to_str().unwrap(),
+            "../../target/tairitsu-dist"
+        );
         assert!(!config.optimize);
         assert!(!config.sourcemap);
-        assert_eq!(config.browser_glue_path, "/browser-glue/__tairitsu_glue__.js");
+        assert_eq!(
+            config.browser_glue_path,
+            "/browser-glue/__tairitsu_glue__.js"
+        );
     }
 
     #[test]
@@ -452,7 +458,10 @@ copyright = "2024 Test"
         assert_eq!(config.scss.entry, Some("styles/main.scss".to_string()));
         assert_eq!(config.scss.output, "compiled.css");
         assert_eq!(config.scss.load_paths, vec!["node_modules".to_string()]);
-        assert_eq!(config.native.identifier, Some("com.example.test".to_string()));
+        assert_eq!(
+            config.native.identifier,
+            Some("com.example.test".to_string())
+        );
         assert_eq!(config.native.icon, Some("icon.ico".to_string()));
         assert_eq!(config.native.copyright, Some("2024 Test".to_string()));
     }

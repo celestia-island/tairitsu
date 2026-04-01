@@ -1569,8 +1569,8 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_element_element_handle() {
-        use tairitsu_vdom::ElementHandle;
         use std::any::Any;
+        use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement(42);
         let any_ref = element.as_any();
@@ -1588,8 +1588,8 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_event_event_handle() {
-        use tairitsu_vdom::EventHandle;
         use std::any::Any;
+        use tairitsu_vdom::EventHandle;
 
         let event = super::WitEvent(999);
         let any_ref = event.as_any();
@@ -1610,7 +1610,10 @@ mod tests {
     #[test]
     fn test_wit_platform_new_native() {
         let result = super::WitPlatform::new();
-        assert!(result.is_err(), "WitPlatform::new should fail on native targets");
+        assert!(
+            result.is_err(),
+            "WitPlatform::new should fail on native targets"
+        );
 
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("wasm32"), "Error should mention wasm32");
@@ -1621,7 +1624,10 @@ mod tests {
     #[test]
     fn test_wit_platform_new_wasm() {
         let result = super::WitPlatform::new();
-        assert!(result.is_ok(), "WitPlatform::new should succeed on wasm targets");
+        assert!(
+            result.is_ok(),
+            "WitPlatform::new should succeed on wasm targets"
+        );
     }
 
     /// Test WitPlatform::set_style_static on native targets.
@@ -1632,7 +1638,10 @@ mod tests {
         let result = super::WitPlatform::set_style_static(&element, "color", "red");
 
         // On native targets, this should return Ok(()) as a no-op
-        assert!(result.is_ok(), "set_style_static should return Ok on native targets");
+        assert!(
+            result.is_ok(),
+            "set_style_static should return Ok on native targets"
+        );
     }
 
     /// Test WitPlatform::set_style_static with various inputs.
@@ -1683,7 +1692,7 @@ mod tests {
     #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
     #[test]
     fn test_log_functions_no_crash() {
-        use super::wasm_impl::{log_error, log_warning, log_info};
+        use super::wasm_impl::{log_error, log_info, log_warning};
 
         // These should not panic - they're no-ops on wasm
         log_error("test error message");
@@ -1695,7 +1704,7 @@ mod tests {
     #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
     #[test]
     fn test_log_functions_native() {
-        use super::wasm_impl::{log_error, log_warning, log_info};
+        use super::wasm_impl::{log_error, log_info, log_warning};
 
         // On native, these print to stderr
         log_error("test error message");
@@ -1710,7 +1719,10 @@ mod tests {
         let element = super::WitElement(42);
         let debug_str = format!("{:?}", element);
 
-        assert!(debug_str.contains("42"), "Debug output should contain the handle value");
+        assert!(
+            debug_str.contains("42"),
+            "Debug output should contain the handle value"
+        );
     }
 
     /// Test WitEvent can be cloned multiple times.
@@ -1742,8 +1754,8 @@ mod tests {
     #[cfg(feature = "wit-bindings")]
     #[test]
     fn test_wit_element_any_operations() {
-        use tairitsu_vdom::ElementHandle;
         use std::any::{Any, TypeId};
+        use tairitsu_vdom::ElementHandle;
 
         let element = super::WitElement(777);
         let any_ref = element.as_any();

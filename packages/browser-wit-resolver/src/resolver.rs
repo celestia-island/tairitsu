@@ -311,7 +311,10 @@ mod tests {
         // Save original value
         let original = std::env::var("TAIRITSU_WIT_REGISTRY").ok();
         unsafe {
-            std::env::set_var("TAIRITSU_WIT_REGISTRY", "https://custom-registry.example.com");
+            std::env::set_var(
+                "TAIRITSU_WIT_REGISTRY",
+                "https://custom-registry.example.com",
+            );
         }
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, "https://custom-registry.example.com");

@@ -79,15 +79,15 @@ impl ClassesBuilder {
     /// Returns (builder, css_rule) tuple where css_rule is Some if the class
     /// matched a registered utility, None otherwise.
     pub fn add_utility_with_css(mut self, utility_class: &str) -> (Self, Option<String>) {
-        let css = if !utility_class.is_empty() {
+        let css = if utility_class.is_empty() {
+            None
+        } else {
             let registry = self.registry.read().unwrap();
             let css = registry.generate_css(utility_class);
             if css.is_some() {
                 self.classes.push(utility_class.to_string());
             }
             css
-        } else {
-            None
         };
         (self, css)
     }
