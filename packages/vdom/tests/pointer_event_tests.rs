@@ -3,6 +3,7 @@
 //! Tests for PointerEvent structure and functionality.
 
 use std::str::FromStr;
+
 use tairitsu_vdom::events::{PointerEvent, PointerType};
 
 #[test]

@@ -1,10 +1,6 @@
 //! In-memory cache for fetch responses
 
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-    time::{Duration, Instant},
-};
+use std::{collections::HashMap, sync::{Arc, RwLock}, time::{Duration, Instant}};
 
 /// Cache entry with expiration time
 #[derive(Debug, Clone)]

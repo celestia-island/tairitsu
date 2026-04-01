@@ -2,8 +2,9 @@
 //!
 //! This module converts the in-memory SsrDom into HTML strings.
 
-use crate::virtual_dom::SsrDom;
 use serde::{Deserialize, Serialize};
+
+use crate::virtual_dom::SsrDom;
 
 /// Configuration for rendering a complete HTML document
 #[derive(Debug, Clone, Serialize, Deserialize)]

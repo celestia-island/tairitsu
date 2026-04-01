@@ -50,12 +50,12 @@
 //! ```
 
 use std::pin::Pin;
-
 use futures::stream::Stream;
+use anyhow::Result;
+
 use tairitsu_vdom::VNode;
 
 use crate::{host_state::SsrConfig, render_to_html};
-use anyhow::Result;
 
 /// A chunk of HTML that can be sent to the client
 ///

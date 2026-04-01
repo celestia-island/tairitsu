@@ -2,8 +2,7 @@ use std::time::{Duration, Instant};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-use crate::config::Config;
-use crate::daemon;
+use crate::{config::Config, daemon};
 
 #[cfg(feature = "dev-server")]
 fn locale() -> &'static crate::i18n::Translations {

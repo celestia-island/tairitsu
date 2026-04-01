@@ -7,9 +7,7 @@ pub fn render() -> VNode {
     rsx! {
         div { id: "page-system-overview", class: "tairitsu-page",
             section { class: "page-section",
-                h2 { class: "page-section__title",
-                    "系统架构总览"
-                }
+                h2 { class: "page-section__title", "系统架构总览" }
                 div { class: "doc-content",
                     p {
                         "Tairitsu 是面向 WebAssembly Component Model 的通用运行时，核心目标是："

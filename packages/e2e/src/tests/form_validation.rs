@@ -356,7 +356,10 @@ impl Test for FormValidationTests {
             Ok(result) => results.push(result),
             Err(e) => {
                 tracing::error!("Required field validation test failed: {}", e);
-                results.push(TestResult::error("Required Field Validation", &e.to_string()));
+                results.push(TestResult::error(
+                    "Required Field Validation",
+                    &e.to_string(),
+                ));
             }
         }
 

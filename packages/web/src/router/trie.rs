@@ -2,9 +2,9 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use super::{Params, RouteHandler, RouteSegment};
-
 use tairitsu_vdom::VNode;
+
+use super::{Params, RouteHandler, RouteSegment};
 
 /// A node in the route matching trie
 pub struct TrieNode {

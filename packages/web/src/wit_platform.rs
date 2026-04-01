@@ -725,7 +725,9 @@ pub mod wasm_impl {
 
                 // Cache miss - get style handle from WIT interface
                 let style_handle =
-                    bindings::tairitsu_browser::full::element_css_inline_style::get_style(element.0);
+                    bindings::tairitsu_browser::full::element_css_inline_style::get_style(
+                        element.0,
+                    );
 
                 // Cache it for future use
                 cache.set_style_handle(element.0, style_handle);

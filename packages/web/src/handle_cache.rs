@@ -3,8 +3,7 @@
 //! Caches opaque handles (u64) to avoid repeated WIT calls for frequently
 //! accessed DOM objects like style declarations.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap};
 
 /// Cache for element-related handles to avoid repeated WIT calls.
 ///
@@ -46,7 +45,9 @@ impl HandleCache {
 
     /// Cache a style handle for an element.
     pub fn set_style_handle(&self, element: u64, style_handle: u64) {
-        self.style_handles.borrow_mut().insert(element, style_handle);
+        self.style_handles
+            .borrow_mut()
+            .insert(element, style_handle);
     }
 
     /// Invalidate the cached style handle for an element.

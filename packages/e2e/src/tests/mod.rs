@@ -13,7 +13,6 @@ pub mod style_integration;
 pub mod svg_safety;
 
 use anyhow::Result;
-use thirtyfour::WebDriver;
 
 pub use async_operations::AsyncOperationsTests;
 pub use basic_components::BasicComponentsTests;
@@ -28,6 +27,7 @@ pub use ssr::SsrTests;
 pub use state_management::StateManagementTests;
 pub use style_integration::StyleIntegrationTests;
 pub use svg_safety::SvgSafetyTests;
+use thirtyfour::WebDriver;
 
 pub trait Test: Send + Sync {
     fn name(&self) -> &str;

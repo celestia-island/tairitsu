@@ -1,8 +1,9 @@
-use super::properties::{CssProperty, Property};
-use super::values::CssValue;
-
 #[cfg(feature = "parse")]
 use super::values::CssLength;
+use super::{
+    properties::{CssProperty, Property},
+    values::CssValue,
+};
 
 pub struct StyleStringBuilder(Vec<(Property, String)>);
 

@@ -2,8 +2,9 @@
 //!
 //! This module provides functions for pre-rendering routes to static HTML.
 
-use crate::config::Config;
 use std::path::PathBuf;
+
+use crate::config::Config;
 
 /// Configuration for static site generation
 #[derive(Debug, Clone)]

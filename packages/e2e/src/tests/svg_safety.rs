@@ -3,6 +3,7 @@
 //! Tests for verifying Safe SVG functionality in the browser.
 
 use anyhow::Result;
+
 use thirtyfour::WebDriver;
 
 use super::{Test, TestResult};

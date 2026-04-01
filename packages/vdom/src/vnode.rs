@@ -1,7 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
-use crate::EventData;
-use crate::svg::SafeSvg;
+use crate::{EventData, svg::SafeSvg};
 
 /// Type-erased element ref that can be stored in VNode.
 ///

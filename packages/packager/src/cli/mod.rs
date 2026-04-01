@@ -377,7 +377,9 @@ pub async fn run() -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
-                    eprintln!("Dev server feature is not enabled. Please enable the 'dev-server' feature.");
+                    eprintln!(
+                        "Dev server feature is not enabled. Please enable the 'dev-server' feature."
+                    );
                     std::process::exit(1);
                 }
             }
@@ -410,7 +412,9 @@ pub async fn run() -> crate::Result<()> {
                         }
                         #[cfg(not(feature = "ssr"))]
                         {
-                            eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                            eprintln!(
+                                "SSR feature is not enabled. Please enable the 'ssr' feature."
+                            );
                             std::process::exit(1);
                         }
                     }

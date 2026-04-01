@@ -30,8 +30,7 @@ use std::path::{Path, PathBuf};
 
 use tracing::{info, warn};
 
-use super::metadata::IconMetadata;
-use super::{IconSource, MDI_DEFAULT_VERSION};
+use super::{IconSource, MDI_DEFAULT_VERSION, metadata::IconMetadata};
 
 // ============================================================================
 // Constants
