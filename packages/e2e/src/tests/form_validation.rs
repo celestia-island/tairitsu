@@ -10,7 +10,7 @@
 use anyhow::Result;
 use std::time::{Duration, Instant};
 
-use thirtyfour::{By, Keys, WebDriver};
+use thirtyfour::{By, Key, WebDriver};
 use tracing::info;
 
 use crate::tests::{Test, TestResult};
@@ -105,7 +105,7 @@ impl FormValidationTests {
             tokio::time::sleep(Duration::from_millis(100)).await;
 
             // Trigger validation (blur)
-            email.send_keys(Keys::Tab).await?;
+            email.send_keys(Key::Tab).await?;
             tokio::time::sleep(Duration::from_millis(100)).await;
 
             // Check for error
@@ -122,8 +122,8 @@ impl FormValidationTests {
             email.send_keys("test@example.com").await?;
             tokio::time::sleep(Duration::from_millis(100)).await;
 
-            email.send_keys(Keys::Tab).await?;
-            tokio::time::sleep(Duration::from_millis(100)).await);
+            email.send_keys(Key::Tab).await?;
+            tokio::time::sleep(Duration::from_millis(100)).await;
 
             // Error should be gone or show success
             let success_element = driver.find(By::Css("#email-success")).await.ok();
@@ -162,7 +162,7 @@ impl FormValidationTests {
         let test_url = format!("{}/components/form", base_url);
 
         driver.goto(&test_url).await?;
-        tokio::time::sleep(Duration::from_millis(500)).await);
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         let password_input = driver.find(By::Css("#password-input")).await.ok();
         let strength_indicator = driver.find(By::Css("#password-strength")).await.ok();
@@ -178,7 +178,7 @@ impl FormValidationTests {
             // Clear and test stronger password
             password.clear().await?;
             password.send_keys("StrongP@ssw0rd!").await?;
-            tokio::time::sleep(Duration::from_millis(100)).await);
+            tokio::time::sleep(Duration::from_millis(100)).await;
 
             let new_strength = indicator.text().await?;
             info!("Password strength for 'StrongP@ssw0rd!': {}", new_strength);
@@ -237,7 +237,7 @@ impl FormValidationTests {
 
             email.clear().await?;
             email.send_keys("john.doe@example.com").await?;
-            tokio::time::sleep(Duration::from_millis(50)).await);
+            tokio::time::sleep(Duration::from_millis(50)).await;
 
             password.clear().await?;
             password.send_keys("SecurePass123!").await?;
@@ -289,7 +289,7 @@ impl FormValidationTests {
         let test_url = format!("{}/components/form", base_url);
 
         driver.goto(&test_url).await?;
-        tokio::time::sleep(Duration::from_millis(500)).await);
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         let name_input = driver.find(By::Css("#name-input")).await.ok();
         let reset_button = driver.find(By::Css("#form-reset")).await.ok();
@@ -297,7 +297,7 @@ impl FormValidationTests {
         if let (Some(name), Some(reset)) = (name_input, reset_button) {
             // Fill input
             name.send_keys("Test Name").await?;
-            tokio::time::sleep(Duration::from_millis(100)).await);
+            tokio::time::sleep(Duration::from_millis(100)).await;
 
             let filled_value = name.attr("value").await?.unwrap_or_default();
             info!("Input value before reset: '{}'", filled_value);

@@ -1071,6 +1071,7 @@ fn format_building_line() -> String {
 }
 /// Try binding localhost starting from `preferred_port` and automatically
 /// fallback to higher ports when the preferred one is already occupied.
+#[cfg(feature = "dev-server")]
 async fn bind_listener_with_fallback(
     preferred_port: u16,
 ) -> crate::Result<(tokio::net::TcpListener, u16)> {
@@ -1111,6 +1112,7 @@ enum DevCmd {
 ///
 /// Debounces rapid saves (200 ms window) so a single `cargo save` operation does
 /// not trigger multiple concurrent builds.
+#[cfg(feature = "dev-server")]
 async fn run_watch_loop(
     config: &Config,
     port: u16,

@@ -116,13 +116,12 @@ pub struct CacheStats {
     pub size: usize,
 }
 
-/// Thread-local handle cache instance.
-///
-/// Uses thread_local storage for WASM compatibility and to avoid
-/// synchronization overhead.
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 thread_local! {
-    /// Global handle cache for style operations.
+    /// Thread-local handle cache instance.
+    ///
+    /// Uses thread_local storage for WASM compatibility and to avoid
+    /// synchronization overhead.
     pub static HANDLE_CACHE: HandleCache = HandleCache::new();
 }
 

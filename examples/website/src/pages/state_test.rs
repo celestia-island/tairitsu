@@ -7,37 +7,36 @@
 //! - List state (add/remove items)
 //! - Computed/reactive values
 
-use tairitsu_hooks::{use_callback, use_signal, use_state};
+use tairitsu_hooks::use_signal;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{MouseEvent, VNode};
+use tairitsu_vdom::{InputEvent, MouseEvent, VNode, VText};
+use std::{cell::RefCell, rc::Rc};
 
 /// Render the state management test page.
 pub fn render() -> VNode {
     // Counter state using use_signal
-    let (count, set_count) = use_signal(|| 0);
+    let count = use_signal(|| 0);
 
-    // Text input state
-    let (text, set_text) = use_state(String::new);
+    // Text input state - using Rc<RefCell<_>> pattern directly since use_state setter isn't cloneable
+    let text: Rc<RefCell<String>> = Rc::new(RefCell::new(String::new()));
+    let text_clone = Rc::clone(&text);
 
     // Toggle state (checkbox)
-    let (is_toggled, set_toggle) = use_state(false);
+    let is_toggled: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+    let is_toggled_clone = Rc::clone(&is_toggled);
 
     // List state
-    let (items, set_items) = use_state(Vec::<String>::new);
+    let items: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
+    let items_clone = Rc::clone(&items);
 
     // Reactive computed values
-    let (rect_width, set_width) = use_signal(|| 10);
-    let (rect_height, set_height) = use_signal(|| 20);
+    let rect_width = use_signal(|| 10);
+    let rect_height = use_signal(|| 20);
 
     // Clone for callbacks
     let count_clone = count.clone();
-    let set_count_clone = set_count.clone();
-    let set_text_clone = set_text.clone();
-    let set_toggle_clone = set_toggle.clone();
-    let items_clone = items.clone();
-    let set_items_clone = set_items.clone();
-    let set_width_clone = set_width.clone();
-    let set_height_clone = set_height.clone();
+    let rect_width_clone = rect_width.clone();
+    let rect_height_clone = rect_height.clone();
 
     rsx! {
         div { id: "page-state-test", class: "tairitsu-page",
@@ -55,14 +54,14 @@ pub fn render() -> VNode {
                     span {
                         style: "font-size: 1.5em; font-weight: bold; min-width: 50px;",
                         id: "counter-display",
-                        ..vec![VNode::text(format!("{}", count_clone.get()))],
+                        ..vec![VNode::Text(VText { text: format!("{}", count_clone.get()) })],
                     }
                     button {
                         id: "counter-increment",
                         class: "tairitsu-button",
                         onclick: move |_| {
                             let current = count_clone.get();
-                            set_count_clone.set(current + 1);
+                            count_clone.set(current + 1);
                         },
                         "Increment"
                     }
@@ -81,12 +80,12 @@ pub fn render() -> VNode {
                         r#type: "text",
                         placeholder: "Type something...",
                         style: "padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; width: 250px;",
-                        oninput: move |e: MouseEvent| {} // In a real implementation, we'd get the input value,
+                        oninput: move |_: InputEvent| {} // TODO: implement input handling
                     }
                     p {
                         id: "text-display",
                         style: "margin-top: 10px; color: #4a5568;",
-                        ..vec![VNode::text("You typed: ")],
+                        ..vec![VNode::Text(VText { text: format!("You typed: {}", text_clone.borrow()) })],
                     }
                 }
             }
@@ -103,8 +102,8 @@ pub fn render() -> VNode {
                             r#type: "checkbox",
                             checked: *is_toggled.borrow(),
                             onclick: move |_| {
-                                let current = *is_toggled.borrow();
-                                set_toggle_clone(!current);
+                                let current = *is_toggled_clone.borrow();
+                                *is_toggled_clone.borrow_mut() = !current;
                             },
                         }
                         span { "Toggle me" }
@@ -112,7 +111,7 @@ pub fn render() -> VNode {
                     span {
                         id: "toggle-display",
                         style: "font-weight: bold; color: #4a5568;",
-                        ..vec![VNode::text(if *is_toggled.borrow() { "ON" } else { "OFF" })],
+                        ..vec![VNode::Text(VText { text: if *is_toggled.borrow() { "ON".to_string() } else { "OFF".to_string() } })],
                     }
                 }
             }
@@ -127,9 +126,9 @@ pub fn render() -> VNode {
                         id: "list-add",
                         class: "tairitsu-button",
                         onclick: move |_| {
-                            let mut items = items_clone.borrow().clone();
-                            items.push(format!("Item {}", items.len() + 1));
-                            set_items_clone(items);
+                            let mut items_ref = items_clone.borrow().clone();
+                            items_ref.push(format!("Item {}", items_ref.len() + 1));
+                            *items_clone.borrow_mut() = items_ref;
                         },
                         "Add Item"
                     }
@@ -144,7 +143,7 @@ pub fn render() -> VNode {
                                 rsx! {
                                     li {
                                         style: "margin: 5px 0; display: flex; align-items: center; gap: 10px;",
-                                        ..vec![VNode::text(item)],
+                                        ..vec![VNode::Text(VText { text: item.clone() })],
                                         button {
                                             class: "remove-btn",
                                             style: "padding: 2px 8px; background: #fc8181; color: white; border: none; border-radius: 4px; cursor: pointer;",
@@ -189,14 +188,14 @@ pub fn render() -> VNode {
                                 id: "rect-area",
                                 style: "font-weight: bold;",
                                 ..vec![
-                                    VNode::text(
-                                        format!(
+                                    VNode::Text(VText {
+                                        text: format!(
                                             "{} × {} = {}",
-                                            rect_width.get(),
-                                            rect_height.get(),
-                                            rect_width.get() * rect_height.get(),
+                                            rect_width_clone.get(),
+                                            rect_height_clone.get(),
+                                            rect_width_clone.get() * rect_height_clone.get(),
                                         ),
-                                    ),
+                                    }),
                                 ],
                             }
                         }
