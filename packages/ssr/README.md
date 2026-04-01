@@ -65,6 +65,7 @@ minify_html = true
 ### `SsrPlatform`
 
 Server-side rendering platform that:
+
 - Generates HTML string output
 - Handles virtual DOM rendering
 - Collects styles for injection

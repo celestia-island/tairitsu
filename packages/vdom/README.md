@@ -19,6 +19,7 @@ The virtual DOM tree is composed of `VNode` variants:
 ### Platform Trait
 
 Abstract platform interface for DOM operations. Implementations:
+
 - `WitPlatform`: WIT-backed browser platform (wasm32)
 - `BrowserPlatform`: Direct web-sys bindings
 - `SsrPlatform`: Server-side rendering platform
@@ -72,6 +73,7 @@ Events are typed and include:
 ## Performance
 
 The VDOM is optimized for:
+
 - Fast diffing with keyed children
 - Minimal memory allocation
 - Efficient batch operations

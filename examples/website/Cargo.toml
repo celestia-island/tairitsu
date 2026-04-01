@@ -28,7 +28,8 @@ pulldown-cmark = "0.12"
 
 # Logging and error handling
 tracing = "^0.1"
-tracing-wasm = "^0.2"
+# tracing-wasm uses wasm-bindgen which is incompatible with wasm32-wasip2 component model
+# Use basic console logging instead for WASI components
 anyhow = "^1"
 
 # Tairitsu Package configuration (replaces HTML template)

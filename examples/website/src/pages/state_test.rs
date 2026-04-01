@@ -55,7 +55,7 @@ pub fn render() -> VNode {
                     span {
                         style: "font-size: 1.5em; font-weight: bold; min-width: 50px;",
                         id: "counter-display",
-                        ..vec![VNode::text(format!("{}", count_clone.get()))]
+                        ..vec![VNode::text(format!("{}", count_clone.get()))],
                     }
                     button {
                         id: "counter-increment",
@@ -74,23 +74,19 @@ pub fn render() -> VNode {
                 h2 { "Test 2: Input State Binding (use_state)" }
                 p { "Type in the input field to see two-way binding." }
 
-                div {
-                    style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
                     input {
                         id: "text-input",
                         class: "tairitsu-input",
                         r#type: "text",
                         placeholder: "Type something...",
                         style: "padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; width: 250px;",
-                        oninput: move |e: MouseEvent| {
-                            // In a real implementation, we'd get the input value
-                            // For now, this is a placeholder
-                        }
+                        oninput: move |e: MouseEvent| {} // In a real implementation, we'd get the input value,
                     }
                     p {
                         id: "text-display",
                         style: "margin-top: 10px; color: #4a5568;",
-                        ..vec![VNode::text("You typed: ")]
+                        ..vec![VNode::text("You typed: ")],
                     }
                 }
             }
@@ -100,10 +96,8 @@ pub fn render() -> VNode {
                 h2 { "Test 3: Boolean State (Toggle)" }
                 p { "Click the checkbox to toggle state." }
 
-                div {
-                    style: "padding: 15px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; gap: 15px;",
-                    label {
-                        style: "display: flex; align-items: center; gap: 8px; cursor: pointer;",
+                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; gap: 15px;",
+                    label { style: "display: flex; align-items: center; gap: 8px; cursor: pointer;",
                         input {
                             id: "toggle-checkbox",
                             r#type: "checkbox",
@@ -111,14 +105,14 @@ pub fn render() -> VNode {
                             onclick: move |_| {
                                 let current = *is_toggled.borrow();
                                 set_toggle_clone(!current);
-                            }
+                            },
                         }
                         span { "Toggle me" }
                     }
                     span {
                         id: "toggle-display",
                         style: "font-weight: bold; color: #4a5568;",
-                        ..vec![VNode::text(if *is_toggled.borrow() { "ON" } else { "OFF" })]
+                        ..vec![VNode::text(if *is_toggled.borrow() { "ON" } else { "OFF" })],
                     }
                 }
             }
@@ -128,8 +122,7 @@ pub fn render() -> VNode {
                 h2 { "Test 4: List State (Add/Remove)" }
                 p { "Add items to the list and remove them individually." }
 
-                div {
-                    style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
                     button {
                         id: "list-add",
                         class: "tairitsu-button",
@@ -143,19 +136,24 @@ pub fn render() -> VNode {
                     ul {
                         id: "list-display",
                         style: "margin-top: 10px; padding-left: 20px;",
-                        ..items.borrow().iter().enumerate().map(|(i, item)| {
-                            rsx! {
-                                li {
-                                    style: "margin: 5px 0; display: flex; align-items: center; gap: 10px;",
-                                    ..vec![VNode::text(item)]
-                                    button {
-                                        class: "remove-btn",
-                                        style: "padding: 2px 8px; background: #fc8181; color: white; border: none; border-radius: 4px; cursor: pointer;",
-                                        "×"
+                        ..items
+                            .borrow()
+                            .iter()
+                            .enumerate()
+                            .map(|(i, item)| {
+                                rsx! {
+                                    li {
+                                        style: "margin: 5px 0; display: flex; align-items: center; gap: 10px;",
+                                        ..vec![VNode::text(item)],
+                                        button {
+                                            class: "remove-btn",
+                                            style: "padding: 2px 8px; background: #fc8181; color: white; border: none; border-radius: 4px; cursor: pointer;",
+                                            "×"
+                                        }
                                     }
                                 }
-                            }
-                        }).collect()
+                            })
+                            .collect(),
                     }
                 }
             }
@@ -165,12 +163,9 @@ pub fn render() -> VNode {
                 h2 { "Test 5: Reactive Computed Values" }
                 p { "Change width/height to see the area update automatically." }
 
-                div {
-                    style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
-                    div {
-                        style: "display: flex; gap: 15px; align-items: center;",
-                        label {
-                            style: "display: flex; flex-direction: column; gap: 5px;",
+                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                    div { style: "display: flex; gap: 15px; align-items: center;",
+                        label { style: "display: flex; flex-direction: column; gap: 5px;",
                             "Width:"
                             input {
                                 id: "rect-width",
@@ -179,8 +174,7 @@ pub fn render() -> VNode {
                                 style: "padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; width: 80px;",
                             }
                         }
-                        label {
-                            style: "display: flex; flex-direction: column; gap: 5px;",
+                        label { style: "display: flex; flex-direction: column; gap: 5px;",
                             "Height:"
                             input {
                                 id: "rect-height",
@@ -189,13 +183,21 @@ pub fn render() -> VNode {
                                 style: "padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; width: 80px;",
                             }
                         }
-                        div {
-                            style: "padding: 10px 20px; background: #4299e1; color: white; border-radius: 8px;",
+                        div { style: "padding: 10px 20px; background: #4299e1; color: white; border-radius: 8px;",
                             "Area: "
                             span {
                                 id: "rect-area",
                                 style: "font-weight: bold;",
-                                ..vec![VNode::text(format!("{} × {} = {}", rect_width.get(), rect_height.get(), rect_width.get() * rect_height.get()))]
+                                ..vec![
+                                    VNode::text(
+                                        format!(
+                                            "{} × {} = {}",
+                                            rect_width.get(),
+                                            rect_height.get(),
+                                            rect_width.get() * rect_height.get(),
+                                        ),
+                                    ),
+                                ],
                             }
                         }
                     }
@@ -205,8 +207,7 @@ pub fn render() -> VNode {
             // Test Summary
             div { class: "test-section",
                 h2 { "State Management Test Summary" }
-                div {
-                    style: "padding: 15px; background: #e6fffa; border: 1px solid #38b2ac; border-radius: 6px;",
+                div { style: "padding: 15px; background: #e6fffa; border: 1px solid #38b2ac; border-radius: 6px;",
                     h3 { "State Patterns Tested:" }
                     ul { style: "list-style-type: none; padding: 0;",
                         li { style: "margin: 5px 0;", "✓ use_signal (reactive counter)" }

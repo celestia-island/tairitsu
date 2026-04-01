@@ -23,14 +23,10 @@ pub fn render() -> VNode {
     content.push(not_found::render());
 
     rsx! {
-        div { id: "tairitsu-app", class: "tairitsu-app",
-            ..vec![top_nav()],
-            div { class: "tairitsu-body",
-                ..vec![sidebar()],
-                main { class: "tairitsu-content",
-                    ..content,
-                },
-            },
+        div { id: "tairitsu-app", class: "tairitsu-app", ..vec![top_nav()],
+            div { class: "tairitsu-body", ..vec![sidebar()],
+                main { class: "tairitsu-content", ..content }
+            }
         }
     }
 }
