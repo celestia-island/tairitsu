@@ -90,10 +90,12 @@ Element = []
 ```
 
 **优点**:
+
 - 按需编译，减少编译时间
 - 精确控制依赖
 
 **缺点**:
+
 - 特征数量爆炸（数百个）
 - 用户需要手动启用所有相关特征
 
@@ -133,12 +135,14 @@ sequenceDiagram
 ### 2.7 优点与缺点
 
 **优点**:
+
 1. ✅ 成熟稳定，广泛使用
 2. ✅ 与 wasm-bindgen 深度集成
 3. ✅ 生成代码质量高，经过大量测试
 4. ✅ 每个接口独立 feature，编译灵活
 
 **缺点**:
+
 1. ❌ **手动维护 WebIDL**，更新不及时
 2. ❌ **没有自动化同步** W3C 规范
 3. ❌ feature 数量爆炸，使用复杂
@@ -267,6 +271,7 @@ Tairitsu 将 Web API 按领域划分为 **26 个包**：
 ### 3.8 优点与缺点
 
 **优点**:
+
 1. ✅ **完全自动化** W3C 同步
 2. ✅ 使用官方 webref 数据源
 3. ✅ 生成的 WIT 符合 Component Model
@@ -276,6 +281,7 @@ Tairitsu 将 Web API 按领域划分为 **26 个包**：
 7. ✅ 真正的 WASI 绑定（不依赖 JS 互操作）
 
 **缺点**:
+
 1. ❌ 生态系统较新，不如 web-sys 成熟
 2. ❌ 需要更多测试和验证
 3. ❌ 文档和示例较少
@@ -444,6 +450,7 @@ mod dom_tests {
 ```rust
 event.stop_propagation();
 ```
+
 ```
 
 ### 5.3 长期改进（6-12 个月）
@@ -523,10 +530,10 @@ WIT → Go 绑定 (计划中)
 
 ### A. 相关资源
 
-- **W3C webref**: https://github.com/w3c/webref
-- **WebIDL 规范**: https://webidl.spec.whatwg.org/
-- **WIT 规范**: https://component-model.bytecodealliance.org/design/wit.html
-- **wasm-bindgen**: https://github.com/rustwasm/wasm-bindgen
+- **W3C webref**: <https://github.com/w3c/webref>
+- **WebIDL 规范**: <https://webidl.spec.whatwg.org/>
+- **WIT 规范**: <https://component-model.bytecodealliance.org/design/wit.html>
+- **wasm-bindgen**: <https://github.com/rustwasm/wasm-bindgen>
 
 ### B. 脚本参考
 
@@ -548,9 +555,3 @@ just wit-sources        # 查看数据源
 | CSSOM | ed/idl/cssom.idl | css |
 | Fetch | ed/idl/fetch.idl | fetch |
 | ... | ... | ... |
-
----
-
-*报告版本: 1.0.0*
-*最后更新: 2026-04-01*
-*作者: Tairitsu 项目组*
