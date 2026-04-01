@@ -5,7 +5,6 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Cache for element-related handles to avoid repeated WIT calls.
 ///
@@ -114,8 +113,7 @@ pub struct CacheStats {
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 thread_local! {
     /// Global handle cache for style operations.
-    pub static HANDLE_CACHE: std::thread::LocalKey<HandleCache> =
-        std::thread::LocalKey::new(|| HandleCache::new());
+    pub static HANDLE_CACHE: HandleCache = HandleCache::new();
 }
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
