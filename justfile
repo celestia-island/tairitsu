@@ -55,7 +55,7 @@ setup: install-tools init
 # JS / Node dependency initialization
 # ============================================================================
 
-# ── Unix ─────────────────────────────────────────────────────────────────────
+# -- Unix ---------------------------------------------------------------------
 # Detect pnpm > yarn > npm, install packages/browser-glue JS deps.
 # Skips when node_modules is already populated (fast, idempotent).
 [unix]
@@ -76,7 +76,7 @@ init:
         printf "  ✓  Node deps installed via %s\n" "$PM"
     fi
 
-# ── Windows (PowerShell / pwsh) ───────────────────────────────────────────────
+# -- Windows (PowerShell / pwsh) -----------------------------------------------
 [windows]
 init:
     @$glue = "packages\browser-glue"; $nm = Join-Path $glue "node_modules"; $ready = (Test-Path $nm) -and ((Get-ChildItem $nm -ErrorAction SilentlyContinue | Select-Object -First 1) -ne $null); if ($ready) { Write-Host "  ✓  Node deps ready  ($nm)" } else { $pm = if (Get-Command pnpm -ErrorAction SilentlyContinue) { "pnpm" } elseif (Get-Command yarn -ErrorAction SilentlyContinue) { "yarn" } elseif (Get-Command npm -ErrorAction SilentlyContinue) { "npm" } else { Write-Error "No package manager found (install pnpm, yarn, or npm)"; exit 1 }; Write-Host "  →  $pm install  ($glue)"; Push-Location $glue; try { & $pm install } finally { Pop-Location }; Write-Host "  ✓  Node deps installed via $pm" }

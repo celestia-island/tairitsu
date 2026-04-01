@@ -93,18 +93,18 @@ scripts = ["scripts/**/*.js"]
 
 ## Output Structure
 
-```
-target/
-├── tairitsu-wit/           # WIT package cache
-├── release/                # Compiled WASM
-│   ├── app.wasm
-│   ├── app.js
-│   └── index.html
-└── dist/                   # Production bundle
-    ├── assets/
-    │   ├── styles.css
-    │   └── scripts.js
-    └── app.wasm
+```mermaid
+graph TD
+    ROOT["target/"] --> WIT["tairitsu-wit/ — WIT package cache"]
+    ROOT --> REL["release/ — Compiled WASM"]
+    ROOT --> DIST["dist/ — Production bundle"]
+    REL --> RW["app.wasm"]
+    REL --> RJ["app.js"]
+    REL --> RH["index.html"]
+    DIST --> DA["assets/"]
+    DIST --> DW["app.wasm"]
+    DA --> DC["styles.css"]
+    DA --> DS["scripts.js"]
 ```
 
 ## Features

@@ -13,20 +13,17 @@
 //!
 //! ## Architecture
 //!
-//! ```text
-//! ┌──────────────────────────────────────────────────┐  wasm32-wasip2
-//! │                  WASM Component                  │
-//! │                                                  │
-//! │  WitPlatform ──► WIT imports (generated)         │
-//! │      node, document, style, event-target         │──► tairitsu-browser:full
-//! │                                                  │
-//! │  BrowserComponent ◄── event-callbacks exports    │◄── host calls on events
-//! └──────────────────────────────────────────────────┘
-//!          ▲ component-model import / export boundary
-//! ┌────────┴─────────────────────────────────────────┐  browser / Node.js
-//! │  browser-glue  (packages/browser-glue/src/)      │
-//! │  dom-glue · events-glue · fetch-glue · …         │
-//! └──────────────────────────────────────────────────┘
+//! ```mermaid
+//! graph TB
+//!     subgraph WASM["WASM Component (wasm32-wasip2)"]
+//!         WP["WitPlatform → WIT imports (generated)<br/>node, document, style, event-target"]
+//!         BC["BrowserComponent &lt;-- event-callbacks exports"]
+//!     end
+//!     subgraph HOST["browser-glue (browser / Node.js)"]
+//!         BG["dom-glue · events-glue · fetch-glue · …<br/>(packages/browser-glue/src/)"]
+//!     end
+//!     WP -- "tairitsu-browser:full" --> BG
+//!     BG -- "host calls on events" --> BC
 //! ```
 
 use anyhow::Result;
@@ -34,7 +31,7 @@ use anyhow::Result;
 #[cfg(feature = "wit-bindings")]
 use tairitsu_vdom::{ElementHandle, EventHandle};
 
-// ── Opaque handle wrappers ─────────────────────────────────────────────────
+// -- Opaque handle wrappers -------------------------------------------------
 
 /// Opaque handle to a DOM node managed by the browser-glue host.
 ///
@@ -63,7 +60,7 @@ impl EventHandle for WitEvent {
     }
 }
 
-// ── WitPlatform ────────────────────────────────────────────────────────────
+// -- WitPlatform ------------------------------------------------------------
 
 /// Browser platform backend that calls the `tairitsu-browser:full` WIT world.
 ///
@@ -232,7 +229,7 @@ impl WitPlatform {
     }
 }
 
-// ── wasm32 Platform implementation ────────────────────────────────────────
+// -- wasm32 Platform implementation ----------------------------------------
 //
 // Everything below is compiled only when *both*:
 //   • the `wit-bindings` Cargo feature is active, and
@@ -273,7 +270,7 @@ pub mod wasm_impl {
         NEXT_CALLBACK_ID.fetch_add(1, Ordering::SeqCst)
     }
 
-    // ── Console helpers ─────────────────────────────────────────────────────
+    // -- Console helpers -----------------------------------------------------
 
     /// Log an error.
     ///
@@ -326,7 +323,7 @@ pub mod wasm_impl {
         static MEDIA_QUERY_LIST_CALLBACKS: RefCell<HashMap<u64, MediaQueryListCallback>> = RefCell::new(HashMap::new());
     }
 
-    // ── WIT binding generation ───────────────────────────────────────────
+    // -- WIT binding generation -------------------------------------------
 
     /// Rust bindings generated from `packages/browser-worlds/wit/browser-full.wit`.
     ///
@@ -377,7 +374,7 @@ pub mod wasm_impl {
         Ok(())
     }
 
-    // ── Component export implementation ─────────────────────────────────
+    // -- Component export implementation ---------------------------------
 
     /// Implements the `event-callbacks` WIT export interface.
     ///
@@ -676,7 +673,7 @@ pub mod wasm_impl {
         }
     }
 
-    // ── Platform trait implementation ────────────────────────────────────
+    // -- Platform trait implementation ------------------------------------
 
     impl Platform for WitPlatform {
         type Element = WitElement;
@@ -1365,7 +1362,7 @@ pub mod wasm_impl {
     }
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// -- Tests ---------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -1621,7 +1618,7 @@ mod tests {
         }
     }
 
-    // ── WitElement and WitEvent tests ───────────────────────────────────────
+    // -- WitElement and WitEvent tests ---------------------------------------
 
     /// Test WitElement clone behavior.
     #[cfg(feature = "wit-bindings")]
@@ -1693,7 +1690,7 @@ mod tests {
         }
     }
 
-    // ── WitPlatform tests ───────────────────────────────────────────────────
+    // -- WitPlatform tests ---------------------------------------------------
 
     /// Test WitPlatform::new() on native targets (should fail).
     #[cfg(all(feature = "wit-bindings", not(target_family = "wasm")))]
@@ -1760,7 +1757,7 @@ mod tests {
         }
     }
 
-    // ── wasm_impl module tests ─────────────────────────────────────────────
+    // -- wasm_impl module tests ---------------------------------------------
 
     /// Test next_callback_id increments.
     #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]

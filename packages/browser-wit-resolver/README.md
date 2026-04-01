@@ -71,17 +71,17 @@ export TAIRITSU_WIT_REGISTRY="https://my-registry.com"
 
 ## Cache Structure
 
-```
-target/tairitsu-wit/
-├── tairitsu-browser/
-│   ├── dom/
-│   │   └── 0.1.0/
-│   │       ├── dom.wit
-│   │       ├── events.wit
-│   │       └── manifest.json
-│   └── events/
-│       └── 0.1.0/
-│           └── manifest.json
+```mermaid
+graph TD
+    ROOT["target/tairitsu-wit/"] --> TB["tairitsu-browser/"]
+    TB --> DOM["dom/"]
+    TB --> EVT["events/"]
+    DOM --> DV["0.1.0/"]
+    DV --> DW["dom.wit"]
+    DV --> DE["events.wit"]
+    DV --> DM["manifest.json"]
+    EVT --> EV["0.1.0/"]
+    EV --> EM["manifest.json"]
 ```
 
 ## Resolution Order

@@ -4,26 +4,26 @@ browser-glue 패키지는 `tairitsu-browser:full` WIT 인터페이스의 TypeScr
 
 ## 아키텍처 개요
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         브라우저 (JS 런타임)                         │
-│                                                                     │
-│  ┌─────────────────────────────┐     ┌─────────────────────────┐  │
-│  │ browser-glue (TS)           │     │ WASM 컴포넌트           │  │
-│  │ - domGlue.ts                │ ←── │ - wit_bindgen 바인딩    │  │
-│  │ - eventsGlue.ts             │     │ - WitPlatform           │  │
-│  │ - fetchGlue.ts              │     │                         │  │
-│  │ - 28개 도메인, 454개 인터페이스│     │                         │  │
-│  └─────────────────────────────┘     └─────────────────────────┘  │
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │ browser-glue/ (jco import 어댑터)                           │   │
-│  │ - console.js, document.js, element.js, node.js, ...        │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-│                                                                     │
-│  Import Map: tairitsu-browser:full/* → ./browser-glue/*            │
-│  jco transpile: 적절한 imports로 컴포넌트 래퍼 생성                 │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph Browser["브라우저 (JS 런타임)"]
+        subgraph BG["browser-glue (TS)"]
+            BG1["domGlue.ts"]
+            BG2["eventsGlue.ts"]
+            BG3["fetchGlue.ts"]
+            BG4["28개 도메인, 454개 인터페이스"]
+        end
+        subgraph WASM["WASM 컴포넌트"]
+            W1["wit_bindgen 바인딩"]
+            W2["WitPlatform"]
+        end
+        subgraph JCO["browser-glue/ (jco import 어댑터)"]
+            J1["console.js, document.js, element.js, node.js, ..."]
+        end
+        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: 적절한 imports로 컴포넌트 래퍼 생성"]
+    end
+    WASM -- "WIT imports" --> BG
+    BG --> JCO
 ```
 
 ## 주요 컴포넌트
@@ -126,23 +126,23 @@ npm run build:production
 
 ## 패키지 구조
 
-```
-packages/browser-glue/
-├── src/
-│   ├── index.ts              # 메인 진입점
-│   ├── handles.ts            # 핸들 관리
-│   ├── async.ts              # 비동기 유틸리티
-│   ├── consoleGlue.ts        # 콘솔 인터페이스
-│   ├── styleGlue.ts          # 스타일 인터페이스
-│   ├── eventTargetGlue.ts    # 이벤트 타겟
-│   ├── domGlue.ts            # DOM 작업
-│   ├── eventsGlue.ts         # 이벤트 타입
-│   ├── fetchGlue.ts          # Fetch API
-│   ├── canvasGlue.ts         # Canvas 2D
-│   └── ... (28개 도메인)
-├── dist/
-│   ├── index.js              # 컴파일된 진입점
-│   ├── *.d.ts                # 타입 선언
-│   └── browser-glue/         # jco 어댑터
-└── package.json
+```mermaid
+graph TD
+    ROOT["packages/browser-glue/"] --> SRC["src/"]
+    ROOT --> DIST["dist/"]
+    ROOT --> PKG["package.json"]
+    SRC --> S1["index.ts — 메인 진입점"]
+    SRC --> S2["handles.ts — 핸들 관리"]
+    SRC --> S3["async.ts — 비동기 유틸리티"]
+    SRC --> S4["consoleGlue.ts — 콘솔 인터페이스"]
+    SRC --> S5["styleGlue.ts — 스타일 인터페이스"]
+    SRC --> S6["eventTargetGlue.ts — 이벤트 타겟"]
+    SRC --> S7["domGlue.ts — DOM 작업"]
+    SRC --> S8["eventsGlue.ts — 이벤트 타입"]
+    SRC --> S9["fetchGlue.ts — Fetch API"]
+    SRC --> S10["canvasGlue.ts — Canvas 2D"]
+    SRC --> S11["... (28개 도메인)"]
+    DIST --> D1["index.js — 컴파일된 진입점"]
+    DIST --> D2["*.d.ts — 타입 선언"]
+    DIST --> D3["browser-glue/ — jco 어댑터"]
 ```

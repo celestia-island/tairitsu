@@ -4,26 +4,26 @@ El paquete browser-glue proporciona implementaciones TypeScript de las interface
 
 ## Visión General de la Arquitectura
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Navegador (JS Runtime)                      │
-│                                                                     │
-│  ┌─────────────────────────────┐     ┌─────────────────────────┐  │
-│  │ browser-glue (TS)           │     │ Componente WASM         │  │
-│  │ - domGlue.ts                │ ←── │ - wit_bindgen bindings  │  │
-│  │ - eventsGlue.ts             │     │ - WitPlatform           │  │
-│  │ - fetchGlue.ts              │     │                         │  │
-│  │ - 28 dominios, 454 interfaces│     │                         │  │
-│  └─────────────────────────────┘     └─────────────────────────┘  │
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐   │
-│  │ browser-glue/ (adaptadores de importación jco)              │   │
-│  │ - console.js, document.js, element.js, node.js, ...        │   │
-│  └─────────────────────────────────────────────────────────────┘   │
-│                                                                     │
-│  Import Map: tairitsu-browser:full/* → ./browser-glue/*            │
-│  jco transpile: genera wrapper del componente con imports correctos│
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph Browser["Navegador (JS Runtime)"]
+        subgraph BG["browser-glue (TS)"]
+            BG1["domGlue.ts"]
+            BG2["eventsGlue.ts"]
+            BG3["fetchGlue.ts"]
+            BG4["28 dominios, 454 interfaces"]
+        end
+        subgraph WASM["Componente WASM"]
+            W1["wit_bindgen bindings"]
+            W2["WitPlatform"]
+        end
+        subgraph JCO["browser-glue/ (adaptadores de importación jco)"]
+            J1["console.js, document.js, element.js, node.js, ..."]
+        end
+        NOTE["Import Map: tairitsu-browser:full/* → ./browser-glue/*<br/>jco transpile: genera wrapper del componente con imports correctos"]
+    end
+    WASM -- "WIT imports" --> BG
+    BG --> JCO
 ```
 
 ## Componentes Clave
@@ -126,23 +126,23 @@ npm run build:production
 
 ## Estructura del Paquete
 
-```
-packages/browser-glue/
-├── src/
-│   ├── index.ts              # Entrada principal
-│   ├── handles.ts            # Gestión de handles
-│   ├── async.ts              # Utilidades async
-│   ├── consoleGlue.ts        # Interfaz de consola
-│   ├── styleGlue.ts          # Interfaz de estilos
-│   ├── eventTargetGlue.ts    # Event target
-│   ├── domGlue.ts            # Operaciones DOM
-│   ├── eventsGlue.ts         # Tipos de eventos
-│   ├── fetchGlue.ts          # Fetch API
-│   ├── canvasGlue.ts         # Canvas 2D
-│   └── ... (28 dominios)
-├── dist/
-│   ├── index.js              # Entrada compilada
-│   ├── *.d.ts                # Declaraciones de tipos
-│   └── browser-glue/         # Adaptadores jco
-└── package.json
+```mermaid
+graph TD
+    ROOT["packages/browser-glue/"] --> SRC["src/"]
+    ROOT --> DIST["dist/"]
+    ROOT --> PKG["package.json"]
+    SRC --> S1["index.ts — Entrada principal"]
+    SRC --> S2["handles.ts — Gestión de handles"]
+    SRC --> S3["async.ts — Utilidades async"]
+    SRC --> S4["consoleGlue.ts — Interfaz de consola"]
+    SRC --> S5["styleGlue.ts — Interfaz de estilos"]
+    SRC --> S6["eventTargetGlue.ts — Event target"]
+    SRC --> S7["domGlue.ts — Operaciones DOM"]
+    SRC --> S8["eventsGlue.ts — Tipos de eventos"]
+    SRC --> S9["fetchGlue.ts — Fetch API"]
+    SRC --> S10["canvasGlue.ts — Canvas 2D"]
+    SRC --> S11["... (28 dominios)"]
+    DIST --> D1["index.js — Entrada compilada"]
+    DIST --> D2["*.d.ts — Declaraciones de tipos"]
+    DIST --> D3["browser-glue/ — Adaptadores jco"]
 ```

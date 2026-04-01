@@ -13,29 +13,29 @@ This demo showcases:
 
 ## Project Structure
 
-```
-examples/website/
-├── Cargo.toml              # Project configuration
-├── README.md               # This file
-├── public/                 # Static assets
-│   └── favicon.ico
-├── src/
-│   ├── lib.rs              # Main library entry
-│   ├── app.rs              # Main application component
-│   ├── components/         # Reusable components
-│   │   ├── mod.rs
-│   │   ├── layout.rs       # Layout components
-│   │   ├── navigation.rs   # Navigation components
-│   │   └── code_block.rs   # Code display component
-│   ├── pages/              # Page components
-│   │   ├── mod.rs
-│   │   ├── home.rs         # Homepage
-│   │   ├── rsx_demo.rs     # rsx! macro demos
-│   │   ├── builders.rs     # Builder system demos
-│   │   └── reactive.rs     # Reactive system demos
-│   └── styles/             # CSS styles
-│       └── main.scss
-└── ../../target/tairitsu-dist/  # Build output (generated)
+```mermaid
+graph TD
+    ROOT["examples/website/"] --> CARGO["Cargo.toml — Project configuration"]
+    ROOT --> README["README.md — This file"]
+    ROOT --> PUBLIC["public/"]
+    ROOT --> SRC["src/"]
+    ROOT --> TARGET["../../target/tairitsu-dist/ — Build output (generated)"]
+    PUBLIC --> FAV["favicon.ico"]
+    SRC --> LIB["lib.rs — Main library entry"]
+    SRC --> APP["app.rs — Main application component"]
+    SRC --> COMP["components/"]
+    SRC --> PAGES["pages/"]
+    SRC --> STYLES["styles/"]
+    COMP --> CM["mod.rs"]
+    COMP --> CL["layout.rs — Layout components"]
+    COMP --> CN["navigation.rs — Navigation components"]
+    COMP --> CC["code_block.rs — Code display component"]
+    PAGES --> PM["mod.rs"]
+    PAGES --> PH["home.rs — Homepage"]
+    PAGES --> PR["rsx_demo.rs — rsx! macro demos"]
+    PAGES --> PB["builders.rs — Builder system demos"]
+    PAGES --> PRE["reactive.rs — Reactive system demos"]
+    STYLES --> SM["main.scss"]
 ```
 
 ## Running the Demo

@@ -13,7 +13,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::atomic::*};
 
 use tairitsu_vdom::{ElementHandle, EventData, EventHandle, Platform, VElement, VNode, VText};
 
-// ── Mock Platform for Testing ─────────────────────────────────────────────
+// -- Mock Platform for Testing ---------------------------------------------
 
 /// A mock element handle for testing.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -280,7 +280,7 @@ impl Platform for MockPlatform {
     fn disconnect_mutation(&self, _observer: u64) {}
 }
 
-// ── Test 1: ElementRef Mounting Tests ─────────────────────────────────────
+// -- Test 1: ElementRef Mounting Tests -------------------------------------
 
 /// Helper to mount a VNode and populate element refs.
 /// Returns a tuple of (element, optional element_ref setter).
@@ -470,7 +470,7 @@ mod test_element_ref_mounting {
     }
 }
 
-// ── Test 2: rAF Animation Integrity Tests ─────────────────────────────────
+// -- Test 2: rAF Animation Integrity Tests ---------------------------------
 
 #[cfg(test)]
 mod test_raf_animation {
@@ -652,7 +652,7 @@ mod test_raf_animation {
     }
 }
 
-// ── Test 3: Signal → DOM Patch Tests ─────────────────────────────────────
+// -- Test 3: Signal → DOM Patch Tests -------------------------------------
 
 #[cfg(test)]
 mod test_signal_dom_patch {
@@ -744,7 +744,7 @@ mod test_signal_dom_patch {
     }
 }
 
-// ── Test 4: ButtonStateMachine State Transition Tests ───────────────────
+// -- Test 4: ButtonStateMachine State Transition Tests -------------------
 
 #[cfg(test)]
 mod test_button_state_machine {
@@ -1072,7 +1072,7 @@ mod test_button_state_machine {
     }
 }
 
-// ── Integration Tests Summary ─────────────────────────────────────────────
+// -- Integration Tests Summary ---------------------------------------------
 
 /// This module demonstrates all 4 test categories from PLAN.md Task 7:
 ///
