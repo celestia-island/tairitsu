@@ -9,6 +9,9 @@ pub mod browser;
 pub mod ssr;
 
 #[cfg(feature = "wit-bindings")]
+pub mod batch_ops;
+
+#[cfg(feature = "wit-bindings")]
 pub mod handle_cache;
 
 #[cfg(feature = "wit-bindings")]
