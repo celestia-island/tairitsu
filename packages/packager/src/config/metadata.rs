@@ -50,3 +50,80 @@ pub fn parse_metadata(manifest: &toml::Value) -> crate::Result<TairitsuMetadata>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_metadata_none() {
+        let toml_str = r#"
+[package]
+name = "test"
+version = "1.0.0"
+"#;
+        let manifest: toml::Value = toml::from_str(toml_str).unwrap();
+        let metadata = parse_metadata(&manifest).unwrap();
+
+        assert!(metadata.app_name.is_none());
+        assert!(metadata.title.is_none());
+        assert!(metadata.description.is_none());
+        // Default values from BuildConfig::default()
+        assert_eq!(metadata.build.target, "component");
+        assert_eq!(metadata.dev.port, 3001);
+    }
+
+    #[test]
+    fn test_parse_metadata_with_values() {
+        let toml_str = r#"
+[package]
+name = "test"
+
+[package.metadata.tairitsu]
+app_name = "My App"
+title = "My Title"
+description = "My Description"
+
+[package.metadata.tairitsu.build]
+target = "app"
+optimize = true
+
+[package.metadata.tairitsu.dev]
+port = 5000
+"#;
+        let manifest: toml::Value = toml::from_str(toml_str).unwrap();
+        let metadata = parse_metadata(&manifest).unwrap();
+
+        assert_eq!(metadata.app_name, Some("My App".to_string()));
+        assert_eq!(metadata.title, Some("My Title".to_string()));
+        assert_eq!(metadata.description, Some("My Description".to_string()));
+        assert_eq!(metadata.build.target, "app");
+        assert!(metadata.build.optimize);
+        assert_eq!(metadata.dev.port, 5000);
+    }
+
+    #[test]
+    fn test_parse_metadata_invalid_type() {
+        let toml_str = r#"
+[package]
+name = "test"
+
+[package.metadata.tairitsu.build]
+target = 123
+"#;
+        let manifest: toml::Value = toml::from_str(toml_str).unwrap();
+        let result = parse_metadata(&manifest);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tairitsu_metadata_default() {
+        let metadata = TairitsuMetadata::default();
+        assert!(metadata.app_name.is_none());
+        assert!(metadata.title.is_none());
+        assert!(metadata.description.is_none());
+        // Default values from Default impl
+        assert_eq!(metadata.build.target, "component");
+        assert_eq!(metadata.dev.port, 3001);
+    }
+}

@@ -29,7 +29,7 @@ pub struct PackageConfig {
     pub version: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct BuildConfig {
     #[serde(default = "default_target")]
     pub target: String,
@@ -43,6 +43,18 @@ pub struct BuildConfig {
     #[serde(alias = "browser-glue-path")]
     #[serde(default = "default_browser_glue_path")]
     pub browser_glue_path: String,
+}
+
+impl Default for BuildConfig {
+    fn default() -> Self {
+        Self {
+            target: default_target(),
+            output_dir: default_output_dir(),
+            optimize: false,
+            sourcemap: false,
+            browser_glue_path: default_browser_glue_path(),
+        }
+    }
 }
 
 fn default_target() -> String {
@@ -85,7 +97,7 @@ impl Default for DevConfig {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AssetsConfig {
     #[serde(default = "default_inline_limit")]
     pub inline_limit: usize,
@@ -93,6 +105,16 @@ pub struct AssetsConfig {
     pub include: Vec<String>,
     #[serde(default)]
     pub exclude: Vec<String>,
+}
+
+impl Default for AssetsConfig {
+    fn default() -> Self {
+        Self {
+            inline_limit: default_inline_limit(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+        }
+    }
 }
 
 fn default_inline_limit() -> usize {
@@ -154,7 +176,7 @@ pub struct CssConfig {
 }
 
 /// SCSS compilation configuration
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ScssConfig {
     /// Single entry point (legacy, for backward compatibility)
     #[serde(default)]
@@ -168,6 +190,17 @@ pub struct ScssConfig {
     /// Load paths for @use and @import
     #[serde(default)]
     pub load_paths: Vec<String>,
+}
+
+impl Default for ScssConfig {
+    fn default() -> Self {
+        Self {
+            entry: None,
+            output: default_scss_output(),
+            entries: Vec::new(),
+            load_paths: Vec::new(),
+        }
+    }
 }
 
 fn default_scss_output() -> String {
@@ -247,5 +280,278 @@ impl Config {
             native: metadata.native,
             manifest_dir,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_build_config() {
+        let config = BuildConfig::default();
+        assert_eq!(config.target, "component");
+        assert_eq!(config.output_dir.to_str().unwrap(), "../../target/tairitsu-dist");
+        assert!(!config.optimize);
+        assert!(!config.sourcemap);
+        assert_eq!(config.browser_glue_path, "/browser-glue/__tairitsu_glue__.js");
+    }
+
+    #[test]
+    fn test_default_dev_config() {
+        let config = DevConfig::default();
+        assert_eq!(config.port, 3001);
+        assert!(config.hot_reload);
+        assert!(!config.open_browser);
+    }
+
+    #[test]
+    fn test_default_html_config() {
+        let config = HtmlConfig::default();
+        assert_eq!(config.lang, "en");
+        assert_eq!(config.charset, "UTF-8");
+        assert_eq!(config.viewport, "width=device-width, initial-scale=1.0");
+        assert!(config.favicon.is_none());
+        assert!(config.title.is_none());
+        assert!(config.head.is_empty());
+        assert!(config.body_class.is_empty());
+    }
+
+    #[test]
+    fn test_default_assets_config() {
+        let config = AssetsConfig::default();
+        assert_eq!(config.inline_limit, 8192);
+        assert!(config.include.is_empty());
+        assert!(config.exclude.is_empty());
+    }
+
+    #[test]
+    fn test_default_css_config() {
+        let config = CssConfig::default();
+        assert!(config.files.is_empty());
+        assert!(!config.autoprefixer);
+        assert!(!config.minify);
+    }
+
+    #[test]
+    fn test_default_scss_config() {
+        let config = ScssConfig::default();
+        assert!(config.entry.is_none());
+        assert_eq!(config.output, "styles.css");
+        assert!(config.entries.is_empty());
+        assert!(config.load_paths.is_empty());
+    }
+
+    #[test]
+    fn test_default_native_config() {
+        let config = NativeConfig::default();
+        assert!(config.identifier.is_none());
+        assert!(config.icon.is_none());
+        assert!(config.copyright.is_none());
+    }
+
+    #[test]
+    fn test_scss_entry_default() {
+        let entry = ScssEntry::default();
+        assert!(entry.entry.is_empty());
+        assert!(entry.output.is_empty());
+    }
+
+    #[test]
+    fn test_build_config_aliases() {
+        let toml_str = r#"
+            target = "app"
+            output-dir = "custom/output"
+            browser-glue-path = "/custom/glue.js"
+            optimize = true
+            sourcemap = true
+        "#;
+
+        let config: BuildConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.target, "app");
+        assert_eq!(config.output_dir, PathBuf::from("custom/output"));
+        assert_eq!(config.browser_glue_path, "/custom/glue.js");
+        assert!(config.optimize);
+        assert!(config.sourcemap);
+    }
+
+    #[test]
+    fn test_load_minimal_config() {
+        let toml_content = r#"
+[package]
+name = "test-app"
+version = "1.0.0"
+"#;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cargo_toml_path = temp_dir.path().join("Cargo.toml");
+        std::fs::write(&cargo_toml_path, toml_content).unwrap();
+
+        let config = Config::load(temp_dir.path()).unwrap();
+        assert_eq!(config.package.name, "test-app");
+        assert_eq!(config.package.version, "1.0.0");
+        assert_eq!(config.build.target, "component"); // default from BuildConfig
+        assert_eq!(config.dev.port, 3001); // default
+    }
+
+    #[test]
+    fn test_load_full_config() {
+        let toml_content = r#"
+[package]
+name = "full-app"
+version = "2.0.0"
+
+[package.metadata.tairitsu.build]
+target = "app"
+optimize = true
+sourcemap = true
+
+[package.metadata.tairitsu.dev]
+port = 4000
+hot_reload = false
+open_browser = true
+
+[package.metadata.tairitsu.html]
+lang = "zh"
+title = "Test App"
+favicon = "/favicon.ico"
+
+[package.metadata.tairitsu.css]
+files = ["styles/main.css"]
+minify = true
+
+[package.metadata.tairitsu.scss]
+entry = "styles/main.scss"
+output = "compiled.css"
+load_paths = ["node_modules"]
+
+[package.metadata.tairitsu.native]
+identifier = "com.example.test"
+icon = "icon.ico"
+copyright = "2024 Test"
+"#;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cargo_toml_path = temp_dir.path().join("Cargo.toml");
+        std::fs::write(&cargo_toml_path, toml_content).unwrap();
+
+        let config = Config::load(temp_dir.path()).unwrap();
+        assert_eq!(config.package.name, "full-app");
+        assert_eq!(config.package.version, "2.0.0");
+        assert_eq!(config.build.target, "app");
+        assert!(config.build.optimize);
+        assert!(config.build.sourcemap);
+        assert_eq!(config.dev.port, 4000);
+        assert!(!config.dev.hot_reload);
+        assert!(config.dev.open_browser);
+        assert_eq!(config.html.lang, "zh");
+        assert_eq!(config.html.title, Some("Test App".to_string()));
+        assert_eq!(config.html.favicon, Some("/favicon.ico".to_string()));
+        assert_eq!(config.css.files, vec!["styles/main.css".to_string()]);
+        assert!(config.css.minify);
+        assert_eq!(config.scss.entry, Some("styles/main.scss".to_string()));
+        assert_eq!(config.scss.output, "compiled.css");
+        assert_eq!(config.scss.load_paths, vec!["node_modules".to_string()]);
+        assert_eq!(config.native.identifier, Some("com.example.test".to_string()));
+        assert_eq!(config.native.icon, Some("icon.ico".to_string()));
+        assert_eq!(config.native.copyright, Some("2024 Test".to_string()));
+    }
+
+    #[test]
+    fn test_load_config_not_found() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let result = Config::load(temp_dir.path());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::TairitsuPackagerError::ConfigNotFound(_) => {}
+            _ => panic!("Expected ConfigNotFound error"),
+        }
+    }
+
+    #[test]
+    fn test_load_config_invalid_toml() {
+        let toml_content = r#"
+[package
+name = "invalid"
+"#;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cargo_toml_path = temp_dir.path().join("Cargo.toml");
+        std::fs::write(&cargo_toml_path, toml_content).unwrap();
+
+        let result = Config::load(temp_dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_load_config_missing_package_section() {
+        let toml_content = r#"
+[workspace]
+members = ["."]
+"#;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cargo_toml_path = temp_dir.path().join("Cargo.toml");
+        std::fs::write(&cargo_toml_path, toml_content).unwrap();
+
+        let result = Config::load(temp_dir.path());
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::TairitsuPackagerError::InvalidConfig(msg) => {
+                assert!(msg.contains("Missing [package] section"));
+            }
+            _ => panic!("Expected InvalidConfig error"),
+        }
+    }
+
+    #[test]
+    fn test_scss_entries_config() {
+        let toml_str = r#"
+[[entries]]
+entry = "styles/main.scss"
+output = "main.css"
+
+[[entries]]
+entry = "styles/admin.scss"
+output = "admin.css"
+"#;
+
+        let config: ScssConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.entries.len(), 2);
+        assert_eq!(config.entries[0].entry, "styles/main.scss");
+        assert_eq!(config.entries[0].output, "main.css");
+        assert_eq!(config.entries[1].entry, "styles/admin.scss");
+        assert_eq!(config.entries[1].output, "admin.css");
+    }
+
+    #[test]
+    fn test_assets_config_with_patterns() {
+        let toml_str = r#"
+inline_limit = 4096
+include = ["**/*.png", "**/*.jpg"]
+exclude = ["**/*.min.css", "**/node_modules/**"]
+"#;
+
+        let config: AssetsConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.inline_limit, 4096);
+        assert_eq!(config.include.len(), 2);
+        assert_eq!(config.exclude.len(), 2);
+    }
+
+    #[test]
+    fn test_load_with_file_path() {
+        let toml_content = r#"
+[package]
+name = "path-test"
+version = "1.0.0"
+"#;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cargo_toml_path = temp_dir.path().join("Cargo.toml");
+        std::fs::write(&cargo_toml_path, toml_content).unwrap();
+
+        // Test loading with file path instead of directory
+        let config = Config::load(&cargo_toml_path).unwrap();
+        assert_eq!(config.package.name, "path-test");
     }
 }
