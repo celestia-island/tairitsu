@@ -242,7 +242,7 @@ async fn no_cache_headers(request: Request, next: Next) -> Response {
 /// Print the divider panel
 #[cfg(feature = "dev-server")]
 fn panel_divider() -> String {
-    "─".repeat(40)
+    "-".repeat(40)
 }
 
 /// Format the last build line

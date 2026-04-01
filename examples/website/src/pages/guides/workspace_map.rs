@@ -16,24 +16,19 @@ pub fn render() -> VNode {
                     }
 
                     h3 { "目录结构" }
-                    div { class: "code-block language-text",
-                        pre {
-                            code {
-                                "packages/     Rust 核心包与工具包
-├── runtime/   Image, Container, builder API
-├── macros/    rsx!, wit_world! 宏
-├── vdom/      平台无关 VDOM
-├── hooks/     React Hooks 风格的 hooks
-├── web/       Web 平台绑定
-├── browser-glue/  浏览器适配器
-└── packager/  组件打包器
-
-examples/     示例工程（不同 WIT 集成路径）
-scripts/      WebIDL/WIT 生成与辅助脚本
-docs/         项目文档（多语言）
-tests/        端到端相关资产"
-                            }
-                        }
+                    div { class: "mermaid",
+                        "graph TD
+    PKG[\"packages/ — Rust 核心包与工具包\"] --> RT[\"runtime/ — Image, Container, builder API\"]
+    PKG --> MC[\"macros/ — rsx!, wit_world! 宏\"]
+    PKG --> VD[\"vdom/ — 平台无关 VDOM\"]
+    PKG --> HK[\"hooks/ — React Hooks 风格的 hooks\"]
+    PKG --> WB[\"web/ — Web 平台绑定\"]
+    PKG --> BG[\"browser-glue/ — 浏览器适配器\"]
+    PKG --> PK[\"packager/ — 组件打包器\"]
+    EX[\"examples/ — 示例工程（不同 WIT 集成路径）\"]
+    SC[\"scripts/ — WebIDL/WIT 生成与辅助脚本\"]
+    DC[\"docs/ — 项目文档（多语言）\"]
+    TS[\"tests/ — 端到端相关资产\"]"
                     }
 
                     h3 { "核心包说明" }

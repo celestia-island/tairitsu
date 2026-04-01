@@ -56,7 +56,7 @@ pub fn build_component(
         None => pb_raw,
     };
 
-    // ── 1/5  check target ─────────────────────────────────────────────────────
+    // -- 1/5  check target -----------------------------------------------------
     pb.set_prefix("[1/5]");
     pb.set_message("check wasm32-wasip2");
     let t = Instant::now();
@@ -68,7 +68,7 @@ pub fn build_component(
     ));
     pb.inc(1);
 
-    // ── 2/5  compile ──────────────────────────────────────────────────────────
+    // -- 2/5  compile ----------------------------------------------------------
     pb.set_prefix("[2/5]");
     pb.set_message("compile WASM component");
     let t = Instant::now();
@@ -81,7 +81,7 @@ pub fn build_component(
     ));
     pb.inc(1);
 
-    // ── 3/5  bundle assets ────────────────────────────────────────────────────
+    // -- 3/5  bundle assets ----------------------------------------------------
     pb.set_prefix("[3/5]");
     pb.set_message("bundle assets");
     let t = Instant::now();
@@ -120,7 +120,7 @@ pub fn build_component(
     ));
     pb.inc(1);
 
-    // ── 4/5  component wrapper ────────────────────────────────────────────────
+    // -- 4/5  component wrapper ------------------------------------------------
     pb.set_prefix("[4/5]");
     pb.set_message("component wrapper");
     let t = Instant::now();
@@ -132,7 +132,7 @@ pub fn build_component(
     ));
     pb.inc(1);
 
-    // ── 5/5  HTML ─────────────────────────────────────────────────────────────
+    // -- 5/5  HTML -------------------------------------------------------------
     pb.set_prefix("[5/5]");
     pb.set_message("generate HTML");
     let t = Instant::now();
@@ -1171,7 +1171,7 @@ async fn run_watch_loop(
         }
     });
 
-    // ── Keyboard command listener ─────────────────────────────────────────────
+    // -- Keyboard command listener ---------------------------------------------
     // Runs on a dedicated blocking thread so the tokio runtime is never stalled
     // waiting for stdin.  The user types a letter + Enter to send a command.
     let (cmd_tx, mut cmd_rx) = tokio::sync::mpsc::channel::<DevCmd>(8);
