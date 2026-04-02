@@ -266,8 +266,11 @@ pub async fn run() -> crate::Result<()> {
     if cli.daemon {
         // Check if we're already the daemon
         if is_daemon() {
-            // We're the daemon child, continue with normal execution
-            // Write initial status
+            // Daemonize this process: double-fork + setsid so it
+            // survives the parent terminal closing.
+            #[cfg(unix)]
+            daemon::daemonize_self()?;
+
             daemon::write_pid_file(std::process::id())?;
             let status = daemon::DaemonStatus {
                 pid: std::process::id(),

@@ -73,6 +73,33 @@ pub fn is_daemon() -> bool {
     env::var("TAIRITSU_DAEMON").is_ok()
 }
 
+/// Daemonize the current process using the `daemonize` crate.
+///
+/// Performs double-fork + setsid so the process detaches from the
+/// controlling terminal and survives the parent exiting.
+#[cfg(unix)]
+pub fn daemonize_self() -> std::io::Result<()> {
+    use daemonize::Daemonize;
+    use std::fs::File;
+
+    let stdout = File::create(daemon_log_path().with_extension("stdout"))?;
+    let stderr = File::create(daemon_log_path().with_extension("stderr"))?;
+
+    let cwd = env::current_dir()?;
+
+    let daemonize = Daemonize::new()
+        .working_directory(&cwd)
+        .stdout(stdout)
+        .stderr(stderr);
+
+    daemonize.start().map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("daemonize failed: {}", e),
+        )
+    })
+}
+
 /// Write daemon status to log file
 pub fn write_daemon_status(status: &DaemonStatus) -> std::io::Result<()> {
     let log_path = daemon_log_path();
@@ -196,17 +223,15 @@ where
         let exe = env::current_exe()?;
         let args: Vec<String> = args
             .into_iter()
-            .skip(1) // Skip argv[0] which is the program name
+            .skip(1)
             .map(|s| s.as_ref().to_string_lossy().into_owned())
             .collect();
 
-        // Ensure parent directory exists for log files
         let log_path = daemon_log_path();
         if let Some(parent) = log_path.parent() {
             fs::create_dir_all(parent)?;
         }
 
-        // Set environment variable to mark as daemon
         Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
             .args(&args)
