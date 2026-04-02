@@ -9,13 +9,35 @@ use std::{
     fs::{self, File},
     path::PathBuf,
     process::Command,
+    sync::OnceLock,
 };
 
+static PROJECT_ROOT: OnceLock<PathBuf> = OnceLock::new();
+
+pub fn set_project_root(path: PathBuf) {
+    let _ = PROJECT_ROOT.set(path);
+}
+
+fn project_root() -> PathBuf {
+    PROJECT_ROOT
+        .get()
+        .cloned()
+        .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+}
+
+fn daemon_dir() -> PathBuf {
+    project_root().join("target")
+}
+
 /// Path to the daemon log file in target directory
-const DAEMON_LOG_PATH: &str = "target/tairitsu-packager.log";
+fn daemon_log_path() -> PathBuf {
+    daemon_dir().join("tairitsu-packager.log")
+}
 
 /// Path to the PID file
-const PID_FILE_PATH: &str = "target/tairitsu-packager.pid";
+fn pid_file_path() -> PathBuf {
+    daemon_dir().join("tairitsu-packager.pid")
+}
 
 /// Daemon status and log entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,16 +71,6 @@ pub fn is_tty() -> bool {
 /// Check if the current process is a daemon (already backgrounded)
 pub fn is_daemon() -> bool {
     env::var("TAIRITSU_DAEMON").is_ok()
-}
-
-/// Get the path to the daemon log file
-pub fn daemon_log_path() -> PathBuf {
-    PathBuf::from(DAEMON_LOG_PATH)
-}
-
-/// Get the path to the PID file
-pub fn pid_file_path() -> PathBuf {
-    PathBuf::from(PID_FILE_PATH)
 }
 
 /// Write daemon status to log file
