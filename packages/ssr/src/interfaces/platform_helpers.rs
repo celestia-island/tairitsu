@@ -136,5 +136,125 @@ where
         move |_caller: wasmtime::Caller<'_, T>, _observer: u64| Ok(()),
     )?;
 
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "get-element-by-id",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _id: String|
+              -> Result<Option<u64>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "query-selector",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _selector: String|
+              -> Result<Option<u64>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "query-selector-all",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _selector: String|
+              -> Result<Vec<u64>, wasmtime::Error> { Ok(vec![]) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "element-from-point",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _x: i32,
+              _y: i32|
+              -> Result<Option<u64>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "element-closest",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _element: u64,
+              _selector: String|
+              -> Result<Option<u64>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "get-scroll-y",
+        move |_caller: wasmtime::Caller<'_, T>| -> Result<f64, wasmtime::Error> { Ok(0.0) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "scroll-to",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _top: f64,
+              _behavior: String|
+              -> Result<(), wasmtime::Error> { Ok(()) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "on-scroll",
+        move |_caller: wasmtime::Caller<'_, T>, _callback_id: u64| -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "on-resize-callback",
+        move |_caller: wasmtime::Caller<'_, T>, _callback_id: u64| -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "copy-to-clipboard",
+        move |_caller: wasmtime::Caller<'_, T>, _text: String| -> Result<bool, wasmtime::Error> {
+            Ok(false)
+        },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "read-clipboard",
+        move |_caller: wasmtime::Caller<'_, T>| -> Result<Option<String>, wasmtime::Error> {
+            Ok(None)
+        },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "prefers-dark-mode",
+        move |_caller: wasmtime::Caller<'_, T>| -> Result<bool, wasmtime::Error> { Ok(false) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "get-element-rect-by-id",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _id: String|
+              -> Result<Option<(f64, f64, f64, f64)>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "get-bounding-rect-by-class",
+        move |_caller: wasmtime::Caller<'_, T>,
+              _class_name: String,
+              _element: u64|
+              -> Result<Option<(f64, f64, f64, f64)>, wasmtime::Error> { Ok(None) },
+    )?;
+
+    linker.func_wrap(
+        "tairitsu-browser:full/platform-helpers@0.2.0",
+        "request-fullscreen",
+        move |_caller: wasmtime::Caller<'_, T>, _element: u64| -> Result<(), wasmtime::Error> {
+            Ok(())
+        },
+    )?;
+
     Ok(())
 }

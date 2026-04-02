@@ -8,9 +8,9 @@
 use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::{
-    Platform, Signal,
     scheduler::Scheduler,
     vnode::{VElement, VNode},
+    Platform, Signal,
 };
 
 // Mock platform for testing
@@ -202,6 +202,62 @@ impl Platform for MockPlatform {
     }
 
     fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
+
+    fn get_element_by_id(&self, _id: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn query_selector(&self, _selector: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn query_selector_all(&self, _selector: &str) -> Vec<Self::Element> {
+        vec![]
+    }
+
+    fn element_from_point(&self, _x: i32, _y: i32) -> Option<Self::Element> {
+        None
+    }
+
+    fn element_closest(&self, _element: &Self::Element, _selector: &str) -> Option<Self::Element> {
+        None
+    }
+
+    fn get_scroll_y(&self) -> f64 {
+        0.0
+    }
+
+    fn scroll_to(&self, _top: f64, _behavior: &str) {}
+
+    fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
+
+    fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
+
+    fn copy_to_clipboard(&self, _text: &str) -> bool {
+        false
+    }
+
+    fn read_clipboard(&self) -> Option<String> {
+        None
+    }
+
+    fn prefers_dark_mode(&self) -> bool {
+        false
+    }
+
+    fn get_element_rect_by_id(&self, _id: &str) -> Option<tairitsu_vdom::DomRect> {
+        None
+    }
+
+    fn get_bounding_rect_by_class(
+        &self,
+        _class_name: &str,
+        _element: &Self::Element,
+    ) -> Option<tairitsu_vdom::DomRect> {
+        None
+    }
+
+    fn request_fullscreen(&self, _element: &Self::Element) {}
 }
 
 #[derive(Clone, Debug)]

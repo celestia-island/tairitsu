@@ -11,7 +11,7 @@ use std::{
 
 use tracing::trace;
 
-use crate::{VNode, platform::Platform};
+use crate::{platform::Platform, VNode};
 
 /// Global scheduler ID counter
 static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);
@@ -96,7 +96,8 @@ impl<P: Platform> Scheduler<P> {
             component.root_element = Some(element);
             trace!(
                 "Scheduler {}: Set root element for component {}",
-                inner.id, component_id
+                inner.id,
+                component_id
             );
         }
     }
@@ -108,7 +109,8 @@ impl<P: Platform> Scheduler<P> {
             component.dirty = true;
             trace!(
                 "Scheduler {}: Marked component {} as dirty",
-                inner.id, component_id
+                inner.id,
+                component_id
             );
         }
         drop(inner);
@@ -166,7 +168,8 @@ impl<P: Platform> Scheduler<P> {
 
         trace!(
             "Scheduler {}: Scheduled render with rAF id {}",
-            inner.id, raf_id
+            inner.id,
+            raf_id
         );
     }
 
@@ -180,7 +183,8 @@ impl<P: Platform> Scheduler<P> {
             component.dirty = false;
             trace!(
                 "Scheduler {}: Rendered component {}",
-                inner_ref.id, component_id
+                inner_ref.id,
+                component_id
             );
         }
     }
@@ -217,7 +221,8 @@ impl<P: Platform> Scheduler<P> {
                     // Initial render - mount the VNode
                     trace!(
                         "Scheduler {}: Initial render for component {}",
-                        inner.id, component_id
+                        inner.id,
+                        component_id
                     );
                 }
             }
@@ -387,6 +392,51 @@ mod tests {
             0
         }
         fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
+        fn get_element_by_id(&self, _id: &str) -> Option<Self::Element> {
+            None
+        }
+        fn query_selector(&self, _selector: &str) -> Option<Self::Element> {
+            None
+        }
+        fn query_selector_all(&self, _selector: &str) -> Vec<Self::Element> {
+            vec![]
+        }
+        fn element_from_point(&self, _x: i32, _y: i32) -> Option<Self::Element> {
+            None
+        }
+        fn element_closest(
+            &self,
+            _element: &Self::Element,
+            _selector: &str,
+        ) -> Option<Self::Element> {
+            None
+        }
+        fn get_scroll_y(&self) -> f64 {
+            0.0
+        }
+        fn scroll_to(&self, _top: f64, _behavior: &str) {}
+        fn on_scroll(&self, _callback: Box<dyn FnMut(f64, f64)>) {}
+        fn on_resize(&self, _callback: Box<dyn FnMut(i32, i32)>) {}
+        fn copy_to_clipboard(&self, _text: &str) -> bool {
+            false
+        }
+        fn read_clipboard(&self) -> Option<String> {
+            None
+        }
+        fn prefers_dark_mode(&self) -> bool {
+            false
+        }
+        fn get_element_rect_by_id(&self, _id: &str) -> Option<crate::DomRect> {
+            None
+        }
+        fn get_bounding_rect_by_class(
+            &self,
+            _class_name: &str,
+            _element: &Self::Element,
+        ) -> Option<crate::DomRect> {
+            None
+        }
+        fn request_fullscreen(&self, _element: &Self::Element) {}
     }
 
     #[test]

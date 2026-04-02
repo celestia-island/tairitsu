@@ -67,6 +67,26 @@ pub trait Platform: Sized + 'static {
     fn media_query_list_get_matches(&self, list: u64) -> bool;
     fn media_query_list_add_listener(&self, list: u64, callback: Box<dyn FnMut(bool)>) -> u64;
     fn media_query_list_remove_listener(&self, list: u64, listener_id: u64);
+
+    fn get_element_by_id(&self, id: &str) -> Option<Self::Element>;
+    fn query_selector(&self, selector: &str) -> Option<Self::Element>;
+    fn query_selector_all(&self, selector: &str) -> Vec<Self::Element>;
+    fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element>;
+    fn element_closest(&self, element: &Self::Element, selector: &str) -> Option<Self::Element>;
+    fn get_scroll_y(&self) -> f64;
+    fn scroll_to(&self, top: f64, behavior: &str);
+    fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>);
+    fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>);
+    fn copy_to_clipboard(&self, text: &str) -> bool;
+    fn read_clipboard(&self) -> Option<String>;
+    fn prefers_dark_mode(&self) -> bool;
+    fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect>;
+    fn get_bounding_rect_by_class(
+        &self,
+        class_name: &str,
+        element: &Self::Element,
+    ) -> Option<DomRect>;
+    fn request_fullscreen(&self, element: &Self::Element);
 }
 
 pub struct ResizeObserverEntry {

@@ -140,6 +140,18 @@ interface media-query-list-callbacks {
     on-change: func(callback-id: u64, matches: bool);
 }
 
+/// Scroll callback interface - implemented by the component, called by host.
+interface scroll-callbacks {
+    /// Callback invoked when a scroll event occurs.
+    on-scroll-event: func(callback-id: u64, scroll-x: f64, scroll-y: f64);
+}
+
+/// Window resize callback interface - implemented by the component, called by host.
+interface window-resize-callbacks {
+    /// Callback invoked when the window is resized.
+    on-window-resize: func(callback-id: u64, width: s32, height: s32);
+}
+
 /// Platform helpers interface - helper functions for platform-specific operations.
 ///
 /// These are convenience functions that wrap complex browser APIs.
@@ -187,6 +199,51 @@ interface platform-helpers {
 
     /// Disconnect a mutation observer.
     disconnect-mutation: func(observer: u64);
+
+    /// Get an element by its ID.
+    get-element-by-id: func(id: string) -> option<u64>;
+
+    /// Query the first element matching a CSS selector.
+    query-selector: func(selector: string) -> option<u64>;
+
+    /// Query all elements matching a CSS selector.
+    query-selector-all: func(selector: string) -> list<u64>;
+
+    /// Get the element at the given viewport coordinates.
+    element-from-point: func(x: s32, y: s32) -> option<u64>;
+
+    /// Get the closest ancestor matching a CSS selector.
+    element-closest: func(element: u64, selector: string) -> option<u64>;
+
+    /// Get the current scroll Y position of the window.
+    get-scroll-y: func() -> f64;
+
+    /// Scroll the window to the given position with behavior.
+    scroll-to: func(top: f64, behavior: string);
+
+    /// Register a callback for scroll events.
+    on-scroll: func(callback-id: u64);
+
+    /// Register a callback for window resize events.
+    on-resize-callback: func(callback-id: u64);
+
+    /// Copy text to the clipboard.
+    copy-to-clipboard: func(text: string) -> bool;
+
+    /// Read text from the clipboard.
+    read-clipboard: func() -> option<string>;
+
+    /// Check if the user prefers dark mode.
+    prefers-dark-mode: func() -> bool;
+
+    /// Get the bounding rect of an element by its ID.
+    get-element-rect-by-id: func(id: string) -> option<dom-rect>;
+
+    /// Get the bounding rect of the first descendant matching a class within an element.
+    get-bounding-rect-by-class: func(class-name: string, element: u64) -> option<dom-rect>;
+
+    /// Request fullscreen mode for an element.
+    request-fullscreen: func(element: u64);
 }
 
 /// Component lifecycle interface - implemented by the component.
@@ -16318,5 +16375,7 @@ world browser-full {
     export resize-observer-callbacks;
     export mutation-observer-callbacks;
     export media-query-list-callbacks;
+    export scroll-callbacks;
+    export window-resize-callbacks;
 }
 
