@@ -251,6 +251,66 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
     }
 
     fn request_fullscreen(&mut self, _element: u64) {}
+
+    fn get_contenteditable_state(
+        &mut self,
+        _element: u64,
+    ) -> Option<crate::bindings::ContentEditableState> {
+        None
+    }
+
+    fn set_content_editable(&mut self, _element: u64, _editable: bool) {}
+
+    fn exec_command(&mut self, _command: String, _value: Option<String>) -> bool {
+        false
+    }
+
+    fn get_selection_start(&mut self, _element: u64) -> Option<u32> {
+        None
+    }
+
+    fn get_selection_end(&mut self, _element: u64) -> Option<u32> {
+        None
+    }
+
+    fn create_audio_context(&mut self) -> u64 {
+        1
+    }
+
+    fn create_analyser_node(&mut self, _audio_context: u64) -> u64 {
+        1
+    }
+
+    fn create_media_element_source(&mut self, _audio_context: u64, _element: u64) -> u64 {
+        1
+    }
+
+    fn analyser_get_frequency_data(&mut self, _analyser: u64) -> Vec<f32> {
+        vec![]
+    }
+
+    fn analyser_get_time_domain_data(&mut self, _analyser: u64) -> Vec<f32> {
+        vec![]
+    }
+
+    fn draw_qrcode_on_canvas_by_id(
+        &mut self,
+        _canvas_id: String,
+        _matrix: Vec<Vec<bool>>,
+        _modules: u64,
+        _color: String,
+        _background: String,
+    ) -> bool {
+        false
+    }
+
+    fn get_scroll_top_from_point(&mut self, _x: i32, _y: i32) -> f64 {
+        0.0
+    }
+
+    fn get_scroll_top_by_selector(&mut self, _selector: String) -> f64 {
+        0.0
+    }
 }
 
 #[cfg(test)]

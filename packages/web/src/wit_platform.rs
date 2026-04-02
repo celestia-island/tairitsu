@@ -265,6 +265,7 @@ pub mod wasm_impl {
     type MediaQueryListCallback = Box<dyn FnMut(bool)>;
     type ScrollCallback = Box<dyn FnMut(f64, f64)>;
     type WindowResizeCallback = Box<dyn FnMut(i32, i32)>;
+    type VideoFrameCallback = Box<dyn FnMut(String)>;
 
     static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -325,6 +326,7 @@ pub mod wasm_impl {
         static MEDIA_QUERY_LIST_CALLBACKS: RefCell<HashMap<u64, MediaQueryListCallback>> = RefCell::new(HashMap::new());
         static SCROLL_CALLBACKS: RefCell<HashMap<u64, ScrollCallback>> = RefCell::new(HashMap::new());
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
+        static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -615,6 +617,17 @@ pub mod wasm_impl {
                 let mut callbacks = m.borrow_mut();
                 if let Some(handler) = callbacks.get_mut(&callback_id) {
                     handler(width, height);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::video_frame_callbacks::Guest for BrowserComponent {
+        fn on_video_frame(callback_id: u64, event: String) {
+            VIDEO_FRAME_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    handler(event);
                 }
             });
         }
@@ -1070,6 +1083,143 @@ pub mod wasm_impl {
 
         fn request_fullscreen(&self, element: &Self::Element) {
             bindings::tairitsu_browser::full::platform_helpers::request_fullscreen(element.0)
+        }
+
+        fn get_contenteditable_state(
+            &self,
+            element: &Self::Element,
+        ) -> Option<tairitsu_vdom::ContentEditableState> {
+            bindings::tairitsu_browser::full::platform_helpers::get_contenteditable_state(element.0)
+                .map(|state| tairitsu_vdom::ContentEditableState {
+                    editable: state.editable,
+                    focused: state.focused,
+                })
+        }
+
+        fn exec_command(&self, command: &str, value: Option<&str>) -> bool {
+            bindings::tairitsu_browser::full::document::exec_command(command, None, value)
+        }
+
+        fn get_selection_start(&self, element: &Self::Element) -> Option<u32> {
+            bindings::tairitsu_browser::full::platform_helpers::get_selection_start(element.0)
+        }
+
+        fn get_selection_end(&self, element: &Self::Element) -> Option<u32> {
+            bindings::tairitsu_browser::full::platform_helpers::get_selection_end(element.0)
+        }
+
+        fn set_content_editable(&self, element: &Self::Element, editable: bool) {
+            bindings::tairitsu_browser::full::platform_helpers::set_content_editable(
+                element.0, editable,
+            );
+        }
+
+        fn get_inner_html(&self, element: &Self::Element) -> String {
+            bindings::tairitsu_browser::full::element::get_inner_html(element.0)
+        }
+
+        fn set_inner_html(&self, element: &Self::Element, html: String) {
+            bindings::tairitsu_browser::full::element::set_inner_html(element.0, &html);
+        }
+
+        fn get_element_scroll_top(&self, element: &Self::Element) -> f64 {
+            bindings::tairitsu_browser::full::element::get_scroll_top(element.0)
+        }
+
+        fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
+            bindings::tairitsu_browser::full::element::set_scroll_top(element.0, value);
+        }
+
+        fn video_play(&self, element: &Self::Element) {
+            let _ = bindings::tairitsu_browser::full::html_media_element::play(element.0);
+        }
+
+        fn video_pause(&self, element: &Self::Element) {
+            bindings::tairitsu_browser::full::html_media_element::pause(element.0);
+        }
+
+        fn video_get_current_time(&self, element: &Self::Element) -> f64 {
+            bindings::tairitsu_browser::full::html_media_element::get_current_time(element.0)
+        }
+
+        fn video_get_duration(&self, element: &Self::Element) -> f64 {
+            bindings::tairitsu_browser::full::html_media_element::get_duration(element.0)
+        }
+
+        fn video_seek(&self, element: &Self::Element, time: f64) {
+            bindings::tairitsu_browser::full::html_media_element::set_current_time(element.0, time);
+        }
+
+        fn video_set_muted(&self, element: &Self::Element, muted: bool) {
+            bindings::tairitsu_browser::full::html_media_element::set_muted(element.0, muted);
+        }
+
+        fn video_set_volume(&self, element: &Self::Element, volume: f64) {
+            bindings::tairitsu_browser::full::html_media_element::set_volume(element.0, volume);
+        }
+
+        fn create_audio_context(&self) -> u64 {
+            bindings::tairitsu_browser::full::platform_helpers::create_audio_context()
+        }
+
+        fn create_analyser_node(&self, audio_context: u64) -> u64 {
+            bindings::tairitsu_browser::full::platform_helpers::create_analyser_node(audio_context)
+        }
+
+        fn create_media_element_source(&self, audio_context: u64, element: u64) -> u64 {
+            bindings::tairitsu_browser::full::platform_helpers::create_media_element_source(
+                audio_context,
+                element,
+            )
+        }
+
+        fn analyser_node_get_frequency_data(&self, analyser: u64) -> Vec<f32> {
+            bindings::tairitsu_browser::full::platform_helpers::analyser_get_frequency_data(
+                analyser,
+            )
+        }
+
+        fn analyser_node_get_time_domain_data(&self, analyser: u64) -> Vec<f32> {
+            bindings::tairitsu_browser::full::platform_helpers::analyser_get_time_domain_data(
+                analyser,
+            )
+        }
+
+        fn draw_qrcode_on_canvas_by_id(
+            &self,
+            canvas_id: &str,
+            matrix: &Vec<Vec<bool>>,
+            modules: u64,
+            color: &str,
+            background: &str,
+        ) -> bool {
+            let wit_matrix: Vec<Vec<bool>> = matrix.clone();
+            bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
+                canvas_id,
+                &wit_matrix,
+                modules,
+                color,
+                background,
+            )
+        }
+
+        fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_from_point(x, y)
+        }
+
+        fn get_scroll_top_by_selector(&self, selector: &str) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_top_by_selector(selector)
+        }
+
+        fn get_target_element_from_event(
+            &self,
+            client_x: i32,
+            client_y: i32,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::element_from_point(
+                client_x, client_y,
+            )
+            .map(WitElement)
         }
     }
 

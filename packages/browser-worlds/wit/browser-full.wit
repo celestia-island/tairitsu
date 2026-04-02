@@ -156,7 +156,7 @@ interface window-resize-callbacks {
 ///
 /// These are convenience functions that wrap complex browser APIs.
 interface platform-helpers {
-    use types.{dom-rect};
+    use types.{dom-rect, content-editable-state};
 
     /// Get the inner width of the window.
     inner-width: func() -> s32;
@@ -244,6 +244,53 @@ interface platform-helpers {
 
     /// Request fullscreen mode for an element.
     request-fullscreen: func(element: u64);
+
+    /// Rich text editing ---
+
+    /// Get the content-editable state of an element.
+    get-contenteditable-state: func(element: u64) -> option<content-editable-state>;
+
+    /// Set content-editable on an element.
+    set-content-editable: func(element: u64, editable: bool);
+
+    /// Execute a command on the document (e.g. "bold", "italic").
+    exec-command: func(command: string, value: option<string>) -> bool;
+
+    /// Get the selection start offset within an element.
+    get-selection-start: func(element: u64) -> option<u32>;
+
+    /// Get the selection end offset within an element.
+    get-selection-end: func(element: u64) -> option<u32>;
+
+    /// Video/Audio media element wrappers ---
+
+    /// Create a new AudioContext and return its handle.
+    create-audio-context: func() -> u64;
+
+    /// Create an AnalyserNode from an AudioContext.
+    create-analyser-node: func(audio-context: u64) -> u64;
+
+    /// Create a MediaElementAudioSourceNode connecting an audio context to a media element.
+    create-media-element-source: func(audio-context: u64, element: u64) -> u64;
+
+    /// Get frequency data from an AnalyserNode.
+    analyser-get-frequency-data: func(analyser: u64) -> list<f32>;
+
+    /// Get time-domain data from an AnalyserNode.
+    analyser-get-time-domain-data: func(analyser: u64) -> list<f32>;
+
+    /// Canvas / QRCode ---
+
+    /// Draw a QR code on a canvas element identified by ID.
+    draw-qrcode-on-canvas-by-id: func(canvas-id: string, matrix: list<list<bool>>, modules: u64, color: string, background: string) -> bool;
+
+    /// Scroll helpers ---
+
+    /// Get the scroll top of the element at the given viewport coordinates.
+    get-scroll-top-from-point: func(x: s32, y: s32) -> f64;
+
+    /// Get the scroll top of the first element matching a CSS selector.
+    get-scroll-top-by-selector: func(selector: string) -> f64;
 }
 
 /// Component lifecycle interface - implemented by the component.
@@ -448,6 +495,11 @@ interface types {
 
         height: f64,
 
+    }
+
+    record content-editable-state {
+        editable: bool,
+        focused: bool,
     }
 
 }
