@@ -185,10 +185,10 @@ impl ResourceRegistry {
         all_affected
     }
 
-    #[allow(dead_code)]
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
-        let _ = id; // Suppress unused warning in this stub implementation
-        None
+        self.resources
+            .get(&id)
+            .map(|arc| arc.lock().unwrap().clone())
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -221,12 +221,11 @@ impl ResourceRegistry {
 
     #[allow(dead_code)]
     fn remove_boundary(&mut self, component_id: runtime::ComponentId) {
-        let _ = component_id; // Suppress unused warning in this stub implementation
+        self.suspense_boundaries.remove(&component_id);
     }
 
     fn get_boundary(&self, component_id: runtime::ComponentId) -> Option<&SuspenseBoundaryState> {
-        let _ = component_id; // Suppress unused warning
-        None
+        self.suspense_boundaries.get(&component_id)
     }
 
     #[allow(dead_code)]
@@ -234,8 +233,7 @@ impl ResourceRegistry {
         &mut self,
         component_id: runtime::ComponentId,
     ) -> Option<&mut SuspenseBoundaryState> {
-        let _ = component_id; // Suppress unused warning
-        None
+        self.suspense_boundaries.get_mut(&component_id)
     }
 }
 
