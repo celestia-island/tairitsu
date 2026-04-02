@@ -18,11 +18,17 @@
 
 mod diff;
 
-use std::{collections::{HashMap, HashSet}, sync::{Arc, Mutex, RwLock}};
 use serde::{Deserialize, Serialize};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::{Arc, Mutex, RwLock},
+};
 
+pub use diff::{
+    ComponentChange, ComponentMetadata, DiffResult, FunctionChange, HookChange, HookInfo, HookType,
+    PropertyChange, PropertyInfo, diff_components,
+};
 use tairitsu_vdom::ComponentId;
-pub use diff::{ComponentChange, ComponentMetadata, DiffResult, FunctionChange, HookChange, HookInfo, HookType, PropertyChange, PropertyInfo, diff_components};
 
 /// Signature for identifying components across updates
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

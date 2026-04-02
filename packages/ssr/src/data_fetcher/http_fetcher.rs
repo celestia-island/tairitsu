@@ -1,8 +1,8 @@
 //! HTTP fetcher implementation
 
-use std::sync::Arc;
 #[cfg(feature = "data-fetcher")]
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use async_trait::async_trait;
 
