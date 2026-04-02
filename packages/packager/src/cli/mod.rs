@@ -241,6 +241,18 @@ pub async fn run() -> crate::Result<()> {
     let cli = Cli::parse();
     let t = crate::i18n::translations();
 
+    // Resolve project root from manifest_path as early as possible
+    // so daemon paths are consistent regardless of CWD
+    if let Some(ref mp) = cli.manifest_path {
+        let canonical = mp.canonicalize().unwrap_or_else(|_| mp.clone());
+        let root = if canonical.is_file() {
+            canonical.parent().unwrap_or(&canonical).to_path_buf()
+        } else {
+            canonical
+        };
+        daemon::set_project_root(root);
+    }
+
     // Determine TTY mode
     let is_interactive = if cli.tty {
         true
@@ -322,25 +334,10 @@ pub async fn run() -> crate::Result<()> {
         .with_target(false)
         .init();
 
-    // Check for non-interactive mode
     let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
 
     if !is_interactive && !is_daemon() && is_dev_command {
         daemon::print_non_tty_hint();
-        // Run a single build then exit
-        let manifest_path = cli.manifest_path.unwrap_or_else(|| PathBuf::from("."));
-        if let Commands::Dev { .. } | Commands::Ssr { .. } = cli.command {
-            let config = crate::config::Config::load(&manifest_path)?;
-            info!("Running single build in non-interactive mode...");
-            let result = crate::wasm::build_component(&config, false, None);
-            match result {
-                Ok(()) => info!("Build complete. Exiting."),
-                Err(e) => {
-                    eprintln!("Build failed: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        }
         return Ok(());
     }
 
