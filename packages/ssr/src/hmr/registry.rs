@@ -3,7 +3,10 @@
 //! Tracks loaded modules and their dependencies for hot replacement.
 
 use serde::{Deserialize, Serialize};
-use std::{collections::{HashMap, HashSet}, sync::{Arc, RwLock}};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::{Arc, RwLock},
+};
 use uuid::Uuid;
 
 use super::protocol::ModuleState;

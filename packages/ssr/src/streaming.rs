@@ -49,9 +49,9 @@
 //! # }
 //! ```
 
-use std::pin::Pin;
-use futures::stream::Stream;
 use anyhow::Result;
+use futures::stream::Stream;
+use std::pin::Pin;
 
 use tairitsu_vdom::VNode;
 
