@@ -258,6 +258,104 @@ impl Platform for MockPlatform {
     }
 
     fn request_fullscreen(&self, _element: &Self::Element) {}
+
+    fn get_contenteditable_state(
+        &self,
+        _element: &Self::Element,
+    ) -> Option<tairitsu_vdom::ContentEditableState> {
+        None
+    }
+
+    fn exec_command(&self, _command: &str, _value: Option<&str>) -> bool {
+        false
+    }
+
+    fn get_selection_start(&self, _element: &Self::Element) -> Option<u32> {
+        None
+    }
+
+    fn get_selection_end(&self, _element: &Self::Element) -> Option<u32> {
+        None
+    }
+
+    fn set_content_editable(&self, _element: &Self::Element, _editable: bool) {}
+
+    fn get_inner_html(&self, _element: &Self::Element) -> String {
+        String::new()
+    }
+
+    fn set_inner_html(&self, _element: &Self::Element, _html: String) {}
+
+    fn get_element_scroll_top(&self, _element: &Self::Element) -> f64 {
+        0.0
+    }
+
+    fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
+
+    fn video_play(&self, _element: &Self::Element) {}
+
+    fn video_pause(&self, _element: &Self::Element) {}
+
+    fn video_get_current_time(&self, _element: &Self::Element) -> f64 {
+        0.0
+    }
+
+    fn video_get_duration(&self, _element: &Self::Element) -> f64 {
+        0.0
+    }
+
+    fn video_seek(&self, _element: &Self::Element, _time: f64) {}
+
+    fn video_set_muted(&self, _element: &Self::Element, _muted: bool) {}
+
+    fn video_set_volume(&self, _element: &Self::Element, _volume: f64) {}
+
+    fn create_audio_context(&self) -> u64 {
+        0
+    }
+
+    fn create_analyser_node(&self, _audio_context: u64) -> u64 {
+        0
+    }
+
+    fn create_media_element_source(&self, _audio_context: u64, _element: u64) -> u64 {
+        0
+    }
+
+    fn analyser_node_get_frequency_data(&self, _analyser: u64) -> Vec<f32> {
+        vec![]
+    }
+
+    fn analyser_node_get_time_domain_data(&self, _analyser: u64) -> Vec<f32> {
+        vec![]
+    }
+
+    fn draw_qrcode_on_canvas_by_id(
+        &self,
+        _canvas_id: &str,
+        _matrix: &Vec<Vec<bool>>,
+        _modules: u64,
+        _color: &str,
+        _background: &str,
+    ) -> bool {
+        false
+    }
+
+    fn get_scroll_top_from_point(&self, _x: i32, _y: i32) -> f64 {
+        0.0
+    }
+
+    fn get_scroll_top_by_selector(&self, _selector: &str) -> f64 {
+        0.0
+    }
+
+    fn get_target_element_from_event(
+        &self,
+        _client_x: i32,
+        _client_y: i32,
+    ) -> Option<Self::Element> {
+        None
+    }
 }
 
 #[derive(Clone, Debug)]

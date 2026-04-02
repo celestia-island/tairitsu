@@ -87,6 +87,43 @@ pub trait Platform: Sized + 'static {
         element: &Self::Element,
     ) -> Option<DomRect>;
     fn request_fullscreen(&self, element: &Self::Element);
+
+    fn get_contenteditable_state(&self, element: &Self::Element) -> Option<ContentEditableState>;
+    fn exec_command(&self, command: &str, value: Option<&str>) -> bool;
+    fn get_selection_start(&self, element: &Self::Element) -> Option<u32>;
+    fn get_selection_end(&self, element: &Self::Element) -> Option<u32>;
+    fn set_content_editable(&self, element: &Self::Element, editable: bool);
+    fn get_inner_html(&self, element: &Self::Element) -> String;
+    fn set_inner_html(&self, element: &Self::Element, html: String);
+
+    fn get_element_scroll_top(&self, element: &Self::Element) -> f64;
+    fn set_element_scroll_top(&self, element: &Self::Element, value: f64);
+
+    fn video_play(&self, element: &Self::Element);
+    fn video_pause(&self, element: &Self::Element);
+    fn video_get_current_time(&self, element: &Self::Element) -> f64;
+    fn video_get_duration(&self, element: &Self::Element) -> f64;
+    fn video_seek(&self, element: &Self::Element, time: f64);
+    fn video_set_muted(&self, element: &Self::Element, muted: bool);
+    fn video_set_volume(&self, element: &Self::Element, volume: f64);
+    fn create_audio_context(&self) -> u64;
+    fn create_analyser_node(&self, audio_context: u64) -> u64;
+    fn create_media_element_source(&self, audio_context: u64, element: u64) -> u64;
+    fn analyser_node_get_frequency_data(&self, analyser: u64) -> Vec<f32>;
+    fn analyser_node_get_time_domain_data(&self, analyser: u64) -> Vec<f32>;
+
+    fn draw_qrcode_on_canvas_by_id(
+        &self,
+        canvas_id: &str,
+        matrix: &Vec<Vec<bool>>,
+        modules: u64,
+        color: &str,
+        background: &str,
+    ) -> bool;
+
+    fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64;
+    fn get_scroll_top_by_selector(&self, selector: &str) -> f64;
+    fn get_target_element_from_event(&self, client_x: i32, client_y: i32) -> Option<Self::Element>;
 }
 
 pub struct ResizeObserverEntry {
@@ -120,4 +157,9 @@ pub struct MutationRecord {
     pub attribute_name: Option<String>,
     pub attribute_namespace: Option<String>,
     pub old_value: Option<String>,
+}
+
+pub struct ContentEditableState {
+    pub editable: bool,
+    pub focused: bool,
 }
