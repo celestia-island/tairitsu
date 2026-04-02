@@ -1173,27 +1173,30 @@ async fn run_watch_loop(
     // -- Keyboard command listener ---------------------------------------------
     // Runs on a dedicated blocking thread so the tokio runtime is never stalled
     // waiting for stdin.  The user types a letter + Enter to send a command.
+    // Skipped in daemon mode where stdin is unavailable.
     let (cmd_tx, mut cmd_rx) = tokio::sync::mpsc::channel::<DevCmd>(8);
-    tokio::task::spawn_blocking(move || {
-        use std::io::BufRead;
-        for line in std::io::stdin().lock().lines() {
-            let line = match line {
-                Ok(l) => l,
-                Err(_) => continue,
-            };
-            let cmd = match line.trim() {
-                "r" | "R" => Some(DevCmd::Rebuild),
-                "o" | "O" => Some(DevCmd::OpenBrowser),
-                "c" | "C" => Some(DevCmd::Clear),
-                _ => None,
-            };
-            if let Some(c) = cmd
-                && cmd_tx.blocking_send(c).is_err()
-            {
-                break;
+    if !crate::daemon::is_daemon() {
+        tokio::task::spawn_blocking(move || {
+            use std::io::BufRead;
+            for line in std::io::stdin().lock().lines() {
+                let line = match line {
+                    Ok(l) => l,
+                    Err(_) => continue,
+                };
+                let cmd = match line.trim() {
+                    "r" | "R" => Some(DevCmd::Rebuild),
+                    "o" | "O" => Some(DevCmd::OpenBrowser),
+                    "c" | "C" => Some(DevCmd::Clear),
+                    _ => None,
+                };
+                if let Some(c) = cmd
+                    && cmd_tx.blocking_send(c).is_err()
+                {
+                    break;
+                }
             }
-        }
-    });
+        });
+    }
 
     let debounce = tokio::time::Duration::from_millis(200);
 
