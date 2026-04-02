@@ -138,25 +138,28 @@ impl LifecycleTests {
         driver.goto(&test_url).await?;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Look for various element types that should be created
         let divs = driver.find_all(By::Tag("div")).await?;
-        let buttons = driver.find_all(By::Tag("button")).await?;
-        let inputs = driver.find_all(By::Tag("input")).await?;
+        let total_elements = divs.len();
 
         let duration = start.elapsed().as_millis() as u64;
 
-        Ok(TestResult {
-            component: "Element Creation".to_string(),
-            status: TestStatus::Success,
-            message: format!(
-                "Elements created: {} divs, {} buttons, {} inputs",
-                divs.len(),
-                buttons.len(),
-                inputs.len()
-            ),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
+        if total_elements > 0 {
+            Ok(TestResult {
+                component: "Element Creation".to_string(),
+                status: TestStatus::Success,
+                message: format!("Elements created: {} divs found", total_elements),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        } else {
+            Ok(TestResult {
+                component: "Element Creation".to_string(),
+                status: TestStatus::Failure,
+                message: "No elements created - page appears empty".to_string(),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        }
     }
 
     /// Test text node rendering

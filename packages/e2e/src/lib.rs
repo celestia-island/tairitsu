@@ -144,6 +144,17 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         }
     }
 
+    // Style Integration Tests
+    info!("Running Style Integration Tests...");
+    match tests::Test::run_with_driver(&tests::StyleIntegrationTests, driver).await {
+        Ok(result) => results.push(result),
+        Err(e) => {
+            eprintln!("Style integration test suite failed: {}", e);
+            let error_msg: String = e.to_string();
+            results.push(TestResult::error("StyleIntegrationTests", error_msg.as_str()));
+        }
+    }
+
     info!("\n=== E2E Test Results ===");
     for result in &results {
         info!("{}: {}", result.component, result.message);
