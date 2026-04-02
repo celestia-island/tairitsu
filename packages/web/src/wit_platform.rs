@@ -263,6 +263,8 @@ pub mod wasm_impl {
     type ResizeObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::ResizeObserverEntry>)>;
     type MutationObserverCallback = Box<dyn FnMut(Vec<tairitsu_vdom::MutationRecord>)>;
     type MediaQueryListCallback = Box<dyn FnMut(bool)>;
+    type ScrollCallback = Box<dyn FnMut(f64, f64)>;
+    type WindowResizeCallback = Box<dyn FnMut(i32, i32)>;
 
     static NEXT_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -321,6 +323,8 @@ pub mod wasm_impl {
         static RESIZE_OBSERVER_CALLBACKS: RefCell<HashMap<u64, ResizeObserverCallback>> = RefCell::new(HashMap::new());
         static MUTATION_OBSERVER_CALLBACKS: RefCell<HashMap<u64, MutationObserverCallback>> = RefCell::new(HashMap::new());
         static MEDIA_QUERY_LIST_CALLBACKS: RefCell<HashMap<u64, MediaQueryListCallback>> = RefCell::new(HashMap::new());
+        static SCROLL_CALLBACKS: RefCell<HashMap<u64, ScrollCallback>> = RefCell::new(HashMap::new());
+        static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -587,6 +591,30 @@ pub mod wasm_impl {
                 let mut callbacks = m.borrow_mut();
                 if let Some(handler) = callbacks.get_mut(&callback_id) {
                     handler(matches);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::scroll_callbacks::Guest for BrowserComponent {
+        fn on_scroll_event(callback_id: u64, scroll_x: f64, scroll_y: f64) {
+            SCROLL_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    handler(scroll_x, scroll_y);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::window_resize_callbacks::Guest
+        for BrowserComponent
+    {
+        fn on_window_resize(callback_id: u64, width: i32, height: i32) {
+            WINDOW_RESIZE_CALLBACKS.with(|m| {
+                let mut callbacks = m.borrow_mut();
+                if let Some(handler) = callbacks.get_mut(&callback_id) {
+                    handler(width, height);
                 }
             });
         }
@@ -947,6 +975,101 @@ pub mod wasm_impl {
                 list,
                 Some(listener_id),
             );
+        }
+
+        fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
+            let doc_handle: u64 = 0;
+            bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
+                .map(WitElement)
+        }
+
+        fn query_selector(&self, selector: &str) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector(selector)
+                .map(WitElement)
+        }
+
+        fn query_selector_all(&self, selector: &str) -> Vec<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::query_selector_all(selector)
+                .into_iter()
+                .map(WitElement)
+                .collect()
+        }
+
+        fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::element_from_point(x, y)
+                .map(WitElement)
+        }
+
+        fn element_closest(
+            &self,
+            element: &Self::Element,
+            selector: &str,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::platform_helpers::element_closest(element.0, selector)
+                .map(WitElement)
+        }
+
+        fn get_scroll_y(&self) -> f64 {
+            bindings::tairitsu_browser::full::platform_helpers::get_scroll_y()
+        }
+
+        fn scroll_to(&self, top: f64, behavior: &str) {
+            bindings::tairitsu_browser::full::platform_helpers::scroll_to(top, behavior)
+        }
+
+        fn on_scroll(&self, callback: Box<dyn FnMut(f64, f64)>) {
+            let callback_id = next_callback_id();
+            SCROLL_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_scroll(callback_id);
+        }
+
+        fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>) {
+            let callback_id = next_callback_id();
+            WINDOW_RESIZE_CALLBACKS.with(|m| m.borrow_mut().insert(callback_id, callback));
+            bindings::tairitsu_browser::full::platform_helpers::on_resize_callback(callback_id);
+        }
+
+        fn copy_to_clipboard(&self, text: &str) -> bool {
+            bindings::tairitsu_browser::full::platform_helpers::copy_to_clipboard(text)
+        }
+
+        fn read_clipboard(&self) -> Option<String> {
+            bindings::tairitsu_browser::full::platform_helpers::read_clipboard()
+        }
+
+        fn prefers_dark_mode(&self) -> bool {
+            bindings::tairitsu_browser::full::platform_helpers::prefers_dark_mode()
+        }
+
+        fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_element_rect_by_id(id).map(
+                |rect| DomRect {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                },
+            )
+        }
+
+        fn get_bounding_rect_by_class(
+            &self,
+            class_name: &str,
+            element: &Self::Element,
+        ) -> Option<DomRect> {
+            bindings::tairitsu_browser::full::platform_helpers::get_bounding_rect_by_class(
+                class_name, element.0,
+            )
+            .map(|rect| DomRect {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+            })
+        }
+
+        fn request_fullscreen(&self, element: &Self::Element) {
+            bindings::tairitsu_browser::full::platform_helpers::request_fullscreen(element.0)
         }
     }
 

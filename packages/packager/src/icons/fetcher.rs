@@ -326,8 +326,7 @@ mod http_fetch {
     }
 }
 
-#[cfg(feature = "icon-fetch")]
-use http_fetch::*;
+
 
 // ============================================================================
 // SVG Path Extraction

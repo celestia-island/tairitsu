@@ -5,7 +5,7 @@
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 use crate::{
-    bindings::{DomRect, PlatformHelpersHost, ResizeObserverEntryHost, ResizeObserverSizeHost},
+    bindings::{DomRect, ResizeObserverEntryHost, ResizeObserverSizeHost},
     virtual_dom::SsrDom,
 };
 
@@ -195,6 +195,62 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
     fn observe_mutations(&mut self, _observer: u64, _element: u64, _options: Option<u64>) {}
 
     fn disconnect_mutation(&mut self, _observer: u64) {}
+
+    fn get_element_by_id(&mut self, _id: String) -> Option<u64> {
+        None
+    }
+
+    fn query_selector(&mut self, _selector: String) -> Option<u64> {
+        None
+    }
+
+    fn query_selector_all(&mut self, _selector: String) -> Vec<u64> {
+        vec![]
+    }
+
+    fn element_from_point(&mut self, _x: i32, _y: i32) -> Option<u64> {
+        None
+    }
+
+    fn element_closest(&mut self, _element: u64, _selector: String) -> Option<u64> {
+        None
+    }
+
+    fn get_scroll_y(&mut self) -> f64 {
+        0.0
+    }
+
+    fn scroll_to(&mut self, _top: f64, _behavior: String) {}
+
+    fn on_scroll(&mut self, _callback_id: u64) {}
+
+    fn on_resize_callback(&mut self, _callback_id: u64) {}
+
+    fn copy_to_clipboard(&mut self, _text: String) -> bool {
+        false
+    }
+
+    fn read_clipboard(&mut self) -> Option<String> {
+        None
+    }
+
+    fn prefers_dark_mode(&mut self) -> bool {
+        false
+    }
+
+    fn get_element_rect_by_id(&mut self, _id: String) -> Option<crate::bindings::DomRect> {
+        None
+    }
+
+    fn get_bounding_rect_by_class(
+        &mut self,
+        _class_name: String,
+        _element: u64,
+    ) -> Option<crate::bindings::DomRect> {
+        None
+    }
+
+    fn request_fullscreen(&mut self, _element: u64) {}
 }
 
 #[cfg(test)]
