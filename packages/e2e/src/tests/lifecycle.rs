@@ -254,13 +254,23 @@ impl LifecycleTests {
 
         let duration = start.elapsed().as_millis() as u64;
 
-        Ok(TestResult {
-            component: "Style Attribute Application".to_string(),
-            status: TestStatus::Success,
-            message: format!("{} elements with inline styles", elements_with_style.len()),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
+        if elements_with_style.is_empty() {
+            Ok(TestResult {
+                component: "Style Attribute Application".to_string(),
+                status: TestStatus::Warning,
+                message: "No elements with inline styles found".to_string(),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        } else {
+            Ok(TestResult {
+                component: "Style Attribute Application".to_string(),
+                status: TestStatus::Success,
+                message: format!("{} elements with inline styles", elements_with_style.len()),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        }
     }
 }
 

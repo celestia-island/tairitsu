@@ -22,12 +22,10 @@ pub type SchedulerId = usize;
 /// Component state tracked by the scheduler
 #[derive(Default)]
 struct ComponentState {
-    /// Current rendered VNode
     current_vnode: Option<VNode>,
-    /// Whether this component is dirty (needs re-render)
     dirty: bool,
-    /// Root element for this component (where patches are applied)
     root_element: Option<Rc<RefCell<dyn std::any::Any>>>,
+    render_fn: Option<Box<dyn Fn() -> VNode>>,
 }
 
 /// Inner state of the scheduler
@@ -79,10 +77,13 @@ impl<P: Platform> Scheduler<P> {
     /// Register a component with the scheduler.
     ///
     /// Returns the component ID that can be used to update this component.
-    pub fn register_component(&self) -> usize {
+    pub fn register_component(&self, render_fn: Option<Box<dyn Fn() -> VNode>>) -> usize {
         let mut inner = self.inner.borrow_mut();
         let id = inner.components.len();
-        inner.components.push(ComponentState::default());
+        inner.components.push(ComponentState {
+            render_fn,
+            ..Default::default()
+        });
         trace!("Scheduler {}: Registered component {}", inner.id, id);
         id
     }
@@ -96,6 +97,19 @@ impl<P: Platform> Scheduler<P> {
             component.root_element = Some(element);
             trace!(
                 "Scheduler {}: Set root element for component {}",
+                inner.id,
+                component_id
+            );
+        }
+    }
+
+    /// Set the render function for a component.
+    pub fn set_render_fn(&self, component_id: usize, render_fn: Box<dyn Fn() -> VNode>) {
+        let mut inner = self.inner.borrow_mut();
+        if let Some(component) = inner.components.get_mut(component_id) {
+            component.render_fn = Some(render_fn);
+            trace!(
+                "Scheduler {}: Set render function for component {}",
                 inner.id,
                 component_id
             );
@@ -175,15 +189,60 @@ impl<P: Platform> Scheduler<P> {
 
     /// Render a single component and apply patches.
     fn render_component_inner(inner: Rc<RefCell<SchedulerInner<P>>>, component_id: usize) {
-        // This is a placeholder - in a real implementation, we'd call the component's render function
-        // For now, we just mark the component as clean
+        let new_vnode = {
+            let inner_ref = inner.borrow();
+            match inner_ref.components.get(component_id) {
+                Some(component) => match &component.render_fn {
+                    Some(render_fn) => render_fn(),
+                    None => {
+                        trace!(
+                            "Scheduler {}: Component {} has no render function, skipping",
+                            inner_ref.id,
+                            component_id
+                        );
+                        drop(inner_ref);
+                        let mut inner_mut = inner.borrow_mut();
+                        if let Some(component) = inner_mut.components.get_mut(component_id) {
+                            component.dirty = false;
+                        }
+                        return;
+                    }
+                },
+                None => return,
+            }
+        };
 
         let mut inner_ref = inner.borrow_mut();
+        let scheduler_id = inner_ref.id;
         if let Some(component) = inner_ref.components.get_mut(component_id) {
+            let old_vnode = component.current_vnode.take();
+            component.current_vnode = Some(new_vnode.clone());
+
+            if let Some(old) = &old_vnode {
+                let patches = crate::diff::diff(Some(old), &new_vnode);
+                if !patches.is_empty() {
+                    trace!(
+                        "Scheduler {}: Component {} has {} patches",
+                        scheduler_id,
+                        component_id,
+                        patches.len()
+                    );
+                    for patch in &patches {
+                        trace!("  Patch: {:?}", patch);
+                    }
+                }
+            } else {
+                trace!(
+                    "Scheduler {}: Initial render for component {}",
+                    scheduler_id,
+                    component_id
+                );
+            }
+
             component.dirty = false;
             trace!(
                 "Scheduler {}: Rendered component {}",
-                inner_ref.id,
+                scheduler_id,
                 component_id
             );
         }
@@ -512,7 +571,7 @@ mod tests {
         fn draw_qrcode_on_canvas_by_id(
             &self,
             _canvas_id: &str,
-            _matrix: &Vec<Vec<bool>>,
+            _matrix: &[Vec<bool>],
             _modules: u64,
             _color: &str,
             _background: &str,
@@ -549,10 +608,10 @@ mod tests {
         let platform = Rc::new(RefCell::new(MockPlatform));
         let scheduler = Scheduler::new(platform);
 
-        let id = scheduler.register_component();
+        let id = scheduler.register_component(None);
         assert_eq!(id, 0);
 
-        let id2 = scheduler.register_component();
+        let id2 = scheduler.register_component(None);
         assert_eq!(id2, 1);
     }
 
@@ -561,7 +620,7 @@ mod tests {
         let platform = Rc::new(RefCell::new(MockPlatform));
         let scheduler = Scheduler::new(platform);
 
-        let id = scheduler.register_component();
+        let id = scheduler.register_component(None);
         scheduler.mark_dirty(id);
 
         // Check that the component is marked dirty

@@ -114,7 +114,7 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             state
                 .dom
                 .append_child(parent, child)
-                .map_err(|s| wasmtime::Error::msg(s))?;
+                .map_err(wasmtime::Error::msg)?;
             Ok((child,))
         },
     )?;
@@ -128,7 +128,7 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
             state
                 .dom
                 .remove_child(parent, child)
-                .map_err(|s| wasmtime::Error::msg(s))?;
+                .map_err(wasmtime::Error::msg)?;
             Ok((child,))
         },
     )?;

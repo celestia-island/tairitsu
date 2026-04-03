@@ -186,27 +186,31 @@ impl FormValidationTests {
             // Strength should have improved
             if new_strength != initial_strength {
                 info!("Password strength indicator updated");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "Password Validation".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "Password strength validation works".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "Password Validation",
+                    "Password strength indicator did not change between weak and strong passwords",
+                ))
             }
         } else {
             info!("Password elements not found, skipping password validation test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "Password Validation".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "Password elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "Password Validation".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "Password strength validation works".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test form submission with all validations.
