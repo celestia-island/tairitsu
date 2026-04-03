@@ -47,27 +47,31 @@ impl AsyncOperationsTests {
 
             if result_text.contains("complete") || result_text.contains("done") {
                 info!("setTimeout completed successfully");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "setTimeout".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "setTimeout works correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "setTimeout",
+                    &format!("setTimeout did not complete as expected, result: '{}'", result_text),
+                ))
             }
         } else {
             info!("Timeout elements not found, skipping setTimeout test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "setTimeout".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "Timeout elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "setTimeout".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "setTimeout works correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test setInterval functionality.
@@ -110,9 +114,24 @@ impl AsyncOperationsTests {
             let count3 = counter.text().await?;
             info!("Interval count after stop: {}", count3);
 
-            // Counter should have increased
-            if count2 != count1 || count3 != count2 {
-                info!("setInterval working: counter changed over time");
+            let c1: u32 = count1.trim().parse().unwrap_or(0);
+            let c2: u32 = count2.trim().parse().unwrap_or(0);
+
+            if c2 > c1 {
+                info!("setInterval working: counter increased over time");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "setInterval".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "setInterval works correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "setInterval",
+                    &format!("Counter did not increase over time: count1={}, count2={}", count1, count2),
+                ))
             }
         } else {
             info!("Interval elements not found, skipping setInterval test");
@@ -125,15 +144,6 @@ impl AsyncOperationsTests {
                 screenshot_path: None,
             });
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "setInterval".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "setInterval works correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test fetch API calls.
@@ -164,27 +174,31 @@ impl AsyncOperationsTests {
 
             if !result_text.is_empty() {
                 info!("Fetch API call completed");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "Fetch API".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "Fetch API works correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "Fetch API",
+                    "Fetch API did not return any result after waiting",
+                ))
             }
         } else {
             info!("Fetch elements not found, skipping fetch test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "Fetch API".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "Fetch elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "Fetch API".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "Fetch API works correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test Promise handling.
@@ -215,27 +229,31 @@ impl AsyncOperationsTests {
 
             if result_text.contains("resolved") || result_text.contains("success") {
                 info!("Promise resolved successfully");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "Promise Handling".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "Promise handling works correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "Promise Handling",
+                    &format!("Promise did not resolve as expected, result: '{}'", result_text),
+                ))
             }
         } else {
             info!("Promise elements not found, skipping Promise test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "Promise Handling".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "Promise elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "Promise Handling".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "Promise handling works correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test async/await patterns.
@@ -266,27 +284,31 @@ impl AsyncOperationsTests {
 
             if !result_text.is_empty() {
                 info!("async/await pattern works");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "async/await".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "async/await patterns work correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "async/await",
+                    "async/await did not return any result after waiting",
+                ))
             }
         } else {
             info!("async/await elements not found, skipping test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "async/await".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "async/await elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "async/await".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "async/await patterns work correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 
     /// Test RequestAnimationFrame.
@@ -316,29 +338,33 @@ impl AsyncOperationsTests {
             info!("RAF counter: {}", count_text);
 
             // Animation should have run
-            if !count_text.is_empty() && count_text != "0" {
+            if !count_text.is_empty() && count_text.trim() != "0" {
                 info!("RequestAnimationFrame working");
+                let duration = start.elapsed().as_millis() as u64;
+                Ok(TestResult {
+                    component: "RequestAnimationFrame".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: "RequestAnimationFrame works correctly".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult::failure(
+                    "RequestAnimationFrame",
+                    &format!("RAF counter did not advance, value: '{}'", count_text),
+                ))
             }
         } else {
             info!("RAF elements not found, skipping RAF test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "RequestAnimationFrame".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "RAF elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
-
-        let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "RequestAnimationFrame".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: "RequestAnimationFrame works correctly".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
     }
 }
 

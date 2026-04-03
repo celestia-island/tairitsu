@@ -267,17 +267,73 @@ impl EventTests {
         driver.goto(&test_url).await?;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Try to get current window size - simplified
-        let _window = driver.window().await;
+        let js_script = r#"
+        (function() {
+            var div = document.createElement('div');
+            div.id = 'mouse-test-target';
+            div.style.position = 'fixed';
+            div.style.left = '100px';
+            div.style.top = '100px';
+            div.style.width = '200px';
+            div.style.height = '200px';
+            document.body.appendChild(div);
+
+            var coords = null;
+            div.addEventListener('mousemove', function(e) {
+                coords = { x: e.clientX, y: e.clientY };
+            });
+
+            var event = new MouseEvent('mousemove', { clientX: 150, clientY: 200 });
+            div.dispatchEvent(event);
+
+            var result = coords ? 'x=' + coords.x + ',y=' + coords.y : 'no coords';
+            document.body.removeChild(div);
+            return result;
+        })()
+        "#;
+
+        let result = driver.execute(js_script, vec![]).await;
         let duration = start.elapsed().as_millis() as u64;
 
-        Ok(TestResult {
-            component: "Mouse Event Coordinates".to_string(),
-            status: TestStatus::Success,
-            message: "Window handle obtained successfully".to_string(),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
+        match result {
+            Ok(ret) => {
+                let js_result: String = ret.json().as_str().unwrap_or("").to_string();
+                info!("Mouse coordinate test result: {}", js_result);
+
+                if js_result.contains("x=150,y=200") {
+                    Ok(TestResult {
+                        component: "Mouse Event Coordinates".to_string(),
+                        status: TestStatus::Success,
+                        message: format!("Mouse coordinates verified: {}", js_result),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else if js_result.contains("no coords") {
+                    Ok(TestResult {
+                        component: "Mouse Event Coordinates".to_string(),
+                        status: TestStatus::Failure,
+                        message: "mousemove event did not fire or coordinates were not captured".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else {
+                    Ok(TestResult {
+                        component: "Mouse Event Coordinates".to_string(),
+                        status: TestStatus::Failure,
+                        message: format!("Unexpected mouse coordinates: {}", js_result),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                }
+            }
+            Err(e) => Ok(TestResult {
+                component: "Mouse Event Coordinates".to_string(),
+                status: TestStatus::Failure,
+                message: format!("JavaScript execution failed: {}", e),
+                duration_ms: duration,
+                screenshot_path: None,
+            }),
+        }
     }
 
     /// Test event listener registration
@@ -292,24 +348,61 @@ impl EventTests {
         driver.goto(&test_url).await?;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Check if elements exist that could have listeners
-        let buttons = driver.find_all(By::Tag("button")).await?;
-        let inputs = driver.find_all(By::Tag("input")).await?;
+        let js_script = r#"
+        (function() {
+            var buttons = document.querySelectorAll('button');
+            if (buttons.length === 0) return 'no buttons';
+            var clicked = false;
+            var handler = function() { clicked = true; };
+            buttons[0].addEventListener('click', handler);
+            buttons[0].click();
+            buttons[0].removeEventListener('click', handler);
+            return clicked ? 'listener fires' : 'no listener';
+        })()
+        "#;
 
+        let result = driver.execute(js_script, vec![]).await;
         let duration = start.elapsed().as_millis() as u64;
 
-        Ok(TestResult {
-            component: "Event Listener Registration".to_string(),
-            status: TestStatus::Success,
-            message: format!(
-                "Found {} potential event listener elements (buttons: {}, inputs: {})",
-                buttons.len() + inputs.len(),
-                buttons.len(),
-                inputs.len()
-            ),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
+        match result {
+            Ok(ret) => {
+                let js_result: String = ret.json().as_str().unwrap_or("").to_string();
+                info!("Event listener test result: {}", js_result);
+
+                if js_result == "listener fires" {
+                    Ok(TestResult {
+                        component: "Event Listener Registration".to_string(),
+                        status: TestStatus::Success,
+                        message: "Click event listener fires correctly on button".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else if js_result == "no buttons" {
+                    Ok(TestResult {
+                        component: "Event Listener Registration".to_string(),
+                        status: TestStatus::Failure,
+                        message: "No buttons found on the page to test event listeners".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else {
+                    Ok(TestResult {
+                        component: "Event Listener Registration".to_string(),
+                        status: TestStatus::Failure,
+                        message: format!("Event listener did not fire: {}", js_result),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                }
+            }
+            Err(e) => Ok(TestResult {
+                component: "Event Listener Registration".to_string(),
+                status: TestStatus::Failure,
+                message: format!("JavaScript execution failed: {}", e),
+                duration_ms: duration,
+                screenshot_path: None,
+            }),
+        }
     }
 
     /// Test form submission event
@@ -324,27 +417,63 @@ impl EventTests {
         driver.goto(&test_url).await?;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Look for forms
-        let forms = driver.find_all(By::Tag("form")).await?;
+        let js_script = r#"
+        (function() {
+            var forms = document.querySelectorAll('form');
+            if (forms.length === 0) return 'no forms';
+            var submitted = false;
+            forms[0].addEventListener('submit', function(e) { 
+                e.preventDefault(); 
+                submitted = true; 
+            });
+            var submitBtn = forms[0].querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.click();
+            else forms[0].dispatchEvent(new Event('submit'));
+            return submitted ? 'submit intercepted' : 'no submit event';
+        })()
+        "#;
 
+        let result = driver.execute(js_script, vec![]).await;
         let duration = start.elapsed().as_millis() as u64;
 
-        if !forms.is_empty() {
-            Ok(TestResult {
+        match result {
+            Ok(ret) => {
+                let js_result: String = ret.json().as_str().unwrap_or("").to_string();
+                info!("Form submission test result: {}", js_result);
+
+                if js_result == "submit intercepted" {
+                    Ok(TestResult {
+                        component: "Form Submission".to_string(),
+                        status: TestStatus::Success,
+                        message: "Form submit event fired and was intercepted correctly".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else if js_result == "no forms" {
+                    Ok(TestResult {
+                        component: "Form Submission".to_string(),
+                        status: TestStatus::Warning,
+                        message: "No forms found on the page".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                } else {
+                    Ok(TestResult {
+                        component: "Form Submission".to_string(),
+                        status: TestStatus::Failure,
+                        message: format!("Submit event was not intercepted: {}", js_result),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                }
+            }
+            Err(e) => Ok(TestResult {
                 component: "Form Submission".to_string(),
-                status: TestStatus::Success,
-                message: format!("Found {} form(s) on the page", forms.len()),
+                status: TestStatus::Failure,
+                message: format!("JavaScript execution failed: {}", e),
                 duration_ms: duration,
                 screenshot_path: None,
-            })
-        } else {
-            Ok(TestResult {
-                component: "Form Submission".to_string(),
-                status: TestStatus::Warning,
-                message: "No forms found on the page".to_string(),
-                duration_ms: duration,
-                screenshot_path: None,
-            })
+            }),
         }
     }
 
@@ -360,23 +489,36 @@ impl EventTests {
         driver.goto(&test_url).await?;
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Try scrolling using the driver's script execution (simplified)
-        match driver.execute("window.scrollBy(0, 100);", vec![]).await {
-            Ok(_) => {
-                tokio::time::sleep(Duration::from_millis(100)).await;
+        let js_script = r#"
+        (function() {
+            var before = window.scrollY;
+            window.scrollBy(0, 100);
+            var after = window.scrollY;
+            return 'before=' + before + ',after=' + after;
+        })()
+        "#;
+
+        let result = driver.execute(js_script, vec![]).await;
+        let duration = start.elapsed().as_millis() as u64;
+
+        match result {
+            Ok(ret) => {
+                let js_result: String = ret.json().as_str().unwrap_or("").to_string();
+                info!("Scroll test result: {}", js_result);
+
                 Ok(TestResult {
                     component: "Scroll Event".to_string(),
                     status: TestStatus::Success,
-                    message: "Scroll executed successfully".to_string(),
-                    duration_ms: start.elapsed().as_millis() as u64,
+                    message: format!("Scroll executed successfully: {}", js_result),
+                    duration_ms: duration,
                     screenshot_path: None,
                 })
             }
             Err(e) => Ok(TestResult {
                 component: "Scroll Event".to_string(),
-                status: TestStatus::Warning,
-                message: format!("Scroll test returned: {}", e),
-                duration_ms: start.elapsed().as_millis() as u64,
+                status: TestStatus::Failure,
+                message: format!("Scroll JavaScript execution failed: {}", e),
+                duration_ms: duration,
                 screenshot_path: None,
             }),
         }

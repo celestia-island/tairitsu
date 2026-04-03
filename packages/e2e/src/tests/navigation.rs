@@ -89,26 +89,41 @@ impl NavigationTests {
         }
 
         // Click first few sidebar links and verify navigation
-        for i in 0..3.min(sidebar_links.len()) {
-            sidebar_links[i].click().await?;
+        let mut any_changed = false;
+
+        for link in sidebar_links.iter().take(3) {
+            let url_before = driver.current_url().await?.to_string();
+            link.click().await?;
             tokio::time::sleep(Duration::from_millis(200)).await;
 
-            // Verify some navigation happened (URL or content changed)
-            let current_url = driver.current_url().await?;
-            info!("Navigated to: {}", current_url);
+            let url_after = driver.current_url().await?;
+            let url_str = url_after.as_str();
+            info!("Navigated to: {}", url_str);
+
+            if url_before != url_str {
+                any_changed = true;
+            }
         }
 
         let duration = start.elapsed().as_millis() as u64;
-        Ok(TestResult {
-            component: "Sidebar Navigation".to_string(),
-            status: crate::tests::TestStatus::Success,
-            message: format!(
-                "Clicked {} sidebar links successfully",
-                3.min(sidebar_links.len())
-            ),
-            duration_ms: duration,
-            screenshot_path: None,
-        })
+
+        if any_changed {
+            Ok(TestResult {
+                component: "Sidebar Navigation".to_string(),
+                status: crate::tests::TestStatus::Success,
+                message: format!(
+                    "Clicked {} sidebar links, URL changed during navigation",
+                    3.min(sidebar_links.len())
+                ),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        } else {
+            Ok(TestResult::failure(
+                "Sidebar Navigation",
+                "Sidebar link clicks did not change the URL",
+            ))
+        }
     }
 
     /// Test browser back/forward buttons with hash navigation.
@@ -137,16 +152,27 @@ impl NavigationTests {
         driver.back().await?;
         tokio::time::sleep(Duration::from_millis(200)).await;
 
-        // Verify we're on the previous page
-        let current_url = driver.current_url().await?;
-        info!("After back(): {}", current_url);
+        let after_back = driver.current_url().await?;
+        info!("After back(): {}", after_back);
+        if !after_back.as_str().contains("guides") {
+            return Ok(TestResult::failure(
+                "Browser History",
+                "back() did not navigate to guides page",
+            ));
+        }
 
         // Go forward
         driver.forward().await?;
         tokio::time::sleep(Duration::from_millis(200)).await;
 
-        let current_url = driver.current_url().await?;
-        info!("After forward(): {}", current_url);
+        let after_forward = driver.current_url().await?;
+        info!("After forward(): {}", after_forward);
+        if !after_forward.as_str().contains("system") {
+            return Ok(TestResult::failure(
+                "Browser History",
+                "forward() did not navigate to system page",
+            ));
+        }
 
         let duration = start.elapsed().as_millis() as u64;
         Ok(TestResult {

@@ -85,40 +85,6 @@ pub extern "C" fn bootstrap() {}
         Ok(project_path)
     }
 
-    /// Create a project with missing bootstrap function
-    #[allow(dead_code)]
-    fn create_missing_bootstrap_project(temp_dir: &TempDir, name: &str) -> Result<PathBuf> {
-        let project_path = temp_dir.path().join(name);
-        fs::create_dir_all(project_path.join("src"))?;
-
-        let cargo_toml = format!(
-            r#"[package]
-name = "{}"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-tairitsu-web = {{ path = "../../../packages/web", features = ["wit-bindings"] }}
-"#,
-            name
-        );
-        fs::write(project_path.join("Cargo.toml"), cargo_toml)?;
-
-        // Missing the required bootstrap export
-        let lib_rs = r#"
-// This file intentionally missing the bootstrap function
-pub fn some_other_function() {
-    println!("Hello");
-}
-"#;
-        fs::write(project_path.join("src/lib.rs"), lib_rs)?;
-
-        Ok(project_path)
-    }
-
     /// Test handling of invalid Rust syntax
     fn test_invalid_syntax_error(&self) -> Result<TestResult> {
         let start = Instant::now();

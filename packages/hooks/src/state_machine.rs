@@ -8,8 +8,9 @@ use std::{cell::RefCell, rc::Rc};
 /// - **Active**: The user is actively pressing the element (`:active`)
 /// - **Focused**: The element has keyboard focus (`:focus-visible`)
 /// - **Disabled**: The element is disabled and cannot be interacted with
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum InteractionState {
+    #[default]
     Idle,
     Hover,
     Active,
@@ -22,12 +23,6 @@ impl InteractionState {
     #[inline]
     pub fn is_interactive(self) -> bool {
         self != Self::Disabled
-    }
-}
-
-impl Default for InteractionState {
-    fn default() -> Self {
-        Self::Idle
     }
 }
 

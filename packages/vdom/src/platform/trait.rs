@@ -115,7 +115,7 @@ pub trait Platform: Sized + 'static {
     fn draw_qrcode_on_canvas_by_id(
         &self,
         canvas_id: &str,
-        matrix: &Vec<Vec<bool>>,
+        matrix: &[Vec<bool>],
         modules: u64,
         color: &str,
         background: &str,

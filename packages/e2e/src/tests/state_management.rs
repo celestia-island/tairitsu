@@ -210,21 +210,21 @@ impl StateManagementTests {
         }
 
         // Try removing an item (click first item's remove button)
-        if let Some(first_item) = new_list_items.first() {
-            if let Ok(remove_btn) = first_item.find(By::Css(".remove-btn")).await {
-                remove_btn.click().await?;
-                tokio::time::sleep(Duration::from_millis(50)).await;
+        if let Some(first_item) = new_list_items.first()
+            && let Ok(remove_btn) = first_item.find(By::Css(".remove-btn")).await
+        {
+            remove_btn.click().await?;
+            tokio::time::sleep(Duration::from_millis(50)).await;
 
-                let final_list_items = driver.find_all(By::Css("#list-display li")).await?;
-                let final_count = final_list_items.len();
-                info!("List count after removal: {}", final_count);
+            let final_list_items = driver.find_all(By::Css("#list-display li")).await?;
+            let final_count = final_list_items.len();
+            info!("List count after removal: {}", final_count);
 
-                if final_count >= new_count {
-                    return Ok(TestResult::failure(
-                        "List State",
-                        "List item was not removed",
-                    ));
-                }
+            if final_count >= new_count {
+                return Ok(TestResult::failure(
+                    "List State",
+                    "List item was not removed",
+                ));
             }
         }
 

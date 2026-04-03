@@ -333,7 +333,7 @@ impl Platform for MockPlatform {
     fn draw_qrcode_on_canvas_by_id(
         &self,
         _canvas_id: &str,
-        _matrix: &Vec<Vec<bool>>,
+        _matrix: &[Vec<bool>],
         _modules: u64,
         _color: &str,
         _background: &str,
@@ -408,8 +408,8 @@ fn test_scheduler_component_registration() {
     let platform = Rc::new(RefCell::new(MockPlatform::new()));
     let scheduler = Scheduler::new(platform);
 
-    let id1 = scheduler.register_component();
-    let id2 = scheduler.register_component();
+    let id1 = scheduler.register_component(None);
+    let id2 = scheduler.register_component(None);
 
     assert_eq!(id1, 0);
     assert_eq!(id2, 1);
@@ -420,7 +420,7 @@ fn test_scheduler_mark_dirty() {
     let platform = Rc::new(RefCell::new(MockPlatform::new()));
     let scheduler = Scheduler::new(platform.clone());
 
-    let id = scheduler.register_component();
+    let id = scheduler.register_component(None);
     scheduler.mark_dirty(id);
 
     // Verify that request_animation_frame was called
@@ -477,7 +477,7 @@ fn test_scheduler_update_component() {
     let platform = Rc::new(RefCell::new(MockPlatform::new()));
     let scheduler = Scheduler::new(platform.clone());
 
-    let id = scheduler.register_component();
+    let id = scheduler.register_component(None);
 
     let old_vnode = VNode::Text(tairitsu_vdom::vnode::VText::new("old"));
     let new_vnode = VNode::Text(tairitsu_vdom::vnode::VText::new("new"));

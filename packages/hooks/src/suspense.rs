@@ -627,6 +627,27 @@ where
     Suspense::new(fallback, children).render()
 }
 
+/// Query result for a resource's current state.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourceStatus {
+    Loading,
+    Ready,
+    Error,
+}
+
+/// Query the current state of a resource by its ID.
+///
+/// Returns `None` if the resource ID is not registered.
+pub fn resource_state(id: ResourceId) -> Option<ResourceStatus> {
+    RESOURCE_REGISTRY.with(|registry| {
+        registry.borrow().get_resource_state(id).map(|op| match op {
+            ResourceStateOp::Loading => ResourceStatus::Loading,
+            ResourceStateOp::Ready(_) => ResourceStatus::Ready,
+            ResourceStateOp::Error => ResourceStatus::Error,
+        })
+    })
+}
+
 /// Suspense boundary state for tracking pending resources.
 ///
 /// This is a simplified version for backward compatibility.
