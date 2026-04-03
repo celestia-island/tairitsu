@@ -1,5 +1,6 @@
 use std::sync::{Arc, RwLock};
 
+use super::typed::TypedClass;
 use super::utility::{UtilityClass, UtilityRegistry};
 
 pub struct ClassesBuilder {
@@ -131,6 +132,37 @@ impl ClassesBuilder {
 
     pub fn build(self) -> String {
         self.classes.join(" ")
+    }
+
+    pub fn add_typed<T: TypedClass>(mut self, class: T) -> Self {
+        for name in class.class_names() {
+            if !name.is_empty() {
+                self.classes.push(name.to_string());
+            }
+        }
+        self
+    }
+
+    pub fn add_typed_if<T: TypedClass>(mut self, class: T, condition: bool) -> Self {
+        if condition {
+            for name in class.class_names() {
+                if !name.is_empty() {
+                    self.classes.push(name.to_string());
+                }
+            }
+        }
+        self
+    }
+
+    pub fn add_typed_all<T: TypedClass>(mut self, classes: &[T]) -> Self {
+        for class in classes {
+            for name in class.class_names() {
+                if !name.is_empty() {
+                    self.classes.push(name.to_string());
+                }
+            }
+        }
+        self
     }
 
     pub fn to_vdom_classes(self) -> tairitsu_vdom::Classes {
