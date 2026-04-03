@@ -39,6 +39,7 @@
 mod builder;
 mod classes;
 mod properties;
+mod typed;
 mod utility;
 mod values;
 
@@ -46,6 +47,8 @@ mod values;
 pub use builder::{StyleBuilder, StyleStringBuilder};
 pub use classes::ClassesBuilder;
 pub use properties::{CssCategory, CssProperty, Property};
+pub use typed::TypedClass;
+// Note: define_typed_classes! macro is automatically exported at crate root via #[macro_export]
 pub use utility::create_default_registry;
 pub use utility::{
     AlignItemsUtility, BgColorUtility, Breakpoint, DisplayUtility, FlexDirectionUtility,
