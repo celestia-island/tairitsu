@@ -6,15 +6,15 @@
 use anyhow::{Context as AnyhowContext, Result};
 
 use wasmtime::{
-    Store,
     component::{Component, Linker},
     error::Context,
+    Store,
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
-use crate::Image;
 #[cfg(feature = "dynamic")]
 use crate::dynamic::host_imports::HostImportRegistry;
+use crate::Image;
 
 /// Base trait for host state
 ///
@@ -290,7 +290,6 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
         Ok(Container {
             store,
             guest: guest_instance,
-            component,
             #[cfg(feature = "dynamic")]
             dynamic_instance,
             #[cfg(feature = "dynamic")]
@@ -305,8 +304,6 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
 pub struct Container<T: HostStateImpl = HostState> {
     store: Store<T>,
     guest: GuestInstance,
-    #[allow(dead_code)] // Reserved for future use
-    component: Component,
 
     /// Dynamic instance for runtime function invocation (duplicated from guest for easier access)
     #[cfg(feature = "dynamic")]

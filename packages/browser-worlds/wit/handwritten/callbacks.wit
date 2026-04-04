@@ -105,3 +105,9 @@ interface window-resize-callbacks {
 interface video-frame-callbacks {
     on-video-frame: func(callback-id: u64, event: string);
 }
+
+/// Promise callback - host delivers promise resolution/rejection to the component.
+interface promise-callbacks {
+    on-promise-resolved: func(promise-id: u64, value: string);
+    on-promise-rejected: func(promise-id: u64, error: string);
+}

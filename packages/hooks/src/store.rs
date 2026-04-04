@@ -51,8 +51,6 @@ thread_local! {
 trait AnyStore {
     fn as_any(&self) -> &dyn std::any::Any;
     fn unsubscribe(&self, subscriber_id: usize);
-    #[allow(dead_code)]
-    fn subscriber_count(&self) -> usize;
 }
 
 /// A subscriber callback
@@ -211,10 +209,6 @@ impl<T: Clone + 'static> AnyStore for Store<T> {
     fn unsubscribe(&self, subscriber_id: usize) {
         self.unsubscribe(subscriber_id);
     }
-
-    fn subscriber_count(&self) -> usize {
-        self.subscriber_count()
-    }
 }
 
 impl SubscriptionHandle {
@@ -303,7 +297,9 @@ macro_rules! store {
 /// ```
 #[macro_export]
 macro_rules! use_store {
-    ($store:expr) => {{ $store.get() }};
+    ($store:expr) => {{
+        $store.get()
+    }};
 }
 
 #[cfg(test)]

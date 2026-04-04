@@ -327,6 +327,7 @@ pub mod wasm_impl {
         static SCROLL_CALLBACKS: RefCell<HashMap<u64, ScrollCallback>> = RefCell::new(HashMap::new());
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
+        static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -628,6 +629,24 @@ pub mod wasm_impl {
                 let mut callbacks = m.borrow_mut();
                 if let Some(handler) = callbacks.get_mut(&callback_id) {
                     handler(event);
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::promise_callbacks::Guest for BrowserComponent {
+        fn on_promise_resolved(promise_id: u64, value: String) {
+            PROMISE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
+                    callback(Ok(value));
+                }
+            });
+        }
+
+        fn on_promise_rejected(promise_id: u64, error: String) {
+            PROMISE_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&promise_id) {
+                    callback(Err(error));
                 }
             });
         }
@@ -1040,6 +1059,34 @@ pub mod wasm_impl {
 
         fn read_clipboard(&self) -> Option<String> {
             bindings::tairitsu_browser::full::platform_helpers::read_clipboard()
+        }
+
+        fn clipboard_write_text_async(
+            &self,
+            text: &str,
+            on_complete: Box<dyn FnOnce(Result<(), String>)>,
+        ) {
+            let promise_id =
+                bindings::tairitsu_browser::full::platform_helpers::clipboard_write_text_promise(
+                    text,
+                );
+            PROMISE_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    promise_id,
+                    Box::new(|res| match res {
+                        Ok(_) => on_complete(Ok(())),
+                        Err(e) => on_complete(Err(e)),
+                    }),
+                );
+            });
+        }
+
+        fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+            let promise_id =
+                bindings::tairitsu_browser::full::platform_helpers::clipboard_read_text_promise();
+            PROMISE_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(promise_id, on_complete);
+            });
         }
 
         fn prefers_dark_mode(&self) -> bool {
