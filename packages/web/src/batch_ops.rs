@@ -103,21 +103,6 @@ impl BatchOps {
     /// # Arguments
     ///
     /// * `element` - Element to set attributes on
-    /// * `name` - Attribute name
-    /// * `value` - Attribute value
-    pub fn add_attr(&self, element: WitElement, name: &str, value: &str) {
-        let mut attrs = self.attrs.borrow_mut();
-        attrs
-            .entry(element.0)
-            .or_default()
-            .push((name.to_string(), value.to_string()));
-    }
-
-    /// Add multiple attribute operations to the batch.
-    ///
-    /// # Arguments
-    ///
-    /// * `element` - Element to set attributes on
     /// * `attrs` - Iterator of (name, value) pairs
     pub fn add_attrs(
         &self,
