@@ -4,6 +4,9 @@
 /// Source specs: credential-management, webauthn
 /// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
 ///
+/// Version: 0.2.0
+/// Generated: 2026-04-04 06:48:14 UTC
+///
 /// All browser objects are represented as opaque u64 handles.
 /// Regenerate with: just wit-gen
 ///
