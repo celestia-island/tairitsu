@@ -35,5 +35,3 @@ data-fetcher = ["tokio", "dep:reqwest"]
 dev = ["hmr", "fast-refresh", "error-overlay", "data-fetcher"]
 
 [build-dependencies]
-wit-parser = "0.201"
-heck = "0.5"
