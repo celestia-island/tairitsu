@@ -921,11 +921,10 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     // Initial build (no MultiProgress — let cargo write directly to terminal).
     let initial_started = Instant::now();
     match config.build.target.as_str() {
-        "component" => build_component(config, false, None).map_err(|e| {
+        "component" => build_component(config, false, None).inspect_err(|e| {
             if crate::daemon::is_daemon() {
                 let _ = crate::daemon::signal_failed(&e.to_string());
             }
-            e
         })?,
         other => {
             let err = crate::TairitsuPackagerError::BuildError(format!(
