@@ -15526,6 +15526,22 @@ interface cache-storage {
 }
 /// W3C WebIDL world — 557 interfaces.
 world w3c-idl-full {
+    import event-callbacks;
+    import timer-callbacks;
+    import animation-callbacks;
+    import resize-observer-callbacks;
+    import mutation-observer-callbacks;
+    import media-query-list-callbacks;
+    import scroll-callbacks;
+    import window-resize-callbacks;
+    import video-frame-callbacks;
+    import promise-callbacks;
+    import geolocation-callbacks;
+    import lifecycle;
+    import console;
+    import event-target;
+    import platform-helpers;
+    import component-types;
     import credential;
     import credential-user-data;
     import credentials-container;

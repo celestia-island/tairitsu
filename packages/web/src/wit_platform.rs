@@ -343,7 +343,7 @@ pub mod wasm_impl {
         use super::BrowserComponent;
 
         wit_bindgen::generate!({
-            path: "../browser-worlds/wit/browser-full.wit",
+            path: "../browser-worlds/wit/composed",
             world: "browser-full",
         });
 

@@ -6,8 +6,9 @@
 use std::{collections::HashSet, fs::File, io::Write, path::Path};
 
 fn main() {
-    // Only regenerate if the WIT file changes
+    // Only regenerate if the WIT files change
     println!("cargo:rerun-if-changed=../../packages/browser-worlds/wit/browser-full.wit");
+    println!("cargo:rerun-if-changed=../../packages/browser-worlds/wit/composed");
 
     // Read the WIT file to extract interface names and functions
     let wit_path = "../../packages/browser-worlds/wit/browser-full.wit";

@@ -9,7 +9,7 @@ use wasmtime::component::bindgen;
 // Only generate bindings for the specific interface we need
 // We use the full browser-full.wit but only use a small part
 bindgen!({
-    path: "../../packages/browser-worlds/wit/browser-full.wit",
+    path: "../../packages/browser-worlds/wit/composed",
     world: "browser-full",
 });
 
