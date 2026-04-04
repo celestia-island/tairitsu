@@ -36,12 +36,15 @@ fn main() {
         "console",
         "event-target",
         "event",
-        "style",
         "document",
         "node",
         "element",
         "window",
         "types",
+        "component-types",
+        // CSS interfaces (manually implemented in linker.rs)
+        "element-css-inline-style",
+        "css-style-declaration",
         // Credential management interfaces (manually implemented in stubs.rs)
         "credential",
         "credentials-container",
@@ -64,8 +67,14 @@ fn main() {
         "animation-callbacks",
         "resize-observer-callbacks",
         "mutation-observer-callbacks",
+        "media-query-list-callbacks",
+        "scroll-callbacks",
+        "window-resize-callbacks",
+        "video-frame-callbacks",
         "event-callbacks",
         "lifecycle",
+        "promise-callbacks",
+        "geolocation-callbacks",
     ]
     .into_iter()
     .collect();

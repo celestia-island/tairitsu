@@ -349,16 +349,16 @@ fn register_core_imports(linker: &mut Linker<SsrHostState>) -> Result<()> {
     let mut window = linker.instance("tairitsu-browser:full/window@0.2.0")?;
     window.func_wrap(
         "get-inner-width",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (): ()|
-         -> Result<(i32,), wasmtime::Error> { Ok((1920,)) },
+         -> Result<(i32,), wasmtime::Error> { Ok((caller.data().config.viewport_width,)) },
     )?;
 
     window.func_wrap(
         "get-inner-height",
-        |_caller: wasmtime::StoreContextMut<'_, SsrHostState>,
+        |caller: wasmtime::StoreContextMut<'_, SsrHostState>,
          (): ()|
-         -> Result<(i32,), wasmtime::Error> { Ok((1080,)) },
+         -> Result<(i32,), wasmtime::Error> { Ok((caller.data().config.viewport_height,)) },
     )?;
 
     Ok(())
