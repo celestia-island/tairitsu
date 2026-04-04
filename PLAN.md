@@ -124,6 +124,31 @@ Implemented in `packages/style/src/typed.rs`:
 - Unused build-dependencies removed: `wit-parser 0.201`, `heck`
 - Stub count reduced from 545 to 536
 
+## Hikari 10F: i18n (Blocked — Needed by hikari)
+
+`hikari/packages/web/Cargo.toml` has `i18n = []` (empty feature flag, no implementation).
+Hikari needs a `tairitsu_i18n` package providing:
+
+| Component | API | Purpose |
+|-----------|-----|---------|
+| `I18nProvider` | Context-based locale provider (like ThemeProvider pattern) | Inject locale into component tree |
+| `Locale` | Enum or struct: `ZhCN`, `EnUS`, `JaJP`, `KoKR`, etc. | Type-safe locale representation |
+| `t!()` / `tr!()` | Macro: `t!("key.subkey")` → `&str` | Translate key to current locale string |
+| `use_locale()` | Hook: returns current `Locale` signal | Read locale in components |
+| `set_locale()` | Callback: switch locale at runtime | Dynamic locale switching |
+| `I18nSwitcher` | Optional UI component: dropdown of available locales | User-facing locale picker |
+
+Design constraints:
+- Use `tairitsu_hooks::provide_context` / `use_context` for context propagation
+- Use `ReactiveSignal<Locale>` for reactive locale switching
+- Translation data: `HashMap<String, HashMap<String, String>>` (locale → key → value) or flat file format
+- SSR: must work without browser APIs (no `navigator.language`)
+- No external deps beyond tairitsu workspace packages
+
+When this is implemented, hikari 10F will wire `I18nProvider` into the app root and optionally add `I18nSwitcher` to settings/nav.
+
+---
+
 ## Daemon Error Reporting
 
 The packager daemon (`packages/packager`) reports build errors correctly:
