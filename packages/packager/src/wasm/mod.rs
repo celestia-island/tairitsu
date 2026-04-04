@@ -921,15 +921,33 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     // Initial build (no MultiProgress — let cargo write directly to terminal).
     let initial_started = Instant::now();
     match config.build.target.as_str() {
-        "component" => build_component(config, false, None)?,
+        "component" => build_component(config, false, None).map_err(|e| {
+            if crate::daemon::is_daemon() {
+                let _ = crate::daemon::signal_failed(&e.to_string());
+            }
+            e
+        })?,
         other => {
-            return Err(crate::TairitsuPackagerError::BuildError(format!(
+            let err = crate::TairitsuPackagerError::BuildError(format!(
                 "Unknown build target '{}'. Only 'component' is supported.",
                 other
-            )));
+            ));
+            if crate::daemon::is_daemon() {
+                let _ = crate::daemon::signal_failed(&err.to_string());
+            }
+            return Err(err);
         }
     }
     let initial_elapsed = initial_started.elapsed();
+
+    if crate::daemon::is_daemon() {
+        let _ = crate::daemon::signal_ready();
+        #[cfg(unix)]
+        crate::daemon::daemonize_self().map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!("daemonize failed: {}", e))
+        })?;
+        println!("  ✓  Initial build succeeded — daemonizing...");
+    }
 
     let dist_dir = config.build.output_dir.clone();
 

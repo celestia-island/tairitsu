@@ -149,23 +149,6 @@ impl ResizeObserverSizeHost for SsrHostState {
 
 // Implement the platform-helpers Host trait
 impl crate::bindings::PlatformHelpersHost for SsrHostState {
-    fn get_bounding_client_rect(&mut self, _element: u64) -> crate::bindings::DomRect {
-        crate::bindings::DomRect {
-            x: 0.0,
-            y: 0.0,
-            width: 0.0,
-            height: 0.0,
-        }
-    }
-
-    fn inner_width(&mut self) -> i32 {
-        self.dom.viewport_width()
-    }
-
-    fn inner_height(&mut self) -> i32 {
-        self.dom.viewport_height()
-    }
-
     fn set_timeout(&mut self, _callback_id: u64, _ms: i32) -> i32 {
         1
     }
@@ -182,19 +165,9 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
         1
     }
 
-    fn observe_resize(&mut self, _observer: u64, _element: u64) {}
-
-    fn unobserve_resize(&mut self, _observer: u64, _element: u64) {}
-
-    fn disconnect_resize(&mut self, _observer: u64) {}
-
     fn create_mutation_observer(&mut self, _callback_id: u64) -> u64 {
         1
     }
-
-    fn observe_mutations(&mut self, _observer: u64, _element: u64, _options: Option<u64>) {}
-
-    fn disconnect_mutation(&mut self, _observer: u64) {}
 
     fn get_element_by_id(&mut self, _id: String) -> Option<u64> {
         None
@@ -206,18 +179,6 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
 
     fn query_selector_all(&mut self, _selector: String) -> Vec<u64> {
         vec![]
-    }
-
-    fn element_from_point(&mut self, _x: i32, _y: i32) -> Option<u64> {
-        None
-    }
-
-    fn element_closest(&mut self, _element: u64, _selector: String) -> Option<u64> {
-        None
-    }
-
-    fn get_scroll_y(&mut self) -> f64 {
-        0.0
     }
 
     fn scroll_to(&mut self, _top: f64, _behavior: String) {}
@@ -250,8 +211,6 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
         None
     }
 
-    fn request_fullscreen(&mut self, _element: u64) {}
-
     fn get_contenteditable_state(
         &mut self,
         _element: u64,
@@ -260,10 +219,6 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
     }
 
     fn set_content_editable(&mut self, _element: u64, _editable: bool) {}
-
-    fn exec_command(&mut self, _command: String, _value: Option<String>) -> bool {
-        false
-    }
 
     fn get_selection_start(&mut self, _element: u64) -> Option<u32> {
         None
@@ -274,14 +229,6 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
     }
 
     fn create_audio_context(&mut self) -> u64 {
-        1
-    }
-
-    fn create_analyser_node(&mut self, _audio_context: u64) -> u64 {
-        1
-    }
-
-    fn create_media_element_source(&mut self, _audio_context: u64, _element: u64) -> u64 {
         1
     }
 

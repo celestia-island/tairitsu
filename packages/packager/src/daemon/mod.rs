@@ -4,13 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::{
-    env,
-    fs::{self, File},
-    path::PathBuf,
-    process::Command,
-    sync::OnceLock,
-};
+use std::{env, fs, path::PathBuf, process::Command, sync::OnceLock};
 
 static PROJECT_ROOT: OnceLock<PathBuf> = OnceLock::new();
 
@@ -37,6 +31,63 @@ fn daemon_log_path() -> PathBuf {
 /// Path to the PID file
 fn pid_file_path() -> PathBuf {
     daemon_dir().join("tairitsu-packager.pid")
+}
+
+/// Path to the daemon readiness signal file
+fn ready_file_path() -> PathBuf {
+    daemon_dir().join("tairitsu-packager.ready")
+}
+
+/// Write the daemon readiness signal (called by child after successful initial build)
+pub fn signal_ready() -> std::io::Result<()> {
+    if let Some(parent) = ready_file_path().parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(ready_file_path(), "ready")
+}
+
+/// Write the daemon failure signal (called by child when initial build fails)
+pub fn signal_failed(error: &str) -> std::io::Result<()> {
+    if let Some(parent) = ready_file_path().parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(ready_file_path(), error)
+}
+
+/// Wait for the daemon child to signal readiness or failure.
+/// Returns `Ok(true)` if ready, `Ok(false)` if failed (error printed), `Err` on timeout/io.
+pub fn wait_for_child_signal(timeout_secs: u64) -> std::io::Result<bool> {
+    let ready_path = ready_file_path();
+    let start = std::time::Instant::now();
+    let timeout = std::time::Duration::from_secs(timeout_secs);
+
+    while start.elapsed() < timeout {
+        if let Ok(content) = fs::read_to_string(&ready_path) {
+            let _ = fs::remove_file(&ready_path);
+            if content.trim() == "ready" {
+                return Ok(true);
+            } else {
+                eprintln!("  ✗  Daemon initial build failed:");
+                eprintln!("     {}", content.trim());
+                return Ok(false);
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+
+    let _ = fs::remove_file(&ready_path);
+    Err(std::io::Error::new(
+        std::io::ErrorKind::TimedOut,
+        format!(
+            "Daemon did not signal within {}s. Check logs for status.",
+            timeout_secs
+        ),
+    ))
+}
+
+/// Clean up the readiness signal file
+pub fn cleanup_ready_file() {
+    let _ = fs::remove_file(ready_file_path());
 }
 
 /// Daemon status and log entry
@@ -235,8 +286,6 @@ where
         Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
             .args(&args)
-            .stdout(File::create(log_path.with_extension("stdout"))?)
-            .stderr(File::create(log_path.with_extension("stderr"))?)
             .spawn()?;
 
         Ok(())
