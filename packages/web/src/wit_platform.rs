@@ -676,10 +676,9 @@ pub mod wasm_impl {
                     Ok(())
                 },
                 |element| {
-                    let rect =
-                        bindings::tairitsu_browser::full::platform_helpers::get_bounding_client_rect(
-                            element,
-                        );
+                    let rect = bindings::tairitsu_browser::full::element::get_bounding_client_rect(
+                        element,
+                    );
                     tairitsu_vdom::DomRect {
                         x: rect.x,
                         y: rect.y,
@@ -848,9 +847,8 @@ pub mod wasm_impl {
         }
 
         fn get_bounding_client_rect(&self, element: &Self::Element) -> DomRect {
-            let rect = bindings::tairitsu_browser::full::platform_helpers::get_bounding_client_rect(
-                element.0,
-            );
+            let rect =
+                bindings::tairitsu_browser::full::element::get_bounding_client_rect(element.0);
             DomRect {
                 x: rect.x,
                 y: rect.y,
@@ -860,11 +858,11 @@ pub mod wasm_impl {
         }
 
         fn inner_width(&self) -> i32 {
-            bindings::tairitsu_browser::full::platform_helpers::inner_width()
+            bindings::tairitsu_browser::full::window::get_inner_width()
         }
 
         fn inner_height(&self) -> i32 {
-            bindings::tairitsu_browser::full::platform_helpers::inner_height()
+            bindings::tairitsu_browser::full::window::get_inner_height()
         }
 
         fn set_timeout(&self, callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
@@ -921,17 +919,15 @@ pub mod wasm_impl {
         }
 
         fn observe_resize(&self, observer: u64, element: &Self::Element) {
-            bindings::tairitsu_browser::full::platform_helpers::observe_resize(observer, element.0);
+            bindings::tairitsu_browser::full::resize_observer::observe(observer, element.0, None);
         }
 
         fn unobserve_resize(&self, observer: u64, element: &Self::Element) {
-            bindings::tairitsu_browser::full::platform_helpers::unobserve_resize(
-                observer, element.0,
-            );
+            bindings::tairitsu_browser::full::resize_observer::unobserve(observer, element.0);
         }
 
         fn disconnect_resize(&self, observer: u64) {
-            bindings::tairitsu_browser::full::platform_helpers::disconnect_resize(observer);
+            bindings::tairitsu_browser::full::resize_observer::disconnect(observer);
         }
 
         fn create_mutation_observer(
@@ -951,13 +947,11 @@ pub mod wasm_impl {
             element: &Self::Element,
             _options: Option<tairitsu_vdom::MutationObserverInit>,
         ) {
-            bindings::tairitsu_browser::full::platform_helpers::observe_mutations(
-                observer, element.0, None,
-            );
+            bindings::tairitsu_browser::full::mutation_observer::observe(observer, element.0, None);
         }
 
         fn disconnect_mutation(&self, observer: u64) {
-            bindings::tairitsu_browser::full::platform_helpers::disconnect_mutation(observer);
+            bindings::tairitsu_browser::full::mutation_observer::disconnect(observer);
         }
 
         fn match_media(&self, query: &str) -> u64 {
@@ -991,7 +985,6 @@ pub mod wasm_impl {
         }
 
         fn get_element_by_id(&self, id: &str) -> Option<Self::Element> {
-            let doc_handle: u64 = 0;
             bindings::tairitsu_browser::full::platform_helpers::get_element_by_id(id)
                 .map(WitElement)
         }
@@ -1009,7 +1002,7 @@ pub mod wasm_impl {
         }
 
         fn element_from_point(&self, x: i32, y: i32) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::element_from_point(x, y)
+            bindings::tairitsu_browser::full::document::element_from_point(x as f64, y as f64)
                 .map(WitElement)
         }
 
@@ -1018,12 +1011,11 @@ pub mod wasm_impl {
             element: &Self::Element,
             selector: &str,
         ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::element_closest(element.0, selector)
-                .map(WitElement)
+            bindings::tairitsu_browser::full::element::closest(element.0, selector).map(WitElement)
         }
 
         fn get_scroll_y(&self) -> f64 {
-            bindings::tairitsu_browser::full::platform_helpers::get_scroll_y()
+            bindings::tairitsu_browser::full::window::get_scroll_y()
         }
 
         fn scroll_to(&self, top: f64, behavior: &str) {
@@ -1082,7 +1074,7 @@ pub mod wasm_impl {
         }
 
         fn request_fullscreen(&self, element: &Self::Element) {
-            bindings::tairitsu_browser::full::platform_helpers::request_fullscreen(element.0)
+            let _ = bindings::tairitsu_browser::full::element::request_fullscreen(element.0, None);
         }
 
         fn get_contenteditable_state(
@@ -1163,11 +1155,11 @@ pub mod wasm_impl {
         }
 
         fn create_analyser_node(&self, audio_context: u64) -> u64 {
-            bindings::tairitsu_browser::full::platform_helpers::create_analyser_node(audio_context)
+            bindings::tairitsu_browser::full::base_audio_context::create_analyser(audio_context)
         }
 
         fn create_media_element_source(&self, audio_context: u64, element: u64) -> u64 {
-            bindings::tairitsu_browser::full::platform_helpers::create_media_element_source(
+            bindings::tairitsu_browser::full::audio_context::create_media_element_source(
                 audio_context,
                 element,
             )
@@ -1188,12 +1180,12 @@ pub mod wasm_impl {
         fn draw_qrcode_on_canvas_by_id(
             &self,
             canvas_id: &str,
-            matrix: &Vec<Vec<bool>>,
+            matrix: &[Vec<bool>],
             modules: u64,
             color: &str,
             background: &str,
         ) -> bool {
-            let wit_matrix: Vec<Vec<bool>> = matrix.clone();
+            let wit_matrix: Vec<Vec<bool>> = matrix.to_vec();
             bindings::tairitsu_browser::full::platform_helpers::draw_qrcode_on_canvas_by_id(
                 canvas_id,
                 &wit_matrix,
@@ -1216,8 +1208,9 @@ pub mod wasm_impl {
             client_x: i32,
             client_y: i32,
         ) -> Option<Self::Element> {
-            bindings::tairitsu_browser::full::platform_helpers::element_from_point(
-                client_x, client_y,
+            bindings::tairitsu_browser::full::document::element_from_point(
+                client_x as f64,
+                client_y as f64,
             )
             .map(WitElement)
         }

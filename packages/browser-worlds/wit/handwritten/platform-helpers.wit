@@ -1,0 +1,66 @@
+/// Platform helpers - ONLY functions NOT available from W3C auto-generated WIT.
+///
+/// For W3C APIs (setTimeout, getElementById, etc.), use auto-generated bindings
+/// from wit/generated/*.wit directly (e.g., window::get-inner-width, document::get-element-by-id).
+interface platform-helpers {
+    use component-types.{content-editable-state};
+    use types.{dom-rect};
+
+    // -- Constructors skipped by auto-generator --
+
+    create-resize-observer: func(callback-id: u64) -> u64;
+    create-mutation-observer: func(callback-id: u64) -> u64;
+    create-audio-context: func() -> u64;
+
+    // -- Global scope operations (need global handle, not readily available) --
+
+    set-timeout: func(callback-id: u64, ms: s32) -> s32;
+    clear-timeout: func(id: s32);
+    request-animation-frame: func(callback-id: u64) -> u32;
+    cancel-animation-frame: func(id: u32);
+
+    // -- Signature mismatch (auto-gen takes options handle, not simple params) --
+
+    scroll-to: func(top: f64, behavior: string);
+
+    // -- Clipboard (needs clipboard handle + async navigation) --
+
+    copy-to-clipboard: func(text: string) -> bool;
+    read-clipboard: func() -> option<string>;
+
+    // -- Content editable (bool→string conversion needed) --
+
+    set-content-editable: func(element: u64, editable: bool);
+
+    // -- DOM queries (auto-gen query_selector_all returns NodeList handle, not list) --
+
+    get-element-by-id: func(id: string) -> option<u64>;
+    query-selector: func(selector: string) -> option<u64>;
+    query-selector-all: func(selector: string) -> list<u64>;
+
+    on-scroll: func(callback-id: u64);
+    on-resize-callback: func(callback-id: u64);
+
+    // -- Custom convenience helpers (not W3C APIs) --
+
+    get-scroll-top-from-point: func(x: s32, y: s32) -> f64;
+    get-scroll-top-by-selector: func(selector: string) -> f64;
+    get-element-rect-by-id: func(id: string) -> option<dom-rect>;
+    get-bounding-rect-by-class: func(class-name: string, element: u64) -> option<dom-rect>;
+    prefers-dark-mode: func() -> bool;
+
+    // -- Rich text editing (custom composite type) --
+
+    get-contenteditable-state: func(element: u64) -> option<content-editable-state>;
+    get-selection-start: func(element: u64) -> option<u32>;
+    get-selection-end: func(element: u64) -> option<u32>;
+
+    // -- Audio convenience (auto-gen requires pre-allocated array) --
+
+    analyser-get-frequency-data: func(analyser: u64) -> list<f32>;
+    analyser-get-time-domain-data: func(analyser: u64) -> list<f32>;
+
+    // -- Custom helpers (not W3C APIs) --
+
+    draw-qrcode-on-canvas-by-id: func(canvas-id: string, matrix: list<list<bool>>, modules: u64, color: string, background: string) -> bool;
+}
