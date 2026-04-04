@@ -37,6 +37,11 @@ interface platform-helpers {
     /// Returns a promise-id that can be polled.
     fetch-promise: func(url: string, options: option<string>) -> u64;
 
+    // -- Geolocation (callback-based, no promise needed) --
+
+    get-geolocation-handle: func() -> u64;
+    get-current-position: func(geo-handle: u64, success-callback-id: u64, error-callback-id: u64, enable-high-accuracy: bool, timeout: u32, maximum-age: u32);
+
     // -- Clipboard (needs clipboard handle + async navigation) --
 
     copy-to-clipboard: func(text: string) -> bool;

@@ -21,8 +21,9 @@ pub use events::{
 };
 pub use patch::Patch;
 pub use platform::{
-    CanvasContext, ContentEditableState, DomRect, ElementHandle, EventHandle, MutationObserverInit,
-    MutationRecord, Platform, ResizeObserverEntry, ResizeObserverSize,
+    CanvasContext, ContentEditableState, DomRect, ElementHandle, EventHandle, GeoPosition,
+    GeoPositionError, MutationObserverInit, MutationRecord, Platform, ResizeObserverEntry,
+    ResizeObserverSize,
 };
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{EffectHandle, Signal, batch, create_effect};

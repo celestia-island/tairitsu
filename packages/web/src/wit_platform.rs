@@ -328,6 +328,7 @@ pub mod wasm_impl {
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
         static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        static GEO_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>>>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -647,6 +648,41 @@ pub mod wasm_impl {
             PROMISE_CALLBACKS.with(|m| {
                 if let Some(callback) = m.borrow_mut().remove(&promise_id) {
                     callback(Err(error));
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::geolocation_callbacks::Guest for BrowserComponent {
+        fn on_position_success(
+            callback_id: u64,
+            position: bindings::exports::tairitsu_browser::full::geolocation_callbacks::GeoPosition,
+        ) {
+            GEO_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Ok(tairitsu_vdom::GeoPosition {
+                        latitude: position.latitude,
+                        longitude: position.longitude,
+                        altitude: position.altitude,
+                        accuracy: position.accuracy,
+                        altitude_accuracy: position.altitude_accuracy,
+                        heading: position.heading,
+                        speed: position.speed,
+                    }));
+                }
+            });
+        }
+
+        fn on_position_error(
+            callback_id: u64,
+            error: bindings::exports::tairitsu_browser::full::geolocation_callbacks::GeoPositionError,
+        ) {
+            GEO_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Err(tairitsu_vdom::GeoPositionError {
+                        code: error.code,
+                        message: error.message,
+                    }));
                 }
             });
         }
@@ -1260,6 +1296,37 @@ pub mod wasm_impl {
                 client_y as f64,
             )
             .map(WitElement)
+        }
+
+        fn get_current_position(
+            &self,
+            on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
+            on_error: Box<dyn FnOnce(tairitsu_vdom::GeoPositionError)>,
+            enable_high_accuracy: bool,
+            timeout: u32,
+            maximum_age: u32,
+        ) {
+            let callback_id = next_callback_id();
+            GEO_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| match result {
+                        Ok(pos) => on_success(pos),
+                        Err(err) => on_error(err),
+                    }),
+                );
+            });
+
+            let geo_handle =
+                bindings::tairitsu_browser::full::platform_helpers::get_geolocation_handle();
+            bindings::tairitsu_browser::full::platform_helpers::get_current_position(
+                geo_handle,
+                callback_id,
+                callback_id,
+                enable_high_accuracy,
+                timeout,
+                maximum_age,
+            );
         }
     }
 
