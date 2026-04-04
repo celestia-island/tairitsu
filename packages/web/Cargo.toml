@@ -24,6 +24,7 @@ anyhow = "^1"
 # Data and serialization
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
+toml = "^0.8"
 
 # Logging and tracing
 tracing = "^0.1"
@@ -46,7 +47,7 @@ data-fetcher = ["ssr"]
 hmr = ["ssr"]
 fast-refresh = ["ssr", "hmr"]
 error-overlay = ["ssr", "hmr"]
-i18n = []
+i18n = ["hooks"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]
 # Browser-only features (without SSR/server dependencies)
