@@ -329,6 +329,9 @@ pub mod wasm_impl {
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
         static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static GEO_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>>>> = RefCell::new(HashMap::new());
+        static FILE_READER_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
+        static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
+        static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
     }
 
     // -- WIT binding generation -------------------------------------------
@@ -683,6 +686,42 @@ pub mod wasm_impl {
                         code: error.code,
                         message: error.message,
                     }));
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::idb_callbacks::Guest for BrowserComponent {
+        fn on_idb_request_success(callback_id: u64, result: Option<String>) {
+            IDB_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Ok(result.unwrap_or_default()));
+                }
+            });
+        }
+
+        fn on_idb_request_error(callback_id: u64, error: String) {
+            IDB_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Err(error));
+                }
+            });
+        }
+    }
+
+    impl bindings::exports::tairitsu_browser::full::file_reader_callbacks::Guest for BrowserComponent {
+        fn on_file_reader_load(callback_id: u64, result: String) {
+            FILE_READER_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Ok(result));
+                }
+            });
+        }
+
+        fn on_file_reader_error(callback_id: u64, error: String) {
+            FILE_READER_CALLBACKS.with(|m| {
+                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+                    callback(Err(error));
                 }
             });
         }
@@ -1326,6 +1365,205 @@ pub mod wasm_impl {
                 enable_high_accuracy,
                 timeout,
                 maximum_age,
+            );
+        }
+
+        fn file_reader_sync_read_as_text(
+            &self,
+            blob: u64,
+            encoding: Option<&str>,
+        ) -> Result<String, String> {
+            bindings::tairitsu_browser::full::platform_helpers::file_reader_sync_read_as_text(
+                blob,
+                encoding.map(|s| s.to_string()),
+            )
+        }
+
+        fn file_reader_sync_read_as_array_buffer(&self, blob: u64) -> Result<Vec<u8>, String> {
+            bindings::tairitsu_browser::full::platform_helpers::file_reader_sync_read_as_array_buffer(blob)
+        }
+
+        fn file_reader_read_as_text(
+            &self,
+            blob: u64,
+            encoding: Option<&str>,
+            on_complete: Box<dyn FnOnce(Result<String, String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            FILE_READER_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(callback_id, on_complete);
+            });
+            bindings::tairitsu_browser::full::platform_helpers::file_reader_read_as_text(
+                blob,
+                encoding.map(|s| s.to_string()),
+                callback_id,
+            );
+        }
+
+        fn file_reader_read_as_array_buffer(
+            &self,
+            blob: u64,
+            on_complete: Box<dyn FnOnce(Result<Vec<u8>, String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            FILE_READER_BIN_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        on_complete(result.map_err(|e| e));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::file_reader_read_as_array_buffer(
+                blob,
+                callback_id,
+            );
+        }
+
+        fn idb_open(
+            &self,
+            name: &str,
+            version: Option<u64>,
+            on_complete: Box<dyn FnOnce(Result<u64, String>)>,
+        ) -> u64 {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ = on_complete(result.map(|s| s.parse::<u64>().unwrap_or(0)));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_open(
+                name.to_string(),
+                version,
+                callback_id,
+            )
+        }
+
+        fn idb_put(
+            &self,
+            db: u64,
+            store_name: &str,
+            value: &str,
+            key: Option<&str>,
+            on_complete: Box<dyn FnOnce(Result<(), String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ = on_complete(result.map(|_| ()));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_put(
+                db,
+                store_name.to_string(),
+                value.to_string(),
+                key.map(|s| s.to_string()),
+                callback_id,
+            );
+        }
+
+        fn idb_get(
+            &self,
+            db: u64,
+            store_name: &str,
+            key: &str,
+            on_complete: Box<dyn FnOnce(Result<Option<String>, String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ =
+                            on_complete(result.map(|s| if s.is_empty() { None } else { Some(s) }));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_get(
+                db,
+                store_name.to_string(),
+                key.to_string(),
+                callback_id,
+            );
+        }
+
+        fn idb_delete(
+            &self,
+            db: u64,
+            store_name: &str,
+            key: &str,
+            on_complete: Box<dyn FnOnce(Result<(), String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ = on_complete(result.map(|_| ()));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_delete(
+                db,
+                store_name.to_string(),
+                key.to_string(),
+                callback_id,
+            );
+        }
+
+        fn idb_get_all(
+            &self,
+            db: u64,
+            store_name: &str,
+            on_complete: Box<dyn FnOnce(Result<Vec<String>, String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ = on_complete(result.map(|s| {
+                            if s.is_empty() {
+                                Vec::new()
+                            } else {
+                                s.split('\n').map(String::from).collect()
+                            }
+                        }));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_get_all(
+                db,
+                store_name.to_string(),
+                callback_id,
+            );
+        }
+
+        fn idb_clear(
+            &self,
+            db: u64,
+            store_name: &str,
+            on_complete: Box<dyn FnOnce(Result<(), String>)>,
+        ) {
+            let callback_id = next_callback_id();
+            IDB_CALLBACKS.with(|m| {
+                m.borrow_mut().insert(
+                    callback_id,
+                    Box::new(move |result| {
+                        let _ = on_complete(result.map(|_| ()));
+                    }),
+                );
+            });
+            bindings::tairitsu_browser::full::platform_helpers::idb_clear(
+                db,
+                store_name.to_string(),
+                callback_id,
             );
         }
     }

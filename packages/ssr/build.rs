@@ -75,6 +75,8 @@ fn main() {
         "lifecycle",
         "promise-callbacks",
         "geolocation-callbacks",
+        "idb-callbacks",
+        "file-reader-callbacks",
     ]
     .into_iter()
     .collect();
