@@ -137,13 +137,13 @@ impl AsyncOperationsTests {
         } else {
             info!("Interval elements not found, skipping setInterval test");
             let duration = start.elapsed().as_millis() as u64;
-            return Ok(TestResult {
+            Ok(TestResult {
                 component: "setInterval".to_string(),
                 status: crate::tests::TestStatus::Warning,
                 message: "Interval elements not found on page".to_string(),
                 duration_ms: duration,
                 screenshot_path: None,
-            });
+            })
         }
     }
 

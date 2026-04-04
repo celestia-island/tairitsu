@@ -61,7 +61,7 @@ impl BatchOps {
         let mut styles = self.styles.borrow_mut();
         styles
             .entry(element.0)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push((name.to_string(), value.to_string()));
     }
 
@@ -77,7 +77,7 @@ impl BatchOps {
         styles: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
     ) {
         let mut map = self.styles.borrow_mut();
-        let entry = map.entry(element.0).or_insert_with(Vec::new);
+        let entry = map.entry(element.0).or_default();
         for (name, value) in styles {
             entry.push((name.as_ref().to_string(), value.as_ref().to_string()));
         }
@@ -94,7 +94,22 @@ impl BatchOps {
         let mut attrs = self.attrs.borrow_mut();
         attrs
             .entry(element.0)
-            .or_insert_with(Vec::new)
+            .or_default()
+            .push((name.to_string(), value.to_string()));
+    }
+
+    /// Add multiple attribute operations to the batch.
+    ///
+    /// # Arguments
+    ///
+    /// * `element` - Element to set attributes on
+    /// * `name` - Attribute name
+    /// * `value` - Attribute value
+    pub fn add_attr(&self, element: WitElement, name: &str, value: &str) {
+        let mut attrs = self.attrs.borrow_mut();
+        attrs
+            .entry(element.0)
+            .or_default()
             .push((name.to_string(), value.to_string()));
     }
 
@@ -110,7 +125,7 @@ impl BatchOps {
         attrs: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
     ) {
         let mut map = self.attrs.borrow_mut();
-        let entry = map.entry(element.0).or_insert_with(Vec::new);
+        let entry = map.entry(element.0).or_default();
         for (name, value) in attrs {
             entry.push((name.as_ref().to_string(), value.as_ref().to_string()));
         }
