@@ -8,8 +8,6 @@ pub type AnimationCallback = Rc<dyn Fn(f32)>;
 /// Handle for managing an active animation
 pub struct AnimationHandle {
     state: Rc<RefCell<AnimationState>>,
-    #[allow(dead_code)]
-    raf_id: Rc<RefCell<Option<u32>>>,
 }
 
 impl AnimationHandle {
@@ -213,7 +211,6 @@ impl UseAnimation {
 
         AnimationHandle {
             state: Rc::clone(&self.state),
-            raf_id: Rc::clone(&self.raf_id),
         }
     }
 

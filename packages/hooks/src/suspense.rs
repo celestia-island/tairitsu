@@ -119,12 +119,12 @@ struct ResourceRegistry {
 
 /// Type-erased resource state for the registry.
 ///
-/// We use Arc to allow cloning without knowing the inner type.
-#[derive(Clone)]
-#[allow(dead_code)] // Ready variant is reserved for future use
+/// Tracks only the state kind (no associated data).
+/// The actual typed data lives in `ResourceInner.thread_safe_state`.
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum ResourceStateOp {
     Loading,
-    Ready(Arc<dyn std::any::Any + Send + Sync>),
+    Ready,
     Error,
 }
 
@@ -188,7 +188,7 @@ impl ResourceRegistry {
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
         self.resources
             .get(&id)
-            .map(|arc| arc.lock().unwrap().clone())
+            .map(|arc| *arc.lock().unwrap())
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -219,21 +219,8 @@ impl ResourceRegistry {
         );
     }
 
-    #[allow(dead_code)]
-    fn remove_boundary(&mut self, component_id: runtime::ComponentId) {
-        self.suspense_boundaries.remove(&component_id);
-    }
-
     fn get_boundary(&self, component_id: runtime::ComponentId) -> Option<&SuspenseBoundaryState> {
         self.suspense_boundaries.get(&component_id)
-    }
-
-    #[allow(dead_code)]
-    fn get_boundary_mut(
-        &mut self,
-        component_id: runtime::ComponentId,
-    ) -> Option<&mut SuspenseBoundaryState> {
-        self.suspense_boundaries.get_mut(&component_id)
     }
 }
 
@@ -373,9 +360,7 @@ impl<T> Resource<T> {
         self.inner.state.borrow()
     }
 
-    /// Update the resource state and trigger a re-render.
-    #[allow(dead_code)]
-    fn update_state(&self, new_state: ResourceState<T>)
+    pub fn update_state(&self, new_state: ResourceState<T>)
     where
         T: Clone + Send + Sync + 'static,
     {
@@ -386,11 +371,7 @@ impl<T> Resource<T> {
         // Update the global registry
         let registry_state = match new_state {
             ResourceState::Loading => ResourceStateOp::Loading,
-            ResourceState::Ready(_) => {
-                // We can't directly convert T to Arc<dyn Any> here without cloning
-                // So we just mark as loading in the registry and rely on the thread_safe_state
-                ResourceStateOp::Loading
-            }
+            ResourceState::Ready(_) => ResourceStateOp::Ready,
             ResourceState::Error(_) => ResourceStateOp::Error,
         };
 
@@ -400,7 +381,6 @@ impl<T> Resource<T> {
                 .update_resource(self.resource_id, registry_state)
         });
 
-        // Notify affected components
         notify_resource_update(self.resource_id, affected);
     }
 
@@ -495,7 +475,7 @@ where
                 // Update the global registry
                 let registry_state = match new_state {
                     ResourceState::Loading => ResourceStateOp::Loading,
-                    ResourceState::Ready(_) => ResourceStateOp::Loading, // Placeholder
+                    ResourceState::Ready(_) => ResourceStateOp::Ready,
                     ResourceState::Error(_) => ResourceStateOp::Error,
                 };
 
@@ -642,7 +622,7 @@ pub fn resource_state(id: ResourceId) -> Option<ResourceStatus> {
     RESOURCE_REGISTRY.with(|registry| {
         registry.borrow().get_resource_state(id).map(|op| match op {
             ResourceStateOp::Loading => ResourceStatus::Loading,
-            ResourceStateOp::Ready(_) => ResourceStatus::Ready,
+            ResourceStateOp::Ready => ResourceStatus::Ready,
             ResourceStateOp::Error => ResourceStatus::Error,
         })
     })
@@ -703,7 +683,7 @@ pub fn trigger_resource_update<T: Clone + Send + Sync + 'static>(
 ) {
     let registry_state = match new_state {
         ResourceState::Loading => ResourceStateOp::Loading,
-        ResourceState::Ready(_) => ResourceStateOp::Loading, // Placeholder
+        ResourceState::Ready(_) => ResourceStateOp::Ready,
         ResourceState::Error(_) => ResourceStateOp::Error,
     };
 

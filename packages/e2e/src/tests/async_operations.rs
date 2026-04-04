@@ -6,6 +6,7 @@
 //! - Promise handling
 //! - async/await patterns
 //! - RequestAnimationFrame
+//! - Clipboard operations (copy/read)
 
 use anyhow::Result;
 use std::time::{Duration, Instant};
@@ -311,6 +312,177 @@ impl AsyncOperationsTests {
         }
     }
 
+    /// Test clipboard copy operation.
+    async fn test_clipboard_copy(&self, driver: &WebDriver) -> Result<TestResult> {
+        let start = Instant::now();
+        info!("Testing clipboard copy operation");
+
+        let base_url = std::env::var("WEBSITE_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let test_url = format!("{}/components/async", base_url);
+
+        driver.goto(&test_url).await?;
+        tokio::time::sleep(Duration::from_millis(500)).await;
+
+        let copy_button = driver.find(By::Css("#clipboard-copy")).await.ok();
+
+        if let Some(button) = copy_button {
+            button.click().await?;
+            tokio::time::sleep(Duration::from_millis(500)).await;
+
+            let result = driver
+                .execute(
+                    r#"
+                    async function getClipboardText() {
+                        try {
+                            return await navigator.clipboard.readText();
+                        } catch (e) {
+                            return 'PERMISSION_DENIED:' + e.message;
+                        }
+                    }
+                    return await getClipboardText();
+                    "#,
+                    vec![],
+                )
+                .await;
+
+            match result {
+                Ok(val) => {
+                    let text = val.json().to_string();
+                    info!("Clipboard read after copy: {}", text);
+
+                    if text.contains("PERMISSION_DENIED") {
+                        info!("Clipboard permission denied (expected in automated browsers)");
+                        let duration = start.elapsed().as_millis() as u64;
+                        Ok(TestResult {
+                            component: "Clipboard Copy".to_string(),
+                            status: crate::tests::TestStatus::Warning,
+                            message: "Clipboard permission denied (automated browser)".to_string(),
+                            duration_ms: duration,
+                            screenshot_path: None,
+                        })
+                    } else if !text.is_empty() {
+                        let duration = start.elapsed().as_millis() as u64;
+                        Ok(TestResult {
+                            component: "Clipboard Copy".to_string(),
+                            status: crate::tests::TestStatus::Success,
+                            message: format!("Clipboard copy succeeded: '{}'", text),
+                            duration_ms: duration,
+                            screenshot_path: None,
+                        })
+                    } else {
+                        Ok(TestResult::failure(
+                            "Clipboard Copy",
+                            "Clipboard was empty after copy operation",
+                        ))
+                    }
+                }
+                Err(e) => {
+                    info!("Clipboard JS execution failed: {}", e);
+                    let duration = start.elapsed().as_millis() as u64;
+                    Ok(TestResult {
+                        component: "Clipboard Copy".to_string(),
+                        status: crate::tests::TestStatus::Warning,
+                        message: "Clipboard API not available in this browser".to_string(),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                }
+            }
+        } else {
+            info!("Clipboard copy button not found, skipping clipboard copy test");
+            let duration = start.elapsed().as_millis() as u64;
+            Ok(TestResult {
+                component: "Clipboard Copy".to_string(),
+                status: crate::tests::TestStatus::Warning,
+                message: "Clipboard copy elements not found on page".to_string(),
+                duration_ms: duration,
+                screenshot_path: None,
+            })
+        }
+    }
+
+    /// Test clipboard read operation.
+    async fn test_clipboard_read(&self, driver: &WebDriver) -> Result<TestResult> {
+        let start = Instant::now();
+        info!("Testing clipboard read operation");
+
+        let base_url = std::env::var("WEBSITE_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string());
+        let test_url = format!("{}/components/async", base_url);
+
+        driver.goto(&test_url).await?;
+        tokio::time::sleep(Duration::from_millis(500)).await;
+
+        let paste_button = driver.find(By::Css("#clipboard-paste")).await.ok();
+        let paste_result = driver.find(By::Css("#clipboard-result")).await.ok();
+
+        if let (Some(button), Some(result_div)) = (paste_button, paste_result) {
+            button.click().await?;
+            tokio::time::sleep(Duration::from_millis(500)).await;
+
+            let result_text = result_div.text().await?;
+            info!("Paste result: {}", result_text);
+
+            let duration = start.elapsed().as_millis() as u64;
+
+            if !result_text.is_empty() {
+                Ok(TestResult {
+                    component: "Clipboard Read".to_string(),
+                    status: crate::tests::TestStatus::Success,
+                    message: format!("Clipboard read succeeded: '{}'", result_text),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            } else {
+                Ok(TestResult {
+                    component: "Clipboard Read".to_string(),
+                    status: crate::tests::TestStatus::Warning,
+                    message: "Clipboard read returned empty (may need permission grant)".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                })
+            }
+        } else {
+            info!("Clipboard read elements not found, skipping clipboard read test");
+
+            let permission_check = driver
+                .execute(
+                    r#"
+                    return navigator.clipboard ? 'AVAILABLE' : 'UNAVAILABLE';
+                    "#,
+                    vec![],
+                )
+                .await;
+
+            let duration = start.elapsed().as_millis() as u64;
+
+            match permission_check {
+                Ok(val) => {
+                    let status_text = val.json().to_string();
+                    info!("Clipboard API availability: {}", status_text);
+                    Ok(TestResult {
+                        component: "Clipboard Read".to_string(),
+                        status: crate::tests::TestStatus::Warning,
+                        message: format!(
+                            "Clipboard read elements not found (API: {})",
+                            status_text
+                        ),
+                        duration_ms: duration,
+                        screenshot_path: None,
+                    })
+                }
+                Err(_) => Ok(TestResult {
+                    component: "Clipboard Read".to_string(),
+                    status: crate::tests::TestStatus::Warning,
+                    message: "Clipboard read elements not found on page".to_string(),
+                    duration_ms: duration,
+                    screenshot_path: None,
+                }),
+            }
+        }
+    }
+
     /// Test RequestAnimationFrame.
     async fn test_request_animation_frame(&self, driver: &WebDriver) -> Result<TestResult> {
         let start = Instant::now();
@@ -434,6 +606,24 @@ impl Test for AsyncOperationsTests {
             Err(e) => {
                 tracing::error!("RequestAnimationFrame test failed: {}", e);
                 results.push(TestResult::error("RequestAnimationFrame", &e.to_string()));
+            }
+        }
+
+        // Test 7: Clipboard copy
+        match self.test_clipboard_copy(driver).await {
+            Ok(result) => results.push(result),
+            Err(e) => {
+                tracing::error!("Clipboard copy test failed: {}", e);
+                results.push(TestResult::error("Clipboard Copy", &e.to_string()));
+            }
+        }
+
+        // Test 8: Clipboard read
+        match self.test_clipboard_read(driver).await {
+            Ok(result) => results.push(result),
+            Err(e) => {
+                tracing::error!("Clipboard read test failed: {}", e);
+                results.push(TestResult::error("Clipboard Read", &e.to_string()));
             }
         }
 

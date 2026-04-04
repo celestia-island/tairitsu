@@ -317,6 +317,18 @@ impl Platform for MockPlatform {
         None
     }
 
+    fn clipboard_write_text_async(
+        &self,
+        _text: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    ) {
+        on_complete(Ok(()));
+    }
+
+    fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>) {
+        on_complete(Err("clipboard not available in mock".to_string()));
+    }
+
     fn prefers_dark_mode(&self) -> bool {
         false
     }

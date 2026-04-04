@@ -147,7 +147,6 @@ impl ResizeObserverSizeHost for SsrHostState {
     }
 }
 
-// Implement the platform-helpers Host trait
 impl crate::bindings::PlatformHelpersHost for SsrHostState {
     fn set_timeout(&mut self, _callback_id: u64, _ms: i32) -> i32 {
         1
@@ -193,6 +192,18 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
 
     fn read_clipboard(&mut self) -> Option<String> {
         None
+    }
+
+    fn clipboard_write_text_promise(&mut self, _text: String) -> u64 {
+        0
+    }
+
+    fn clipboard_read_text_promise(&mut self) -> u64 {
+        0
+    }
+
+    fn fetch_promise(&mut self, _url: String, _options: Option<String>) -> u64 {
+        0
     }
 
     fn prefers_dark_mode(&mut self) -> bool {

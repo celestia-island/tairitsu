@@ -23,6 +23,20 @@ interface platform-helpers {
 
     scroll-to: func(top: f64, behavior: string);
 
+    // -- Promise polling (async/await bridge) --
+
+    /// Create a promise from navigator.clipboard.writeText().
+    /// Returns a promise-id that can be polled.
+    clipboard-write-text-promise: func(text: string) -> u64;
+
+    /// Create a promise from navigator.clipboard.readText().
+    /// Returns a promise-id that can be polled.
+    clipboard-read-text-promise: func() -> u64;
+
+    /// Create a promise from fetch().
+    /// Returns a promise-id that can be polled.
+    fetch-promise: func(url: string, options: option<string>) -> u64;
+
     // -- Clipboard (needs clipboard handle + async navigation) --
 
     copy-to-clipboard: func(text: string) -> bool;

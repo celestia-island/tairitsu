@@ -79,6 +79,12 @@ pub trait Platform: Sized + 'static {
     fn on_resize(&self, callback: Box<dyn FnMut(i32, i32)>);
     fn copy_to_clipboard(&self, text: &str) -> bool;
     fn read_clipboard(&self) -> Option<String>;
+    fn clipboard_write_text_async(
+        &self,
+        text: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    );
+    fn clipboard_read_text_async(&self, on_complete: Box<dyn FnOnce(Result<String, String>)>);
     fn prefers_dark_mode(&self) -> bool;
     fn get_element_rect_by_id(&self, id: &str) -> Option<DomRect>;
     fn get_bounding_rect_by_class(

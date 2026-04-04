@@ -35,7 +35,6 @@ use super::{Fetcher, Resource, http_fetcher::HttpFetcher};
 ///     Resource::Error(e) => view! { "Error: {e}" },
 /// }
 /// ```
-#[allow(dead_code)]
 pub fn use_fetch<T, F>(url: &str, parser: F) -> Rc<RefCell<Resource<T>>>
 where
     T: Clone + Send + 'static,
@@ -48,7 +47,6 @@ where
 ///
 /// This is a more flexible version of `use_fetch` that allows you to provide
 /// a custom `Fetcher` implementation.
-#[allow(dead_code)]
 pub fn use_fetch_with_fetcher<T, F, Fr>(
     url: &str,
     parser: F,
@@ -63,7 +61,7 @@ where
 }
 
 /// Internal implementation of fetch with optional fetcher
-#[allow(dead_code, unused_variables)]
+#[allow(unused_variables)]
 fn use_fetch_with_fetcher_impl<T, F, Fr>(
     url: &str,
     parser: F,
@@ -150,7 +148,6 @@ where
 ///     Resource::Error(e) => view! { "Error: {e}" },
 /// }
 /// ```
-#[allow(dead_code)]
 pub fn use_fetch_json<T>(url: &str) -> Rc<RefCell<Resource<T>>>
 where
     T: serde::de::DeserializeOwned + Clone + Send + 'static,
@@ -161,7 +158,6 @@ where
 }
 
 /// Hook for fetching data with a custom fetcher and automatic JSON parsing
-#[allow(dead_code)]
 pub fn use_fetch_json_with_fetcher<T, Fr>(url: &str, fetcher: Fr) -> Rc<RefCell<Resource<T>>>
 where
     T: serde::de::DeserializeOwned + Clone + Send + 'static,
@@ -209,7 +205,6 @@ where
 ///     }
 /// }
 /// ```
-#[allow(dead_code)]
 pub fn use_lazy_fetch<T, F>(url: &str, parser: F) -> (Rc<RefCell<Resource<T>>>, impl Fn())
 where
     T: Clone + Send + 'static,
