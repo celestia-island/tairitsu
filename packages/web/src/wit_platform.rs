@@ -315,6 +315,9 @@ pub mod wasm_impl {
         eprintln!("[WitPlatform] {}", message);
     }
 
+    type GeoCallback =
+        Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>;
+
     thread_local! {
         static EVENT_CALLBACKS: RefCell<EventCallbackMap> = RefCell::new(HashMap::new());
         static ELEMENT_LISTENERS: RefCell<HashMap<(u64, String), u64>>
@@ -328,7 +331,7 @@ pub mod wasm_impl {
         static WINDOW_RESIZE_CALLBACKS: RefCell<HashMap<u64, WindowResizeCallback>> = RefCell::new(HashMap::new());
         static VIDEO_FRAME_CALLBACKS: RefCell<HashMap<u64, VideoFrameCallback>> = RefCell::new(HashMap::new());
         static PROMISE_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
-        static GEO_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<tairitsu_vdom::GeoPosition, tairitsu_vdom::GeoPositionError>)>>>> = RefCell::new(HashMap::new());
+        static GEO_CALLBACKS: RefCell<HashMap<u64, GeoCallback>> = RefCell::new(HashMap::new());
         static FILE_READER_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
         static FILE_READER_BIN_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<Vec<u8>, String>)>>> = RefCell::new(HashMap::new());
         static IDB_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(Result<String, String>)>>> = RefCell::new(HashMap::new());
@@ -1374,8 +1377,7 @@ pub mod wasm_impl {
             encoding: Option<&str>,
         ) -> Result<String, String> {
             bindings::tairitsu_browser::full::platform_helpers::file_reader_sync_read_as_text(
-                blob,
-                encoding.map(|s| s.to_string()),
+                blob, encoding,
             )
         }
 
@@ -1395,7 +1397,7 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::file_reader_read_as_text(
                 blob,
-                encoding.map(|s| s.to_string()),
+                encoding,
                 callback_id,
             );
         }
@@ -1435,11 +1437,7 @@ pub mod wasm_impl {
                     }),
                 );
             });
-            bindings::tairitsu_browser::full::platform_helpers::idb_open(
-                name.to_string(),
-                version,
-                callback_id,
-            )
+            bindings::tairitsu_browser::full::platform_helpers::idb_open(name, version, callback_id)
         }
 
         fn idb_put(
@@ -1461,9 +1459,9 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::idb_put(
                 db,
-                store_name.to_string(),
-                value.to_string(),
-                key.map(|s| s.to_string()),
+                store_name,
+                value,
+                key,
                 callback_id,
             );
         }
@@ -1487,8 +1485,8 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::idb_get(
                 db,
-                store_name.to_string(),
-                key.to_string(),
+                store_name,
+                key,
                 callback_id,
             );
         }
@@ -1511,8 +1509,8 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::idb_delete(
                 db,
-                store_name.to_string(),
-                key.to_string(),
+                store_name,
+                key,
                 callback_id,
             );
         }
@@ -1540,7 +1538,7 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::idb_get_all(
                 db,
-                store_name.to_string(),
+                store_name,
                 callback_id,
             );
         }
@@ -1562,7 +1560,7 @@ pub mod wasm_impl {
             });
             bindings::tairitsu_browser::full::platform_helpers::idb_clear(
                 db,
-                store_name.to_string(),
+                store_name,
                 callback_id,
             );
         }
