@@ -130,6 +130,16 @@ interface geolocation-callbacks {
     on-position-error: func(callback-id: u64, error: geo-position-error);
 }
 
+interface idb-callbacks {
+    on-idb-request-success: func(callback-id: u64, %result: option<string>);
+    on-idb-request-error: func(callback-id: u64, error: string);
+}
+
+interface file-reader-callbacks {
+    on-file-reader-load: func(callback-id: u64, %result: string);
+    on-file-reader-error: func(callback-id: u64, error: string);
+}
+
 interface lifecycle {
     start: func() -> result<_, string>;
 }
@@ -227,6 +237,42 @@ interface platform-helpers {
     // -- Custom helpers (not W3C APIs) --
 
     draw-qrcode-on-canvas-by-id: func(canvas-id: string, matrix: list<list<bool>>, modules: u64, color: string, background: string) -> bool;
+
+    // -- FileReader (sync convenience wrappers) --
+
+    /// Read a blob/file as text synchronously (returns result directly).
+    file-reader-sync-read-as-text: func(blob: u64, encoding: option<string>) -> result<string, string>;
+
+    /// Read a blob/file as ArrayBuffer synchronously (returns bytes directly).
+    file-reader-sync-read-as-array-buffer: func(blob: u64) -> result<list<u8>, string>;
+
+    // -- FileReader async (callback-based) --
+
+    /// Read a blob/file as text asynchronously.
+    file-reader-read-as-text: func(blob: u64, encoding: option<string>, callback-id: u64);
+
+    /// Read a blob/file as ArrayBuffer asynchronously.
+    file-reader-read-as-array-buffer: func(blob: u64, callback-id: u64);
+
+    // -- IndexedDB convenience (callback-based) --
+
+    /// Open an IndexedDB database.
+    idb-open: func(name: string, version: option<u64>, callback-id: u64) -> u64;
+
+    /// Put a value into an object store.
+    idb-put: func(db: u64, store-name: string, value: string, key: option<string>, callback-id: u64);
+
+    /// Get a value from an object store.
+    idb-get: func(db: u64, store-name: string, key: string, callback-id: u64);
+
+    /// Delete a value from an object store.
+    idb-delete: func(db: u64, store-name: string, key: string, callback-id: u64);
+
+    /// Get all values from an object store.
+    idb-get-all: func(db: u64, store-name: string, callback-id: u64);
+
+    /// Delete an entire object store.
+    idb-clear: func(db: u64, store-name: string, callback-id: u64);
 }
 
 interface component-types {
@@ -15753,8 +15799,8 @@ interface cache-storage {
     /// `keys()` operation.
     keys: func(self: cache-storage-handle) -> u64;
 }
-/// Full browser world — 573 interfaces total
-/// (16 handwritten + 557 W3C auto-generated).
+/// Full browser world — 575 interfaces total
+/// (18 handwritten + 557 W3C auto-generated).
 world browser-full {
     import event-callbacks;
     import timer-callbacks;
@@ -15767,6 +15813,8 @@ world browser-full {
     import video-frame-callbacks;
     import promise-callbacks;
     import geolocation-callbacks;
+    import idb-callbacks;
+    import file-reader-callbacks;
     import lifecycle;
     import console;
     import event-target;
@@ -16341,5 +16389,7 @@ world browser-full {
     export video-frame-callbacks;
     export promise-callbacks;
     export geolocation-callbacks;
+    export idb-callbacks;
+    export file-reader-callbacks;
 }
 

@@ -7,8 +7,8 @@
 /// Regenerate with: just wit-gen
 package tairitsu-browser:full@0.2.0;
 
-/// Full browser world — 573 interfaces total
-/// (16 handwritten + 557 W3C auto-generated).
+/// Full browser world — 575 interfaces total
+/// (18 handwritten + 557 W3C auto-generated).
 world browser-full {
     import event-callbacks;
     import timer-callbacks;
@@ -21,6 +21,8 @@ world browser-full {
     import video-frame-callbacks;
     import promise-callbacks;
     import geolocation-callbacks;
+    import idb-callbacks;
+    import file-reader-callbacks;
     import lifecycle;
     import console;
     import event-target;
@@ -595,5 +597,7 @@ world browser-full {
     export video-frame-callbacks;
     export promise-callbacks;
     export geolocation-callbacks;
+    export idb-callbacks;
+    export file-reader-callbacks;
 }
 

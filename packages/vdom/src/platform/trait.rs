@@ -139,6 +139,69 @@ pub trait Platform: Sized + 'static {
         timeout: u32,
         maximum_age: u32,
     );
+
+    // -- FileReader --
+
+    fn file_reader_sync_read_as_text(
+        &self,
+        blob: u64,
+        encoding: Option<&str>,
+    ) -> Result<String, String>;
+    fn file_reader_sync_read_as_array_buffer(&self, blob: u64) -> Result<Vec<u8>, String>;
+    fn file_reader_read_as_text(
+        &self,
+        blob: u64,
+        encoding: Option<&str>,
+        on_complete: Box<dyn FnOnce(Result<String, String>)>,
+    );
+    fn file_reader_read_as_array_buffer(
+        &self,
+        blob: u64,
+        on_complete: Box<dyn FnOnce(Result<Vec<u8>, String>)>,
+    );
+
+    // -- IndexedDB --
+
+    fn idb_open(
+        &self,
+        name: &str,
+        version: Option<u64>,
+        on_complete: Box<dyn FnOnce(Result<u64, String>)>,
+    ) -> u64;
+    fn idb_put(
+        &self,
+        db: u64,
+        store_name: &str,
+        value: &str,
+        key: Option<&str>,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    );
+    fn idb_get(
+        &self,
+        db: u64,
+        store_name: &str,
+        key: &str,
+        on_complete: Box<dyn FnOnce(Result<Option<String>, String>)>,
+    );
+    fn idb_delete(
+        &self,
+        db: u64,
+        store_name: &str,
+        key: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    );
+    fn idb_get_all(
+        &self,
+        db: u64,
+        store_name: &str,
+        on_complete: Box<dyn FnOnce(Result<Vec<String>, String>)>,
+    );
+    fn idb_clear(
+        &self,
+        db: u64,
+        store_name: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    );
 }
 
 pub struct ResizeObserverEntry {

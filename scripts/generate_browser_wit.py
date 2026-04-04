@@ -1296,6 +1296,7 @@ EXPORTED_CALLBACKS = [
     "mutation-observer-callbacks", "media-query-list-callbacks",
     "scroll-callbacks", "window-resize-callbacks",
     "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
+    "idb-callbacks", "file-reader-callbacks",
 ]
 
 

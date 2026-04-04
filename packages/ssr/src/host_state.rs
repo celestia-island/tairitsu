@@ -284,6 +284,53 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
         _maximum_age: u32,
     ) {
     }
+
+    fn file_reader_sync_read_as_text(
+        &mut self,
+        _blob: u64,
+        _encoding: Option<String>,
+    ) -> std::result::Result<String, String> {
+        Err("FileReader not available in SSR".to_string())
+    }
+
+    fn file_reader_sync_read_as_array_buffer(
+        &mut self,
+        _blob: u64,
+    ) -> std::result::Result<Vec<u8>, String> {
+        Err("FileReader not available in SSR".to_string())
+    }
+
+    fn file_reader_read_as_text(
+        &mut self,
+        _blob: u64,
+        _encoding: Option<String>,
+        _callback_id: u64,
+    ) {
+    }
+
+    fn file_reader_read_as_array_buffer(&mut self, _blob: u64, _callback_id: u64) {}
+
+    fn idb_open(&mut self, _name: String, _version: Option<u64>, _callback_id: u64) -> u64 {
+        0
+    }
+
+    fn idb_put(
+        &mut self,
+        _db: u64,
+        _store_name: String,
+        _value: String,
+        _key: Option<String>,
+        _callback_id: u64,
+    ) {
+    }
+
+    fn idb_get(&mut self, _db: u64, _store_name: String, _key: String, _callback_id: u64) {}
+
+    fn idb_delete(&mut self, _db: u64, _store_name: String, _key: String, _callback_id: u64) {}
+
+    fn idb_get_all(&mut self, _db: u64, _store_name: String, _callback_id: u64) {}
+
+    fn idb_clear(&mut self, _db: u64, _store_name: String, _callback_id: u64) {}
 }
 
 #[cfg(test)]

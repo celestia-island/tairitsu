@@ -132,3 +132,15 @@ interface geolocation-callbacks {
     on-position-success: func(callback-id: u64, position: geo-position);
     on-position-error: func(callback-id: u64, error: geo-position-error);
 }
+
+/// IndexedDB callback - host delivers request completion to the component.
+interface idb-callbacks {
+    on-idb-request-success: func(callback-id: u64, %result: option<string>);
+    on-idb-request-error: func(callback-id: u64, error: string);
+}
+
+/// FileReader callback - host delivers file read completion to the component.
+interface file-reader-callbacks {
+    on-file-reader-load: func(callback-id: u64, %result: string);
+    on-file-reader-error: func(callback-id: u64, error: string);
+}

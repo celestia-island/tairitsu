@@ -15537,6 +15537,8 @@ world w3c-idl-full {
     import video-frame-callbacks;
     import promise-callbacks;
     import geolocation-callbacks;
+    import idb-callbacks;
+    import file-reader-callbacks;
     import lifecycle;
     import console;
     import event-target;

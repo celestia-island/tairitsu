@@ -386,6 +386,94 @@ impl Platform for MockPlatform {
             message: "geolocation not available in mock".to_string(),
         });
     }
+
+    fn file_reader_sync_read_as_text(
+        &self,
+        _blob: u64,
+        _encoding: Option<&str>,
+    ) -> Result<String, String> {
+        Err("file reader not available in mock".to_string())
+    }
+
+    fn file_reader_sync_read_as_array_buffer(&self, _blob: u64) -> Result<Vec<u8>, String> {
+        Err("file reader not available in mock".to_string())
+    }
+
+    fn file_reader_read_as_text(
+        &self,
+        _blob: u64,
+        _encoding: Option<&str>,
+        on_complete: Box<dyn FnOnce(Result<String, String>)>,
+    ) {
+        on_complete(Err("file reader not available in mock".to_string()));
+    }
+
+    fn file_reader_read_as_array_buffer(
+        &self,
+        _blob: u64,
+        on_complete: Box<dyn FnOnce(Result<Vec<u8>, String>)>,
+    ) {
+        on_complete(Err("file reader not available in mock".to_string()));
+    }
+
+    fn idb_open(
+        &self,
+        _name: &str,
+        _version: Option<u64>,
+        on_complete: Box<dyn FnOnce(Result<u64, String>)>,
+    ) -> u64 {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+        0
+    }
+
+    fn idb_put(
+        &self,
+        _db: u64,
+        _store_name: &str,
+        _value: &str,
+        _key: Option<&str>,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    ) {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+    }
+
+    fn idb_get(
+        &self,
+        _db: u64,
+        _store_name: &str,
+        _key: &str,
+        on_complete: Box<dyn FnOnce(Result<Option<String>, String>)>,
+    ) {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+    }
+
+    fn idb_delete(
+        &self,
+        _db: u64,
+        _store_name: &str,
+        _key: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    ) {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+    }
+
+    fn idb_get_all(
+        &self,
+        _db: u64,
+        _store_name: &str,
+        on_complete: Box<dyn FnOnce(Result<Vec<String>, String>)>,
+    ) {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+    }
+
+    fn idb_clear(
+        &self,
+        _db: u64,
+        _store_name: &str,
+        on_complete: Box<dyn FnOnce(Result<(), String>)>,
+    ) {
+        on_complete(Err("indexeddb not available in mock".to_string()));
+    }
 }
 
 // -- Test 1: ElementRef Mounting Tests -------------------------------------
