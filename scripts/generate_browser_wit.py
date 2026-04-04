@@ -1176,6 +1176,7 @@ def run_generate(
             log_info(
                 f"dry-run write {dest.name} ({iface_count} interfaces, {len(wit_content):,} bytes)"
             )
+            written += 1
             continue
 
         dest.write_text(wit_content, encoding="utf-8")
@@ -1190,11 +1191,14 @@ def run_generate(
             f'    import {wit_domain_name}-world from "{domain}";'
         )
 
-    if not dry_run and written > 0:
+    if written > 0:
         print()
-        log_info(f"Result : {written} files written, {skipped} skipped")
+        if dry_run:
+            log_info(f"Result : {written} files would be written, {skipped} skipped")
+        else:
+            log_info(f"Result : {written} files written, {skipped} skipped")
 
-        # Generate unified browser-full.wit
+        # Generate unified browser-full.wit (monolithic + composed)
         generate_full_world(output_dir, dry_run)
 
 
@@ -1242,23 +1246,19 @@ def _extract_interface_names(interfaces: List[str]) -> List[str]:
     return names
 
 
-def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
+def _extract_all_interfaces(
+    handwritten_dir: Path, generated_dir: Path
+) -> Tuple[List[str], List[str], List[str], List[str], Set[str]]:
     """
-    Generate a unified browser-full.wit that combines:
-      1. Auto-generated domain interfaces from wit/generated/*.wit
-      2. Hand-written framework interfaces from wit/handwritten/*.wit
+    Extract and deduplicate interfaces from handwritten and generated WIT files.
+    
+    Returns:
+        handwritten_interfaces: interface blocks from handwritten files
+        auto_interfaces: interface blocks from generated files (excluding handwritten)
+        hw_names: interface names from handwritten
+        auto_names: interface names from generated
+        seen_interface_names: all seen interface names
     """
-    generated_dir = output_dir
-    if not generated_dir.exists():
-        log_warn("Cannot generate browser-full.wit: generated directory not found")
-        return
-
-    handwritten_dir = generated_dir.parent / "handwritten"
-    if not handwritten_dir.exists():
-        log_warn("Cannot generate browser-full.wit: handwritten directory not found")
-        return
-
-    # 1. Collect hand-written interfaces first (they take priority)
     seen_interface_names: Set[str] = set()
     handwritten_interfaces: List[str] = []
     for hw_file in sorted(handwritten_dir.glob("*.wit")):
@@ -1269,7 +1269,6 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
                 seen_interface_names.add(m.group(1))
             handwritten_interfaces.append(iface_block)
 
-    # 2. Collect auto-generated interfaces (skip names already in handwritten)
     auto_interfaces: List[str] = []
     for domain_file in sorted(generated_dir.glob("*.wit")):
         content = domain_file.read_text(encoding="utf-8")
@@ -1281,55 +1280,120 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
 
     hw_names = _extract_interface_names(handwritten_interfaces)
     auto_names = _extract_interface_names(auto_interfaces)
+
+    return (
+        handwritten_interfaces,
+        auto_interfaces,
+        hw_names,
+        auto_names,
+        seen_interface_names,
+    )
+
+
+EXPORTED_CALLBACKS = [
+    "event-callbacks", "lifecycle", "timer-callbacks",
+    "animation-callbacks", "resize-observer-callbacks",
+    "mutation-observer-callbacks", "media-query-list-callbacks",
+    "scroll-callbacks", "window-resize-callbacks",
+    "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
+]
+
+
+def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
+    """
+    Generate browser-full.wit in two formats:
+    
+    1. **Composed directory** (`wit/composed/`): Multi-file WIT package where
+       interface definitions are split across files and `browser-full.wit` is
+       a pure world block (~600 lines). This is the format used by wit-bindgen
+       and wasmtime for code generation.
+    
+    2. **Monolithic file** (`wit/browser-full.wit`): All interfaces inlined
+       into a single file (~16K lines). Kept for backward compatibility and
+       as a human-readable reference.
+    """
+    generated_dir = output_dir
+    if not generated_dir.exists():
+        log_warn("Cannot generate browser-full.wit: generated directory not found")
+        return
+
+    handwritten_dir = generated_dir.parent / "handwritten"
+    if not handwritten_dir.exists():
+        log_warn("Cannot generate browser-full.wit: handwritten directory not found")
+        return
+
+    (
+        handwritten_interfaces,
+        auto_interfaces,
+        hw_names,
+        auto_names,
+        seen_interface_names,
+    ) = _extract_all_interfaces(handwritten_dir, generated_dir)
+
     all_names = hw_names + auto_names
 
     if not all_names:
         log_warn("No interfaces found to include in browser-full.wit")
         return
 
-    # 3. Build world imports/exports
-    auto_imports = "\n".join(f"    import {name};" for name in auto_names)
-    hw_imports = "\n".join(f"    import {name};" for name in hw_names)
+    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
 
-    exported_callbacks = [
-        "event-callbacks", "lifecycle", "timer-callbacks",
-        "animation-callbacks", "resize-observer-callbacks",
-        "mutation-observer-callbacks", "media-query-list-callbacks",
-        "scroll-callbacks", "window-resize-callbacks",
-        "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
-    ]
-    exports = "\n".join(f"    export {name};" for name in exported_callbacks)
+    handwritten_section = "\n\n".join(handwritten_interfaces)
+    auto_section = "\n\n".join(auto_interfaces)
 
-    # 4. Assemble the full WIT file
-    header = """/// Unified browser world — combines auto-generated domain interfaces
-/// and hand-written framework interfaces.
+    # -----------------------------------------------------------------------
+    # 1. Generate composed directory (multi-file WIT package)
+    # -----------------------------------------------------------------------
+    composed_dir = generated_dir.parent / "composed"
+
+    if not dry_run:
+        if composed_dir.exists():
+            for f in composed_dir.glob("*.wit"):
+                f.unlink()
+        composed_dir.mkdir(parents=True, exist_ok=True)
+
+    _generate_composed(
+        composed_dir,
+        handwritten_dir,
+        generated_dir,
+        all_names,
+        hw_names,
+        auto_names,
+        dry_run,
+    )
+
+    # -----------------------------------------------------------------------
+    # 2. Generate monolithic browser-full.wit (backward compat / reference)
+    # -----------------------------------------------------------------------
+    bf_header = """/// browser-full — monolithic world combining W3C auto-generated
+/// interfaces with handwritten framework helper interfaces.
 ///
-/// Auto-generated by: scripts/generate_browser_wit.py
-/// W3C/WHATWG webref: https://github.com/w3c/webref (MIT)
+/// AUTO-GENERATED by: scripts/generate_browser_wit.py
+/// DO NOT EDIT MANUALLY — changes will be overwritten.
 ///
-/// Hand-written interfaces: wit/handwritten/*.wit
-/// Auto-generated interfaces: wit/generated/*.wit
+/// For code generation, use the composed directory (wit/composed/) instead.
+/// This file is kept as a human-readable reference.
 ///
 /// Regenerate with: just wit-gen
 package tairitsu-browser:full@0.2.0;
 
 """
 
-    world_block = f"""/// Full browser world — {len(all_names)} interfaces total.
+    bf_world = f"""/// Full browser world — {len(all_names)} interfaces total
+/// ({len(hw_names)} handwritten + {len(auto_names)} W3C auto-generated).
 world browser-full {{
-{hw_imports}
-{auto_imports}
+{all_imports}
 {exports}
 }}
 """
 
-    handwritten_section = "\n\n".join(handwritten_interfaces)
-    auto_section = "\n\n".join(auto_interfaces)
-    full_content = header + handwritten_section + "\n\n" + auto_section + "\n" + world_block + "\n"
+    bf_content = bf_header + handwritten_section + "\n\n" + auto_section + "\n" + bf_world + "\n"
+    bf_dest = generated_dir.parent / "browser-full.wit"
 
-    # 5. Write both files
-
-    # w3c-idl-full.wit: only W3C auto-generated interfaces
+    # -----------------------------------------------------------------------
+    # 3. Generate w3c-idl-full.wit (W3C-only reference)
+    # -----------------------------------------------------------------------
     w3c_header = """/// W3C WebIDL auto-generated interfaces.
 ///
 /// AUTO-GENERATED by: scripts/generate_browser_wit.py
@@ -1343,24 +1407,52 @@ package tairitsu-browser:w3c-idl-full@0.2.0;
 
     w3c_world = f"""/// W3C WebIDL world — {len(auto_names)} interfaces.
 world w3c-idl-full {{
-{auto_imports}
+{all_imports}
 }}
 """
 
     w3c_content = w3c_header + auto_section + "\n" + w3c_world + "\n"
     w3c_dest = generated_dir.parent / "w3c-idl-full.wit"
 
-    # browser-full.wit: composition of W3C + handwritten interfaces
-    bf_header = """/// browser-full — composition world combining W3C auto-generated
-/// interfaces with handwritten framework helper interfaces.
+    if dry_run:
+        log_info(f"dry-run write {bf_dest.name} ({len(all_names)} interfaces, {len(bf_content):,} bytes)")
+        log_info(f"dry-run write {w3c_dest.name} ({len(auto_names)} interfaces, {len(w3c_content):,} bytes)")
+        return
+
+    bf_dest.write_text(bf_content, encoding="utf-8")
+    log_ok(f"Wrote {bf_dest.name:<30} {len(all_names):3d} interfaces ({len(bf_content):,} bytes) [monolithic]")
+
+    w3c_dest.write_text(w3c_content, encoding="utf-8")
+    log_ok(f"Wrote {w3c_dest.name:<30} {len(auto_names):3d} interfaces ({len(w3c_content):,} bytes)")
+
+
+def _generate_composed(
+    composed_dir: Path,
+    handwritten_dir: Path,
+    generated_dir: Path,
+    all_names: List[str],
+    hw_names: List[str],
+    auto_names: List[str],
+    dry_run: bool,
+) -> None:
+    """
+    Generate the composed/ directory as a multi-file WIT package.
+    
+    Layout:
+        composed/
+          browser-full.wit  — package declaration + world block only
+          _handwritten.wit  — all handwritten interface definitions
+          _domain-*.wit     — auto-generated interfaces per domain
+    """
+    all_imports = "\n".join(f"    import {name};" for name in all_names)
+    exports = "\n".join(f"    export {name};" for name in EXPORTED_CALLBACKS)
+
+    bf_header = """/// browser-full — composition world for tairitsu-browser:full package.
 ///
 /// AUTO-GENERATED by: scripts/generate_browser_wit.py
 /// DO NOT EDIT MANUALLY — changes will be overwritten.
 ///
-/// Sources:
-///   W3C interfaces:  w3c-idl-full.wit (auto-generated from WebIDL)
-///   Framework helpers: handwritten/*.wit (manually maintained)
-///
+/// Interface definitions are in sibling .wit files in this directory.
 /// Regenerate with: just wit-gen
 package tairitsu-browser:full@0.2.0;
 
@@ -1369,25 +1461,74 @@ package tairitsu-browser:full@0.2.0;
     bf_world = f"""/// Full browser world — {len(all_names)} interfaces total
 /// ({len(hw_names)} handwritten + {len(auto_names)} W3C auto-generated).
 world browser-full {{
-{hw_imports}
-{auto_imports}
+{all_imports}
 {exports}
 }}
 """
 
-    bf_content = bf_header + handwritten_section + "\n\n" + auto_section + "\n" + bf_world + "\n"
-    bf_dest = generated_dir.parent / "browser-full.wit"
+    bf_content = bf_header + bf_world + "\n"
+    bf_dest = composed_dir / "browser-full.wit"
 
     if dry_run:
-        log_info(f"dry-run write {w3c_dest.name} ({len(auto_names)} interfaces)")
-        log_info(f"dry-run write {bf_dest.name} ({len(all_names)} interfaces)")
+        log_info(f"dry-run write composed/{bf_dest.name} ({len(all_names)} interfaces, {len(bf_content):,} bytes)")
         return
 
-    w3c_dest.write_text(w3c_content, encoding="utf-8")
-    log_ok(f"Wrote {w3c_dest.name:<30} {len(auto_names):3d} interfaces ({len(w3c_content):,} bytes)")
-
     bf_dest.write_text(bf_content, encoding="utf-8")
-    log_ok(f"Wrote {bf_dest.name:<30} {len(all_names):3d} interfaces ({len(bf_content):,} bytes)")
+    log_ok(f"Wrote composed/{bf_dest.name:<30} {len(all_names):3d} interfaces ({len(bf_content):,} bytes) [world only]")
+
+    header = """/// Handwritten framework interfaces for tairitsu-browser:full package.
+///
+/// AUTO-GENERATED by: scripts/generate_browser_wit.py
+/// DO NOT EDIT MANUALLY — changes will be overwritten.
+///
+/// Source: wit/handwritten/*.wit
+/// Regenerate with: just wit-gen
+
+"""
+
+    handwritten_blocks: List[str] = []
+    for hw_file in sorted(handwritten_dir.glob("*.wit")):
+        content = hw_file.read_text(encoding="utf-8")
+        for iface_block in _extract_interfaces_from_wit(content):
+            handwritten_blocks.append(iface_block)
+
+    if handwritten_blocks:
+        hw_content = header + "\n\n".join(handwritten_blocks) + "\n"
+        hw_dest = composed_dir / "_handwritten.wit"
+        hw_dest.write_text(hw_content, encoding="utf-8")
+        log_ok(f"Wrote composed/{hw_dest.name:<30} {len(handwritten_blocks):3d} interfaces ({len(hw_content):,} bytes)")
+
+    seen_composed: Set[str] = set(hw_names)
+
+    for domain_file in sorted(generated_dir.glob("*.wit")):
+        domain_name = domain_file.stem
+        content = domain_file.read_text(encoding="utf-8")
+
+        domain_ifaces: List[str] = []
+        for iface_block in _extract_interfaces_from_wit(content):
+            m = re.match(r"\s*interface\s+([\w-]+)", iface_block)
+            if m:
+                iface_name = m.group(1)
+                if iface_name not in seen_composed:
+                    seen_composed.add(iface_name)
+                    domain_ifaces.append(iface_block)
+
+        if not domain_ifaces:
+            continue
+
+        d_header = f"""/// Auto-generated interfaces from domain: {domain_name}
+///
+/// AUTO-GENERATED by: scripts/generate_browser_wit.py
+/// DO NOT EDIT MANUALLY — changes will be overwritten.
+///
+/// Source: wit/generated/{domain_file.name}
+/// Regenerate with: just wit-gen
+
+"""
+        d_content = d_header + "\n\n".join(domain_ifaces) + "\n"
+        d_dest = composed_dir / f"_domain-{domain_name}.wit"
+        d_dest.write_text(d_content, encoding="utf-8")
+        log_ok(f"Wrote composed/{d_dest.name:<30} {len(domain_ifaces):3d} interfaces ({len(d_content):,} bytes)")
 
 
 # ---------------------------------------------------------------------------
