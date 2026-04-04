@@ -17,7 +17,10 @@ pub mod wit_platform;
 #[cfg(feature = "browser")]
 pub use browser::BrowserPlatform;
 #[cfg(feature = "i18n")]
-pub use i18n::*;
+pub use i18n::{
+    provide_i18n, set_locale, translate, translate_or_key, use_locale, I18nProvider, I18nState,
+    Language, TextDirection,
+};
 pub use prelude::*;
 #[cfg(feature = "router")]
 pub use router::*;
