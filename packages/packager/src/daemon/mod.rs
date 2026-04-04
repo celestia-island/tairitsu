@@ -143,12 +143,9 @@ pub fn daemonize_self() -> std::io::Result<()> {
         .stdout(stdout)
         .stderr(stderr);
 
-    daemonize.start().map_err(|e| {
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("daemonize failed: {}", e),
-        )
-    })
+    daemonize
+        .start()
+        .map_err(|e| std::io::Error::other(format!("daemonize failed: {}", e)))
 }
 
 /// Write daemon status to log file
@@ -195,11 +192,10 @@ pub fn read_pid() -> std::io::Result<u32> {
 
 /// Check if a daemon is running
 pub fn is_daemon_running() -> bool {
-    if let Ok(pid) = read_pid() {
-        if pid > 0 {
-            // Check if process exists
-            return check_process_exists(pid);
-        }
+    if let Ok(pid) = read_pid()
+        && pid > 0
+    {
+        return check_process_exists(pid);
     }
     false
 }
@@ -233,27 +229,27 @@ pub fn check_process_exists(pid: u32) -> bool {
 
 /// Kill the daemon process
 pub fn kill_daemon() -> std::io::Result<bool> {
-    if let Ok(pid) = read_pid() {
-        if pid > 0 && check_process_exists(pid) {
-            #[cfg(unix)]
-            {
-                let _ = Command::new("kill")
-                    .arg("-TERM")
-                    .arg(pid.to_string())
-                    .output();
-            }
-
-            #[cfg(windows)]
-            {
-                let _ = Command::new("taskkill")
-                    .args(&["/PID", &pid.to_string(), "/F"])
-                    .output();
-            }
-
-            // Remove PID file
-            let _ = fs::remove_file(pid_file_path());
-            return Ok(true);
+    if let Ok(pid) = read_pid()
+        && pid > 0
+        && check_process_exists(pid)
+    {
+        #[cfg(unix)]
+        {
+            let _ = Command::new("kill")
+                .arg("-TERM")
+                .arg(pid.to_string())
+                .output();
         }
+
+        #[cfg(windows)]
+        {
+            let _ = Command::new("taskkill")
+                .args(&["/PID", &pid.to_string(), "/F"])
+                .output();
+        }
+
+        let _ = fs::remove_file(pid_file_path());
+        return Ok(true);
     }
     Ok(false)
 }
