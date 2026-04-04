@@ -266,10 +266,10 @@ pub async fn run() -> crate::Result<()> {
     if cli.daemon {
         // Check if we're already the daemon
         if is_daemon() {
-            // Daemonize this process: double-fork + setsid so it
-            // survives the parent terminal closing.
-            #[cfg(unix)]
-            daemon::daemonize_self()?;
+            // Don't daemonize yet — let the initial build run with terminal
+            // output so errors are visible. Daemonization happens after
+            // the first successful build (see dev_server).
+            daemon::cleanup_ready_file();
 
             daemon::write_pid_file(std::process::id())?;
             let status = daemon::DaemonStatus {
@@ -303,7 +303,18 @@ pub async fn run() -> crate::Result<()> {
                     daemon::kill_daemon()?;
                 }
                 daemon::fork_daemon()?;
-                println!("Daemon started.");
+                match daemon::wait_for_child_signal(300) {
+                    Ok(true) => {
+                        println!("Daemon started.");
+                    }
+                    Ok(false) => {
+                        std::process::exit(1);
+                    }
+                    Err(e) => {
+                        eprintln!("Warning: {}", e);
+                        eprintln!("Daemon may still be starting. Use 'tairitsu dev --daemon' to check status.");
+                    }
+                }
                 return Ok(());
             }
 
@@ -319,8 +330,19 @@ pub async fn run() -> crate::Result<()> {
 
             // Start new daemon
             daemon::fork_daemon()?;
-            println!("Daemon started in background.");
-            println!("Use 'tairitsu dev --daemon' to check status.");
+            match daemon::wait_for_child_signal(300) {
+                Ok(true) => {
+                    println!("Daemon started in background.");
+                    println!("Use 'tairitsu dev --daemon' to check status.");
+                }
+                Ok(false) => {
+                    std::process::exit(1);
+                }
+                Err(e) => {
+                    eprintln!("Warning: {}", e);
+                    eprintln!("Daemon may still be starting. Use 'tairitsu dev --daemon' to check status.");
+                }
+            }
             return Ok(());
         }
     }
