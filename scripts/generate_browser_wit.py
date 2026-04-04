@@ -1296,7 +1296,7 @@ def generate_full_world(output_dir: Path, dry_run: bool = False) -> None:
         "animation-callbacks", "resize-observer-callbacks",
         "mutation-observer-callbacks", "media-query-list-callbacks",
         "scroll-callbacks", "window-resize-callbacks",
-        "video-frame-callbacks", "promise-callbacks",
+        "video-frame-callbacks", "promise-callbacks", "geolocation-callbacks",
     ]
     exports = "\n".join(f"    export {name};" for name in exported_callbacks)
 

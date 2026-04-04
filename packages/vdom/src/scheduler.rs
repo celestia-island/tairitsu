@@ -604,6 +604,20 @@ mod tests {
         ) -> Option<Self::Element> {
             None
         }
+
+        fn get_current_position(
+            &self,
+            _on_success: Box<dyn FnOnce(crate::GeoPosition)>,
+            on_error: Box<dyn FnOnce(crate::GeoPositionError)>,
+            _enable_high_accuracy: bool,
+            _timeout: u32,
+            _maximum_age: u32,
+        ) {
+            on_error(crate::GeoPositionError {
+                code: 1,
+                message: "geolocation not available in mock".to_string(),
+            });
+        }
     }
 
     #[test]

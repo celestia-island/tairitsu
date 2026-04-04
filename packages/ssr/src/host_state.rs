@@ -269,6 +269,21 @@ impl crate::bindings::PlatformHelpersHost for SsrHostState {
     fn get_scroll_top_by_selector(&mut self, _selector: String) -> f64 {
         0.0
     }
+
+    fn get_geolocation_handle(&mut self) -> u64 {
+        0
+    }
+
+    fn get_current_position(
+        &mut self,
+        _geo_handle: u64,
+        _success_callback_id: u64,
+        _error_callback_id: u64,
+        _enable_high_accuracy: bool,
+        _timeout: u32,
+        _maximum_age: u32,
+    ) {
+    }
 }
 
 #[cfg(test)]

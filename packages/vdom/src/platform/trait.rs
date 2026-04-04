@@ -130,6 +130,15 @@ pub trait Platform: Sized + 'static {
     fn get_scroll_top_from_point(&self, x: i32, y: i32) -> f64;
     fn get_scroll_top_by_selector(&self, selector: &str) -> f64;
     fn get_target_element_from_event(&self, client_x: i32, client_y: i32) -> Option<Self::Element>;
+
+    fn get_current_position(
+        &self,
+        on_success: Box<dyn FnOnce(GeoPosition)>,
+        on_error: Box<dyn FnOnce(GeoPositionError)>,
+        enable_high_accuracy: bool,
+        timeout: u32,
+        maximum_age: u32,
+    );
 }
 
 pub struct ResizeObserverEntry {
@@ -168,4 +177,21 @@ pub struct MutationRecord {
 pub struct ContentEditableState {
     pub editable: bool,
     pub focused: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct GeoPosition {
+    pub latitude: f64,
+    pub longitude: f64,
+    pub altitude: Option<f64>,
+    pub accuracy: f64,
+    pub altitude_accuracy: Option<f64>,
+    pub heading: Option<f64>,
+    pub speed: Option<f64>,
+}
+
+#[derive(Clone, Debug)]
+pub struct GeoPositionError {
+    pub code: u8,
+    pub message: String,
 }

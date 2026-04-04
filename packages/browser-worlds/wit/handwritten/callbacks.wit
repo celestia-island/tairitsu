@@ -111,3 +111,24 @@ interface promise-callbacks {
     on-promise-resolved: func(promise-id: u64, value: string);
     on-promise-rejected: func(promise-id: u64, error: string);
 }
+
+/// Geolocation callback - host delivers position/error results.
+interface geolocation-callbacks {
+    record geo-position {
+        latitude: f64,
+        longitude: f64,
+        altitude: option<f64>,
+        accuracy: f64,
+        altitude-accuracy: option<f64>,
+        heading: option<f64>,
+        speed: option<f64>,
+    }
+
+    record geo-position-error {
+        code: u8,
+        message: string,
+    }
+
+    on-position-success: func(callback-id: u64, position: geo-position);
+    on-position-error: func(callback-id: u64, error: geo-position-error);
+}

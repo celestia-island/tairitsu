@@ -111,6 +111,26 @@ interface promise-callbacks {
     on-promise-rejected: func(promise-id: u64, error: string);
 }
 
+interface geolocation-callbacks {
+    record geo-position {
+        latitude: f64,
+        longitude: f64,
+        altitude: option<f64>,
+        accuracy: f64,
+        altitude-accuracy: option<f64>,
+        heading: option<f64>,
+        speed: option<f64>,
+    }
+
+    record geo-position-error {
+        code: u8,
+        message: string,
+    }
+
+    on-position-success: func(callback-id: u64, position: geo-position);
+    on-position-error: func(callback-id: u64, error: geo-position-error);
+}
+
 interface lifecycle {
     start: func() -> result<_, string>;
 }
@@ -162,6 +182,11 @@ interface platform-helpers {
     /// Create a promise from fetch().
     /// Returns a promise-id that can be polled.
     fetch-promise: func(url: string, options: option<string>) -> u64;
+
+    // -- Geolocation (callback-based, no promise needed) --
+
+    get-geolocation-handle: func() -> u64;
+    get-current-position: func(geo-handle: u64, success-callback-id: u64, error-callback-id: u64, enable-high-accuracy: bool, timeout: u32, maximum-age: u32);
 
     // -- Clipboard (needs clipboard handle + async navigation) --
 
@@ -15729,8 +15754,8 @@ interface cache-storage {
     /// `keys()` operation.
     keys: func(self: cache-storage-handle) -> u64;
 }
-/// Full browser world — 572 interfaces total
-/// (15 handwritten + 557 W3C auto-generated).
+/// Full browser world — 573 interfaces total
+/// (16 handwritten + 557 W3C auto-generated).
 world browser-full {
     import event-callbacks;
     import timer-callbacks;
@@ -15742,6 +15767,7 @@ world browser-full {
     import window-resize-callbacks;
     import video-frame-callbacks;
     import promise-callbacks;
+    import geolocation-callbacks;
     import lifecycle;
     import console;
     import event-target;
@@ -16315,5 +16341,6 @@ world browser-full {
     export window-resize-callbacks;
     export video-frame-callbacks;
     export promise-callbacks;
+    export geolocation-callbacks;
 }
 

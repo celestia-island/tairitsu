@@ -364,6 +364,28 @@ impl Platform for MockPlatform {
     }
 
     fn media_query_list_remove_listener(&self, _list: u64, _listener_id: u64) {}
+
+    fn get_target_element_from_event(
+        &self,
+        _client_x: i32,
+        _client_y: i32,
+    ) -> Option<Self::Element> {
+        None
+    }
+
+    fn get_current_position(
+        &self,
+        _on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
+        on_error: Box<dyn FnOnce(tairitsu_vdom::GeoPositionError)>,
+        _enable_high_accuracy: bool,
+        _timeout: u32,
+        _maximum_age: u32,
+    ) {
+        on_error(tairitsu_vdom::GeoPositionError {
+            code: 1,
+            message: "geolocation not available in mock".to_string(),
+        });
+    }
 }
 
 // -- Test 1: ElementRef Mounting Tests -------------------------------------

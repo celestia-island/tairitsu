@@ -368,6 +368,20 @@ impl Platform for MockPlatform {
     ) -> Option<Self::Element> {
         None
     }
+
+    fn get_current_position(
+        &self,
+        _on_success: Box<dyn FnOnce(tairitsu_vdom::GeoPosition)>,
+        on_error: Box<dyn FnOnce(tairitsu_vdom::GeoPositionError)>,
+        _enable_high_accuracy: bool,
+        _timeout: u32,
+        _maximum_age: u32,
+    ) {
+        on_error(tairitsu_vdom::GeoPositionError {
+            code: 1,
+            message: "geolocation not available in mock".to_string(),
+        });
+    }
 }
 
 #[derive(Clone, Debug)]
