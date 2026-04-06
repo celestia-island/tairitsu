@@ -477,7 +477,7 @@ fn write_component_wrapper_loader(
 
     let loader = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/wasm/component-wrapper-loader.template.js"
+        "/src/wasm/component-wrapper-loader.template.ts"
     ))
     .replace("__WASM_STEM__", wasm_stem);
 
@@ -1243,14 +1243,14 @@ async fn run_watch_loop(
                 changed = ev
                     .paths
                     .iter()
-                    .filter_map(|p| p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf()))
+                    .filter_map(|p: &std::path::PathBuf| p.strip_prefix(&project_root).ok().map(|r: &std::path::Path| r.to_path_buf()))
                     .collect();
 
                 // Debounce: drain further events within the 200 ms window.
                 let deadline = tokio::time::Instant::now() + debounce;
                 while let Ok(Some(Ok(ev))) = tokio::time::timeout_at(deadline, rx.recv()).await {
-                    changed.extend(ev.paths.iter().filter_map(|p| {
-                        p.strip_prefix(&project_root).ok().map(|r| r.to_path_buf())
+                    changed.extend(ev.paths.iter().filter_map(|p: &std::path::PathBuf| {
+                        p.strip_prefix(&project_root).ok().map(|r: &std::path::Path| r.to_path_buf())
                     }));
                 }
                 changed.sort();
