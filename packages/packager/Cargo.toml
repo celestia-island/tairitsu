@@ -1,10 +1,10 @@
 [package]
 name = "tairitsu-packager"
 version = "0.1.0"
-edition.workspace = true
+edition = "2024"
 description = "Build and packaging tool for Tairitsu applications"
-authors.workspace = true
-license.workspace = true
+authors = ["langyo <langyo.china@gmail.com>"]
+license = "MIT OR Apache-2.0"
 
 [[bin]]
 name = "tairitsu"
@@ -30,13 +30,14 @@ serde_json = "^1"
 toml = "^0.8"
 
 # Async runtime (only for native targets)
-tokio = { workspace = true, default-features = false, features = [
+tokio = { version = "^1", default-features = false, features = [
   "sync",
   "macros",
   "io-util",
   "rt",
   "rt-multi-thread",
   "time",
+  "signal",
 ], optional = true }
 futures = "^0.3"
 
