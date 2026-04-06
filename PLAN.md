@@ -48,15 +48,16 @@ The file was renamed from `.js` to `.ts` in commit `5417bfc`, briefly deleted, t
 
 **Fix**: Change `.js` to `.ts` in the `include_str!` call.
 
-### Bug 2: `cargo install` cannot resolve workspace dependencies
+### Bug 2 (FIXED): Missing `[dependencies]` header after `[target.'cfg(unix)'.dependencies]`
 
-`cargo install --path <subdir>` compiles the crate in **isolation**, not as part of the workspace. Several dependencies in `packages/packager/Cargo.toml` use `workspace = true` (e.g. `tokio`, `tracing`, `serde`, `serde_json`, `toml`, `chrono`, `clap`, etc.), which requires workspace context.
+**File**: `packages/packager/Cargo.toml`
 
-**Symptoms**: 100+ "use of unresolved crate" errors for `tracing`, `tokio`, `serde`, `clap`, `axum`, `indicatif`, `grass`, `regex`, `walkdir`, etc.
+The `[target.'cfg(unix)'.dependencies]` section (containing only `daemonize`) was placed in the middle of the `[dependencies]` block. In TOML, all key-value pairs after a `[section]` header belong to that section until the next `[section]` header. This meant **every dependency after `daemonize`** (`serde`, `tracing`, `tokio`, `axum`, `indicatif`, `chrono`, `clap`, `toml`, `grass`, `walkdir`, etc.) was silently placed under `[target.'cfg(unix)'.dependencies]`.
 
-**Workaround**: Use `cargo run --package tairitsu-packager -- <args>` from the workspace root instead of `cargo install`.
+**Symptoms**: On Windows, 318 "use of unresolved crate" errors. `cargo tree --depth 1` showed only 5 direct dependencies (the ones before the target section). `cargo metadata` revealed almost all deps had `"target": "cfg(unix)"`.
 
-**Fix options**:
-1. Replace `workspace = true` with explicit version paths in `packages/packager/Cargo.toml` for direct dependencies (not workspace member crates).
-2. OR document that `cargo install` is not supported and users should use `cargo run --package tairitsu-packager` from a clone of the repo.
-3. OR add a `[profile.release.package.tairitsu-packager]` section and publish to crates.io (then `cargo install tairitsu-packager` would work from the published crate which has resolved versions).
+**Fix**: Moved `[target.'cfg(unix)'.dependencies]` to the end of `Cargo.toml`, after all `[dependencies]` entries. Also changed `just install-packager` from `cargo install --path` to `cargo build --release --package` + copy binary (more robust, avoids workspace isolation issues).
+
+### Note: `cargo install --path` workspace isolation
+
+`cargo install --path <subdir>` compiles the crate in **isolation**, not as part of the workspace. The `just install-packager` recipe now uses `cargo build --release --package` + binary copy to avoid this.

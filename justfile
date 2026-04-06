@@ -40,12 +40,23 @@ install-tools:
     python3 scripts/download_wasi_adapters.py
 
 # Install tairitsu-packager CLI binary (tairitsu) to ~/.cargo/bin
+[unix]
 install-packager:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Installing tairitsu CLI..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo install --path packages/packager
-    @echo "✅ Installed 'tairitsu' CLI to ~/.cargo/bin"
+    cargo build --release --package tairitsu-packager
+    cp target/release/tairitsu "${CARGO_HOME:-$HOME/.cargo}/bin/"
+    @echo "✅ Installed 'tairitsu' CLI to ${CARGO_HOME:-$HOME/.cargo}/bin/"
+
+[windows]
+install-packager:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Installing tairitsu CLI..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cargo build --release --package tairitsu-packager
+    $binDir = if ($env:CARGO_HOME) { Join-Path $env:CARGO_HOME "bin" } else { Join-Path $env:USERPROFILE ".cargo\bin" }; if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }; Copy-Item "target\release\tairitsu.exe" (Join-Path $binDir "tairitsu.exe") -Force
+    @echo "✅ Installed 'tairitsu' CLI to $binDir"
 
 # Development environment setup (install tools and build)
 setup: install-tools init
