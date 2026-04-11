@@ -40,6 +40,11 @@ dist/
 .DS_Store
 Thumbs.db
 
+# MCP server configs (local tooling)
+.mcp.json
+package.json
+screenshot-test.png
+
 # W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
 scripts/idl-cache/
 scripts/idl-cache/
