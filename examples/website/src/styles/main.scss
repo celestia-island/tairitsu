@@ -506,41 +506,121 @@ a:hover {
    Glow Effect — matches hikari-legacy ::before radial-gradient
    ============================================ */
 
-.hi-glow-wrapper {
+.hi-glow-wrapper,
+.hi-glow-wrapper-block {
   position: relative;
   --glow-intensity-scale: 0;
   --glow-spread-scale: 1.0;
-}
 
-.hi-glow-wrapper::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  border-radius: inherit;
-  opacity: calc(var(--glow-opacity, 0.15) * var(--glow-intensity-scale));
-  background: radial-gradient(
-    circle at var(--glow-x, 50%) var(--glow-y, 50%),
-    var(--ts-glow-color, rgba(20, 110, 116, 0.5)) 0%,
-    transparent calc(var(--glow-spread, 1.6) * 100%)
-  );
-  transition: opacity 150ms ease-out, background-position 100ms ease-out;
-}
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    border-radius: inherit;
+    opacity: var(--glow-opacity, calc(var(--glow-base-opacity, 1) * var(--glow-intensity-scale)));
+    background: radial-gradient(
+      circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      var(--ts-glow-color, rgba(20, 110, 116, 0.5)) 0%,
+      transparent calc(var(--glow-spread, 1.6) * 100%)
+    );
+    transition:
+      opacity 150ms ease-out,
+      background-position 100ms ease-out;
+  }
 
-.hi-glow-wrapper:hover {
-  --glow-intensity-scale: 0.5;
+  &:hover {
+    --glow-intensity-scale: 0.5;
+  }
+
+  &:active {
+    --glow-intensity-scale: 1.0;
+  }
+
+  > * {
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+  }
 }
 
 /* Glow blur levels */
-.hi-glow-blur-light::before { backdrop-filter: blur(2px); }
-.hi-glow-blur-medium::before { backdrop-filter: blur(4px); }
-.hi-glow-blur-heavy::before { backdrop-filter: blur(8px); }
+.hi-glow-blur-none { }
+.hi-glow-blur-light::before {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.hi-glow-blur-medium::before {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.hi-glow-blur-heavy::before {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 
-.hi-glow-wrapper > * {
-  pointer-events: auto;
-  position: relative;
-  z-index: 1;
+/* Glow intensity levels */
+.hi-glow-dim {
+  --glow-spread: 2.4;
+  --glow-base-opacity: 0.15;
+}
+.hi-glow-soft {
+  --glow-spread: 1.6;
+  --glow-base-opacity: 0.30;
+}
+.hi-glow-bright {
+  --glow-spread: 1.3;
+  --glow-base-opacity: 0.50;
+}
+
+/* Wrapper layout */
+.hi-glow-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.hi-glow-wrapper-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 4px;
+  overflow: visible;
+}
+
+/* Glow animation presets */
+@keyframes glow-pulse {
+  0%, 100% { --glow-intensity-scale: 0.5; }
+  50% { --glow-intensity-scale: 1.0; }
+}
+@keyframes glow-breathe {
+  0%, 100% { --glow-intensity-scale: 0.3; }
+  50% { --glow-intensity-scale: 1.0; }
+}
+@keyframes glow-shimmer {
+  0% { --glow-x: 20%; --glow-y: 50%; }
+  25% { --glow-x: 50%; --glow-y: 80%; }
+  50% { --glow-x: 80%; --glow-y: 50%; }
+  75% { --glow-x: 50%; --glow-y: 20%; }
+  100% { --glow-x: 20%; --glow-y: 50%; }
+}
+
+.hi-glow-wrapper.pulse::before { animation: glow-pulse 2s ease-in-out infinite; }
+.hi-glow-wrapper.breathe::before { animation: glow-breathe 4s ease-in-out infinite; }
+.hi-glow-wrapper.shimmer::before { animation: glow-shimmer 3s linear infinite; }
+
+.hi-glow-wrapper.pulse:has(:hover)::before,
+.hi-glow-wrapper.pulse:has(:active)::before,
+.hi-glow-wrapper.breathe:has(:hover)::before,
+.hi-glow-wrapper.breathe:has(:active)::before,
+.hi-glow-wrapper.shimmer:has(:hover)::before,
+.hi-glow-wrapper.shimmer:has(:active)::before {
+  animation-play-state: paused;
 }
 
 /* ============================================
