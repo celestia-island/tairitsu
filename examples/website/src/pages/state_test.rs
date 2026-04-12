@@ -51,15 +51,15 @@ pub fn render() -> VNode {
 
                 div {
                     class: "counter-test",
-                    style: "padding: 15px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; gap: 15px;",
+                    style: "padding: 15px; background: rgba(22,32,45,0.92); border-radius: 8px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.08);",
                     span {
-                        style: "font-size: 1.5em; font-weight: bold; min-width: 50px;",
+                        style: "font-size: 1.5em; font-weight: bold; min-width: 50px; color: rgba(255,255,255,0.92);",
                         id: "counter-display",
                         ..vec![VNode::Text(VText { text: format!("{}", count_clone.get()) })],
                     }
                     button {
                         id: "counter-increment",
-                        class: "hi-btn hi-btn--primary",
+                        class: "hi-button hi-button-primary",
                         onclick: move |_| {
                             let current = count_clone.get();
                             count_clone.set(current + 1);
@@ -74,18 +74,18 @@ pub fn render() -> VNode {
                 h2 { "Test 2: Input State Binding (use_state)" }
                 p { "Type in the input field to see two-way binding." }
 
-                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                 div { style: "padding: 15px; background: rgba(22,32,45,0.92); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);",
                     input {
                         id: "text-input",
                         class: "hi-input",
                         r#type: "text",
                         placeholder: "Type something...",
-                        style: "padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; width: 250px;",
+                        style: "padding: 8px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; width: 250px; background: rgba(26,35,50,1); color: rgba(255,255,255,0.92);",
                         oninput: move |_: InputEvent| {} // TODO: implement input handling
                     }
                     p {
                         id: "text-display",
-                        style: "margin-top: 10px; color: #4a5568;",
+                        style: "margin-top: 10px; color: rgba(255,255,255,0.65);",
                         ..vec![VNode::Text(VText { text: format!("You typed: {}", text_clone.borrow()) })],
                     }
                 }
@@ -96,7 +96,7 @@ pub fn render() -> VNode {
                 h2 { "Test 3: Boolean State (Toggle)" }
                 p { "Click the checkbox to toggle state." }
 
-                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px; display: flex; align-items: center; gap: 15px;",
+                 div { style: "padding: 15px; background: rgba(22,32,45,0.92); border-radius: 8px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.08);",
                     label { style: "display: flex; align-items: center; gap: 8px; cursor: pointer;",
                         input {
                             id: "toggle-checkbox",
@@ -111,7 +111,7 @@ pub fn render() -> VNode {
                     }
                     span {
                         id: "toggle-display",
-                        style: "font-weight: bold; color: #4a5568;",
+                        style: "font-weight: bold; color: rgba(255,255,255,0.92);",
                         ..vec![VNode::Text(VText { text: if *is_toggled.borrow() { "ON".to_string() } else { "OFF".to_string() } })],
                     }
                 }
@@ -122,10 +122,10 @@ pub fn render() -> VNode {
                 h2 { "Test 4: List State (Add/Remove)" }
                 p { "Add items to the list and remove them individually." }
 
-                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                div { style: "padding: 15px; background: rgba(22,32,45,0.92); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);",
                     button {
                         id: "list-add",
-                        class: "hi-btn hi-btn--primary",
+                        class: "hi-button hi-button-primary",
                         onclick: move |_| {
                             let mut items_ref = items_clone.borrow().clone();
                             items_ref.push(format!("Item {}", items_ref.len() + 1));
@@ -146,7 +146,7 @@ pub fn render() -> VNode {
                                         ..vec![VNode::Text(VText { text: item.clone() })],
                                         button {
                                             class: "remove-btn",
-                                            style: "padding: 2px 8px; background: #fc8181; color: white; border: none; border-radius: 4px; cursor: pointer;",
+                                            style: "padding: 2px 8px; background: rgba(255,76,0,0.6); color: white; border: none; border-radius: 4px; cursor: pointer;",
                                             "×"
                                         }
                                     }
@@ -162,7 +162,7 @@ pub fn render() -> VNode {
                 h2 { "Test 5: Reactive Computed Values" }
                 p { "Change width/height to see the area update automatically." }
 
-                div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
+                div { style: "padding: 15px; background: rgba(22,32,45,0.92); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);",
                     div { style: "display: flex; gap: 15px; align-items: center;",
                         label { style: "display: flex; flex-direction: column; gap: 5px;",
                             "Width:"
@@ -170,7 +170,7 @@ pub fn render() -> VNode {
                                 id: "rect-width",
                                 r#type: "number",
                                 value: rect_width.get().to_string(),
-                                style: "padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; width: 80px;",
+                                style: "padding: 5px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; width: 80px; background: rgba(26,35,50,1); color: rgba(255,255,255,0.92);"
                             }
                         }
                         label { style: "display: flex; flex-direction: column; gap: 5px;",
@@ -179,10 +179,10 @@ pub fn render() -> VNode {
                                 id: "rect-height",
                                 r#type: "number",
                                 value: rect_height.get().to_string(),
-                                style: "padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; width: 80px;",
+                                style: "padding: 5px; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; width: 80px; background: rgba(26,35,50,1); color: rgba(255,255,255,0.92);"
                             }
                         }
-                        div { style: "padding: 10px 20px; background: #4299e1; color: white; border-radius: 8px;",
+                        div { style: "padding: 10px 20px; background: rgba(20,110,116,0.7); color: white; border-radius: 8px;",
                             "Area: "
                             span {
                                 id: "rect-area",
@@ -206,7 +206,7 @@ pub fn render() -> VNode {
             // Test Summary
             div { class: "test-section",
                 h2 { "State Management Test Summary" }
-                div { style: "padding: 15px; background: #e6fffa; border: 1px solid #38b2ac; border-radius: 6px;",
+                div { style: "padding: 15px; background: rgba(20,110,116,0.15); border: 1px solid rgba(20,110,116,0.4); border-radius: 6px;",
                     h3 { "State Patterns Tested:" }
                     ul { style: "list-style-type: none; padding: 0;",
                         li { style: "margin: 5px 0;", "✓ use_signal (reactive counter)" }

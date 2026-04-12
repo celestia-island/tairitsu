@@ -31,27 +31,27 @@ fn render_overview() -> VNode {
                     div { class: "card",
                         h3 { class: "card__title", "System Overview" }
                         p { class: "card__body", "整体架构分层和设计原则。" }
-                        a { href: "/system/overview", class: "hi-btn hi-btn--secondary", "阅读文档" }
+                        a { href: "/system/overview", class: "hi-button hi-button-secondary", "阅读文档" }
                     }
                     div { class: "card",
                         h3 { class: "card__title", "Runtime Engine" }
                         p { class: "card__body", "镜像/容器模型和执行引擎。" }
-                        a { href: "/system/runtime", class: "hi-btn hi-btn--secondary", "阅读文档" }
+                        a { href: "/system/runtime", class: "hi-button hi-button-secondary", "阅读文档" }
                     }
                     div { class: "card",
                         h3 { class: "card__title", "WIT Pipeline" }
                         p { class: "card__body", "W3C WebIDL 到 WIT 的生成流程。" }
-                        a { href: "/system/wit-pipeline", class: "hi-btn hi-btn--secondary", "阅读文档" }
+                        a { href: "/system/wit-pipeline", class: "hi-button hi-button-secondary", "阅读文档" }
                     }
                     div { class: "card",
                         h3 { class: "card__title", "Web Backends" }
                         p { class: "card__body", "web 与 wit-bindings 双后端架构。" }
-                        a { href: "/system/web-backends", class: "hi-btn hi-btn--secondary", "阅读文档" }
+                        a { href: "/system/web-backends", class: "hi-button hi-button-secondary", "阅读文档" }
                     }
                     div { class: "card",
                         h3 { class: "card__title", "Versioning" }
                         p { class: "card__body", "语义化版本控制策略。" }
-                        a { href: "/system/versioning", class: "hi-btn hi-btn--secondary", "阅读文档" }
+                        a { href: "/system/versioning", class: "hi-button hi-button-secondary", "阅读文档" }
                     }
                 }
             }
