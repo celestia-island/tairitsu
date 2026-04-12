@@ -162,20 +162,91 @@ pub fn sidebar() -> VNode {
         }
     };
 
-    let guides_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Quick Start", "/guides/quick-start", MdiIcon::Play),
-        ("Workspace Map", "/guides/workspace-map", MdiIcon::Layers),
+    let layer1_items: Vec<(&str, &str, MdiIcon)> = vec![
+        ("Button", "/components/layer1/button", MdiIcon::ToggleSwitch),
+        ("Form", "/components/layer1/form", MdiIcon::TextBoxEdit),
         (
-            "Build / Test / Release",
-            "/guides/build-test-release",
-            MdiIcon::TextBoxEdit,
+            "Number Input",
+            "/components/layer1/number-input",
+            MdiIcon::FormatListNumbered,
+        ),
+        ("Search", "/components/layer1/search", MdiIcon::Magnify),
+        ("Switch", "/components/layer1/switch", MdiIcon::ToggleSwitch),
+        ("Feedback", "/components/layer1/feedback", MdiIcon::Alert),
+        ("Display", "/components/layer1/display", MdiIcon::ViewColumn),
+        ("Avatar", "/components/layer1/avatar", MdiIcon::Account),
+        ("Image", "/components/layer1/image", MdiIcon::Image),
+        ("Tag", "/components/layer1/tag", MdiIcon::Tag),
+        (
+            "Empty",
+            "/components/layer1/empty",
+            MdiIcon::CheckboxMarkedCircle,
+        ),
+        ("Comment", "/components/layer1/comment", MdiIcon::Chat),
+        (
+            "Description List",
+            "/components/layer1/description-list",
+            MdiIcon::FormatListBulleted,
+        ),
+    ];
+
+    let layer2_items: Vec<(&str, &str, MdiIcon)> = vec![
+        ("Navigation", "/components/layer2/navigation", MdiIcon::Menu),
+        (
+            "Collapsible",
+            "/components/layer2/collapsible",
+            MdiIcon::ChevronDown,
+        ),
+        ("Data", "/components/layer2/data", MdiIcon::Table),
+        ("Table", "/components/layer2/table", MdiIcon::Table),
+        ("Tree", "/components/layer2/tree", MdiIcon::Tree),
+        (
+            "Pagination",
+            "/components/layer2/pagination",
+            MdiIcon::ChevronDoubleRight,
         ),
         (
-            "Migration Guide",
-            "/guides/migration",
-            MdiIcon::ArrowExpandHorizontal,
+            "QRCode",
+            "/components/layer2/qrcode",
+            MdiIcon::ViewDashboard,
         ),
-        ("Glossary", "/guides/glossary", MdiIcon::FormatListBulleted),
+        (
+            "Timeline",
+            "/components/layer2/timeline",
+            MdiIcon::ChartTimeline,
+        ),
+        ("Form", "/components/layer2/form", MdiIcon::TextBoxEdit),
+        (
+            "Cascader",
+            "/components/layer2/cascader",
+            MdiIcon::ChevronDown,
+        ),
+        (
+            "Transfer",
+            "/components/layer2/transfer",
+            MdiIcon::SwapHorizontal,
+        ),
+        ("Feedback", "/components/layer2/feedback", MdiIcon::Alert),
+    ];
+
+    let layer3_items: Vec<(&str, &str, MdiIcon)> = vec![
+        ("Media", "/components/layer3/media", MdiIcon::Play),
+        ("Editor", "/components/layer3/editor", MdiIcon::FileEdit),
+        (
+            "Visualization",
+            "/components/layer3/visualization",
+            MdiIcon::ChartTimeline,
+        ),
+        (
+            "User Guide",
+            "/components/layer3/user-guide",
+            MdiIcon::BookOpen,
+        ),
+        (
+            "Zoom Controls",
+            "/components/layer3/zoom-controls",
+            MdiIcon::MagnifyPlus,
+        ),
     ];
 
     let system_items: Vec<(&str, &str, MdiIcon)> = vec![
@@ -188,28 +259,46 @@ pub fn sidebar() -> VNode {
             MdiIcon::SourceBranch,
         ),
         ("Versioning", "/system/versioning", MdiIcon::Tag),
+        ("CSS Utilities", "/system/css", MdiIcon::FormatAlignLeft),
+        ("Icons", "/system/icons", MdiIcon::Star),
+        ("Color Palette", "/system/palette", MdiIcon::Palette),
+        ("Animations", "/system/animations", MdiIcon::LightningBolt),
+        ("i18n", "/system/i18n", MdiIcon::Translate),
+        ("Animation Demo", "/animations", MdiIcon::Play),
     ];
 
-    let packages_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Overview", "/packages/overview", MdiIcon::Package),
-        (
-            "Package List",
-            "/packages/list",
-            MdiIcon::FormatListBulleted,
-        ),
+    let demo_items: Vec<(&str, &str, MdiIcon)> = vec![
+        ("Form Demo", "/demos/form", MdiIcon::TextBoxEdit),
+        ("Dashboard", "/demos/dashboard", MdiIcon::ViewDashboard),
+        ("Video & Audio", "/demos/video", MdiIcon::Play),
     ];
 
     let sections: Vec<VNode> = vec![
         home,
-        submenu_section("guides", MdiIcon::BookOpen, "Guides", &guides_items, true),
-        submenu_section("system", MdiIcon::Cog, "System", &system_items, false),
+        submenu_section("components", MdiIcon::Package, "Components", &[], true),
         submenu_section(
-            "packages",
-            MdiIcon::Package,
-            "Packages",
-            &packages_items,
+            "layer1",
+            MdiIcon::Layers,
+            "Layer 1 — Base",
+            &layer1_items,
+            true,
+        ),
+        submenu_section(
+            "layer2",
+            MdiIcon::SourceBranch,
+            "Layer 2 — Composed",
+            &layer2_items,
             false,
         ),
+        submenu_section(
+            "layer3",
+            MdiIcon::CubeOutline,
+            "Layer 3 — Complex",
+            &layer3_items,
+            false,
+        ),
+        submenu_section("system", MdiIcon::Cog, "System", &system_items, false),
+        submenu_section("demos", MdiIcon::TrophyAward, "Demos", &demo_items, false),
     ];
 
     VNode::Element(

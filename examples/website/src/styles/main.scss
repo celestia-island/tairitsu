@@ -70,7 +70,9 @@
   --ts-spacing-2xl: 3rem;
 
   /* Layout */
-  --ts-sidebar-width: 260px;
+  --ts-sidebar-ratio: 35%;
+  --ts-sidebar-max: 420px;
+  --ts-sidebar-min: 220px;
   --ts-header-height: 64px;
 }
 
@@ -635,4 +637,122 @@ a:hover {
 .doc-content {
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* ============================================
+   Responsive Layout — 35%/65% sidebar split
+   ============================================ */
+
+.hi-layout-body {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - var(--ts-header-height, 64px));
+  overflow: hidden;
+}
+
+/* Outer sidebar container (layout-framework rendered): dynamic 35% */
+.hi-layout-has-sidebar .hi-layout-body > aside,
+.hi-layout-body > .hi-aside {
+  width: var(--ts-sidebar-ratio, 35%) !important;
+  max-width: var(--ts-sidebar-max, 340px) !important;
+  min-width: var(--ts-sidebar-min, 220px) !important;
+  flex-shrink: 0 !important;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Inner #hikari-aside (our sidebar component): fill parent */
+#hikari-aside {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100%;
+}
+
+/* Main content: fills remaining ~65% */
+.hi-layout-has-sidebar .hi-layout-main,
+.hi-layout-body > .hi-layout-main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Tablet: slightly narrower sidebar (30%) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .hi-layout-body > .hi-aside,
+  .hi-layout-has-sidebar .hi-layout-body > aside {
+    --ts-sidebar-ratio: 30%;
+    --ts-sidebar-max: 280px;
+    --ts-sidebar-min: 200px;
+  }
+}
+
+/* Mobile: drawer mode — fixed overlay on OUTER aside */
+@media (max-width: 640px) {
+  .hi-layout-body {
+    position: relative;
+  }
+
+  .hi-layout-body > .hi-aside,
+  .hi-layout-has-sidebar .hi-layout-body > aside,
+  .hi-aside-drawer {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    width: 80% !important;
+    max-width: 300px !important;
+    min-width: 0 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .hi-layout-body > .hi-aside.hi-aside-drawer-open,
+  .hi-aside-drawer.hi-aside-drawer-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Overlay backdrop */
+  #drawer-overlay,
+  .hi-layout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 110, 116, 0.25);
+    backdrop-filter: blur(4px);
+    z-index: 199;
+  }
+
+  #drawer-overlay.is-visible,
+  .hi-layout-overlay.is-visible {
+    display: block;
+  }
+
+  /* Main content takes full width on mobile */
+  .hi-layout-has-sidebar .hi-layout-main,
+  .hi-layout-body > .hi-layout-main {
+    width: 100% !important;
+    flex: none;
+  }
+
+  /* Show hamburger toggle */
+  .hi-header-toggle {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .hi-header-toggle {
+    display: none !important;
+  }
+  #drawer-overlay,
+  .hi-layout-overlay {
+    display: none !important;
+  }
 }
