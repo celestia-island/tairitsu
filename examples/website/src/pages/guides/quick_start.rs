@@ -3,9 +3,12 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::breadcrumb;
+
 pub fn render() -> VNode {
     rsx! {
         div { id: "page-guides-quick-start", class: "hikari-page",
+            ..vec![breadcrumb(&[("Home", "/"), ("Guides", "/guides"), ("Quick Start", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "快速开始"

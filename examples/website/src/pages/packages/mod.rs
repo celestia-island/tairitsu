@@ -2,6 +2,8 @@
 
 use tairitsu_vdom::{VElement, VNode, VText};
 
+use crate::components::breadcrumb;
+
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
 }
@@ -59,6 +61,7 @@ fn render_overview() -> VNode {
             .attr("id", "page-packages-overview")
             .class("hikari-page")
             .children(vec![
+                breadcrumb(&[("Home", "/"), ("Packages", "")]),
                 VNode::Element(
                     VElement::new("section").class("page-hero").children(vec![
                         VNode::Element(VElement::new("h1").child(txt("Packages"))),
@@ -139,6 +142,11 @@ fn render_list() -> VNode {
             .attr("id", "page-packages-list")
             .class("hikari-page")
             .children(vec![
+                breadcrumb(&[
+                    ("Home", "/"),
+                    ("Packages", "/packages"),
+                    ("Package List", ""),
+                ]),
                 VNode::Element(VElement::new("section").class("page-hero").children(vec![
                         VNode::Element(VElement::new("h1").child(txt("Package List"))),
                         VNode::Element(

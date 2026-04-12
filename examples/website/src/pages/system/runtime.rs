@@ -3,9 +3,12 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::breadcrumb;
+
 pub fn render() -> VNode {
     rsx! {
         div { id: "page-system-runtime", class: "hikari-page",
+            ..vec![breadcrumb(&[("Home", "/"), ("System", "/system"), ("Runtime", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "运行时与容器模型"

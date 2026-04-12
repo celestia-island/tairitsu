@@ -5,12 +5,12 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::breadcrumb;
+
 pub fn render() -> VNode {
     rsx! {
         div { id: "page-home", class: "hikari-page is-active",
-            nav { class: "hi-p-4",
-                "Home / Home"
-            }
+            ..vec![breadcrumb(&[("Home", "")])]
             div { class: "hi-container hi-container-md",
                 section { class: "hi-section hi-section-lg",
                     div { class: "hi-section-body",

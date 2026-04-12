@@ -9,6 +9,8 @@ pub mod wit_pipeline;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
+use crate::components::breadcrumb;
+
 /// Render all system pages
 pub fn render_all() -> Vec<VNode> {
     vec![
@@ -24,6 +26,7 @@ pub fn render_all() -> Vec<VNode> {
 fn render_overview() -> VNode {
     rsx! {
         div { id: "page-system", class: "hikari-page",
+            ..vec![breadcrumb(&[("Home", "/"), ("System", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "System" }
                 p { "系统架构文档，了解 Tairitsu 的核心设计和实现原理。" }

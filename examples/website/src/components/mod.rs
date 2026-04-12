@@ -190,6 +190,34 @@ fn menu_item(label: &str, href: &str) -> VNode {
 }
 
 // ============================================================
+// Breadcrumb Navigation
+// ============================================================
+
+pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
+    let mut children: Vec<VNode> = Vec::new();
+    for (i, (label, href)) in items.iter().enumerate() {
+        if i > 0 {
+            children.push(VNode::Element(
+                el("span").class("hi-breadcrumb-sep").child(txt(" / ")),
+            ));
+        }
+        if href.is_empty() {
+            children.push(VNode::Element(
+                el("span").class("hi-breadcrumb-current").child(txt(label)),
+            ));
+        } else {
+            children.push(VNode::Element(
+                el("a")
+                    .attr("href", href)
+                    .class("hi-breadcrumb-link")
+                    .child(txt(label)),
+            ));
+        }
+    }
+    VNode::Element(el("nav").class("hi-breadcrumb").children(children))
+}
+
+// ============================================================
 // Aside Footer
 // ============================================================
 
