@@ -477,7 +477,7 @@ fn write_component_wrapper_loader(
 
     let loader = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/wasm/component-wrapper-loader.template.ts"
+        "/src/wasm/component-wrapper-loader.template.js"
     ))
     .replace("__WASM_STEM__", wasm_stem);
 
