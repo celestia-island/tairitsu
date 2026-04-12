@@ -107,7 +107,13 @@ pub fn top_nav() -> VNode {
                     span { class: "hi-logo", "\u{273F}" }
                 }
             }
-            div { class: "hi-header-right" }
+            div { class: "hi-header-right",
+                nav { class: "hi-header-nav",
+                    a { href: "/guides", class: "hi-header-link", "Guides" }
+                    a { href: "/system", class: "hi-header-link", "System" }
+                    a { href: "/packages", class: "hi-header-link", "Packages" }
+                }
+            }
         }
     }
 }
@@ -185,10 +191,10 @@ pub fn aside_footer() -> VNode {
     rsx! {
         div { class: "hi-aside-footer",
             button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                "\u{2600}"
+                id: "theme-toggle", "\u{2600}"
             }
             button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                "A"
+                id: "lang-toggle", "A"
             }
         }
     }
