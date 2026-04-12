@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-guides-glossary", class: "tairitsu-page",
+        div { id: "page-guides-glossary", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "术语对照表"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 项目中使用的术语和概念说明。"
                     }

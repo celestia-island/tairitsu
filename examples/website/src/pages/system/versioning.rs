@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-versioning", class: "tairitsu-page",
+        div { id: "page-system-versioning", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "版本与兼容性策略"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 遵循语义化版本控制（SemVer），确保 API 的稳定性和可预测性。"
                     }
@@ -35,7 +35,7 @@ pub fn render() -> VNode {
                     }
 
                     h3 { "依赖声明" }
-                    div { class: "code-block language-toml",
+                    div { class: "hi-code-block language-toml",
                         pre {
                             code {
                                 "# Cargo.toml

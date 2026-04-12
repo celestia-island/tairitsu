@@ -5,10 +5,10 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-overview", class: "tairitsu-page",
+        div { id: "page-system-overview", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title", "系统架构总览" }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 是面向 WebAssembly Component Model 的通用运行时，核心目标是："
                     }

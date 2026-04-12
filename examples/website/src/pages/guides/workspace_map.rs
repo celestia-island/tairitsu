@@ -5,10 +5,10 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-guides-workspace-map", class: "tairitsu-page",
+        div { id: "page-guides-workspace-map", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title", "工作区地图" }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p { "了解 Tairitsu 项目的目录结构和各个包的职责。" }
 
                     h3 { "目录结构" }

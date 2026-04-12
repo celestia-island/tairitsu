@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-wit-pipeline", class: "tairitsu-page",
+        div { id: "page-system-wit-pipeline", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "WIT 流水线"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "从 W3C WebIDL 到 WIT 接口的自动化生成流程。"
                     }
@@ -36,7 +36,7 @@ pub fn render() -> VNode {
                     }
 
                     h3 { "WIT 接口示例" }
-                    div { class: "code-block language-wit",
+                    div { class: "hi-code-block language-wit",
                         pre {
                             code {
                                 "// 生成的 WIT 接口示例

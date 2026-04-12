@@ -10,12 +10,12 @@ pub fn render_all() -> Vec<VNode> {
 
 fn render_overview() -> VNode {
     rsx! {
-        div { id: "page-packages-overview", class: "tairitsu-page",
+        div { id: "page-packages-overview", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "Packages"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 由多个核心包组成，每个包负责特定的功能领域。"
                     }
@@ -65,12 +65,12 @@ fn render_overview() -> VNode {
 
 fn render_list() -> VNode {
     rsx! {
-        div { id: "page-packages-list", class: "tairitsu-page",
+        div { id: "page-packages-list", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "包清单"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     h3 { "packages/runtime" }
                     p {
                         "核心运行时引擎。提供 Image（镜像）、Container（容器）、Builder API 和 Wasmtime component 执行能力。"

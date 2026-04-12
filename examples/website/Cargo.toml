@@ -22,6 +22,7 @@ tairitsu-web = { path = "../../packages/web", features = [
 
 # Hikari design system (direct path to hikari workspace)
 hikari-palette = { path = "../../../hikari/packages/palette" }
+hikari-components = { path = "../../../hikari/packages/components", default-features = false }
 
 # Markdown rendering
 pulldown-cmark = "0.12"
@@ -59,6 +60,8 @@ head = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles/bundle.css">
+<link rel="stylesheet" href="./styles/spa.css">
 <link rel="stylesheet" href="./styles.css">
 <script>
 (function() {
@@ -88,7 +91,7 @@ head = """
     }
 
     function hideAllPages() {
-        document.querySelectorAll('.tairitsu-page').forEach(function(p) {
+        document.querySelectorAll('.hikari-page').forEach(function(p) {
             p.classList.remove('is-active');
             p.setAttribute('aria-hidden', 'true');
         });
@@ -109,17 +112,20 @@ head = """
     }
 
     function updateSidebarActiveState(pageId) {
-        document.querySelectorAll('.sidebar-link').forEach(function(link) {
-            link.classList.remove('is-active');
-            const href = link.getAttribute('href');
-            if (href && ROUTES[href] === pageId) {
-                link.classList.add('is-active');
+        document.querySelectorAll('.hi-menu-item').forEach(function(item) {
+            item.classList.remove('hi-menu-item-active');
+            const link = item.querySelector('a');
+            if (link) {
+                const href = link.getAttribute('href');
+                if (href && ROUTES[href] === pageId) {
+                    item.classList.add('hi-menu-item-active');
+                }
             }
         });
     }
 
     function updateTopNavActiveState(pageId) {
-        document.querySelectorAll('.tairitsu-topnav__link').forEach(function(link) {
+        document.querySelectorAll('.hi-header-link').forEach(function(link) {
             link.classList.remove('is-active');
             const href = link.getAttribute('href');
             if (href) {
@@ -181,7 +187,7 @@ head = """
 })();
 </script>
 """
-body-class = "tairitsu-app"
+body_class = "hi-layout hi-layout-dark hi-layout-has-sidebar"
 
 [package.metadata.tairitsu.assets]
 inline-limit = 8192

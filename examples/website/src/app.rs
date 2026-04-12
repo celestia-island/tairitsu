@@ -1,17 +1,16 @@
 //! App root — assembles all pages into a single VNode tree.
 //!
-//! All pages are rendered at once; JavaScript hash routing controls which
-//! page is visible by toggling `.is-active` on `.tairitsu-page` divs.
+//! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme.
+//! Structure mirrors hikari-legacy website exactly.
 
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
 use crate::{
-    components::{sidebar, top_nav},
+    components::{aside_footer, sidebar, top_nav},
     pages::{dom_ops_test, guides, home, not_found, packages, state_test, system},
 };
 
-/// Render the full application VNode tree.
 pub fn render() -> VNode {
     let mut content: Vec<VNode> = Vec::new();
     content.push(home::render());
@@ -23,9 +22,19 @@ pub fn render() -> VNode {
     content.push(not_found::render());
 
     rsx! {
-        div { id: "tairitsu-app", class: "tairitsu-app", ..vec![top_nav()],
-            div { class: "tairitsu-body", ..vec![sidebar()],
-                main { class: "tairitsu-content", ..content }
+        div { id: "hikari-app",
+            class: "hi-layout hi-layout-dark hi-layout-has-sidebar",
+            div { class: "hi-background" }
+            ..vec![top_nav()],
+            div { class: "hi-layout-body",
+                div { id: "drawer-overlay", class: "hi-layout-overlay" }
+                aside { class: "hi-aside hi-aside-drawer hi-aside-lg",
+                    div { class: "hi-aside-content", ..vec![sidebar()] }
+                    ..vec![aside_footer()]
+                }
+                div { class: "hi-layout-main",
+                    main { class: "hi-layout-content", ..content }
+                }
             }
         }
     }

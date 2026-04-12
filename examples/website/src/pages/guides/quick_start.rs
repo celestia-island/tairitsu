@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-guides-quick-start", class: "tairitsu-page",
+        div { id: "page-guides-quick-start", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "快速开始"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "本指南帮助你在本地完成最小可用链路：安装工具、构建、测试、运行示例。"
                     }
@@ -25,7 +25,7 @@ pub fn render() -> VNode {
                         li { "Python 3（用于 WIT 生成脚本）" }
                         li { "Node.js（用于 packages/browser-glue）" }
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 安装 just 命令工具
@@ -41,7 +41,7 @@ just install-tools"
                     p {
                         "该命令会运行核心编译与检查流程，用于快速确认环境与依赖可用。"
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 一次性全量校验
@@ -54,7 +54,7 @@ just install-tools"
                     p {
                         "运行各种示例来了解框架的不同特性："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 宏驱动示例
@@ -73,7 +73,7 @@ just run-dynamic-advanced"
                     p {
                         "若你计划使用 Component Model 浏览器接口："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 浏览器 WIT 路线
@@ -88,7 +88,7 @@ just run-dynamic-advanced"
                     p {
                         "执行以下命令添加 target："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 添加 wasm32-wasip2 target
@@ -111,7 +111,7 @@ just run-dynamic-advanced"
                     p {
                         "在 packages/browser-glue 中执行："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "npm install

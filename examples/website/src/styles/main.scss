@@ -1,33 +1,65 @@
 /**
- * Tairitsu Website Styles
- * 照抄 Hikari 设计系统，使用 Tairitsu（对立）深色主题
+ * Tairitsu Website — Dark Theme Overrides
+ *
+ * Compiled by tairitsu-packager's SCSS compiler.
+ * Loads AFTER hikari's bundle.css.
+ * Only: CSS variable overrides + surface patches + scrollbar.
  */
 
 /* ============================================
-   CSS Variables - Tairitsu Dark Theme
+   CSS Variables — Override hikari light → tairitsu dark
    ============================================ */
 
 :root {
-  /* Colors - Tairitsu Dark Theme */
+  /* === Tairitsu Custom Variables === */
   --ts-color-primary: #146e74;
   --ts-color-secondary: #ffc773;
   --ts-color-accent: #fbc02d;
-  --ts-color-background: #50616d;
-  --ts-color-surface: rgba(30, 40, 50, 0.9);
-  --ts-color-border: rgba(255, 255, 255, 0.1);
-
-  --ts-color-text-primary: rgba(255, 255, 255, 0.95);
-  --ts-color-text-secondary: rgba(255, 255, 255, 0.85);
-  --ts-color-text-disabled: rgba(255, 255, 255, 0.3);
-
-  --ts-color-success: #0EB840;
-  --ts-color-warning: #EED677;
-  --ts-color-danger: #FF4C00;
-  --ts-color-info: #6ABED6;
-
-  /* Glow Colors */
   --ts-glow-color: rgba(20, 110, 116, 0.5);
   --ts-glow-primary: rgba(20, 110, 116, 0.8);
+  --ts-font-sans: 'Noto Sans SC', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --ts-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* === Override ALL hikari light-theme variables to dark === */
+  --hi-color-background: #1a2332;
+  --hi-color-surface: rgba(22, 32, 45, 0.92);
+  --hi-color-surface-secondary: rgba(22, 32, 45, 0.7);
+  --hi-color-primary: #146e74;
+  --hi-color-primary-dark: #0f5559;
+  --hi-color-secondary: #ffc773;
+  --hi-color-secondary-dark: #e5b060;
+  --hi-color-danger: #FF4C00;
+  --hi-color-danger-dark: #CC3300;
+  --hi-color-success: #0EB840;
+  --hi-color-text-primary: rgba(255, 255, 255, 0.92);
+  --hi-color-text-secondary: rgba(255, 255, 255, 0.65);
+  --hi-color-text-disabled: rgba(255, 255, 255, 0.28);
+  --hi-color-border: rgba(255, 255, 255, 0.08);
+  --hi-color-accent: #fbc02d;
+
+  /* Ghost variant colors */
+  --hi-ghost-text: rgba(255, 255, 255, 0.88);
+  --hi-ghost-border: rgba(255, 255, 255, 0.15);
+  --hi-ghost-glow: rgba(20, 110, 116, 0.4);
+
+  /* Button glow */
+  --hi-glow-button-primary: 0 4px 20px rgba(20, 110, 116, 0.5);
+  --hi-glow-button-secondary: 0 4px 20px rgba(255, 199, 115, 0.4);
+  --hi-glow-button-danger: 0 4px 20px rgba(255, 76, 0, 0.4);
+
+  /* Text-on-colored backgrounds */
+  --hi-color-text-on-primary: #ffffff;
+  --hi-color-text-on-secondary: #1a2332;
+  --hi-color-text-on-danger: #ffffff;
+  --hi-color-text-on-success: #ffffff;
+
+  /* Background gradient */
+  --bg-color-1: rgb(26, 35, 50);
+  --bg-color-2: rgb(40, 55, 75);
+
+  /* Surface aliases */
+  --hi-header-surface: rgba(22, 32, 45, 0.88);
+  --hi-aside-surface: rgba(22, 32, 45, 0.88);
 
   /* Spacing */
   --ts-spacing-xs: 0.25rem;
@@ -37,39 +69,13 @@
   --ts-spacing-xl: 2rem;
   --ts-spacing-2xl: 3rem;
 
-  /* Typography */
-  --ts-font-sans: 'Noto Sans SC', 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  --ts-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --ts-font-size-xs: 0.75rem;
-  --ts-font-size-sm: 0.875rem;
-  --ts-font-size-base: 1rem;
-  --ts-font-size-lg: 1.125rem;
-  --ts-font-size-xl: 1.25rem;
-  --ts-font-size-2xl: 1.5rem;
-  --ts-font-size-3xl: 2rem;
-
-  /* Border Radius */
-  --ts-radius-sm: 4px;
-  --ts-radius-md: 8px;
-  --ts-radius-lg: 12px;
-
-  /* Shadows */
-  --ts-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --ts-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --ts-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-
-  /* Transitions */
-  --ts-duration-fast: 150ms;
-  --ts-duration-normal: 300ms;
-  --ts-ease: cubic-bezier(0.4, 0, 0.2, 1);
-
   /* Layout */
   --ts-sidebar-width: 260px;
   --ts-header-height: 64px;
 }
 
 /* ============================================
-   Reset & Base Styles
+   Reset & Base
    ============================================ */
 
 *, *::before, *::after {
@@ -85,10 +91,9 @@ html {
 
 body {
   font-family: var(--ts-font-sans);
-  font-size: var(--ts-font-size-base);
   line-height: 1.6;
-  color: var(--ts-color-text-primary);
-  background: var(--ts-color-background);
+  color: var(--hi-color-text-primary);
+  background: var(--hi-color-background);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -100,535 +105,111 @@ a {
 }
 
 a:hover {
-  color: var(--ts-color-secondary);
+  color: var(--hi-color-secondary);
 }
 
 /* ============================================
-   Tairitsu App Container
+   Dark Theme Background Gradient
    ============================================ */
 
-.tairitsu-app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, var(--ts-color-background) 0%, rgba(80, 97, 109, 0.95) 100%);
+.hi-background {
+  background: radial-gradient(
+    circle at 70% 50.4%,
+    var(--bg-color-1) 0%,
+    var(--bg-color-2) 100%
+  ) !important;
 }
 
 /* ============================================
-   Top Navigation
+   Header / Aside dark overrides
    ============================================ */
 
-.tairitsu-topnav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--ts-header-height);
-  padding: 0 var(--ts-spacing-lg);
-  background: var(--ts-color-surface);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--ts-color-border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.hi-header {
+  background: var(--hi-header-surface) !important;
+  border-bottom-color: var(--hi-color-border) !important;
 }
 
-.tairitsu-topnav__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--ts-spacing-sm);
-  font-size: var(--ts-font-size-lg);
-  font-weight: 700;
-  color: var(--ts-color-text-primary);
-  text-decoration: none;
-  transition: all var(--ts-duration-fast) var(--ts-ease);
-}
-
-.tairitsu-topnav__brand:hover {
-  color: var(--ts-color-secondary);
-  text-shadow: 0 0 12px var(--ts-glow-color);
-}
-
-.tairitsu-topnav__links {
-  display: flex;
-  align-items: center;
-  gap: var(--ts-spacing-md);
-}
-
-.tairitsu-topnav__link {
-  padding: var(--ts-spacing-sm) var(--ts-spacing-md);
-  font-size: var(--ts-font-size-sm);
-  font-weight: 500;
-  color: var(--ts-color-text-secondary);
-  border-radius: var(--ts-radius-sm);
-  transition: all var(--ts-duration-fast) var(--ts-ease);
-}
-
-.tairitsu-topnav__link:hover,
-.tairitsu-topnav__link.is-active {
-  color: var(--ts-color-text-primary);
-  background: var(--ts-color-primary);
-  box-shadow: 0 0 12px var(--ts-glow-color);
+.hi-aside,
+.hi-aside-drawer {
+  background: var(--hi-aside-surface) !important;
+  border-right-color: var(--hi-color-border) !important;
 }
 
 /* ============================================
-   Body Layout (Sidebar + Content)
+   Button dark theme fixes
    ============================================ */
 
-.tairitsu-body {
-  flex: 1;
-  display: flex;
-  height: calc(100vh - var(--ts-header-height));
-  overflow: hidden;
+.hi-button-primary {
+  color: #ffffff !important;
+}
+
+.hi-button-secondary {
+  color: var(--hi-color-text-on-secondary) !important;
 }
 
 /* ============================================
-   Sidebar
+   hi-markdown-content dark enhancements
    ============================================ */
 
-.tairitsu-sidebar {
-  width: var(--ts-sidebar-width);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--ts-color-surface);
-  border-right: 1px solid var(--ts-color-border);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.sidebar-link {
-  display: block;
-  padding: var(--ts-spacing-sm) var(--ts-spacing-md);
-  padding-left: var(--ts-spacing-lg);
-  font-size: var(--ts-font-size-sm);
-  color: var(--ts-color-text-secondary);
-  text-decoration: none;
-  border-bottom: 1px solid var(--ts-color-border);
-  transition: all var(--ts-duration-fast) var(--ts-ease);
-  cursor: pointer;
-}
-
-.sidebar-link:hover {
-  color: var(--ts-color-text-primary);
-  background: rgba(20, 110, 116, 0.1);
-  box-shadow: inset 0 0 8px var(--ts-glow-color);
-}
-
-.sidebar-link.is-active {
-  color: var(--ts-color-text-primary);
-  background: var(--ts-color-primary);
-  font-weight: 500;
-  border-left: 3px solid var(--ts-color-secondary);
-  padding-left: calc(var(--ts-spacing-lg) - 3px);
-}
-
-.sidebar-link--home {
-  font-weight: 600;
-  padding-left: var(--ts-spacing-md);
-  background: rgba(255, 199, 115, 0.1);
-}
-
-.sidebar-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-section__label {
-  display: block;
-  padding: var(--ts-spacing-md) var(--ts-spacing-md) var(--ts-spacing-sm);
-  font-size: var(--ts-font-size-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ts-color-text-secondary);
-  border-bottom: 1px solid var(--ts-color-border);
-}
-
-/* ============================================
-   Main Content
-   ============================================ */
-
-.tairitsu-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: var(--ts-spacing-xl);
-  background: transparent;
-}
-
-/* ============================================
-   Page Styles
-   ============================================ */
-
-.tairitsu-page {
-  display: none;
-  animation: fadeIn var(--ts-duration-normal) var(--ts-ease);
-}
-
-.tairitsu-page.is-active {
-  display: block;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ============================================
-   Hero Section
-   ============================================ */
-
-.page-hero {
-  padding: var(--ts-spacing-2xl) 0;
-  text-align: center;
-}
-
-.page-hero__inner {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.page-hero__title {
-  font-size: var(--ts-font-size-3xl);
-  font-weight: 700;
-  margin-bottom: var(--ts-spacing-sm);
-  background: linear-gradient(135deg, var(--ts-color-primary), var(--ts-color-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.page-hero__subtitle {
-  font-size: var(--ts-font-size-xl);
-  color: var(--ts-color-text-secondary);
-  margin-bottom: var(--ts-spacing-md);
-}
-
-.page-hero__desc {
-  font-size: var(--ts-font-size-base);
-  color: var(--ts-color-text-secondary);
-  margin-bottom: var(--ts-spacing-lg);
-  line-height: 1.8;
-}
-
-.page-hero__actions {
-  display: flex;
-  gap: var(--ts-spacing-md);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* ============================================
-   Buttons
-   ============================================ */
-
-.ts-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--ts-spacing-sm);
-  padding: var(--ts-spacing-sm) var(--ts-spacing-lg);
-  font-family: var(--ts-font-sans);
-  font-size: var(--ts-font-size-sm);
-  font-weight: 500;
-  text-decoration: none;
-  border-radius: var(--ts-radius-md);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all var(--ts-duration-fast) var(--ts-ease);
-}
-
-.ts-btn--primary {
-  background: var(--ts-color-primary);
-  color: var(--ts-color-text-primary);
-  border-color: var(--ts-color-primary);
-}
-
-.ts-btn--primary:hover {
-  background: rgba(20, 110, 116, 0.8);
-  box-shadow: 0 0 16px var(--ts-glow-color);
-}
-
-.ts-btn--secondary {
-  background: transparent;
-  color: var(--ts-color-text-primary);
-  border-color: var(--ts-color-border);
-}
-
-.ts-btn--secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--ts-color-secondary);
-}
-
-.ts-btn--lg {
-  padding: var(--ts-spacing-md) var(--ts-spacing-xl);
-  font-size: var(--ts-font-size-base);
-}
-
-/* ============================================
-   Page Sections
-   ============================================ */
-
-.page-section {
-  margin-bottom: var(--ts-spacing-2xl);
-}
-
-.page-section__title {
-  font-size: var(--ts-font-size-xl);
-  font-weight: 600;
-  margin-bottom: var(--ts-spacing-lg);
-  padding-bottom: var(--ts-spacing-sm);
-  border-bottom: 2px solid var(--ts-color-primary);
-}
-
-/* ============================================
-   Card Grid
-   ============================================ */
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--ts-spacing-lg);
-}
-
-.card {
-  background: var(--ts-color-surface);
-  border-radius: var(--ts-radius-lg);
-  padding: var(--ts-spacing-lg);
-  border: 1px solid var(--ts-color-border);
-  transition: all var(--ts-duration-fast) var(--ts-ease);
-}
-
-.card:hover {
-  border-color: var(--ts-color-primary);
-  box-shadow: 0 0 20px var(--ts-glow-color);
-}
-
-.card__title {
-  font-size: var(--ts-font-size-lg);
-  font-weight: 600;
-  margin-bottom: var(--ts-spacing-sm);
-  color: var(--ts-color-text-primary);
-}
-
-.card__body {
-  font-size: var(--ts-font-size-sm);
-  color: var(--ts-color-text-secondary);
-  line-height: 1.6;
-}
-
-/* ============================================
-   Code Blocks
-   ============================================ */
-
-.code-block {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--ts-radius-md);
-  padding: var(--ts-spacing-md);
-  overflow-x: auto;
-  font-family: var(--ts-font-mono);
-  font-size: var(--ts-font-size-sm);
-  line-height: 1.6;
-  border: 1px solid var(--ts-color-border);
-}
-
-.code-block__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--ts-spacing-xs) var(--ts-spacing-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--ts-radius-sm) var(--ts-radius-sm) 0 0;
-  margin: calc(var(--ts-spacing-md) * -1) calc(var(--ts-spacing-md) * -1) var(--ts-spacing-md);
-}
-
-.code-block__lang {
-  font-size: var(--ts-font-size-xs);
-  color: var(--ts-color-text-secondary);
-  text-transform: uppercase;
-}
-
-.code-block pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-/* ============================================
-   Documentation Content
-   ============================================ */
-
-.doc-content {
+.hi-markdown-content {
   max-width: 900px;
 }
 
-.doc-content h1 {
-  font-size: var(--ts-font-size-2xl);
-  font-weight: 700;
-  margin-bottom: var(--ts-spacing-lg);
-  color: var(--ts-color-text-primary);
-}
-
-.doc-content h2 {
-  font-size: var(--ts-font-size-xl);
-  font-weight: 600;
+.hi-markdown-content h2 {
   margin-top: var(--ts-spacing-2xl);
   margin-bottom: var(--ts-spacing-md);
-  color: var(--ts-color-text-primary);
-  border-bottom: 1px solid var(--ts-color-border);
+  border-bottom: 1px solid var(--hi-color-border);
   padding-bottom: var(--ts-spacing-sm);
 }
 
-.doc-content h3 {
-  font-size: var(--ts-font-size-lg);
-  font-weight: 600;
+.hi-markdown-content h3 {
   margin-top: var(--ts-spacing-xl);
   margin-bottom: var(--ts-spacing-sm);
-  color: var(--ts-color-text-primary);
 }
 
-.doc-content p {
+.hi-markdown-content p {
   margin-bottom: var(--ts-spacing-md);
-  color: var(--ts-color-text-secondary);
   line-height: 1.8;
 }
 
-.doc-content ul, .doc-content ol {
+.hi-markdown-content ul,
+.hi-markdown-content ol {
   margin-bottom: var(--ts-spacing-md);
   padding-left: var(--ts-spacing-xl);
-  color: var(--ts-color-text-secondary);
 }
 
-.doc-content li {
+.hi-markdown-content li {
   margin-bottom: var(--ts-spacing-xs);
 }
 
-.doc-content code {
-  font-family: var(--ts-font-mono);
-  font-size: 0.9em;
-  padding: 0.1em 0.3em;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--ts-radius-sm);
-}
-
-.doc-content pre {
-  background: rgba(0, 0, 0, 0.3);
-  padding: var(--ts-spacing-md);
-  border-radius: var(--ts-radius-md);
-  overflow-x: auto;
-  margin-bottom: var(--ts-spacing-md);
-  border: 1px solid var(--ts-color-border);
-}
-
-.doc-content pre code {
+.hi-markdown-content pre code {
   background: transparent;
   padding: 0;
 }
 
-.doc-content blockquote {
-  border-left: 4px solid var(--ts-color-primary);
+.hi-markdown-content blockquote {
+  border-left: 4px solid var(--hi-color-primary);
   padding-left: var(--ts-spacing-md);
   margin: var(--ts-spacing-md) 0;
-  color: var(--ts-color-text-secondary);
   font-style: italic;
 }
 
-.doc-content a {
-  color: var(--ts-color-secondary);
-  text-decoration: underline;
-}
-
-.doc-content a:hover {
-  color: var(--ts-color-primary);
-}
-
-.doc-content table {
+.hi-markdown-content table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--ts-spacing-md);
 }
 
-.doc-content th, .doc-content td {
+.hi-markdown-content th,
+.hi-markdown-content td {
   padding: var(--ts-spacing-sm) var(--ts-spacing-md);
-  border: 1px solid var(--ts-color-border);
+  border: 1px solid var(--hi-color-border);
   text-align: left;
 }
 
-.doc-content th {
+.hi-markdown-content th {
   background: rgba(255, 255, 255, 0.05);
   font-weight: 600;
-}
-
-.doc-content hr {
-  border: none;
-  border-top: 1px solid var(--ts-color-border);
-  margin: var(--ts-spacing-xl) 0;
-}
-
-/* ============================================
-   Footer
-   ============================================ */
-
-.tairitsu-footer {
-  padding: var(--ts-spacing-lg);
-  text-align: center;
-  font-size: var(--ts-font-size-sm);
-  color: var(--ts-color-text-secondary);
-  border-top: 1px solid var(--ts-color-border);
-  margin-top: var(--ts-spacing-2xl);
-}
-
-/* ============================================
-   Not Found Page
-   ============================================ */
-
-.not-found {
-  text-align: center;
-  padding: var(--ts-spacing-2xl);
-}
-
-.not-found h1 {
-  font-size: 4rem;
-  color: var(--ts-color-primary);
-  margin-bottom: var(--ts-spacing-md);
-}
-
-.not-found p {
-  color: var(--ts-color-text-secondary);
-  margin-bottom: var(--ts-spacing-lg);
-}
-
-/* ============================================
-   Responsive Design
-   ============================================ */
-
-@media (max-width: 768px) {
-  .tairitsu-sidebar {
-    display: none;
-  }
-
-  .tairitsu-content {
-    padding: var(--ts-spacing-md);
-  }
-
-  .page-hero__title {
-    font-size: var(--ts-font-size-2xl);
-  }
-
-  .page-hero__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ============================================
