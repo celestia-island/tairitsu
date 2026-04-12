@@ -34,6 +34,9 @@ pub struct SiteText {
     pub section_packages: &'static str,
     pub section_examples: &'static str,
     pub cmd_caption: &'static str,
+    pub not_found_title: &'static str,
+    pub not_found_desc: &'static str,
+    pub not_found_action: &'static str,
 }
 
 pub const LOCALES: [Locale; 8] = [
@@ -101,6 +104,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "Core Package Atlas",
             section_examples: "Suggested Example Reading Order",
             cmd_caption: "Current goal: complete a visible baseline first, then continue with richer interactivity.",
+            not_found_title: "Page Not Found",
+            not_found_desc: "The page you requested does not exist. Check the URL or go home.",
+            not_found_action: "Go Home",
         },
         Locale::ZhChs => SiteText {
             brand: "Tairitsu Framework Demo",
@@ -126,6 +132,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "核心包图谱",
             section_examples: "建议阅读示例顺序",
             cmd_caption: "当前目标：先把可见基线做完整，再继续加交互深度。",
+            not_found_title: "页面未找到",
+            not_found_desc: "请求的页面不存在。请检查 URL 或返回首页。",
+            not_found_action: "返回首页",
         },
         Locale::ZhCht => SiteText {
             brand: "Tairitsu Framework Demo",
@@ -151,6 +160,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "核心套件圖譜",
             section_examples: "建議閱讀示例順序",
             cmd_caption: "目前目標：先完成可見基線，再逐步補強互動能力。",
+            not_found_title: "頁面未找到",
+            not_found_desc: "請求的頁面不存在。請檢查 URL 或返回首頁。",
+            not_found_action: "返回首頁",
         },
         Locale::JaJp => SiteText {
             brand: "Tairitsu Framework Demo",
@@ -176,6 +188,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "主要パッケージ一覧",
             section_examples: "推奨サンプル読書順",
             cmd_caption: "まず見える土台を完成し、その後に対話性を強化します。",
+            not_found_title: "ページが見つかりません",
+            not_found_desc: "お探しのページは存在しません。URLをご確認の上、ホームに戻ってください。",
+            not_found_action: "ホームに戻る",
         },
         Locale::KoKr => SiteText {
             brand: "Tairitsu Framework Demo",
@@ -201,6 +216,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "핵심 패키지 지도",
             section_examples: "권장 예제 읽기 순서",
             cmd_caption: "현재 목표는 보이는 기본형을 먼저 완성하고, 이후 상호작용을 확장하는 것입니다.",
+            not_found_title: "페이지를 찾을 수 없습니다",
+            not_found_desc: "요청한 페이지가 존재하지 않습니다. URL을 확인하거나 홈으로 가세요.",
+            not_found_action: "홈으로",
         },
         Locale::FrFr => SiteText {
             brand: "Démo du Framework Tairitsu",
@@ -226,6 +244,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "Atlas des paquets centraux",
             section_examples: "Ordre de lecture conseillé des exemples",
             cmd_caption: "Objectif actuel: livrer d'abord une base visible, puis enrichir l'interactivité.",
+            not_found_title: "Page introuvable",
+            not_found_desc: "La page demandée n'existe pas. Vérifiez l'URL ou retournez à l'accueil.",
+            not_found_action: "Aller à l'accueil",
         },
         Locale::EsEs => SiteText {
             brand: "Demo del Framework Tairitsu",
@@ -251,6 +272,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "Atlas de paquetes centrales",
             section_examples: "Orden sugerido de ejemplos",
             cmd_caption: "Meta actual: terminar primero una base visible y luego ampliar la interactividad.",
+            not_found_title: "Página no encontrada",
+            not_found_desc: "La página solicitada no existe. Verifique la URL o vaya al inicio.",
+            not_found_action: "Ir al inicio",
         },
         Locale::RuRu => SiteText {
             brand: "Демо Tairitsu Framework",
@@ -276,6 +300,9 @@ pub fn text(locale: Locale) -> SiteText {
             section_packages: "Ключевые пакеты",
             section_examples: "Рекомендуемый порядок изучения примеров",
             cmd_caption: "Текущая цель: сначала завершить видимую базу, затем нарастить интерактивность.",
+            not_found_title: "Страница не найдена",
+            not_found_desc: "Запрашиваемая страница не существует. Проверьте URL или вернитесь на главную.",
+            not_found_action: "На главную",
         },
     }
 }

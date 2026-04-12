@@ -4,6 +4,7 @@
 
 mod app;
 mod components;
+mod i18n;
 mod pages;
 
 use anyhow::Result;
