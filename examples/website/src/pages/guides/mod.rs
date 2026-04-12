@@ -23,7 +23,7 @@ pub fn render_all() -> Vec<VNode> {
 
 fn render_overview() -> VNode {
     rsx! {
-        div { id: "page-guides", class: "tairitsu-page",
+        div { id: "page-guides", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title", "Guides" }
                 p { class: "card__body",
@@ -37,7 +37,7 @@ fn render_overview() -> VNode {
                         }
                         a {
                             href: "/guides/quick-start",
-                            class: "ts-btn ts-btn--secondary",
+                            class: "hi-btn hi-btn--secondary",
                             "阅读文档"
                         }
                     }
@@ -46,7 +46,7 @@ fn render_overview() -> VNode {
                         p { class: "card__body", "了解项目结构和各个包的职责。" }
                         a {
                             href: "/guides/workspace-map",
-                            class: "ts-btn ts-btn--secondary",
+                            class: "hi-btn hi-btn--secondary",
                             "阅读文档"
                         }
                     }
@@ -55,7 +55,7 @@ fn render_overview() -> VNode {
                         p { class: "card__body", "完整的构建流程和发布策略。" }
                         a {
                             href: "/guides/build-test-release",
-                            class: "ts-btn ts-btn--secondary",
+                            class: "hi-btn hi-btn--secondary",
                             "阅读文档"
                         }
                     }
@@ -64,7 +64,7 @@ fn render_overview() -> VNode {
                         p { class: "card__body", "从其他框架迁移到 Tairitsu 的指南。" }
                         a {
                             href: "/guides/migration",
-                            class: "ts-btn ts-btn--secondary",
+                            class: "hi-btn hi-btn--secondary",
                             "阅读文档"
                         }
                     }

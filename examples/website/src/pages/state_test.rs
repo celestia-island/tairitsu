@@ -40,7 +40,7 @@ pub fn render() -> VNode {
     let rect_height_clone = rect_height.clone();
 
     rsx! {
-        div { id: "page-state-test", class: "tairitsu-page",
+        div { id: "page-state-test", class: "hikari-page",
             h1 { "State Management Tests" }
             p { "Tests for reactive state management, signals, and context." }
 
@@ -59,7 +59,7 @@ pub fn render() -> VNode {
                     }
                     button {
                         id: "counter-increment",
-                        class: "tairitsu-button",
+                        class: "hi-btn hi-btn--primary",
                         onclick: move |_| {
                             let current = count_clone.get();
                             count_clone.set(current + 1);
@@ -77,7 +77,7 @@ pub fn render() -> VNode {
                 div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
                     input {
                         id: "text-input",
-                        class: "tairitsu-input",
+                        class: "hi-input",
                         r#type: "text",
                         placeholder: "Type something...",
                         style: "padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; width: 250px;",
@@ -125,7 +125,7 @@ pub fn render() -> VNode {
                 div { style: "padding: 15px; background: #f7fafc; border-radius: 8px;",
                     button {
                         id: "list-add",
-                        class: "tairitsu-button",
+                        class: "hi-btn hi-btn--primary",
                         onclick: move |_| {
                             let mut items_ref = items_clone.borrow().clone();
                             items_ref.push(format!("Item {}", items_ref.len() + 1));

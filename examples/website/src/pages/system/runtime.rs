@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-runtime", class: "tairitsu-page",
+        div { id: "page-system-runtime", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "运行时与容器模型"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 运行时采用 Docker-like 的镜像/容器架构，管理 WASM 组件的生命周期。"
                     }
@@ -33,7 +33,7 @@ pub fn render() -> VNode {
                     }
 
                     h3 { "使用示例" }
-                    div { class: "code-block language-rust",
+                    div { class: "hi-code-block language-rust",
                         pre {
                             code {
                                 "// 创建镜像

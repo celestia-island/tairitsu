@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-guides-migration", class: "tairitsu-page",
+        div { id: "page-guides-migration", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "迁移指南"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "帮助你从其他框架迁移到 Tairitsu。"
                     }
@@ -19,7 +19,7 @@ pub fn render() -> VNode {
                     p {
                         "Tairitsu 的 rsx! 宏设计参考了 Dioxus，大部分语法可以直接复用："
                     }
-                    div { class: "code-block language-rust",
+                    div { class: "hi-code-block language-rust",
                         pre {
                             code {
                                 "// Dioxus 0.7 风格
@@ -47,7 +47,7 @@ rsx! {
                     p {
                         "从命令式 DOM 操作迁移到声明式 rsx! 宏："
                     }
-                    div { class: "code-block language-rust",
+                    div { class: "hi-code-block language-rust",
                         pre {
                             code {
                                 "// web-sys 风格

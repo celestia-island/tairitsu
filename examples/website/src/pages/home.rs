@@ -1,103 +1,95 @@
-//! Home page — hero section and navigation cards.
+//! Home page — mirrors hikari-legacy home page structure.
+//!
+//! Centered hero with logo, title, subtitle, tagline, and CTA buttons.
 
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-home", class: "tairitsu-page is-active",
-            section { class: "page-hero",
-                div { class: "page-hero__inner",
-                    h1 { class: "page-hero__title", "Tairitsu" }
-                    p { class: "page-hero__subtitle", "泛型 WASM Component Runtime 引擎" }
-                    p { class: "page-hero__desc",
-                        "采用 Docker-like 架构的通用运行时。支持镜像/容器模型管理 WASM 模块，提供灵活的构建器模式和 WIT-based 类型安全通信。"
-                    }
-                    div { class: "page-hero__actions",
-                        a {
-                            href: "/guides/quick-start",
-                            class: "ts-btn ts-btn--primary ts-btn--lg",
-                            "快速开始"
+        div { id: "page-home", class: "hikari-page is-active",
+            nav { class: "hi-p-4",
+                "Home / Home"
+            }
+            div { class: "hi-container hi-container-md",
+                section { class: "hi-section hi-section-lg",
+                    div { class: "hi-section-body",
+                        div { class: "hi-text-center",
+                            div { class: "hi-mb-4",
+                                span { style: "font-size:80px;line-height:1", "\u{273F}" }
+                            }
+                            h1 { class: "hi-text-2xl hi-text-secondary hi-mb-6",
+                                "Tairitsu"
+                            }
+                            div { style: "height:1.5rem" }
+                            p { class: "hi-text-lg hi-text-primary",
+                                "A generic WASM Component Runtime Engine."
+                            }
+                            p { class: "hi-text-sm hi-text-primary",
+                                "Docker-like architecture for WASM modules. Type-safe via WIT."
+                            }
                         }
-                        a {
-                            href: "/system/overview",
-                            class: "ts-btn ts-btn--secondary ts-btn--lg",
-                            "系统架构"
+                        div { style: "height:2rem" }
+                        div { class: "hi-row hi-row-gap-md",
+                            style: "display:flex;justify-content:center;gap:1rem;flex-wrap:wrap",
+                            a {
+                                href: "/guides/quick-start",
+                                class: "hi-button hi-button-primary hi-button-lg hi-button-width-auto hi-justify-center",
+                                "Quick Start \u{2192}"
+                            }
+                            a {
+                                href: "/system/overview",
+                                class: "hi-button hi-button-secondary hi-button-lg hi-button-width-auto hi-justify-center",
+                                "System Architecture"
+                            }
+                        }
+                        div { style: "height:3rem" }
+                    }
+                }
+                div { style: "height:2rem" }
+                section { class: "hi-section",
+                    h2 { class: "hi-text-xl hi-mb-4", "What is Tairitsu?" }
+                    div { class: "card-grid",
+                        div { class: "card",
+                            h3 { class: "card__title", "Image / Container Model" }
+                            p { class: "card__body",
+                                "Docker-like architecture for managing WASM modules."
+                            }
+                        }
+                        div { class: "card",
+                            h3 { class: "card__title", "Generic Runtime" }
+                            p { class: "card__body",
+                                "No preset WIT interfaces. Pluggable host imports and guest exports."
+                            }
+                        }
+                        div { class: "card",
+                            h3 { class: "card__title", "Builder Pattern" }
+                            p { class: "card__body",
+                                "Flexible Container::builder() API for configuring host imports."
+                            }
                         }
                     }
                 }
-            }
-            section { class: "page-section",
-                h2 { class: "page-section__title", "什么是 Tairitsu?" }
-                div { class: "card-grid",
-                    div { class: "card",
-                        h3 { class: "card__title", "镜像/容器模型" }
-                        p { class: "card__body",
-                            "使用 Docker-like 架构管理 WASM 模块。Image 是不可变的 WASM 组件二进制文件，Container 是运行实例。"
+                section { class: "hi-section",
+                    h2 { class: "hi-text-xl hi-mb-4", "Architecture Layers" }
+                    div { class: "card-grid",
+                        div { class: "card",
+                            h3 { class: "card__title", "App Layer" }
+                            p { class: "card__body",
+                                "Custom WIT interfaces, business components, example applications."
+                            }
                         }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "通用运行时" }
-                        p { class: "card__body",
-                            "不预设任何特定 WIT 接口，提供可插拔的宿主导入与客体导出调用，同时支持编译期与运行期接口路径。"
+                        div { class: "card",
+                            h3 { class: "card__title", "Framework Layer" }
+                            p { class: "card__body",
+                                "Runtime + macros + vdom/hooks/style/web + packager."
+                            }
                         }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "构建器模式" }
-                        p { class: "card__body",
-                            "灵活的 Container::builder() API，支持配置 host imports、guest initializer、linker state 和 execution context。"
-                        }
-                    }
-                }
-            }
-            section { class: "page-section",
-                h2 { class: "page-section__title", "架构分层" }
-                div { class: "card-grid",
-                    div { class: "card",
-                        h3 { class: "card__title", "App Layer" }
-                        p { class: "card__body",
-                            "自定义 WIT 接口、业务组件、示例应用。"
-                        }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "Framework Layer" }
-                        p { class: "card__body",
-                            "runtime + macros + vdom/hooks/style/web + packager。"
-                        }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "Host Layer" }
-                        p { class: "card__body",
-                            "wasmtime/native host 和 browser-glue runtime adaptors。"
-                        }
-                    }
-                }
-            }
-            section { class: "page-section",
-                h2 { class: "page-section__title", "核心特性" }
-                div { class: "card-grid",
-                    div { class: "card",
-                        h3 { class: "card__title", "接口先行" }
-                        p { class: "card__body",
-                            "优先通过 WIT 描述协议，确保类型安全和跨语言互操作性。"
-                        }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "运行时解耦" }
-                        p { class: "card__body",
-                            "容器模型不绑定业务语义，支持多种执行环境和宿主平台。"
-                        }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "双路径共存" }
-                        p { class: "card__body",
-                            "web 与 wit-bindings 两种后端可并行演进，满足不同场景需求。"
-                        }
-                    }
-                    div { class: "card",
-                        h3 { class: "card__title", "离线优先" }
-                        p { class: "card__body",
-                            "WIT 缓存支持无网构建，提升开发体验。"
+                        div { class: "card",
+                            h3 { class: "card__title", "Host Layer" }
+                            p { class: "card__body",
+                                "wasmtime/native host and browser-glue runtime adaptors."
+                            }
                         }
                     }
                 }

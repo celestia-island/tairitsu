@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-web-backends", class: "tairitsu-page",
+        div { id: "page-system-web-backends", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "Web 平台双后端"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "Tairitsu 提供两种 Web 平台后端，满足不同的使用场景。"
                     }
@@ -52,7 +52,7 @@ pub fn render() -> VNode {
                     p {
                         "直接 DOM 操作，适合传统 Web 应用："
                     }
-                    div { class: "code-block language-rust",
+                    div { class: "hi-code-block language-rust",
                         pre {
                             code {
                                 "// web 后端 - 直接 DOM 操作
@@ -68,7 +68,7 @@ platform.append_child(&element)?;"
                     p {
                         "Component Model 原生，适合 Component 生态："
                     }
-                    div { class: "code-block language-rust",
+                    div { class: "hi-code-block language-rust",
                         pre {
                             code {
                                 "// wit-bindings 后端 - Component Model

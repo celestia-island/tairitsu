@@ -5,12 +5,12 @@ use tairitsu_vdom::VNode;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-guides-build-test-release", class: "tairitsu-page",
+        div { id: "page-guides-build-test-release", class: "hikari-page",
             section { class: "page-section",
                 h2 { class: "page-section__title",
                     "构建、测试与发布"
                 }
-                div { class: "doc-content",
+                div { class: "hi-markdown-content",
                     p {
                         "了解 Tairitsu 的构建流程、测试策略和发布流程。"
                     }
@@ -19,7 +19,7 @@ pub fn render() -> VNode {
                     p {
                         "使用 just 命令进行构建："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 开发构建
@@ -38,7 +38,7 @@ just serve-web"
                     p {
                         "运行测试来验证代码正确性："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 运行测试
@@ -54,7 +54,7 @@ cargo test -p tairitsu-vdom"
                     p {
                         "发布前的检查和发布流程："
                     }
-                    div { class: "code-block language-bash",
+                    div { class: "hi-code-block language-bash",
                         pre {
                             code {
                                 "# 发布检查
