@@ -3,10 +3,9 @@
 //! Uses hikari-icons (SVG-based MDI icons) matching hikari-legacy's
 //! component library icon system, rendered under tairitsu dark theme.
 
-use tairitsu_macros::rsx;
-use tairitsu_vdom::{svg::SafeSvg, VElement, VNode, VText};
-
 use hikari_icons::{get, MdiIcon};
+use tairitsu_macros::rsx;
+use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, VElement, VNode, VText};
 
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
@@ -52,24 +51,76 @@ fn arrow_icon() -> VNode {
     svg_icon(MdiIcon::ChevronRight, 10, "hi-sidebar-arrow")
 }
 
-fn submenu_title(icon: MdiIcon, label: &str) -> VNode {
+/// Glow effect wrapper with native Rust mouse-tracking.
+/// Uses set_style() directly in event callbacks for CSS custom properties,
+/// matching hikari-legacy's Glow component architecture but built on tairitsu's own infrastructure
+/// (MouseEvent, get_bounding_client_rect, set_style via WIT bindings).
+fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VNode {
+    let opacity = match intensity {
+        "dim" => "0.07",
+        "soft" => "0.15",
+        "bright" => "0.30",
+        _ => "0.15",
+    };
+
+    let onmousemove = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
+        if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
+            if let Some(target) = me.target {
+                let rect = get_bounding_client_rect(target);
+                if rect.width > 0.0 && rect.height > 0.0 {
+                    let px = (me.offset_x as f64 / rect.width * 100.0).clamp(0.0, 100.0);
+                    let py = (me.offset_y as f64 / rect.height * 100.0).clamp(0.0, 100.0);
+                    set_style(target, "--glow-x", &format!("{:.1}%", px));
+                    set_style(target, "--glow-y", &format!("{:.1}%", py));
+                }
+            }
+        }
+    };
+    let onmouseenter = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
+        if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
+            if let Some(target) = me.target {
+                set_style(target, "--glow-opacity", opacity);
+            }
+        }
+    };
+    let onmouseleave = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
+        if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
+            if let Some(target) = me.target {
+                set_style(target, "--glow-x", "50%");
+                set_style(target, "--glow-y", "50%");
+                set_style(target, "--glow-opacity", "0");
+            }
+        }
+    };
+
     VNode::Element(
         el("div")
-            .class("hi-menu-item-wrapper hi-menu-height-compact")
-            .child(VNode::Element(
-                el("div")
-                    .class("hi-glow-wrapper hi-glow-blur-medium hi-glow-subtle")
-                    .attr("style", "--glow-x:50%;--glow-y:50%;--glow-intensity:0.8")
-                    .child(VNode::Element(
-                        el("div")
-                            .class("hi-menu-height-compact hi-menu-submenu-title")
-                            .child(sidebar_icon(icon))
-                            .child(arrow_icon())
-                            .child(VNode::Element(
-                                el("span").class("hi-menu-item-content").child(txt(label)),
-                            )),
-                    )),
-            )),
+            .class(format!("hi-glow-wrapper hi-glow-{} hi-glow-{}", blur, intensity).as_str())
+            .attr("style", &format!(
+                "--glow-x:50%;--glow-y:50%;--glow-color:{};--glow-opacity:0;--glow-intensity-scale:0;",
+                color
+            ))
+            .on_event("mousemove", onmousemove)
+            .on_event("mouseenter", onmouseenter)
+            .on_event("mouseleave", onmouseleave)
+            .child(children),
+    )
+}
+
+fn submenu_title(icon: MdiIcon, label: &str) -> VNode {
+    glow_wrapper(
+        "medium",
+        "subtle",
+        "rgba(128,128,128,0.4)",
+        VNode::Element(
+            el("div")
+                .class("hi-menu-height-compact hi-menu-submenu-title")
+                .child(sidebar_icon(icon))
+                .child(arrow_icon())
+                .child(VNode::Element(
+                    el("span").class("hi-menu-item-content").child(txt(label)),
+                )),
+        ),
     )
 }
 
@@ -145,19 +196,25 @@ pub fn top_nav() -> VNode {
 // ============================================================
 
 pub fn sidebar() -> VNode {
-    let home = rsx! {
-        ul { class: "hi-menu hi-menu-vertical hi-menu-compact",
-            li { role: "menuitem", class: "hi-menu-item hi-menu-item--home hi-menu-height-compact",
-                data_key: "Home",
-                a { href: "/",
-                    ..vec![
-                        sidebar_icon(MdiIcon::Home),
-                        VNode::Element(el("span").class("hi-sidebar-label").child(txt("Home"))),
-                    ]
-                }
-            }
-        }
-    };
+    let home = glow_wrapper(
+        "medium",
+        "subtle",
+        "rgba(128,128,128,0.3)",
+        VNode::Element(
+            el("ul")
+                .class("hi-menu hi-menu-vertical hi-menu-compact")
+                .child(VNode::Element(
+                    el("li")
+                        .attr("role", "menuitem")
+                        .class("hi-menu-item hi-menu-item--home hi-menu-height-compact")
+                        .attr("data_key", "Home")
+                        .child(VNode::Element(el("a").attr("href", "/").children(vec![
+                            sidebar_icon(MdiIcon::Home),
+                            VNode::Element(el("span").class("hi-sidebar-label").child(txt("Home"))),
+                        ]))),
+                )),
+        ),
+    );
 
     let layer1_items: Vec<(&str, &str, MdiIcon)> = vec![
         ("Button", "/components/layer1/button", MdiIcon::ToggleSwitch),
@@ -307,14 +364,19 @@ pub fn sidebar() -> VNode {
 }
 
 fn menu_item(icon: MdiIcon, label: &str, href: &str) -> VNode {
-    VNode::Element(
-        el("li")
-            .attr("role", "menuitem")
-            .class("hi-menu-item hi-menu-height-compact")
-            .child(VNode::Element(el("a").attr("href", href).children(vec![
-                sidebar_icon(icon),
-                VNode::Element(el("span").class("hi-sidebar-label").child(txt(label))),
-            ]))),
+    glow_wrapper(
+        "medium",
+        "subtle",
+        "rgba(128,128,128,0.3)",
+        VNode::Element(
+            el("li")
+                .attr("role", "menuitem")
+                .class("hi-menu-item hi-menu-height-compact")
+                .child(VNode::Element(el("a").attr("href", href).children(vec![
+                    sidebar_icon(icon),
+                    VNode::Element(el("span").class("hi-sidebar-label").child(txt(label))),
+                ]))),
+        ),
     )
 }
 
