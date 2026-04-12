@@ -8,7 +8,7 @@ use tairitsu_vdom::VNode;
 
 use crate::{
     components::{aside_footer, sidebar, top_nav},
-    pages::{dom_ops_test, guides, home, not_found, packages, state_test, system},
+    pages::{guides, home, not_found, packages, system},
 };
 
 pub fn render() -> VNode {
@@ -17,8 +17,6 @@ pub fn render() -> VNode {
     content.extend(guides::render_all());
     content.extend(system::render_all());
     content.extend(packages::render_all());
-    content.push(dom_ops_test::render());
-    content.push(state_test::render());
     content.push(not_found::render());
 
     rsx! {

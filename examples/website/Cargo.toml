@@ -83,7 +83,6 @@ head = """
         '/system/versioning': 'system-versioning',
         '/packages': 'packages-overview',
         '/packages/list': 'packages-list',
-        '/dom-ops-test': 'dom-ops-test',
     };
 
     /* ===== DRAWER STATE ===== */
@@ -123,6 +122,87 @@ head = """
             if (btn) btn.textContent = '\\u2600';
             currentTheme = 'dark';
         }
+    }
+
+    /* ===== LANGUAGE SWITCHER ===== */
+    var currentLang = 'en';
+    var LANGUAGES = [
+        { code: 'en', label: 'English' },
+        { code: 'zh-CN', label: '中文' },
+        { code: 'zh-TW', label: '繁體中文' },
+        { code: 'ja', label: '日本語' },
+        { code: 'ko', label: '한국어' },
+        { code: 'fr', label: 'Français' },
+        { code: 'de', label: 'Deutsch' },
+        { code: 'es', label: 'Español' },
+        { code: 'ru', label: 'Русский' },
+    ];
+    var langPopover = null;
+
+    function toggleLangPopover() {
+        if (langPopover && langPopover.parentNode) {
+            langPopover.remove();
+            langPopover = null;
+            return;
+        }
+        var btn = document.getElementById('lang-toggle');
+        if (!btn) return;
+        var rect = btn.getBoundingClientRect();
+        langPopover = document.createElement('div');
+        langPopover.className = 'hi-lang-popover';
+        langPopover.style.cssText = 'position:fixed;right:' + (window.innerWidth - rect.left) + 'px;top:' + (rect.bottom + 4) + 'px;z-index:200;background:var(--hi-color-surface);border:1px solid var(--hi-color-border);border-radius:8px;padding:4px 0;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+        LANGUAGES.forEach(function(lang) {
+            var item = document.createElement('div');
+            item.style.cssText = 'padding:8px 16px;cursor:pointer;color:' + (lang.code === currentLang ? 'var(--hi-color-secondary)' : 'var(--hi-color-text-primary)') + ';font-size:0.875rem;';
+            item.textContent = lang.label;
+            item.addEventListener('click', function() {
+                currentLang = lang.code;
+                if (langPopover) { langPopover.remove(); langPopover = null; }
+                document.documentElement.lang = lang.code;
+            });
+            langPopover.appendChild(item);
+        });
+        document.body.appendChild(langPopover);
+        setTimeout(function() {
+            document.addEventListener('click', function closeLang(e) {
+                if (langPopover && !langPopover.contains(e.target) && e.target !== btn) {
+                    langPopover.remove();
+                    langPopover = null;
+                    document.removeEventListener('click', closeLang);
+                }
+            });
+        }, 10);
+    }
+
+    /* ===== SIDEBAR SUBMENU TOGGLE ===== */
+    function initSidebarToggle() {
+        document.querySelectorAll('.hi-menu-submenu-title').forEach(function(title) {
+            title.addEventListener('click', function() {
+                var parent = title.closest('li');
+                if (!parent) return;
+                var list = parent.querySelector('.hi-menu-submenu-list');
+                if (!list) return;
+                var isOpen = list.classList.contains('hi-menu-submenu-list-open');
+                /* Close all other submenus first */
+                document.querySelectorAll('.hi-menu-submenu-list-open').forEach(function(el) {
+                    el.classList.remove('hi-menu-submenu-list-open');
+                    el.style.display = 'none';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateX(-8px)';
+                });
+                document.querySelectorAll('.hi-menu-submenu-title[aria-expanded="true"]').forEach(function(el) {
+                    el.setAttribute('aria-expanded', 'false');
+                });
+                /* Toggle current */
+                if (!isOpen) {
+                    list.classList.add('hi-menu-submenu-list-open');
+                    list.style.display = 'block';
+                    list.style.opacity = '1';
+                    list.style.transform = 'translateX(0)';
+                    title.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
     }
 
     /* ===== GLOW MOUSE-FOLLOW ===== */
@@ -231,6 +311,13 @@ head = """
         /* Theme toggle button */
         var themeBtn = document.querySelector('.hi-aside-footer .hi-icon-button:first-child');
         if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+        /* Language switcher button */
+        var langBtn = document.getElementById('lang-toggle');
+        if (langBtn) langBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleLangPopover(); });
+
+        /* Sidebar submenu collapse/expand */
+        initSidebarToggle();
 
         /* Glow effect on sidebar submenu titles */
         initGlowEffect();
