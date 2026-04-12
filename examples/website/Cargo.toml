@@ -70,13 +70,13 @@ head = """
     /* ===== ROUTE TABLE ===== */
     var ROUTES = {
         '/': 'home',
-        '/guides': 'guides-overview',
+        '/guides': 'guides',
         '/guides/quick-start': 'guides-quick-start',
         '/guides/workspace-map': 'guides-workspace-map',
         '/guides/build-test-release': 'guides-build-test-release',
         '/guides/migration': 'guides-migration',
         '/guides/glossary': 'guides-glossary',
-        '/system': 'system-overview',
+        '/system': 'system',
         '/system/overview': 'system-overview',
         '/system/runtime': 'system-runtime',
         '/system/wit-pipeline': 'system-wit-pipeline',
