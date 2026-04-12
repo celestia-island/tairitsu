@@ -22,23 +22,10 @@ pub fn render() -> VNode {
                     }
 
                     h3 { "架构分层" }
-                    div { class: "mermaid",
-                        "graph TD
-    subgraph APP[\"应用层（业务）\"]
-        A1[\"自定义 WIT 接口 / 组件\"]
-        A2[\"示例工程（examples/*）\"]
-    end
-    subgraph FW[\"框架层（Tairitsu）\"]
-        F1[\"runtime: 镜像/容器/调用引擎\"]
-        F2[\"macros: 宏辅助接口定义\"]
-        F3[\"vdom + hooks + web: UI 运行层\"]
-        F4[\"packager: 解析与分发\"]
-    end
-    subgraph HOST[\"宿主层\"]
-        H1[\"wasmtime / native host\"]
-        H2[\"browser-glue（TS）\"]
-    end
-    APP --> FW --> HOST"
+                    div { class: "hi-code-block",
+                        pre { class: "hi-code-content",
+                            "graph TD\n    subgraph APP[\"应用层（业务）\"]\n        A1[\"自定义 WIT 接口 / 组件\"]\n        A2[\"示例工程（examples/*）\"]\n    end\n    subgraph FW[\"框架层（Tairitsu）\"]\n        F1[\"runtime: 镜像/容器/调用引擎\"]\n        F2[\"macros: 宏辅助接口定义\"]\n        F3[\"vdom + hooks + web: UI 运行层\"]\n        F4[\"packager: 解析与分发\"]\n    end\n    subgraph HOST[\"宿主层\"]\n        H1[\"wasmtime / native host\"]\n        H2[\"browser-glue（TS）\"]\n    end\n    APP --> FW --> HOST"
+                        }
                     }
 
                     h3 { "关键设计原则" }
