@@ -11,15 +11,15 @@ pub fn render() -> VNode {
                     div { class: "hi-section-body",
                         div { class: "hi-text-center",
                             h1 { class: "hi-text-2xl hi-text-secondary hi-mb-6", "404" }
-                            p { class: "hi-text-lg hi-text-primary", "页面未找到" }
+                            p { class: "hi-text-lg hi-text-primary", "Page Not Found" }
                             p { class: "hi-text-sm hi-text-primary",
-                                "请求的页面不存在。请检查 URL 或返回首页。"
+                                "The page you requested does not exist. Check the URL or go home."
                             }
                             div { style: "height:2rem" }
                             a {
                                 href: "/",
                                 class: "hi-button hi-button-primary hi-button-md hi-button-width-auto hi-justify-center",
-                                "返回首页"
+                                "Go Home"
                             }
                         }
                     }
