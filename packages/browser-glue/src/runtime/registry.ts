@@ -11,6 +11,7 @@ import { resizeObserverSize_exports } from "./resizeObserverSize";
 import { cssStyleDeclaration_exports } from "./cssStyleDeclaration";
 import { elementCssInlineStyle_exports } from "./elementCssInlineStyle";
 import { eventTarget_exports } from "./eventTarget";
+import { location_exports } from "./location";
 
 export const INTERFACES = {
   "@tairitsu-glue/document": document_exports,
@@ -25,6 +26,7 @@ export const INTERFACES = {
   "@tairitsu-glue/css-style-declaration": cssStyleDeclaration_exports,
   "@tairitsu-glue/element-css-inline-style": elementCssInlineStyle_exports,
   "@tairitsu-glue/event-target": eventTarget_exports,
+  "@tairitsu-glue/location": location_exports,
 };
 
 export function generateModuleCode(exports) {

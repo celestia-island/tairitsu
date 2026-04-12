@@ -3,10 +3,16 @@ import { lookupElement } from "./helpers";
 
 export const element_exports = {
   setAttribute(self, qualifiedName, value) {
-    lookupElement(self).setAttribute(qualifiedName, value);
+    const name = typeof qualifiedName === 'string' && qualifiedName.startsWith('r#')
+      ? qualifiedName.slice(2)
+      : qualifiedName;
+    lookupElement(self).setAttribute(name, value);
   },
   removeAttribute(self, qualifiedName) {
-    lookupElement(self).removeAttribute(qualifiedName);
+    const name = typeof qualifiedName === 'string' && qualifiedName.startsWith('r#')
+      ? qualifiedName.slice(2)
+      : qualifiedName;
+    lookupElement(self).removeAttribute(name);
   },
   getBoundingClientRect(element) {
     const el = globalThis.__elementHandles.get(element);
