@@ -67,7 +67,8 @@ head = """
 (function() {
     'use strict';
 
-    const ROUTES = {
+    /* ===== ROUTE TABLE ===== */
+    var ROUTES = {
         '/': 'home',
         '/guides': 'guides-overview',
         '/guides/quick-start': 'guides-quick-start',
@@ -85,8 +86,66 @@ head = """
         '/dom-ops-test': 'dom-ops-test',
     };
 
+    /* ===== DRAWER STATE ===== */
+    var drawerOpen = false;
+
+    function openDrawer() {
+        drawerOpen = true;
+        document.getElementById('hikari-aside')?.classList.add('hi-aside-drawer-open');
+        document.getElementById('drawer-overlay')?.classList.add('hi-layout-overlay-open');
+    }
+
+    function closeDrawer() {
+        drawerOpen = false;
+        document.getElementById('hikari-aside')?.classList.remove('hi-aside-drawer-open');
+        document.getElementById('drawer-overlay')?.classList.remove('hi-layout-overlay-open');
+    }
+
+    function toggleDrawer() {
+        drawerOpen ? closeDrawer() : openDrawer();
+    }
+
+    /* ===== THEME TOGGLE ===== */
+    var currentTheme = 'dark';
+
+    function toggleTheme() {
+        var app = document.getElementById('hikari-app') || document.querySelector('.hi-layout');
+        if (!app) return;
+        var btn = document.querySelector('.hi-aside-footer .hi-icon-button:first-child');
+        if (currentTheme === 'dark') {
+            app.classList.remove('hi-layout-dark');
+            app.classList.add('hi-layout-light');
+            if (btn) btn.textContent = '\\u263E';
+            currentTheme = 'light';
+        } else {
+            app.classList.remove('hi-layout-light');
+            app.classList.add('hi-layout-dark');
+            if (btn) btn.textContent = '\\u2600';
+            currentTheme = 'dark';
+        }
+    }
+
+    /* ===== GLOW MOUSE-FOLLOW ===== */
+    function initGlowEffect() {
+        var glowWrappers = document.querySelectorAll('.hi-glow-wrapper');
+        glowWrappers.forEach(function(wrapper) {
+            wrapper.addEventListener('mousemove', function(e) {
+                var rect = wrapper.getBoundingClientRect();
+                var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+                var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+                wrapper.style.setProperty('--glow-x', x + '%');
+                wrapper.style.setProperty('--glow-y', y + '%');
+            });
+            wrapper.addEventListener('mouseleave', function() {
+                wrapper.style.setProperty('--glow-x', '50%');
+                wrapper.style.setProperty('--glow-y', '50%');
+            });
+        });
+    }
+
+    /* ===== SPA ROUTING ===== */
     function getPageId(path) {
-        const cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
+        var cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
         return ROUTES[cleanPath] || 'not-found';
     }
 
@@ -99,27 +158,26 @@ head = """
 
     function showPage(pageId) {
         hideAllPages();
-        const page = document.getElementById('page-' + pageId);
+        var page = document.getElementById('page-' + pageId);
         if (page) {
             page.classList.add('is-active');
             page.removeAttribute('aria-hidden');
             window.scrollTo(0, 0);
         } else {
-            document.getElementById('page-not-found')?.classList.add('is-active');
+            var nf = document.getElementById('page-not-found');
+            if (nf) { nf.classList.add('is-active'); nf.removeAttribute('aria-hidden'); }
         }
         updateSidebarActiveState(pageId);
         updateTopNavActiveState(pageId);
+        closeDrawer();
     }
 
     function updateSidebarActiveState(pageId) {
         document.querySelectorAll('.hi-menu-item').forEach(function(item) {
             item.classList.remove('hi-menu-item-active');
-            const link = item.querySelector('a');
-            if (link) {
-                const href = link.getAttribute('href');
-                if (href && ROUTES[href] === pageId) {
-                    item.classList.add('hi-menu-item-active');
-                }
+            var link = item.querySelector('a');
+            if (link && ROUTES[link.getAttribute('href')] === pageId) {
+                item.classList.add('hi-menu-item-active');
             }
         });
     }
@@ -127,49 +185,55 @@ head = """
     function updateTopNavActiveState(pageId) {
         document.querySelectorAll('.hi-header-link').forEach(function(link) {
             link.classList.remove('is-active');
-            const href = link.getAttribute('href');
-            if (href) {
-                const linkPageId = ROUTES[href];
-                if (linkPageId === pageId) {
-                    link.classList.add('is-active');
-                }
+            var href = link.getAttribute('href');
+            if (href && ROUTES[href] === pageId) {
+                link.classList.add('is-active');
             }
         });
     }
 
     function navigate(path) {
-        const pageId = getPageId(path);
-        showPage(pageId);
+        showPage(getPageId(path));
         if (window.history && window.history.pushState) {
-            window.history.pushState({ path, pageId }, '', path);
+            window.history.pushState({ path: path }, '', path);
         }
     }
 
-    function handlePopState(event) {
-        const path = window.location.pathname;
-        const pageId = getPageId(path);
-        showPage(pageId);
-    }
-
-    function handleLinkClick(event) {
-        const link = event.target.closest('a');
+    function handleLinkClick(e) {
+        var link = e.target.closest('a');
         if (!link) return;
-        const href = link.getAttribute('href');
-        if (!href) return;
-        if (!href.startsWith('/')) return;
-        const isRoute = ROUTES[href] || href.startsWith('/guides/') || href.startsWith('/system/') || href.startsWith('/packages/');
-        if (isRoute) {
-            event.preventDefault();
+        var href = link.getAttribute('href');
+        if (!href || !href.startsWith('/')) return;
+        if (ROUTES[href] || /^\\/guides\\//.test(href) || /^\\/system\\//.test(href) || /^\\/packages\\//.test(href)) {
+            e.preventDefault();
             navigate(href);
         }
     }
 
+    function handlePopState() {
+        showPage(getPageId(window.location.pathname));
+    }
+
+    /* ===== INITIALIZATION ===== */
     function initRouter() {
-        const path = window.location.pathname;
-        const pageId = getPageId(path);
-        showPage(pageId);
+        showPage(getPageId(window.location.pathname));
         window.addEventListener('popstate', handlePopState);
         document.addEventListener('click', handleLinkClick, { passive: false });
+
+        /* Drawer toggle button */
+        var toggleBtn = document.getElementById('drawer-toggle');
+        if (toggleBtn) toggleBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDrawer(); });
+
+        /* Drawer overlay click-to-close */
+        var overlay = document.getElementById('drawer-overlay');
+        if (overlay) overlay.addEventListener('click', closeDrawer);
+
+        /* Theme toggle button */
+        var themeBtn = document.querySelector('.hi-aside-footer .hi-icon-button:first-child');
+        if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+        /* Glow effect on sidebar submenu titles */
+        initGlowEffect();
     }
 
     if (document.readyState === 'loading') {
@@ -179,11 +243,7 @@ head = """
     }
     setTimeout(initRouter, 200);
 
-    window.tairitsuRouter = {
-        navigate: navigate,
-        showPage: showPage,
-        routes: ROUTES
-    };
+    window.tairitsuRouter = { navigate: navigate, showPage: showPage, routes: ROUTES };
 })();
 </script>
 """
