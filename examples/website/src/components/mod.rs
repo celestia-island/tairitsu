@@ -4,7 +4,7 @@
 //! component library icon system, rendered under tairitsu dark theme.
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode, VText};
+use tairitsu_vdom::{svg::SafeSvg, VElement, VNode, VText};
 
 use hikari_icons::{get, MdiIcon};
 
@@ -32,18 +32,15 @@ fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     } else {
         format!("hikari-icon {}", class)
     };
+    let svg_html = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}"><path fill="currentColor" d="{}"/></svg>"#,
+        view_box, path_d
+    );
     VNode::Element(
         el("div")
             .class(full_class.as_str())
             .attr("style", &format!("width:{}px;height:{}px;", size, size))
-            .child(VNode::Element(
-                el("svg")
-                    .attr("xmlns", "http://www.w3.org/2000/svg")
-                    .attr("viewBox", view_box)
-                    .child(VNode::Element(
-                        el("path").attr("fill", "currentColor").attr("d", path_d),
-                    )),
-            )),
+            .safe_svg(SafeSvg::from_static(Box::leak(svg_html.into_boxed_str()))),
     )
 }
 

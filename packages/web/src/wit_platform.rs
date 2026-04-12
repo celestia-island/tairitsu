@@ -1639,8 +1639,12 @@ pub mod wasm_impl {
                     );
                 }
 
-                for child in &velement.children {
-                    render_vnode(platform, child, &element)?;
+                if let Some(ref inner) = velement.inner_html {
+                    platform.set_inner_html(&element, inner.clone());
+                } else {
+                    for child in &velement.children {
+                        render_vnode(platform, child, &element)?;
+                    }
                 }
 
                 platform.append_child(parent, &element);
