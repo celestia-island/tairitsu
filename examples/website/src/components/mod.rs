@@ -57,35 +57,40 @@ fn submenu_title(label: &str) -> VNode {
     )
 }
 
-fn submenu_list(items: &[(&str, &str)]) -> VNode {
+fn submenu_list(items: &[(&str, &str)], open: bool) -> VNode {
     let children: Vec<VNode> = items
         .iter()
         .map(|(label, href)| menu_item(label, href))
         .collect();
-    VNode::Element(
-        el("ul")
-            .attr("role", "menu")
-            .class("hi-menu-submenu-list")
-            .attr(
-                "style",
-                "display:block;opacity:1;transform:translateX(0);padding-left:1em",
-            )
-            .children(children),
-    )
+    let mut list = el("ul")
+        .attr("role", "menu")
+        .class("hi-menu-submenu-list")
+        .attr("style", "padding-left:1em");
+    if open {
+        list = list.class("hi-menu-submenu-list-open");
+        list = list.attr(
+            "style",
+            "display:block;opacity:1;transform:translateX(0);padding-left:1em",
+        );
+    }
+    VNode::Element(list.children(children))
 }
 
-fn submenu_section(key: &str, label: &str, items: &[(&str, &str)]) -> VNode {
+fn submenu_section(key: &str, label: &str, items: &[(&str, &str)], open: bool) -> VNode {
+    let mut li = el("li")
+        .attr("role", "none")
+        .class("hi-menu-submenu")
+        .attr("data_key", key);
+    if open {
+        li = li.class("hi-menu-submenu-list-open");
+    }
+    let li_el = li
+        .child(submenu_title(label))
+        .child(submenu_list(items, open));
     VNode::Element(
         el("ul")
             .class("hi-menu hi-menu-vertical hi-menu-compact")
-            .child(VNode::Element(
-                el("li")
-                    .attr("role", "none")
-                    .class("hi-menu-submenu hi-menu-submenu-list-open")
-                    .attr("data_key", key)
-                    .child(submenu_title(label))
-                    .child(submenu_list(items)),
-            )),
+            .child(VNode::Element(li_el)),
     )
 }
 
@@ -105,6 +110,7 @@ pub fn top_nav() -> VNode {
                 }
                 a { href: "/", class: "hi-header-brand",
                     span { class: "hi-logo", "\u{273F}" }
+                    span { style: "font-weight:700;font-size:1.15rem;margin-left:8px;", "Tairitsu" }
                 }
             }
             div { class: "hi-header-right",
@@ -157,9 +163,9 @@ pub fn sidebar() -> VNode {
 
     let sections: Vec<VNode> = vec![
         home,
-        submenu_section("guides", "Guides", &guides_items),
-        submenu_section("system", "System", &system_items),
-        submenu_section("packages", "Packages", &packages_items),
+        submenu_section("guides", "Guides", &guides_items, true),
+        submenu_section("system", "System", &system_items, false),
+        submenu_section("packages", "Packages", &packages_items, false),
     ];
 
     VNode::Element(

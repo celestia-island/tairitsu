@@ -233,3 +233,47 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--ts-color-secondary);
 }
+
+/* ============================================
+   Top Nav Active State
+   ============================================ */
+
+.hi-header-link.is-active {
+  color: var(--hi-color-secondary) !important;
+  font-weight: 600;
+  border-bottom: 2px solid var(--hi-color-secondary);
+}
+
+/* ============================================
+   Sidebar Submenu Default Collapsed State
+   ============================================ */
+
+.hi-menu-submenu-list {
+  display: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.hi-menu-submenu-list-open {
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+}
+
+.hi-menu-submenu-title {
+  cursor: pointer;
+  user-select: none;
+}
+
+.hi-menu-submenu-title:hover {
+  color: var(--hi-color-secondary);
+}
+
+/* ============================================
+   Language Popover
+   ============================================ */
+
+.hi-lang-popover div:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
