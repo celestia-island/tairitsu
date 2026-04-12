@@ -71,6 +71,15 @@ fn render_overview() -> VNode {
                             "阅读文档"
                         }
                     }
+                    div { class: "card",
+                        h3 { class: "card__title", "术语表" }
+                        p { class: "card__body", "Tairitsu 和 WASM 相关术语的快速参考。" }
+                        a {
+                            href: "/guides/glossary",
+                            class: "hi-button hi-button-secondary",
+                            "阅读文档"
+                        }
+                    }
                 }
             }
         }

@@ -308,3 +308,134 @@ a:hover {
   color: var(--hi-color-text-primary);
   font-weight: 500;
 }
+
+/* ============================================
+   Card Grid Components (home/system/guides)
+   ============================================ */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--ts-spacing-lg);
+}
+
+.card {
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 12px;
+  padding: var(--ts-spacing-lg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--ts-color-primary);
+  box-shadow: 0 4px 16px rgba(20, 110, 116, 0.15);
+}
+
+.card__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--hi-color-text-primary);
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.card__body {
+  font-size: 0.9rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--ts-spacing-md);
+}
+
+/* ============================================
+   Page Section Layout
+   ============================================ */
+
+.page-section {
+  padding: var(--ts-spacing-xl) 0;
+}
+
+.page-section__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--hi-color-text-primary);
+  margin-bottom: var(--ts-spacing-md);
+}
+
+.page-hero {
+  text-align: center;
+  padding: var(--ts-spacing-2xl) var(--ts-spacing-md);
+}
+
+/* ============================================
+   Package Components (packages page)
+   ============================================ */
+
+.package-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--ts-spacing-lg);
+}
+
+.package-card {
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 12px;
+  padding: var(--ts-spacing-lg);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.package-card:hover {
+  border-color: var(--ts-color-primary);
+  transform: translateY(-2px);
+}
+
+.package-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-spacing-sm);
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.package-card-header code {
+  font-family: var(--ts-font-mono);
+  font-size: 0.95rem;
+  color: var(--hi-color-secondary);
+  font-weight: 600;
+}
+
+.package-card-desc {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.5;
+}
+
+.package-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ts-spacing-md);
+  padding: var(--ts-spacing-sm) 0;
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.package-list-item:last-child {
+  border-bottom: none;
+}
+
+.package-name {
+  font-family: var(--ts-font-mono);
+  font-size: 0.9rem;
+  color: var(--hi-color-secondary);
+  white-space: nowrap;
+  min-width: 200px;
+}
+
+.package-desc {
+  font-size: 0.85rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.4;
+}
+
+.doc-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
