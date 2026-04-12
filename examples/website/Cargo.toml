@@ -207,24 +207,6 @@ head = """
         });
     }
 
-    /* ===== GLOW MOUSE-FOLLOW ===== */
-    function initGlowEffect() {
-        var glowWrappers = document.querySelectorAll('.hi-glow-wrapper');
-        glowWrappers.forEach(function(wrapper) {
-            wrapper.addEventListener('mousemove', function(e) {
-                var rect = wrapper.getBoundingClientRect();
-                var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-                var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-                wrapper.style.setProperty('--glow-x', x + '%');
-                wrapper.style.setProperty('--glow-y', y + '%');
-            });
-            wrapper.addEventListener('mouseleave', function() {
-                wrapper.style.setProperty('--glow-x', '50%');
-                wrapper.style.setProperty('--glow-y', '50%');
-            });
-        });
-    }
-
     /* ===== SPA ROUTING ===== */
     function getPageId(path) {
         var cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
@@ -338,9 +320,6 @@ head = """
                 return;
             }
         }, true); /* capture phase for priority over handleLinkClick */
-
-        /* Glow effect on sidebar submenu titles */
-        initGlowEffect();
     }
 
     if (document.readyState === 'loading') {
