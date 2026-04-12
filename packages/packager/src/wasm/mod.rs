@@ -857,6 +857,32 @@ fn generate_component_html_with_output_dir(
         }} else {{
             clearLoadingIfUnchanged();
         }}
+
+        // Fix SVG elements created with wrong namespace (HTML instead of SVG).
+        // WIT document::createElement always creates HTML-namespaced elements,
+        // which makes SVG graphics invisible. This post-process step replaces
+        // any HTML-namespaced <svg> elements with proper SVG namespaced ones.
+        (function fixSvgNamespaces() {{
+            const SVG_NS = 'http://www.w3.org/2000/svg';
+            document.querySelectorAll('svg').forEach(svg => {{
+                if (svg.namespaceURI === SVG_NS) return;
+                const parent = svg.parentNode;
+                if (!parent) return;
+                const newSvg = document.createElementNS(SVG_NS, 'svg');
+                for (const attr of svg.attributes) {{
+                    // Preserve viewBox case sensitivity
+                    if (attr.name.toLowerCase() === 'viewbox') {{
+                        newSvg.setAttribute('viewBox', attr.value);
+                    }} else {{
+                        newSvg.setAttribute(attr.name, attr.value);
+                    }}
+                }}
+                // Re-parse innerHTML in SVG namespace context so all
+                // child elements (<path>, <circle>, etc.) get SVG namespace.
+                newSvg.innerHTML = svg.innerHTML;
+                parent.replaceChild(newSvg, svg);
+            }});
+        }})();
     </script>
 </body>
 </html>"#,
