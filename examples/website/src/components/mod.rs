@@ -9,31 +9,19 @@ use tairitsu_vdom::{VElement, VNode, VText};
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
 }
-
 fn el(tag: &str) -> VElement {
     VElement::new(tag)
 }
 
-fn arrow_svg() -> VNode {
-    VNode::Element(
-        el("span")
-            .class("hi-arrow hi-arrow-down hi-arrow-14")
-            .child(VNode::Element(
-                el("svg")
-                    .attr("xmlns", "http://www.w3.org/2000/svg")
-                    .attr("viewBox", "0 0 24 24")
-                    .attr("fill", "currentColor")
-                    .attr("width", "14")
-                    .attr("height", "14")
-                    .child(VNode::Element(el("path").attr(
-                        "d",
-                        "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
-                    ))),
-            )),
-    )
+fn sidebar_icon(glyph: &str) -> VNode {
+    VNode::Element(el("span").class("hi-sidebar-icon").child(txt(glyph)))
 }
 
-fn submenu_title(label: &str) -> VNode {
+fn arrow_indicator() -> VNode {
+    VNode::Element(el("span").class("hi-sidebar-arrow").child(txt("\u{25B6}")))
+}
+
+fn submenu_title(icon: &str, label: &str) -> VNode {
     VNode::Element(
         el("div")
             .class("hi-menu-item-wrapper hi-menu-height-compact")
@@ -47,36 +35,37 @@ fn submenu_title(label: &str) -> VNode {
                             .child(VNode::Element(
                                 el("div")
                                     .class("hi-menu-submenu-title-inner")
+                                    .child(sidebar_icon(icon))
+                                    .child(arrow_indicator())
                                     .child(VNode::Element(
                                         el("span").class("hi-menu-item-content").child(txt(label)),
-                                    ))
-                                    .child(arrow_svg()),
+                                    )),
                             )),
                     )),
             )),
     )
 }
 
-fn submenu_list(items: &[(&str, &str)], open: bool) -> VNode {
+fn submenu_list(items: &[(&str, &str, &str)], open: bool) -> VNode {
     let children: Vec<VNode> = items
         .iter()
-        .map(|(label, href)| menu_item(label, href))
+        .map(|(icon, label, href)| menu_item(icon, label, href))
         .collect();
-    let mut list = el("ul")
-        .attr("role", "menu")
-        .class("hi-menu-submenu-list")
-        .attr("style", "padding-left:1em");
+    let mut list = el("ul").attr("role", "menu").class("hi-menu-submenu-list");
     if open {
         list = list.class("hi-menu-submenu-list-open");
-        list = list.attr(
-            "style",
-            "display:block;opacity:1;transform:translateX(0);padding-left:1em",
-        );
+        list = list.attr("style", "display:block;opacity:1;transform:translateX(0)");
     }
     VNode::Element(list.children(children))
 }
 
-fn submenu_section(key: &str, label: &str, items: &[(&str, &str)], open: bool) -> VNode {
+fn submenu_section(
+    key: &str,
+    icon: &str,
+    label: &str,
+    items: &[(&str, &str, &str)],
+    open: bool,
+) -> VNode {
     let mut li = el("li")
         .attr("role", "none")
         .class("hi-menu-submenu")
@@ -85,7 +74,7 @@ fn submenu_section(key: &str, label: &str, items: &[(&str, &str)], open: bool) -
         li = li.class("hi-menu-submenu-list-open");
     }
     let li_el = li
-        .child(submenu_title(label))
+        .child(submenu_title(icon, label))
         .child(submenu_list(items, open));
     VNode::Element(
         el("ul")
@@ -125,47 +114,53 @@ pub fn top_nav() -> VNode {
 }
 
 // ============================================================
-// Sidebar Navigation
+// Sidebar Navigation — mirrors hikari-legacy exactly
+// Unicode icons match hikari's sidebar-icon system
 // ============================================================
 
 pub fn sidebar() -> VNode {
     let home = rsx! {
         ul { class: "hi-menu hi-menu-vertical hi-menu-compact",
-            li { role: "menuitem", class: "hi-menu-item hi-menu-height-compact",
+            li { role: "menuitem", class: "hi-menu-item hi-menu-item--home hi-menu-height-compact",
                 data_key: "Home",
-                div { class: "hi-menu-item-inner",
-                    span { class: "hi-menu-item-content", "Home" }
+                a { href: "/",
+                    span { class: "hi-sidebar-icon", "\u{2302}" }
+                    span { class: "hi-sidebar-label", "Home" }
                 }
             }
         }
     };
 
-    let guides_items: Vec<(&str, &str)> = vec![
-        ("Quick Start", "/guides/quick-start"),
-        ("Workspace Map", "/guides/workspace-map"),
-        ("Build / Test / Release", "/guides/build-test-release"),
-        ("Migration Guide", "/guides/migration"),
-        ("Glossary", "/guides/glossary"),
+    let guides_items: Vec<(&str, &str, &str)> = vec![
+        ("\u{25C9}", "Quick Start", "/guides/quick-start"),
+        ("\u{25A6}", "Workspace Map", "/guides/workspace-map"),
+        (
+            "\u{25A2}",
+            "Build / Test / Release",
+            "/guides/build-test-release",
+        ),
+        ("\u{2194}", "Migration Guide", "/guides/migration"),
+        ("\u{270E}", "Glossary", "/guides/glossary"),
     ];
 
-    let system_items: Vec<(&str, &str)> = vec![
-        ("Overview", "/system/overview"),
-        ("Runtime Engine", "/system/runtime"),
-        ("WIT Pipeline", "/system/wit-pipeline"),
-        ("Web Backends", "/system/web-backends"),
-        ("Versioning", "/system/versioning"),
+    let system_items: Vec<(&str, &str, &str)> = vec![
+        ("\u{25C9}", "Overview", "/system/overview"),
+        ("\u{2699}", "Runtime Engine", "/system/runtime"),
+        ("\u{25C8}", "WIT Pipeline", "/system/wit-pipeline"),
+        ("\u{25A6}", "Web Backends", "/system/web-backends"),
+        ("\u{25CB}", "Versioning", "/system/versioning"),
     ];
 
-    let packages_items: Vec<(&str, &str)> = vec![
-        ("Overview", "/packages/overview"),
-        ("Package List", "/packages/list"),
+    let packages_items: Vec<(&str, &str, &str)> = vec![
+        ("\u{229E}", "Overview", "/packages/overview"),
+        ("\u{2261}", "Package List", "/packages/list"),
     ];
 
     let sections: Vec<VNode> = vec![
         home,
-        submenu_section("guides", "Guides", &guides_items, true),
-        submenu_section("system", "System", &system_items, false),
-        submenu_section("packages", "Packages", &packages_items, false),
+        submenu_section("guides", "\u{229E}", "Guides", &guides_items, true),
+        submenu_section("system", "\u{2699}", "System", &system_items, false),
+        submenu_section("packages", "\u{229E}", "Packages", &packages_items, false),
     ];
 
     VNode::Element(
@@ -176,16 +171,15 @@ pub fn sidebar() -> VNode {
     )
 }
 
-fn menu_item(label: &str, href: &str) -> VNode {
+fn menu_item(icon: &str, label: &str, href: &str) -> VNode {
     VNode::Element(
         el("li")
             .attr("role", "menuitem")
             .class("hi-menu-item hi-menu-height-compact")
-            .child(VNode::Element(el("a").attr("href", href).child(
-                VNode::Element(el("div").class("hi-menu-item-inner").child(VNode::Element(
-                    el("span").class("hi-menu-item-content").child(txt(label)),
-                ))),
-            ))),
+            .child(VNode::Element(el("a").attr("href", href).children(vec![
+                sidebar_icon(icon),
+                VNode::Element(el("span").class("hi-sidebar-label").child(txt(label))),
+            ]))),
     )
 }
 
@@ -218,17 +212,18 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
 }
 
 // ============================================================
-// Aside Footer
+// Aside Footer — matches hikari-legacy footer style
+// Uses ☾ moon icon (like hikari light mode → switch to dark)
 // ============================================================
 
 pub fn aside_footer() -> VNode {
     rsx! {
         div { class: "hi-aside-footer",
             button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                id: "theme-toggle", "\u{2600}"
+                id: "theme-toggle", title: "Toggle theme", "\u{263E}"
             }
             button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                id: "lang-toggle", "A"
+                id: "lang-toggle", title: "Language", "A"
             }
         }
     }
