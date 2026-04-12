@@ -23,6 +23,7 @@ tairitsu-web = { path = "../../packages/web", features = [
 # Hikari design system (direct path to hikari workspace)
 hikari-palette = { path = "../../../hikari/packages/palette" }
 hikari-components = { path = "../../../hikari/packages/components", default-features = false }
+hikari-icons = { path = "../../../hikari/packages/icons", features = ["tairitsu"] }
 
 # Markdown rendering
 pulldown-cmark = "0.12"
