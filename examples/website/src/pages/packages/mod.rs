@@ -169,7 +169,7 @@ fn package_card_vnode(name: &str, title: &str, desc: &str) -> VNode {
                 VNode::Element(
                     VElement::new("a")
                         .attr("href", "#")
-                        .class("hi-btn hi-btn--ghost hi-btn--sm")
+                        .class("hi-button hi-button-ghost hi-button-sm")
                         .child(txt("View Docs →")),
                 ),
             ]))
