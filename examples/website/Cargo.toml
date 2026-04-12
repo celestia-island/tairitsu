@@ -77,6 +77,7 @@ head = """
         '/guides/migration': 'guides-migration',
         '/guides/glossary': 'guides-glossary',
         '/system': 'system-overview',
+        '/system/overview': 'system-overview',
         '/system/runtime': 'system-runtime',
         '/system/wit-pipeline': 'system-wit-pipeline',
         '/system/web-backends': 'system-web-backends',
@@ -300,24 +301,42 @@ head = """
         window.addEventListener('popstate', handlePopState);
         document.addEventListener('click', handleLinkClick, { passive: false });
 
-        /* Drawer toggle button */
-        var toggleBtn = document.getElementById('drawer-toggle');
-        if (toggleBtn) toggleBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleDrawer(); });
+        /* Event delegation for all interactive elements (binds on document, not on individual elements) */
+        document.addEventListener('click', function(e) {
+            var target = e.target;
 
-        /* Drawer overlay click-to-close */
-        var overlay = document.getElementById('drawer-overlay');
-        if (overlay) overlay.addEventListener('click', closeDrawer);
+            /* Drawer toggle button */
+            if (target.closest('#drawer-toggle')) {
+                e.stopPropagation();
+                toggleDrawer();
+                return;
+            }
 
-        /* Theme toggle button */
-        var themeBtn = document.querySelector('.hi-aside-footer .hi-icon-button:first-child');
-        if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+            /* Drawer overlay click-to-close */
+            if (target.closest('#drawer-overlay')) {
+                closeDrawer();
+                return;
+            }
 
-        /* Language switcher button */
-        var langBtn = document.getElementById('lang-toggle');
-        if (langBtn) langBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleLangPopover(); });
+            /* Theme toggle button */
+            if (target.closest('#theme-toggle')) {
+                toggleTheme();
+                return;
+            }
 
-        /* Sidebar submenu collapse/expand */
-        initSidebarToggle();
+            /* Language switcher button */
+            if (target.closest('#lang-toggle')) {
+                e.stopPropagation();
+                toggleLangPopover();
+                return;
+            }
+
+            /* Sidebar submenu collapse/expand */
+            if (target.closest('.hi-menu-submenu-title')) {
+                initSidebarToggle();
+                return;
+            }
+        }, true); /* capture phase for priority over handleLinkClick */
 
         /* Glow effect on sidebar submenu titles */
         initGlowEffect();
