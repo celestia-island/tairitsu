@@ -9,9 +9,16 @@ fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
 }
 
-fn find_workspace_root() -> crate::Result<std::path::PathBuf> {
+fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
-        .args(["metadata", "--no-deps", "--format-version", "1"])
+        .args([
+            "metadata",
+            "--no-deps",
+            "--format-version",
+            "1",
+            "--manifest-path",
+            manifest_dir.join("Cargo.toml").to_str().unwrap(),
+        ])
         .output()?;
 
     let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)?;
@@ -195,6 +202,8 @@ fn build_wasm_component(
         "--lib",
         "--package",
         pkg_name,
+        "--manifest-path",
+        config.manifest_dir.join("Cargo.toml").to_str().unwrap(),
         "--message-format=json-diagnostic-rendered-ansi",
     ]);
     if release {
@@ -295,7 +304,7 @@ fn build_wasm_component(
         ));
     }
 
-    let workspace_root = find_workspace_root()?;
+    let workspace_root = find_workspace_root(&config.manifest_dir)?;
     let profile = if release { "release" } else { "debug" };
     let wasm_path = workspace_root
         .join("target")
