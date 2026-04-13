@@ -654,15 +654,17 @@ fn try_generate_component_wrapper(
                             // must be preserved in WebAssembly.instantiate() import keys,
                             // because the core WASM binary expects those exact module names.
 
-                            // Rewrite @tairitsu-glue/* → @tairitsu/browser-glue (main barrel entry).
+                            // Rewrite @tairitsu-glue/* → relative path to browser-glue main entry.
                             // jco generates import paths from WIT interface names ("element",
                             // "document", "node") but browser-glue uses WebIDL-category filenames
                             // ("dom", "css", "html"). Functions are cross-file scattered, so
-                            // all glue imports must go through the main entry that re-exports everything.
+                            // all glue imports must go through the main barrel entry that re-exports everything.
+                            // Use relative path since bare specifiers need an import map we don't have.
+                            // wrapper lives in component-wrapper/, browser-glue/ is at output root → ../browser-glue
                             let re_single = regex::Regex::new(r"from\s*'@tairitsu-glue/[^']*'").unwrap();
                             let re_double = regex::Regex::new(r#"(?x) from \s* "@tairitsu-glue/ [^"]* ""#).unwrap();
-                            content = re_single.replace_all(&content, "from '@tairitsu/browser-glue'").to_string();
-                            content = re_double.replace_all(&content, "from \"@tairitsu/browser-glue\"").to_string();
+                            content = re_single.replace_all(&content, "from '../browser-glue/index.js'").to_string();
+                            content = re_double.replace_all(&content, "from \"../browser-glue/index.js\"").to_string();
                             if content != original {
                                 std::fs::write(&js_file, content)?;
                             }
