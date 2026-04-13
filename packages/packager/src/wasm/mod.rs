@@ -345,6 +345,46 @@ fn copy_browser_glue_with_output_dir(
     _pb: &ProgressBar,
 ) -> crate::Result<()> {
     write_browser_glue_bundle(config, output_dir)?;
+
+    // Also copy the full browser-glue dist so that jco-generated wrapper
+    // ES module imports (e.g. `import { setProperty } from '@tairitsu/browser-glue'`)
+    // can resolve. The dist contains index.js (main barrel) + glue/*.js submodules.
+    // Try tairitsu workspace first (where browser-glue is built), then local.
+    let glue_dist_candidates: &[&str] = &[
+        "../../../tairitsu/packages/browser-glue/dist", // hikari/examples/website → tairitsu
+        "../../packages/browser-glue/dist",          // tairitsu/examples/website → tairitsu
+        "../packages/browser-glue/dist",             // any project examples/* → workspace root
+        "packages/browser-glue/dist",               // workspace root itself
+    ];
+    let mut copied = false;
+    for candidate in glue_dist_candidates {
+        let glue_dist = config.manifest_dir.join(candidate);
+        if glue_dist.exists() {
+            let dest_glue = output_dir.join("browser-glue");
+            std::fs::create_dir_all(&dest_glue)?;
+            for entry in walkdir::WalkDir::new(&glue_dist) {
+                let entry = entry.map_err(|e| {
+                    crate::TairitsuPackagerError::BuildError(format!("Failed to walk browser-glue dist: {}", e))
+                })?;
+                let path = entry.path();
+                let rel = path.strip_prefix(&glue_dist).map_err(|_| {
+                    crate::TairitsuPackagerError::BuildError("Failed to compute relative path".to_string())
+                })?;
+                let dest = dest_glue.join(rel);
+                if path.is_dir() {
+                    std::fs::create_dir_all(&dest)?;
+                } else {
+                    std::fs::copy(path, &dest)?;
+                }
+            }
+            copied = true;
+            break;
+        }
+    }
+    if !copied {
+        tracing::warn!("browser-glue dist not found — jco wrapper imports may fail at runtime");
+    }
+
     Ok(())
 }
 
@@ -603,7 +643,7 @@ fn try_generate_component_wrapper(
                             && let Ok(mut content) = std::fs::read_to_string(&js_file)
                         {
                             let original = content.clone();
-                            // Replace import statements
+                            // Replace import statements: WIT world names → @tairitsu-glue
                             content = content
                                 .replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
                             content = content
@@ -613,6 +653,16 @@ fn try_generate_component_wrapper(
                             // WIT interface names (e.g. 'tairitsu-browser:full/document@0.2.0')
                             // must be preserved in WebAssembly.instantiate() import keys,
                             // because the core WASM binary expects those exact module names.
+
+                            // Rewrite @tairitsu-glue/* → @tairitsu/browser-glue (main barrel entry).
+                            // jco generates import paths from WIT interface names ("element",
+                            // "document", "node") but browser-glue uses WebIDL-category filenames
+                            // ("dom", "css", "html"). Functions are cross-file scattered, so
+                            // all glue imports must go through the main entry that re-exports everything.
+                            let re_single = regex::Regex::new(r"from\s*'@tairitsu-glue/[^']*'").unwrap();
+                            let re_double = regex::Regex::new(r#"(?x) from \s* "@tairitsu-glue/ [^"]* ""#).unwrap();
+                            content = re_single.replace_all(&content, "from '@tairitsu/browser-glue'").to_string();
+                            content = re_double.replace_all(&content, "from \"@tairitsu/browser-glue\"").to_string();
                             if content != original {
                                 std::fs::write(&js_file, content)?;
                             }
