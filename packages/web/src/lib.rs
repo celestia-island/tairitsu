@@ -30,12 +30,12 @@ pub use prelude::*;
 pub use router::*;
 #[cfg(feature = "ssr")]
 pub use ssr::SsrPlatform;
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub use wit_platform::prevent_event_default;
 #[cfg(feature = "wit-bindings")]
 pub use wit_platform::{
-    get_pathname, prevent_event_default, push_state, replace_state, WitElement, WitEvent,
-    WitPlatform,
+    get_pathname, push_state, replace_state, WitElement, WitEvent, WitPlatform,
 };
 
-#[cfg(feature = "router")]
-#[cfg(feature = "wit-bindings")]
+#[cfg(all(feature = "router", feature = "wit-bindings", target_family = "wasm"))]
 pub mod client_router;
