@@ -17,7 +17,7 @@ fn el(tag: &str) -> VElement {
 /// Render an MDI SVG icon as a VNode using VElement builder.
 /// Builds the SVG as real VNode children so the diff/patch system
 /// can properly create and update DOM nodes (inner_html is SSR-only).
-fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
+pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
     let (view_box, path_d) = match get(&name) {
         Some(data) => (
@@ -182,9 +182,13 @@ pub fn top_nav() -> VNode {
             }
             div { class: "hi-header-right",
                 nav { class: "hi-header-nav",
-                    a { href: "/guides", class: "hi-header-link", "Guides" }
+                    a { href: "/components/layer1/button", class: "hi-header-link", "Components" }
                     a { href: "/system", class: "hi-header-link", "System" }
                     a { href: "/packages", class: "hi-header-link", "Packages" }
+                    a { href: "https://github.com/langyo/tairitsu", class: "hi-header-link",
+                        target: "_blank", rel: "noopener noreferrer",
+                        "GitHub"
+                    }
                 }
             }
         }
