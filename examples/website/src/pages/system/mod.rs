@@ -23,7 +23,7 @@ pub fn render_all() -> Vec<VNode> {
     ]
 }
 
-fn render_overview() -> VNode {
+pub fn render_overview() -> VNode {
     rsx! {
         div { id: "page-system", class: "hikari-page",
             ..vec![breadcrumb(&[("Home", "/"), ("System", "")])]

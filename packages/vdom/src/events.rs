@@ -122,6 +122,10 @@ impl MouseEvent {
         self
     }
 
+    pub fn wit_handle(&self) -> Option<u64> {
+        self.event_handle.handle
+    }
+
     pub fn client_x(mut self, x: i32) -> Self {
         self.client_x = x;
         self

@@ -20,4 +20,9 @@ export const node_exports = {
   getTextContent(self) {
     return lookupNode(self).textContent || "";
   },
+  getParentElement(self) {
+    const el = lookupNode(self).parentElement;
+    if (!el) return undefined;
+    return globalThis.__elementHandles.get(el);
+  },
 };

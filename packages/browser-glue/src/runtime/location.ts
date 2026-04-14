@@ -8,4 +8,7 @@ export const location_exports = {
   getInnerWidth() {
     return window.innerWidth;
   },
+  getPathname() {
+    return window.location.pathname || '/';
+  },
 };
