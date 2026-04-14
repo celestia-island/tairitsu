@@ -339,6 +339,274 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
     Ok(())
 }
 
+fn resolve_import_to_modules(
+    full_import: &str,
+    symbols_str: &str,
+    sym_map: &std::collections::HashMap<String, String>,
+    single_quote: bool,
+) -> String {
+    let q = if single_quote { '\'' } else { '"' };
+
+    let symbols: Vec<&str> = symbols_str.split(',').map(|s| s.trim()).collect();
+
+    let mut module_imports: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
+
+    for sym in &symbols {
+        let clean = sym.split_whitespace().next().unwrap_or(sym);
+        if clean.is_empty() {
+            continue;
+        }
+        // Exact match first
+        if let Some(mod_name) = sym_map.get(clean) {
+            module_imports
+                .entry(mod_name.clone())
+                .or_default()
+                .push(clean.to_string());
+        } else if let Some((alias_mod, _)) = sym_map
+            .iter()
+            .find(|(k, _)| {
+                let clean_str: &str = clean;
+                k.ends_with(clean_str) && k.len() > clean_str.len()
+            })
+        {
+            module_imports
+                .entry(alias_mod.clone())
+                .or_default()
+                .push(clean.to_string());
+        } else {
+            tracing::warn!(
+                "Glue symbol '{}' not found in any module (map has {} symbols)",
+                clean,
+                sym_map.len()
+            );
+        }
+    }
+
+    if module_imports.is_empty() {
+        return String::new();
+    }
+
+    let mut lines = Vec::new();
+    for (mod_name, syms) in &module_imports {
+        lines.push(format!(
+            "import {{ {} }} from {}../browser-glue/glue/{}.js{}",
+            syms.join(", "),
+            q,
+            mod_name,
+            q
+        ));
+    }
+    lines.join("\n  ")
+}
+
+fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
+    let content = std::fs::read_to_string(barrel_path).map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!(
+            "Failed to read barrel {}: {}",
+            barrel_path.display(), e
+        ))
+    })?;
+
+    let mut needs_flatten = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("export * as ") || (trimmed.contains("export * from") && trimmed.contains("glue/index")) {
+            needs_flatten = true;
+            break;
+        }
+    }
+
+    if !needs_flatten {
+        return Ok(());
+    }
+
+    let glue_dir = barrel_path.parent().map(|p| p.join("glue"));
+    let Some(glue_dir) = glue_dir else { return Ok(()); };
+
+    let sym_map = build_symbol_module_map(&glue_dir);
+
+    let mut module_syms: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
+    for (sym, mod_name) in &sym_map {
+        module_syms
+            .entry(mod_name.clone())
+            .or_default()
+            .push(sym.clone());
+    }
+
+    let mut lines = vec![
+        "/**".to_string(),
+        " * @tairitsu/browser-glue — flattened barrel (auto-generated)".to_string(),
+        " * Combines exports from all glue submodules into named re-exports.".to_string(),
+        " */".to_string(),
+    ];
+    for (mod_name, syms) in &module_syms {
+        if syms.is_empty() {
+            continue;
+        }
+        lines.push(format!(
+            "export {{ {} }} from \"./glue/{}.js\";",
+            syms.join(", "),
+            mod_name
+        ));
+    }
+
+    std::fs::write(barrel_path, lines.join("\n")).map_err(|e| {
+        crate::TairitsuPackagerError::BuildError(format!(
+            "Failed to write flattened barrel {}: {}",
+            barrel_path.display(), e
+        ))
+    })?;
+
+    tracing::info!(
+        "Flattened barrel {} with {} modules ({} total symbols)",
+        barrel_path.display(),
+        module_syms.len(),
+        sym_map.len()
+    );
+    Ok(())
+}
+
+fn build_symbol_module_map(
+    glue_dir: &std::path::Path,
+) -> std::collections::HashMap<String, String> {
+    let mut map: std::collections::HashMap<String, (String, bool)> = std::collections::HashMap::new();
+    let Ok(entries) = std::fs::read_dir(glue_dir) else {
+        return std::collections::HashMap::new()
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.extension().map_or(false, |e| e == "js") {
+            continue;
+        }
+        let Some(module_name) = path.file_stem().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        let Ok(content) = std::fs::read_to_string(&path) else { continue };
+        for line in content.lines() {
+            let trimmed = line.trim();
+            let export_start = trimmed
+                .find("export ")
+                .or_else(|| trimmed.find("export\t"))
+                .unwrap_or(usize::MAX);
+            if export_start == usize::MAX {
+                continue;
+            }
+            let after_export = &trimmed[export_start + 7..];
+            let prefix = if after_export.starts_with("function ") {
+                "function "
+            } else if after_export.starts_with("const ") {
+                "const "
+            } else if after_export.starts_with("let ") {
+                "let "
+            } else if after_export.starts_with("var ") {
+                "var "
+            } else if after_export.starts_with("async function ") {
+                "async function "
+            } else {
+                continue;
+            };
+            if let Some(rest) = after_export.strip_prefix(prefix) {
+                if let Some(sym_full) = rest.split_whitespace().next() {
+                    let sym_name = sym_full
+                        .split('(')
+                        .next()
+                        .unwrap_or(sym_full)
+                        .trim()
+                        .to_string();
+                    if !sym_name.is_empty() {
+                        // Check if first param is 'self' — prefer non-self versions
+                        let has_self = rest.contains("(self)") || rest.contains("(self,");
+                        match map.get(&sym_name) {
+                            Some((_other_mod, other_has_self)) => {
+                                // Prefer non-self over self-parameterized versions
+                                if *other_has_self && !has_self {
+                                    map.insert(sym_name, (module_name.to_string(), has_self));
+                                }
+                            }
+                            None => {
+                                map.insert(sym_name, (module_name.to_string(), has_self));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    map.into_iter().map(|(k, (v, _))| (k, v)).collect()
+}
+
+fn rewrite_glue_import_line(
+    import_line: &str,
+    sym_map: &std::collections::HashMap<String, String>,
+    single_quote: bool,
+) -> String {
+    let re_symbols = regex::Regex::new(r"\{([^}]+)\}").unwrap();
+    let re_source = if single_quote {
+        regex::Regex::new(r"'@tairitsu-glue/[^']*'").unwrap()
+    } else {
+        regex::Regex::new(r#""@tairitsu-glue/[^"]*""#).unwrap()
+    };
+
+    let symbols_str = re_symbols
+        .captures(import_line)
+        .and_then(|c| c.get(1))
+        .map(|m| m.as_str())
+        .unwrap_or("");
+
+    let symbols: Vec<&str> = symbols_str.split(',').map(|s| s.trim()).collect();
+
+    let mut module_imports: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
+    let mut unknown = Vec::new();
+
+    for sym in &symbols {
+        let clean = sym.split_whitespace().next().unwrap_or(sym);
+        if clean.is_empty() {
+            continue;
+        }
+        if let Some(mod_name) = sym_map.get(clean) {
+            module_imports
+                .entry(mod_name.clone())
+                .or_default()
+                .push(clean.to_string());
+        } else if let Some((alias_mod, _)) = sym_map
+            .iter()
+            .find(|(k, _)| {
+                let clean_str: &str = clean;
+                k.ends_with(clean_str) && k.len() > clean_str.len()
+            })
+        {
+            module_imports
+                .entry(alias_mod.clone())
+                .or_default()
+                .push(clean.to_string());
+        } else {
+            unknown.push(clean.to_string());
+        }
+    }
+
+    let q = if single_quote { "'" } else { "\"" };
+    let mut lines = Vec::new();
+    for (mod_name, syms) in &module_imports {
+        if syms.is_empty() {
+            continue;
+        }
+        lines.push(format!(
+            "import {{ {} }} from {}../browser-glue/glue/{}.js{}",
+            syms.join(", "), q, mod_name, q
+        ));
+    }
+    // Drop unknown symbols silently — they're likely unimplemented WIT stubs
+    // that would cause module load failures if imported.
+    if lines.is_empty() {
+        String::new()
+    } else {
+        lines.join("\n  ")
+    }
+}
+
 fn copy_browser_glue_with_output_dir(
     config: &Config,
     output_dir: &std::path::Path,
@@ -378,6 +646,13 @@ fn copy_browser_glue_with_output_dir(
                 }
             }
             copied = true;
+
+            let top_barrel = dest_glue.join("index.js");
+            if top_barrel.exists() {
+                if let Err(e) = flatten_barrel_exports(&top_barrel) {
+                    tracing::warn!("Failed to flatten top-level barrel: {}", e);
+                }
+            }
             break;
         }
     }
@@ -643,28 +918,84 @@ fn try_generate_component_wrapper(
                             && let Ok(mut content) = std::fs::read_to_string(&js_file)
                         {
                             let original = content.clone();
-                            // Replace import statements: WIT world names → @tairitsu-glue
+                            // Step 1: WIT world names → @tairitsu-glue intermediate
                             content = content
                                 .replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
                             content = content
                                 .replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
-                            // NOTE: Only ES module `from '...'` imports are rewritten above.
-                            // Do NOT blanket-replace all string occurrences — the original
-                            // WIT interface names (e.g. 'tairitsu-browser:full/document@0.2.0')
-                            // must be preserved in WebAssembly.instantiate() import keys,
-                            // because the core WASM binary expects those exact module names.
 
-                            // Rewrite @tairitsu-glue/* → relative path to browser-glue main entry.
-                            // jco generates import paths from WIT interface names ("element",
-                            // "document", "node") but browser-glue uses WebIDL-category filenames
-                            // ("dom", "css", "html"). Functions are cross-file scattered, so
-                            // all glue imports must go through the main barrel entry that re-exports everything.
-                            // Use relative path since bare specifiers need an import map we don't have.
-                            // wrapper lives in component-wrapper/, browser-glue/ is at output root → ../browser-glue
-                            let re_single = regex::Regex::new(r"from\s*'@tairitsu-glue/[^']*'").unwrap();
-                            let re_double = regex::Regex::new(r#"(?x) from \s* "@tairitsu-glue/ [^"]* ""#).unwrap();
-                            content = re_single.replace_all(&content, "from '../browser-glue/index.js'").to_string();
-                            content = re_double.replace_all(&content, "from \"../browser-glue/index.js\"").to_string();
+                            // Step 2: All @tairitsu-glue/ imports now route through import map
+                            // (__tairitsu_glue__.js provides all needed interfaces with shared handles)
+                            let _import_map_interfaces: std::collections::HashSet<&str> =
+                                [].into_iter().collect();
+
+                            let re_import = regex::Regex::new(
+                                r"(?:import\s*\{([^}]+)\}\s*from\s*'@tairitsu-glue/([^']*)'\s*;?)",
+                            )
+                            .unwrap();
+                            let re_import_d = regex::Regex::new(
+                                r#"(?:import\s*\{([^}]+)\}\s*from\s*"@tairitsu-glue/([^"]*)"\s*;?)"#,
+                            )
+                            .unwrap();
+
+                            content = re_import
+                                .replace_all(&content, |caps: &regex::Captures| {
+                                    let m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                    let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                                    let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                                    if m1.is_empty() {
+                                        return String::new();
+                                    }
+                                    let iface_name = m2.split('/').next().unwrap_or("");
+
+                                    // Split symbols: import-map-available vs needs-glue-fallback
+                                    let mut map_syms = Vec::new();
+                                    for sym in m1.trim().split(',') {
+                                        let s = sym.trim();
+                                        if s.is_empty() { continue; }
+                                        // All interfaces now provided by __tairitsu_glue__.js import map
+                                        map_syms.push(s.to_string());
+                                    }
+
+                                    let mut parts = Vec::new();
+                                    if !map_syms.is_empty() {
+                                        parts.push(format!(
+                                            "import {{ {} }} from '@tairitsu-glue/{}';",
+                                            map_syms.join(", "), m2
+                                        ));
+                                    }
+                                        // Resolve each symbol to its own module
+                                    parts.join("\n  ")
+                                })
+                                .to_string();
+                            content = re_import_d
+                                .replace_all(&content, |caps: &regex::Captures| {
+                                    let m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                    let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+                                    let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+                                    if m1.is_empty() {
+                                        return String::new();
+                                    }
+                                    let iface_name = m2.split('/').next().unwrap_or("");
+
+                                    let mut map_syms = Vec::new();
+                                    for sym in m1.trim().split(',') {
+                                        let s = sym.trim();
+                                        if s.is_empty() { continue; }
+                                        map_syms.push(s.to_string());
+                                    }
+
+                                    let mut parts = Vec::new();
+                                    if !map_syms.is_empty() {
+                                        parts.push(format!(
+                                            "import {{ {} }} from \"@tairitsu-glue/{}\";",
+                                            map_syms.join(", "), m2
+                                        ));
+                                    }
+                                    parts.join("\n  ")
+                                })
+                                .to_string();
+
                             if content != original {
                                 std::fs::write(&js_file, content)?;
                             }

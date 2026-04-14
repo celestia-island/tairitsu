@@ -22,4 +22,7 @@ export const element_exports = {
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   },
+  setInnerHtml(self, html) {
+    lookupElement(self).innerHTML = html;
+  },
 };
