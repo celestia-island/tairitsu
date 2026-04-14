@@ -241,6 +241,7 @@ head = """
     /* ===== SPA ROUTING ===== */
     function getPageId(path) {
         var cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
+        if (!cleanPath) cleanPath = '/';
         return ROUTES[cleanPath] || 'not-found';
     }
 
