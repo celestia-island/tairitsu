@@ -230,13 +230,6 @@ impl WitPlatform {
 }
 
 // -- wasm32 Platform implementation ----------------------------------------
-//
-// Everything below is compiled only when *both*:
-//   • the `wit-bindings` Cargo feature is active, and
-//   • the target is a wasm32 family (component model capable).
-//
-// Native builds never see these items, so the `extern "C"` trampolines
-// emitted by `wit_bindgen::generate!()` never reach the native linker.
 
 #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
 pub mod wasm_impl {
@@ -386,6 +379,46 @@ pub mod wasm_impl {
             None, // priority (e.g., "important")
         );
         Ok(())
+    }
+
+    // -- DOM query helpers (for client-side routing) --------------------
+
+    /// Get the tag name of a DOM element (e.g., `"A"`, `"DIV"`).
+    pub fn get_tag_name(_platform: &WitPlatform, element: &WitElement) -> String {
+        bindings::tairitsu_browser::full::element::get_tag_name(element.0)
+    }
+
+    /// Get an attribute value from a DOM element.
+    pub fn get_attribute(
+        _platform: &WitPlatform,
+        element: &WitElement,
+        name: &str,
+    ) -> Option<String> {
+        bindings::tairitsu_browser::full::element::get_attribute(element.0, name)
+    }
+
+    /// Get the parent element of a DOM node.
+    pub fn get_parent_element(_platform: &WitPlatform, element: &WitElement) -> Option<WitElement> {
+        bindings::tairitsu_browser::full::node::get_parent_element(element.0).map(WitElement)
+    }
+
+    /// Prevent default action on an event (via WIT event-target interface).
+    pub fn prevent_event_default(event_handle: u64) {
+        bindings::tairitsu_browser::full::event_target::prevent_default(event_handle);
+    }
+
+    // -- Navigation / Routing helpers (WIT-backed) -----------------------
+
+    pub fn wasm_get_pathname() -> String {
+        bindings::tairitsu_browser::full::location::get_pathname()
+    }
+
+    pub fn wasm_push_state(url: &str) {
+        bindings::tairitsu_browser::full::history::push_state("", "", Some(url));
+    }
+
+    pub fn wasm_replace_state(url: &str) {
+        bindings::tairitsu_browser::full::history::replace_state("", "", Some(url));
     }
 
     // -- Component export implementation ---------------------------------
@@ -849,7 +882,6 @@ pub mod wasm_impl {
         }
 
         fn remove_attribute(&self, element: &Self::Element, name: &str) {
-            // New WIT: remove-attribute returns void
             bindings::tairitsu_browser::full::element::remove_attribute(element.0, name);
         }
 
@@ -1985,6 +2017,66 @@ pub mod wasm_impl {
 }
 
 // -- Tests ---------------------------------------------------------------------
+
+// -- Navigation / Routing helpers ---------------------------------------
+
+/// Get the current URL pathname (e.g., `/components/layer1/button`).
+pub fn get_pathname() -> String {
+    #[cfg(not(target_family = "wasm"))]
+    {
+        "/".to_string()
+    }
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    {
+        wasm_impl::wasm_get_pathname()
+    }
+}
+
+/// Push a new URL onto the browser history stack (client-side navigation).
+pub fn push_state(url: &str) {
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    {
+        wasm_impl::wasm_push_state(url);
+    }
+    #[allow(unused_variables)]
+    let _ = url;
+}
+
+/// Replace the current history entry's URL (client-side navigation).
+pub fn replace_state(url: &str) {
+    #[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+    {
+        wasm_impl::wasm_replace_state(url);
+    }
+    #[allow(unused_variables)]
+    let _ = url;
+}
+
+// -- DOM query helpers (public API, delegates to wasm_impl) --------------
+
+/// Get the tag name of a DOM element.
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn get_tag_name(platform: &WitPlatform, element: &WitElement) -> String {
+    wasm_impl::get_tag_name(platform, element)
+}
+
+/// Get an attribute value from a DOM element.
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn get_attribute(platform: &WitPlatform, element: &WitElement, name: &str) -> Option<String> {
+    wasm_impl::get_attribute(platform, element, name)
+}
+
+/// Get the parent element of a DOM node.
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn get_parent_element(platform: &WitPlatform, element: &WitElement) -> Option<WitElement> {
+    wasm_impl::get_parent_element(platform, element)
+}
+
+/// Prevent default action on a DOM event (via WIT event-target interface).
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub fn prevent_event_default(event_handle: u64) {
+    wasm_impl::prevent_event_default(event_handle)
+}
 
 #[cfg(test)]
 mod tests {

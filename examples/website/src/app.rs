@@ -1,16 +1,24 @@
-//! App root — assembles all pages into a single VNode tree.
+//! App root — assembles pages into a VNode tree based on current route.
 //!
 //! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme.
 //! Structure mirrors hikari-legacy website exactly.
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VElement, VNode, VText};
 
 use crate::{
     components::{aside_footer, sidebar, top_nav},
     pages::{guides, home, not_found, packages, system},
 };
 
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
+fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+
+/// Render the full app — all pages included for JS-based SPA show/hide.
 pub fn render() -> VNode {
     let mut content: Vec<VNode> = Vec::new();
     content.push(home::render());
@@ -18,7 +26,10 @@ pub fn render() -> VNode {
     content.extend(system::render_all());
     content.extend(packages::render_all());
     content.push(not_found::render());
+    layout_shell(content)
+}
 
+fn layout_shell(children: Vec<VNode>) -> VNode {
     rsx! {
         div { id: "hikari-app",
             class: "hi-layout hi-layout-dark hi-layout-has-sidebar",
@@ -31,7 +42,9 @@ pub fn render() -> VNode {
                     ..vec![aside_footer()]
                 }
                 div { class: "hi-layout-main",
-                    main { class: "hi-layout-content", ..content }
+                    main { class: "hi-layout-content",
+                        ..children
+                    }
                 }
             }
         }

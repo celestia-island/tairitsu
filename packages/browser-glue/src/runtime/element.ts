@@ -25,4 +25,10 @@ export const element_exports = {
   setInnerHtml(self, html) {
     lookupElement(self).innerHTML = html;
   },
+  getAttribute(self, name) {
+    return lookupElement(self).getAttribute(name);
+  },
+  getTagName(self) {
+    return lookupElement(self).tagName || '';
+  },
 };

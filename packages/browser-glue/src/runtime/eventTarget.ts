@@ -77,4 +77,12 @@ export const eventTarget_exports = {
       console.error(`Error removing event listener: ${error}`);
     }
   },
+  preventDefault(event: bigint): void {
+    const ev = globalThis.__eventHandles.get(event);
+    if (ev) ev.preventDefault();
+  },
+  stopPropagation(event: bigint): void {
+    const ev = globalThis.__eventHandles.get(event);
+    if (ev) ev.stopPropagation();
+  },
 };

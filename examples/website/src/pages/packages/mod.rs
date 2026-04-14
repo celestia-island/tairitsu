@@ -12,7 +12,7 @@ pub fn render_all() -> Vec<VNode> {
     vec![render_overview(), render_list()]
 }
 
-fn render_overview() -> VNode {
+pub fn render_overview() -> VNode {
     let cards: Vec<VNode> = vec![
         package_card_vnode(
             "tairitsu-vdom",
@@ -77,7 +77,7 @@ fn render_overview() -> VNode {
     )
 }
 
-fn render_list() -> VNode {
+pub fn render_list() -> VNode {
     let packages = [
         (
             "tairitsu-vdom",

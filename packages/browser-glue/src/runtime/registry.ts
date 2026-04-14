@@ -12,6 +12,7 @@ import { cssStyleDeclaration_exports } from "./cssStyleDeclaration";
 import { elementCssInlineStyle_exports } from "./elementCssInlineStyle";
 import { eventTarget_exports } from "./eventTarget";
 import { location_exports } from "./location";
+import { history_exports } from "./history";
 import { observers_exports } from "./observers";
 
 export const INTERFACES = {
@@ -28,6 +29,7 @@ export const INTERFACES = {
   "@tairitsu-glue/element-css-inline-style": elementCssInlineStyle_exports,
   "@tairitsu-glue/event-target": eventTarget_exports,
   "@tairitsu-glue/location": location_exports,
+  "@tairitsu-glue/history": history_exports,
   "@tairitsu-glue/observers": observers_exports,
 };
 
