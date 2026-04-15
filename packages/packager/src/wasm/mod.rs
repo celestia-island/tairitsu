@@ -1350,6 +1350,37 @@ fn generate_component_html_with_output_dir(
                 }});
             }}
         }})();
+
+        // Hot-reload client: connects to dev server SSE endpoint.
+        // On rebuild notification, reloads the page. Gives up after 3
+        // consecutive failures and suggests using release builds.
+        (function initHotReload() {{
+            let failures = 0;
+            const MAX_FAILURES = 3;
+            function connect() {{
+                const es = new EventSource('/__tairitsu_reload');
+                es.onmessage = function(ev) {{
+                    if (ev.data === 'reload') {{
+                        console.log('[tairitsu] rebuild detected, reloading…');
+                        location.reload();
+                    }}
+                }};
+                es.onerror = function() {{
+                    failures++;
+                    es.close();
+                    if (failures >= MAX_FAILURES) {{
+                        console.warn(
+                            '[tairitsu] hot-reload connection failed ' + MAX_FAILURES +
+                            ' times. Dev server may not be running.' +
+                            '\\nFor production builds, use: tairitsu build --release'
+                        );
+                        return;
+                    }}
+                    setTimeout(connect, 3000);
+                }};
+            }}
+            connect();
+        }})();
     </script>
 </body>
 </html>"#,
@@ -1411,6 +1442,11 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     println!("{}", divider);
     println!();
 
+    // Broadcast channel for hot-reload SSE notifications.
+    // When a rebuild finishes, the watch loop sends () here;
+    // the browser client receives it and re-fetches WASM.
+    let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
+
     // Initial build (no MultiProgress — let cargo write directly to terminal).
     let initial_started = Instant::now();
     match config.build.target.as_str() {
@@ -1466,7 +1502,28 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
             Html(content)
         }
     }));
+    let reload_tx_for_route = reload_tx.clone();
     let app = Router::new()
+        .route("/__tairitsu_reload", get(move || {
+            let tx = reload_tx_for_route.clone();
+            async move {
+                use axum::response::sse::{Event, Sse};
+                use axum::response::IntoResponse;
+                use futures::stream::StreamExt;
+                let receiver = tx.subscribe();
+                let stream = tokio_stream::wrappers::BroadcastStream::new(receiver).map(|result| {
+                    match result {
+                        Ok(()) => Ok::<_, std::io::Error>(Event::default().data("reload")),
+                        Err(_) => Err(std::io::Error::new(std::io::ErrorKind::Other, "lagged")),
+                    }
+                });
+                Sse::new(stream).keep_alive(
+                    axum::response::sse::KeepAlive::new()
+                        .interval(Duration::from_secs(15))
+                        .text("ping"),
+                ).into_response()
+            }
+        }))
         .route(
             "/",
             get(move || {
@@ -1528,6 +1585,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
             actual_port,
             &config.build.output_dir,
             &mut last_build_line,
+            reload_tx,
         )
         .await?;
     } else {
@@ -1633,6 +1691,7 @@ async fn run_watch_loop(
     port: u16,
     output_dir: &std::path::Path,
     last_build_line: &mut String,
+    reload_tx: tokio::sync::broadcast::Sender<()>,
 ) -> crate::Result<()> {
     use notify::{EventKind, RecursiveMode, Watcher};
 
@@ -1826,6 +1885,9 @@ async fn run_watch_loop(
                     locale().dev.rebuilt,
                     port
                 );
+
+                // Notify connected browsers to hot-reload
+                let _ = reload_tx.send(());
 
                 // Log successful rebuild if in daemon mode
                 if daemon::is_daemon() {
