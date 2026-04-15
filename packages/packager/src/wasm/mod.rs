@@ -1280,6 +1280,10 @@ fn generate_component_html_with_output_dir(
             clearLoadingIfUnchanged();
         }}
 
+        // WASM just replaced #app content; re-run SPA router so the
+        // correct page is activated for the current URL path.
+        window.dispatchEvent(new PopStateEvent('popstate'));
+
         // Fix SVG elements created with wrong namespace (HTML instead of SVG).
         // WIT document::createElement always creates HTML-namespaced elements,
         // which makes SVG graphics invisible. This post-process step replaces
