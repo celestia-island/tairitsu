@@ -1135,7 +1135,7 @@ fn generate_component_html_with_output_dir(
          any module scripts, guaranteeing a single complete import map. -->
     <script src="{glue_bundle_path}?v={v}"></script>
     <script type="module">
-        import {{ instantiateWithWrapper }} from './component-wrapper-loader.js?v={v}';
+        import {{ instantiateWithWrapper }} from '/component-wrapper-loader.js?v={v}';
 
         const appRoot = document.getElementById('app');
         const setAppStatus = (text) => {{
@@ -1249,7 +1249,7 @@ fn generate_component_html_with_output_dir(
             bootInvoked = await tryInvokeBootExports(wrapperResult);
         }} catch (_wrapperErr) {{
             // No jco wrapper or wrapper failed — load WASM directly
-            const response = await fetch('./{wasm_file}');
+            const response = await fetch('/{wasm_file}');
             const bytes = await response.arrayBuffer();
             const magic = new Uint8Array(bytes, 0, 8);
             const isWasm =
