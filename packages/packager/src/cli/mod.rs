@@ -69,9 +69,9 @@ enum Commands {
         #[arg(short, long, default_value = "component")]
         target: String,
 
-        /// Build in release mode
-        #[arg(short, long)]
-        release: bool,
+        /// Build in debug mode (default is release)
+        #[arg(long)]
+        debug: bool,
 
         /// Enable server-side rendering (pre-render static HTML)
         #[arg(long)]
@@ -409,11 +409,12 @@ pub async fn run() -> crate::Result<()> {
         #[allow(unused_variables)]
         Commands::Build {
             target,
-            release,
+            debug,
             ssr,
             routes,
         } => {
             let config = crate::config::Config::load(&manifest_path)?;
+            let release = !debug;
             info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
                 "component" => {
