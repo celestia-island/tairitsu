@@ -1282,7 +1282,15 @@ fn generate_component_html_with_output_dir(
 
         // WASM just replaced #app content; re-run SPA router so the
         // correct page is activated for the current URL path.
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        // Use rAF to ensure the browser has flushed the new DOM into
+        // the render tree before we query it for .hikari-page elements.
+        requestAnimationFrame(function() {{
+            if (typeof navigate === 'function') {{
+                navigate();
+            }} else {{
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+        }});
 
         // Fix SVG elements created with wrong namespace (HTML instead of SVG).
         // WIT document::createElement always creates HTML-namespaced elements,
