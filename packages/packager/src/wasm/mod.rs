@@ -1222,23 +1222,10 @@ fn generate_component_html_with_output_dir(
             return invoked;
         }};
 
-        // Load wasm bytes and detect whether this is a Component or core module
-        const response = await fetch('./{wasm_file}');
-        const bytes = await response.arrayBuffer();
-        const magic = new Uint8Array(bytes, 0, 8);
-        const isWasm =
-            magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
-        const isComponent = isWasm &&
-            magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
-
-        let bootInvoked = false;
-
         // Build imports object from registered browser glue interfaces
         const buildImports = () => {{
             const imports = {{}};
             if (globalThis.__TAIRITSU_GLUE__ && globalThis.__TAIRITSU_GLUE__.INTERFACES) {{
-                // Map @tairitsu-glue/interface names to tairitsu-browser:full/interface@0.2.0
-                // for WASM component imports
                 for (const [shortName, exports] of Object.entries(globalThis.__TAIRITSU_GLUE__.INTERFACES)) {{
                     const ifaceName = shortName.replace('@tairitsu-glue/', '');
                     const fullName = `tairitsu-browser:full/${{ifaceName}}@0.2.0`;
@@ -1248,31 +1235,43 @@ fn generate_component_html_with_output_dir(
             return imports;
         }};
 
-        if (isComponent) {{
-            if (typeof WebAssembly.Component !== 'function') {{
-                const wrapperResult = await instantiateWithWrapper(buildImports());
-                // Register exports for event callbacks before invoking boot
-                if (globalThis.__setWasmExports && wrapperResult) {{
-                    globalThis.__setWasmExports(wrapperResult);
-                }}
-                bootInvoked = await tryInvokeBootExports(wrapperResult);
-            }} else {{
+        let bootInvoked = false;
+
+        // Strategy: always try the jco component wrapper first (avoids a
+        // redundant 50MB fetch of the raw WASM just to inspect magic bytes).
+        // The wrapper internally fetches only the core module it needs.
+        // Fall back to direct WASM loading only if no wrapper is available.
+        try {{
+            const wrapperResult = await instantiateWithWrapper(buildImports());
+            if (globalThis.__setWasmExports && wrapperResult) {{
+                globalThis.__setWasmExports(wrapperResult);
+            }}
+            bootInvoked = await tryInvokeBootExports(wrapperResult);
+        }} catch (_wrapperErr) {{
+            // No jco wrapper or wrapper failed — load WASM directly
+            const response = await fetch('./{wasm_file}');
+            const bytes = await response.arrayBuffer();
+            const magic = new Uint8Array(bytes, 0, 8);
+            const isWasm =
+                magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
+            const isComponent = isWasm &&
+                magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
+
+            if (isComponent && typeof WebAssembly.Component === 'function') {{
                 const component = new WebAssembly.Component(bytes);
                 const componentResult = await WebAssembly.instantiate(component, buildImports());
-                // Register exports for event callbacks before invoking boot
                 if (globalThis.__setWasmExports && componentResult) {{
                     globalThis.__setWasmExports(componentResult);
                 }}
                 bootInvoked = await tryInvokeBootExports(componentResult);
+            }} else {{
+                const module = await WebAssembly.compile(bytes);
+                const moduleResult = await WebAssembly.instantiate(module, buildImports());
+                if (globalThis.__setWasmExports && moduleResult) {{
+                    globalThis.__setWasmExports(moduleResult);
+                }}
+                bootInvoked = await tryInvokeBootExports(moduleResult);
             }}
-        }} else {{
-            const module = await WebAssembly.compile(bytes);
-            const moduleResult = await WebAssembly.instantiate(module, buildImports());
-            // Register exports for event callbacks before invoking boot
-            if (globalThis.__setWasmExports && moduleResult) {{
-                globalThis.__setWasmExports(moduleResult);
-            }}
-            bootInvoked = await tryInvokeBootExports(moduleResult);
         }}
 
         if (!bootInvoked) {{
