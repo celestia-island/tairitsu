@@ -557,18 +557,13 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::animation_callbacks::Guest for BrowserComponent {
         fn on_frame(callback_id: u64, timestamp: f64) {
-            let mut found = false;
             ANIMATION_CALLBACKS.with(|m| {
                 if let Some(callback) = m.borrow_mut().remove(&callback_id) {
                     if let Some(cb) = callback {
                         cb(timestamp);
                     }
-                    found = true;
                 }
             });
-            if !found {
-                tairitsu_vdom::dispatch_dom_ops_animation_frame(callback_id, timestamp);
-            }
         }
     }
 
@@ -800,7 +795,6 @@ pub mod wasm_impl {
         unsafe {
             register_wit_functions(
                 |element, property, value| {
-                    // Use W3C CSSOM standard interface
                     let style_handle =
                         bindings::tairitsu_browser::full::element_css_inline_style::get_style(
                             element,
@@ -826,14 +820,6 @@ pub mod wasm_impl {
                 },
                 |element, name, value| {
                     bindings::tairitsu_browser::full::element::set_attribute(element, name, value);
-                },
-                |callback_id| {
-                    bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(
-                        callback_id,
-                    )
-                },
-                |callback_id, timestamp| {
-                    tairitsu_vdom::dispatch_dom_ops_animation_frame(callback_id, timestamp);
                 },
             );
         }

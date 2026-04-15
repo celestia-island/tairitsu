@@ -12,10 +12,7 @@ pub mod svg;
 pub mod vnode;
 
 pub use callback::{Callback, EventHandler};
-pub use dom_ops::{
-    dispatch_dom_ops_animation_frame, get_bounding_client_rect, register_wit_functions,
-    request_animation_frame, set_attribute, set_style,
-};
+pub use dom_ops::{get_bounding_client_rect, register_wit_functions, set_attribute, set_style};
 pub use events::{
     AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
     FileData, FocusEvent, FormData, FormEvent, GenericEvent, InputEvent, Key, KeyboardEvent,
