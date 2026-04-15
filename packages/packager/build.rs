@@ -43,10 +43,23 @@ fn main() {
             .join(file);
         println!("cargo:rerun-if-changed={}", path.display());
     }
-    // Also watch the shared helpers
+    // Also watch the shared helpers and runtime modules
     for file in &["handles.ts", "async.ts"] {
         let path = workspace_root.join("packages/browser-glue/src").join(file);
         println!("cargo:rerun-if-changed={}", path.display());
+    }
+    // Watch runtime modules (these are bundled into the glue)
+    if runtime_dir.is_dir() {
+        for entry in std::fs::read_dir(&runtime_dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+        {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("ts") {
+                println!("cargo:rerun-if-changed={}", path.display());
+            }
+        }
     }
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());

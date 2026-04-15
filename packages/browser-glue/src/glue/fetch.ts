@@ -3727,7 +3727,7 @@ export function FormDataGet(self: bigint, name: string): bigint | undefined {
 /**
  * `get-all()` operation.
  */
-export function getAll(self: bigint, name: string): (bigint)[] {
+export function getAll(self: bigint, name: string): (string)[] {
   const obj = lookupFormData(self);
   return (obj as any).all;
 }

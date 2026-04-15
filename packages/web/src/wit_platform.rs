@@ -439,25 +439,28 @@ pub mod wasm_impl {
             data: bindings::exports::tairitsu_browser::full::event_callbacks::MouseEventData,
         ) {
             let wit_handle = EventWitHandle::from_wit(event_handle);
+            let current_target =
+                bindings::tairitsu_browser::full::event::get_current_target(event_handle);
             let event: Box<dyn EventData> = Box::new(
                 MouseEvent::new()
                     .client_x(data.client_x as i32)
                     .client_y(data.client_y as i32)
-                    .screen_x(0) // Not provided by WIT
-                    .screen_y(0) // Not provided by WIT
+                    .screen_x(0)
+                    .screen_y(0)
                     .offset_x(data.offset_x as i32)
                     .offset_y(data.offset_y as i32)
-                    .page_x(0) // Not provided by WIT
-                    .page_y(0) // Not provided by WIT
-                    .movement_x(0) // Not provided by WIT
-                    .movement_y(0) // Not provided by WIT
+                    .page_x(0)
+                    .page_y(0)
+                    .movement_x(0)
+                    .movement_y(0)
                     .button(data.button as i16)
                     .buttons(data.buttons as u16)
                     .ctrl_key(data.ctrl_key)
                     .shift_key(data.shift_key)
                     .alt_key(data.alt_key)
                     .meta_key(data.meta_key)
-                    .event_handle(wit_handle),
+                    .event_handle(wit_handle)
+                    .current_target(current_target.unwrap_or(0)),
             );
             dispatch_event(listener_id, "mouse", event);
         }
@@ -554,13 +557,18 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::animation_callbacks::Guest for BrowserComponent {
         fn on_frame(callback_id: u64, timestamp: f64) {
+            let mut found = false;
             ANIMATION_CALLBACKS.with(|m| {
                 if let Some(callback) = m.borrow_mut().remove(&callback_id) {
                     if let Some(cb) = callback {
                         cb(timestamp);
                     }
+                    found = true;
                 }
             });
+            if !found {
+                tairitsu_vdom::dispatch_dom_ops_animation_frame(callback_id, timestamp);
+            }
         }
     }
 
@@ -819,6 +827,14 @@ pub mod wasm_impl {
                 |element, name, value| {
                     bindings::tairitsu_browser::full::element::set_attribute(element, name, value);
                 },
+                |callback_id| {
+                    bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(
+                        callback_id,
+                    )
+                },
+                |callback_id, timestamp| {
+                    tairitsu_vdom::dispatch_dom_ops_animation_frame(callback_id, timestamp);
+                },
             );
         }
 
@@ -923,23 +939,16 @@ pub mod wasm_impl {
             event: &str,
             handler: Box<dyn FnMut(Box<dyn EventData>)>,
         ) {
-            // W3C interface: generate callback handle first, then pass to add-event-listener
-            let callback_handle = next_callback_id();
-
-            // Store the handler with the callback handle
-            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(callback_handle, handler));
-
-            // Call the W3C add-event-listener with self parameter
-            // The WIT interface returns a listener-id that we need to store for removal
             let listener_id = bindings::tairitsu_browser::full::event_target::add_event_listener(
-                element.0, event, false, // use_capture
+                element.0, event, false,
             )
             .unwrap_or_else(|e| {
                 log_error(&format!("add_event_listener failed: {}", e));
                 0
             });
 
-            // Store the mapping from element+event to listener-id for removal
+            EVENT_CALLBACKS.with(|m| m.borrow_mut().insert(listener_id, handler));
+
             ELEMENT_LISTENERS.with(|m| {
                 m.borrow_mut()
                     .insert((element.0, event.to_string()), listener_id);

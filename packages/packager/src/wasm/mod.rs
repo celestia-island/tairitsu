@@ -1275,6 +1275,51 @@ fn generate_component_html_with_output_dir(
                 parent.replaceChild(newSvg, svg);
             }});
         }})();
+
+        // Glow mouse-following spotlight effect
+        (function initGlow() {{
+            let rafId = null;
+            const activeGlow = new Map();
+
+            document.addEventListener('mouseenter', function(e) {{
+                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
+                if (!glow || activeGlow.has(glow)) return;
+                activeGlow.set(glow, {{ x: 50, y: 50 }});
+                if (!rafId) scheduleFrame();
+            }}, true);
+
+            document.addEventListener('mousemove', function(e) {{
+                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
+                if (!glow || !activeGlow.has(glow)) return;
+                const rect = glow.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {{
+                    activeGlow.get(glow).x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+                    activeGlow.get(glow).y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+                }}
+            }}, true);
+
+            document.addEventListener('mouseleave', function(e) {{
+                const glow = e.target.closest ? e.target.closest('[data-glow]') : null;
+                if (!glow) return;
+                activeGlow.delete(glow);
+                glow.style.setProperty('--glow-x', '50%');
+                glow.style.setProperty('--glow-y', '50%');
+            }}, true);
+
+            function scheduleFrame() {{
+                rafId = requestAnimationFrame(function tick() {{
+                    for (const [el, pos] of activeGlow) {{
+                        el.style.setProperty('--glow-x', pos.x + '%');
+                        el.style.setProperty('--glow-y', pos.y + '%');
+                    }}
+                    if (activeGlow.size > 0) {{
+                        rafId = requestAnimationFrame(tick);
+                    }} else {{
+                        rafId = null;
+                    }}
+                }});
+            }}
+        }})();
     </script>
 </body>
 </html>"#,
