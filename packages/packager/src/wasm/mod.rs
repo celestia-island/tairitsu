@@ -1000,6 +1000,37 @@ fn try_generate_component_wrapper(
                                 std::fs::write(&js_file, content)?;
                             }
                         }
+
+                        // Patch preview2-shim resource instanceof checks that fail
+                        // due to cross-module class identity issues (jco + preview2-shim).
+                        // The getStdout/getStderr/subscribe calls return valid objects but
+                        // from a different module instance than the expected class.
+                        if let Ok(mut content) = std::fs::read_to_string(&js_file) {
+                            let original = content.clone();
+                            let patterns = [
+                                ("OutputStream", "\"OutputStream\""),
+                                ("InputStream", "\"InputStream\""),
+                                ("Pollable", "\"Pollable\""),
+                                ("TerminalOutput", "\"TerminalOutput\""),
+                                ("TerminalInput", "\"TerminalInput\""),
+                            ];
+                            for (class_name, label) in patterns {
+                                let check = format!(
+                                    "if (!(ret instanceof {})) {{\n      throw new TypeError('Resource error: Not a valid {} resource.');\n    }}",
+                                    class_name, label
+                                );
+                                let catch_check = format!(
+                                    "if (!(e instanceof {})) {{\n      throw new TypeError('Resource error: Not a valid {} resource.');\n    }}",
+                                    class_name, label
+                                );
+                                let comment = format!("/* {} instanceof check patched for browser compat */", class_name);
+                                content = content.replace(&check, &comment);
+                                content = content.replace(&catch_check, &comment);
+                            }
+                            if content != original {
+                                std::fs::write(&js_file, content)?;
+                            }
+                        }
                     }
                     return Ok(true);
                 }

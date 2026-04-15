@@ -528,17 +528,17 @@ pub mod wasm_impl {
     }
 
     /// Dispatch an event to the registered callback with error handling.
-    fn dispatch_event(listener_id: u64, event_type: &str, event: Box<dyn EventData>) {
+    fn dispatch_event(listener_id: u64, _event_type: &str, event: Box<dyn EventData>) {
         EVENT_CALLBACKS.with(|m| {
-            let mut callbacks = m.borrow_mut();
-            if let Some(handler) = callbacks.get_mut(&listener_id) {
+            // Temporarily remove the handler to release the borrow,
+            // allowing re-entrant calls (e.g., mousemove → rAF → dispatch).
+            let mut handler_opt = m.borrow_mut().remove(&listener_id);
+            if let Some(handler) = &mut handler_opt {
                 handler(event);
-            } else {
-                let msg = format!(
-                    "Event dispatched but no callback registered: type={}, listener={}",
-                    event_type, listener_id
-                );
-                log_warning(&msg);
+            }
+            // Re-insert the handler so it can be called again
+            if let Some(handler) = handler_opt {
+                m.borrow_mut().insert(listener_id, handler);
             }
         });
     }
