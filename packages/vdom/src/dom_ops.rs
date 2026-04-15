@@ -9,9 +9,18 @@
 //! Before using these functions in a WIT environment, you must call
 //! [`register_wit_functions`] to provide the WIT binding functions.
 
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use crate::platform::DomRect;
+
+static DOM_OPS_CALLBACK_ID: AtomicU64 = AtomicU64::new(1);
+
+thread_local! {
+    static RAF_CALLBACKS: RefCell<HashMap<u64, Box<dyn FnOnce(f64)>>> = RefCell::new(HashMap::new());
+}
 
 // Global function pointers for WIT operations
 static WIT_FUNCS: Mutex<Option<WitFuncs>> = Mutex::new(None);
@@ -20,6 +29,8 @@ struct WitFuncs {
     set_style: unsafe fn(u64, &str, &str) -> Result<(), String>,
     get_bounding_client_rect: unsafe fn(u64) -> DomRect,
     set_attribute: unsafe fn(u64, &str, &str),
+    request_animation_frame: unsafe fn(u64) -> u32,
+    dispatch_animation_frame: unsafe fn(u64, f64),
 }
 
 /// Register the WIT binding functions for DOM operations.
@@ -35,11 +46,15 @@ pub unsafe fn register_wit_functions(
     set_style: unsafe fn(u64, &str, &str) -> Result<(), String>,
     get_bounding_client_rect: unsafe fn(u64) -> DomRect,
     set_attribute: unsafe fn(u64, &str, &str),
+    request_animation_frame: unsafe fn(u64) -> u32,
+    dispatch_animation_frame: unsafe fn(u64, f64),
 ) {
     *WIT_FUNCS.lock().unwrap() = Some(WitFuncs {
         set_style,
         get_bounding_client_rect,
         set_attribute,
+        request_animation_frame,
+        dispatch_animation_frame,
     });
 }
 
@@ -98,4 +113,43 @@ pub fn set_attribute(element_handle: u64, name: &str, value: &str) {
     if let Some(funcs) = WIT_FUNCS.lock().unwrap().as_ref() {
         unsafe { (funcs.set_attribute)(element_handle, name, value) };
     }
+}
+
+/// Request an animation frame callback.
+///
+/// The callback is invoked once with the current timestamp (ms since page load).
+/// For a continuous loop, re-register from within the callback.
+///
+/// # Example
+///
+/// ```ignore
+/// fn start_loop() {
+///     request_animation_frame(Box::new(move |_ts| {
+///         // do work...
+///         start_loop(); // re-register for next frame
+///     }));
+/// }
+/// ```
+pub fn request_animation_frame(callback: Box<dyn FnOnce(f64)>) -> u32 {
+    if let Some(funcs) = WIT_FUNCS.lock().unwrap().as_ref() {
+        let id = DOM_OPS_CALLBACK_ID.fetch_add(1, Ordering::SeqCst);
+        RAF_CALLBACKS.with(|m| {
+            m.borrow_mut().insert(id, callback);
+        });
+        unsafe { (funcs.request_animation_frame)(id) }
+    } else {
+        0
+    }
+}
+
+/// Dispatch a dom_ops animation frame callback.
+///
+/// Called from the WIT export `on_frame` to route callbacks that were
+/// registered via [`request_animation_frame`].
+pub fn dispatch_dom_ops_animation_frame(callback_id: u64, timestamp: f64) {
+    RAF_CALLBACKS.with(|m| {
+        if let Some(callback) = m.borrow_mut().remove(&callback_id) {
+            callback(timestamp);
+        }
+    });
 }

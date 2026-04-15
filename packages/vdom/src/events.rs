@@ -64,10 +64,11 @@ impl Default for EventWitHandle {
 
 #[derive(Debug, Clone)]
 pub struct MouseEvent {
-    /// The target element handle that received this event.
-    /// This allows event handlers to directly manipulate the element
-    /// via Platform methods like set_style and get_bounding_client_rect.
+    /// The target element handle that received this event (deepest child under cursor).
     pub target: Option<u64>,
+    /// The currentTarget — the element the listener is bound to (e.g. .hi-glow-wrapper).
+    /// Use this for setting CSS custom properties on the wrapper element.
+    pub current_target: Option<u64>,
     pub client_x: i32,
     pub client_y: i32,
     pub screen_x: i32,
@@ -97,6 +98,7 @@ impl MouseEvent {
     pub fn new() -> Self {
         Self {
             target: None,
+            current_target: None,
             client_x: 0,
             client_y: 0,
             screen_x: 0,
@@ -119,6 +121,10 @@ impl MouseEvent {
 
     pub fn target(mut self, target: u64) -> Self {
         self.target = Some(target);
+        self
+    }
+    pub fn current_target(mut self, current_target: u64) -> Self {
+        self.current_target = Some(current_target);
         self
     }
 
