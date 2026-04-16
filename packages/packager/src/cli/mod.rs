@@ -424,14 +424,19 @@ pub async fn run() -> crate::Result<()> {
                     if ssr {
                         #[cfg(feature = "ssr")]
                         {
-                            let routes = if routes.is_empty() {
-                                vec!["".to_string()]
+                            let effective_routes = if routes.is_empty() {
+                                let discovered = config.discovered_routes();
+                                if discovered.is_empty() {
+                                    vec!["".to_string()]
+                                } else {
+                                    discovered.iter().map(|r| r.path.clone()).collect()
+                                }
                             } else {
                                 routes
                             };
                             let output_dir = std::path::PathBuf::from("dist/prerendered");
-                            info!("Pre-rendering {} routes...", routes.len());
-                            crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                            info!("Pre-rendering {} routes...", effective_routes.len());
+                            crate::ssr::prerender_routes(&config, &effective_routes, &output_dir)?;
                         }
                         #[cfg(not(feature = "ssr"))]
                         {
@@ -608,8 +613,13 @@ pub async fn run() -> crate::Result<()> {
 
             if build {
                 // Pre-render mode
-                let routes = if routes.is_empty() {
-                    vec!["".to_string()]
+                let effective_routes = if routes.is_empty() {
+                    let discovered = config.discovered_routes();
+                    if discovered.is_empty() {
+                        vec!["".to_string()]
+                    } else {
+                        discovered.iter().map(|r| r.path.clone()).collect()
+                    }
                 } else {
                     routes
                 };
@@ -619,12 +629,12 @@ pub async fn run() -> crate::Result<()> {
 
                 info!(
                     "Pre-rendering {} routes to {}...",
-                    routes.len(),
+                    effective_routes.len(),
                     output_dir.display()
                 );
                 #[cfg(feature = "ssr")]
                 {
-                    crate::ssr::prerender_routes(&config, &routes, &output_dir)?;
+                    crate::ssr::prerender_routes(&config, &effective_routes, &output_dir)?;
                 }
                 #[cfg(not(feature = "ssr"))]
                 {

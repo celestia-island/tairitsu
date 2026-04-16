@@ -1,4 +1,7 @@
 mod metadata;
+mod routes;
+
+pub use routes::{discover_routes, DiscoveredRoute};
 
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -280,6 +283,17 @@ impl Config {
             native: metadata.native,
             manifest_dir,
         })
+    }
+
+    /// Auto-discover client-side routes from the `html.head` JavaScript.
+    ///
+    /// Parses `const ROUTES = { ... }` or similar patterns embedded in the
+    /// head field and returns structured route mappings. This enables:
+    /// - Automatic SSG (per-route HTML generation during build)
+    /// - Route-aware SSR rendering
+    /// - Dev server route discovery without manual --routes flags
+    pub fn discovered_routes(&self) -> Vec<DiscoveredRoute> {
+        discover_routes(&self.html.head)
     }
 }
 

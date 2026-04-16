@@ -16,6 +16,8 @@ pub struct SsrConfig {
     pub viewport_width: i32,
     /// Simulated viewport height (default 1080)
     pub viewport_height: i32,
+    /// Current URL path for route-aware rendering (default "/")
+    pub current_route: String,
 }
 
 impl Default for SsrConfig {
@@ -23,6 +25,7 @@ impl Default for SsrConfig {
         Self {
             viewport_width: 1920,
             viewport_height: 1080,
+            current_route: "/".to_string(),
         }
     }
 }
@@ -33,6 +36,20 @@ impl SsrConfig {
         Self {
             viewport_width,
             viewport_height,
+            current_route: "/".to_string(),
+        }
+    }
+
+    /// Create a new config with a specific route for route-aware rendering
+    pub fn with_route(viewport_width: i32, viewport_height: i32, route: &str) -> Self {
+        Self {
+            viewport_width,
+            viewport_height,
+            current_route: if route.is_empty() {
+                "/".to_string()
+            } else {
+                route.to_string()
+            },
         }
     }
 }
@@ -343,13 +360,15 @@ mod tests {
         assert_ne!(state.dom.body_handle(), 0);
         assert_eq!(state.config.viewport_width, 1920);
         assert_eq!(state.config.viewport_height, 1080);
+        assert_eq!(state.config.current_route, "/");
     }
 
     #[test]
     fn test_host_state_with_config() {
-        let config = SsrConfig::new(1280, 720);
+        let config = SsrConfig::with_route(1280, 720, "/about");
         let state = SsrHostState::with_config(config).unwrap();
         assert_eq!(state.config.viewport_width, 1280);
         assert_eq!(state.config.viewport_height, 720);
+        assert_eq!(state.config.current_route, "/about");
     }
 }

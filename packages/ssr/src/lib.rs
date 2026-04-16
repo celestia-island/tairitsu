@@ -161,6 +161,7 @@ mod tests {
         let config = SsrConfig::default();
         assert_eq!(config.viewport_width, 1920);
         assert_eq!(config.viewport_height, 1080);
+        assert_eq!(config.current_route, "/");
     }
 
     #[test]
@@ -168,6 +169,15 @@ mod tests {
         let config = SsrConfig::new(1280, 720);
         assert_eq!(config.viewport_width, 1280);
         assert_eq!(config.viewport_height, 720);
+        assert_eq!(config.current_route, "/");
+    }
+
+    #[test]
+    fn test_config_with_route() {
+        let config = SsrConfig::with_route(1280, 720, "/components/button");
+        assert_eq!(config.viewport_width, 1280);
+        assert_eq!(config.viewport_height, 720);
+        assert_eq!(config.current_route, "/components/button");
     }
 
     #[test]
