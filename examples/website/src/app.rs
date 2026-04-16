@@ -6,9 +6,10 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
 
+use crate::pages::components as page_components;
 use crate::{
     components::{aside_footer, sidebar, top_nav},
-    pages::{components, guides, home, not_found, packages, system},
+    pages::{guides, home, not_found, packages, system},
 };
 
 fn txt(s: &str) -> VNode {
@@ -22,7 +23,7 @@ fn el(tag: &str) -> VElement {
 pub fn render() -> VNode {
     let mut content: Vec<VNode> = Vec::new();
     content.push(home::render());
-    content.extend(components::render_all());
+    content.extend(page_components::render_all());
     content.extend(guides::render_all());
     content.extend(system::render_all());
     content.extend(packages::render_all());

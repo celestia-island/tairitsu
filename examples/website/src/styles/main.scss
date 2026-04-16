@@ -836,3 +836,1146 @@ a:hover {
     display: none !important;
   }
 }
+
+/* ============================================
+   Component Demo Blocks
+   ============================================ */
+
+.demo-block {
+  margin-bottom: var(--ts-spacing-xl);
+}
+
+.demo-block__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: var(--ts-spacing-md);
+  padding-bottom: var(--ts-spacing-sm);
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.demo-block__body {
+  padding: var(--ts-spacing-lg);
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-spacing-md);
+}
+
+.demo-block__body--horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ts-spacing-md);
+}
+
+/* ============================================
+   Component Demo — Form Controls
+   ============================================ */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-spacing-xs);
+}
+
+.form-group label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--hi-color-text-secondary);
+}
+
+.form-input-wrapper input,
+.form-input-wrapper textarea,
+.form-input-wrapper select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 6px;
+  color: var(--hi-color-text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input-wrapper input:focus,
+.form-input-wrapper textarea:focus,
+.form-input-wrapper select:focus {
+  outline: none;
+  border-color: var(--ts-color-primary);
+  box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
+}
+
+.form-input-wrapper input::placeholder,
+.form-input-wrapper textarea::placeholder {
+  color: var(--hi-color-text-disabled);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ts-spacing-md);
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--ts-spacing-sm);
+  margin-top: var(--ts-spacing-sm);
+}
+
+/* ============================================
+   Component Demo — Buttons
+   ============================================ */
+
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ts-spacing-sm);
+  align-items: center;
+}
+
+.demo-row + .demo-row {
+  margin-top: var(--ts-spacing-sm);
+}
+
+.demo-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-spacing-sm);
+}
+
+.demo-col + .demo-col {
+  margin-left: var(--ts-spacing-xl);
+}
+
+.demo-label {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--ts-spacing-xs);
+}
+
+.demo-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--hi-color-border);
+  margin: var(--ts-spacing-sm) 0;
+}
+
+/* ============================================
+   Component Demo — Switches
+   ============================================ */
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ts-spacing-sm) 0;
+  min-width: 200px;
+}
+
+.switch-row + .switch-row {
+  border-top: 1px solid var(--hi-color-border);
+}
+
+.switch-label {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+}
+
+.hi-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.hi-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.hi-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.hi-switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.hi-switch input:checked + .hi-switch-slider {
+  background: var(--ts-color-primary);
+}
+
+.hi-switch input:checked + .hi-switch-slider::before {
+  transform: translateX(20px);
+}
+
+.hi-switch-sm {
+  width: 36px;
+  height: 20px;
+}
+
+.hi-switch-sm .hi-switch-slider::before {
+  width: 14px;
+  height: 14px;
+}
+
+.hi-switch-sm input:checked + .hi-switch-slider::before {
+  transform: translateX(16px);
+}
+
+.hi-switch-lg {
+  width: 56px;
+  height: 30px;
+}
+
+.hi-switch-lg .hi-switch-slider::before {
+  width: 24px;
+  height: 24px;
+}
+
+.hi-switch-lg input:checked + .hi-switch-slider::before {
+  transform: translateX(26px);
+}
+
+/* ============================================
+   Component Demo — Alerts / Feedback
+   ============================================ */
+
+.hi-alert {
+  padding: var(--ts-spacing-md) var(--ts-spacing-lg);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-left: 3px solid;
+}
+
+.hi-alert-info {
+  background: rgba(20, 110, 116, 0.12);
+  border-color: var(--ts-color-primary);
+  color: var(--hi-color-text-primary);
+}
+
+.hi-alert-success {
+  background: rgba(14, 184, 64, 0.12);
+  border-color: var(--hi-color-success);
+  color: var(--hi-color-text-primary);
+}
+
+.hi-alert-warning {
+  background: rgba(255, 192, 0, 0.12);
+  border-color: var(--hi-color-accent);
+  color: var(--hi-color-text-primary);
+}
+
+.hi-alert-error {
+  background: rgba(255, 76, 0, 0.12);
+  border-color: var(--hi-color-danger);
+  color: var(--hi-color-text-primary);
+}
+
+/* ============================================
+   Component Demo — Display
+   ============================================ */
+
+.display-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ts-spacing-sm) 0;
+}
+
+.display-item + .display-item {
+  border-top: 1px solid var(--hi-color-border);
+}
+
+.display-label {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+}
+
+.display-value {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+}
+
+.hi-status-active {
+  color: var(--hi-color-success);
+}
+
+.hi-status-inactive {
+  color: var(--hi-color-text-disabled);
+}
+
+.hi-status-warning {
+  color: var(--hi-color-accent);
+}
+
+.hi-status-error {
+  color: var(--hi-color-danger);
+}
+
+/* ============================================
+   Component Demo — Avatar
+   ============================================ */
+
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-spacing-md);
+}
+
+.hi-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--ts-color-primary);
+  color: #fff;
+  font-weight: 600;
+  user-select: none;
+}
+
+.hi-avatar-sm { width: 28px; height: 28px; font-size: 0.7rem; }
+.hi-avatar-md { width: 36px; height: 36px; font-size: 0.8125rem; }
+.hi-avatar-lg { width: 48px; height: 48px; font-size: 1rem; }
+.hi-avatar-xl { width: 64px; height: 64px; font-size: 1.25rem; }
+
+.avatar-group {
+  display: flex;
+}
+
+.avatar-group .hi-avatar {
+  border: 2px solid var(--hi-color-background);
+  margin-left: -8px;
+}
+
+.avatar-group .hi-avatar:first-child {
+  margin-left: 0;
+}
+
+/* ============================================
+   Component Demo — Tags
+   ============================================ */
+
+.hi-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  gap: 4px;
+}
+
+.hi-tag-primary { background: rgba(20, 110, 116, 0.2); color: #4dd0e1; }
+.hi-tag-success { background: rgba(14, 184, 64, 0.2); color: #69f0ae; }
+.hi-tag-warning { background: rgba(255, 192, 0, 0.2); color: #ffd740; }
+.hi-tag-error   { background: rgba(255, 76, 0, 0.2); color: #ff6e40; }
+.hi-tag-default { background: rgba(255, 255, 255, 0.08); color: var(--hi-color-text-secondary); }
+
+/* ============================================
+   Component Demo — Empty
+   ============================================ */
+
+.hi-empty {
+  text-align: center;
+  padding: var(--ts-spacing-2xl) var(--ts-spacing-lg);
+}
+
+.hi-empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--ts-spacing-md);
+  opacity: 0.6;
+}
+
+.hi-empty-description {
+  color: var(--hi-color-text-secondary);
+  margin-bottom: var(--ts-spacing-lg);
+  font-size: 0.9375rem;
+}
+
+/* ============================================
+   Component Demo — Comments
+   ============================================ */
+
+.hi-comment {
+  padding: var(--ts-spacing-md);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid var(--hi-color-border);
+}
+
+.hi-comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.hi-comment-author {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hi-color-text-primary);
+}
+
+.hi-comment-content {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.hi-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-spacing-md);
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+}
+
+.hi-comment-actions {
+  display: flex;
+  gap: var(--ts-spacing-sm);
+}
+
+.hi-comment-actions a {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.hi-comment-actions a:hover {
+  color: var(--hi-color-secondary);
+}
+
+/* ============================================
+   Component Demo — Description List
+   ============================================ */
+
+.hi-description-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--ts-spacing-sm) var(--ts-spacing-lg);
+}
+
+.hi-dl-term {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--hi-color-text-secondary);
+}
+
+.hi-dl-detail {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+}
+
+/* ============================================
+   Component Demo — Search
+   ============================================ */
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-wrapper input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 6px;
+  color: var(--hi-color-text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-wrapper input:focus {
+  outline: none;
+  border-color: var(--ts-color-primary);
+  box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
+}
+
+.search-wrapper input::placeholder {
+  color: var(--hi-color-text-disabled);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--hi-color-text-disabled);
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+/* ============================================
+   Component Demo — Tabs / Navigation
+   ============================================ */
+
+.hi-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--hi-color-border);
+  gap: 0;
+}
+
+.hi-tab {
+  padding: var(--ts-spacing-sm) var(--ts-spacing-lg);
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.hi-tab:hover {
+  color: var(--hi-color-text-primary);
+}
+
+.hi-tab-active {
+  color: var(--ts-color-primary);
+  border-bottom-color: var(--ts-color-primary);
+  font-weight: 500;
+}
+
+.hi-tab-disabled {
+  color: var(--hi-color-text-disabled);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Component Demo — Collapsible
+   ============================================ */
+
+.hi-collapsible {
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hi-collapsible summary {
+  padding: var(--ts-spacing-md) var(--ts-spacing-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--hi-color-text-primary);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.15s ease;
+  list-style: none;
+}
+
+.hi-collapsible summary::-webkit-details-marker {
+  display: none;
+}
+
+.hi-collapsible summary::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: var(--ts-spacing-sm);
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.hi-collapsible[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.hi-collapsible summary:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hi-collapsible p,
+.hi-collapsible div {
+  padding: var(--ts-spacing-md) var(--ts-spacing-lg);
+  color: var(--hi-color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ============================================
+   Component Demo — Table
+   ============================================ */
+
+.hi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.hi-table th,
+.hi-table td {
+  padding: var(--ts-spacing-sm) var(--ts-spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.hi-table th {
+  font-weight: 600;
+  color: var(--hi-color-text-secondary);
+  font-size: 0.8125rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hi-table td {
+  color: var(--hi-color-text-primary);
+}
+
+.hi-table-bordered {
+  border: 1px solid var(--hi-color-border);
+}
+
+.hi-table-bordered th,
+.hi-table-bordered td {
+  border: 1px solid var(--hi-color-border);
+}
+
+.hi-table-striped tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hi-table-hover tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hi-button-link {
+  font-size: 0.8125rem;
+  color: var(--ts-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hi-button-link:hover {
+  color: var(--hi-color-secondary);
+  text-decoration: underline;
+}
+
+/* ============================================
+   Component Demo — Tree
+   ============================================ */
+
+.hi-tree {
+  list-style: none;
+  padding-left: 0;
+  font-size: 0.875rem;
+}
+
+.hi-tree ul {
+  list-style: none;
+  padding-left: 1.25rem;
+}
+
+.hi-tree li {
+  padding: 4px 0;
+  color: var(--hi-color-text-primary);
+}
+
+/* ============================================
+   Component Demo — Pagination
+   ============================================ */
+
+.hi-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hi-pagination-prev,
+.hi-pagination-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--hi-color-text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hi-color-border);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.hi-pagination-prev:hover,
+.hi-pagination-next:hover {
+  border-color: var(--ts-color-primary);
+  color: var(--ts-color-primary);
+}
+
+.hi-pagination-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.hi-pagination-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--hi-color-text-primary);
+}
+
+.hi-pagination-active {
+  background: var(--ts-color-primary) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.hi-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  color: var(--hi-color-text-disabled);
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Component Demo — Timeline
+   ============================================ */
+
+.hi-timeline {
+  position: relative;
+  padding-left: var(--ts-spacing-xl);
+}
+
+.hi-timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--hi-color-border);
+}
+
+.hi-timeline-item {
+  position: relative;
+  padding-bottom: var(--ts-spacing-lg);
+}
+
+.hi-timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.hi-timeline-dot {
+  position: absolute;
+  left: calc(-1 * var(--ts-spacing-xl) + 2px);
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ts-color-primary);
+  border: 2px solid var(--hi-color-background);
+}
+
+.hi-timeline-content {
+  margin-left: var(--ts-spacing-sm);
+}
+
+.hi-timeline-content strong {
+  font-size: 0.9375rem;
+  color: var(--hi-color-text-primary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.hi-timeline-content p {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.hi-timeline-time {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+}
+
+.hi-timeline-item--success .hi-timeline-dot { background: var(--hi-color-success); }
+.hi-timeline-item--warning .hi-timeline-dot { background: var(--hi-color-accent); }
+.hi-timeline-item--error   .hi-timeline-dot { background: var(--hi-color-danger); }
+
+/* ============================================
+   Component Demo — Progress / Feedback L2
+   ============================================ */
+
+.hi-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hi-progress-fill {
+  height: 100%;
+  background: var(--ts-color-primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.hi-progress-fill--success { background: var(--hi-color-success); }
+.hi-progress-fill--warning { background: var(--hi-color-accent); }
+.hi-progress-fill--danger  { background: var(--hi-color-danger); }
+
+.hi-progress-bar--lg { height: 12px; }
+.hi-progress-bar--sm { height: 4px; }
+
+/* ============================================
+   Component Demo — Skeleton Loading
+   ============================================ */
+
+.hi-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.hi-skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+}
+
+.hi-skeleton-text:last-child {
+  width: 60%;
+}
+
+.hi-skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.hi-skeleton-title {
+  height: 20px;
+  width: 40%;
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Component Demo — Transfer
+   ============================================ */
+
+.transfer-panel {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: var(--ts-spacing-md);
+}
+
+.transfer-panel h4 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: var(--ts-spacing-sm);
+  padding-bottom: var(--ts-spacing-sm);
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.transfer-panel ul {
+  list-style: none;
+  padding: 0;
+}
+
+.transfer-panel li {
+  padding: 6px 8px;
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.transfer-panel li:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.transfer-panel li.selected {
+  background: rgba(20, 110, 116, 0.15);
+}
+
+.transfer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-spacing-sm);
+  align-items: center;
+  padding-top: var(--ts-spacing-xl);
+}
+
+/* ============================================
+   Component Demo — Editor
+   ============================================ */
+
+.editor-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.editor-textarea {
+  width: 100%;
+  padding: var(--ts-spacing-md);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 0;
+  color: var(--hi-color-text-primary);
+  font-family: var(--ts-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.editor-textarea:focus {
+  outline: none;
+  border-color: var(--ts-color-primary);
+}
+
+.editor-preview {
+  padding: var(--ts-spacing-md);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  color: var(--hi-color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ============================================
+   Component Demo — Zoom Controls
+   ============================================ */
+
+.zoom-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ts-spacing-xs);
+  padding: 4px;
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+}
+
+.zoom-level {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--hi-color-text-secondary);
+  padding: 0 var(--ts-spacing-sm);
+  min-width: 48px;
+  text-align: center;
+  font-family: var(--ts-font-mono);
+}
+
+/* ============================================
+   Component Demo — User Guide Steps
+   ============================================ */
+
+.user-guide-steps {
+  padding-left: var(--ts-spacing-lg);
+  counter-reset: step-counter;
+}
+
+.user-guide-steps li {
+  position: relative;
+  padding: var(--ts-spacing-md) 0 var(--ts-spacing-md) var(--ts-spacing-xl);
+  border-left: 2px solid var(--hi-color-border);
+  list-style: none;
+}
+
+.user-guide-steps li::before {
+  counter-increment: step-counter;
+  content: counter(step-counter);
+  position: absolute;
+  left: -14px;
+  top: var(--ts-spacing-md);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ts-color-primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-guide-steps li strong {
+  display: block;
+  font-size: 0.9375rem;
+  color: var(--hi-color-text-primary);
+  margin-bottom: 4px;
+}
+
+.user-guide-steps li p {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ============================================
+   Component Demo — Code Block
+   ============================================ */
+
+.demo-code {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 6px;
+  padding: var(--ts-spacing-md);
+  font-family: var(--ts-font-mono);
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.6;
+}
+
+/* ============================================
+   Component Demo — API Table
+   ============================================ */
+
+.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin-top: var(--ts-spacing-md);
+}
+
+.api-table th {
+  text-align: left;
+  padding: var(--ts-spacing-sm) var(--ts-spacing-md);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--hi-color-text-secondary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--hi-color-border);
+}
+
+.api-table td {
+  padding: var(--ts-spacing-sm) var(--ts-spacing-md);
+  border-bottom: 1px solid var(--hi-color-border);
+  color: var(--hi-color-text-primary);
+}
+
+.api-table code {
+  font-family: var(--ts-font-mono);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: var(--hi-color-secondary);
+}
+
+/* ============================================
+   Component Demo — Misc
+   ============================================ */
+
+.hi-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-spacing-sm);
+  padding: 4px 0;
+}
+
+.hi-radio-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-spacing-sm);
+  padding: 4px 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.badge-primary { background: rgba(20, 110, 116, 0.2); color: #4dd0e1; }
+.badge-success { background: rgba(14, 184, 64, 0.2); color: #69f0ae; }
+.badge-warning { background: rgba(255, 192, 0, 0.2); color: #ffd740; }
+.badge-error   { background: rgba(255, 76, 0, 0.2); color: #ff6e40; }
+.badge-default { background: rgba(255, 255, 255, 0.08); color: var(--hi-color-text-disabled); }
+
+.result-page {
+  text-align: center;
+  padding: var(--ts-spacing-2xl);
+}
+
+.result-page__icon {
+  font-size: 4rem;
+  margin-bottom: var(--ts-spacing-md);
+}
+
+.result-page__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--hi-color-text-primary);
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.result-page__desc {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: var(--ts-spacing-lg);
+}
