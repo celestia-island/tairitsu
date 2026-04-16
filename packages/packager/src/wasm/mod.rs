@@ -1408,7 +1408,73 @@ fn generate_component_html_with_output_dir(
     );
 
     let html_path = output_dir.join("index.html");
-    std::fs::write(&html_path, html)?;
+    std::fs::write(&html_path, &html)?;
+
+    generate_route_html_files(config, output_dir, &html)?;
+
+    Ok(())
+}
+
+fn generate_route_html_files(
+    config: &Config,
+    output_dir: &std::path::Path,
+    base_html: &str,
+) -> crate::Result<()> {
+    use crate::config::DiscoveredRoute;
+
+    let routes = config.discovered_routes();
+    if routes.is_empty() {
+        return Ok(());
+    }
+
+    let non_root_routes: Vec<&DiscoveredRoute> = routes
+        .iter()
+        .filter(|r| !r.is_root())
+        .collect();
+
+    if non_root_routes.is_empty() {
+        return Ok(());
+    }
+
+    let route_preload_script = |route_path: &str| -> String {
+        format!(
+            "<script>if(history.replaceState){{history.replaceState(null,null,{path})}}</script>",
+            path = serde_json::to_string(route_path).unwrap_or_else(|_| format!("'{}'", route_path))
+        )
+    };
+
+    for route in &non_root_routes {
+        let fs_route = route.fs_path();
+        let route_dir = output_dir.join(fs_route);
+
+        std::fs::create_dir_all(&route_dir).map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "Failed to create route directory {}: {}",
+                route_dir.display(),
+                e
+            ))
+        })?;
+
+        let preload = route_preload_script(&route.path);
+        let route_html = base_html.replace(
+            "<div id=\"app\">Loading...</div>",
+            &format!("<div id=\"app\">Loading...</div>\n    {}", preload),
+        );
+
+        let route_file = route_dir.join("index.html");
+        std::fs::write(&route_file, &route_html).map_err(|e| {
+            crate::TairitsuPackagerError::BuildError(format!(
+                "Failed to write route HTML {}: {}",
+                route_file.display(),
+                e
+            ))
+        })?;
+    }
+
+    tracing::info!(
+        "Generated {} route HTML files for direct URL access",
+        non_root_routes.len()
+    );
 
     Ok(())
 }
@@ -1498,13 +1564,39 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     // Clone dist_dir for the SPA fallback handler
     let dist_for_spa = dist_for_index.clone();
     let spa_pkg_name = pkg_name.clone();
-    // SPA fallback: serve index.html for any path that doesn't match a
-    // static file, so that History API routing works on the client.
-    let spa_fallback = Router::new().fallback(get(move || {
+
+    let discovered = config.discovered_routes();
+    let known_route_paths: Vec<String> = discovered
+        .iter()
+        .filter(|r| !r.is_root())
+        .map(|r| r.path.clone())
+        .collect();
+
+    let spa_fallback = Router::new().fallback(get(move |req: axum::extract::Request| {
         let dist = dist_for_spa.clone();
         let pkg = spa_pkg_name.clone();
+        let routes = known_route_paths.clone();
         async move {
-            let content = std::fs::read_to_string(dist.join("index.html")).unwrap_or_else(|_| {
+            let path = req.uri().path().trim_end_matches('/');
+
+            let route_file = if !path.is_empty() && routes.iter().any(|r| r == path || format!("{}/", r) == *path) {
+                let clean_path = path.strip_prefix('/').unwrap_or(path);
+                Some(dist.join(clean_path).join("index.html"))
+            } else {
+                None
+            };
+
+            let content = match route_file {
+                Some(ref fp) if fp.exists() => std::fs::read_to_string(fp),
+                _ => Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "no route file",
+                )),
+            }
+            .or_else(|_| {
+                std::fs::read_to_string(dist.join("index.html"))
+            })
+            .unwrap_or_else(|_| {
                 format!(
                     "<!DOCTYPE html><html><head><title>{}</title></head>\
                          <body><div id=\"app\">Loading…</div></body></html>",

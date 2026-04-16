@@ -293,7 +293,14 @@ pub fn prerender_routes(
         use std::fs;
         use tairitsu_ssr::{SsrConfig, render_full_page};
 
-        info!("Pre-rendering {} routes...", routes.len());
+        let discovered = config.discovered_routes();
+        let effective_routes: Vec<String> = if routes.is_empty() && !discovered.is_empty() {
+            discovered.iter().map(|r| r.path.clone()).collect()
+        } else {
+            routes.to_vec()
+        };
+
+        info!("Pre-rendering {} routes...", effective_routes.len());
 
         // Build the component first
         crate::wasm::build_component(config, true, None)?;
@@ -321,29 +328,33 @@ pub fn prerender_routes(
         // Create output directory
         fs::create_dir_all(output_dir)?;
 
-        let ssr_config = SsrConfig::default();
-
-        for route in routes {
+        for route in &effective_routes {
             info!("  Rendering /{}...", route);
 
+            let clean_route = route.trim_start_matches('/');
+
+            let ssr_config = SsrConfig::with_route(1920, 1080, route);
+
             let html =
-                render_full_page(&wasm_bytes, ssr_config.clone(), &template).map_err(|e| {
+                render_full_page(&wasm_bytes, ssr_config, &template).map_err(|e| {
                     crate::TairitsuPackagerError::BuildError(format!(
                         "Failed to render route '{}': {}",
                         route, e
                     ))
                 })?;
 
+            let activated_html = activate_route_in_html(&html, route);
+
             // Determine output path
-            let output_path = if route.is_empty() {
+            let output_path = if clean_route.is_empty() {
                 output_dir.join("index.html")
             } else {
-                let route_path = output_dir.join(route).join("index.html");
+                let route_path = output_dir.join(clean_route).join("index.html");
                 fs::create_dir_all(route_path.parent().unwrap())?;
                 route_path
             };
 
-            fs::write(&output_path, html)?;
+            fs::write(&output_path, activated_html)?;
             info!("    -> {}", output_path.display());
         }
 
@@ -360,6 +371,77 @@ pub fn prerender_routes(
         Err(crate::TairitsuPackagerError::BuildError(
             "SSR feature is not enabled. Build with --features ssr".to_string(),
         ))
+    }
+}
+
+/// Post-process rendered HTML to activate the correct SPA page.
+///
+/// Since tairitsu apps render all pages at once and use CSS show/hide,
+/// this injects `is-active` class on the target page so search engines
+/// and social media crawlers see the right content without JS execution.
+fn activate_route_in_html(html: &str, route: &str) -> String {
+    let clean_route = route.trim_matches('/');
+
+    if clean_route.is_empty() {
+        return html.to_string();
+    }
+
+    let page_id_map: std::collections::HashMap<String, &str> = [
+        ("".to_string(), "home"),
+        ("/".to_string(), "home"),
+        ("/components".to_string(), "components"),
+        ("/components/layer1/button".to_string(), "component-button"),
+        ("/components/layer1/form".to_string(), "component-form"),
+        ("/components/layer1/number-input".to_string(), "component-number-input"),
+        ("/components/layer1/search".to_string(), "component-search"),
+        ("/components/layer1/switch".to_string(), "component-switch"),
+        ("/components/layer1/feedback".to_string(), "component-feedback"),
+        ("/components/layer1/display".to_string(), "component-display"),
+        ("/components/layer1/avatar".to_string(), "component-avatar"),
+        ("/components/layer1/image".to_string(), "component-image"),
+        ("/components/layer1/tag".to_string(), "component-tag"),
+        ("/components/layer1/empty".to_string(), "component-empty"),
+        ("/components/layer1/comment".to_string(), "component-comment"),
+        ("/components/layer1/description-list".to_string(), "component-description-list"),
+        ("/components/layer2/navigation".to_string(), "component-navigation"),
+        ("/components/layer2/data".to_string(), "component-data"),
+        ("/components/layer2/table".to_string(), "component-table"),
+        ("/components/layer2/tree".to_string(), "component-tree"),
+        ("/components/layer2/pagination".to_string(), "component-pagination"),
+        ("/components/layer2/qrcode".to_string(), "component-qrcode"),
+        ("/components/layer2/timeline".to_string(), "component-timeline"),
+        ("/components/layer2/form".to_string(), "component-form-composed"),
+        ("/components/layer2/cascader".to_string(), "component-cascader"),
+        ("/components/layer2/transfer".to_string(), "component-transfer"),
+        ("/components/layer2/collapsible".to_string(), "component-collapsible"),
+        ("/components/layer2/feedback".to_string(), "component-feedback-composed"),
+        ("/components/layer3/media".to_string(), "component-media"),
+        ("/components/layer3/editor".to_string(), "component-editor"),
+        ("/components/layer3/visualization".to_string(), "component-visualization"),
+        ("/components/layer3/user-guide".to_string(), "component-user-guide"),
+        ("/components/layer3/zoom-controls".to_string(), "component-zoom-controls"),
+        ("/system/architecture".to_string(), "system-architecture"),
+        ("/system/design-tokens".to_string(), "system-design-tokens"),
+        ("/guides/getting-started".to_string(), "guide-getting-started"),
+        ("/guides/theminging".to_string(), "guide-theming"),
+        ("/demos/showcase".to_string(), "demos-showcase"),
+        ("/demos/form".to_string(), "demos-form"),
+        ("/demos/dashboard".to_string(), "demos-dashboard"),
+        ("/demos/video".to_string(), "demos-video"),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    match page_id_map.get(&format!("/{}", clean_route)).or(page_id_map.get(route)) {
+        Some(page_id) => {
+            let target_id = format!("page-{}", page_id);
+            html.replace(
+                &format!(r#"id="{}""#, target_id),
+                &format!(r#"id="{}" class="hikari-page is-active""#, target_id),
+            )
+        }
+        None => html.to_string(),
     }
 }
 
