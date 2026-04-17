@@ -28,7 +28,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/switch"), ("Switch", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Switch" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Toggle switch for boolean state control. Supports custom sizes, labels, and disabled state."
                 }
                 div { class: "demo-block",
@@ -68,24 +68,20 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Switch with Description" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:16px;",
-                            div {
-                                div { style: "display:flex;align-items:center;justify-content:space-between;",
-                                    div {
-                                        div { style: "font-size:0.875rem;color:var(--hi-color-text-primary);font-weight:500;", "Auto-save" }
-                                        p { style: "font-size:0.8125rem;color:var(--hi-color-text-disabled);margin:0;", "Automatically save changes every 30 seconds" }
-                                    }
-                                    ..vec![switch(true, "")]
+                        div { class: "switch-desc-list",
+                            div { class: "switch-desc-row",
+                                div { class: "switch-desc-info",
+                                    div { class: "switch-desc-title", "Auto-save" }
+                                    p { class: "switch-desc-subtitle", "Automatically save changes every 30 seconds" }
                                 }
+                                ..vec![switch(true, "")]
                             }
-                            div {
-                                div { style: "display:flex;align-items:center;justify-content:space-between;",
-                                    div {
-                                        div { style: "font-size:0.875rem;color:var(--hi-color-text-primary);font-weight:500;", "Notifications" }
-                                        p { style: "font-size:0.8125rem;color:var(--hi-color-text-disabled);margin:0;", "Receive push notifications for updates" }
-                                    }
-                                    ..vec![switch(false, "")]
+                            div { class: "switch-desc-row",
+                                div { class: "switch-desc-info",
+                                    div { class: "switch-desc-title", "Notifications" }
+                                    p { class: "switch-desc-subtitle", "Receive push notifications for updates" }
                                 }
+                                ..vec![switch(false, "")]
                             }
                         }
                     }
@@ -95,13 +91,13 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         table { class: "api-table",
                             thead {
-                                tr { th { "Property" } th { "Type" } th { "Default" } th { "Description" } }
+                                tr { th { "Property" } th { "Type" } th { "Description" } }
                             }
                             tbody {
-                                tr { td { code { "checked" } } td { code { "bool" } } td { code { "false" } } td { "Controlled checked state" } }
-                                tr { td { code { "disabled" } } td { code { "bool" } } td { code { "false" } } td { "Disable the switch" } }
-                                tr { td { code { "size" } } td { code { "small | default | large" } } td { code { "default" } } td { "Switch size" } }
-                                tr { td { code { "onChange" } } td { code { "(checked: bool) => void" } } td { "-" } td { "Change callback" } }
+                                tr { td { code { "checked" } } td { code { "bool" } } td { "Controlled checked state" } }
+                                tr { td { code { "disabled" } } td { code { "bool" } } td { "Disable the switch" } }
+                                tr { td { code { "size" } } td { code { "small | default | large" } } td { "Switch size" } }
+                                tr { td { code { "onChange" } } td { code { "(checked: bool) => void" } } td { "Change callback" } }
                             }
                         }
                     }

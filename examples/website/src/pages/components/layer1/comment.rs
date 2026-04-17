@@ -1,6 +1,13 @@
 use crate::components::breadcrumb;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VElement, VNode, VText};
+
+fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -8,7 +15,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/comment"), ("Comment", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Comment" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Comment/discussion component with nested replies, author info, timestamp, and actions."
                 }
                 div { class: "demo-block",
@@ -16,11 +23,11 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         div { class: "hi-comment",
                             div { class: "hi-comment-header",
-                                div { style: "display:flex;align-items:center;gap:8px;",
+                                div { class: "comment-author-line",
                                     div { class: "hi-avatar hi-avatar-sm", "A" }
                                     span { class: "hi-comment-author", "Alice" }
                                 }
-                                span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "2 hours ago" }
+                                span { class: "hi-comment-meta", "2 hours ago" }
                             }
                             div { class: "hi-comment-content", "This is a sample comment demonstrating the comment component." }
                             div { class: "hi-comment-actions",
@@ -36,11 +43,11 @@ pub fn render() -> VNode {
                         div { style: "display:flex;flex-direction:column;gap:12px;",
                             div { class: "hi-comment",
                                 div { class: "hi-comment-header",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "comment-author-line",
                                         div { class: "hi-avatar hi-avatar-sm", style: "background:#e91e63;", "B" }
                                         span { class: "hi-comment-author", "Bob" }
                                     }
-                                    span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "3 hours ago" }
+                                    span { class: "hi-comment-meta", "3 hours ago" }
                                 }
                                 div { class: "hi-comment-content", "The new component architecture looks great! I especially like the layer separation." }
                                 div { class: "hi-comment-actions",
@@ -48,13 +55,13 @@ pub fn render() -> VNode {
                                     a { href: "#", "Like (3)" }
                                 }
                             }
-                            div { class: "hi-comment", style: "margin-left:32px;" ,
+                            div { class: "hi-comment hi-comment--nested",
                                 div { class: "hi-comment-header",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "comment-author-line",
                                         div { class: "hi-avatar hi-avatar-sm", "A" }
                                         span { class: "hi-comment-author", "Alice" }
                                     }
-                                    span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "2 hours ago" }
+                                    span { class: "hi-comment-meta", "2 hours ago" }
                                 }
                                 div { class: "hi-comment-content", "Thanks! The three-layer approach makes it easy to compose complex UIs from simple primitives." }
                                 div { class: "hi-comment-actions",
@@ -64,11 +71,11 @@ pub fn render() -> VNode {
                             }
                             div { class: "hi-comment",
                                 div { class: "hi-comment-header",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "comment-author-line",
                                         div { class: "hi-avatar hi-avatar-sm", style: "background:#2196f3;", "C" }
                                         span { class: "hi-comment-author", "Charlie" }
                                     }
-                                    span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "1 hour ago" }
+                                    span { class: "hi-comment-meta", "1 hour ago" }
                                 }
                                 div { class: "hi-comment-content", "Would love to see more documentation examples. The current ones are helpful but more edge cases would be nice." }
                                 div { class: "hi-comment-actions",
@@ -87,11 +94,11 @@ pub fn render() -> VNode {
                             div { style: "flex:1;",
                                 div { class: "form-input-wrapper",
                                     ..vec![VNode::Element(
-                                        tairitsu_vdom::VElement::new("input").attr("type","text").attr("placeholder","Write a comment...")
+                                        el("input").attr("type","text").attr("placeholder","Write a comment...")
                                     )]
                                 }
                                 div { style: "display:flex;justify-content:flex-end;margin-top:8px;",
-                                    a { href: "#", class: "hi-button hi-button-primary", style: "padding:4px 16px;font-size:0.8125rem;", "Post" }
+                                    button { class: "hi-button hi-button-primary hi-button-sm", "Post" }
                                 }
                             }
                         }

@@ -19,10 +19,10 @@ pub fn render() -> VNode {
                                 tr { th { "ID" } th { "Name" } th { "Category" } th { "Status" } }
                             }
                             tbody {
-                                tr { td { "1" } td { "Button" } td { "Base" } td { span { class: "badge badge-success", "Stable" } } }
-                                tr { td { "2" } td { "Form" } td { "Base" } td { span { class: "badge badge-success", "Stable" } } }
-                                tr { td { "3" } td { "Table" } td { "Composed" } td { span { class: "badge badge-success", "Stable" } } }
-                                tr { td { "4" } td { "Editor" } td { "Complex" } td { span { class: "badge badge-warning", "Beta" } } }
+                                tr { td { "1" } td { "Button" } td { "Base" } td { span { class: "hi-badge hi-badge-success", "Stable" } } }
+                                tr { td { "2" } td { "Form" } td { "Base" } td { span { class: "hi-badge hi-badge-success", "Stable" } } }
+                                tr { td { "3" } td { "Table" } td { "Composed" } td { span { class: "hi-badge hi-badge-success", "Stable" } } }
+                                tr { td { "4" } td { "Editor" } td { "Complex" } td { span { class: "hi-badge hi-badge-warning", "Beta" } } }
                             }
                         }
                     }
@@ -50,11 +50,11 @@ pub fn render() -> VNode {
                                 tr { th { "Component" } th { "Layer" } th { "Actions" } }
                             }
                             tbody {
-                                tr { td { "Button" } td { "Layer 1" } td { a { href: "#", class: "hi-button-link", "View" } " " a { href: "#", class: "hi-button-link", "Edit" } } }
-                                tr { td { "Navigation" } td { "Layer 2" } td { a { href: "#", class: "hi-button-link", "View" } " " a { href: "#", class: "hi-button-link", "Edit" } } }
-                                tr { td { "Media" } td { "Layer 3" } td { a { href: "#", class: "hi-button-link", "View" } " " a { href: "#", class: "hi-button-link", "Edit" } } }
-                                tr { td { "Timeline" } td { "Layer 2" } td { a { href: "#", class: "hi-button-link", "View" } " " a { href: "#", class: "hi-button-link", "Edit" } } }
-                                tr { td { "Editor" } td { "Layer 3" } td { a { href: "#", class: "hi-button-link", "View" } " " a { href: "#", class: "hi-button-link", "Edit" } } }
+                                tr { td { "Button" } td { "Layer 1" } td { div { class: "table-actions", a { href: "#", class: "hi-button-link", "View" } a { href: "#", class: "hi-button-link", "Edit" } } } }
+                                tr { td { "Navigation" } td { "Layer 2" } td { div { class: "table-actions", a { href: "#", class: "hi-button-link", "View" } a { href: "#", class: "hi-button-link", "Edit" } } } }
+                                tr { td { "Media" } td { "Layer 3" } td { div { class: "table-actions", a { href: "#", class: "hi-button-link", "View" } a { href: "#", class: "hi-button-link", "Edit" } } } }
+                                tr { td { "Timeline" } td { "Layer 2" } td { div { class: "table-actions", a { href: "#", class: "hi-button-link", "View" } a { href: "#", class: "hi-button-link", "Edit" } } } }
+                                tr { td { "Editor" } td { "Layer 3" } td { div { class: "table-actions", a { href: "#", class: "hi-button-link", "View" } a { href: "#", class: "hi-button-link", "Edit" } } } }
                             }
                         }
                     }

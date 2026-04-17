@@ -1,6 +1,11 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VNode, VText};
+
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -41,19 +46,19 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Tour Overlay (Visual)" }
                     div { class: "demo-block__body",
-                        div { style: "background:rgba(255,255,255,0.03);border:1px solid var(--hi-color-border);border-radius:8px;padding:20px;text-align:center;position:relative;",
-                            div { style: "font-size:0.875rem;color:var(--hi-color-text-primary);margin-bottom:8px;", "\u{1F4A1} Tooltip pointing to an element" }
-                            div { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);margin-bottom:16px;", "Step 2 of 5: This is the main content area where your components are rendered." }
-                            div { style: "display:flex;align-items:center;justify-content:center;gap:12px;",
-                                a { href: "#", class: "hi-button hi-button-secondary", style: "padding:4px 16px;font-size:0.8125rem;", "Skip" }
-                                a { href: "#", class: "hi-button hi-button-primary", style: "padding:4px 16px;font-size:0.8125rem;", "Next" }
+                         div { class: "guide-tour-box",
+                            div { class: "guide-tour-box__hint", ..vec![svg_icon(MdiIcon::LightningBolt, 16, ""), txt(" Tooltip pointing to an element")] }
+                            div { class: "guide-tour-box__step", "Step 2 of 5: This is the main content area where your components are rendered." }
+                            div { class: "guide-tour-actions",
+                                button { class: "hi-button hi-button-secondary guide-tour-btn", "Skip" }
+                                button { class: "hi-button hi-button-primary guide-tour-btn", "Next" }
                             }
-                            div { style: "display:flex;justify-content:center;gap:4px;margin-top:12px;",
-                                div { style: "width:8px;height:8px;border-radius:50%;background:var(--hi-color-text-disabled);" }
-                                div { style: "width:8px;height:8px;border-radius:50%;background:var(--ts-color-primary);" }
-                                div { style: "width:8px;height:8px;border-radius:50%;background:var(--hi-color-text-disabled);" }
-                                div { style: "width:8px;height:8px;border-radius:50%;background:var(--hi-color-text-disabled);" }
-                                div { style: "width:8px;height:8px;border-radius:50%;background:var(--hi-color-text-disabled);" }
+                            div { class: "guide-dots",
+                                div { class: "guide-dot" }
+                                div { class: "guide-dot guide-dot--active" }
+                                div { class: "guide-dot" }
+                                div { class: "guide-dot" }
+                                div { class: "guide-dot" }
                             }
                         }
                     }

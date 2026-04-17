@@ -14,30 +14,30 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Bar Chart" }
                     div { class: "demo-block__body",
-                        div { style: "width:100%;max-width:500px;height:200px;background:rgba(255,255,255,0.03);border:1px solid var(--hi-color-border);border-radius:8px;padding:16px;display:flex;align-items:flex-end;gap:12px;",
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:120px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "Jan" }
+                         div { class: "viz-chart-container",
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:120px;" }
+                                span { class: "viz-bar-label", "Jan" }
                             }
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:80px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "Feb" }
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:80px;" }
+                                span { class: "viz-bar-label", "Feb" }
                             }
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:150px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "Mar" }
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:150px;" }
+                                span { class: "viz-bar-label", "Mar" }
                             }
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:100px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "Apr" }
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:100px;" }
+                                span { class: "viz-bar-label", "Apr" }
                             }
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:160px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "May" }
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:160px;" }
+                                span { class: "viz-bar-label", "May" }
                             }
-                            div { style: "flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;",
-                                div { style: "width:100%;height:130px;background:var(--ts-color-primary);border-radius:4px 4px 0 0;opacity:0.8;" }
-                                span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);", "Jun" }
+                            div { class: "viz-bar-col",
+                                div { class: "viz-bar-fill", style: "height:130px;" }
+                                span { class: "viz-bar-label", "Jun" }
                             }
                         }
                     }
@@ -45,15 +45,15 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Progress Ring" }
                     div { class: "demo-block__body",
-                        div { class: "demo-row",
-                            div { style: "width:80px;height:80px;border-radius:50%;background:conic-gradient(var(--ts-color-primary) 0% 75%, rgba(255,255,255,0.08) 75% 100%);display:flex;align-items:center;justify-content:center;",
-                                div { style: "width:60px;height:60px;border-radius:50%;background:var(--hi-color-surface);display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--hi-color-text-primary);", "75%" }
+                         div { class: "demo-row",
+                            div { class: "viz-ring", style: "background:conic-gradient(var(--ts-color-primary) 0% 75%, rgba(255,255,255,0.08) 75% 100%);",
+                                div { class: "viz-ring-inner", "75%" }
                             }
-                            div { style: "width:80px;height:80px;border-radius:50%;background:conic-gradient(var(--hi-color-success) 0% 100%, rgba(255,255,255,0.08) 100% 100%);display:flex;align-items:center;justify-content:center;",
-                                div { style: "width:60px;height:60px;border-radius:50%;background:var(--hi-color-surface);display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--hi-color-text-primary);", "100%" }
+                            div { class: "viz-ring", style: "background:conic-gradient(var(--hi-color-success) 0% 100%, rgba(255,255,255,0.08) 100% 100%);",
+                                div { class: "viz-ring-inner", "100%" }
                             }
-                            div { style: "width:80px;height:80px;border-radius:50%;background:conic-gradient(var(--hi-color-accent) 0% 45%, rgba(255,255,255,0.08) 45% 100%);display:flex;align-items:center;justify-content:center;",
-                                div { style: "width:60px;height:60px;border-radius:50%;background:var(--hi-color-surface);display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--hi-color-text-primary);", "45%" }
+                            div { class: "viz-ring", style: "background:conic-gradient(var(--hi-color-accent) 0% 45%, rgba(255,255,255,0.08) 45% 100%);",
+                                div { class: "viz-ring-inner", "45%" }
                             }
                         }
                     }
@@ -61,31 +61,31 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Mini Dashboard" }
                     div { class: "demo-block__body",
-                        div { style: "display:grid;grid-template-columns:1fr 1fr;gap:12px;",
-                            div { style: "background:rgba(255,255,255,0.03);border:1px solid var(--hi-color-border);border-radius:8px;padding:16px;",
-                                div { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);margin-bottom:4px;", "Requests / min" }
-                                div { style: "font-size:1.5rem;font-weight:700;color:var(--hi-color-text-primary);", "1,234" }
-                                div { style: "height:40px;display:flex;align-items:flex-end;gap:2px;margin-top:8px;",
-                                    div { style: "flex:1;height:60%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:80%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:45%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:90%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:70%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:95%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:85%;background:var(--ts-color-primary);opacity:0.5;border-radius:2px 2px 0 0;" }
+                         div { class: "viz-dashboard-grid",
+                            div { class: "viz-dashboard-card",
+                                div { class: "viz-dashboard-label", "Requests / min" }
+                                div { class: "viz-dashboard-value", "1,234" }
+                                div { class: "viz-sparkline",
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:60%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:80%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:45%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:90%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:70%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:95%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--primary", style: "height:85%;" }
                                 }
                             }
-                            div { style: "background:rgba(255,255,255,0.03);border:1px solid var(--hi-color-border);border-radius:8px;padding:16px;",
-                                div { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);margin-bottom:4px;", "Error Rate" }
-                                div { style: "font-size:1.5rem;font-weight:700;color:var(--hi-color-success);", "0.12%" }
-                                div { style: "height:40px;display:flex;align-items:flex-end;gap:2px;margin-top:8px;",
-                                    div { style: "flex:1;height:20%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:15%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:25%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:10%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:18%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:12%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
-                                    div { style: "flex:1;height:8%;background:var(--hi-color-success);opacity:0.5;border-radius:2px 2px 0 0;" }
+                            div { class: "viz-dashboard-card",
+                                div { class: "viz-dashboard-label", "Error Rate" }
+                                div { class: "viz-dashboard-value", style: "color:var(--hi-color-success);", "0.12%" }
+                                div { class: "viz-sparkline",
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:20%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:15%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:25%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:10%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:18%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:12%;" }
+                                    div { class: "viz-sparkline-bar viz-sparkline-bar--success", style: "height:8%;" }
                                 }
                             }
                         }

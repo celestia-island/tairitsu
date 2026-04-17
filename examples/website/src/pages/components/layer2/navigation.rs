@@ -35,22 +35,22 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Breadcrumb Navigation" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:16px;",
-                            div { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);",
-                                a { href: "#", style: "color:var(--hi-color-text-secondary);", "Home" }
-                                " / "
-                                a { href: "#", style: "color:var(--hi-color-text-secondary);", "Components" }
-                                " / "
-                                a { href: "#", style: "color:var(--hi-color-text-secondary);", "Layer 2" }
-                                " / "
-                                span { style: "color:var(--hi-color-text-primary);font-weight:500;", "Navigation" }
+                        div { class: "breadcrumb-nav",
+                            div { class: "breadcrumb-nav__item",
+                                a { href: "#", "Home" }
+                                span { class: "breadcrumb-nav__separator", "/" }
+                                a { href: "#", "Components" }
+                                span { class: "breadcrumb-nav__separator", "/" }
+                                a { href: "#", "Layer 2" }
+                                span { class: "breadcrumb-nav__separator", "/" }
+                                span { class: "breadcrumb-nav__current", "Navigation" }
                             }
-                            div { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);",
-                                a { href: "#", style: "color:var(--hi-color-text-secondary);", "Home" }
-                                " > "
-                                a { href: "#", style: "color:var(--hi-color-text-secondary);", "Guides" }
-                                " > "
-                                span { style: "color:var(--hi-color-text-primary);font-weight:500;", "Quick Start" }
+                            div { class: "breadcrumb-nav__item",
+                                a { href: "#", "Home" }
+                                span { class: "breadcrumb-nav__separator", ">" }
+                                a { href: "#", "Guides" }
+                                span { class: "breadcrumb-nav__separator", ">" }
+                                span { class: "breadcrumb-nav__current", "Quick Start" }
                             }
                         }
                     }
@@ -58,11 +58,11 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Sidebar Menu (simplified)" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:2px;max-width:220px;",
-                            a { href: "#", style: "display:block;padding:6px 12px;border-radius:4px;font-size:0.875rem;color:var(--ts-color-primary);background:rgba(20,110,116,0.1);text-decoration:none;", "Dashboard" }
-                            a { href: "#", style: "display:block;padding:6px 12px;border-radius:4px;font-size:0.875rem;color:var(--hi-color-text-secondary);text-decoration:none;", "Components" }
-                            a { href: "#", style: "display:block;padding:6px 12px;border-radius:4px;font-size:0.875rem;color:var(--hi-color-text-secondary);text-decoration:none;", "Settings" }
-                            a { href: "#", style: "display:block;padding:6px 12px;border-radius:4px;font-size:0.875rem;color:var(--hi-color-text-disabled);text-decoration:none;", "Disabled" }
+                        div { class: "sidebar-menu",
+                            a { href: "#", class: "sidebar-menu__link sidebar-menu__link--active", "Dashboard" }
+                            a { href: "#", class: "sidebar-menu__link sidebar-menu__link--default", "Components" }
+                            a { href: "#", class: "sidebar-menu__link sidebar-menu__link--default", "Settings" }
+                            a { href: "#", class: "sidebar-menu__link sidebar-menu__link--disabled", "Disabled" }
                         }
                     }
                 }

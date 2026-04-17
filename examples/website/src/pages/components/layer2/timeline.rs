@@ -8,7 +8,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 2 \u{2014} Composed", "/components/layer2/timeline"), ("Timeline", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Timeline" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Vertical or horizontal timeline for displaying sequential events, activity logs, or process steps."
                 }
                 div { class: "demo-block",
@@ -88,7 +88,7 @@ pub fn render() -> VNode {
                             div { class: "hi-timeline-item",
                                 div { class: "hi-timeline-dot" }
                                 div { class: "hi-timeline-content",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "timeline-tag-row",
                                         strong { "v0.1.0 Released" }
                                         span { class: "hi-tag hi-tag-primary", "Milestone" }
                                     }
@@ -99,7 +99,7 @@ pub fn render() -> VNode {
                             div { class: "hi-timeline-item",
                                 div { class: "hi-timeline-dot" }
                                 div { class: "hi-timeline-content",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "timeline-tag-row",
                                         strong { "v0.2.0 Released" }
                                         span { class: "hi-tag hi-tag-success", "Stable" }
                                     }
@@ -110,7 +110,7 @@ pub fn render() -> VNode {
                             div { class: "hi-timeline-item",
                                 div { class: "hi-timeline-dot" }
                                 div { class: "hi-timeline-content",
-                                    div { style: "display:flex;align-items:center;gap:8px;",
+                                    div { class: "timeline-tag-row",
                                         strong { "v0.3.0 In Progress" }
                                         span { class: "hi-tag hi-tag-warning", "Beta" }
                                     }

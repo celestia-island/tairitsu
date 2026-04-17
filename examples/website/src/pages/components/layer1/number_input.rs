@@ -1,21 +1,29 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode};
+use tairitsu_vdom::{VElement, VNode, VText};
 
 fn el(tag: &str) -> VElement {
     VElement::new(tag)
 }
 
-fn num_input(val: &str, min: &str, max: &str, step: &str, ph: &str) -> VNode {
-    VNode::Element(
-        el("input")
-            .attr("type", "number")
-            .attr("value", val)
-            .attr("min", min)
-            .attr("max", max)
-            .attr("step", step)
-            .attr("placeholder", ph),
-    )
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
+
+fn num_input(val: &str, ph: &str) -> VNode {
+    VNode::Element(el("div").class("num-input-wrap").children(vec![
+            VNode::Element(
+                el("input")
+                    .attr("type", "number")
+                    .attr("value", val)
+                    .attr("placeholder", ph),
+            ),
+            VNode::Element(el("button").class("num-input-btn").attr("type", "button")
+                .child(svg_icon(MdiIcon::Minus, 14, ""))),
+            VNode::Element(el("button").class("num-input-btn").attr("type", "button")
+                .child(svg_icon(MdiIcon::Plus, 14, ""))),
+        ]))
 }
 
 pub fn render() -> VNode {
@@ -24,15 +32,15 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/number-input"), ("Number Input", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Number Input" }
-                p { class: "card__body",
-                    "Input field for numeric values with increment/decrement controls, step configuration, and range validation."
+                p { class: "page-section__description",
+                    "Input field for numeric values with full-height increment/decrement buttons, step configuration, and range validation."
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Basic Number Input" }
                     div { class: "demo-block__body",
                         div { class: "form-group",
                             label { "Quantity" }
-                            div { class: "form-input-wrapper", ..vec![num_input("0", "0", "100", "1", "0")] }
+                            ..vec![num_input("0", "0")]
                         }
                     }
                 }
@@ -41,7 +49,7 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         div { class: "form-group",
                             label { "Price" }
-                            div { class: "form-input-wrapper", ..vec![num_input("0.00", "0", "9999", "0.01", "0.00")] }
+                            ..vec![num_input("0.00", "0.00")]
                         }
                     }
                 }
@@ -50,12 +58,12 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         div { class: "form-row",
                             div { class: "form-group",
-                                label { "Min Value: 0" }
-                                div { class: "form-input-wrapper", ..vec![num_input("0", "0", "10000", "1", "0")] }
+                                label { "Minimum" }
+                                ..vec![num_input("0", "0")]
                             }
                             div { class: "form-group",
-                                label { "Min Value: -100" }
-                                div { class: "form-input-wrapper", ..vec![num_input("0", "-100", "100", "5", "0")] }
+                                label { "Maximum (negative)" }
+                                ..vec![num_input("0", "0")]
                             }
                         }
                     }
@@ -65,14 +73,14 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         table { class: "api-table",
                             thead {
-                                tr { th { "Property" } th { "Type" } th { "Default" } th { "Description" } }
+                                tr { th { "Property" } th { "Type" } th { "Description" } }
                             }
                             tbody {
-                                tr { td { code { "min" } } td { code { "number" } } td { code { "-Infinity" } } td { "Minimum value" } }
-                                tr { td { code { "max" } } td { code { "number" } } td { code { "Infinity" } } td { "Maximum value" } }
-                                tr { td { code { "step" } } td { code { "number" } } td { code { "1" } } td { "Increment step" } }
-                                tr { td { code { "precision" } } td { code { "number" } } td { code { "-" } } td { "Decimal precision" } }
-                                tr { td { code { "disabled" } } td { code { "bool" } } td { code { "false" } } td { "Disable input" } }
+                                tr { td { code { "min" } } td { code { "number" } } td { "Minimum value (-Infinity for unbounded)" } }
+                                tr { td { code { "max" } } td { code { "number" } } td { "Maximum value (Infinity for unbounded)" } }
+                                tr { td { code { "step" } } td { code { "number" } } td { "Increment step (default: 1)" } }
+                                tr { td { code { "precision" } } td { code { "number" } } td { "Decimal precision" } }
+                                tr { td { code { "disabled" } } td { code { "bool" } } td { "Disable input" } }
                             }
                         }
                     }

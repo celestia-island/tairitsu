@@ -1,4 +1,5 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
@@ -14,38 +15,38 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Progress Bars" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:16px;",
+                         div { style: "display:flex;flex-direction:column;gap:16px;",
                             div {
-                                div { style: "display:flex;justify-content:space-between;margin-bottom:4px;",
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);", "Upload Progress" }
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-text-primary);font-family:var(--ts-font-mono);", "65%" }
+                                div { class: "progress-label-row",
+                                    span { class: "progress-label-row__text", "Upload Progress" }
+                                    span { class: "progress-label-row__value progress-label-row__value--primary", "65%" }
                                 }
                                 div { class: "hi-progress-bar",
                                     div { class: "hi-progress-fill", style: "width:65%;" }
                                 }
                             }
                             div {
-                                div { style: "display:flex;justify-content:space-between;margin-bottom:4px;",
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);", "Build Complete" }
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-success);font-family:var(--ts-font-mono);", "100%" }
+                                div { class: "progress-label-row",
+                                    span { class: "progress-label-row__text", "Build Complete" }
+                                    span { class: "progress-label-row__value progress-label-row__value--success", "100%" }
                                 }
                                 div { class: "hi-progress-bar",
                                     div { class: "hi-progress-fill hi-progress-fill--success", style: "width:100%;" }
                                 }
                             }
                             div {
-                                div { style: "display:flex;justify-content:space-between;margin-bottom:4px;",
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);", "Storage Warning" }
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-accent);font-family:var(--ts-font-mono);", "85%" }
+                                div { class: "progress-label-row",
+                                    span { class: "progress-label-row__text", "Storage Warning" }
+                                    span { class: "progress-label-row__value progress-label-row__value--warning", "85%" }
                                 }
                                 div { class: "hi-progress-bar",
                                     div { class: "hi-progress-fill hi-progress-fill--warning", style: "width:85%;" }
                                 }
                             }
                             div {
-                                div { style: "display:flex;justify-content:space-between;margin-bottom:4px;",
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);", "Memory Critical" }
-                                    span { style: "font-size:0.8125rem;color:var(--hi-color-danger);font-family:var(--ts-font-mono);", "95%" }
+                                div { class: "progress-label-row",
+                                    span { class: "progress-label-row__text", "Memory Critical" }
+                                    span { class: "progress-label-row__value progress-label-row__value--danger", "95%" }
                                 }
                                 div { class: "hi-progress-bar",
                                     div { class: "hi-progress-fill hi-progress-fill--danger", style: "width:95%;" }
@@ -57,21 +58,21 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Progress Bar Sizes" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:16px;",
+                         div { style: "display:flex;flex-direction:column;gap:16px;",
                             div {
-                                span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "Small" }
+                                span { class: "progress-size-label", "Small" }
                                 div { class: "hi-progress-bar hi-progress-bar--sm",
                                     div { class: "hi-progress-fill", style: "width:50%;" }
                                 }
                             }
                             div {
-                                span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "Default" }
+                                span { class: "progress-size-label", "Default" }
                                 div { class: "hi-progress-bar",
                                     div { class: "hi-progress-fill", style: "width:50%;" }
                                 }
                             }
                             div {
-                                span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "Large" }
+                                span { class: "progress-size-label", "Large" }
                                 div { class: "hi-progress-bar hi-progress-bar--lg",
                                     div { class: "hi-progress-fill", style: "width:50%;" }
                                 }
@@ -98,13 +99,13 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         div { style: "display:grid;grid-template-columns:1fr 1fr;gap:16px;",
                             div { class: "result-page",
-                                div { class: "result-page__icon", "\u{2705}" }
+                                div { class: "result-page__icon", ..vec![svg_icon(MdiIcon::CheckboxMarkedCircle, 48, "")] }
                                 div { class: "result-page__title", "Success" }
                                 div { class: "result-page__desc", "Operation completed successfully." }
                                 a { href: "#", class: "hi-button hi-button-primary", "Continue" }
                             }
                             div { class: "result-page",
-                                div { class: "result-page__icon", "\u{274C}" }
+                                div { class: "result-page__icon", ..vec![svg_icon(MdiIcon::Close, 48, "")] }
                                 div { class: "result-page__title", "Error" }
                                 div { class: "result-page__desc", "Something went wrong. Please try again." }
                                 a { href: "#", class: "hi-button hi-button-primary", "Retry" }

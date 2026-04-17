@@ -19,6 +19,9 @@
   --ts-glow-primary: rgba(20, 110, 116, 0.8);
   --ts-font-sans: 'Noto Sans SC', 'Space Grotesk', system-ui, -apple-system, sans-serif;
   --ts-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --ts-duration-fast: 150ms;
+  --ts-duration-normal: 250ms;
+  --ts-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* === Override ALL hikari light-theme variables to dark === */
   --hi-color-background: #1a2332;
@@ -142,7 +145,7 @@ a:hover {
    ============================================ */
 
 .hi-button-primary {
-  color: #ffffff !important;
+  color: var(--hi-color-text-on-primary, #fff) !important;
 }
 
 .hi-button-secondary {
@@ -414,7 +417,14 @@ a:hover {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--hi-color-text-primary);
-  margin-bottom: var(--ts-spacing-md);
+  margin-bottom: var(--ts-spacing-sm);
+}
+
+.page-section__description {
+  font-size: 0.9375rem;
+  color: var(--hi-color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--ts-spacing-lg);
 }
 
 /* ============================================
@@ -624,24 +634,90 @@ a:hover {
 }
 
 /* ============================================
-   Buttons — hover lift effect matching hikari
+   Buttons — restrained hover/focus (no text-color
+   flicker, no jarring translateY pop)
    ============================================ */
 
 .hi-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.15s ease,
+              border-color 0.15s ease,
+              box-shadow 0.15s ease;
+  cursor: pointer;
 }
 
+/* Lock text colour on every pseudo-class so it never
+   oscillates between white / primary / secondary. */
+.hi-button:focus,
+.hi-button:hover,
+.hi-button:active {
+  color: inherit;
+}
+
+.hi-button-primary:focus,
+.hi-button-primary:hover,
+.hi-button-primary:active {
+  color: var(--hi-color-text-on-primary, #ffffff) !important;
+}
+
+.hi-button-secondary:focus,
+.hi-button-secondary:hover,
+.hi-button-secondary:active {
+  color: var(--hi-color-text-on-secondary, #1a2332) !important;
+}
+
+.hi-button-tertiary:focus,
+.hi-button-tertiary:hover,
+.hi-button-tertiary:active {
+  color: var(--hi-color-text-primary) !important;
+}
+
+/* Subtle background shift only — no translateZ / scale gimmicks */
 .hi-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .hi-button-primary:hover {
-  box-shadow: 0 4px 12px rgba(20, 110, 116, 0.3);
+  box-shadow: 0 2px 8px rgba(20, 110, 116, 0.2);
 }
 
 .hi-button-secondary:hover {
-  box-shadow: 0 4px 12px rgba(255, 199, 115, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 199, 115, 0.2);
+}
+
+.hi-button:active {
+  box-shadow: none;
+}
+
+/* Remove any outline ring that the base hikari sheet may inject */
+.hi-button:focus-visible {
+  outline: 2px solid var(--ts-color-primary);
+  outline-offset: 2px;
+}
+
+.hi-button-sm {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+}
+
+.hi-button-lg {
+  padding: 10px 24px;
+  font-size: 1rem;
+}
+
+.hi-button-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hi-button-tertiary {
+  color: var(--hi-color-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--hi-color-border);
+}
+
+.hi-button-tertiary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================
@@ -998,6 +1074,34 @@ textarea {
   color: var(--hi-color-text-primary);
 }
 
+.switch-desc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.switch-desc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.switch-desc-info {
+  flex: 1;
+}
+
+.switch-desc-title {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+}
+
+.switch-desc-subtitle {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+  margin: 0;
+}
+
 .hi-switch {
   position: relative;
   display: inline-block;
@@ -1027,10 +1131,11 @@ textarea {
   width: 18px;
   height: 18px;
   left: 3px;
-  bottom: 3px;
+  top: 50%;
+  transform: translateY(-50%);
   background: #fff;
   border-radius: 50%;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, top 0s;
 }
 
 .hi-switch input:checked + .hi-switch-slider {
@@ -1133,19 +1238,108 @@ textarea {
 
 .hi-status-active {
   color: var(--hi-color-success);
+  padding-left: 12px;
+  position: relative;
+}
+
+.hi-status-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hi-color-success);
 }
 
 .hi-status-inactive {
   color: var(--hi-color-text-disabled);
+  padding-left: 12px;
+  position: relative;
+}
+
+.hi-status-inactive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hi-color-text-disabled);
 }
 
 .hi-status-warning {
   color: var(--hi-color-accent);
+  padding-left: 12px;
+  position: relative;
+}
+
+.hi-status-warning::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hi-color-accent);
 }
 
 .hi-status-error {
   color: var(--hi-color-danger);
+  padding-left: 12px;
+  position: relative;
 }
+
+.hi-status-error::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hi-color-danger);
+}
+
+/* ============================================
+   Component Demo — Text Styles (Display)
+   ============================================ */
+
+.text-style-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.text-style-item {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.text-style-item:last-child {
+  border-bottom: none;
+}
+
+.text-style-label {
+  margin-bottom: 6px;
+}
+
+.text-style-body {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.text-style-caption { font-size: 0.75rem; color: var(--hi-color-text-disabled); }
+.text-style-body-text { font-size: 0.875rem; color: var(--hi-color-text-secondary); }
+.text-style-heading { font-size: 1rem; font-weight: 600; color: var(--hi-color-text-primary); }
+.text-style-code { font-family: var(--ts-font-mono); font-size: 0.875rem; color: var(--hi-color-secondary); }
 
 /* ============================================
    Component Demo — Avatar
@@ -1283,6 +1477,16 @@ textarea {
   color: var(--hi-color-secondary);
 }
 
+.comment-author-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hi-comment--nested {
+  margin-left: 32px;
+}
+
 /* ============================================
    Component Demo — Description List
    ============================================ */
@@ -1302,6 +1506,72 @@ textarea {
 .hi-dl-detail {
   font-size: 0.875rem;
   color: var(--hi-color-text-primary);
+}
+
+/* ============================================
+   Component Demo — Number Input
+   ============================================ */
+
+.num-input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--hi-color-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.num-input-wrap:focus-within {
+  border-color: var(--ts-color-primary);
+  box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
+}
+
+.num-input-wrap input[type="number"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--hi-color-text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.num-input-wrap input[type="number"]::-webkit-inner-spin-button,
+.num-input-wrap input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.num-input-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--hi-color-text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.num-input-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--hi-color-text-primary);
+}
+
+.num-input-btn:active {
+  background: rgba(20, 110, 116, 0.15);
+  color: var(--ts-color-secondary);
 }
 
 /* ============================================
@@ -1342,6 +1612,32 @@ textarea {
   color: var(--hi-color-text-disabled);
   font-size: 0.875rem;
   pointer-events: none;
+}
+
+.search-wrapper--sm input {
+  padding: 4px 8px 4px 2rem;
+  font-size: 0.8125rem;
+}
+
+.search-wrapper--lg input {
+  padding: 10px 12px 10px 2.75rem;
+  font-size: 1rem;
+}
+
+.hi-search-input-sm {
+  padding: 4px 8px 4px 2rem !important;
+  font-size: 0.8125rem !important;
+}
+
+.hi-search-input-lg {
+  padding: 10px 12px 10px 2.75rem !important;
+  font-size: 1rem !important;
+}
+
+.demo-hint {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+  margin-top: 8px;
 }
 
 /* ============================================
@@ -1405,10 +1701,14 @@ textarea {
 }
 
 .hi-collapsible summary::before {
-  content: '\25B6';
+  content: '';
   display: inline-block;
+  width: 0;
+  height: 0;
   margin-right: var(--ts-spacing-sm);
-  font-size: 0.7rem;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--hi-color-text-secondary);
   transition: transform 0.2s ease;
 }
 
@@ -1506,7 +1806,97 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Pagination
+   Component Demo — Data Display (Layer2)
+   ============================================ */
+
+.data-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.data-stat-card {
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--hi-color-border);
+}
+
+.data-stat-card--primary {
+  background: rgba(20, 110, 116, 0.08);
+  border-color: rgba(20, 110, 116, 0.15);
+}
+
+.data-stat-card--warning {
+  background: rgba(255, 199, 115, 0.06);
+  border-color: rgba(255, 199, 115, 0.12);
+}
+
+.data-stat-card--success {
+  background: rgba(14, 184, 64, 0.06);
+  border-color: rgba(14, 184, 64, 0.12);
+}
+
+.data-stat-label {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+}
+
+.data-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--hi-color-text-primary);
+  margin-top: 4px;
+}
+
+.data-stat-trend {
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.data-stat-trend--up { color: var(--hi-color-success); }
+.data-stat-trend--down { color: var(--hi-color-danger); }
+.data-stat-trend--neutral { color: var(--hi-color-text-disabled); }
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hi-color-border);
+}
+
+.data-list-item--last {
+  border-bottom: none;
+}
+
+.data-list-item-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.data-list-item-content {
+  flex: 1;
+}
+
+.data-list-item-name {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+}
+
+.data-list-item-desc {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — Navigation
    ============================================ */
 
 .hi-pagination {
@@ -1873,6 +2263,53 @@ textarea {
 }
 
 /* ============================================
+   Component Demo — Image Placeholders
+   ============================================ */
+
+.img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  color: var(--hi-color-text-disabled);
+  font-size: 0.875rem;
+}
+
+.img-placeholder-sm { width: 48px; height: 48px; font-size: 0.625rem; border-radius: 4px; }
+.img-placeholder-md { width: 96px; height: 96px; font-size: 0.75rem; border-radius: 6px; }
+.img-placeholder-lg { width: 160px; height: 160px; font-size: 0.875rem; border-radius: 6px; }
+.img-placeholder-xl { width: 240px; height: 240px; font-size: 1rem; border-radius: 8px; }
+
+.img-placeholder-fit {
+  width: 120px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hi-color-text-disabled);
+  font-size: 0.75rem;
+  overflow: hidden;
+}
+
+.img-error-state {
+  width: 160px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--hi-color-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--hi-color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+/* ============================================
    Component Demo — Code Block
    ============================================ */
 
@@ -1935,6 +2372,11 @@ textarea {
   padding: 4px 0;
 }
 
+.hi-checkbox-label {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+}
+
 .hi-radio-row {
   display: flex;
   align-items: center;
@@ -1957,6 +2399,21 @@ textarea {
 .badge-error   { background: rgba(255, 76, 0, 0.2); color: #ff6e40; }
 .badge-default { background: rgba(255, 255, 255, 0.08); color: var(--hi-color-text-disabled); }
 
+.hi-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.hi-badge-primary { background: rgba(20, 110, 116, 0.2); color: #4dd0e1; }
+.hi-badge-success { background: rgba(14, 184, 64, 0.2); color: #69f0ae; }
+.hi-badge-warning { background: rgba(255, 192, 0, 0.2); color: #ffd740; }
+.hi-badge-error   { background: rgba(255, 76, 0, 0.2); color: #ff6e40; }
+.hi-badge-default { background: rgba(255, 255, 255, 0.08); color: var(--hi-color-text-disabled); }
+
 .result-page {
   text-align: center;
   padding: var(--ts-spacing-2xl);
@@ -1978,4 +2435,706 @@ textarea {
   font-size: 0.875rem;
   color: var(--hi-color-text-secondary);
   margin-bottom: var(--ts-spacing-lg);
+}
+
+/* ============================================
+   Component Demo — Breadcrumb Navigation (L2)
+   ============================================ */
+
+.breadcrumb-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.breadcrumb-nav__item {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-secondary);
+}
+
+.breadcrumb-nav__item a {
+  color: var(--hi-color-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb-nav__item a:hover {
+  color: var(--hi-color-secondary);
+}
+
+.breadcrumb-nav__separator {
+  margin: 0 4px;
+  color: var(--hi-color-text-disabled);
+}
+
+.breadcrumb-nav__current {
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 220px;
+}
+
+.sidebar-menu__link {
+  display: block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-menu__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-menu__link--active {
+  color: var(--ts-color-primary);
+  background: rgba(20, 110, 116, 0.1);
+}
+
+.sidebar-menu__link--default {
+  color: var(--hi-color-text-secondary);
+}
+
+.sidebar-menu__link--disabled {
+  color: var(--hi-color-text-disabled);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Component Demo — Table Actions (L2)
+   ============================================ */
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================
+   Component Demo — Tree Node Icons (L2)
+   ============================================ */
+
+.tree-node-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-node-icon__folder { color: var(--hi-color-accent); }
+.tree-node-icon__file { color: var(--hi-color-text-secondary); }
+
+.tree-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: var(--hi-color-text-disabled);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Component Demo — Pagination Mini (L2)
+   ============================================ */
+
+.hi-pagination-mini .hi-pagination-prev,
+.hi-pagination-mini .hi-pagination-next,
+.hi-pagination-mini .hi-pagination-item {
+  min-width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+}
+
+.pagination-info {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — Transfer Buttons (L2)
+   ============================================ */
+
+.transfer-btn-sm {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Component Demo — QRCode Placeholders (L2)
+   ============================================ */
+
+.qrcode-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--hi-color-text-disabled);
+  font-size: 0.8125rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.qrcode-placeholder--sm { width: 64px; height: 64px; border-radius: 4px; font-size: 0.625rem; }
+.qrcode-placeholder--md { width: 128px; height: 128px; }
+.qrcode-placeholder--lg { width: 192px; height: 192px; border-radius: 12px; font-size: 1rem; }
+
+.qrcode-info-title {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.qrcode-info-desc {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.qrcode-info-meta {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — Cascader Steps (L2)
+   ============================================ */
+
+.cascader-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cascader-step-sep {
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — Step Indicator (L2 Form)
+   ============================================ */
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-circle--active {
+  background: var(--ts-color-primary);
+  color: #fff;
+}
+
+.step-circle--inactive {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--hi-color-text-disabled);
+}
+
+.step-label {
+  font-size: 0.875rem;
+}
+
+.step-label--active {
+  color: var(--hi-color-text-primary);
+  font-weight: 500;
+}
+
+.step-label--inactive {
+  color: var(--hi-color-text-disabled);
+}
+
+.step-separator {
+  color: var(--hi-color-text-disabled);
+  margin: 0 4px;
+}
+
+.step-progress-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.step-progress-fill {
+  height: 100%;
+  background: var(--ts-color-primary);
+  border-radius: 2px;
+}
+
+/* ============================================
+   Component Demo — Progress Label Row (L2 Feedback)
+   ============================================ */
+
+.progress-label-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.progress-label-row__text {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+}
+
+.progress-label-row__value {
+  font-size: 0.8125rem;
+  font-family: var(--ts-font-mono);
+}
+
+.progress-label-row__value--primary { color: var(--hi-color-text-primary); }
+.progress-label-row__value--success { color: var(--hi-color-success); }
+.progress-label-row__value--warning { color: var(--hi-color-accent); }
+.progress-label-row__value--danger { color: var(--hi-color-danger); }
+
+.progress-size-label {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — Editor Toolbar (L3)
+   ============================================ */
+
+.editor-toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--hi-color-border);
+  margin: 0 4px;
+  align-self: center;
+}
+
+.editor-mode-btn {
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+}
+
+.editor-preview h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--hi-color-text-primary);
+  margin-bottom: 8px;
+}
+
+.editor-preview ul {
+  padding-left: 1.5rem;
+  margin: 8px 0;
+}
+
+/* ============================================
+   Component Demo — Media Player (L3)
+   ============================================ */
+
+.media-player-placeholder {
+  width: 100%;
+  max-width: 640px;
+  height: 360px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--hi-color-text-secondary);
+}
+
+.media-player-placeholder__label {
+  font-size: 0.875rem;
+}
+
+.media-player-placeholder__meta {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+}
+
+.media-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hi-color-border);
+  max-width: 640px;
+}
+
+.media-control-btn {
+  padding: 4px 8px;
+}
+
+.media-progress-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.media-progress-fill {
+  height: 100%;
+  background: var(--ts-color-primary);
+  border-radius: 2px;
+}
+
+.media-time-display {
+  font-size: 0.75rem;
+  color: var(--hi-color-text-disabled);
+  font-family: var(--ts-font-mono);
+}
+
+.audio-player-card {
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.audio-player-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.audio-player-artwork {
+  width: 48px;
+  height: 48px;
+  background: var(--ts-color-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.audio-player-info-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--hi-color-text-primary);
+}
+
+.audio-player-info-subtitle {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+}
+
+.audio-player-time {
+  font-size: 0.6875rem;
+  color: var(--hi-color-text-disabled);
+  font-family: var(--ts-font-mono);
+}
+
+.audio-player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.audio-play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Component Demo — Visualization Charts (L3)
+   ============================================ */
+
+.viz-chart-container {
+  width: 100%;
+  max-width: 500px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.viz-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.viz-bar-fill {
+  width: 100%;
+  background: var(--ts-color-primary);
+  border-radius: 4px 4px 0 0;
+}
+
+.viz-bar-label {
+  font-size: 0.6875rem;
+  color: var(--hi-color-text-disabled);
+}
+
+.viz-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viz-ring-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--hi-color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hi-color-text-primary);
+}
+
+.viz-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.viz-dashboard-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.viz-dashboard-label {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.viz-dashboard-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--hi-color-text-primary);
+}
+
+.viz-sparkline {
+  height: 40px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.viz-sparkline-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+}
+
+.viz-sparkline-bar--primary {
+  background: var(--ts-color-primary);
+  opacity: 0.7;
+}
+
+.viz-sparkline-bar--success {
+  background: var(--hi-color-success);
+  opacity: 0.7;
+}
+
+/* ============================================
+   Component Demo — Zoom Controls (L3)
+   ============================================ */
+
+.zoom-toolbar-btn {
+  padding: 4px 8px;
+  font-size: 1rem;
+}
+
+.zoom-toolbar-btn--md {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+.zoom-float-panel {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.zoom-float-divider {
+  height: 1px;
+  background: var(--hi-color-border);
+  margin: 2px 0;
+}
+
+.zoom-float-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--hi-color-surface);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.zoom-float-badge__text {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+  font-family: var(--ts-font-mono);
+}
+
+.zoom-float-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--hi-color-text-disabled);
+  font-size: 0.875rem;
+}
+
+.zoom-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 300px;
+}
+
+.zoom-slider-label {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-disabled);
+}
+
+.zoom-slider-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  position: relative;
+}
+
+.zoom-slider-fill {
+  height: 100%;
+  background: var(--ts-color-primary);
+  border-radius: 2px;
+}
+
+.zoom-slider-thumb {
+  position: absolute;
+  left: 40%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ts-color-primary);
+}
+
+.zoom-viewport {
+  width: 100%;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hi-color-text-disabled);
+}
+
+/* ============================================
+   Component Demo — User Guide Tour (L3)
+   ============================================ */
+
+.guide-tour-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hi-color-border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.guide-tour-box__hint {
+  font-size: 0.875rem;
+  color: var(--hi-color-text-primary);
+  margin-bottom: 8px;
+}
+
+.guide-tour-box__step {
+  font-size: 0.8125rem;
+  color: var(--hi-color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.guide-tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.guide-tour-btn {
+  padding: 4px 16px;
+  font-size: 0.8125rem;
+}
+
+.guide-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.guide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hi-color-text-disabled);
+}
+
+.guide-dot--active {
+  background: var(--ts-color-primary);
+}
+
+/* ============================================
+   Component Demo — Timeline Tag Row (L2)
+   ============================================ */
+
+.timeline-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

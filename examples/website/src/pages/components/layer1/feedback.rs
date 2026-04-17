@@ -1,6 +1,13 @@
 use crate::components::breadcrumb;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VElement, VNode, VText};
+
+fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -8,7 +15,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/feedback"), ("Feedback", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Feedback" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Visual feedback components: alerts, messages, notifications, and loading indicators."
                 }
                 div { class: "demo-block",
@@ -24,27 +31,27 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Alert with Title" }
                     div { class: "demo-block__body",
                         div { class: "hi-alert hi-alert-info",
-                            strong { "Information" }
-                            br {}
-                            "Your account settings have been updated."
+                            div { style: "display:flex;align-items:baseline;gap:8px;margin-bottom:4px;",
+                                strong { "Information" }
+                            }
+                            div { "Your account settings have been updated." }
                         }
                         div { class: "hi-alert hi-alert-warning",
-                            strong { "Deprecated" }
-                            br {}
-                            "This API will be removed in version 2.0."
+                            div { style: "display:flex;align-items:baseline;gap:8px;margin-bottom:4px;",
+                                strong { "Deprecated" }
+                            }
+                            div { "This API will be removed in version 2.0." }
                         }
                     }
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Inline Status Badges" }
-                    div { class: "demo-block__body",
-                        div { class: "demo-row",
-                            span { class: "badge badge-success", "Online" }
-                            span { class: "badge badge-warning", "Pending" }
-                            span { class: "badge badge-error", "Offline" }
-                            span { class: "badge badge-primary", "Active" }
-                            span { class: "badge badge-default", "Inactive" }
-                        }
+                    div { class: "demo-block__body demo-block__body--horizontal",
+                        span { class: "hi-badge hi-badge-success", "Online" }
+                        span { class: "hi-badge hi-badge-warning", "Pending" }
+                        span { class: "hi-badge hi-badge-error", "Offline" }
+                        span { class: "hi-badge hi-badge-primary", "Active" }
+                        span { class: "hi-badge hi-badge-default", "Inactive" }
                     }
                 }
                 div { class: "demo-block",
