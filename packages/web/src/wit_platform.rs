@@ -824,6 +824,52 @@ pub mod wasm_impl {
             );
         }
 
+        use tairitsu_vdom::DomFuncs;
+
+        unsafe {
+            tairitsu_vdom::register_dom_functions(DomFuncs {
+                get_scroll_top: |el| {
+                    bindings::tairitsu_browser::full::element::get_scroll_top(el)
+                },
+                set_scroll_top: |el, v| {
+                    bindings::tairitsu_browser::full::element::set_scroll_top(el, v);
+                },
+                get_scroll_height: |el| {
+                    bindings::tairitsu_browser::full::element::get_scroll_height(el)
+                },
+                get_client_height: |el| {
+                    bindings::tairitsu_browser::full::element::get_client_height(el)
+                },
+                get_class_list: |el| {
+                    bindings::tairitsu_browser::full::element::get_class_list(el)
+                },
+                class_list_add: |list, tokens| {
+                    bindings::tairitsu_browser::full::dom_token_list::add(list, tokens);
+                },
+                class_list_remove: |list, tokens| {
+                    bindings::tairitsu_browser::full::dom_token_list::remove(list, tokens);
+                },
+                class_list_contains: |list, token| {
+                    bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
+                },
+                first_child: |el| {
+                    bindings::tairitsu_browser::full::node::get_first_child(el)
+                },
+                query_selector_on: |el, sel| {
+                    bindings::tairitsu_browser::full::parent_node::query_selector(el, sel)
+                },
+                create_element: |tag| {
+                    bindings::tairitsu_browser::full::document::create_element(tag, None)
+                },
+                append_child: |parent, child| {
+                    bindings::tairitsu_browser::full::node::append_child(parent, child)
+                },
+                remove_child: |parent, child| {
+                    bindings::tairitsu_browser::full::node::remove_child(parent, child)
+                },
+            });
+        }
+
         log_info("DOM operations functions registered for event handlers");
     }
 
@@ -1272,6 +1318,66 @@ pub mod wasm_impl {
 
         fn set_element_scroll_top(&self, element: &Self::Element, value: f64) {
             bindings::tairitsu_browser::full::element::set_scroll_top(element.0, value);
+        }
+
+        fn get_element_scroll_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_scroll_height(element.0)
+        }
+
+        fn get_element_client_height(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_height(element.0)
+        }
+
+        fn get_element_client_width(&self, element: &Self::Element) -> i32 {
+            bindings::tairitsu_browser::full::element::get_client_width(element.0)
+        }
+
+        fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String> {
+            bindings::tairitsu_browser::full::element::get_attribute(element.0, name)
+        }
+
+        fn class_list_add(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.0);
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::add(list, &wit_tokens);
+        }
+
+        fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]) {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.0);
+            let wit_tokens: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+            bindings::tairitsu_browser::full::dom_token_list::remove(list, &wit_tokens);
+        }
+
+        fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool {
+            let list = bindings::tairitsu_browser::full::element::get_class_list(element.0);
+            bindings::tairitsu_browser::full::dom_token_list::contains(list, token)
+        }
+
+        fn first_child(&self, element: &Self::Element) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::node::get_first_child(element.0).map(WitElement)
+        }
+
+        fn insert_before(
+            &self,
+            parent: &Self::Element,
+            new_node: &Self::Element,
+            reference_node: Option<&Self::Element>,
+        ) {
+            let ref_handle = reference_node.map(|r| r.0);
+            let _ = bindings::tairitsu_browser::full::node::insert_before(
+                parent.0,
+                new_node.0,
+                ref_handle,
+            );
+        }
+
+        fn query_selector_on(
+            &self,
+            element: &Self::Element,
+            selector: &str,
+        ) -> Option<Self::Element> {
+            bindings::tairitsu_browser::full::parent_node::query_selector(element.0, selector)
+                .map(WitElement)
         }
 
         fn video_play(&self, element: &Self::Element) {

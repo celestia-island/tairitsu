@@ -104,6 +104,29 @@ pub trait Platform: Sized + 'static {
 
     fn get_element_scroll_top(&self, element: &Self::Element) -> f64;
     fn set_element_scroll_top(&self, element: &Self::Element, value: f64);
+    fn get_element_scroll_height(&self, element: &Self::Element) -> i32;
+    fn get_element_client_height(&self, element: &Self::Element) -> i32;
+    fn get_element_client_width(&self, element: &Self::Element) -> i32;
+
+    fn get_attribute(&self, element: &Self::Element, name: &str) -> Option<String>;
+
+    fn class_list_add(&self, element: &Self::Element, tokens: &[&str]);
+    fn class_list_remove(&self, element: &Self::Element, tokens: &[&str]);
+    fn class_list_contains(&self, element: &Self::Element, token: &str) -> bool;
+
+    fn first_child(&self, element: &Self::Element) -> Option<Self::Element>;
+    fn insert_before(
+        &self,
+        parent: &Self::Element,
+        new_node: &Self::Element,
+        reference_node: Option<&Self::Element>,
+    );
+
+    fn query_selector_on(
+        &self,
+        element: &Self::Element,
+        selector: &str,
+    ) -> Option<Self::Element>;
 
     fn video_play(&self, element: &Self::Element);
     fn video_pause(&self, element: &Self::Element);
