@@ -304,6 +304,17 @@ impl Platform for MockPlatform {
 
     fn set_element_scroll_top(&self, _element: &Self::Element, _value: f64) {}
 
+    fn get_element_scroll_height(&self, _element: &Self::Element) -> i32 { 0 }
+    fn get_element_client_height(&self, _element: &Self::Element) -> i32 { 0 }
+    fn get_element_client_width(&self, _element: &Self::Element) -> i32 { 0 }
+    fn get_attribute(&self, _element: &Self::Element, _name: &str) -> Option<String> { None }
+    fn class_list_add(&self, _element: &Self::Element, _tokens: &[&str]) {}
+    fn class_list_remove(&self, _element: &Self::Element, _tokens: &[&str]) {}
+    fn class_list_contains(&self, _element: &Self::Element, _token: &str) -> bool { false }
+    fn first_child(&self, _element: &Self::Element) -> Option<Self::Element> { None }
+    fn insert_before(&self, _parent: &Self::Element, _new_node: &Self::Element, _reference_node: Option<&Self::Element>) {}
+    fn query_selector_on(&self, _element: &Self::Element, _selector: &str) -> Option<Self::Element> { None }
+
     fn video_play(&self, _element: &Self::Element) {}
 
     fn video_pause(&self, _element: &Self::Element) {}

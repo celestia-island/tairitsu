@@ -1,19 +1,64 @@
-//! Global DOM operations for use in event handlers.
+//! Global DOM operations for use outside the VDOM rendering cycle.
 //!
-//! When an event handler receives an event with a target element handle,
-//! these functions can be used to directly manipulate the DOM without
-//! requiring a Platform reference.
+//! Provides a [`DomHandle`] opaque wrapper around raw host handles and a set
+//! of functions for direct DOM manipulation. These are intended for
+//! imperative code (e.g. custom scrollbar setup) that runs after the VDOM
+//! tree has been mounted.
 //!
 //! # Initialization
 //!
-//! Before using these functions in a WIT environment, you must call
-//! [`register_wit_functions`] to provide the WIT binding functions.
+//! The WIT binding function pointers **must** be registered once during
+//! component bootstrap via [`register_wit_functions`] and
+//! [`register_dom_functions`].
 
 use std::sync::Mutex;
 
 use crate::platform::DomRect;
 
-// Global function pointers for WIT operations
+// ---------------------------------------------------------------------------
+// DomHandle
+// ---------------------------------------------------------------------------
+
+/// Opaque handle to a DOM node managed by the browser-glue host.
+///
+/// Wraps the raw `u64` handle that the WIT host assigns to each DOM node.
+/// Use [`DomHandle::get_inner_id`] only when you need to pass the handle to
+/// low-level WIT binding functions.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct DomHandle(u64);
+
+impl DomHandle {
+    /// Construct a handle from a raw host id.
+    ///
+    /// This should only be called by platform implementation code that
+    /// receives a handle from the WIT host.
+    pub const fn from_raw(id: u64) -> Self {
+        Self(id)
+    }
+
+    /// The null handle (equivalent to an absent element).
+    pub const fn null() -> Self {
+        Self(0)
+    }
+
+    /// Whether this handle is non-null.
+    pub const fn is_valid(&self) -> bool {
+        self.0 != 0
+    }
+
+    /// Return the raw `u64` host id.
+    ///
+    /// Only use this when interfacing with low-level WIT binding functions
+    /// that require the raw id.
+    pub const fn get_inner_id(&self) -> u64 {
+        self.0
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Internal: function pointer tables
+// ---------------------------------------------------------------------------
+
 static WIT_FUNCS: Mutex<Option<WitFuncs>> = Mutex::new(None);
 
 struct WitFuncs {
@@ -22,15 +67,35 @@ struct WitFuncs {
     set_attribute: unsafe fn(u64, &str, &str),
 }
 
-/// Register the WIT binding functions for DOM operations.
+static DOM_FUNCS: Mutex<Option<DomFuncs>> = Mutex::new(None);
+
+/// Function pointers for extended DOM operations.
 ///
-/// This should be called once during initialization, typically in
-/// the component's bootstrap function.
+/// Filled in by the platform layer during bootstrap.
+pub struct DomFuncs {
+    pub get_scroll_top: unsafe fn(u64) -> f64,
+    pub set_scroll_top: unsafe fn(u64, f64),
+    pub get_scroll_height: unsafe fn(u64) -> i32,
+    pub get_client_height: unsafe fn(u64) -> i32,
+    pub get_class_list: unsafe fn(u64) -> u64,
+    pub class_list_add: unsafe fn(u64, &[String]),
+    pub class_list_remove: unsafe fn(u64, &[String]),
+    pub class_list_contains: unsafe fn(u64, &str) -> bool,
+    pub first_child: unsafe fn(u64) -> Option<u64>,
+    pub query_selector_on: unsafe fn(u64, &str) -> Option<u64>,
+    pub create_element: unsafe fn(&str) -> u64,
+    pub append_child: unsafe fn(u64, u64) -> u64,
+    pub remove_child: unsafe fn(u64, u64) -> u64,
+}
+
+// ---------------------------------------------------------------------------
+// Registration
+// ---------------------------------------------------------------------------
+
+/// Register the core WIT binding function pointers.
 ///
 /// # Safety
-///
-/// The caller must ensure that the provided function pointers are valid
-/// and will remain valid for the lifetime of the program.
+/// Caller must ensure the pointers remain valid for the program lifetime.
 pub unsafe fn register_wit_functions(
     set_style: unsafe fn(u64, &str, &str) -> Result<(), String>,
     get_bounding_client_rect: unsafe fn(u64) -> DomRect,
@@ -43,59 +108,112 @@ pub unsafe fn register_wit_functions(
     });
 }
 
-/// Set a CSS property on an element by handle.
+/// Register extended DOM operation function pointers.
 ///
-/// This is a convenience function for event handlers that have access
-/// to the target element handle but not a Platform reference.
-///
-/// # Example
-///
-/// ```ignore
-/// onmouseenter: move |e: MouseEvent| {
-///     if let Some(target) = e.target {
-///         set_style(target, "--glow-x", "100");
-///         set_style(target, "--glow-y", "200");
-///     }
-/// }
-/// ```
-pub fn set_style(element_handle: u64, property: &str, value: &str) {
-    if let Some(funcs) = WIT_FUNCS.lock().unwrap().as_ref() {
-        unsafe {
-            let _ = (funcs.set_style)(element_handle, property, value);
-        }
+/// # Safety
+/// Caller must ensure the pointers remain valid for the program lifetime.
+pub unsafe fn register_dom_functions(funcs: DomFuncs) {
+    *DOM_FUNCS.lock().unwrap() = Some(funcs);
+}
+
+// ---------------------------------------------------------------------------
+// Core operations (backed by WIT_FUNCS)
+// ---------------------------------------------------------------------------
+
+/// Set a CSS property on an element.
+pub fn set_style(el: DomHandle, property: &str, value: &str) {
+    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+        unsafe { let _ = (f.set_style)(el.get_inner_id(), property, value); }
     }
 }
 
-/// Get the bounding client rect of an element by handle.
-///
-/// Returns the element's size and position relative to the viewport.
-///
-/// # Example
-///
-/// ```ignore
-/// onmouseenter: move |e: MouseEvent| {
-///     if let Some(target) = e.target {
-///         let rect = get_bounding_client_rect(target);
-///         println!("Element position: {}, {}", rect.x, rect.y);
-///     }
-/// }
-/// ```
-pub fn get_bounding_client_rect(element_handle: u64) -> DomRect {
-    if let Some(funcs) = WIT_FUNCS.lock().unwrap().as_ref() {
-        unsafe { (funcs.get_bounding_client_rect)(element_handle) }
+/// Get the bounding client rect of an element.
+pub fn get_bounding_client_rect(el: DomHandle) -> DomRect {
+    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.get_bounding_client_rect)(el.get_inner_id()) }
     } else {
-        DomRect {
-            x: 0.0,
-            y: 0.0,
-            width: 0.0,
-            height: 0.0,
-        }
+        DomRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }
     }
 }
 
-/// Set an attribute on an element by handle.
-pub fn set_attribute(element_handle: u64, name: &str, value: &str) {
-    if let Some(funcs) = WIT_FUNCS.lock().unwrap().as_ref() {
-        unsafe { (funcs.set_attribute)(element_handle, name, value) };
+/// Set an attribute on an element.
+pub fn set_attribute(el: DomHandle, name: &str, value: &str) {
+    if let Some(f) = WIT_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.set_attribute)(el.get_inner_id(), name, value) };
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Extended DOM operations (backed by DOM_FUNCS)
+// ---------------------------------------------------------------------------
+
+pub fn get_scroll_top(el: DomHandle) -> f64 {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(0.0, |f| unsafe { (f.get_scroll_top)(el.get_inner_id()) })
+}
+
+pub fn set_scroll_top(el: DomHandle, value: f64) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.set_scroll_top)(el.get_inner_id(), value) };
+    }
+}
+
+pub fn get_scroll_height(el: DomHandle) -> i32 {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(0, |f| unsafe { (f.get_scroll_height)(el.get_inner_id()) })
+}
+
+pub fn get_client_height(el: DomHandle) -> i32 {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(0, |f| unsafe { (f.get_client_height)(el.get_inner_id()) })
+}
+
+pub fn class_list_add(el: DomHandle, tokens: &[&str]) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
+        let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+        unsafe { (f.class_list_add)(list, &ts) };
+    }
+}
+
+pub fn class_list_remove(el: DomHandle, tokens: &[&str]) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
+        let ts: Vec<String> = tokens.iter().map(|s| s.to_string()).collect();
+        unsafe { (f.class_list_remove)(list, &ts) };
+    }
+}
+
+pub fn class_list_contains(el: DomHandle, token: &str) -> bool {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(false, |f| {
+        let list = unsafe { (f.get_class_list)(el.get_inner_id()) };
+        unsafe { (f.class_list_contains)(list, token) }
+    })
+}
+
+pub fn first_child(el: DomHandle) -> Option<DomHandle> {
+    DOM_FUNCS.lock().unwrap().as_ref().and_then(|f| {
+        unsafe { (f.first_child)(el.get_inner_id()) }.map(DomHandle::from_raw)
+    })
+}
+
+pub fn query_selector_on(el: DomHandle, selector: &str) -> Option<DomHandle> {
+    DOM_FUNCS.lock().unwrap().as_ref().and_then(|f| {
+        unsafe { (f.query_selector_on)(el.get_inner_id(), selector) }.map(DomHandle::from_raw)
+    })
+}
+
+pub fn create_element(tag: &str) -> DomHandle {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(DomHandle::null(), |f| {
+        DomHandle::from_raw(unsafe { (f.create_element)(tag) })
+    })
+}
+
+pub fn append_child(parent: DomHandle, child: DomHandle) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        let _ = unsafe { (f.append_child)(parent.get_inner_id(), child.get_inner_id()) };
+    }
+}
+
+pub fn remove_child(parent: DomHandle, child: DomHandle) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        let _ = unsafe { (f.remove_child)(parent.get_inner_id(), child.get_inner_id()) };
     }
 }
