@@ -1,4 +1,5 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
@@ -14,26 +15,25 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Video Player" }
                     div { class: "demo-block__body",
-                        div { class: "media-player-placeholder",
-                            style: "width:100%;max-width:640px;height:360px;background:rgba(255,255,255,0.03);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#666;flex-direction:column;gap:8px;",
-                            "\u{1F3AC}"
-                            span { style: "font-size:0.875rem;", "Video Player Component" }
-                            span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "16:9 aspect ratio" }
+                         div { class: "media-player-placeholder",
+                            ..vec![svg_icon(MdiIcon::Image, 48, "media-player-placeholder__meta")]
+                            span { class: "media-player-placeholder__label", "Video Player Component" }
+                            span { class: "media-player-placeholder__meta", "16:9 aspect ratio" }
                         }
                     }
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Video Controls" }
                     div { class: "demo-block__body",
-                        div { style: "max-width:640px;",
-                            div { style: "display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--hi-color-border);",
-                                button { class: "hi-button", style: "padding:4px 8px;font-size:1rem;", "\u{25B6}" }
-                                div { style: "flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;",
-                                    div { style: "width:35%;height:100%;background:var(--ts-color-primary);border-radius:2px;" }
+                         div { style: "max-width:640px;",
+                            div { class: "media-controls-bar",
+                                button { class: "hi-button media-control-btn", ..vec![svg_icon(MdiIcon::Play, 16, "")] }
+                                div { class: "media-progress-track",
+                                    div { class: "media-progress-fill", style: "width:35%;" }
                                 }
-                                span { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);font-family:var(--ts-font-mono);", "1:24 / 4:02" }
-                                button { class: "hi-button", style: "padding:4px 8px;font-size:0.875rem;", "\u{1F50A}" }
-                                button { class: "hi-button", style: "padding:4px 8px;font-size:0.875rem;", "\u{26F6}" }
+                                span { class: "media-time-display", "1:24 / 4:02" }
+                                button { class: "hi-button media-control-btn", ..vec![svg_icon(MdiIcon::VolumeHigh, 16, "")] }
+                                button { class: "hi-button media-control-btn", ..vec![svg_icon(MdiIcon::Fullscreen, 16, "")] }
                             }
                         }
                     }
@@ -41,27 +41,27 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Audio Player" }
                     div { class: "demo-block__body",
-                        div { style: "max-width:480px;background:rgba(255,255,255,0.03);border:1px solid var(--hi-color-border);border-radius:12px;padding:16px;",
-                            div { style: "display:flex;align-items:center;gap:12px;margin-bottom:12px;",
-                                div { style: "width:48px;height:48px;background:var(--ts-color-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;", "\u{266B}" }
+                         div { class: "audio-player-card",
+                            div { class: "audio-player-header",
+                                div { class: "audio-player-artwork", ..vec![svg_icon(MdiIcon::Music, 24, "")] }
                                 div {
-                                    div { style: "font-size:0.9375rem;font-weight:500;color:var(--hi-color-text-primary);", "WASM Symphony" }
-                                    div { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);", "Tairitsu Orchestra" }
+                                    div { class: "audio-player-info-title", "WASM Symphony" }
+                                    div { class: "audio-player-info-subtitle", "Tairitsu Orchestra" }
                                 }
                             }
                             div { style: "margin-bottom:8px;",
-                                div { style: "height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;",
-                                    div { style: "width:60%;height:100%;background:var(--ts-color-primary);border-radius:2px;" }
+                                div { class: "media-progress-track",
+                                    div { class: "media-progress-fill", style: "width:60%;" }
                                 }
                                 div { style: "display:flex;justify-content:space-between;margin-top:4px;",
-                                    span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);font-family:var(--ts-font-mono);", "2:15" }
-                                    span { style: "font-size:0.6875rem;color:var(--hi-color-text-disabled);font-family:var(--ts-font-mono);", "3:45" }
+                                    span { class: "audio-player-time", "2:15" }
+                                    span { class: "audio-player-time", "3:45" }
                                 }
                             }
-                            div { style: "display:flex;align-items:center;justify-content:center;gap:24px;",
-                                button { class: "hi-button", style: "padding:4px 8px;", "\u{23EE}" }
-                                button { class: "hi-button hi-button-primary", style: "width:40px;height:40px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;", "\u{25B6}" }
-                                button { class: "hi-button", style: "padding:4px 8px;", "\u{23ED}" }
+                            div { class: "audio-player-controls",
+                                button { class: "hi-button media-control-btn", ..vec![svg_icon(MdiIcon::Stop, 16, "")] }
+                                button { class: "hi-button hi-button-primary audio-play-btn", ..vec![svg_icon(MdiIcon::Play, 18, "")] }
+                                button { class: "hi-button media-control-btn", ..vec![svg_icon(MdiIcon::Pause, 16, "")] }
                             }
                         }
                     }

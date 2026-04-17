@@ -1,6 +1,14 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VElement, VNode, VText};
+
+fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -8,16 +16,16 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/button"), ("Button", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Button" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "A fundamental interactive element that triggers an action when clicked. Supports multiple variants, sizes, and states."
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Button Variants" }
                     div { class: "demo-block__body",
                         div { class: "demo-row",
-                            a { href: "#", class: "hi-button hi-button-primary", "Primary" }
-                            a { href: "#", class: "hi-button hi-button-secondary", "Secondary" }
-                            a { href: "#", class: "hi-button hi-button-tertiary", "Tertiary" }
+                            button { class: "hi-button hi-button-primary", "Primary" }
+                            button { class: "hi-button hi-button-secondary", "Secondary" }
+                            button { class: "hi-button hi-button-tertiary", "Tertiary" }
                         }
                     }
                 }
@@ -25,8 +33,8 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Button with Glow Effect" }
                     div { class: "demo-block__body",
                         div { class: "demo-row",
-                            a { href: "#", class: "hi-button hi-button-primary hi-glow-wrapper hi-glow-soft", "Primary Glow" }
-                            a { href: "#", class: "hi-button hi-button-secondary hi-glow-wrapper hi-glow-soft", "Secondary Glow" }
+                            button { class: "hi-button hi-button-primary hi-glow-wrapper hi-glow-soft", "Primary Glow" }
+                            button { class: "hi-button hi-button-secondary hi-glow-wrapper hi-glow-soft", "Secondary Glow" }
                         }
                     }
                 }
@@ -34,9 +42,9 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Button Sizes" }
                     div { class: "demo-block__body",
                         div { class: "demo-row",
-                            a { href: "#", class: "hi-button hi-button-primary", style: "padding:4px 12px;font-size:0.75rem;", "Small" }
-                            a { href: "#", class: "hi-button hi-button-primary", "Default" }
-                            a { href: "#", class: "hi-button hi-button-primary", style: "padding:10px 24px;font-size:1rem;", "Large" }
+                            button { class: "hi-button hi-button-primary hi-button-sm", "Small" }
+                            button { class: "hi-button hi-button-primary", "Default" }
+                            button { class: "hi-button hi-button-primary hi-button-lg", "Large" }
                         }
                     }
                 }
@@ -44,9 +52,9 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Button States" }
                     div { class: "demo-block__body",
                         div { class: "demo-row",
-                            a { href: "#", class: "hi-button hi-button-primary", "Normal" }
-                            a { href: "#", class: "hi-button hi-button-primary", style: "opacity:0.5;pointer-events:none;", "Disabled" }
-                            a { href: "#", class: "hi-button hi-button-primary", style: "padding-left:8px;padding-right:8px;", "\u{1F4BE}" }
+                            button { class: "hi-button hi-button-primary", "Normal" }
+                            button { class: "hi-button hi-button-primary hi-button-disabled", "Disabled" }
+                            button { class: "hi-button hi-button-primary hi-button-sm", ..vec![svg_icon(MdiIcon::Upload, 14, "")] }
                         }
                     }
                 }
@@ -54,8 +62,8 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Button Group" }
                     div { class: "demo-block__body",
                         div { class: "demo-row",
-                            a { href: "#", class: "hi-button hi-button-secondary", "Cancel" }
-                            a { href: "#", class: "hi-button hi-button-primary", "Confirm" }
+                            button { class: "hi-button hi-button-secondary", "Cancel" }
+                            button { class: "hi-button hi-button-primary", "Confirm" }
                         }
                     }
                 }
@@ -68,7 +76,7 @@ pub fn render() -> VNode {
                             }
                             tbody {
                                 tr { td { code { "variant" } } td { code { "primary | secondary | tertiary" } } td { "Button visual style" } }
-                                tr { td { code { "size" } } td { code { "small | default | large" } } td { "Button size preset" } }
+                                tr { td { code { "size" } } td { code { "sm | default | lg" } } td { "Button size preset" } }
                                 tr { td { code { "disabled" } } td { code { "bool" } } td { "Disable the button" } }
                                 tr { td { code { "glow" } } td { code { "dim | soft | bright" } } td { "Glow hover intensity" } }
                                 tr { td { code { "icon" } } td { code { "bool" } } td { "Icon-only button mode" } }

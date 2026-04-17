@@ -1,6 +1,11 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VNode, VText};
+
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -23,9 +28,9 @@ pub fn render() -> VNode {
                                     li { "Option C" }
                                 }
                             }
-                            div { class: "transfer-controls",
-                                button { class: "hi-button", style: "padding:6px 12px;font-size:0.875rem;", "\u{2192}" }
-                                button { class: "hi-button", style: "padding:6px 12px;font-size:0.875rem;", "\u{2190}" }
+                             div { class: "transfer-controls",
+                                button { class: "hi-button transfer-btn-sm", ..vec![svg_icon(MdiIcon::ArrowRight, 14, "")] }
+                                button { class: "hi-button transfer-btn-sm", ..vec![svg_icon(MdiIcon::ChevronLeft, 14, "")] }
                             }
                             div { class: "transfer-panel",
                                 h4 { "Selected" }
@@ -41,21 +46,21 @@ pub fn render() -> VNode {
                             div { class: "transfer-panel",
                                 h4 { "Framework Features (4)" }
                                 ul {
-                                    li { class: "selected", "\u{2713} Virtual DOM" }
-                                    li { class: "selected", "\u{2713} Reactive Hooks" }
+                                    li { class: "selected", ..vec![svg_icon(MdiIcon::Check, 12, ""), txt(" Virtual DOM")] }
+                                    li { class: "selected", ..vec![svg_icon(MdiIcon::Check, 12, ""), txt(" Reactive Hooks")] }
                                     li { "RSX Macros" }
                                     li { "WASI Runtime" }
                                 }
                             }
-                            div { class: "transfer-controls",
-                                button { class: "hi-button hi-button-primary", style: "padding:6px 12px;font-size:0.875rem;", "\u{2192}" }
-                                button { class: "hi-button hi-button-secondary", style: "padding:6px 12px;font-size:0.875rem;", "\u{2190}" }
+                             div { class: "transfer-controls",
+                                button { class: "hi-button hi-button-primary transfer-btn-sm", ..vec![svg_icon(MdiIcon::ArrowRight, 14, "")] }
+                                button { class: "hi-button hi-button-secondary transfer-btn-sm", ..vec![svg_icon(MdiIcon::ChevronLeft, 14, "")] }
                             }
                             div { class: "transfer-panel",
                                 h4 { "Enabled (2)" }
                                 ul {
-                                    li { "\u{2713} Virtual DOM" }
-                                    li { "\u{2713} Reactive Hooks" }
+                                    li { ..vec![svg_icon(MdiIcon::Check, 12, ""), txt(" Virtual DOM")] }
+                                    li { ..vec![svg_icon(MdiIcon::Check, 12, ""), txt(" Reactive Hooks")] }
                                 }
                             }
                         }

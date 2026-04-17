@@ -14,9 +14,8 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Basic QRCode" }
                     div { class: "demo-block__body",
-                        div { class: "demo-row",
-                            div { class: "qrcode-placeholder",
-                                style: "width:128px;height:128px;background:rgba(255,255,255,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.8125rem;",
+                         div { class: "demo-row",
+                            div { class: "qrcode-placeholder qrcode-placeholder--md",
                                 "QR Code"
                             }
                         }
@@ -25,17 +24,14 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "QRCode Sizes" }
                     div { class: "demo-block__body",
-                        div { class: "demo-row",
-                            div { class: "qrcode-placeholder",
-                                style: "width:64px;height:64px;background:rgba(255,255,255,0.05);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.625rem;",
+                         div { class: "demo-row",
+                            div { class: "qrcode-placeholder qrcode-placeholder--sm",
                                 "64px"
                             }
-                            div { class: "qrcode-placeholder",
-                                style: "width:128px;height:128px;background:rgba(255,255,255,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.8125rem;",
+                            div { class: "qrcode-placeholder qrcode-placeholder--md",
                                 "128px"
                             }
-                            div { class: "qrcode-placeholder",
-                                style: "width:192px;height:192px;background:rgba(255,255,255,0.05);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#888;font-size:1rem;",
+                            div { class: "qrcode-placeholder qrcode-placeholder--lg",
                                 "192px"
                             }
                         }
@@ -44,15 +40,14 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "QRCode with Content" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;align-items:center;gap:24px;",
-                            div { class: "qrcode-placeholder",
-                                style: "width:128px;height:128px;background:rgba(255,255,255,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.75rem;",
+                         div { style: "display:flex;align-items:center;gap:24px;",
+                            div { class: "qrcode-placeholder qrcode-placeholder--md",
                                 "tairitsu.ai"
                             }
                             div {
-                                div { style: "font-size:0.875rem;color:var(--hi-color-text-primary);font-weight:500;margin-bottom:4px;", "Tairitsu Website" }
-                                div { style: "font-size:0.8125rem;color:var(--hi-color-text-secondary);margin-bottom:4px;", "Scan to visit: https://tairitsu.ai" }
-                                div { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);", "Error correction: High" }
+                                div { class: "qrcode-info-title", "Tairitsu Website" }
+                                div { class: "qrcode-info-desc", "Scan to visit: https://tairitsu.ai" }
+                                div { class: "qrcode-info-meta", "Error correction: High" }
                             }
                         }
                     }
@@ -61,16 +56,16 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "API" }
                     div { class: "demo-block__body",
                         table { class: "api-table",
-                            thead {
-                                tr { th { "Property" } th { "Type" } th { "Default" } th { "Description" } }
+                             thead {
+                                tr { th { "Property" } th { "Type" } th { "Description" } }
                             }
                             tbody {
-                                tr { td { code { "value" } } td { code { "string" } } td { "-" } td { "QR code content/URL" } }
-                                tr { td { code { "size" } } td { code { "number" } } td { code { "128" } } td { "QR code size in pixels" } }
-                                tr { td { code { "color" } } td { code { "string" } } td { code { "#000" } } td { "Foreground color" } }
-                                tr { td { code { "bgColor" } } td { code { "string" } } td { code { "#fff" } } td { "Background color" } }
-                                tr { td { code { "level" } } td { code { "L | M | Q | H" } } td { code { "M" } } td { "Error correction level" } }
-                                tr { td { code { "logo" } } td { code { "string" } } td { "-" } td { "Embedded logo URL" } }
+                                 tr { td { code { "value" } } td { code { "string" } } td { "QR code content or URL" } }
+                                tr { td { code { "size" } } td { code { "number" } } td { "QR code size in pixels (default 128)" } }
+                                tr { td { code { "color" } } td { code { "string" } } td { "Foreground color (default #000)" } }
+                                tr { td { code { "bgColor" } } td { code { "string" } } td { "Background color (default #fff)" } }
+                                tr { td { code { "level" } } td { code { "L | M | Q | H" } } td { "Error correction level (default M)" } }
+                                tr { td { code { "logo" } } td { code { "string" } } td { "Embedded logo URL" } }
                             }
                         }
                     }

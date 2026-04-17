@@ -45,8 +45,8 @@ pub fn render() -> VNode {
                             }
                         }
                         div { class: "form-actions",
-                            a { href: "#", class: "hi-button hi-button-secondary", "Cancel" }
-                            a { href: "#", class: "hi-button hi-button-primary", "Save" }
+                         button { class: "hi-button hi-button-secondary", "Cancel" }
+                             button { class: "hi-button hi-button-primary", "Save" }
                         }
                     }
                 }
@@ -54,18 +54,18 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Multi-step Form" }
                     div { class: "demo-block__body",
                         div { style: "margin-bottom:16px;",
-                            div { style: "display:flex;align-items:center;gap:8px;margin-bottom:8px;",
-                                span { style: "width:24px;height:24px;border-radius:50%;background:var(--ts-color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;", "1" }
-                                span { style: "font-size:0.875rem;color:var(--hi-color-text-primary);font-weight:500;", "Account" }
-                                span { style: "color:var(--hi-color-text-disabled);margin:0 4px;", "\u{2014}" }
-                                span { style: "width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);color:var(--hi-color-text-disabled);display:flex;align-items:center;justify-content:center;font-size:0.75rem;", "2" }
-                                span { style: "font-size:0.875rem;color:var(--hi-color-text-disabled);", "Profile" }
-                                span { style: "color:var(--hi-color-text-disabled);margin:0 4px;", "\u{2014}" }
-                                span { style: "width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);color:var(--hi-color-text-disabled);display:flex;align-items:center;justify-content:center;font-size:0.75rem;", "3" }
-                                span { style: "font-size:0.875rem;color:var(--hi-color-text-disabled);", "Review" }
+                            div { class: "step-indicator",
+                                span { class: "step-circle step-circle--active", "1" }
+                                span { class: "step-label step-label--active", "Account" }
+                                span { class: "step-separator", "\u{2014}" }
+                                span { class: "step-circle step-circle--inactive", "2" }
+                                span { class: "step-label step-label--inactive", "Profile" }
+                                span { class: "step-separator", "\u{2014}" }
+                                span { class: "step-circle step-circle--inactive", "3" }
+                                span { class: "step-label step-label--inactive", "Review" }
                             }
-                            div { style: "height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;",
-                                div { style: "width:33%;height:100%;background:var(--ts-color-primary);border-radius:2px;" }
+                            div { class: "step-progress-track",
+                                div { class: "step-progress-fill", style: "width:33%;" }
                             }
                         }
                         div { class: "form-row",
@@ -79,8 +79,8 @@ pub fn render() -> VNode {
                             }
                         }
                         div { class: "form-actions",
-                            a { href: "#", class: "hi-button hi-button-secondary", "Back" }
-                            a { href: "#", class: "hi-button hi-button-primary", "Next Step" }
+                             button { class: "hi-button hi-button-secondary", "Back" }
+                             button { class: "hi-button hi-button-primary", "Next Step" }
                         }
                     }
                 }
@@ -102,7 +102,7 @@ pub fn render() -> VNode {
                                     ]))]
                                 }
                             }
-                            a { href: "#", class: "hi-button hi-button-primary", style: "margin-bottom:0;", "Search" }
+                             button { class: "hi-button hi-button-primary", style: "margin-bottom:0;", "Search" }
                         }
                     }
                 }

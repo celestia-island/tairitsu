@@ -1,6 +1,13 @@
 use crate::components::breadcrumb;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::VNode;
+use tairitsu_vdom::{VElement, VNode, VText};
+
+fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
 
 pub fn render() -> VNode {
     rsx! {
@@ -8,7 +15,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/display"), ("Display", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Display" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Read-only display components for presenting data: text, numbers, dates, and status indicators."
                 }
                 div { class: "demo-block",
@@ -16,19 +23,19 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         div { class: "display-item",
                             span { class: "display-label", "Build Status" }
-                            span { class: "display-value hi-status-active", "\u{25CF} Active" }
+                            span { class: "display-value hi-status-active", "Active" }
                         }
                         div { class: "display-item",
                             span { class: "display-label", "Deploy Status" }
-                            span { class: "display-value hi-status-warning", "\u{25CF} Pending" }
+                            span { class: "display-value hi-status-warning", "Pending" }
                         }
                         div { class: "display-item",
                             span { class: "display-label", "Test Results" }
-                            span { class: "display-value hi-status-error", "\u{25CF} Failed" }
+                            span { class: "display-value hi-status-error", "Failed" }
                         }
                         div { class: "display-item",
                             span { class: "display-label", "Archived" }
-                            span { class: "display-value hi-status-inactive", "\u{25CF} Inactive" }
+                            span { class: "display-value hi-status-inactive", "Inactive" }
                         }
                     }
                 }
@@ -56,22 +63,22 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Text Styles" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:12px;",
-                            div {
-                                div { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);margin-bottom:2px;", "Caption" }
-                                p { style: "font-size:0.75rem;color:var(--hi-color-text-disabled);margin:0;", "This is caption text for supplementary information." }
+                        div { class: "text-style-stack",
+                            div { class: "text-style-item",
+                                div { class: "text-style-label text-style-caption", "Caption" }
+                                p { class: "text-style-body text-style-caption", "This is caption text for supplementary information." }
                             }
-                            div {
-                                div { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);margin-bottom:2px;", "Body" }
-                                p { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);margin:0;", "This is standard body text for general content." }
+                            div { class: "text-style-item",
+                                div { class: "text-style-label text-style-body-text", "Body" }
+                                p { class: "text-style-body text-style-body-text", "This is standard body text for general content." }
                             }
-                            div {
-                                div { style: "font-size:1rem;font-weight:600;color:var(--hi-color-text-primary);margin-bottom:2px;", "Heading" }
-                                p { style: "font-size:1rem;font-weight:600;color:var(--hi-color-text-primary);margin:0;", "This is a heading style for emphasis." }
+                            div { class: "text-style-item",
+                                div { class: "text-style-label text-style-heading", "Heading" }
+                                p { class: "text-style-body text-style-heading", "This is a heading style for emphasis." }
                             }
-                            div {
-                                div { style: "font-family:var(--ts-font-mono);font-size:0.875rem;color:var(--hi-color-secondary);margin-bottom:2px;", "Code" }
-                                p { style: "font-family:var(--ts-font-mono);font-size:0.875rem;color:var(--hi-color-secondary);margin:0;", "fn render() -> VNode" }
+                            div { class: "text-style-item",
+                                div { class: "text-style-label text-style-code", "Code" }
+                                p { class: "text-style-body text-style-code", "fn render() -> VNode" }
                             }
                         }
                     }

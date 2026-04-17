@@ -40,24 +40,20 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Cascader Steps Display" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;flex-direction:column;gap:16px;",
-                            div { style: "display:flex;align-items:center;gap:8px;",
-                                div { style: "display:flex;gap:4px;",
-                                    span { class: "hi-tag hi-tag-primary", "Asia" }
-                                    span { style: "color:var(--hi-color-text-disabled);", ">" }
-                                    span { class: "hi-tag hi-tag-primary", "China" }
-                                    span { style: "color:var(--hi-color-text-disabled);", ">" }
-                                    span { class: "hi-tag hi-tag-primary", "Beijing" }
-                                }
+                         div { style: "display:flex;flex-direction:column;gap:16px;",
+                            div { class: "cascader-steps",
+                                span { class: "hi-tag hi-tag-primary", "Asia" }
+                                span { class: "cascader-step-sep", ">" }
+                                span { class: "hi-tag hi-tag-primary", "China" }
+                                span { class: "cascader-step-sep", ">" }
+                                span { class: "hi-tag hi-tag-primary", "Beijing" }
                             }
-                            div { style: "display:flex;align-items:center;gap:8px;",
-                                div { style: "display:flex;gap:4px;",
-                                    span { class: "hi-tag hi-tag-primary", "Technology" }
-                                    span { style: "color:var(--hi-color-text-disabled);", ">" }
-                                    span { class: "hi-tag hi-tag-primary", "Programming" }
-                                    span { style: "color:var(--hi-color-text-disabled);", ">" }
-                                    span { class: "hi-tag hi-tag-warning", "Select..." }
-                                }
+                            div { class: "cascader-steps",
+                                span { class: "hi-tag hi-tag-primary", "Technology" }
+                                span { class: "cascader-step-sep", ">" }
+                                span { class: "hi-tag hi-tag-primary", "Programming" }
+                                span { class: "cascader-step-sep", ">" }
+                                span { class: "hi-tag hi-tag-warning", "Select..." }
                             }
                         }
                     }

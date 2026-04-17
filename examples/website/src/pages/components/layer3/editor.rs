@@ -1,4 +1,5 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
@@ -14,21 +15,21 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Markdown Editor" }
                     div { class: "demo-block__body",
-                        div { class: "editor-toolbar",
+                         div { class: "editor-toolbar",
                             button { class: "hi-button hi-button-borderless", style: "font-weight:bold;", "B" }
                             button { class: "hi-button hi-button-borderless", style: "font-style:italic;", "I" }
                             button { class: "hi-button hi-button-borderless", style: "text-decoration:underline;", "U" }
                             button { class: "hi-button hi-button-borderless", style: "text-decoration:line-through;", "S" }
-                            button { class: "hi-button hi-button-borderless", "|" }
+                            div { class: "editor-toolbar-separator" }
                             button { class: "hi-button hi-button-borderless", style: "font-family:var(--ts-font-mono);font-size:0.8125rem;", "Code" }
                             button { class: "hi-button hi-button-borderless", "Link" }
                             button { class: "hi-button hi-button-borderless", "Image" }
-                            button { class: "hi-button hi-button-borderless", "|" }
+                            div { class: "editor-toolbar-separator" }
                             button { class: "hi-button hi-button-borderless", "H1" }
                             button { class: "hi-button hi-button-borderless", "H2" }
                             button { class: "hi-button hi-button-borderless", "H3" }
-                            button { class: "hi-button hi-button-borderless", "|" }
-                            button { class: "hi-button hi-button-borderless", "\u{1F4DD}" }
+                            div { class: "editor-toolbar-separator" }
+                            button { class: "hi-button hi-button-borderless", ..vec![svg_icon(MdiIcon::Pencil, 14, "")] }
                         }
                         textarea { class: "editor-textarea",
                             placeholder: "Write your content here...",
@@ -48,11 +49,11 @@ pub fn render() -> VNode {
 }
 ```"
                         }
-                        div { class: "editor-preview",
+                         div { class: "editor-preview",
                             div { style: "margin-bottom:8px;",
-                                h3 { style: "font-size:1.25rem;font-weight:700;color:var(--hi-color-text-primary);margin-bottom:8px;", "Tairitsu Editor" }
+                                h3 { "Tairitsu Editor" }
                                 p { "This is a rich text editor component with markdown support." }
-                                ul { style: "padding-left:1.5rem;margin:8px 0;",
+                                ul {
                                     li { "List item 1" }
                                     li { "List item 2" }
                                     li { "List item 3" }
@@ -65,10 +66,10 @@ pub fn render() -> VNode {
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Editor Modes" }
                     div { class: "demo-block__body",
-                        div { style: "display:flex;gap:8px;",
-                            a { href: "#", class: "hi-button hi-button-primary", style: "padding:4px 12px;font-size:0.8125rem;", "Edit" }
-                            a { href: "#", class: "hi-button hi-button-secondary", style: "padding:4px 12px;font-size:0.8125rem;", "Preview" }
-                            a { href: "#", class: "hi-button hi-button-tertiary", style: "padding:4px 12px;font-size:0.8125rem;", "Split" }
+                         div { style: "display:flex;gap:8px;",
+                            button { class: "hi-button hi-button-primary editor-mode-btn", "Edit" }
+                            button { class: "hi-button hi-button-secondary editor-mode-btn", "Preview" }
+                            button { class: "hi-button hi-button-tertiary editor-mode-btn", "Split" }
                         }
                         p { style: "font-size:0.8125rem;color:var(--hi-color-text-disabled);margin-top:8px;",
                             "Switch between edit, preview, and split view modes."
@@ -88,7 +89,6 @@ pub fn render() -> VNode {
                                 tr { td { code { "language" } } td { code { "markdown | rich-text" } } td { "Editor language mode" } }
                                 tr { td { code { "readonly" } } td { code { "bool" } } td { "Read-only mode" } }
                                 tr { td { code { "toolbar" } } td { code { "ToolbarItem[]" } } td { "Toolbar configuration" } }
-                                tr { td { code { "onChange" } } td { code { "(value: string) => void" } } td { "Content change callback" } }
                                 tr { td { code { "placeholder" } } td { code { "string" } } td { "Placeholder text" } }
                             }
                         }

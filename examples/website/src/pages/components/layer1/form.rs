@@ -8,8 +8,12 @@ fn el(tag: &str) -> VElement {
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
 }
-fn make_select_input() -> VNode {
-    VNode::Element(el("select").children(vec![
+fn make_select_input(disabled: bool) -> VNode {
+    let mut sel = el("select");
+    if disabled {
+        sel = sel.attr("disabled", "true");
+    }
+    VNode::Element(sel.children(vec![
         VNode::Element(el("option").attr("value", "").child(txt("Select an option..."))),
         VNode::Element(el("option").attr("value", "dev").child(txt("Developer"))),
         VNode::Element(el("option").attr("value", "design").child(txt("Designer"))),
@@ -18,8 +22,13 @@ fn make_select_input() -> VNode {
 }
 
 pub fn render() -> VNode {
-    let text_input =
-        |ph: &str| VNode::Element(el("input").attr("type", "text").attr("placeholder", ph));
+    let text_input = |ph: &str, dis: bool| {
+        let mut inp = el("input").attr("type", "text").attr("placeholder", ph);
+        if dis {
+            inp = inp.attr("disabled", "true");
+        }
+        VNode::Element(inp)
+    };
     let password_input = VNode::Element(
         el("input")
             .attr("type", "password")
@@ -43,7 +52,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/form"), ("Form", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Form" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Form container for collecting and validating user input. Provides layout structure and validation integration."
                 }
                 div { class: "demo-block",
@@ -52,20 +61,22 @@ pub fn render() -> VNode {
                         div { class: "form-row",
                             div { class: "form-group",
                                 label { "Username" }
-                                div { class: "form-input-wrapper", ..vec![text_input("Enter username")] }
+                                div { class: "form-input-wrapper", ..vec![text_input("Enter username", false)] }
                             }
                             div { class: "form-group",
                                 label { "Email" }
                                 div { class: "form-input-wrapper", ..vec![email_input] }
                             }
                         }
-                        div { class: "form-group",
-                            label { "Password" }
-                            div { class: "form-input-wrapper", ..vec![password_input] }
-                        }
-                        div { class: "form-group",
-                            label { "Role" }
-                            div { class: "form-input-wrapper", ..vec![make_select_input()] }
+                        div { class: "form-row",
+                            div { class: "form-group",
+                                label { "Password" }
+                                div { class: "form-input-wrapper", ..vec![password_input] }
+                            }
+                            div { class: "form-group",
+                                label { "Role" }
+                                div { class: "form-input-wrapper", ..vec![make_select_input(false)] }
+                            }
                         }
                         div { class: "form-group",
                             label { "Bio" }
@@ -73,28 +84,30 @@ pub fn render() -> VNode {
                         }
                         div { class: "hi-checkbox-row",
                             ..vec![check_agree]
-                            span { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);", "I agree to the terms and conditions" }
+                            span { class: "hi-checkbox-label", "I agree to the terms and conditions" }
                         }
                         div { class: "hi-checkbox-row",
                             ..vec![check_news]
-                            span { style: "font-size:0.875rem;color:var(--hi-color-text-secondary);", "Subscribe to newsletter" }
+                            span { class: "hi-checkbox-label", "Subscribe to newsletter" }
                         }
                         div { class: "form-actions",
-                            a { href: "#", class: "hi-button hi-button-secondary", "Cancel" }
-                            a { href: "#", class: "hi-button hi-button-primary", "Submit" }
+                            button { class: "hi-button hi-button-secondary", "Cancel" }
+                            button { class: "hi-button hi-button-primary", "Submit" }
                         }
                     }
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Disabled Form" }
                     div { class: "demo-block__body",
-                        div { class: "form-group",
-                            label { "Disabled Input" }
-                            div { class: "form-input-wrapper", ..vec![text_input("Cannot edit")] }
-                        }
-                        div { class: "form-group",
-                            label { "Disabled Select" }
-                            div { class: "form-input-wrapper", ..vec![make_select_input()] }
+                        div { class: "form-row",
+                            div { class: "form-group",
+                                label { "Disabled Input" }
+                                div { class: "form-input-wrapper", ..vec![text_input("Cannot edit", true)] }
+                            }
+                            div { class: "form-group",
+                                label { "Disabled Select" }
+                                div { class: "form-input-wrapper", ..vec![make_select_input(true)] }
+                            }
                         }
                     }
                 }

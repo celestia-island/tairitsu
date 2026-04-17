@@ -8,7 +8,7 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/description-list"), ("Description List", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Description List" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Key-value pair display component for presenting metadata and configuration details."
                 }
                 div { class: "demo-block",
@@ -50,16 +50,17 @@ pub fn render() -> VNode {
                     div { class: "demo-block__body",
                         dl { class: "hi-description-list",
                             dt { class: "hi-dl-term", "Status" }
-                            dd { class: "hi-dl-detail", span { class: "badge badge-success", "Active" } }
+                            dd { class: "hi-dl-detail", span { class: "hi-badge hi-badge-success", "Active" } }
                             dt { class: "hi-dl-term", "Priority" }
-                            dd { class: "hi-dl-detail", span { class: "badge badge-warning", "Medium" } }
+                            dd { class: "hi-dl-detail", span { class: "hi-badge hi-badge-warning", "Medium" } }
                             dt { class: "hi-dl-term", "Assignee" }
                             dd { class: "hi-dl-detail", "Tairitsu Team" }
                             dt { class: "hi-dl-term", "Labels" }
                             dd { class: "hi-dl-detail",
-                                span { class: "hi-tag hi-tag-primary", "framework" }
-                                " "
-                                span { class: "hi-tag hi-tag-default", "wasm" }
+                                div { style: "display:flex;gap:4px;flex-wrap:wrap;",
+                                    span { class: "hi-tag hi-tag-primary", "framework" }
+                                    span { class: "hi-tag hi-tag-default", "wasm" }
+                                }
                             }
                         }
                     }

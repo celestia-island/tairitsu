@@ -1,9 +1,18 @@
-use crate::components::breadcrumb;
+use crate::components::{breadcrumb, svg_icon};
+use hikari_icons::MdiIcon;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode};
+use tairitsu_vdom::{VElement, VNode, VText};
 
 fn el(tag: &str) -> VElement {
     VElement::new(tag)
+}
+
+fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
+
+fn search_icon(size: u32) -> VNode {
+    svg_icon(MdiIcon::Magnify, size, "search-icon")
 }
 
 pub fn render() -> VNode {
@@ -28,15 +37,14 @@ pub fn render() -> VNode {
             ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/search"), ("Search", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Search" }
-                p { class: "card__body",
+                p { class: "page-section__description",
                     "Search input with optional icon, clear button, and debounced search callback support."
                 }
                 div { class: "demo-block",
                     h3 { class: "demo-block__title", "Basic Search" }
                     div { class: "demo-block__body",
                         div { class: "search-wrapper", style: "max-width:400px;",
-                            span { class: "search-icon", "\u{1F50D}" }
-                            ..vec![search_basic]
+                            ..vec![search_icon(14), search_basic]
                         }
                     }
                 }
@@ -44,17 +52,14 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Search Sizes" }
                     div { class: "demo-block__body",
                         div { style: "display:flex;flex-direction:column;gap:var(--ts-spacing-md);max-width:400px;",
-                            div { class: "search-wrapper",
-                                span { class: "search-icon", style: "font-size:0.75rem;", "\u{1F50D}" }
-                                ..vec![VNode::Element(el("input").attr("type", "text").attr("placeholder", "Small search").attr("style", "padding:4px 8px 4px 2rem;font-size:0.8125rem;"))]
+                            div { class: "search-wrapper search-wrapper--sm",
+                                ..vec![search_icon(12), VNode::Element(el("input").attr("type", "text").attr("placeholder", "Small search").class("hi-search-input-sm"))]
                             }
                             div { class: "search-wrapper",
-                                span { class: "search-icon", "\u{1F50D}" }
-                                ..vec![search_docs]
+                                ..vec![search_icon(14), search_docs]
                             }
-                            div { class: "search-wrapper",
-                                span { class: "search-icon", style: "font-size:1rem;", "\u{1F50D}" }
-                                ..vec![VNode::Element(el("input").attr("type", "text").attr("placeholder", "Large search").attr("style", "padding:10px 12px 10px 2.75rem;font-size:1rem;"))]
+                            div { class: "search-wrapper search-wrapper--lg",
+                                ..vec![search_icon(18), VNode::Element(el("input").attr("type", "text").attr("placeholder", "Large search").class("hi-search-input-lg"))]
                             }
                         }
                     }
@@ -63,10 +68,9 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Search in Navigation Bar" }
                     div { class: "demo-block__body",
                         div { class: "search-wrapper", style: "max-width:100%;",
-                            span { class: "search-icon", "\u{1F50D}" }
-                            ..vec![search_api]
+                            ..vec![search_icon(14), search_api]
                         }
-                        p { style: "font-size:0.8125rem;color:var(--hi-color-text-disabled);margin-top:8px;",
+                        p { class: "demo-hint",
                             "Hint: Try searching for \"component\" or \"guide\""
                         }
                     }
