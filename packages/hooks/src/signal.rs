@@ -1,4 +1,4 @@
-use tairitsu_vdom::{Signal, runtime};
+use tairitsu_vdom::{runtime, Classes, Signal, Style};
 
 /// Creates a new Signal with the given initial value.
 /// Takes a closure that returns the initial value (Dioxus-compatible API).
@@ -60,6 +60,24 @@ impl<T: std::fmt::Debug> std::fmt::Debug for ReactiveSignal<T> {
             .field("signal", &self.signal)
             .field("component_id", &self.component_id)
             .finish()
+    }
+}
+
+impl std::fmt::Display for ReactiveSignal<String> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get())
+    }
+}
+
+impl From<ReactiveSignal<String>> for Style {
+    fn from(signal: ReactiveSignal<String>) -> Self {
+        Style::from(signal.get())
+    }
+}
+
+impl From<ReactiveSignal<String>> for Classes {
+    fn from(signal: ReactiveSignal<String>) -> Self {
+        Classes::from(signal.get())
     }
 }
 

@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    Expr, Ident, LitStr, Pat, Token,
+    Expr, ExprLit, Ident, Lit, LitStr, Pat, Token,
     parse::{Parse, ParseStream},
 };
 
@@ -402,12 +402,13 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(expr) => {
-                class_code = quote! { #expr };
+                class_code = interpolate_expr(expr);
             }
             RsxAttr::Style(expr) => {
-                style_code = quote! { #expr };
+                style_code = interpolate_expr(expr);
             }
             RsxAttr::Id(expr) => {
+                let expr = interpolate_expr(expr);
                 other_attrs.push(quote! { .attr("id", #expr) });
             }
             RsxAttr::Onclick(expr) => {
@@ -425,6 +426,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 });
             }
             RsxAttr::InnerHtml(expr) => {
+                let expr = interpolate_expr(expr);
                 other_attrs.push(quote! { .inner_html(#expr) });
             }
             RsxAttr::Ref(expr) => {
@@ -500,6 +502,7 @@ pub fn expand_rsx(element: RsxElement) -> TokenStream2 {
                 }
 
                 // For custom components or non-event attributes, pass as regular attribute
+                let value = interpolate_expr(value);
                 if name == "children" {
                     // Special handling for children - add as child, not attribute
                     children_code.push(quote! { .child(#value) });
@@ -607,16 +610,11 @@ fn expand_child(child: RsxChild) -> TokenStream2 {
     match child {
         RsxChild::Text(text) => {
             let text_value = text.value();
-            // Check if this is a format string like "{variable}"
-            if text_value.starts_with('{')
-                && text_value.ends_with('}')
-                && text_value.matches('{').count() == 1
-            {
-                // This is a shorthand for displaying a variable: "{count}" -> count.to_string()
-                let inner = &text_value[1..text_value.len() - 1];
-                // Parse the inner as an expression
-                if let Ok(expr) = syn::parse_str::<Expr>(inner) {
-                    return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!("{}", #expr))) };
+            if text_value.contains('{') && text_value.contains('}') {
+                let (fmt_str, args) = parse_interp_string(&text_value);
+                if !args.is_empty() {
+                    let fmt_lit = LitStr::new(&fmt_str, text.span());
+                    return quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(&format!(#fmt_lit, #(#args),*))) };
                 }
             }
             quote! { tairitsu_vdom::VNode::Text(tairitsu_vdom::VText::new(#text_value)) }
@@ -642,12 +640,15 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
     for attr in element.attrs {
         match attr {
             RsxAttr::Class(expr) => {
+                let expr = interpolate_expr(expr);
                 props_fields.push(quote! { class: #expr });
             }
             RsxAttr::Style(expr) => {
+                let expr = interpolate_expr(expr);
                 props_fields.push(quote! { style: #expr });
             }
             RsxAttr::Id(expr) => {
+                let expr = interpolate_expr(expr);
                 props_fields.push(quote! { id: #expr });
             }
             RsxAttr::Onclick(expr) => {
@@ -656,6 +657,7 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
                 props_fields.push(quote! { onclick: #expr });
             }
             RsxAttr::InnerHtml(expr) => {
+                let expr = interpolate_expr(expr);
                 props_fields.push(quote! { dangerous_inner_html: #expr });
             }
             RsxAttr::Ref(expr) => {
@@ -666,6 +668,7 @@ fn expand_custom_component(element: RsxElement) -> TokenStream2 {
                 // Convert attribute name to Rust field name
                 let field_name = name.as_str();
                 let field_ident = syn::Ident::new(field_name, tag.span());
+                let value = interpolate_expr(value);
                 props_fields.push(quote! { #field_ident: #value });
             }
         }
@@ -732,4 +735,74 @@ fn expand_child_method(child: RsxChild) -> TokenStream2 {
             quote! { .child(#expanded) }
         }
     }
+}
+
+fn interpolate_expr(expr: Expr) -> TokenStream2 {
+    if let Expr::Lit(ExprLit {
+        lit: Lit::Str(ref lit_str),
+        ..
+    }) = expr
+    {
+        let value = lit_str.value();
+        if value.contains('{') && value.contains('}') {
+            let (fmt_str, args) = parse_interp_string(&value);
+            if !args.is_empty() {
+                let fmt_lit = LitStr::new(&fmt_str, lit_str.span());
+                return quote! { format!(#fmt_lit, #(#args),*) };
+            }
+        }
+    }
+    quote! { #expr }
+}
+
+fn parse_interp_string(s: &str) -> (String, Vec<TokenStream2>) {
+    let mut result = String::with_capacity(s.len());
+    let mut args = Vec::new();
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '{' {
+            if chars.peek() == Some(&'{') {
+                chars.next();
+                result.push_str("{{");
+                continue;
+            }
+            let mut expr_str = String::new();
+            let mut depth = 1;
+            for inner_c in chars.by_ref() {
+                if inner_c == '{' {
+                    depth += 1;
+                    expr_str.push(inner_c);
+                } else if inner_c == '}' {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                    expr_str.push(inner_c);
+                } else {
+                    expr_str.push(inner_c);
+                }
+            }
+            if let Ok(expr) = syn::parse_str::<Expr>(&expr_str) {
+                let idx = args.len();
+                args.push(quote! { &#expr });
+                result.push('{');
+                result.push_str(&idx.to_string());
+                result.push('}');
+            } else {
+                result.push('{');
+                result.push_str(&expr_str);
+                result.push('}');
+            }
+        } else if c == '}' {
+            if chars.peek() == Some(&'}') {
+                chars.next();
+                result.push_str("}}");
+            } else {
+                result.push(c);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    (result, args)
 }
