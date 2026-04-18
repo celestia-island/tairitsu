@@ -1130,7 +1130,8 @@ fn generate_component_html_with_output_dir(
     {favicon_link}
     {head}
 </head>
-<body class="{body_class}">
+<body class="{body_class}" data-booting>
+    <style>[data-booting] {{ visibility: hidden !important; }}</style>
     <div id="app">Loading...</div>
     <!-- Import map (WASI preview2-shim + tairitsu-glue interfaces) is created
          dynamically by __tairitsu_glue__.js, which runs synchronously before
@@ -1282,23 +1283,43 @@ fn generate_component_html_with_output_dir(
             clearLoadingIfUnchanged();
         }}
 
-        // WASM just replaced #app content; re-run SPA router so the
-        // correct page is activated for the current URL path.
-        // Use rAF to ensure the browser has flushed the new DOM into
-        // the render tree before we query it for .hikari-page elements.
-        requestAnimationFrame(function() {{
-            if (typeof navigate === 'function') {{
-                navigate();
-            }} else {{
-                window.dispatchEvent(new PopStateEvent('popstate'));
+        // Wait for all stylesheets to finish loading before running any
+        // post-boot DOM fixups.  CSS <link>s in <head> block rendering but
+        // a deferred module script can execute before every stylesheet has
+        // fully parsed (edge-case on slow networks / large bundles).
+        const stylesReady = () => {{
+            if (!document.styleSheets) return Promise.resolve();
+            const pending = [];
+            for (const sheet of document.styleSheets) {{
+                try {{ void sheet.cssRules; }} catch (_) {{
+                    // cssRules throws when the stylesheet is still loading
+                    // (cross-origin sheets always throw, but those are fine
+                    // since they are not our component styles).
+                    pending.push(sheet);
+                }}
             }}
-        }});
+            if (pending.length === 0) return Promise.resolve();
+            return new Promise(resolve => {{
+                let count = 0;
+                const check = () => {{
+                    count++;
+                    if (count > 50) {{ resolve(); return; }}
+                    let stillPending = 0;
+                    for (const s of pending) {{
+                        try {{ void s.cssRules; }} catch (_) {{ stillPending++; }}
+                    }}
+                    if (stillPending === 0) resolve();
+                    else setTimeout(check, 40);
+                }};
+                check();
+            }});
+        }};
 
         // Fix SVG elements created with wrong namespace (HTML instead of SVG).
         // WIT document::createElement always creates HTML-namespaced elements,
         // which makes SVG graphics invisible. This post-process step replaces
         // any HTML-namespaced <svg> elements with proper SVG namespaced ones.
-        (function fixSvgNamespaces() {{
+        const fixSvgNamespaces = () => {{
             const SVG_NS = 'http://www.w3.org/2000/svg';
             document.querySelectorAll('svg').forEach(svg => {{
                 if (svg.namespaceURI === SVG_NS) return;
@@ -1306,18 +1327,75 @@ fn generate_component_html_with_output_dir(
                 if (!parent) return;
                 const newSvg = document.createElementNS(SVG_NS, 'svg');
                 for (const attr of svg.attributes) {{
-                    // Preserve viewBox case sensitivity
                     if (attr.name.toLowerCase() === 'viewbox') {{
                         newSvg.setAttribute('viewBox', attr.value);
                     }} else {{
                         newSvg.setAttribute(attr.name, attr.value);
                     }}
                 }}
-                // Re-parse innerHTML in SVG namespace context so all
-                // child elements (<path>, <circle>, etc.) get SVG namespace.
                 newSvg.innerHTML = svg.innerHTML;
                 parent.replaceChild(newSvg, svg);
             }});
+        }};
+
+        // WASM just replaced #app content; re-run SPA router so the
+        // correct page is activated for the current URL path.
+        // The WASM boot function may spawn async DOM work (rAF, setTimeout,
+        // etc.) that finishes *after* the await resolves.  A single rAF
+        // is not enough — we wait for DOM mutations inside #app to settle
+        // before calling navigate(), so every .hikari-page element exists.
+        const waitForDomSettle = (root, maxWait) => {{
+            return new Promise(resolve => {{
+                const deadline = Date.now() + maxWait;
+                let timer = null;
+                let settled = false;
+
+                const tryResolve = () => {{
+                    if (settled) return;
+                    settled = true;
+                    if (timer) {{ clearTimeout(timer); timer = null; }}
+                    observer.disconnect();
+                    resolve();
+                }};
+
+                const observer = new MutationObserver(() => {{
+                    // mutations happening — reset the settle timer
+                    if (timer) clearTimeout(timer);
+                    if (Date.now() >= deadline) {{ tryResolve(); return; }}
+                    timer = setTimeout(tryResolve, 80);
+                }});
+
+                observer.observe(root, {{
+                    childList: true,
+                    subtree: true,
+                    attributes: false,
+                }});
+
+                // If no mutations fire within a short window, resolve.
+                timer = setTimeout(tryResolve, 120);
+
+                // Absolute safety net.
+                setTimeout(tryResolve, maxWait);
+            }});
+        }};
+
+        (async () => {{
+            await stylesReady();
+
+            const appRoot = document.getElementById('app');
+            if (appRoot) {{
+                await waitForDomSettle(appRoot, 2000);
+            }}
+
+            fixSvgNamespaces();
+
+            if (typeof navigate === 'function') {{
+                navigate();
+            }} else {{
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+
+            document.body.removeAttribute('data-booting');
         }})();
 
         // Glow mouse-following spotlight effect
