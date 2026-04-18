@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { lookupElement } from "./helpers";
 import { wasmExports } from "./wasmExports";
 
 // Initialize global handle tables for event listeners
@@ -19,7 +18,7 @@ export const eventTarget_exports = {
    */
   addEventListener(target: bigint, eventType: string, useCapture: boolean): bigint | string {
     try {
-      const element = lookupElement(target);
+      const element = globalThis.__lookupElement(target);
 
       const listener = function (event: Event) {
         if (wasmExports) {
@@ -104,7 +103,7 @@ export const eventTarget_exports = {
    */
   removeEventListener(target: bigint, eventType: string, listenerHandle: bigint): void {
     try {
-      const element = lookupElement(target);
+      const element = globalThis.__lookupElement(target);
       const listenerInfo = globalThis.__listenerHandles.get(listenerHandle);
 
       if (listenerInfo && listenerInfo.element === element && listenerInfo.type === eventType) {

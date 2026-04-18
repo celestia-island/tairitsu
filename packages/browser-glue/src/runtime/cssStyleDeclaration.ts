@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { storeText } from "./helpers";
 import { storeCssStyleDeclaration, lookupCssStyleDeclaration } from "./elementCssInlineStyle";
 
 export const cssStyleDeclaration_exports = {
@@ -33,7 +32,7 @@ export const cssStyleDeclaration_exports = {
   item(self: bigint, index: number): bigint {
     const obj = lookupCssStyleDeclaration(self);
     const result = obj.item(index);
-    return storeText(result);
+    return globalThis.__storeText(result);
   },
 
   /**
@@ -66,7 +65,7 @@ export const cssStyleDeclaration_exports = {
   removeProperty(self: bigint, property: string): bigint {
     const obj = lookupCssStyleDeclaration(self);
     const result = obj.removeProperty(property);
-    return storeText(result);
+    return globalThis.__storeText(result);
   },
 
   /**

@@ -1,12 +1,11 @@
 // @ts-nocheck
-import { storeElement } from "./helpers";
 
 export const resizeObserverEntry_exports = {
   getTarget(self) {
     if (!globalThis.__resizeObserverEntryHandles) return 0n;
     const entry = globalThis.__resizeObserverEntryHandles.get(self);
     if (!entry) return 0n;
-    return storeElement(entry.target);
+    return globalThis.__storeElement(entry.target);
   },
   getContentRect(self) {
     if (!globalThis.__resizeObserverEntryHandles) return 0n;

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { storeElement } from "./helpers";
 import { wasmExports } from "./wasmExports";
 
 let _timeoutCallbacks = new Map();
@@ -69,7 +68,7 @@ export const platformHelpers_exports = {
         wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"].on_resize(callbackId, entryHandles);
       }
     });
-    return storeElement(observer);
+    return globalThis.__storeElement(observer);
   },
   observeResize(observer, element) {
     const obs = globalThis.__elementHandles.get(observer);
@@ -106,7 +105,7 @@ export const platformHelpers_exports = {
         wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"].on_mutation(callbackId, recordHandles);
       }
     });
-    return storeElement(observer);
+    return globalThis.__storeElement(observer);
   },
   observeMutations(observer, target, _options) {
     const obs = globalThis.__elementHandles.get(observer);
@@ -119,6 +118,23 @@ export const platformHelpers_exports = {
         subtree: true,
       });
     }
+  },
+  querySelector(self, selectors) {
+    const el = globalThis.__lookupElement(self);
+    const result = el.querySelector(selectors);
+    if (!result) return undefined;
+    return globalThis.__storeElement(result);
+  },
+  querySelectorAll(self, selectors) {
+    const el = globalThis.__lookupElement(self);
+    const result = el.querySelectorAll(selectors);
+    if (!globalThis.__nodeListHandles) {
+      globalThis.__nodeListHandles = new Map();
+      globalThis.__nextNodeList = 1n;
+    }
+    const handle = globalThis.__nextNodeList++;
+    globalThis.__nodeListHandles.set(handle, result);
+    return handle;
   },
   disconnectMutation(observer) {
     const obs = globalThis.__elementHandles.get(observer);

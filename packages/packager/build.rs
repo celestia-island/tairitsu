@@ -92,16 +92,6 @@ pub const BROWSER_GLUE_BUNDLE_SIZE: usize = {};"#,
 }
 
 fn compile_with_swc(workspace_root: &Path) -> Option<String> {
-    let dist_file = workspace_root.join("packages/browser-glue/dist/runtime.js");
-
-    // Check if esbuild already produced the bundle
-    if dist_file.exists()
-        && let Ok(content) = std::fs::read_to_string(&dist_file)
-    {
-        return Some(content);
-    }
-
-    // Try to bundle runtime/index.ts with esbuild
     let src_file = workspace_root.join("packages/browser-glue/src/runtime/index.ts");
     let out_file = workspace_root.join("packages/browser-glue/dist/runtime.js");
 
@@ -118,7 +108,6 @@ fn compile_with_swc(workspace_root: &Path) -> Option<String> {
             &format!("--outfile={}", out_file.to_string_lossy()),
             "--format=esm",
             "--platform=browser",
-            "--minify",
         ])
         .current_dir(workspace_root.join("packages/browser-glue"))
         .output();

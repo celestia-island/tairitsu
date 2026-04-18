@@ -3,14 +3,17 @@ import { document_exports } from "./document";
 import { element_exports } from "./element";
 import { node_exports } from "./node";
 import { nonElementParentNode_exports } from "./nonElementParentNode";
+import { parentNode_exports } from "./parentNode";
 import { window_exports } from "./window";
 import { platformHelpers_exports } from "./platformHelpers";
 import { mutationRecord_exports } from "./mutationRecord";
 import { resizeObserverEntry_exports } from "./resizeObserverEntry";
 import { resizeObserverSize_exports } from "./resizeObserverSize";
+import { resizeObserver_exports } from "./resizeObserver";
 import { cssStyleDeclaration_exports } from "./cssStyleDeclaration";
 import { elementCssInlineStyle_exports } from "./elementCssInlineStyle";
 import { eventTarget_exports } from "./eventTarget";
+import { domTokenList_exports } from "./domTokenList";
 import { location_exports } from "./location";
 import { history_exports } from "./history";
 import { observers_exports } from "./observers";
@@ -21,14 +24,17 @@ export const INTERFACES = {
   "@tairitsu-glue/element": element_exports,
   "@tairitsu-glue/node": node_exports,
   "@tairitsu-glue/non-element-parent-node": nonElementParentNode_exports,
+  "@tairitsu-glue/parent-node": parentNode_exports,
   "@tairitsu-glue/window": window_exports,
   "@tairitsu-glue/platform-helpers": platformHelpers_exports,
   "@tairitsu-glue/mutation-record": mutationRecord_exports,
   "@tairitsu-glue/resize-observer-entry": resizeObserverEntry_exports,
   "@tairitsu-glue/resize-observer-size": resizeObserverSize_exports,
+  "@tairitsu-glue/resize-observer": resizeObserver_exports,
   "@tairitsu-glue/css-style-declaration": cssStyleDeclaration_exports,
   "@tairitsu-glue/element-css-inline-style": elementCssInlineStyle_exports,
   "@tairitsu-glue/event-target": eventTarget_exports,
+  "@tairitsu-glue/dom-token-list": domTokenList_exports,
   "@tairitsu-glue/location": location_exports,
   "@tairitsu-glue/history": history_exports,
   "@tairitsu-glue/observers": observers_exports,
