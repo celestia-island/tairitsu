@@ -208,6 +208,8 @@ fn build_wasm_component(
     ]);
     if release {
         cmd.arg("--release");
+    } else {
+        cmd.args(["--profile", "dev-wasm"]);
     }
 
     // Capture stdout (JSON messages) and suppress stderr (cargo's native progress bars)
@@ -305,7 +307,7 @@ fn build_wasm_component(
     }
 
     let workspace_root = find_workspace_root(&config.manifest_dir)?;
-    let profile = if release { "release" } else { "debug" };
+    let profile = if release { "release" } else { "dev-wasm" };
     let wasm_path = workspace_root
         .join("target")
         .join("wasm32-wasip2")
