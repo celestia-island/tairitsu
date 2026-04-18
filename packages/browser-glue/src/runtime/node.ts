@@ -1,27 +1,26 @@
 // @ts-nocheck
-import { lookupNode, storeNode } from "./helpers";
 
 export const node_exports = {
   appendChild(self, child) {
-    const parent = lookupNode(self);
-    const childNode = lookupNode(child);
+    const parent = globalThis.__lookupNode(self);
+    const childNode = globalThis.__lookupNode(child);
     const result = parent.appendChild(childNode);
-    return storeNode(result);
+    return globalThis.__storeNode(result);
   },
   removeChild(self, child) {
-    const parent = lookupNode(self);
-    const childNode = lookupNode(child);
+    const parent = globalThis.__lookupNode(self);
+    const childNode = globalThis.__lookupNode(child);
     const result = parent.removeChild(childNode);
-    return storeNode(result);
+    return globalThis.__storeNode(result);
   },
   setTextContent(self, text) {
-    lookupNode(self).textContent = text;
+    globalThis.__lookupNode(self).textContent = text;
   },
   getTextContent(self) {
-    return lookupNode(self).textContent || "";
+    return globalThis.__lookupNode(self).textContent || "";
   },
   getParentElement(self) {
-    const el = lookupNode(self).parentElement;
+    const el = globalThis.__lookupNode(self).parentElement;
     if (!el) return undefined;
     return globalThis.__elementHandles.get(el);
   },

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { storeElement, storeNode } from "./helpers";
 
 export const mutationRecord_exports = {
   getType(self) {
@@ -11,19 +10,19 @@ export const mutationRecord_exports = {
     if (!globalThis.__mutationRecordHandles) return 0n;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.target) return 0n;
-    return storeElement(rec.target);
+    return globalThis.__storeElement(rec.target);
   },
   getPreviousSibling(self) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.previousSibling) return undefined;
-    return storeNode(rec.previousSibling);
+    return globalThis.__storeNode(rec.previousSibling);
   },
   getNextSibling(self) {
     if (!globalThis.__mutationRecordHandles) return undefined;
     const rec = globalThis.__mutationRecordHandles.get(self);
     if (!rec || !rec.nextSibling) return undefined;
-    return storeNode(rec.nextSibling);
+    return globalThis.__storeNode(rec.nextSibling);
   },
   getAttributeName(self) {
     if (!globalThis.__mutationRecordHandles) return undefined;

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { lookupElement } from "./helpers";
 
 export const observers_exports = {
   getBoundingClientRect(element) {
@@ -9,5 +8,12 @@ export const observers_exports = {
     }
     const rect = el.getBoundingClientRect();
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  },
+  observe(self, target, options) {
+    const observer = globalThis.__lookupElement(self);
+    const el = globalThis.__lookupElement(target);
+    if (observer && el) {
+      observer.observe(el, options);
+    }
   },
 };

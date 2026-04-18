@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { lookupElement } from "./helpers";
 
 // Initialize global handle tables for CSSStyleDeclaration
 globalThis.__cssStyleDeclarationHandles = globalThis.__cssStyleDeclarationHandles || new Map();
@@ -32,7 +31,7 @@ export const elementCssInlineStyle_exports = {
    * Returns a handle to the CSSStyleDeclaration for this element.
    */
   getStyle(self: bigint): bigint {
-    const el = lookupElement(self);
+    const el = globalThis.__lookupElement(self);
     const style = el.style;
     return storeCssStyleDeclaration(style);
   },
