@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { wasmExports } from "./wasmExports";
 
 let _timeoutCallbacks = new Map();
 let _nextTimeoutId = 1;
@@ -16,8 +15,8 @@ export const platformHelpers_exports = {
   setTimeout(callbackId, ms) {
     const id = _nextTimeoutId++;
     const timeoutId = setTimeout(() => {
-      if (wasmExports && wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]) {
-        wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"].on_timeout(callbackId);
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"].on_timeout(callbackId);
       }
     }, ms);
     _timeoutCallbacks.set(id, timeoutId);
@@ -32,8 +31,8 @@ export const platformHelpers_exports = {
   requestAnimationFrame(callbackId) {
     const id = _nextAnimationId++;
     const animationId = requestAnimationFrame((timestamp) => {
-      if (wasmExports && wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]) {
-        wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"].on_animation_frame(callbackId, timestamp);
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]) {
+        globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"].on_animation_frame(callbackId, timestamp);
       }
     });
     _animationCallbacks.set(id, animationId);
@@ -55,7 +54,7 @@ export const platformHelpers_exports = {
   },
   createResizeObserver(callbackId) {
     const observer = new ResizeObserver((entries) => {
-      if (wasmExports && wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]) {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"]) {
         const entryHandles = entries.map(entry => {
           if (!globalThis.__resizeObserverEntryHandles) {
             globalThis.__resizeObserverEntryHandles = new Map();
@@ -65,7 +64,7 @@ export const platformHelpers_exports = {
           globalThis.__resizeObserverEntryHandles.set(handle, entry);
           return handle;
         });
-        wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"].on_resize(callbackId, entryHandles);
+        globalThis.__wasmExports["tairitsu-browser:full/resize-observer-callbacks@0.2.0"].on_resize(callbackId, entryHandles);
       }
     });
     return globalThis.__storeElement(observer);
@@ -92,7 +91,7 @@ export const platformHelpers_exports = {
   },
   createMutationObserver(callbackId) {
     const observer = new MutationObserver((records) => {
-      if (wasmExports && wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
+      if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"]) {
         const recordHandles = records.map(record => {
           if (!globalThis.__mutationRecordHandles) {
             globalThis.__mutationRecordHandles = new Map();
@@ -102,7 +101,7 @@ export const platformHelpers_exports = {
           globalThis.__mutationRecordHandles.set(handle, record);
           return handle;
         });
-        wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"].on_mutation(callbackId, recordHandles);
+        globalThis.__wasmExports["tairitsu-browser:full/mutation-observer-callbacks@0.2.0"].on_mutation(callbackId, recordHandles);
       }
     });
     return globalThis.__storeElement(observer);

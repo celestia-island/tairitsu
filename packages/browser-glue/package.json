@@ -4,7 +4,7 @@
   "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
   "license": "MIT OR Apache-2.0",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": ["src/runtime/**/*.ts", "src/glue/**/*.ts"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
