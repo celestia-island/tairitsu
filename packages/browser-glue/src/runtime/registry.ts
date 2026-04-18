@@ -17,6 +17,7 @@ import { domTokenList_exports } from "./domTokenList";
 import { location_exports } from "./location";
 import { history_exports } from "./history";
 import { observers_exports } from "./observers";
+import { mutationObserver_exports } from "./mutationObserver";
 import { event_exports } from "./event";
 
 export const INTERFACES = {
@@ -38,6 +39,7 @@ export const INTERFACES = {
   "@tairitsu-glue/location": location_exports,
   "@tairitsu-glue/history": history_exports,
   "@tairitsu-glue/observers": observers_exports,
+  "@tairitsu-glue/mutation-observer": mutationObserver_exports,
   "@tairitsu-glue/event": event_exports,
 };
 

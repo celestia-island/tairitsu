@@ -1,38 +1,27 @@
 // @ts-nocheck
 
-// Initialize global handle tables for CSSStyleDeclaration
 globalThis.__cssStyleDeclarationHandles = globalThis.__cssStyleDeclarationHandles || new Map();
 globalThis.__nextCssStyleDeclarationHandle = globalThis.__nextCssStyleDeclarationHandle || 1n;
 
-/**
- * Store a CSSStyleDeclaration and return its handle.
- */
-export function storeCssStyleDeclaration(obj: CSSStyleDeclaration | null): bigint | undefined {
+globalThis.__storeCssStyleDeclaration = function(obj) {
   if (!obj) return undefined;
   const handle = globalThis.__nextCssStyleDeclarationHandle++;
   globalThis.__cssStyleDeclarationHandles.set(handle, obj);
   return handle;
-}
+};
 
-/**
- * Lookup a CSSStyleDeclaration by handle, throwing if not found.
- */
-export function lookupCssStyleDeclaration(handle: bigint): CSSStyleDeclaration {
+globalThis.__lookupCssStyleDeclaration = function(handle) {
   const obj = globalThis.__cssStyleDeclarationHandles.get(handle);
   if (!obj) {
-    throw new Error(`CSSStyleDeclaration handle ${handle} not found`);
+    throw new Error("CSSStyleDeclaration handle " + handle + " not found");
   }
   return obj;
-}
+};
 
 export const elementCssInlineStyle_exports = {
-  /**
-   * `style` attribute — getter.
-   * Returns a handle to the CSSStyleDeclaration for this element.
-   */
-  getStyle(self: bigint): bigint {
+  getStyle(self) {
     const el = globalThis.__lookupElement(self);
     const style = el.style;
-    return storeCssStyleDeclaration(style);
+    return globalThis.__storeCssStyleDeclaration(style);
   },
 };

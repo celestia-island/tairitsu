@@ -24,4 +24,10 @@ export const node_exports = {
     if (!el) return undefined;
     return globalThis.__elementHandles.get(el);
   },
+  getFirstChild(self) {
+    const node = globalThis.__lookupNode(self);
+    const first = node.firstChild;
+    if (!first) return undefined;
+    return globalThis.__storeNode(first);
+  },
 };

@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { wasmExports } from "./wasmExports";
 
 // Initialize global handle tables for event listeners
 globalThis.__listenerHandles = globalThis.__listenerHandles || new Map();
@@ -21,8 +20,8 @@ export const eventTarget_exports = {
       const element = globalThis.__lookupElement(target);
 
       const listener = function (event: Event) {
-        if (wasmExports) {
-          const callbacks = wasmExports["tairitsu-browser:full/event-callbacks@0.2.0"];
+        if (globalThis.__wasmExports) {
+          const callbacks = globalThis.__wasmExports["tairitsu-browser:full/event-callbacks@0.2.0"];
           if (callbacks) {
             const eventHandle = globalThis.__nextEventHandle++;
             globalThis.__eventHandles.set(eventHandle, event);
