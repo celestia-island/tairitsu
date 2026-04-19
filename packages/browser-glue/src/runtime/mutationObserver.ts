@@ -5,7 +5,7 @@ export const mutationObserver_exports = {
     const observer = globalThis.__lookupElement(self);
     const el = globalThis.__lookupElement(target);
     if (observer && el) {
-      observer.observe(el, options);
+      observer.observe(el, options || { childList: true, subtree: true });
     }
   },
   disconnect(self) {

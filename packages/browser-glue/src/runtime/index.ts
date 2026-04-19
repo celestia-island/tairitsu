@@ -22,6 +22,7 @@ import { INTERFACES, registerImportMap } from "./registry";
 
 // Auto-register when loaded
 registerImportMap();
+console.log('[tairitsu] Import map registered with', Object.keys(INTERFACES).length, 'interfaces');
 
 // Export debug handle for diagnostics
 globalThis.__TAIRITSU_GLUE__ = {
