@@ -124,28 +124,53 @@ pub fn is_daemon() -> bool {
     env::var("TAIRITSU_DAEMON").is_ok()
 }
 
-/// Daemonize the current process using the `daemonize` crate.
+/// Daemonize the current process.
 ///
-/// Performs double-fork + setsid so the process detaches from the
-/// controlling terminal and survives the parent exiting.
+/// Performs `setsid()` to detach from the controlling terminal and
+/// redirects stdin/stdout/stderr so the process can survive the
+/// parent exiting. Does NOT fork — the caller is already a child
+/// process spawned by `fork_daemon()`.
 #[cfg(unix)]
 pub fn daemonize_self() -> std::io::Result<()> {
-    use daemonize::Daemonize;
     use std::fs::File;
+    use std::os::unix::io::AsRawFd;
 
     let stdout = File::create(daemon_log_path().with_extension("stdout"))?;
     let stderr = File::create(daemon_log_path().with_extension("stderr"))?;
 
-    let cwd = env::current_dir()?;
+    unsafe {
+        // Detach from controlling terminal
+        if libc::setsid() == -1 {
+            return Err(std::io::Error::last_os_error());
+        }
 
-    let daemonize = Daemonize::new()
-        .working_directory(&cwd)
-        .stdout(stdout)
-        .stderr(stderr);
+        // Redirect stdin to /dev/null
+        let devnull = std::ffi::CString::new("/dev/null").unwrap();
+        let null_fd = libc::open(devnull.as_ptr(), libc::O_RDWR);
+        if null_fd == -1 {
+            return Err(std::io::Error::last_os_error());
+        }
+        if libc::dup2(null_fd, libc::STDIN_FILENO) == -1 {
+            libc::close(null_fd);
+            return Err(std::io::Error::last_os_error());
+        }
 
-    daemonize
-        .start()
-        .map_err(|e| std::io::Error::other(format!("daemonize failed: {}", e)))
+        // Redirect stdout
+        if libc::dup2(stdout.as_raw_fd(), libc::STDOUT_FILENO) == -1 {
+            libc::close(null_fd);
+            return Err(std::io::Error::last_os_error());
+        }
+
+        // Redirect stderr
+        if libc::dup2(stderr.as_raw_fd(), libc::STDERR_FILENO) == -1 {
+            libc::close(null_fd);
+            return Err(std::io::Error::last_os_error());
+        }
+
+        libc::close(null_fd);
+    }
+
+    Ok(())
 }
 
 /// Write daemon status to log file

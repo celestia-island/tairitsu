@@ -109,4 +109,4 @@ cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 
 [target.'cfg(unix)'.dependencies]
-daemonize = "^0.5"
+libc = "0.2"
