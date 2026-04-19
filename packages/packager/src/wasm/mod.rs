@@ -1250,8 +1250,8 @@ fn generate_component_html_with_output_dir(
                 globalThis.__setWasmExports(wrapperResult);
             }}
             bootInvoked = await tryInvokeBootExports(wrapperResult);
-        }} catch (_wrapperErr) {{
-            // No jco wrapper or wrapper failed — load WASM directly
+        }} catch (wrapperErr) {{
+            console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', wrapperErr);
             const response = await fetch('/{wasm_file}');
             const bytes = await response.arrayBuffer();
             const magic = new Uint8Array(bytes, 0, 8);
@@ -1267,6 +1267,9 @@ fn generate_component_html_with_output_dir(
                     globalThis.__setWasmExports(componentResult);
                 }}
                 bootInvoked = await tryInvokeBootExports(componentResult);
+            }} else if (isComponent) {{
+                console.error('[tairitsu] WASM Component detected but WebAssembly.Component is not supported in this browser. The jco-transpiled wrapper must be used.');
+                setAppStatus('Failed to load: WASM Components require the jco wrapper, which failed to load. Check console for details.');
             }} else {{
                 const module = await WebAssembly.compile(bytes);
                 const moduleResult = await WebAssembly.instantiate(module, buildImports());
