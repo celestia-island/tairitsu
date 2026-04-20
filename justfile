@@ -24,6 +24,9 @@
 # Configure Windows to use PowerShell (UTF-8 encoding)
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
 
+# Python interpreter — Windows ships as 'python', Unix as '{{python}}'
+python := if os_family() == "windows" { "python" } else { "{{python}}" }
+
 # Default: show help information
 default:
     @just --list
@@ -37,12 +40,12 @@ install-tools:
     rustup target add wasm32-wasip2
     rustup component add rustfmt --toolchain nightly
     rustup component add clippy
-    python3 scripts/download_wasi_adapters.py
+    {{python}} scripts/download_wasi_adapters.py
 
 # Install tairitsu-packager CLI binary (tairitsu) to ~/.cargo/bin
 install-packager:
     cargo build --release --package tairitsu-packager
-    python3 scripts/install_packager.py
+    {{python}} scripts/install_packager.py
 
 # Development environment setup (install tools and build)
 setup: install-tools init
@@ -54,7 +57,7 @@ setup: install-tools init
 
 # Install Node.js dependencies for packages/browser-glue (auto-detects pnpm/yarn/npm)
 init:
-    python3 scripts/init_browser_glue.py
+    {{python}} scripts/init_browser_glue.py
 
 # ============================================================================
 # Cleanup tasks
@@ -81,11 +84,11 @@ gen-wit-fetch:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Fetching W3C WebIDL specs from webref..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    python3 scripts/fetch_w3c_idl.py
+    {{python}} scripts/fetch_w3c_idl.py
 
 # Re-fetch all specs (ignore cache)
 gen-wit-fetch-force:
-    python3 scripts/fetch_w3c_idl.py --force
+    {{python}} scripts/fetch_w3c_idl.py --force
 
 # Generate WIT interface files from cached WebIDL specs.
 # Reads:  scripts/idl-cache/*.idl
@@ -95,7 +98,7 @@ gen-wit:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Generating WIT interfaces from W3C WebIDL..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    python3 scripts/webidl_to_wit.py
+    {{python}} scripts/webidl_to_wit.py
 
 # Full pipeline: fetch WebIDL specs then generate WIT files.
 gen-wit-all: gen-wit-fetch gen-wit
@@ -331,7 +334,7 @@ build-web: init
 # Serve web demo (production build)
 serve-web: build-web
     @echo "Serving production build..."
-    cd examples/website/dist && python3 -m http.server 3001
+    cd examples/website/dist && {{python}} -m http.server 3001
 
 # ============================================================================
 # WIT generation — W3C WebIDL → WIT interface pipeline
@@ -345,26 +348,26 @@ wit-gen:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "WIT generation pipeline (WebIDL → WIT)"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    python3 scripts/gen_wit_from_webidl.py
+    {{python}} scripts/gen_wit_from_webidl.py
 
 # Step 1: Fetch W3C/WHATWG WebIDL spec files into target/tairitsu-wit/webidl-cache/
 wit-fetch-idl:
     @echo "Fetching WebIDL specs from w3c/webref..."
-    python3 scripts/fetch_webidl.py
+    {{python}} scripts/fetch_webidl.py
 
 # Step 2: Parse cached WebIDL and generate WIT files under packages/browser-worlds/wit/generated/
 wit-gen-wit:
     @echo "Generating WIT from cached WebIDL..."
-    python3 scripts/generate_browser_wit.py
+    {{python}} scripts/generate_browser_wit.py
 
 # Re-download all WebIDL specs (force even if cached)
 wit-fetch-force:
     @echo "Force re-fetching all WebIDL specs..."
-    python3 scripts/fetch_webidl.py --force
+    {{python}} scripts/fetch_webidl.py --force
 
 # Show WIT generation coverage statistics
 wit-stats:
-    python3 scripts/generate_browser_wit.py --stats
+    {{python}} scripts/generate_browser_wit.py --stats
 
 # ============================================================================
 # TypeScript Glue generation (WIT → TypeScript)
@@ -377,18 +380,18 @@ glue-gen:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "TypeScript Glue generation (WIT → TypeScript)"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    python3 scripts/generate_browser_glue.py
+    {{python}} scripts/generate_browser_glue.py
 
 # Show TypeScript glue generation coverage statistics
 glue-stats:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "TypeScript Glue Statistics"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    python3 scripts/generate_browser_glue.py --stats
+    {{python}} scripts/generate_browser_glue.py --stats
 
 # Dry-run: show what glue generation would do without writing
 glue-dry-run:
-    python3 scripts/generate_browser_glue.py --dry-run
+    {{python}} scripts/generate_browser_glue.py --dry-run
 
 # Full pipeline: WIT + TypeScript Glue generation
 wit-full: wit-gen glue-gen
@@ -400,15 +403,15 @@ wit-full: wit-gen glue-gen
 
 # Show all W3C data sources used by the pipeline
 wit-sources:
-    python3 scripts/gen_wit_from_webidl.py --list-sources
+    {{python}} scripts/gen_wit_from_webidl.py --list-sources
 
 # List all target WebIDL specs and their cache status
 wit-list-specs:
-    python3 scripts/fetch_webidl.py --list-specs
+    {{python}} scripts/fetch_webidl.py --list-specs
 
 # Dry-run: show what the pipeline would do without downloading/writing
 wit-dry-run:
-    python3 scripts/gen_wit_from_webidl.py --dry-run
+    {{python}} scripts/gen_wit_from_webidl.py --dry-run
 
 # ============================================================================
 # Browser testing tasks
