@@ -65,14 +65,17 @@ fn main() {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let generated_rs = out_dir.join("browser_glue_bundle.rs");
 
-    // Try to compile runtime.ts with SWC
+    // Try to compile runtime.ts with esbuild.
+    // MUST produce IIFE (not ESM) because the HTML loads it via a classic
+    // <script> tag (no type="module").  ESM import/export statements would
+    // cause "Cannot use import statement outside a module" in that context.
     let bundle_content = if let Some(compiled) = compile_with_swc(&workspace_root) {
         compiled
-    } else if let Ok(src) = std::fs::read_to_string(runtime_dir.join("index.ts")) {
-        // Fallback: use TypeScript source (browser will handle it)
-        src
     } else {
-        // Ultimate fallback: minimal inline implementation
+        // Fallback: minimal inline implementation that is IIFE-safe.
+        // We intentionally do NOT fall back to raw TypeScript source here,
+        // because it contains import/export statements that would fail in a
+        // classic <script> tag.
         generate_minimal_fallback()
     };
 
@@ -95,31 +98,67 @@ fn compile_with_swc(workspace_root: &Path) -> Option<String> {
     let src_file = workspace_root.join("packages/browser-glue/src/runtime/index.ts");
     let out_file = workspace_root.join("packages/browser-glue/dist/runtime.js");
 
-    // Ensure the dist directory exists
     if let Some(parent) = out_file.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
 
-    let output = Command::new("npx")
+    // On Windows, npm ships `npx.cmd` which may not be found via the plain
+    // name.  Probe both `npx` and `npx.cmd`, falling back to the full path
+    // through `npm root -g`.
+    let npx = find_npx();
+
+    let output = Command::new(&npx)
         .args([
             "esbuild",
             &src_file.to_string_lossy(),
             "--bundle",
             &format!("--outfile={}", out_file.to_string_lossy()),
-            "--format=esm",
+            "--format=iife",
             "--platform=browser",
         ])
         .current_dir(workspace_root.join("packages/browser-glue"))
         .output();
 
-    if let Ok(output) = output
-        && output.status.success()
-        && let Ok(content) = std::fs::read_to_string(&out_file)
-    {
-        return Some(content);
+    match output {
+        Ok(output) if output.status.success() => {
+            if let Ok(content) = std::fs::read_to_string(&out_file) {
+                return Some(content);
+            }
+            println!("cargo:warning=esbuild succeeded but output file not readable: {}", out_file.display());
+        }
+        Ok(output) => {
+            println!("cargo:warning=esbuild failed (status={}):", output.status);
+            println!("cargo:warning=  stdout: {}", String::from_utf8_lossy(&output.stdout));
+            println!("cargo:warning=  stderr: {}", String::from_utf8_lossy(&output.stderr));
+        }
+        Err(e) => {
+            println!("cargo:warning=esbuild command '{}' not found: {}", npx, e);
+        }
     }
 
     None
+}
+
+fn find_npx() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        // Try npx.cmd first (npm shim), then plain npx
+        if Command::new("npx.cmd").arg("--version").output().is_ok() {
+            return "npx.cmd".to_string();
+        }
+    }
+    // Fallback: try to locate via npm root
+    if let Ok(output) = Command::new("npm").args(["root", "-g"]).output() {
+        let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        #[cfg(target_os = "windows")]
+        let npx_path = format!("{}\\npx.cmd", npm_root);
+        #[cfg(not(target_os = "windows"))]
+        let npx_path = format!("{}/npx", npm_root);
+        if std::path::Path::new(&npx_path).exists() {
+            return npx_path;
+        }
+    }
+    "npx".to_string()
 }
 
 fn escape_rust_string(s: &str) -> String {
