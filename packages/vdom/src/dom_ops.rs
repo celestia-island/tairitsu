@@ -86,6 +86,11 @@ pub struct DomFuncs {
     pub create_element: unsafe fn(&str) -> u64,
     pub append_child: unsafe fn(u64, u64) -> u64,
     pub remove_child: unsafe fn(u64, u64) -> u64,
+    pub get_computed_style_value: unsafe fn(u64, &str) -> String,
+    pub set_timeout_fn: unsafe fn(Box<dyn FnOnce()>, i32) -> i32,
+    pub clear_timeout_fn: unsafe fn(i32),
+    pub request_animation_frame_fn: unsafe fn(Box<dyn FnMut(f64)>) -> u32,
+    pub cancel_animation_frame_fn: unsafe fn(u32),
 }
 
 // ---------------------------------------------------------------------------
@@ -215,5 +220,35 @@ pub fn append_child(parent: DomHandle, child: DomHandle) {
 pub fn remove_child(parent: DomHandle, child: DomHandle) {
     if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
         let _ = unsafe { (f.remove_child)(parent.get_inner_id(), child.get_inner_id()) };
+    }
+}
+
+pub fn get_computed_style_value(el: DomHandle, property: &str) -> String {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(String::new(), |f| unsafe {
+        (f.get_computed_style_value)(el.get_inner_id(), property)
+    })
+}
+
+pub fn set_timeout(callback: Box<dyn FnOnce()>, ms: i32) -> i32 {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(0, |f| unsafe {
+        (f.set_timeout_fn)(callback, ms)
+    })
+}
+
+pub fn clear_timeout(id: i32) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.clear_timeout_fn)(id) };
+    }
+}
+
+pub fn request_animation_frame(callback: Box<dyn FnMut(f64)>) -> u32 {
+    DOM_FUNCS.lock().unwrap().as_ref().map_or(0, |f| unsafe {
+        (f.request_animation_frame_fn)(callback)
+    })
+}
+
+pub fn cancel_animation_frame(id: u32) {
+    if let Some(f) = DOM_FUNCS.lock().unwrap().as_ref() {
+        unsafe { (f.cancel_animation_frame_fn)(id) };
     }
 }
