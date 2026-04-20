@@ -1619,6 +1619,44 @@ async fn no_cache_headers(
     response
 }
 
+/// Returns true if the path requests a static asset (JS, WASM, CSS, etc.)
+/// that should return 404 when missing, NOT the SPA fallback HTML.
+#[cfg(feature = "dev-server")]
+fn is_asset_request(path: &str) -> bool {
+    const ASSET_EXTENSIONS: &[&str] = &[
+        ".js", ".mjs", ".cjs", ".wasm", ".css", ".map", ".svg", ".png",
+        ".jpg", ".jpeg", ".gif", ".ico", ".webp", ".woff", ".woff2",
+        ".ttf", ".otf", ".eot",
+    ];
+    ASSET_EXTENSIONS.iter().any(|ext| path.ends_with(ext))
+}
+
+/// Middleware that returns a proper 404 for asset file requests (.js, .wasm, etc.)
+/// when the file does not exist on disk.  Without this, the SPA fallback handler
+/// would serve index.html (text/html) for missing JS files, causing:
+///   "Failed to load module script: Expected a JavaScript module but got text/html"
+#[cfg(feature = "dev-server")]
+async fn reject_missing_assets(
+    axum::extract::State(dist): axum::extract::State<std::sync::Arc<std::path::PathBuf>>,
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+    let path = request.uri().path();
+    if is_asset_request(path) && request.method() == axum::http::Method::GET {
+        let clean = path.trim_start_matches('/');
+        let file_path = dist.join(clean);
+        if !file_path.exists() {
+            return (
+                axum::http::StatusCode::NOT_FOUND,
+                format!("404 Not Found: {}", path),
+            )
+                .into_response();
+        }
+    }
+    next.run(request).await
+}
+
 #[cfg(feature = "dev-server")]
 pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
     use axum::{Router, middleware, response::Html, routing::get};
@@ -1662,7 +1700,6 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
 
     if crate::daemon::is_daemon() {
         let _ = crate::daemon::signal_ready();
-        #[cfg(unix)]
         crate::daemon::daemonize_self().map_err(|e| {
             crate::TairitsuPackagerError::BuildError(format!("daemonize failed: {}", e))
         })?;
@@ -1721,6 +1758,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         }
     }));
     let reload_tx_for_route = reload_tx.clone();
+    let dist_state = std::sync::Arc::new(dist_dir.clone());
     let app = Router::new()
         .route("/__tairitsu_reload", get(move || {
             let tx = reload_tx_for_route.clone();
@@ -1761,6 +1799,10 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
             }),
         )
         .fallback_service(ServeDir::new(dist_dir).fallback(spa_fallback))
+        .layer(middleware::from_fn_with_state(
+            dist_state,
+            reject_missing_assets,
+        ))
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;

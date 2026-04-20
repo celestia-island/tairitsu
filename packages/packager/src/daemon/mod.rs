@@ -173,6 +173,34 @@ pub fn daemonize_self() -> std::io::Result<()> {
     Ok(())
 }
 
+#[cfg(windows)]
+pub fn daemonize_self() -> std::io::Result<()> {
+    use std::fs::OpenOptions;
+    use std::os::windows::io::IntoRawHandle;
+
+    let stdout_path = daemon_log_path().with_extension("stdout");
+    let stderr_path = daemon_log_path().with_extension("stderr");
+
+    let stdout_file = OpenOptions::new().create(true).append(true).open(&stdout_path)?;
+    let stderr_file = OpenOptions::new().create(true).append(true).open(&stderr_path)?;
+
+    unsafe {
+        use windows_sys::Win32::System::Console::{SetStdHandle, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+
+        let stdout_handle = stdout_file.into_raw_handle();
+        let stderr_handle = stderr_file.into_raw_handle();
+
+        if SetStdHandle(STD_OUTPUT_HANDLE, stdout_handle) == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        if SetStdHandle(STD_ERROR_HANDLE, stderr_handle) == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+    }
+
+    Ok(())
+}
+
 /// Write daemon status to log file
 pub fn write_daemon_status(status: &DaemonStatus) -> std::io::Result<()> {
     let log_path = daemon_log_path();
@@ -304,35 +332,49 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        Command::new(&exe)
+        let child = Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
             .args(&args)
             .spawn()?;
+
+        // Child::drop() would wait for the daemon to exit; detach instead.
+        std::mem::forget(child);
 
         Ok(())
     }
 
     #[cfg(windows)]
     {
+        use std::os::windows::process::CommandExt;
+
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
+
         let exe = env::current_exe()?;
         let args: Vec<String> = args
             .into_iter()
-            .skip(1) // Skip argv[0] which is the program name
+            .skip(1)
             .map(|s| s.as_ref().to_string_lossy().into_owned())
             .collect();
 
-        // Ensure parent directory exists for log files
         let log_path = daemon_log_path();
         if let Some(parent) = log_path.parent() {
             fs::create_dir_all(parent)?;
         }
 
-        // On Windows, use START to create a detached process
-        let _ = Command::new("cmd")
-            .args(&["/C", "start", "/B", &exe.to_string_lossy()])
-            .args(&args)
+        let child = Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
+            .args(&args)
+            .creation_flags(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .stdin(std::process::Stdio::null())
             .spawn()?;
+
+        // On Windows, Child::drop() calls WaitForSingleObject which would
+        // block the parent until the daemon exits (forever).  Leak the
+        // handle intentionally so the parent returns immediately.
+        std::mem::forget(child);
 
         Ok(())
     }
