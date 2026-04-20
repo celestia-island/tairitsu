@@ -1476,6 +1476,37 @@ fn generate_component_html_with_output_dir(
             }}
             connect();
         }})();
+
+        // Scrollbar auto-retract: track expands to 8px on scroll,
+        // retracts to 4px with CSS transition after ~1s of inactivity.
+        (function initScrollbarAutoRetract() {{
+            var RETRACT_DELAY = 1000;
+            var timers = new WeakMap();
+            function setupTrack(contentEl) {{
+                var wrapper = contentEl.closest('.custom-scrollbar-wrapper');
+                if (!wrapper) return;
+                var track = wrapper.querySelector('.custom-scrollbar-track');
+                if (!track) return;
+                if (timers.has(track)) return;
+                timers.set(track, null);
+                contentEl.addEventListener('scroll', function() {{
+                    track.style.width = '8px';
+                    track.style.transition = 'none';
+                    var t = timers.get(track);
+                    if (t) clearTimeout(t);
+                    timers.set(track, setTimeout(function() {{
+                        track.style.transition = 'width 300ms cubic-bezier(0.25, 0.1, 0.25, 1)';
+                        track.style.width = '4px';
+                        timers.set(track, null);
+                    }}, RETRACT_DELAY));
+                }}, {{ passive: true }});
+            }}
+            function initAll() {{
+                document.querySelectorAll('.custom-scrollbar-content').forEach(setupTrack);
+            }}
+            initAll();
+            new MutationObserver(initAll).observe(document.body, {{ childList: true, subtree: true }});
+        }})();
     </script>
 </body>
 </html>"#,

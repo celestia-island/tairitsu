@@ -867,6 +867,36 @@ pub mod wasm_impl {
                 remove_child: |parent, child| {
                     bindings::tairitsu_browser::full::node::remove_child(parent, child)
                 },
+                get_computed_style_value: |el, prop| {
+                    let style = bindings::tairitsu_browser::full::window::get_computed_style(el, None);
+                    bindings::tairitsu_browser::full::css_style_declaration::get_property_value(style, prop)
+                },
+                set_timeout_fn: |callback: Box<dyn FnOnce()>, ms: i32| -> i32 {
+                    let callback_id = next_callback_id() as i32;
+                    TIMEOUT_CALLBACKS.with(|m| {
+                        m.borrow_mut().insert(callback_id as u64, Some(callback));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::set_timeout(callback_id as u64, ms) as i32
+                },
+                clear_timeout_fn: |id: i32| {
+                    TIMEOUT_CALLBACKS.with(|m| {
+                        m.borrow_mut().remove(&(id as u64));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::clear_timeout(id);
+                },
+                request_animation_frame_fn: |callback: Box<dyn FnMut(f64)>| -> u32 {
+                    let callback_id = next_callback_id();
+                    ANIMATION_CALLBACKS.with(|m| {
+                        m.borrow_mut().insert(callback_id, Some(callback));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::request_animation_frame(callback_id) as u32
+                },
+                cancel_animation_frame_fn: |id: u32| {
+                    ANIMATION_CALLBACKS.with(|m| {
+                        m.borrow_mut().remove(&(id as u64));
+                    });
+                    bindings::tairitsu_browser::full::platform_helpers::cancel_animation_frame(id);
+                },
             });
         }
 
