@@ -40,23 +40,9 @@ install-tools:
     python3 scripts/download_wasi_adapters.py
 
 # Install tairitsu-packager CLI binary (tairitsu) to ~/.cargo/bin
-[unix]
 install-packager:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Installing tairitsu CLI..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     cargo build --release --package tairitsu-packager
-    cp target/release/tairitsu "${CARGO_HOME:-$HOME/.cargo}/bin/"
-    @echo "✅ Installed 'tairitsu' CLI to ${CARGO_HOME:-$HOME/.cargo}/bin/"
-
-[windows]
-install-packager:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Installing tairitsu CLI..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    cargo build --release --package tairitsu-packager
-    $binDir = if ($env:CARGO_HOME) { Join-Path $env:CARGO_HOME "bin" } else { Join-Path $env:USERPROFILE ".cargo\bin" }; if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }; Copy-Item "target\release\tairitsu.exe" (Join-Path $binDir "tairitsu.exe") -Force
-    @echo "✅ Installed 'tairitsu' CLI to $binDir"
+    python3 scripts/install_packager.py
 
 # Development environment setup (install tools and build)
 setup: install-tools init
@@ -66,31 +52,9 @@ setup: install-tools init
 # JS / Node dependency initialization
 # ============================================================================
 
-# -- Unix ---------------------------------------------------------------------
-# Detect pnpm > yarn > npm, install packages/browser-glue JS deps.
-# Skips when node_modules is already populated (fast, idempotent).
-[unix]
+# Install Node.js dependencies for packages/browser-glue (auto-detects pnpm/yarn/npm)
 init:
-    #!/usr/bin/env sh
-    set -e
-    GLUE_DIR="packages/browser-glue"
-    NM_DIR="$GLUE_DIR/node_modules"
-    if [ -d "$NM_DIR" ] && [ "$(ls -A "$NM_DIR" 2>/dev/null)" != "" ]; then
-        printf "  ✓  Node deps ready  (%s)\n" "$NM_DIR"
-    else
-        if   command -v pnpm >/dev/null 2>&1; then PM=pnpm
-        elif command -v yarn >/dev/null 2>&1; then PM=yarn
-        elif command -v npm  >/dev/null 2>&1; then PM=npm
-        else printf "  ✗  No package manager found (install pnpm, yarn, or npm)\n" >&2; exit 1; fi
-        printf "  →  %s install  (%s)\n" "$PM" "$GLUE_DIR"
-        cd "$GLUE_DIR" && "$PM" install
-        printf "  ✓  Node deps installed via %s\n" "$PM"
-    fi
-
-# -- Windows (PowerShell / pwsh) -----------------------------------------------
-[windows]
-init:
-    @$glue = "packages\browser-glue"; $nm = Join-Path $glue "node_modules"; $ready = (Test-Path $nm) -and ((Get-ChildItem $nm -ErrorAction SilentlyContinue | Select-Object -First 1) -ne $null); if ($ready) { Write-Host "  ✓  Node deps ready  ($nm)" } else { $pm = if (Get-Command pnpm -ErrorAction SilentlyContinue) { "pnpm" } elseif (Get-Command yarn -ErrorAction SilentlyContinue) { "yarn" } elseif (Get-Command npm -ErrorAction SilentlyContinue) { "npm" } else { Write-Error "No package manager found (install pnpm, yarn, or npm)"; exit 1 }; Write-Host "  →  $pm install  ($glue)"; Push-Location $glue; try { & $pm install } finally { Pop-Location }; Write-Host "  ✓  Node deps installed via $pm" }
+    python3 scripts/init_browser_glue.py
 
 # ============================================================================
 # Cleanup tasks
