@@ -483,6 +483,7 @@ npm-list-wasm:
 npm-build-all: npm-build-glue
     cd packages/npm/runtime && npm run build
     cd packages/npm/glue-core && npm run build
+    {{python}} scripts/build_wasm_packages.py
 
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
 publish: (publish-pkg "packages/browser-glue") (publish-pkg "packages/npm/runtime")
@@ -506,6 +507,7 @@ publish-live:
     cd packages/npm/glue-core && npm run build && npm publish --access public
     cd packages/browser-glue && npm run build:production && npm publish --access public
     @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
+    @for dir in packages/npm/*-wasm/; do cd "$$dir" && npm publish --access public && cd -; done
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "All npm packages published (LIVE)!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

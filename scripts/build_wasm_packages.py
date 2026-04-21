@@ -126,7 +126,7 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
 
     # Step 3: jco transpile
     print(f"    [3/4] jco transpile ...")
-    jco = find_tool("jco", ["npx.cmd jco", "npx jco"])
+    jco = find_tool("jco", ["npx.cmd @bytecodealliance/jco", "npx @bytecodealliance/jco"])
     wrapper_dir = dist_dir / "wrapper"
     wrapper_dir.mkdir(exist_ok=True)
 
@@ -158,6 +158,8 @@ def build_wasm_crate(crate_name: str, crate_info: dict):
         "files": [
             f"dist/{wasm_stem}.wasm",
             "dist/wrapper/**/*.js",
+            "dist/wrapper/**/*.d.ts",
+            "dist/wrapper/**/*.wasm",
             "README.md",
         ],
         "repository": {
