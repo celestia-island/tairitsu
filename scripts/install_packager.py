@@ -6,7 +6,7 @@ Copies the compiled tairitsu (or tairitsu.exe on Windows) from
 target/release/ into the user's Cargo bin directory.
 
 Usage:
-    python3 scripts/install_packager.py [--source <path>]
+    python3 scripts/install_packager.py [--source <path>] [--quick]
 """
 
 import os
@@ -23,10 +23,20 @@ def main():
     exe_name = "tairitsu.exe" if is_windows else "tairitsu"
 
     source = project_root / "target" / "release" / exe_name
+    quick = False
 
-    for i, arg in enumerate(sys.argv):
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
         if arg == "--source" and i + 1 < len(sys.argv):
             source = Path(sys.argv[i + 1])
+            i += 2
+            continue
+        if arg == "--quick":
+            quick = True
+            i += 1
+            continue
+        i += 1
 
     if not source.exists():
         print(f"[ERROR] Binary not found: {source}")
@@ -45,7 +55,20 @@ def main():
     bin_dir.mkdir(parents=True, exist_ok=True)
     dest = bin_dir / exe_name
 
+    if quick:
+        stamp = project_root / "target" / ".tairitsu-install-stamp"
+        if stamp.exists() and dest.exists():
+            stamp_mtime = stamp.stat().st_mtime
+            src_mtime = source.stat().st_mtime
+            if stamp_mtime >= src_mtime:
+                sys.exit(0)
+        if not dest.exists():
+            print("[ERROR] tairitsu CLI not installed. Run without --quick first.")
+            sys.exit(1)
+
     shutil.copy2(str(source), str(dest))
+    stamp = project_root / "target" / ".tairitsu-install-stamp"
+    stamp.write_text(str(source.resolve()))
     print(f"[OK] Installed '{exe_name}' CLI to {bin_dir}")
 
 
