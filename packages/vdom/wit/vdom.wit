@@ -156,6 +156,93 @@ interface types {
         elapsed-time: f64,
         iteration: f64,
     }
+
+    record generic-event {
+        event-type: string,
+        target: option<u64>,
+        current-target: option<u64>,
+        trust: bool,
+    }
+
+    variant key {
+        character(string),
+        backspace,
+        tab,
+        enter,
+        shift,
+        control,
+        alt,
+        pause,
+        caps-lock,
+        escape,
+        space,
+        page-up,
+        page-down,
+        end,
+        home,
+        arrow-left,
+        arrow-up,
+        arrow-right,
+        arrow-down,
+        insert,
+        delete,
+        meta,
+        f1,
+        f2,
+        f3,
+        f4,
+        f5,
+        f6,
+        f7,
+        f8,
+        f9,
+        f10,
+        f11,
+        f12,
+        other(string),
+    }
+
+    record file-data {
+        name: string,
+        mime-type: string,
+        size: u64,
+    }
+
+    record form-data {
+        values: list<tuple<string, string>>,
+        files: list<file-data>,
+    }
+}
+
+interface svg {
+    sanitize-svg: func(content: string) -> string;
+}
+
+interface portal-types {
+    enum fixed-position {
+        center,
+        top,
+        top-left,
+        top-right,
+        bottom,
+        bottom-left,
+        bottom-right,
+        left,
+        right,
+    }
+
+    variant portal-position {
+        follow-trigger,
+        fixed(fixed-position),
+        custom(tuple<s32, s32>),
+    }
+
+    enum portal-mask-mode {
+        none,
+        transparent,
+        opaque,
+        blur,
+    }
 }
 
 interface version {
@@ -165,4 +252,6 @@ interface version {
 world vdom {
     export version;
     export types;
+    export svg;
+    export portal-types;
 }

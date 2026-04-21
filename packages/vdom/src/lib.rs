@@ -53,5 +53,11 @@ mod wasm_export {
         }
     }
 
+    impl exports::tairitsu::vdom::svg::Guest for VdomExports {
+        fn sanitize_svg(content: String) -> String {
+            crate::svg::SafeSvg::new(&content).into_content()
+        }
+    }
+
     export!(VdomExports);
 }
