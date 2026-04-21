@@ -8,6 +8,8 @@
   "files": [
     "dist/tairitsu_vdom.wasm",
     "dist/wrapper/**/*.js",
+    "dist/wrapper/**/*.d.ts",
+    "dist/wrapper/**/*.wasm",
     "README.md"
   ],
   "repository": {

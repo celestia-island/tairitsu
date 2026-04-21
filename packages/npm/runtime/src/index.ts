@@ -3,9 +3,14 @@ export interface BootOptions {
   wrapperUrl?: string;
   appRootId?: string;
   glueModules?: string[];
+  components?: Record<string, string>;
+  glueImports?: Record<string, Record<string, unknown>>;
 }
 
+type WasmExports = Record<string, unknown>;
 type WasmImports = Record<string, Record<string, unknown>>;
+
+const componentCache = new Map<string, unknown>();
 
 export async function boot(options: BootOptions): Promise<unknown> {
   const {
@@ -16,6 +21,10 @@ export async function boot(options: BootOptions): Promise<unknown> {
 
   document.getElementById(appRootId);
 
+  if (options.components) {
+    await preloadComponents(options.components);
+  }
+
   let result: unknown;
 
   try {
@@ -23,7 +32,7 @@ export async function boot(options: BootOptions): Promise<unknown> {
       const mod = await import(wrapperUrl);
       const instantiate = (mod as any).instantiate || (mod as any).default || (mod as any).init;
       if (typeof instantiate === "function") {
-        result = await instantiate(buildImports());
+        result = await instantiate(buildImports(options.glueImports));
       } else {
         result = mod;
       }
@@ -44,10 +53,10 @@ export async function boot(options: BootOptions): Promise<unknown> {
       if (isComponent && typeof (WebAssembly as any).Component === "function") {
         const Component = (WebAssembly as any).Component;
         const component = new Component(bytes);
-        result = await (WebAssembly as any).instantiate(component, buildImports());
+        result = await (WebAssembly as any).instantiate(component, buildImports(options.glueImports));
       } else {
         const module = await WebAssembly.compile(bytes);
-        const instantiated = await WebAssembly.instantiate(module, buildImports() as WebAssembly.Imports);
+        const instantiated = await WebAssembly.instantiate(module, buildImports(options.glueImports) as WebAssembly.Imports);
         result = instantiated;
       }
     }
@@ -66,7 +75,41 @@ export async function boot(options: BootOptions): Promise<unknown> {
   return result;
 }
 
-function buildImports(): WasmImports {
+export async function loadComponent(name: string, wrapperUrl: string, glueImports?: Record<string, Record<string, unknown>>): Promise<WasmExports> {
+  if (componentCache.has(name)) {
+    return componentCache.get(name) as WasmExports;
+  }
+
+  const mod = await import(wrapperUrl);
+  const instantiate = (mod as any).instantiate || (mod as any).default || (mod as any).init;
+
+  if (typeof instantiate !== "function") {
+    throw new Error(`[tairitsu] Component "${name}" has no instantiate function`);
+  }
+
+  const result = await instantiate(buildImports(glueImports));
+  componentCache.set(name, result);
+  return result as WasmExports;
+}
+
+export async function loadComponentFromCdn(name: string, version: string): Promise<WasmExports> {
+  const scope = name.startsWith("@celestia/") ? name : `@celestia/${name}`;
+  const wrapperUrl = `https://esm.sh/${scope}@${version}`;
+  return loadComponent(name, wrapperUrl);
+}
+
+async function preloadComponents(components: Record<string, string>): Promise<void> {
+  const entries = Object.entries(components);
+  await Promise.all(
+    entries.map(([name, url]) =>
+      loadComponent(name, url).catch((err) => {
+        console.warn(`[tairitsu] Failed to preload component "${name}":`, err);
+      })
+    )
+  );
+}
+
+function buildImports(extraImports?: Record<string, Record<string, unknown>>): WasmImports {
   const imports: WasmImports = {};
   const g = globalThis as any;
   if (g.__TAIRITSU_GLUE && g.__TAIRITSU_GLUE.INTERFACES) {
@@ -76,6 +119,17 @@ function buildImports(): WasmImports {
       imports[fullName] = exp;
     }
   }
+
+  if (extraImports) {
+    for (const [key, value] of Object.entries(extraImports)) {
+      if (!imports[key]) {
+        imports[key] = value;
+      } else {
+        Object.assign(imports[key], value);
+      }
+    }
+  }
+
   return imports;
 }
 
