@@ -37,3 +37,21 @@ pub use runtime::{
 pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
 pub use vnode::{Classes, IntoAttrValue, Style, VElement, VNode, VText, empty_vnode};
+
+#[cfg(target_family = "wasm")]
+mod wasm_export {
+    wit_bindgen::generate!({
+        path: "wit",
+        world: "vdom",
+    });
+
+    pub struct VdomExports;
+
+    impl exports::tairitsu::vdom::version::Guest for VdomExports {
+        fn get_version() -> String {
+            env!("CARGO_PKG_VERSION").to_string()
+        }
+    }
+
+    export!(VdomExports);
+}

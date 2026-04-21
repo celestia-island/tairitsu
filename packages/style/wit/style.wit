@@ -1,0 +1,33 @@
+package tairitsu:style;
+
+interface types {
+    enum display-value { flex, grid, block, inline, inline-flex, inline-grid, none }
+    enum position-value { static-pos, relative, absolute, fixed, sticky }
+    enum flex-direction-value { row, column, row-reverse, column-reverse }
+    enum flex-wrap-value { nowrap, wrap, wrap-reverse }
+    enum justify-content-value { center, space-between, space-evenly, flex-start, flex-end }
+    enum align-items-value { center, stretch, baseline, flex-start, flex-end }
+    enum text-align-value { left, right, center, justify, start, end }
+    enum overflow-value { visible, hidden, scroll, auto, clip }
+    enum cursor-value { pointer, grab, not-allowed, help, text, move }
+    enum length-unit { px, percent, em, rem, vw, vh, vmin, vmax }
+
+    record style-declaration {
+        property: string,
+        value: string,
+    }
+}
+
+interface builder {
+    build-style-string: func(declarations: list<tuple<string, string>>) -> string;
+}
+
+interface version {
+    get-version: func() -> string;
+}
+
+world style {
+    export version;
+    export types;
+    export builder;
+}

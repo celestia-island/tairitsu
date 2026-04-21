@@ -6,6 +6,9 @@ authors.workspace = true
 license.workspace = true
 edition.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 # Basic language and tools
 anyhow = "^1"
@@ -15,6 +18,10 @@ serde = { version = "^1", features = ["derive"] }
 
 # Logging and tracing
 tracing = "^0.1"
+
+# WASM Component Model bindings (wasm32 target only)
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.50", features = ["macros"] }
 
 [dev-dependencies]
 tokio = { workspace = true, default-features = false, features = [
