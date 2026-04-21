@@ -280,7 +280,7 @@ pub fn check_process_exists(pid: u32) -> bool {
     }
 }
 
-/// Kill the daemon process
+/// Kill the daemon process and wait for it to exit
 pub fn kill_daemon() -> std::io::Result<bool> {
     if let Ok(pid) = read_pid()
         && pid > 0
@@ -299,6 +299,19 @@ pub fn kill_daemon() -> std::io::Result<bool> {
             let _ = Command::new("taskkill")
                 .args(&["/PID", &pid.to_string(), "/F"])
                 .output();
+        }
+
+        // Wait for the process to actually exit (up to 5s)
+        let start = std::time::Instant::now();
+        while start.elapsed() < std::time::Duration::from_secs(5) {
+            if !check_process_exists(pid) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+
+        if check_process_exists(pid) {
+            eprintln!("Warning: daemon process {} did not exit within 5s", pid);
         }
 
         let _ = fs::remove_file(pid_file_path());

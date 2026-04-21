@@ -299,20 +299,24 @@ pub async fn run() -> crate::Result<()> {
             if cli.force {
                 // Force mode: kill existing and start new
                 if daemon::is_daemon_running() {
-                    println!("Restarting daemon...");
+                    println!("Stopping existing daemon...");
                     daemon::kill_daemon()?;
+                    println!("Daemon stopped.");
                 }
+                println!("Starting new daemon...");
                 daemon::fork_daemon()?;
-                match daemon::wait_for_child_signal(300) {
+                match daemon::wait_for_child_signal(120) {
                     Ok(true) => {
                         println!("Daemon started.");
                     }
                     Ok(false) => {
+                        eprintln!("Daemon failed to start. Check logs above for details.");
                         std::process::exit(1);
                     }
                     Err(e) => {
-                        eprintln!("Warning: {}", e);
-                        eprintln!("Daemon may still be starting. Use 'tairitsu dev --daemon' to check status.");
+                        eprintln!("Daemon startup timed out: {}", e);
+                        eprintln!("Check logs with: tairitsu dev --daemon");
+                        std::process::exit(1);
                     }
                 }
                 return Ok(());
@@ -330,17 +334,19 @@ pub async fn run() -> crate::Result<()> {
 
             // Start new daemon
             daemon::fork_daemon()?;
-            match daemon::wait_for_child_signal(300) {
+            match daemon::wait_for_child_signal(120) {
                 Ok(true) => {
                     println!("Daemon started in background.");
                     println!("Use 'tairitsu dev --daemon' to check status.");
                 }
                 Ok(false) => {
+                    eprintln!("Daemon failed to start. Check logs above for details.");
                     std::process::exit(1);
                 }
                 Err(e) => {
-                    eprintln!("Warning: {}", e);
-                    eprintln!("Daemon may still be starting. Use 'tairitsu dev --daemon' to check status.");
+                    eprintln!("Daemon startup timed out: {}", e);
+                    eprintln!("Check logs with: tairitsu dev --daemon");
+                    std::process::exit(1);
                 }
             }
             return Ok(());
