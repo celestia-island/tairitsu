@@ -1,0 +1,168 @@
+package tairitsu:vdom;
+
+interface types {
+    record dom-rect {
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+    }
+
+    record v-text {
+        text: string,
+    }
+
+    record style {
+        static-styles: string,
+        css-variables: list<tuple<string, string>>,
+    }
+
+    record classes {
+        static-classes: string,
+    }
+
+    enum pointer-type {
+        mouse,
+        pen,
+        touch,
+    }
+
+    record mouse-event {
+        client-x: s32,
+        client-y: s32,
+        screen-x: s32,
+        screen-y: s32,
+        offset-x: s32,
+        offset-y: s32,
+        page-x: s32,
+        page-y: s32,
+        movement-x: s32,
+        movement-y: s32,
+        button: s16,
+        buttons: u16,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    record keyboard-event {
+        key: string,
+        code: string,
+        key-code: u32,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+        repeat: bool,
+    }
+
+    record focus-event {
+        related-target: option<u64>,
+    }
+
+    record input-event {
+        data: option<string>,
+        input-type: option<string>,
+    }
+
+    record change-event {
+        value: string,
+    }
+
+    record wheel-event {
+        delta-x: f64,
+        delta-y: f64,
+        delta-z: f64,
+        delta-mode: u32,
+        client-x: s32,
+        client-y: s32,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    record touch-point {
+        identifier: s32,
+        client-x: s32,
+        client-y: s32,
+        screen-x: s32,
+        screen-y: s32,
+        page-x: s32,
+        page-y: s32,
+        force: option<f64>,
+        radius-x: option<f64>,
+        radius-y: option<f64>,
+        rotation-angle: option<f64>,
+    }
+
+    record touch-event {
+        touches: list<touch-point>,
+        changed-touches: list<touch-point>,
+        target-touches: list<touch-point>,
+        timestamp: f64,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    record pointer-event {
+        pointer-id: s32,
+        pointer-type: pointer-type,
+        is-primary: bool,
+        width: f64,
+        height: f64,
+        pressure: f32,
+        tilt-x: s32,
+        tilt-y: s32,
+        twist: s32,
+        client-x: s32,
+        client-y: s32,
+        screen-x: s32,
+        screen-y: s32,
+        page-x: s32,
+        page-y: s32,
+        button: s16,
+        buttons: u16,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    record drag-event {
+        data-transfer: option<string>,
+        drop-effect: option<string>,
+        effect-allowed: option<string>,
+        client-x: s32,
+        client-y: s32,
+        ctrl-key: bool,
+        shift-key: bool,
+        alt-key: bool,
+        meta-key: bool,
+    }
+
+    record transition-event {
+        property-name: string,
+        elapsed-time: f64,
+        pseudo-element: string,
+    }
+
+    record animation-event {
+        animation-name: string,
+        pseudo-element: string,
+        elapsed-time: f64,
+        iteration: f64,
+    }
+}
+
+interface version {
+    get-version: func() -> string;
+}
+
+world vdom {
+    export version;
+    export types;
+}

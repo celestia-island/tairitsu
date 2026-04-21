@@ -1048,3 +1048,31 @@ mod tests {
         }
     }
 }
+
+#[cfg(target_family = "wasm")]
+mod wasm_export {
+    wit_bindgen::generate!({
+        path: "wit",
+        world: "style",
+    });
+
+    pub struct StyleExports;
+
+    impl exports::tairitsu::style::version::Guest for StyleExports {
+        fn get_version() -> String {
+            env!("CARGO_PKG_VERSION").to_string()
+        }
+    }
+
+    impl exports::tairitsu::style::builder::Guest for StyleExports {
+        fn build_style_string(declarations: Vec<(String, String)>) -> String {
+            let mut builder = crate::StyleStringBuilder::new();
+            for (prop, val) in declarations {
+                builder = builder.add_custom(&prop, &val);
+            }
+            builder.build()
+        }
+    }
+
+    export!(StyleExports);
+}
