@@ -26,10 +26,14 @@ yarn-error.log*
 
 # Build outputs
 dist/
-*.js
 *.js.map
 *.d.ts.map
 .cache/
+
+# But keep npm package source and config files
+!packages/npm/**/package.json
+!packages/npm/**/src/*.ts
+!packages/npm/**/*.ts
 
 # Static assets policy: ignore public folders and compiled CSS, keep SCSS in git
 **/public/
@@ -43,6 +47,8 @@ Thumbs.db
 # MCP server configs (local tooling)
 .mcp.json
 package.json
+!packages/npm/*/package.json
+!packages/browser-glue/package.json
 screenshot-test.png
 
 # W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
