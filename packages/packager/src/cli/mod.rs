@@ -347,6 +347,20 @@ pub async fn run() -> crate::Result<()> {
         }
     }
 
+    // Early check: if a daemon is already running and the user is trying
+    // to start a foreground dev server, warn before cargo builds anything.
+    if !cli.daemon && !cli.shutdown && !cli.force && daemon::is_daemon_running() {
+        let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
+        if is_dev_command {
+            eprintln!("Error: A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
+            eprintln!();
+            eprintln!("  Use --daemon   to attach to the running daemon");
+            eprintln!("  Use --shutdown to stop it first");
+            eprintln!("  Use --force    to restart the daemon");
+            std::process::exit(1);
+        }
+    }
+
     // Setup logging
     let log_level = match cli.verbose {
         0 => tracing::Level::INFO,

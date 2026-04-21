@@ -326,12 +326,14 @@ dev *FLAGS: init
     @echo "Starting Tairitsu dev server  (watch mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    @cd examples/website && cargo run --package tairitsu-packager --features dev-server -- dev --watch {{FLAGS}}
+    @{{python}} scripts/install_packager.py --quick || (echo "Building tairitsu CLI..." && cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
+    tairitsu --manifest-path examples/website dev --watch {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
     @echo "Building website demo with tairitsu-packager..."
-    cd examples/website && cargo run --package tairitsu-packager -- build --release
+    @{{python}} scripts/install_packager.py --quick || (cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
+    tairitsu --manifest-path examples/website build --release
     @echo "Building CDN modular demo..."
     {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist
 
