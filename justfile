@@ -462,6 +462,40 @@ doc-open: doc
     cargo doc --no-deps --all-features --open
 
 # ============================================================================
+# NPM publishing
+# ============================================================================
+
+# Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
+publish: (publish-pkg "packages/browser-glue") (publish-pkg "packages/npm/runtime")
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ All npm packages published!"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Publish a single npm package (dry-run by default)
+publish-pkg dir:
+    @echo "Publishing {{dir}}..."
+    @if echo "{{dir}}" | grep -q "runtime"; then cd {{dir}} && npm run build; fi
+    npm publish --access public --dry-run {{dir}}
+
+# Publish for real (not dry-run) — requires NPM_TOKEN
+publish-live:
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "Publishing all npm packages (LIVE)..."
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
+    npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+    cd packages/browser-glue && npm run build && npm publish --access public
+    cd packages/npm/runtime && npm run build && npm publish --access public
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    @echo "✅ All npm packages published (LIVE)!"
+    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Build all npm packages locally
+npm-build:
+    npm run build -w @celestia/tairitsu-browser-glue || (cd packages/browser-glue && npm run build)
+    npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/runtime && npm run build)
+
+# ============================================================================
 # Utilities
 # ============================================================================
 

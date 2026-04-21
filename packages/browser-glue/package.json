@@ -1,12 +1,27 @@
 {
-  "name": "@tairitsu/browser-glue",
+  "name": "@celestia/tairitsu-browser-glue",
   "version": "0.1.0",
   "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
   "license": "MIT OR Apache-2.0",
   "type": "module",
-  "sideEffects": ["src/runtime/**/*.ts", "src/glue/**/*.ts"],
+  "sideEffects": ["src/runtime/**/*.ts", "dist/runtime.js"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/runtime.js",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-org/tairitsu.git",
+    "directory": "packages/browser-glue"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
