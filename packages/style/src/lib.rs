@@ -1072,6 +1072,58 @@ mod wasm_export {
             }
             builder.build()
         }
+
+        fn css_property_to_string(name: String) -> String {
+            match crate::Property::from(name.as_str()) {
+                crate::Property::Known(p) => p.as_str().to_string(),
+                crate::Property::Custom(s) => s,
+            }
+        }
+
+        fn css_length_to_string(value: f64, unit: String) -> String {
+            use crate::LengthUnit;
+            let u = match unit.as_str() {
+                "%" => "%",
+                s => LengthUnit::from_str(s).map_or(s, |u| u.as_str()),
+            };
+            format!("{}{}", value, u)
+        }
+    }
+
+    impl exports::tairitsu::style::utility::Guest for StyleExports {
+        fn generate_utility_css(class_name: String) -> Option<String> {
+            crate::create_default_registry().generate_css(&class_name)
+        }
+
+        fn generate_stylesheet(class_names: Vec<String>) -> String {
+            let mut builder = crate::ClassesBuilder::new();
+            for name in &class_names {
+                builder = builder.add_utility(name);
+            }
+            builder.generate_stylesheet()
+        }
+
+        fn parse_utility_base(class_name: String) -> String {
+            crate::ParsedUtility::parse(&class_name).base
+        }
+    }
+
+    impl exports::tairitsu::style::classes::Guest for StyleExports {
+        fn build_classes(classes: Vec<String>) -> String {
+            let mut builder = crate::ClassesBuilder::new();
+            for c in &classes {
+                builder = builder.add(c);
+            }
+            builder.build()
+        }
+
+        fn build_classes_conditional(classes: Vec<(String, bool)>) -> String {
+            let mut builder = crate::ClassesBuilder::new();
+            for (c, cond) in &classes {
+                builder = builder.add_if(c, *cond);
+            }
+            builder.build()
+        }
     }
 
     export!(StyleExports);

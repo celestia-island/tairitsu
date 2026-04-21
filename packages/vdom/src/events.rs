@@ -56,6 +56,14 @@ impl EventWitHandle {
     }
 }
 
+#[cfg(all(not(target_arch = "wasm32"), not(feature = "test")))]
+#[unsafe(no_mangle)]
+pub extern "C" fn tairitsu_prevent_default(_event_handle: u64) {}
+
+#[cfg(all(not(target_arch = "wasm32"), not(feature = "test")))]
+#[unsafe(no_mangle)]
+pub extern "C" fn tairitsu_stop_propagation(_event_handle: u64) {}
+
 impl Default for EventWitHandle {
     fn default() -> Self {
         Self::placeholder()
