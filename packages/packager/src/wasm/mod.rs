@@ -1672,6 +1672,39 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     println!("{}", divider);
     println!();
 
+    if !crate::daemon::is_daemon() && crate::daemon::is_daemon_running() {
+        let pid = crate::daemon::read_pid().unwrap_or(0);
+        eprintln!("  ⚠  A tairitsu daemon is already running (PID {}).", pid);
+        eprintln!("     Use `tairitsu dev --daemon` to attach, or `tairitsu dev --shutdown` to stop it.");
+        eprintln!();
+    }
+
+    // Pre-check: probe the preferred port before building anything.
+    if !crate::daemon::is_daemon() {
+        let probe = std::net::TcpListener::bind(("127.0.0.1", port));
+        if let Err(ref err) = probe {
+            if err.kind() == std::io::ErrorKind::AddrInUse {
+                if crate::daemon::is_daemon_running() {
+                    let pid = crate::daemon::read_pid().unwrap_or(0);
+                    return Err(crate::TairitsuPackagerError::BuildError(format!(
+                        "Port {} is already in use by tairitsu daemon (PID {}).\n  \
+                         Use `tairitsu dev --daemon` to attach to the running daemon,\n  \
+                         or `tairitsu dev --shutdown` to stop it first.",
+                        port, pid
+                    )));
+                } else {
+                    return Err(crate::TairitsuPackagerError::BuildError(format!(
+                        "Port {} is already in use by another process.\n  \
+                         Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,\n  \
+                         or stop the process occupying port {}.",
+                        port, port
+                    )));
+                }
+            }
+        }
+        drop(probe);
+    }
+
     // Broadcast channel for hot-reload SSE notifications.
     // When a rebuild finishes, the watch loop sends () here;
     // the browser client receives it and re-fetches WASM.
@@ -1926,9 +1959,20 @@ async fn bind_listener_with_fallback(
     }
 
     let last = preferred_port.saturating_add(MAX_CANDIDATES - 1);
+
+    let mut hint = String::new();
+    if crate::daemon::is_daemon_running() {
+        hint = format!(
+            "\n\n  Hint: A tairitsu daemon is already running (PID {}). \
+             To attach to it, use: tairitsu dev --daemon\n  \
+             To stop it first, use: tairitsu dev --shutdown",
+            crate::daemon::read_pid().unwrap_or(0)
+        );
+    }
+
     Err(crate::TairitsuPackagerError::BuildError(format!(
-        "failed to bind dev server: no free port in range {}..={}",
-        preferred_port, last
+        "failed to bind dev server: no free port in range {}..={}{}",
+        preferred_port, last, hint
     )))
 }
 
