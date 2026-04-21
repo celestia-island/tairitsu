@@ -5,7 +5,7 @@
 
 use hikari_icons::{get, MdiIcon};
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, VElement, VNode, VText};
+use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, VText};
 
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
@@ -66,12 +66,13 @@ fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VN
     let onmousemove = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
         if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
             if let Some(target) = me.target {
-                let rect = get_bounding_client_rect(target);
+                let handle = DomHandle::from_raw(target);
+                let rect = get_bounding_client_rect(handle);
                 if rect.width > 0.0 && rect.height > 0.0 {
                     let px = (me.offset_x as f64 / rect.width * 100.0).clamp(0.0, 100.0);
                     let py = (me.offset_y as f64 / rect.height * 100.0).clamp(0.0, 100.0);
-                    set_style(target, "--glow-x", &format!("{:.1}%", px));
-                    set_style(target, "--glow-y", &format!("{:.1}%", py));
+                    set_style(handle, "--glow-x", &format!("{:.1}%", px));
+                    set_style(handle, "--glow-y", &format!("{:.1}%", py));
                 }
             }
         }
@@ -79,16 +80,17 @@ fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VN
     let onmouseenter = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
         if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
             if let Some(target) = me.target {
-                set_style(target, "--glow-opacity", opacity);
+                set_style(DomHandle::from_raw(target), "--glow-opacity", opacity);
             }
         }
     };
     let onmouseleave = move |e: std::boxed::Box<dyn tairitsu_vdom::EventData>| {
         if let Some(me) = e.as_any().downcast_ref::<tairitsu_vdom::MouseEvent>() {
             if let Some(target) = me.target {
-                set_style(target, "--glow-x", "50%");
-                set_style(target, "--glow-y", "50%");
-                set_style(target, "--glow-opacity", "0");
+                let handle = DomHandle::from_raw(target);
+                set_style(handle, "--glow-x", "50%");
+                set_style(handle, "--glow-y", "50%");
+                set_style(handle, "--glow-opacity", "0");
             }
         }
     };

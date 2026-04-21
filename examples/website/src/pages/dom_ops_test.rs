@@ -6,7 +6,7 @@
 //! 3. get_bounding_client_rect returns correct values
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{get_bounding_client_rect, set_attribute, set_style, MouseEvent, VNode};
+use tairitsu_vdom::{get_bounding_client_rect, set_attribute, set_style, DomHandle, MouseEvent, VNode};
 
 /// Render the DOM operations test page.
 pub fn render() -> VNode {
@@ -26,27 +26,27 @@ pub fn render() -> VNode {
                     style: "position: relative; width: 200px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; transition: transform 0.2s;",
                     onmouseenter: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            // Set CSS variables for glow effect
-                            set_style(target, "--glow-intensity", "1");
-                            set_style(target, "--glow-x", &e.client_x.to_string());
-                            set_style(target, "--glow-y", &e.client_y.to_string());
-                            set_style(target, "box-shadow", "0 0 30px rgba(102, 126, 234, 0.8)");
-                            set_style(target, "transform", "scale(1.05)");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "--glow-intensity", "1");
+                            set_style(h, "--glow-x", &e.client_x.to_string());
+                            set_style(h, "--glow-y", &e.client_y.to_string());
+                            set_style(h, "box-shadow", "0 0 30px rgba(102, 126, 234, 0.8)");
+                            set_style(h, "transform", "scale(1.05)");
                         }
                     },
                     onmouseleave: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            // Reset CSS variables
-                            set_style(target, "--glow-intensity", "0");
-                            set_style(target, "box-shadow", "none");
-                            set_style(target, "transform", "scale(1)");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "--glow-intensity", "0");
+                            set_style(h, "box-shadow", "none");
+                            set_style(h, "transform", "scale(1)");
                         }
                     },
                     onmousemove: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            // Update glow position on mouse move
-                            set_style(target, "--glow-x", &e.client_x.to_string());
-                            set_style(target, "--glow-y", &e.client_y.to_string());
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "--glow-x", &e.client_x.to_string());
+                            set_style(h, "--glow-y", &e.client_y.to_string());
                         }
                     },
                     "Hover me!"
@@ -70,8 +70,8 @@ pub fn render() -> VNode {
                     style: "position: relative; width: 150px; height: 80px; background: #48bb78; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer;",
                     onclick: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            let rect = get_bounding_client_rect(target);
-                            // Update the output div with rect info
+                            let h = DomHandle::from_raw(target);
+                            let rect = get_bounding_client_rect(h);
                             let _output = format!(
                                 "Rect: x={:.1}, y={:.1}, width={:.1}, height={:.1}",
                                 rect.x,
@@ -79,8 +79,8 @@ pub fn render() -> VNode {
                                 rect.width,
                                 rect.height,
                             );
-                            set_style(target, "background", "#38a169");
-                            set_style(target, "box-shadow", "0 0 20px rgba(72, 187, 120, 0.6)");
+                            set_style(h, "background", "#38a169");
+                            set_style(h, "box-shadow", "0 0 20px rgba(72, 187, 120, 0.6)");
                         }
                     },
                     "Click for rect!"
@@ -104,26 +104,30 @@ pub fn render() -> VNode {
                     style: "position: relative; padding: 12px 24px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; overflow: hidden;",
                     onmouseenter: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_style(target, "--glow-intensity-scale", "1");
-                            set_style(target, "box-shadow", "0 0 25px rgba(240, 147, 251, 0.7)");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "--glow-intensity-scale", "1");
+                            set_style(h, "box-shadow", "0 0 25px rgba(240, 147, 251, 0.7)");
                         }
                     },
                     onmouseleave: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_style(target, "--glow-intensity-scale", "0");
-                            set_style(target, "box-shadow", "none");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "--glow-intensity-scale", "0");
+                            set_style(h, "box-shadow", "none");
                         }
                     },
                     onmousedown: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_style(target, "transform", "scale(0.95)");
-                            set_style(target, "--glow-intensity-scale", "1.5");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "transform", "scale(0.95)");
+                            set_style(h, "--glow-intensity-scale", "1.5");
                         }
                     },
                     onmouseup: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_style(target, "transform", "scale(1)");
-                            set_style(target, "--glow-intensity-scale", "1");
+                            let h = DomHandle::from_raw(target);
+                            set_style(h, "transform", "scale(1)");
+                            set_style(h, "--glow-intensity-scale", "1");
                         }
                     },
                     "Glow Button (Hover & Click)"
@@ -140,14 +144,16 @@ pub fn render() -> VNode {
                     style: "position: relative; width: 200px; height: 60px; background: #4299e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; transition: all 0.3s;",
                     onmouseenter: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_attribute(target, "data-hovered", "true");
-                            set_style(target, "background", "#3182ce");
+                            let h = DomHandle::from_raw(target);
+                            set_attribute(h, "data-hovered", "true");
+                            set_style(h, "background", "#3182ce");
                         }
                     },
                     onmouseleave: move |e: MouseEvent| {
                         if let Some(target) = e.target {
-                            set_attribute(target, "data-hovered", "false");
-                            set_style(target, "background", "#4299e1");
+                            let h = DomHandle::from_raw(target);
+                            set_attribute(h, "data-hovered", "false");
+                            set_style(h, "background", "#4299e1");
                         }
                     },
                     "Hover to change attribute"

@@ -326,10 +326,12 @@ dev: init
     @echo ""
     @cd examples/website && cargo run --package tairitsu-packager --features dev-server -- dev --watch
 
-# Build web demo for production (using tairitsu-packager)
+# Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
     @echo "Building website demo with tairitsu-packager..."
     cd examples/website && cargo run --package tairitsu-packager -- build --release
+    @echo "Building CDN modular demo..."
+    {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist
 
 # Serve web demo (production build)
 serve-web: build-web
@@ -516,6 +518,11 @@ publish-live:
 npm-build:
     npm run build -w @celestia/tairitsu-browser-glue || (cd packages/browser-glue && npm run build)
     npm run build -w @celestia/tairitsu-runtime || (cd packages/npm/runtime && npm run build)
+
+# Build CDN demo with esm.sh CDN URLs (for production deployment)
+cdn-demo-prod:
+    @echo "Building CDN demo (esm.sh mode)..."
+    {{python}} scripts/build_cdn_demo.py --dist target/tairitsu-dist --cdn-mode esm-sh
 
 # ============================================================================
 # Utilities
