@@ -318,13 +318,15 @@ watch:
 # ============================================================================
 
 # Start web demo development server (using tairitsu-packager)
-# Start web demo development server with continuous file-watch rebuild
-dev: init
+# Usage: just dev              — foreground watch mode
+#        just dev --daemon     — run as background daemon
+#        just dev --shutdown   — stop running daemon
+dev *FLAGS: init
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Starting Tairitsu dev server  (watch mode)..."
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo ""
-    @cd examples/website && cargo run --package tairitsu-packager --features dev-server -- dev --watch
+    @cd examples/website && cargo run --package tairitsu-packager --features dev-server -- dev --watch {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
