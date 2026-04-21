@@ -33,6 +33,13 @@ opt-level = 'z'
 codegen-units = 1
 panic = "abort"
 
+[profile.dev-wasm]
+inherits = "release"
+lto = true
+opt-level = 'z'
+codegen-units = 1
+panic = "abort"
+
 [workspace.package]
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2024"
