@@ -1,0 +1,22 @@
+{
+  "name": "@celestia/tairitsu-style-wasm",
+  "version": "0.1.0",
+  "description": "Tairitsu Style \u2014 type-safe CSS property builders",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "main": "./dist/wrapper/tairitsu_style.js",
+  "files": [
+    "dist/tairitsu_style.wasm",
+    "dist/wrapper/**/*.js",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-org/tairitsu.git",
+    "directory": "packages/npm/tairitsu-style-wasm"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
