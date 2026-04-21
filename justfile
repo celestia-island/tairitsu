@@ -465,16 +465,34 @@ doc-open: doc
 # NPM publishing
 # ============================================================================
 
+# Generate and build all per-domain npm glue packages
+npm-build-glue:
+    @echo "Generating per-domain glue packages..."
+    {{python}} scripts/build_npm_glue_packages.py
+
+# Build Rust crates into optimized wasm component npm packages
+npm-build-wasm crate="":
+    @echo "Building WASM component packages..."
+    {{python}} scripts/build_wasm_packages.py {{crate}}
+
+# List compilable WASM crates
+npm-list-wasm:
+    {{python}} scripts/build_wasm_packages.py --list
+
+# Build all npm packages (glue + runtime + wasm)
+npm-build-all: npm-build-glue
+    cd packages/npm/runtime && npm run build
+    cd packages/npm/glue-core && npm run build
+
 # Publish all npm packages to @celestia scope (requires NPM_TOKEN env var)
 publish: (publish-pkg "packages/browser-glue") (publish-pkg "packages/npm/runtime")
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "✅ All npm packages published!"
+    @echo "All npm packages published!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Publish a single npm package (dry-run by default)
 publish-pkg dir:
     @echo "Publishing {{dir}}..."
-    @if echo "{{dir}}" | grep -q "runtime"; then cd {{dir}} && npm run build; fi
     npm publish --access public --dry-run {{dir}}
 
 # Publish for real (not dry-run) — requires NPM_TOKEN
@@ -484,10 +502,12 @@ publish-live:
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @if [ -z "$NPM_TOKEN" ]; then echo "Error: NPM_TOKEN environment variable is not set."; exit 1; fi
     npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-    cd packages/browser-glue && npm run build && npm publish --access public
     cd packages/npm/runtime && npm run build && npm publish --access public
+    cd packages/npm/glue-core && npm run build && npm publish --access public
+    cd packages/browser-glue && npm run build:production && npm publish --access public
+    @for dir in packages/npm/glue-*/; do cd "$$dir" && npm publish --access public && cd -; done
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "✅ All npm packages published (LIVE)!"
+    @echo "All npm packages published (LIVE)!"
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Build all npm packages locally

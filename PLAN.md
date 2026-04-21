@@ -288,10 +288,34 @@ hikari-wrapper.js
 
 ---
 
-## 当前已完成 (本批次)
+## 当前已完成
 
 1. ✅ PLAN.md 撰写
 2. ✅ browser-glue package.json 更新 (publish 元数据, @celestia scope)
-3. ✅ packages/npm/runtime/ 创建 (@celestia/tairitsu-runtime)
-4. ✅ justfile 添加 `publish` recipe
-5. ✅ packages/npm/ 目录结构初始化
+3. ✅ @celestia/tairitsu-runtime (1.6KB) — WASM component 加载器
+4. ✅ justfile 添加 `publish` / `publish-live` / `npm-build-glue` / `npm-build-wasm` recipes
+5. ✅ 34 个 per-domain npm 包全部生成并构建完成 (总计 309.8KB, minified)
+6. ✅ @celestia/tairitsu-glue-core (4.4KB) — handles + helpers + async
+7. ✅ 7 个 runtime domain 包 (dom/events/css/html/observers/resize-observer/platform)
+8. ✅ 25 个 auto-generated stub 包 (canvas/fetch/media/svg/webrtc/workers 等)
+9. ✅ @celestia/tairitsu-glue-full (2.1KB) — 聚合包
+10. ✅ Rust → wasm → npm 构建脚本 (scripts/build_wasm_packages.py)
+11. ✅ glue 包自动生成脚本 (scripts/build_npm_glue_packages.py)
+
+### 包大小分布 (esbuild minified)
+
+| 包 | 大小 | 说明 |
+|---|------|------|
+| glue-canvas | 48.6 KB | Canvas 2D API |
+| glue-media | 46 KB | Media APIs |
+| glue-svg | 41.3 KB | SVG 操作 |
+| glue-fetch | 30.7 KB | Fetch API |
+| glue-webrtc | 25.4 KB | WebRTC |
+| glue-platform | 14.9 KB | 平台助手 (setTimeout, rAF 等) |
+| glue-storage | 15.1 KB | Storage APIs |
+| glue-core | 4.4 KB | 共享 handles + helpers |
+| glue-dom | 2.5 KB | DOM 操作 |
+| glue-events | 4 KB | 事件系统 |
+| glue-full | 2.1 KB | 聚合入口 |
+| runtime | 1.6 KB | 加载器 |
+| **总计** | **~310 KB** | **~80-90 KB gzip** |
