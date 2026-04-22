@@ -11,7 +11,9 @@ Usage:
 
 import os
 import shutil
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -66,7 +68,26 @@ def main():
             print("[ERROR] tairitsu CLI not installed. Run without --quick first.")
             sys.exit(1)
 
-    shutil.copy2(str(source), str(dest))
+    try:
+        shutil.copy2(str(source), str(dest))
+    except PermissionError:
+        if is_windows and dest.exists():
+            old = dest.with_suffix(".old.exe")
+            if old.exists():
+                try:
+                    old.unlink()
+                except PermissionError:
+                    pass
+            dest.rename(old)
+            try:
+                shutil.copy2(str(source), str(dest))
+            except PermissionError:
+                eprint = lambda msg: print(f"[ERROR] {msg}", file=sys.stderr)
+                eprint(f"Cannot replace '{dest}' — it is locked by a running process.")
+                eprint("Stop the daemon first:  just dev --daemon --shutdown")
+                sys.exit(1)
+        else:
+            raise
     stamp = project_root / "target" / ".tairitsu-install-stamp"
     stamp.write_text(str(source.resolve()))
     print(f"[OK] Installed '{exe_name}' CLI to {bin_dir}")
