@@ -21,17 +21,23 @@ struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
-    /// Run in daemon mode (background service)
+    /// Run as / manage daemon (background service)
+    ///   --daemon             start or restart daemon
+    ///   --daemon --dry-run   only check status, don't restart
     #[arg(long, global = true)]
     daemon: bool,
 
-    /// Force restart daemon (kill existing and start new)
+    /// With --daemon: only check status, don't restart/start
     #[arg(long, global = true, requires = "daemon")]
-    force: bool,
+    dry_run: bool,
 
-    /// Shutdown daemon (stop background service)
-    #[arg(long, global = true, requires = "daemon")]
+    /// Shutdown running daemon
+    #[arg(long, global = true)]
     shutdown: bool,
+
+    /// Check daemon status only
+    #[arg(long, global = true)]
+    status: bool,
 
     /// Force TTY interactive mode
     #[arg(long, global = true)]
@@ -262,15 +268,32 @@ pub async fn run() -> crate::Result<()> {
         is_tty()
     };
 
-    // Handle daemon mode
-    if cli.daemon {
-        // Check if we're already the daemon
-        if is_daemon() {
-            // Don't daemonize yet — let the initial build run with terminal
-            // output so errors are visible. Daemonization happens after
-            // the first successful build (see dev_server).
-            daemon::cleanup_ready_file();
+    // Handle --status: print daemon status and exit
+    if cli.status {
+        daemon::print_daemon_status()?;
+        return Ok(());
+    }
 
+    // Handle --shutdown: stop daemon and exit
+    if cli.shutdown {
+        if daemon::is_daemon_running() {
+            println!("Stopping daemon...");
+            if daemon::kill_daemon()? {
+                println!("Daemon stopped successfully.");
+            } else {
+                println!("No daemon was running (stale PID file cleaned).");
+            }
+        } else {
+            println!("No daemon is currently running.");
+        }
+        return Ok(());
+    }
+
+    // Handle --daemon
+    if cli.daemon {
+        // Check if we're already the daemon child process
+        if is_daemon() {
+            daemon::cleanup_ready_file();
             daemon::write_pid_file(std::process::id())?;
             let status = daemon::DaemonStatus {
                 pid: std::process::id(),
@@ -278,66 +301,28 @@ pub async fn run() -> crate::Result<()> {
                 build_logs: Vec::new(),
             };
             daemon::write_daemon_status(&status)?;
+        } else if cli.dry_run {
+            // --daemon --dry-run: only check status
+            daemon::print_daemon_status()?;
+            return Ok(());
         } else {
-            // We're the parent, handle daemon management
-            if cli.shutdown {
-                // Shutdown mode: kill existing daemon and exit
-                if daemon::is_daemon_running() {
-                    println!("Stopping daemon...");
-                    if daemon::kill_daemon()? {
-                        println!("Daemon stopped successfully.");
-                    } else {
-                        println!("No daemon was running.");
-                    }
-                    daemon::print_daemon_status()?;
-                } else {
-                    println!("No daemon is currently running.");
-                }
-                return Ok(());
+            // --daemon (no --dry-run): restart or start
+            let was_running = daemon::is_daemon_running();
+            if was_running {
+                println!("Restarting daemon...");
+                daemon::kill_daemon()?;
+                println!("Old daemon stopped.");
+            } else {
+                println!("Starting daemon...");
             }
-
-            if cli.force {
-                // Force mode: kill existing and start new
-                if daemon::is_daemon_running() {
-                    println!("Stopping existing daemon...");
-                    daemon::kill_daemon()?;
-                    println!("Daemon stopped.");
-                }
-                println!("Starting new daemon...");
-                daemon::fork_daemon()?;
-                match daemon::wait_for_child_signal(120) {
-                    Ok(true) => {
-                        println!("Daemon started.");
-                    }
-                    Ok(false) => {
-                        eprintln!("Daemon failed to start. Check logs above for details.");
-                        std::process::exit(1);
-                    }
-                    Err(e) => {
-                        eprintln!("Daemon startup timed out: {}", e);
-                        eprintln!("Check logs with: tairitsu dev --daemon");
-                        std::process::exit(1);
-                    }
-                }
-                return Ok(());
-            }
-
-            // Normal daemon mode: show status if running, or start new
-            if daemon::is_daemon_running() {
-                println!("Daemon is already running.");
-                println!();
-                daemon::print_daemon_status()?;
-                println!();
-                println!("Use --force to restart, or --shutdown to stop.");
-                return Ok(());
-            }
-
-            // Start new daemon
             daemon::fork_daemon()?;
             match daemon::wait_for_child_signal(120) {
                 Ok(true) => {
-                    println!("Daemon started in background.");
-                    println!("Use 'tairitsu dev --daemon' to check status.");
+                    if was_running {
+                        println!("Daemon restarted.");
+                    } else {
+                        println!("Daemon started in background.");
+                    }
                 }
                 Ok(false) => {
                     eprintln!("Daemon failed to start. Check logs above for details.");
@@ -345,7 +330,7 @@ pub async fn run() -> crate::Result<()> {
                 }
                 Err(e) => {
                     eprintln!("Daemon startup timed out: {}", e);
-                    eprintln!("Check logs with: tairitsu dev --daemon");
+                    eprintln!("Check status with: tairitsu dev --status");
                     std::process::exit(1);
                 }
             }
@@ -353,16 +338,15 @@ pub async fn run() -> crate::Result<()> {
         }
     }
 
-    // Early check: if a daemon is already running and the user is trying
-    // to start a foreground dev server, warn before cargo builds anything.
-    if !cli.daemon && !cli.shutdown && !cli.force && daemon::is_daemon_running() {
+    // Early check: daemon already running, foreground dev blocked
+    if !cli.daemon && daemon::is_daemon_running() {
         let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
         if is_dev_command {
             eprintln!("Error: A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
             eprintln!();
-            eprintln!("  Use --daemon   to attach to the running daemon");
+            eprintln!("  Use --daemon   to restart the daemon");
             eprintln!("  Use --shutdown to stop it first");
-            eprintln!("  Use --force    to restart the daemon");
+            eprintln!("  Use --status   to check daemon state");
             std::process::exit(1);
         }
     }
