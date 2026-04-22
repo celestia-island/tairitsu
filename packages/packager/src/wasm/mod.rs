@@ -1801,7 +1801,11 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         println!("  ✓  Initial build succeeded — daemonizing...");
     }
 
-    let dist_dir = config.build.output_dir.clone();
+    let dist_dir = if config.build.output_dir.is_relative() {
+        config.manifest_dir.join(&config.build.output_dir)
+    } else {
+        config.build.output_dir.clone()
+    };
 
     // Always read index.html from disk on each request so watch-mode rebuilds
     // are served immediately without needing a server restart.
