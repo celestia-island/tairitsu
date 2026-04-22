@@ -731,22 +731,14 @@ fn prepare_component_wrapper_fallback(
     write_component_wrapper_loader(config, component_wasm_path, output_dir)?;
 
     if !try_generate_component_wrapper(config, component_wasm_path, output_dir, pb)? {
-        let wasm_hint_path = std::fs::canonicalize(component_wasm_path)
-            .unwrap_or_else(|_| component_wasm_path.to_path_buf());
-        let wasm_hint = wasm_hint_path
-            .display()
-            .to_string()
-            .trim_start_matches(r"\\?\")
-            .to_string();
-        pb.println(format!(
-            "⚠  Wrapper transpile command not found: 'jco'.\n   \
-             Attempted: jco transpile {} -o {}",
-            wasm_hint,
-            output_dir.join("component-wrapper").display()
+        return Err(crate::TairitsuPackagerError::BuildError(
+            "Component wrapper transpile failed. \
+             Install jco: npm install -g @bytecodealliance/jco\n\
+             The dev server requires the jco-transpiled wrapper to serve WASM components."
+                .to_string(),
         ));
     }
 
-    // Always normalize wrapper imports if wrapper files already exist.
     rewrite_wrapper_imports_to_esm(output_dir)?;
 
     Ok(())
@@ -1138,7 +1130,19 @@ fn generate_component_html_with_output_dir(
          any module scripts, guaranteeing a single complete import map. -->
     <script src="{glue_bundle_path}?v={v}"></script>
     <script type="module">
-        import {{ instantiateWithWrapper }} from '/component-wrapper-loader.js?v={v}';
+        const bootError = (msg, err) => {{
+            console.error('[tairitsu] Boot failed:', msg, err || '');
+            const appRoot = document.getElementById('app');
+            if (appRoot) appRoot.innerHTML =
+                '<div style="padding:2em;font-family:monospace;color:#e06c75">' +
+                '<b>Tairitsu boot error</b><br><pre style="margin-top:.5em;white-space:pre-wrap">' +
+                (err ? String(err.message || err) : String(msg)) +
+                '</pre></div>';
+            document.body.removeAttribute('data-booting');
+        }};
+
+        try {{
+        const {{ instantiateWithWrapper }} = await import('/component-wrapper-loader.js?v={v}');
 
         const appRoot = document.getElementById('app');
         const setAppStatus = (text) => {{
@@ -1226,8 +1230,11 @@ fn generate_component_html_with_output_dir(
         }};
 
         // Build imports object from registered browser glue interfaces
-        const buildImports = () => {{
+        // plus WASI preview2 shim (required for wasm32-wasip2 components).
+        const buildImports = async () => {{
             const imports = {{}};
+
+            // Browser glue interfaces
             if (globalThis.__TAIRITSU_GLUE__ && globalThis.__TAIRITSU_GLUE__.INTERFACES) {{
                 for (const [shortName, exports] of Object.entries(globalThis.__TAIRITSU_GLUE__.INTERFACES)) {{
                     const ifaceName = shortName.replace('@tairitsu-glue/', '');
@@ -1235,6 +1242,51 @@ fn generate_component_html_with_output_dir(
                     imports[fullName] = exports;
                 }}
             }}
+
+            // WASI preview2 shim — needed for direct WASM component instantiation
+            // when no jco wrapper is available.  The shim is loaded from esm.sh CDN.
+            if (!globalThis.__wasiShimModules) {{
+                try {{
+                    const [
+                        wasiIo,
+                        wasiCli,
+                        wasiRandom,
+                        wasiClocks,
+                        wasiFilesystem,
+                        wasiSockets,
+                    ] = await Promise.all([
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/io'),
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/cli'),
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/random'),
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/clocks'),
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/filesystem'),
+                        import('https://esm.sh/@bytecodealliance/preview2-shim/sockets'),
+                    ]);
+                    globalThis.__wasiShimModules = {{ wasiIo: wasiIo, wasiCli: wasiCli, wasiRandom: wasiRandom, wasiClocks: wasiClocks, wasiFilesystem: wasiFilesystem, wasiSockets: wasiSockets }};
+                }} catch (e) {{
+                    console.warn('[tairitsu] Could not load WASI preview2 shim:', e);
+                }}
+            }}
+            if (globalThis.__wasiShimModules) {{
+                const s = globalThis.__wasiShimModules;
+                imports['wasi:cli/environment@0.2.0'] = s.wasiCli.environment;
+                imports['wasi:cli/exit@0.2.0'] = s.wasiCli.exit;
+                imports['wasi:cli/stdin@0.2.0'] = s.wasiCli.stdin;
+                imports['wasi:cli/stdout@0.2.0'] = s.wasiCli.stdout;
+                imports['wasi:cli/stderr@0.2.0'] = s.wasiCli.stderr;
+                imports['wasi:clocks/monotonic-clock@0.2.0'] = s.wasiClocks.monotonicClock;
+                imports['wasi:clocks/wall-clock@0.2.0'] = s.wasiClocks.wallClock;
+                imports['wasi:filesystem/preopens@0.2.0'] = s.wasiFilesystem.preopens;
+                imports['wasi:io/error@0.2.0'] = s.wasiIo.error;
+                imports['wasi:io/poll@0.2.0'] = s.wasiIo.poll;
+                imports['wasi:io/streams@0.2.0'] = s.wasiIo.streams;
+                imports['wasi:random/random@0.2.0'] = s.wasiRandom.random;
+                imports['wasi:sockets/tcp@0.2.0'] = s.wasiSockets.tcp;
+                imports['wasi:sockets/udp@0.2.0'] = s.wasiSockets.udp;
+                imports['wasi:sockets/network@0.2.0'] = s.wasiSockets.network;
+                imports['wasi:sockets/instance-network@0.2.0'] = s.wasiSockets.instanceNetwork;
+            }}
+
             return imports;
         }};
 
@@ -1245,38 +1297,44 @@ fn generate_component_html_with_output_dir(
         // The wrapper internally fetches only the core module it needs.
         // Fall back to direct WASM loading only if no wrapper is available.
         try {{
-            const wrapperResult = await instantiateWithWrapper(buildImports());
+            const imports = await buildImports();
+            const wrapperResult = await instantiateWithWrapper(imports);
             if (globalThis.__setWasmExports && wrapperResult) {{
                 globalThis.__setWasmExports(wrapperResult);
             }}
             bootInvoked = await tryInvokeBootExports(wrapperResult);
         }} catch (wrapperErr) {{
             console.error('[tairitsu] Component wrapper failed, falling back to direct WASM load:', wrapperErr);
-            const response = await fetch('/{wasm_file}');
-            const bytes = await response.arrayBuffer();
-            const magic = new Uint8Array(bytes, 0, 8);
-            const isWasm =
-                magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
-            const isComponent = isWasm &&
-                magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
+            try {{
+                const imports = await buildImports();
+                const response = await fetch('/{wasm_file}');
+                const bytes = await response.arrayBuffer();
+                const magic = new Uint8Array(bytes, 0, 8);
+                const isWasm =
+                    magic[0] === 0x00 && magic[1] === 0x61 && magic[2] === 0x73 && magic[3] === 0x6d;
+                const isComponent = isWasm &&
+                    magic[4] === 0x0d && magic[5] === 0x00 && magic[6] === 0x01 && magic[7] === 0x00;
 
-            if (isComponent && typeof WebAssembly.Component === 'function') {{
-                const component = new WebAssembly.Component(bytes);
-                const componentResult = await WebAssembly.instantiate(component, buildImports());
-                if (globalThis.__setWasmExports && componentResult) {{
-                    globalThis.__setWasmExports(componentResult);
+                if (isComponent && typeof WebAssembly.Component === 'function') {{
+                    const component = new WebAssembly.Component(bytes);
+                    const componentResult = await WebAssembly.instantiate(component, imports);
+                    if (globalThis.__setWasmExports && componentResult) {{
+                        globalThis.__setWasmExports(componentResult);
+                    }}
+                    bootInvoked = await tryInvokeBootExports(componentResult);
+                }} else if (isComponent) {{
+                    console.error('[tairitsu] WASM Component detected but WebAssembly.Component is not supported.');
+                    setAppStatus('Failed to load: WASM Components require the jco wrapper. Check console.');
+                }} else {{
+                    const module = await WebAssembly.compile(bytes);
+                    const moduleResult = await WebAssembly.instantiate(module, imports);
+                    if (globalThis.__setWasmExports && moduleResult) {{
+                        globalThis.__setWasmExports(moduleResult);
+                    }}
+                    bootInvoked = await tryInvokeBootExports(moduleResult);
                 }}
-                bootInvoked = await tryInvokeBootExports(componentResult);
-            }} else if (isComponent) {{
-                console.error('[tairitsu] WASM Component detected but WebAssembly.Component is not supported in this browser. The jco-transpiled wrapper must be used.');
-                setAppStatus('Failed to load: WASM Components require the jco wrapper, which failed to load. Check console for details.');
-            }} else {{
-                const module = await WebAssembly.compile(bytes);
-                const moduleResult = await WebAssembly.instantiate(module, buildImports());
-                if (globalThis.__setWasmExports && moduleResult) {{
-                    globalThis.__setWasmExports(moduleResult);
-                }}
-                bootInvoked = await tryInvokeBootExports(moduleResult);
+            }} catch (directErr) {{
+                bootError('Direct WASM load failed', directErr);
             }}
         }}
 
@@ -1507,6 +1565,10 @@ fn generate_component_html_with_output_dir(
             initAll();
             new MutationObserver(initAll).observe(document.body, {{ childList: true, subtree: true }});
         }})();
+
+        }} catch (topErr) {{
+            bootError('Unhandled error', topErr);
+        }}
     </script>
 </body>
 </html>"#,
