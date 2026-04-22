@@ -318,9 +318,11 @@ watch:
 # ============================================================================
 
 # Start web demo development server (using tairitsu-packager)
-# Usage: just dev              — foreground watch mode
-#        just dev --daemon     — run as background daemon
-#        just dev --shutdown   — stop running daemon
+# Usage: just dev                 — foreground watch mode
+#        just dev --daemon        — start or restart background daemon
+#        just dev --daemon --dry-run — check daemon status only
+#        just dev --shutdown      — stop running daemon
+#        just dev --status        — check daemon status
 dev *FLAGS: init
     @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     @echo "Starting Tairitsu dev server  (watch mode)..."
