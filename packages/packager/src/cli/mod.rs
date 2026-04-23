@@ -7,11 +7,9 @@ use crate::daemon::{self, is_daemon, is_tty};
 
 #[derive(Parser)]
 #[command(name = "tairitsu")]
-#[command(about = "Build and packaging tool for Tairitsu applications", long_about = None)]
-#[command(version)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 
     /// Path to Cargo.toml (defaults to current directory)
     #[arg(short, long, global = true)]
@@ -243,8 +241,100 @@ enum ResourcesCommands {
     },
 }
 
-pub async fn run() -> crate::Result<()> {
+/// Handle synchronous daemon operations (status, shutdown, parent fork).
+/// Returns `Some(result)` if the operation was handled synchronously (process should exit).
+/// Returns `None` if we should proceed to async/tokio mode (daemon child or foreground).
+pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     let cli = Cli::parse();
+    const SYNC_OK: Option<crate::Result<()>> = Some(Ok(()));
+
+    if let Some(ref mp) = cli.manifest_path {
+        let canonical = mp.canonicalize().unwrap_or_else(|_| mp.clone());
+        let root = if canonical.is_file() {
+            canonical.parent().unwrap_or(&canonical).to_path_buf()
+        } else {
+            canonical
+        };
+        daemon::set_project_root(root);
+    }
+
+    if cli.status {
+        let _ = daemon::print_daemon_status();
+        return SYNC_OK;
+    }
+
+    if cli.shutdown {
+        return Some(if daemon::is_daemon_running() {
+            println!("Stopping daemon...");
+            if daemon::kill_daemon().unwrap_or(false) {
+                println!("Daemon stopped successfully.");
+            } else {
+                println!("No daemon was running (stale PID file cleaned).");
+            }
+            Ok(())
+        } else {
+            println!("No daemon is currently running.");
+            Ok(())
+        });
+    }
+
+    if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
+        let was_running = daemon::is_daemon_running();
+        if was_running {
+            println!("Restarting daemon...");
+            let _ = daemon::kill_daemon();
+            println!("Old daemon stopped.");
+        } else {
+            println!("Starting daemon...");
+        }
+        daemon::fork_daemon();
+        #[cfg(unix)]
+        {
+            match daemon::wait_for_child_signal(120) {
+                Ok(true) => {
+                    if was_running { println!("Daemon restarted."); }
+                    else { println!("Daemon started in background."); }
+                }
+                Ok(false) => {
+                    eprintln!("Daemon failed to start.");
+                    std::process::exit(1);
+                }
+                Err(e) => {
+                    eprintln!("Daemon startup timed out: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        return SYNC_OK;
+    }
+
+    // --daemon --dry-run also exits synchronously
+    if cli.daemon && cli.dry_run {
+        let _ = daemon::print_daemon_status();
+        return SYNC_OK;
+    }
+
+    // Not a sync daemon operation — proceed to async mode
+    None
+}
+
+pub fn run_tokio() {
+    #[tokio::main]
+    async fn inner() -> crate::Result<()> {
+        run().await
+    }
+
+    if let Err(e) = inner() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+pub async fn run() -> crate::Result<()> {
+    run_with_cli(Cli::parse()).await
+}
+
+async fn run_with_cli(cli: Cli) -> crate::Result<()> {
     let t = crate::i18n::translations();
 
     // Resolve project root from manifest_path as early as possible
@@ -293,6 +383,7 @@ pub async fn run() -> crate::Result<()> {
     if cli.daemon {
         // Check if we're already the daemon child process
         if is_daemon() {
+            // Daemon child: set up PID file and status, then fall through to dev server
             daemon::cleanup_ready_file();
             daemon::write_pid_file(std::process::id())?;
             let status = daemon::DaemonStatus {
@@ -302,45 +393,17 @@ pub async fn run() -> crate::Result<()> {
             };
             daemon::write_daemon_status(&status)?;
         } else if cli.dry_run {
-            // --daemon --dry-run: only check status
+            // --daemon --dry-run: only check status (handled in main.rs, but keep as fallback)
             daemon::print_daemon_status()?;
             return Ok(());
-        } else {
-            // --daemon (no --dry-run): restart or start
-            let was_running = daemon::is_daemon_running();
-            if was_running {
-                println!("Restarting daemon...");
-                daemon::kill_daemon()?;
-                println!("Old daemon stopped.");
-            } else {
-                println!("Starting daemon...");
-            }
-            daemon::fork_daemon()?;
-            match daemon::wait_for_child_signal(120) {
-                Ok(true) => {
-                    if was_running {
-                        println!("Daemon restarted.");
-                    } else {
-                        println!("Daemon started in background.");
-                    }
-                }
-                Ok(false) => {
-                    eprintln!("Daemon failed to start. Check logs above for details.");
-                    std::process::exit(1);
-                }
-                Err(e) => {
-                    eprintln!("Daemon startup timed out: {}", e);
-                    eprintln!("Check status with: tairitsu dev --status");
-                    std::process::exit(1);
-                }
-            }
-            return Ok(());
         }
+        // Note: parent process fork+exit is now handled in main() OUTSIDE tokio runtime
+        // to avoid Windows hang on exit. If we reach here in parent mode, just proceed.
     }
 
     // Early check: daemon already running, foreground dev blocked
     if !cli.daemon && daemon::is_daemon_running() {
-        let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
+        let is_dev_command = matches!(cli.command, Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. }));
         if is_dev_command {
             eprintln!("Error: A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
             eprintln!();
@@ -363,7 +426,7 @@ pub async fn run() -> crate::Result<()> {
         .with_target(false)
         .init();
 
-    let is_dev_command = matches!(cli.command, Commands::Dev { .. } | Commands::Ssr { .. });
+    let is_dev_command = matches!(cli.command, Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. }));
 
     if !is_interactive && !is_daemon() && is_dev_command {
         daemon::print_non_tty_hint();
@@ -375,12 +438,12 @@ pub async fn run() -> crate::Result<()> {
 
     match cli.command {
         #[allow(unused_variables)]
-        Commands::Dev {
+        Some(Commands::Dev {
             port,
             open,
             watch,
             ssr,
-        } => {
+        }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
                 #[cfg(feature = "ssr")]
@@ -411,12 +474,12 @@ pub async fn run() -> crate::Result<()> {
             }
         }
         #[allow(unused_variables)]
-        Commands::Build {
+        Some(Commands::Build {
             target,
             debug,
             ssr,
             routes,
-        } => {
+        }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             let release = !debug;
             info!("{} {}...", t.cli.building_for, target);
@@ -464,24 +527,24 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         }
-        Commands::Package { platform } => {
+        Some(Commands::Package { platform }) => {
             info!("{} {}...", t.cli.packaging_for, platform);
             eprintln!("{}", t.cli.packaging_not_implemented);
             std::process::exit(1);
         }
-        Commands::Preview { port } => {
+        Some(Commands::Preview { port }) => {
             info!("{}", t.cli.preview_starting);
             let port = port.unwrap_or(3001);
             let _port = port;
             eprintln!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }
-        Commands::Init { name } => {
+        Some(Commands::Init { name }) => {
             info!("{}", t.cli.init_starting);
             let name = name.unwrap_or_else(|| "my-tairitsu-app".to_string());
             crate::utils::init_project(&name)?;
         }
-        Commands::Wit { action } => match action {
+        Some(Commands::Wit { action }) => match action {
             WitCommands::Fetch { specs, offline } => {
                 info!("Fetching WIT packages...");
                 crate::wit_cmd::cmd_fetch(&manifest_path, &specs, offline)?;
@@ -494,7 +557,7 @@ pub async fn run() -> crate::Result<()> {
                 crate::wit_cmd::cmd_list(&manifest_path)?;
             }
         },
-        Commands::Icons { action } => match action {
+        Some(Commands::Icons { action }) => match action {
             IconsCommands::Fetch { source, force } => {
                 info!("Fetching icons from {}...", source);
                 let target_dir = std::path::PathBuf::from("target");
@@ -604,14 +667,14 @@ pub async fn run() -> crate::Result<()> {
             }
         },
         #[allow(unused_variables)]
-        Commands::Ssr {
+        Some(Commands::Ssr {
             port,
             open,
             watch,
             build,
             routes,
             output,
-        } => {
+        }) => {
             #[allow(unused_variables)]
             let config = crate::config::Config::load(&manifest_path)?;
 
@@ -659,7 +722,7 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         }
-        Commands::Resources { action } => match action {
+        Some(Commands::Resources { action }) => match action {
             ResourcesCommands::Index { format } => {
                 info!("Indexing resources...");
 
@@ -764,6 +827,13 @@ pub async fn run() -> crate::Result<()> {
                 }
             }
         },
+        None => {
+            if cli.status || cli.shutdown || cli.daemon {
+                return Ok(());
+            }
+            eprintln!("No command specified. Use --help for usage information.");
+            std::process::exit(1);
+        }
     }
 
     Ok(())

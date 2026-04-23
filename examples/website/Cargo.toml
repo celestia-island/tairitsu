@@ -371,6 +371,7 @@ body_class = "hi-layout hi-layout-dark hi-layout-has-sidebar"
 inline-limit = 8192
 include = ["public/**"]
 exclude = ["**/*.md"]
+extra-public-dirs = ["../../../hikari/public"]
 
 [package.metadata.tairitsu.css]
 autoprefixer = true
