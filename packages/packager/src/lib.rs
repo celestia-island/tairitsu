@@ -10,6 +10,7 @@ pub mod config;
 pub mod daemon;
 pub mod i18n;
 pub mod icons;
+pub mod logfmt;
 pub mod resources;
 #[cfg(feature = "ssr")]
 pub mod ssr;
