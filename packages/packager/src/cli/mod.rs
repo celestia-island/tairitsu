@@ -25,6 +25,10 @@ struct Cli {
     #[arg(long, global = true)]
     daemon: bool,
 
+    /// Internal marker for the Windows daemon child process.
+    #[arg(long = "daemon-child-process", hide = true, global = true)]
+    daemon_child_process: bool,
+
     /// With --daemon: only check status, don't restart/start
     #[arg(long, global = true, requires = "daemon")]
     dry_run: bool,
@@ -287,7 +291,9 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         } else {
             println!("Starting daemon...");
         }
-        daemon::fork_daemon();
+        if let Err(error) = daemon::fork_daemon() {
+            return Some(Err(error.into()));
+        }
         #[cfg(unix)]
         {
             match daemon::wait_for_child_signal(120) {

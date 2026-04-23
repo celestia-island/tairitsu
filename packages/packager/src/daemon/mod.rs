@@ -8,6 +8,9 @@ use std::{env, fs, path::PathBuf, process::Command, sync::OnceLock};
 
 static PROJECT_ROOT: OnceLock<PathBuf> = OnceLock::new();
 
+#[cfg(windows)]
+const DAEMON_CHILD_ARG: &str = "--daemon-child-process";
+
 pub fn set_project_root(path: PathBuf) {
     let _ = PROJECT_ROOT.set(path);
 }
@@ -121,7 +124,22 @@ pub fn is_tty() -> bool {
 
 /// Check if the current process is a daemon (already backgrounded)
 pub fn is_daemon() -> bool {
-    env::var("TAIRITSU_DAEMON").is_ok()
+    #[cfg(windows)]
+    {
+        static HAS_DAEMON_CHILD_ARG: OnceLock<bool> = OnceLock::new();
+
+        env::var("TAIRITSU_DAEMON").is_ok()
+            || *HAS_DAEMON_CHILD_ARG.get_or_init(|| {
+                env::args_os()
+                    .skip(1)
+                    .any(|arg| arg == std::ffi::OsStr::new(DAEMON_CHILD_ARG))
+            })
+    }
+
+    #[cfg(not(windows))]
+    {
+        env::var("TAIRITSU_DAEMON").is_ok()
+    }
 }
 
 /// Daemonize the current process.
@@ -181,11 +199,19 @@ pub fn daemonize_self() -> std::io::Result<()> {
     let stdout_path = daemon_log_path().with_extension("stdout");
     let stderr_path = daemon_log_path().with_extension("stderr");
 
-    let stdout_file = OpenOptions::new().create(true).append(true).open(&stdout_path)?;
-    let stderr_file = OpenOptions::new().create(true).append(true).open(&stderr_path)?;
+    let stdout_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&stdout_path)?;
+    let stderr_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&stderr_path)?;
 
     unsafe {
-        use windows_sys::Win32::System::Console::{SetStdHandle, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+        use windows_sys::Win32::System::Console::{
+            STD_ERROR_HANDLE, STD_OUTPUT_HANDLE, SetStdHandle,
+        };
 
         let stdout_handle = stdout_file.into_raw_handle();
         let stderr_handle = stderr_file.into_raw_handle();
@@ -320,6 +346,251 @@ pub fn kill_daemon() -> std::io::Result<bool> {
     Ok(false)
 }
 
+#[cfg(windows)]
+fn to_wide_null(value: &std::ffi::OsStr) -> Vec<u16> {
+    use std::os::windows::ffi::OsStrExt;
+
+    value
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect::<Vec<u16>>()
+}
+
+#[cfg(windows)]
+fn append_windows_quoted_arg(command_line: &mut Vec<u16>, value: &std::ffi::OsStr) {
+    use std::os::windows::ffi::OsStrExt;
+
+    const SPACE: u16 = b' ' as u16;
+    const TAB: u16 = b'\t' as u16;
+    const QUOTE: u16 = b'"' as u16;
+    const BACKSLASH: u16 = b'\\' as u16;
+
+    let units = value.encode_wide().collect::<Vec<u16>>();
+    let needs_quotes = units.is_empty()
+        || units
+            .iter()
+            .any(|unit| matches!(*unit, SPACE | TAB | QUOTE));
+
+    if !needs_quotes {
+        command_line.extend_from_slice(&units);
+        return;
+    }
+
+    command_line.push(QUOTE);
+
+    let mut pending_backslashes = 0usize;
+    for unit in units {
+        match unit {
+            BACKSLASH => {
+                pending_backslashes += 1;
+            }
+            QUOTE => {
+                command_line.extend(std::iter::repeat_n(BACKSLASH, pending_backslashes * 2 + 1));
+                command_line.push(unit);
+                pending_backslashes = 0;
+            }
+            _ => {
+                command_line.extend(std::iter::repeat_n(BACKSLASH, pending_backslashes));
+                command_line.push(unit);
+                pending_backslashes = 0;
+            }
+        }
+    }
+
+    command_line.extend(std::iter::repeat_n(BACKSLASH, pending_backslashes * 2));
+    command_line.push(QUOTE);
+}
+
+#[cfg(windows)]
+fn build_windows_command_line(exe: &std::path::Path, args: &[std::ffi::OsString]) -> Vec<u16> {
+    let mut command_line = Vec::new();
+
+    append_windows_quoted_arg(&mut command_line, exe.as_os_str());
+    for arg in args {
+        command_line.push(b' ' as u16);
+        append_windows_quoted_arg(&mut command_line, arg.as_os_str());
+    }
+    command_line.push(b' ' as u16);
+    append_windows_quoted_arg(&mut command_line, std::ffi::OsStr::new(DAEMON_CHILD_ARG));
+    command_line.push(0);
+
+    command_line
+}
+
+#[cfg(windows)]
+fn spawn_daemon_process_windows(
+    exe: &std::path::Path,
+    args: &[std::ffi::OsString],
+) -> std::io::Result<()> {
+    use std::{io, mem, ptr};
+    use windows_sys::Win32::Foundation::{
+        CloseHandle, GENERIC_READ, GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE,
+    };
+    use windows_sys::Win32::Security::SECURITY_ATTRIBUTES;
+    use windows_sys::Win32::Storage::FileSystem::{
+        CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
+    };
+    use windows_sys::Win32::System::Threading::{
+        CreateProcessW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
+        InitializeProcThreadAttributeList, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
+        STARTF_USESTDHANDLES, STARTUPINFOEXW, UpdateProcThreadAttribute,
+    };
+
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+    struct OwnedHandle(HANDLE);
+
+    impl OwnedHandle {
+        fn nul(desired_access: u32) -> io::Result<Self> {
+            let nul = to_wide_null(std::ffi::OsStr::new("NUL"));
+            let mut security_attributes = SECURITY_ATTRIBUTES {
+                nLength: mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+                lpSecurityDescriptor: ptr::null_mut(),
+                bInheritHandle: 1,
+            };
+
+            let handle = unsafe {
+                CreateFileW(
+                    nul.as_ptr(),
+                    desired_access,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    &mut security_attributes,
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    ptr::null_mut(),
+                )
+            };
+
+            if handle.is_null() || handle == INVALID_HANDLE_VALUE {
+                return Err(io::Error::last_os_error());
+            }
+
+            Ok(Self(handle))
+        }
+
+        fn raw(&self) -> HANDLE {
+            self.0
+        }
+    }
+
+    impl Drop for OwnedHandle {
+        fn drop(&mut self) {
+            if !self.0.is_null() && self.0 != INVALID_HANDLE_VALUE {
+                unsafe {
+                    CloseHandle(self.0);
+                }
+            }
+        }
+    }
+
+    struct OwnedAttributeList {
+        _buffer: Vec<u8>,
+        ptr: *mut std::ffi::c_void,
+    }
+
+    impl OwnedAttributeList {
+        fn new(attribute_count: u32) -> io::Result<Self> {
+            let mut bytes_required = 0usize;
+
+            unsafe {
+                let _ = InitializeProcThreadAttributeList(
+                    ptr::null_mut(),
+                    attribute_count,
+                    0,
+                    &mut bytes_required,
+                );
+            }
+
+            let mut buffer = vec![0u8; bytes_required];
+            let ptr = buffer.as_mut_ptr() as *mut std::ffi::c_void;
+
+            let initialized = unsafe {
+                InitializeProcThreadAttributeList(ptr, attribute_count, 0, &mut bytes_required)
+            };
+            if initialized == 0 {
+                return Err(io::Error::last_os_error());
+            }
+
+            Ok(Self {
+                _buffer: buffer,
+                ptr,
+            })
+        }
+
+        fn set_handle_list(&mut self, handles: &mut [HANDLE]) -> io::Result<()> {
+            let updated = unsafe {
+                UpdateProcThreadAttribute(
+                    self.ptr,
+                    0,
+                    PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+                    handles.as_mut_ptr() as *mut _,
+                    mem::size_of_val(handles),
+                    ptr::null_mut(),
+                    ptr::null_mut(),
+                )
+            };
+            if updated == 0 {
+                return Err(io::Error::last_os_error());
+            }
+
+            Ok(())
+        }
+    }
+
+    impl Drop for OwnedAttributeList {
+        fn drop(&mut self) {
+            unsafe {
+                DeleteProcThreadAttributeList(self.ptr);
+            }
+        }
+    }
+
+    let stdin_handle = OwnedHandle::nul(GENERIC_READ)?;
+    let stdout_handle = OwnedHandle::nul(GENERIC_WRITE)?;
+    let stderr_handle = OwnedHandle::nul(GENERIC_WRITE)?;
+
+    let mut inherited_handles = [stdin_handle.raw(), stdout_handle.raw(), stderr_handle.raw()];
+    let mut attribute_list = OwnedAttributeList::new(1)?;
+    attribute_list.set_handle_list(&mut inherited_handles)?;
+
+    let application_name = to_wide_null(exe.as_os_str());
+    let mut command_line = build_windows_command_line(exe, args);
+
+    let mut startup_info = STARTUPINFOEXW {
+        StartupInfo: unsafe { mem::zeroed() },
+        lpAttributeList: attribute_list.ptr,
+    };
+    startup_info.StartupInfo.cb = mem::size_of::<STARTUPINFOEXW>() as u32;
+    startup_info.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    startup_info.StartupInfo.hStdInput = stdin_handle.raw();
+    startup_info.StartupInfo.hStdOutput = stdout_handle.raw();
+    startup_info.StartupInfo.hStdError = stderr_handle.raw();
+
+    let mut process_info: PROCESS_INFORMATION = unsafe { mem::zeroed() };
+    let created = unsafe {
+        CreateProcessW(
+            application_name.as_ptr(),
+            command_line.as_mut_ptr(),
+            ptr::null(),
+            ptr::null(),
+            1,
+            CREATE_NO_WINDOW | EXTENDED_STARTUPINFO_PRESENT,
+            ptr::null(),
+            ptr::null(),
+            &mut startup_info as *mut STARTUPINFOEXW as *mut _,
+            &mut process_info,
+        )
+    };
+    if created == 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    let _process_handle = OwnedHandle(process_info.hProcess);
+    let _thread_handle = OwnedHandle(process_info.hThread);
+
+    Ok(())
+}
+
 /// Fork the process to run as a daemon
 pub fn fork_daemon() -> std::io::Result<()> {
     fork_daemon_with_args(std::env::args())
@@ -359,10 +630,10 @@ where
     #[cfg(windows)]
     {
         let exe = env::current_exe()?;
-        let args: Vec<String> = args
+        let args: Vec<std::ffi::OsString> = args
             .into_iter()
             .skip(1)
-            .map(|s| s.as_ref().to_string_lossy().into_owned())
+            .map(|s| s.as_ref().to_os_string())
             .collect();
 
         let log_path = daemon_log_path();
@@ -370,47 +641,7 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        use std::os::windows::process::CommandExt;
-        use windows_sys::Win32::Foundation::{SetHandleInformation, HANDLE_FLAG_INHERIT};
-        use windows_sys::Win32::System::Console::{GetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE};
-
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-        unsafe fn make_non_inheritable(std_handle: u32) -> Option<*mut std::ffi::c_void> {
-            let handle = GetStdHandle(std_handle);
-            if handle.is_null() || handle == windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE {
-                return None;
-            }
-            if SetHandleInformation(handle as _, HANDLE_FLAG_INHERIT, 0) == 0 {
-                return None;
-            }
-            Some(handle)
-        }
-
-        unsafe fn restore_inheritable(handle: *mut std::ffi::c_void) {
-            SetHandleInformation(handle as _, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        }
-
-        let saved_out = unsafe { make_non_inheritable(STD_OUTPUT_HANDLE) };
-        let saved_err = unsafe { make_non_inheritable(STD_ERROR_HANDLE) };
-
-        let result = std::process::Command::new(&exe)
-            .env("TAIRITSU_DAEMON", "1")
-            .args(&args)
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .creation_flags(CREATE_NO_WINDOW)
-            .spawn();
-
-        if let Some(h) = saved_out {
-            unsafe { restore_inheritable(h) };
-        }
-        if let Some(h) = saved_err {
-            unsafe { restore_inheritable(h) };
-        }
-
-        let _child = result?;
+        spawn_daemon_process_windows(&exe, &args)?;
         std::process::exit(0);
     }
 }
