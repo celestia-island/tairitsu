@@ -306,6 +306,90 @@ pub fn check_process_exists(pid: u32) -> bool {
     }
 }
 
+/// Information about the process owning a port.
+pub struct PortOwnerInfo {
+    pub pid: u32,
+    pub exe_path: Option<PathBuf>,
+}
+
+/// Find the PID of the process listening on `port` (TCP, IPv4 localhost).
+fn find_pid_on_port(port: u16) -> Option<u32> {
+    #[cfg(windows)]
+    {
+        let output = Command::new("netstat")
+            .args(&["-ano", "-p", "TCP"])
+            .output()
+            .ok()?;
+        let text = String::from_utf8_lossy(&output.stdout);
+        let needle = format!("  127.0.0.1:{} ", port);
+        for line in text.lines() {
+            if line.contains(&needle) && line.contains("LISTENING") {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if let Some(pid_str) = parts.last() {
+                    if let Ok(pid) = pid_str.parse::<u32>() {
+                        return Some(pid);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    #[cfg(unix)]
+    {
+        let output = Command::new("lsof")
+            .args(&["-ti", &format!(":{}", port), "-sTCP:LISTEN"])
+            .output()
+            .ok()?;
+        let text = String::from_utf8_lossy(&output.stdout);
+        text.lines()
+            .next()
+            .and_then(|line| line.trim().parse::<u32>().ok())
+    }
+}
+
+/// Get the executable path of a process by PID.
+fn get_process_exe(pid: u32) -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        let output = Command::new("wmic")
+            .args(&[
+                "process",
+                &format!("where ProcessId={}", pid),
+                "get",
+                "ExecutablePath",
+                "/format:value",
+            ])
+            .output()
+            .ok()?;
+        let text = String::from_utf8_lossy(&output.stdout);
+        for line in text.lines() {
+            if let Some(path) = line.strip_prefix("ExecutablePath=") {
+                let trimmed = path.trim();
+                if !trimmed.is_empty() {
+                    return Some(PathBuf::from(trimmed));
+                }
+            }
+        }
+        None
+    }
+
+    #[cfg(unix)]
+    {
+        std::fs::read_link(format!("/proc/{}/exe", pid)).ok()
+    }
+}
+
+/// Return information about the process currently listening on `port`.
+///
+/// Uses platform-native tools (`netstat`/`lsof`) to find the owning PID,
+/// then resolves its executable path.
+pub fn port_owner_info(port: u16) -> Option<PortOwnerInfo> {
+    let pid = find_pid_on_port(port)?;
+    let exe_path = get_process_exe(pid);
+    Some(PortOwnerInfo { pid, exe_path })
+}
+
 /// Kill the daemon process and wait for it to exit
 pub fn kill_daemon() -> std::io::Result<bool> {
     if let Ok(pid) = read_pid()

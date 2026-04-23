@@ -1761,22 +1761,29 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         let probe = std::net::TcpListener::bind(("127.0.0.1", port));
         if let Err(ref err) = probe {
             if err.kind() == std::io::ErrorKind::AddrInUse {
-                if crate::daemon::is_daemon_running() {
-                    let pid = crate::daemon::read_pid().unwrap_or(0);
-                    return Err(crate::TairitsuPackagerError::BuildError(format!(
-                        "Port {} is already in use by tairitsu daemon (PID {}).\n  \
-                         Use `tairitsu dev --daemon` to attach to the running daemon,\n  \
-                         or `tairitsu dev --shutdown` to stop it first.",
-                        port, pid
-                    )));
-                } else {
-                    return Err(crate::TairitsuPackagerError::BuildError(format!(
-                        "Port {} is already in use by another process.\n  \
-                         Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,\n  \
-                         or stop the process occupying port {}.",
-                        port, port
-                    )));
+                let owner = crate::daemon::port_owner_info(port);
+                if let Some(ref info) = owner {
+                    if info.pid == crate::daemon::read_pid().unwrap_or(0) {
+                        return Err(crate::TairitsuPackagerError::BuildError(format!(
+                            "Port {} is already in use by tairitsu daemon (PID {}).\n  \
+                             Use `tairitsu dev --daemon` to attach to the running daemon,\n  \
+                             or `tairitsu dev --shutdown` to stop it first.",
+                            port, info.pid
+                        )));
+                    }
                 }
+                let mut msg = format!("Port {} is already in use by another process.", port);
+                if let Some(info) = owner {
+                    msg.push_str(&format!(" (PID {})", info.pid));
+                    if let Some(exe) = info.exe_path {
+                        msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                    }
+                }
+                msg.push_str("\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,\n  \
+                     or stop the process occupying port ");
+                msg.push_str(&port.to_string());
+                msg.push('.');
+                return Err(crate::TairitsuPackagerError::BuildError(msg));
             }
         }
         drop(probe);
@@ -2048,6 +2055,16 @@ async fn bind_listener_with_fallback(
              To attach to it, use: tairitsu dev --daemon\n  \
              To stop it first, use: tairitsu dev --shutdown",
             crate::daemon::read_pid().unwrap_or(0)
+        );
+    } else if let Some(owner) = crate::daemon::port_owner_info(preferred_port) {
+        hint = format!(
+            "\n\n  Hint: Port {} is held by PID {}{}.",
+            preferred_port,
+            owner.pid,
+            owner
+                .exe_path
+                .map(|p| format!(" ({})", p.display()))
+                .unwrap_or_default()
         );
     }
 

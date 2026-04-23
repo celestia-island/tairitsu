@@ -83,7 +83,7 @@ pub struct DevConfig {
 }
 
 fn default_port() -> u16 {
-    3001
+    3000
 }
 
 fn default_hot_reload() -> bool {
