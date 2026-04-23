@@ -102,7 +102,14 @@ tempfile = "3"
 [features]
 default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch"]
 native = ["tokio", "crossterm"]
-dev-server = ["axum", "tower-http", "notify", "tairitsu-ssr", "tokio", "tokio-stream"]
+dev-server = [
+  "axum",
+  "tower-http",
+  "notify",
+  "tairitsu-ssr",
+  "tokio",
+  "tokio-stream",
+]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 # Enable remote icon fetching from MDI, Lucide, etc.
@@ -112,4 +119,10 @@ icon-fetch = ["reqwest", "zip"]
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_System_Console", "Win32_Foundation"] }
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Console",
+  "Win32_System_Threading",
+] }
