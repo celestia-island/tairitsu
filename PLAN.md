@@ -1,321 +1,188 @@
-# Tairitsu 模块化 WASM Component CDN 分发计划
+# Daemon Windows Spawn Fix — Active Work Plan
 
-> **目标**: 利用 WASM Component Model 的动态链接特性，将框架拆分为可独立缓存、CDN 加速的 npm 模块，
-> 使业务代码只需引用一份胶水 + 一份基于 tairitsu 编译的 wasm 即可快速加载。
-> hikari 也可按同样模式分模块上传和缓存。
+## Status: IN PROGRESS (blocked on pipe handle inheritance)
 
----
+## What's Done
 
-## 现状分析
+### CSS 404 Fix (COMPLETED)
+- Root cause: packager only copied project's `public/`, not hikari's
+- Added `extra_public_dirs` field to `AssetsConfig` in `config/mod.rs`
+- Website `Cargo.toml` now references `../../../hikari/public`
+- Verified: `target/tairitsu-dist/styles/` contains `bundle.css`, `spa.css`, etc.
 
-### 当前架构 (单体打包)
+### Daemon Path Mismatch Fix (COMPLETED)
+- Parent in `handle_sync_daemon()` never set `project_root` → looked in wrong `target/` dir
+- Child set `project_root` from `--manifest-path` → wrote ready file to different path
+- Fix: `set_project_root()` called in `handle_sync_daemon()` before daemon ops
 
-```
-Rust 业务代码
-    ↓ cargo build --target wasm32-wasip2
-单体 .wasm (~1-5MB)
-    ↓ jco transpile (构建时)
-component-wrapper/*.js
-    ↓ + browser-glue (嵌入在 packager 编译时)
-dist/
-  ├── index.html
-  ├── __tairitsu_glue__.js          ← 运行时胶水 (IIFE, 嵌入在 Rust binary 中)
-  ├── browser-glue/                  ← 完整 glue dist 副本
-  ├── component-wrapper/             ← jco 生成的 wrapper
-  └── app.wasm                       ← 单体组件
-```
+### Daemon Refactoring (COMPLETED)
+- `main.rs`: daemon sync ops happen OUTSIDE tokio runtime via `handle_sync_daemon()`
+- `cli/mod.rs`: `handle_sync_daemon()` for sync ops (status/shutdown/parent-fork)
+- `command` field is `Option<Commands>` so `--status`/`--shutdown`/`--daemon` work without subcommand
+- Windows parent path: fork + `exit(0)` (no `wait_for_child_signal`)
+- Unix parent path: fork + `wait_for_child_signal(120)` (unchanged)
 
-**问题**:
-1. 每次业务代码变更，整个 .wasm 必须重新下载
-2. browser-glue 胶水代码嵌入在 packager Rust binary 中，无法独立更新/缓存
-3. hikari 组件库被静态链接进 .wasm，无法共享缓存
-4. 无 npm 分发基础设施，无法 CDN 加速
+## Current Blocker: MCP Tool Pipe Hang on Windows
 
-### 目标架构 (模块化动态链接)
+### The Problem
 
-```
-npm CDN (@celestia scope)
-├── @celestia/tairitsu-runtime        ← 运行时加载器 + import map 注册 (JS)
-├── @celestia/tairitsu-glue-core      ← 核心胶水: handles, async, registry (JS)
-├── @celestia/tairitsu-glue-dom       ← DOM 域胶水 (JS)
-├── @celestia/tairitsu-glue-events    ← Events 域胶水 (JS)
-├── @celestia/tairitsu-glue-html      ← HTML 域胶水 (JS)
-├── ... (每个 WIT domain 一个包)
-├── @celestia/tairitsu-glue-full      ← 聚合包: 引用上述所有域
-├── @celestia/tairitsu-wit-adapter    ← WASI preview2 adapter .wasm (CDN 可缓存)
-├── @celestia/tairitsu-component-loader ← jco 转译后的通用加载器 (JS)
-└── @celestia/hikari-components       ← hikari UI 组件 (独立 .wasm)
+When `tairitsu --daemon` is called from an MCP bash tool (e.g. opencode's bash tool):
 
-业务页面引用:
-├── <script type="importmap">{ ... }</script>
-├── <script type="module">
-│     import { boot } from '@celestia/tairitsu-runtime';
-│     boot({ componentUrl: '/app.wasm' });
-│   </script>
-└── app.wasm  ← 仅包含业务逻辑 (极小, ~50-200KB)
-```
+1. The MCP tool spawns the parent process with **pipe handles** for stdout/stderr
+2. The parent forks a child process via `Command::spawn()`
+3. Rust's `Command::spawn()` calls Windows `CreateProcess` with `bInheritHandles = TRUE`
+4. **ALL inheritable handles** are copied to the child — including the MCP tool's pipe handles
+5. Parent calls `std::process::exit(0)` — parent terminates
+6. But child still holds references to the MCP tool's stdout/stderr pipes
+7. MCP tool waits for its pipe to close → pipe doesn't close because child has copies → **HANGS FOREVER**
 
----
+### What We've Tried
 
-## Phase 1: npm 发布基础设施
+| Approach | Result |
+|----------|--------|
+| `CREATE_NEW_PROCESS_GROUP` + `Stdio::null()` + `mem::forget` | Child alive but MCP tool hangs (pipe inherited) |
+| `DETACHED_PROCESS` + `Stdio::null()` + `exit(0)` | Pops up console window (unacceptable) |
+| `CREATE_NO_WINDOW` + `Stdio::null()` + `exit(0)` | MCP tool still hangs (pipe still inherited) |
+| `SetHandleInformation` to clear `HANDLE_FLAG_INHERIT` on parent's stdout/stderr before spawn, then restore after | **COMPILES but NOT YET TESTED** — this is the current code |
+| `Stdio::from(file)` + `DETACHED_PROCESS` + `exit(0)` | Popup console window |
+| PowerShell `Start-Process -WindowStyle Hidden` directly from MCP bash | Works perfectly (no popup, child survives) |
+| `$env:TAIRITSU_DAEMON="1"; & tairitsu.exe dev ...` directly in MCP bash | Works (child alive and building) |
 
-### 1.1 修正 browser-glue package.json 发布元数据
-
-- [x] 添加 `files` 白名单 (仅 `dist/`, `README.md`)
-- [x] 添加 `repository`, `publishConfig` 字段
-- [x] 将 scope 从 `@tairitsu` 迁移到 `@celestia`
-
-### 1.2 创建 @celestia/tairitsu-runtime 包
-
-新建 `packages/npm/runtime/` 目录:
-- `package.json`: @celestia/tairitsu-runtime
-- `src/index.ts`: 运行时加载器 (从 browser-glue/src/runtime 提取)
-- 构建: esbuild → ESM + IIFE 双格式
-
-### 1.3 justfile 添加 publish recipe
-
-```just
-# 发布所有 npm 包到 @celestia scope (需要 NPM_TOKEN 环境变量)
-publish:
-    npm publish --access public packages/npm/runtime
-    npm publish --access public packages/browser-glue
-```
-
----
-
-## Phase 2: 拆分 browser-glue 为独立域模块
-
-### 2.1 域级包结构
-
-每个 WIT domain 对应一个独立的 npm 包:
-
-```
-packages/npm/
-├── runtime/                     ← @celestia/tairitsu-runtime
-│   ├── package.json
-│   ├── src/index.ts
-│   └── tsconfig.json
-├── glue-core/                   ← @celestia/tairitsu-glue-core (handles + async + registry)
-│   ├── package.json
-│   ├── src/
-│   │   ├── handles.ts
-│   │   ├── async.ts
-│   │   └── registry.ts
-│   └── tsconfig.json
-├── glue-dom/                    ← @celestia/tairitsu-glue-dom
-│   ├── package.json
-│   └── src/index.ts             ← re-export from browser-glue/src/glue/dom.ts
-├── glue-events/                 ← @celestia/tairitsu-glue-events
-├── glue-html/
-├── glue-css/
-├── glue-fetch/
-├── glue-canvas/
-├── ... (每个 WIT domain)
-└── glue-full/                   ← @celestia/tairitsu-glue-full (聚合所有域)
-    ├── package.json
-    └── src/index.ts             ← import + re-export 所有子包
-```
-
-### 2.2 依赖关系
-
-```
-@celestia/tairitsu-glue-dom
-  └── @celestia/tairitsu-glue-core (handles)
-
-@celestia/tairitsu-glue-events
-  └── @celestia/tairitsu-glue-core
-
-@celestia/tairitsu-glue-full
-  ├── @celestia/tairitsu-glue-core
-  ├── @celestia/tairitsu-glue-dom
-  ├── @celestia/tairitsu-glue-events
-  └── ... (所有域)
-
-@celestia/tairitsu-runtime
-  └── @celestia/tairitsu-glue-core
-```
-
----
-
-## Phase 3: WASM Component 动态链接支持
-
-### 3.1 浏览器端 Component Model 支持现状
-
-| 浏览器 | WebAssembly.Component | 状态 |
-|--------|----------------------|------|
-| Chrome 125+ | ✅ 支持 | 需要 origin trial 或 flag |
-| Firefox | ❌ 不支持 | 需要 polyfill (jco) |
-| Safari | ❌ 不支持 | 需要 polyfill (jco) |
-
-**当前方案**: jco transpile 在构建时将 .wasm component 转为 .js + .wasm (core module)，
-运行时用纯 JS 实现 component model 的链接语义。
-
-**改进方向**: 
-- 短期: 继续用 jco，但将 jco 的产物也作为 npm 包发布
-- 中期: 当浏览器原生支持后，直接用 `WebAssembly.Component` API
-
-### 3.2 分模块编译与链接
-
-当前: 所有代码编译为一个 .wasm component
-```
-cargo build --target wasm32-wasip2
-→ app.wasm (包含 runtime + vdom + hooks + hikari + 业务代码)
-```
-
-目标: 框架层与业务代码分离
-```
-cargo build --target wasm32-wasip2 -p hikari-components
-→ hikari.wasm (独立组件库 component)
-
-cargo build --target wasm32-wasip2 -p tairitsu-vdom
-→ tairitsu-vdom.wasm (虚拟 DOM component)
-
-cargo build --target wasm32-wasip2 -p my-app
-→ app.wasm (仅业务代码, import tairitsu-vdom 和 hikari)
-```
-
-**需要的 Rust 侧改动**:
-1. `tairitsu-vdom` 需要能作为独立 wasm32-wasip2 crate 编译
-2. `hikari-components` 同理
-3. 业务代码通过 WIT import 引用这些共享 component 的导出
-4. packager 需要支持多 component 链接模式
-
-### 3.3 packager 改造: 多 component 构建模式
-
-当前 `build_component()` 只处理单个 .wasm，需要扩展为:
-
-```
-tairitsu build --release
-  → 编译 app.wasm
-  → 检测 WIT imports 中引用的已知框架 component
-  → 从 npm CDN 或本地缓存获取 pre-built framework components
-  → 生成 HTML 时包含多个 component 的加载和链接逻辑
-```
-
----
-
-## Phase 4: import map CDN 分发
-
-### 4.1 运行时加载策略
-
-业务页面 HTML 只需要:
-
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@celestia/tairitsu-runtime": "https://esm.sh/@celestia/tairitsu-runtime@0.1.0",
-    "@celestia/tairitsu-glue-dom": "https://esm.sh/@celestia/tairitsu-glue-dom@0.1.0",
-    "@celestia/tairitsu-glue-events": "https://esm.sh/@celestia/tairitsu-glue-events@0.1.0",
-    "@celestia/tairitsu-glue-html": "https://esm.sh/@celestia/tairitsu-glue-html@0.1.0"
-  }
-}
-</script>
-<script type="module">
-  import { boot } from '@celestia/tairitsu-runtime';
-  await boot({ componentUrl: '/app.wasm' });
-</script>
-```
-
-### 4.2 框架 component 的 CDN 分发
-
-```
-npm publish → @celestia/tairitsu-vdom-wasm (包含 .wasm + wrapper .js)
-           → @celestia/hikari-components-wasm (包含 .wasm + wrapper .js)
-```
-
-CDN 引用:
-```
-https://esm.sh/@celestia/tairitsu-vdom-wasm@0.1.0/tairitsu_vdom.wasm
-https://esm.sh/@celestia/tairitsu-vdom-wasm@0.1.0/wrapper.js
-```
-
-### 4.3 版本缓存策略
-
-- 每个 npm 包独立 semver
-- wasm 文件使用 content hash 文件名 (cache busting)
-- import map 中的版本号由 packager 生成时自动注入
-
----
-
-## Phase 5: hikari 模块化
-
-### 5.1 hikari 组件库独立 wasm component
-
-hikari 当前被静态链接到业务 .wasm 中。改为:
-
-```
-hikari-components
-  ↓ cargo build --target wasm32-wasip2 --lib
-hikari.wasm (独立 component)
-  ↓ jco transpile
-hikari-wrapper.js
-  ↓ npm publish
-@celestia/hikari-components
-```
-
-### 5.2 业务代码引用 hikari
+### Current Code (in `daemon/mod.rs` fork_daemon_with_args, Windows branch)
 
 ```rust
-// 业务代码中通过 WIT import 引用 hikari 组件
-// wit:
-//   import hikari:components/button;
-//   import hikari:components/card;
+// Strategy: mark parent's stdout/stderr pipe handles as non-inheritable
+// before spawn, so child doesn't inherit MCP tool's pipe handles.
+// Then restore inheritability after spawn (parent still needs them
+// for the brief moment before exit(0)).
+
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+unsafe fn make_non_inheritable(std_handle: u32) -> Option<*mut c_void> {
+    let handle = GetStdHandle(std_handle);
+    if handle.is_null() || handle == INVALID_HANDLE_VALUE {
+        return None;
+    }
+    if SetHandleInformation(handle as _, HANDLE_FLAG_INHERIT, 0) == 0 {
+        return None;
+    }
+    Some(handle)
+}
+
+let saved_out = unsafe { make_non_inheritable(STD_OUTPUT_HANDLE) };
+let saved_err = unsafe { make_non_inheritable(STD_ERROR_HANDLE) };
+
+let result = Command::new(&exe)
+    .env("TAIRITSU_DAEMON", "1")
+    .args(&args)
+    .stdin(Stdio::null())
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .creation_flags(CREATE_NO_WINDOW)
+    .spawn();
+
+// Restore inheritability (though we exit immediately after)
+if let Some(h) = saved_out { unsafe { restore_inheritable(h) }; }
+if let Some(h) = saved_err { unsafe { restore_inheritable(h) }; }
+
+let _child = result?;
+std::process::exit(0);
 ```
 
----
+**This code compiles and builds successfully but has NOT been tested yet.** The last test was interrupted before we could verify.
 
-## 实施优先级
+### Why This Should Work
 
-| 阶段 | 优先级 | 依赖 | 预估工作量 |
-|------|--------|------|-----------|
-| Phase 1 | P0 | 无 | 2-3h |
-| Phase 2 | P1 | Phase 1 | 4-6h |
-| Phase 3 | P2 | Phase 1 | 8-12h |
-| Phase 4 | P3 | Phase 2 + 3 | 4-6h |
-| Phase 5 | P4 | Phase 3 | 4-6h |
+`SetHandleInformation(handle, HANDLE_FLAG_INHERIT, 0)` clears the inherit flag on the pipe handle. When `CreateProcess` is called with `bInheritHandles = TRUE`, it only duplicates handles that have the `HANDLE_FLAG_INHERIT` flag set. So the MCP tool's pipe handles should NOT be copied to the child.
 
----
+### Potential Issues to Investigate
 
-## 技术风险与缓解
+1. **Rust's `Command::spawn()` may internally duplicate handles before calling `CreateProcess`**: The Rust std library might create its own inheritable duplicates of handles during the spawn process. If so, our `SetHandleInformation` call might not be sufficient. Need to check Rust's `sys_common/process.rs` Windows implementation.
 
-| 风险 | 影响 | 缓解方案 |
-|------|------|---------|
-| 浏览器不支持原生 Component Model | jco 产物体积大 | 短期继续 jco，中期用 WebAssembly.Component |
-| 多 component 动态链接性能 | 加载时间增加 | HTTP/2 multiplexing + 预加载 |
-| WIT 接口跨 component 版本不兼容 | 运行时链接失败 | 严格 semver + 构建时版本检查 |
-| npm 包体积 | CDN 加载慢 | tree-shaking + 按域拆分 |
+2. **`CREATE_NO_WINDOW` + non-inheritable stdout/stderr might cause the child to crash**: The child has no console and no inherited handles. When it tries to write to stdout/stderr (during initialization before `daemonize_self()` redirects them), it might panic. But since we use `Stdio::null()`, the child's stdio handles should be NUL — this should be fine.
 
----
+3. **The MCP tool's pipe might not be the standard handle**: The MCP tool might not use Windows standard handles for communication. It might use a different mechanism (e.g., anonymous pipes created with `CreatePipe`). If the pipe is not the standard handle, `GetStdHandle` won't return it, and our fix won't apply.
 
-## 当前已完成
+### Alternative Approaches to Try Next
 
-1. ✅ PLAN.md 撰写
-2. ✅ browser-glue package.json 更新 (publish 元数据, @celestia scope)
-3. ✅ @celestia/tairitsu-runtime (1.6KB) — WASM component 加载器
-4. ✅ justfile 添加 `publish` / `publish-live` / `npm-build-glue` / `npm-build-wasm` recipes
-5. ✅ 34 个 per-domain npm 包全部生成并构建完成 (总计 309.8KB, minified)
-6. ✅ @celestia/tairitsu-glue-core (4.4KB) — handles + helpers + async
-7. ✅ 7 个 runtime domain 包 (dom/events/css/html/observers/resize-observer/platform)
-8. ✅ 25 个 auto-generated stub 包 (canvas/fetch/media/svg/webrtc/workers 等)
-9. ✅ @celestia/tairitsu-glue-full (2.1KB) — 聚合包
-10. ✅ Rust → wasm → npm 构建脚本 (scripts/build_wasm_packages.py)
-11. ✅ glue 包自动生成脚本 (scripts/build_npm_glue_packages.py)
+#### Option A: Use `CreateProcess` directly via `windows-sys`
+Instead of Rust's `Command::spawn()`, call `CreateProcessW` directly with `bInheritHandles = FALSE`. This completely prevents any handle inheritance. Pass only the handles we explicitly want (NUL for stdio) via `STARTUPINFOEX` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`.
 
-### 包大小分布 (esbuild minified)
+```rust
+// Pseudocode:
+let startup_info_ex = STARTUPINFOEXW { 
+    lpAttributeList: proc_thread_attribute_list,
+    // Only inherit NUL handles, NOT the MCP tool's pipes
+};
+CreateProcessW(
+    exe_path,
+    cmd_line,
+    lpProcessAttributes: null,
+    lpThreadAttributes: null,
+    bInheritHandles: FALSE,  // <-- KEY: no inheritance at all
+    dwCreationFlags: CREATE_NO_WINDOW | EXTENDED_STARTUPINFO_PRESENT,
+    lpEnvironment: null,
+    lpCurrentDirectory: null,
+    &startup_info_ex.StartupInfo,
+    lpProcessInformation: &mut proc_info,
+);
+```
 
-| 包 | 大小 | 说明 |
-|---|------|------|
-| glue-canvas | 48.6 KB | Canvas 2D API |
-| glue-media | 46 KB | Media APIs |
-| glue-svg | 41.3 KB | SVG 操作 |
-| glue-fetch | 30.7 KB | Fetch API |
-| glue-webrtc | 25.4 KB | WebRTC |
-| glue-platform | 14.9 KB | 平台助手 (setTimeout, rAF 等) |
-| glue-storage | 15.1 KB | Storage APIs |
-| glue-core | 4.4 KB | 共享 handles + helpers |
-| glue-dom | 2.5 KB | DOM 操作 |
-| glue-events | 4 KB | 事件系统 |
-| glue-full | 2.1 KB | 聚合入口 |
-| runtime | 1.6 KB | 加载器 |
-| **总计** | **~310 KB** | **~80-90 KB gzip** |
+#### Option B: Spawn via PowerShell/cmd.exe as intermediary
+Since `Start-Process -WindowStyle Hidden` works from MCP bash, we could have the parent spawn `cmd.exe /c start /B tairitsu.exe ...` as the intermediary. The `start /B` command creates a detached process that doesn't inherit handles from the caller.
+
+```rust
+Command::new("cmd.exe")
+    .args(&["/C", "start", "/B", "/MIN", &exe.to_string_lossy(), &args.join(" ")])
+    .creation_flags(CREATE_NO_WINDOW)
+    .stdin(Stdio::null())
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn()?;
+std::process::exit(0);
+```
+
+Caveat: passing complex arguments with spaces/quotes through cmd.exe is fragile.
+
+#### Option C: Self-exec via `CreateProcess` with no handle inheritance
+Write a thin wrapper that calls `CreateProcessW` directly with `bInheritHandles = FALSE` and `STARTF_USESTDHANDLES` pointing to NUL. This avoids Rust's `Command` entirely.
+
+#### Option D: Use Job Objects
+Create a Windows Job Object, mark it as "breakaway OK", spawn the child into the job. The child detaches from the parent's handle table. Complex but correct.
+
+### Recommended Next Step
+
+**Test the current `SetHandleInformation` approach first.** If it doesn't work (likely because Rust's `Command::spawn` internally creates new inheritable duplicates), then proceed to **Option A** (direct `CreateProcessW` with `bInheritHandles = FALSE`).
+
+To test:
+```powershell
+# From MCP bash:
+Remove-Item -Force examples/website/target/tairitsu-packager.pid,examples/website/target/tairitsu-packager.ready -ErrorAction SilentlyContinue
+cargo build --bin tairitsu
+# Run with short timeout — if it returns within 5s, the fix works
+D:\源代码\工程项目\celestia\tairitsu\target\debug\tairitsu.exe --manifest-path examples/website dev --daemon
+
+# Then verify child survived:
+Get-Process -Name tairitsu | Select-Object Id,ProcessName
+Get-Content examples/website/target/tairitsu-packager.pid
+```
+
+## Key Files Modified
+
+| File | Change |
+|------|--------|
+| `packages/packager/Cargo.toml` | Added `Win32_Foundation` feature to windows-sys |
+| `packages/packager/src/main.rs` | Calls `handle_sync_daemon()` outside tokio; `exit(0)` on sync path |
+| `packages/packager/src/cli/mod.rs` | `handle_sync_daemon()`: sets project_root, handles status/shutdown/fork |
+| `packages/packager/src/daemon/mod.rs` | `fork_daemon_with_args()`: Windows uses SetHandleInformation + CREATE_NO_WINDOW + exit(0) |
+| `packages/packager/src/config/mod.rs` | `AssetsConfig`: added `extra_public_dirs` field |
+| `packages/packager/src/wasm/mod.rs` | Copies extra_public_dirs assets; calls `signal_ready()` after initial build |
+| `examples/website/Cargo.toml` | Added `extra-public-dirs = ["../../../hikari/public"]` |
+
+## Reference
+
+- **daemon_forge**: https://github.com/ninunez14/daemon_forge — cross-platform Rust daemon library using `DETACHED_PROCESS` + `exit(0)` on Windows
+- **Windows `CreateProcess` docs**: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+- **`SetHandleInformation` docs**: https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-sethandleinformation
+- **`HANDLE_FLAG_INHERIT`**: When cleared on a handle, `CreateProcess(bInheritHandles=TRUE)` will NOT duplicate it to the child
+- **Opencode bash tool**: Uses `detached: process.platform !== "win32"` — does NOT detach on Windows; spawns per-command shell and waits for stdout/stderr pipes to close

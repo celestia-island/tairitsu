@@ -358,11 +358,6 @@ where
 
     #[cfg(windows)]
     {
-        use std::os::windows::process::CommandExt;
-
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
-
         let exe = env::current_exe()?;
         let args: Vec<String> = args
             .into_iter()
@@ -375,21 +370,48 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        let child = Command::new(&exe)
+        use std::os::windows::process::CommandExt;
+        use windows_sys::Win32::Foundation::{SetHandleInformation, HANDLE_FLAG_INHERIT};
+        use windows_sys::Win32::System::Console::{GetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE};
+
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+        unsafe fn make_non_inheritable(std_handle: u32) -> Option<*mut std::ffi::c_void> {
+            let handle = GetStdHandle(std_handle);
+            if handle.is_null() || handle == windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE {
+                return None;
+            }
+            if SetHandleInformation(handle as _, HANDLE_FLAG_INHERIT, 0) == 0 {
+                return None;
+            }
+            Some(handle)
+        }
+
+        unsafe fn restore_inheritable(handle: *mut std::ffi::c_void) {
+            SetHandleInformation(handle as _, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        }
+
+        let saved_out = unsafe { make_non_inheritable(STD_OUTPUT_HANDLE) };
+        let saved_err = unsafe { make_non_inheritable(STD_ERROR_HANDLE) };
+
+        let result = std::process::Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
             .args(&args)
-            .creation_flags(CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP)
+            .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
-            .stdin(std::process::Stdio::null())
-            .spawn()?;
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn();
 
-        // On Windows, Child::drop() calls WaitForSingleObject which would
-        // block the parent until the daemon exits (forever).  Leak the
-        // handle intentionally so the parent returns immediately.
-        std::mem::forget(child);
+        if let Some(h) = saved_out {
+            unsafe { restore_inheritable(h) };
+        }
+        if let Some(h) = saved_err {
+            unsafe { restore_inheritable(h) };
+        }
 
-        Ok(())
+        let _child = result?;
+        std::process::exit(0);
     }
 }
 

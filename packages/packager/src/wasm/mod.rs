@@ -671,22 +671,38 @@ fn copy_static_public_assets_with_output_dir(
 ) -> crate::Result<()> {
     let public_dir = config.manifest_dir.join("public");
 
-    if !public_dir.exists() {
-        return Ok(());
+    if public_dir.exists() {
+        copy_dir_contents(&public_dir, output_dir)?;
     }
 
-    for entry in walkdir::WalkDir::new(&public_dir) {
+    for extra in &config.assets.extra_public_dirs {
+        let extra_path = config.manifest_dir.join(extra);
+        if extra_path.exists() {
+            tracing::info!("Copying extra public assets from: {}", extra_path.display());
+            copy_dir_contents(&extra_path, output_dir)?;
+        } else {
+            tracing::warn!("Extra public dir not found: {}", extra_path.display());
+        }
+    }
+
+    Ok(())
+}
+
+fn copy_dir_contents(
+    src_dir: &std::path::Path,
+    output_dir: &std::path::Path,
+) -> crate::Result<()> {
+    for entry in walkdir::WalkDir::new(src_dir) {
         let entry = entry.map_err(|e| {
-            crate::TairitsuPackagerError::BuildError(format!("Failed to walk public assets: {}", e))
+            crate::TairitsuPackagerError::BuildError(format!("Failed to walk directory: {}", e))
         })?;
         let path = entry.path();
         if path.is_dir() {
             continue;
         }
-
-        let relative = path.strip_prefix(&public_dir).map_err(|e| {
+        let relative = path.strip_prefix(src_dir).map_err(|e| {
             crate::TairitsuPackagerError::BuildError(format!(
-                "Failed to compute public asset relative path: {}",
+                "Failed to compute relative path: {}",
                 e
             ))
         })?;
@@ -696,7 +712,6 @@ fn copy_static_public_assets_with_output_dir(
         }
         std::fs::copy(path, dest)?;
     }
-
     Ok(())
 }
 

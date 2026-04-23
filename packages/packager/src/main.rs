@@ -1,9 +1,16 @@
-use tairitsu_packager::cli::run;
+use tairitsu_packager::cli;
 
-#[tokio::main]
-async fn main() {
-    if let Err(e) = run().await {
-        eprintln!("Error: {}", e);
-        std::process::exit(1);
+fn main() {
+    if let Some(result) = cli::handle_sync_daemon() {
+        match result {
+            Ok(()) => {}
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+        std::process::exit(0);
     }
+
+    cli::run_tokio();
 }

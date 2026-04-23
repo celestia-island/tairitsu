@@ -108,6 +108,9 @@ pub struct AssetsConfig {
     pub include: Vec<String>,
     #[serde(default)]
     pub exclude: Vec<String>,
+    #[serde(default)]
+    #[serde(alias = "extra-public-dirs")]
+    pub extra_public_dirs: Vec<String>,
 }
 
 impl Default for AssetsConfig {
@@ -116,6 +119,7 @@ impl Default for AssetsConfig {
             inline_limit: default_inline_limit(),
             include: Vec::new(),
             exclude: Vec::new(),
+            extra_public_dirs: Vec::new(),
         }
     }
 }
