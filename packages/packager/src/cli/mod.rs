@@ -269,15 +269,15 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
 
     if cli.shutdown {
         return Some(if daemon::is_daemon_running() {
-            println!("Stopping daemon...");
+            crate::log_progress!("Stopping daemon...");
             if daemon::kill_daemon().unwrap_or(false) {
-                println!("Daemon stopped successfully.");
+                crate::log_ok!("Daemon stopped.");
             } else {
-                println!("No daemon was running (stale PID file cleaned).");
+                crate::log_info!("No daemon was running (stale PID file cleaned).");
             }
             Ok(())
         } else {
-            println!("No daemon is currently running.");
+            crate::log_info!("No daemon is currently running.");
             Ok(())
         });
     }
@@ -285,11 +285,11 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
         let was_running = daemon::is_daemon_running();
         if was_running {
-            println!("Restarting daemon...");
+            crate::log_progress!("Restarting daemon...");
             let _ = daemon::kill_daemon();
-            println!("Old daemon stopped.");
+            crate::log_ok!("Old daemon stopped.");
         } else {
-            println!("Starting daemon...");
+            crate::log_progress!("Starting daemon...");
         }
         let child_pid = match daemon::fork_daemon() {
             Ok(pid) => pid,
@@ -297,15 +297,15 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         };
         match daemon::wait_for_child_signal(120, Some(child_pid)) {
             Ok(true) => {
-                if was_running { println!("Daemon restarted."); }
-                else { println!("Daemon started in background."); }
+                if was_running { crate::log_ok!("Daemon restarted (PID {}).", child_pid); }
+                else { crate::log_ok!("Daemon started (PID {}).", child_pid); }
             }
             Ok(false) => {
-                eprintln!("Daemon failed to start.");
+                crate::log_fail!("Daemon failed to start. Check logs for details.");
                 std::process::exit(1);
             }
             Err(e) => {
-                eprintln!("Daemon startup failed: {}", e);
+                crate::log_fail!("{}", e);
                 std::process::exit(1);
             }
         }
@@ -332,7 +332,7 @@ pub fn run_tokio() {
         if daemon::is_daemon() {
             let _ = daemon::signal_failed(&e.to_string());
         }
-        eprintln!("Error: {}", e);
+        crate::log_fail!("{}", e);
         std::process::exit(1);
     }
 }
@@ -374,14 +374,14 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
     // Handle --shutdown: stop daemon and exit
     if cli.shutdown {
         if daemon::is_daemon_running() {
-            println!("Stopping daemon...");
+            crate::log_progress!("Stopping daemon...");
             if daemon::kill_daemon()? {
-                println!("Daemon stopped successfully.");
+                crate::log_ok!("Daemon stopped.");
             } else {
-                println!("No daemon was running (stale PID file cleaned).");
+                crate::log_info!("No daemon was running (stale PID file cleaned).");
             }
         } else {
-            println!("No daemon is currently running.");
+            crate::log_info!("No daemon is currently running.");
         }
         return Ok(());
     }
@@ -412,11 +412,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
     if !cli.daemon && daemon::is_daemon_running() {
         let is_dev_command = matches!(cli.command, Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. }));
         if is_dev_command {
-            eprintln!("Error: A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
-            eprintln!();
-            eprintln!("  Use --daemon   to restart the daemon");
-            eprintln!("  Use --shutdown to stop it first");
-            eprintln!("  Use --status   to check daemon state");
+            crate::log_fail!("A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
+            crate::log_info!("Use --daemon   to restart the daemon");
+            crate::log_info!("Use --shutdown to stop it first");
+            crate::log_info!("Use --status   to check daemon state");
             std::process::exit(1);
         }
     }

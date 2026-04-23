@@ -5,7 +5,7 @@ fn main() {
         match result {
             Ok(()) => {}
             Err(e) => {
-                eprintln!("Error: {}", e);
+                tairitsu_packager::log_fail!("{}", e);
                 std::process::exit(1);
             }
         }

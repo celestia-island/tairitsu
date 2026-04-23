@@ -151,13 +151,25 @@ pub fn build_component(
     pb.inc(1);
 
     pb.finish_and_clear();
-    println!();
-    println!(
-        "  ✓  build complete  {:.1?}    📦  {}",
-        build_start.elapsed(),
-        config.build.output_dir.display()
+
+    let elapsed = build_start.elapsed();
+    let output_dir_display = config.build.output_dir.display();
+    crate::log_ok!(
+        "build complete  {:.1?}  ->  {}",
+        elapsed,
+        output_dir_display
     );
-    println!();
+
+    let wasm_file = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
+    if let Ok(meta) = std::fs::metadata(&wasm_file) {
+        let size_bytes = meta.len();
+        let size_str = if size_bytes >= 1_048_576 {
+            format!("{:.1} MB", size_bytes as f64 / 1_048_576.0)
+        } else {
+            format!("{:.1} KB", size_bytes as f64 / 1024.0)
+        };
+        crate::log_info!("package {} ({} bytes)", wasm_file.file_name().unwrap_or_default().to_string_lossy(), size_str);
+    }
 
     // Log successful build if in daemon mode
     if daemon::is_daemon() {
@@ -1739,24 +1751,18 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     use axum::{Router, middleware, response::Html, routing::get};
     use tower_http::services::ServeDir;
 
-    let divider = panel_divider();
-    println!("{}", divider);
     if watch {
-        println!("  Tairitsu  ↻  Development  (watch mode)");
+        crate::log_info!("Tairitsu dev server (watch mode)");
     } else {
-        println!("  Tairitsu  Development Server");
+        crate::log_info!("Tairitsu dev server");
     }
-    println!("{}", divider);
-    println!();
 
     if !crate::daemon::is_daemon() && crate::daemon::is_daemon_running() {
         let pid = crate::daemon::read_pid().unwrap_or(0);
-        eprintln!("  ⚠  A tairitsu daemon is already running (PID {}).", pid);
-        eprintln!("     Use `tairitsu dev --daemon` to attach, or `tairitsu dev --shutdown` to stop it.");
-        eprintln!();
+        crate::log_warn!("A tairitsu daemon is already running (PID {}).", pid);
+        crate::log_info!("Use --daemon to attach, or --shutdown to stop it.");
     }
 
-    // Pre-check: probe the preferred port before building anything.
     if !crate::daemon::is_daemon() {
         let probe = std::net::TcpListener::bind(("127.0.0.1", port));
         if let Err(ref err) = probe {
@@ -1765,9 +1771,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
                 if let Some(ref info) = owner {
                     if info.pid == crate::daemon::read_pid().unwrap_or(0) {
                         return Err(crate::TairitsuPackagerError::BuildError(format!(
-                            "Port {} is already in use by tairitsu daemon (PID {}).\n  \
-                             Use `tairitsu dev --daemon` to attach to the running daemon,\n  \
-                             or `tairitsu dev --shutdown` to stop it first.",
+                            "Port {} is already in use by tairitsu daemon (PID {}). Use --daemon to attach or --shutdown to stop.",
                             port, info.pid
                         )));
                     }
@@ -1779,23 +1783,17 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
                         msg.push_str(&format!("\n  Executable: {}", exe.display()));
                     }
                 }
-                msg.push_str("\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,\n  \
-                     or stop the process occupying port ");
-                msg.push_str(&port.to_string());
-                msg.push('.');
+                msg.push_str("\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,");
                 return Err(crate::TairitsuPackagerError::BuildError(msg));
             }
         }
         drop(probe);
     }
 
-    // Broadcast channel for hot-reload SSE notifications.
-    // When a rebuild finishes, the watch loop sends () here;
-    // the browser client receives it and re-fetches WASM.
     let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
 
-    // Initial build (no MultiProgress — let cargo write directly to terminal).
     let initial_started = Instant::now();
+    crate::log_progress!("Building {} component...", config.package.name);
     match config.build.target.as_str() {
         "component" => build_component(config, false, None).inspect_err(|e| {
             if crate::daemon::is_daemon() {
@@ -1820,7 +1818,6 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         crate::daemon::daemonize_self().map_err(|e| {
             crate::TairitsuPackagerError::BuildError(format!("daemonize failed: {}", e))
         })?;
-        println!("  ✓  Initial build succeeded — daemonizing...");
     }
 
     let dist_dir = if config.build.output_dir.is_relative() {
@@ -1829,11 +1826,26 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         config.build.output_dir.clone()
     };
 
-    // Always read index.html from disk on each request so watch-mode rebuilds
-    // are served immediately without needing a server restart.
+    let wasm_file = dist_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
+    let pkg_size_str = match std::fs::metadata(&wasm_file) {
+        Ok(meta) => {
+            let bytes = meta.len();
+            if bytes >= 1_048_576 {
+                format!("{:.1} MB", bytes as f64 / 1_048_576.0)
+            } else {
+                format!("{:.1} KB", bytes as f64 / 1024.0)
+            }
+        }
+        Err(_) => String::from("unknown"),
+    };
+
+    crate::log_ok!("Initial build succeeded ({:.1?})", initial_elapsed);
+    crate::log_info!("workspace  {}", config.manifest_dir.display());
+    crate::log_info!("package    {} v{}", config.package.name, config.package.version);
+    crate::log_info!("output     {} ({})", dist_dir.display(), pkg_size_str);
+
     let dist_for_index = dist_dir.clone();
     let pkg_name = config.package.name.clone();
-    // Clone dist_dir for the SPA fallback handler
     let dist_for_spa = dist_for_index.clone();
     let spa_pkg_name = pkg_name.clone();
 
@@ -1951,8 +1963,8 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", actual_port);
         match webbrowser::open(&url) {
-            Ok(_) => println!("  ✓  {}", locale().dev.opening_browser),
-            Err(e) => eprintln!("  ⚠  {}: {}", locale().dev.open_browser_failed, e),
+            Ok(_) => crate::log_ok!("{}", locale().dev.opening_browser),
+            Err(e) => crate::log_warn!("{}: {}", locale().dev.open_browser_failed, e),
         }
     }
 
@@ -1970,7 +1982,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         )
         .await?;
     } else {
-        println!("  {}", locale().dev.press_ctrl_c_to_stop);
+        crate::log_info!("{}", locale().dev.press_ctrl_c_to_stop);
         axum::serve(listener, app).await?;
     }
 
@@ -1984,33 +1996,20 @@ fn print_status_panel(
     last_build_line: Option<&str>,
     warning: Option<&str>,
 ) {
-    let divider = panel_divider();
-    println!("{}", divider);
-    println!("  🌍  {}: http://localhost:{}", locale().dev.local, port);
-    println!("  📁  {}: {}", locale().dev.serving, output_dir.display());
+    crate::log_ok!("{}: http://localhost:{}", locale().dev.local, port);
+    crate::log_info!("{}: {}", locale().dev.serving, output_dir.display());
     if let Some(line) = last_build_line {
-        println!("  🧱  {}", line);
+        crate::log_info!("{}", line);
     }
     if let Some(w) = warning {
-        println!("  ⚠  {}", w);
+        crate::log_warn!("{}", w);
     }
-    println!("{}", divider);
-    println!();
-}
-
-#[cfg(feature = "dev-server")]
-fn panel_divider() -> String {
-    let width = crossterm::terminal::size()
-        .map(|(w, _)| w as usize)
-        .unwrap_or(60);
-    let len = width.max(24);
-    "━".repeat(len)
 }
 
 #[cfg(feature = "dev-server")]
 fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>) -> String {
-    let status = if ok { "成功" } else { "失败" };
-    let mut line = format!("{} | 用时 {:.1?}", status, elapsed);
+    let status = if ok { "OK" } else { "FAIL" };
+    let mut line = format!("{} | {:.1?}", status, elapsed);
     if let Some(hint) = error_hint {
         let display = if hint.len() > 50 { &hint[..50] } else { hint };
         line.push_str(&format!(" | {}", display));
@@ -2118,7 +2117,7 @@ async fn run_watch_loop(
         let Ok(mut watcher) = notify::recommended_watcher(move |ev| {
             tx.blocking_send(ev).ok();
         }) else {
-            eprintln!("  ⚠  Failed to create file watcher");
+            crate::log_warn!("Failed to create file watcher");
             return;
         };
 
@@ -2129,11 +2128,11 @@ async fn run_watch_loop(
                 RecursiveMode::NonRecursive
             };
             if let Err(e) = watcher.watch(path, mode) {
-                eprintln!("  ⚠  Cannot watch {}: {}", path.display(), e);
+                crate::log_warn!("Cannot watch {}: {}", path.display(), e);
             }
         }
 
-        println!("  ↻  {}", locale().dev.watching_for_changes);
+        crate::log_ok!("{}", locale().dev.watching_for_changes);
 
         // Keep the watcher alive until the process exits.
         loop {
@@ -2181,7 +2180,7 @@ async fn run_watch_loop(
                 let ev = match ev {
                     None => break 'watch,
                     Some(Err(e)) => {
-                        eprintln!("  ⚠  {}: {}", locale().dev.watch_error, e);
+                        crate::log_warn!("{}: {}", locale().dev.watch_error, e);
                         continue;
                     }
                     Some(Ok(e)) => e,
@@ -2216,12 +2215,12 @@ async fn run_watch_loop(
                 match cmd {
                     None => break 'watch,
                     Some(DevCmd::Rebuild) => {
-                        println!("  ↻  {}", locale().dev.manual_rebuild_triggered);
+                        crate::log_progress!("{}", locale().dev.manual_rebuild_triggered);
                         true
                     }
                     Some(DevCmd::OpenBrowser) => {
                         let url = format!("http://localhost:{}", port);
-                        println!("  ↗  {} {}", locale().dev.opening_url, url);
+                        crate::log_info!("{} {}", locale().dev.opening_url, url);
                         webbrowser::open(&url).ok();
                         false
                     }
@@ -2237,9 +2236,7 @@ async fn run_watch_loop(
             }
 
             _ = tokio::signal::ctrl_c() => {
-                // Graceful shutdown on Ctrl+C
-                println!();
-                println!("  ✓  {}", locale().dev.stopping);
+                crate::log_ok!("{}", locale().dev.stopping);
                 std::process::exit(0);
             }
         };
@@ -2249,11 +2246,11 @@ async fn run_watch_loop(
         }
 
         if changed.is_empty() {
-            println!("  ↻  {}", locale().dev.source_changed);
+            crate::log_progress!("{}", locale().dev.source_changed);
         } else if changed.len() == 1 {
-            println!("  ↻  {}", changed[0].display());
+            crate::log_progress!("{}", changed[0].display());
         } else {
-            println!("  ↻  {} {}", changed.len(), locale().dev.files_changed);
+            crate::log_progress!("{} {}", changed.len(), locale().dev.files_changed);
         }
 
         *last_build_line = format_building_line();
@@ -2282,16 +2279,15 @@ async fn run_watch_loop(
             Ok(()) => {
                 *last_build_line = format_last_build_line(true, elapsed, None);
                 print_status_panel(port, output_dir, Some(last_build_line), None);
-                println!(
-                    "  ✓  {}  →  http://localhost:{}",
+                crate::log_ok!(
+                    "{}  ->  http://localhost:{}  ({:.1?})",
                     locale().dev.rebuilt,
-                    port
+                    port,
+                    elapsed
                 );
 
-                // Notify connected browsers to hot-reload
                 let _ = reload_tx.send(());
 
-                // Log successful rebuild if in daemon mode
                 if daemon::is_daemon() {
                     let _ = daemon::append_build_log("component", true, None);
                 }
@@ -2300,9 +2296,8 @@ async fn run_watch_loop(
                 let hint = extract_error_hint(e.to_string());
                 *last_build_line = format_last_build_line(false, elapsed, Some(&hint));
                 print_status_panel(port, output_dir, Some(last_build_line), None);
-                eprintln!("  ✗  {}", e);
+                crate::log_fail!("{}", e);
 
-                // Log failed build if in daemon mode
                 if daemon::is_daemon() {
                     let _ = daemon::append_build_log("component", false, Some(&e.to_string()));
                 }

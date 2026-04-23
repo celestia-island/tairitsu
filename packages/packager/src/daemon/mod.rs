@@ -72,8 +72,7 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
             if content.trim() == "ready" {
                 return Ok(true);
             } else {
-                eprintln!("  ✗  Daemon initial build failed:");
-                eprintln!("     {}", content.trim());
+                crate::log_fail!("Daemon initial build failed: {}", content.trim());
                 return Ok(false);
             }
         }
@@ -86,8 +85,7 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
                     if content.trim() == "ready" {
                         return Ok(true);
                     }
-                    eprintln!("  ✗  Daemon initial build failed:");
-                    eprintln!("     {}", content.trim());
+                    crate::log_fail!("Daemon initial build failed: {}", content.trim());
                     return Ok(false);
                 }
                 let _ = fs::remove_file(&ready_path);
@@ -445,7 +443,7 @@ pub fn kill_daemon() -> std::io::Result<bool> {
         }
 
         if check_process_exists(pid) {
-            eprintln!("Warning: daemon process {} did not exit within 5s", pid);
+            crate::log_warn!("daemon process {} did not exit within 5s", pid);
         }
 
         let _ = fs::remove_file(pid_file_path());
@@ -760,39 +758,26 @@ where
 /// Print daemon status and recent logs
 pub fn print_daemon_status() -> std::io::Result<()> {
     if !is_daemon_running() {
-        println!("No daemon is currently running.");
-        println!();
-        println!("Start a daemon with: tairitsu dev --daemon");
+        crate::log_info!("No daemon is currently running.");
+        crate::log_info!("Start a daemon with: tairitsu dev --daemon");
         return Ok(());
     }
 
     let status = read_daemon_status()?;
     let uptime = Utc::now() - status.start_time;
 
-    println!("Daemon Status:");
-    println!("  PID: {}", status.pid);
-    println!(
-        "  Running since: {}",
-        status.start_time.format("%Y-%m-%d %H:%M:%S UTC")
-    );
-    println!("  Uptime: {}", format_duration(uptime));
-    println!();
+    crate::log_ok!("Daemon is running  PID={}  uptime={}", status.pid, format_duration(uptime));
+    crate::log_info!("Running since {}", status.start_time.format("%Y-%m-%d %H:%M:%S UTC"));
 
-    if status.build_logs.is_empty() {
-        println!("No builds recorded yet.");
-    } else {
-        println!("Recent builds ({}):", status.build_logs.len());
+    if !status.build_logs.is_empty() {
         for log in status.build_logs.iter().rev().take(10) {
-            let status_icon = if log.success { "✓" } else { "✗" };
-            println!(
-                "  [{}] {} {} - {}",
-                log.timestamp.format("%Y-%m-%d %H:%M:%S"),
-                status_icon,
-                log.module,
-                if log.success { "OK" } else { "FAILED" }
-            );
-            if let Some(error) = &log.error {
-                println!("    Error: {}", error);
+            if log.success {
+                crate::log_ok!("{}  {}  OK", log.timestamp.format("%H:%M:%S"), log.module);
+            } else {
+                crate::log_fail!("{}  {}  FAILED", log.timestamp.format("%H:%M:%S"), log.module);
+                if let Some(error) = &log.error {
+                    crate::log_fail!("  {}", error);
+                }
             }
         }
     }
@@ -814,15 +799,13 @@ fn format_duration(duration: chrono::Duration) -> String {
 
 /// Print non-TTY message with daemon hint
 pub fn print_non_tty_hint() {
-    eprintln!("Not running in a TTY - running in non-interactive mode.");
-    eprintln!();
-    eprintln!("For development with hot-reload, use the daemon mode:");
-    eprintln!("  tairitsu dev --daemon");
-    eprintln!();
-    eprintln!("To control the daemon:");
-    eprintln!("  tairitsu dev --daemon       # Start daemon (or show status if running)");
-    eprintln!("  tairitsu dev --daemon --force   # Restart daemon");
-    eprintln!("  tairitsu dev --daemon --shutdown # Stop daemon");
+    crate::log_warn!("Not running in a TTY - running in non-interactive mode.");
+    crate::log_info!("For development with hot-reload, use daemon mode:");
+    crate::log_info!("  tairitsu dev --daemon");
+    crate::log_info!("Daemon controls:");
+    crate::log_info!("  tairitsu dev --daemon           # Start or restart daemon");
+    crate::log_info!("  tairitsu dev --daemon --force   # Force restart");
+    crate::log_info!("  tairitsu dev --daemon --shutdown # Stop daemon");
 }
 
 /// Append a build log entry to the daemon status
