@@ -291,24 +291,22 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         } else {
             println!("Starting daemon...");
         }
-        if let Err(error) = daemon::fork_daemon() {
-            return Some(Err(error.into()));
-        }
-        #[cfg(unix)]
-        {
-            match daemon::wait_for_child_signal(120) {
-                Ok(true) => {
-                    if was_running { println!("Daemon restarted."); }
-                    else { println!("Daemon started in background."); }
-                }
-                Ok(false) => {
-                    eprintln!("Daemon failed to start.");
-                    std::process::exit(1);
-                }
-                Err(e) => {
-                    eprintln!("Daemon startup timed out: {}", e);
-                    std::process::exit(1);
-                }
+        let child_pid = match daemon::fork_daemon() {
+            Ok(pid) => pid,
+            Err(error) => return Some(Err(error.into())),
+        };
+        match daemon::wait_for_child_signal(120, Some(child_pid)) {
+            Ok(true) => {
+                if was_running { println!("Daemon restarted."); }
+                else { println!("Daemon started in background."); }
+            }
+            Ok(false) => {
+                eprintln!("Daemon failed to start.");
+                std::process::exit(1);
+            }
+            Err(e) => {
+                eprintln!("Daemon startup failed: {}", e);
+                std::process::exit(1);
             }
         }
         return SYNC_OK;
@@ -331,6 +329,9 @@ pub fn run_tokio() {
     }
 
     if let Err(e) = inner() {
+        if daemon::is_daemon() {
+            let _ = daemon::signal_failed(&e.to_string());
+        }
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }

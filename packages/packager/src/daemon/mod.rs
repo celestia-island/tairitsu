@@ -58,8 +58,10 @@ pub fn signal_failed(error: &str) -> std::io::Result<()> {
 }
 
 /// Wait for the daemon child to signal readiness or failure.
+/// If `child_pid` is provided, detects early child-exit so the parent
+/// doesn't sit idle for the full timeout after a crash.
 /// Returns `Ok(true)` if ready, `Ok(false)` if failed (error printed), `Err` on timeout/io.
-pub fn wait_for_child_signal(timeout_secs: u64) -> std::io::Result<bool> {
+pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::io::Result<bool> {
     let ready_path = ready_file_path();
     let start = std::time::Instant::now();
     let timeout = std::time::Duration::from_secs(timeout_secs);
@@ -75,6 +77,27 @@ pub fn wait_for_child_signal(timeout_secs: u64) -> std::io::Result<bool> {
                 return Ok(false);
             }
         }
+
+        if let Some(pid) = child_pid {
+            if !check_process_exists(pid) {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                if let Ok(content) = fs::read_to_string(&ready_path) {
+                    let _ = fs::remove_file(&ready_path);
+                    if content.trim() == "ready" {
+                        return Ok(true);
+                    }
+                    eprintln!("  ✗  Daemon initial build failed:");
+                    eprintln!("     {}", content.trim());
+                    return Ok(false);
+                }
+                let _ = fs::remove_file(&ready_path);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::UnexpectedEof,
+                    format!("Daemon child process (PID {}) exited unexpectedly. Check logs at {}", pid, daemon_log_path().with_extension("stdout").display()),
+                ));
+            }
+        }
+
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
@@ -82,8 +105,9 @@ pub fn wait_for_child_signal(timeout_secs: u64) -> std::io::Result<bool> {
     Err(std::io::Error::new(
         std::io::ErrorKind::TimedOut,
         format!(
-            "Daemon did not signal within {}s. Check logs for status.",
-            timeout_secs
+            "Daemon did not signal within {}s. Check logs at {}",
+            timeout_secs,
+            daemon_log_path().with_extension("stdout").display()
         ),
     ))
 }
@@ -505,7 +529,7 @@ fn build_windows_command_line(exe: &std::path::Path, args: &[std::ffi::OsString]
 fn spawn_daemon_process_windows(
     exe: &std::path::Path,
     args: &[std::ffi::OsString],
-) -> std::io::Result<()> {
+) -> std::io::Result<u32> {
     use std::{io, mem, ptr};
     use windows_sys::Win32::Foundation::{
         CloseHandle, GENERIC_READ, GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE,
@@ -672,16 +696,18 @@ fn spawn_daemon_process_windows(
     let _process_handle = OwnedHandle(process_info.hProcess);
     let _thread_handle = OwnedHandle(process_info.hThread);
 
-    Ok(())
+    Ok(process_info.dwProcessId)
 }
 
-/// Fork the process to run as a daemon
-pub fn fork_daemon() -> std::io::Result<()> {
+/// Fork the process to run as a daemon.
+/// Returns the child PID on success.
+pub fn fork_daemon() -> std::io::Result<u32> {
     fork_daemon_with_args(std::env::args())
 }
 
-/// Fork the process to run as a daemon with specific arguments
-pub fn fork_daemon_with_args<I, S>(args: I) -> std::io::Result<()>
+/// Fork the process to run as a daemon with specific arguments.
+/// Returns the child PID on success.
+pub fn fork_daemon_with_args<I, S>(args: I) -> std::io::Result<u32>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<std::ffi::OsStr>,
@@ -705,10 +731,11 @@ where
             .args(&args)
             .spawn()?;
 
+        let pid = child.id();
         // Child::drop() would wait for the daemon to exit; detach instead.
         std::mem::forget(child);
 
-        Ok(())
+        Ok(pid)
     }
 
     #[cfg(windows)]
@@ -725,8 +752,8 @@ where
             fs::create_dir_all(parent)?;
         }
 
-        spawn_daemon_process_windows(&exe, &args)?;
-        std::process::exit(0);
+        let pid = spawn_daemon_process_windows(&exe, &args)?;
+        Ok(pid)
     }
 }
 
