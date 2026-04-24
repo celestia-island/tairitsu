@@ -135,14 +135,14 @@ pub fn cmd_list(workspace_root: &Path) -> Result<()> {
     let ids = cache.list()?;
 
     if ids.is_empty() {
-        println!(
+        crate::log_info!(
             "No WIT packages cached in {}",
             target_dir.join(CACHE_DIR_NAME).display()
         );
     } else {
-        println!("Cached WIT packages ({}):", ids.len());
+        crate::log_ok!("Cached WIT packages ({}):", ids.len());
         for id in &ids {
-            println!("  {id}");
+            crate::log_info!("  {id}");
         }
     }
     Ok(())

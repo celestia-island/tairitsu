@@ -460,7 +460,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
                     std::process::exit(1);
                 }
             } else {
@@ -472,9 +472,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
-                    eprintln!(
-                        "Dev server feature is not enabled. Please enable the 'dev-server' feature."
-                    );
+                    crate::log_fail!("Dev server feature is not enabled. Please enable the 'dev-server' feature.");
                     std::process::exit(1);
                 }
             }
@@ -513,19 +511,17 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                         }
                         #[cfg(not(feature = "ssr"))]
                         {
-                            eprintln!(
-                                "SSR feature is not enabled. Please enable the 'ssr' feature."
-                            );
+                            crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
                             std::process::exit(1);
                         }
                     }
                 }
                 "native" => {
-                    eprintln!("{}", t.cli.native_not_implemented);
+                    crate::log_fail!("{}", t.cli.native_not_implemented);
                     std::process::exit(1);
                 }
                 _ => {
-                    eprintln!(
+                    crate::log_fail!(
                         "{}: {}. Use 'component' or 'native'",
                         t.cli.unknown_target, target
                     );
@@ -535,14 +531,14 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Package { platform }) => {
             info!("{} {}...", t.cli.packaging_for, platform);
-            eprintln!("{}", t.cli.packaging_not_implemented);
+            crate::log_fail!("{}", t.cli.packaging_not_implemented);
             std::process::exit(1);
         }
         Some(Commands::Preview { port }) => {
             info!("{}", t.cli.preview_starting);
             let port = port.unwrap_or(3001);
             let _port = port;
-            eprintln!("{}", t.cli.preview_not_implemented);
+            crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }
         Some(Commands::Init { name }) => {
@@ -657,18 +653,18 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     metadata.filter_icons(&[], &[])
                 };
 
-                println!("Found {} icons:", icons.len());
+                crate::log_ok!("Found {} icons:", icons.len());
                 for icon in icons.iter().take(100) {
                     let tags_str = if icon.tags.is_empty() {
                         String::new()
                     } else {
                         format!(" [{}]", icon.tags.join(", "))
                     };
-                    println!("  {}{}", icon.name, tags_str);
+                    crate::log_info!("  {}{}", icon.name, tags_str);
                 }
 
                 if icons.len() > 100 {
-                    println!("  ... and {} more", icons.len() - 100);
+                    crate::log_info!("  ... and {} more", icons.len() - 100);
                 }
             }
         },
@@ -711,7 +707,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
                     std::process::exit(1);
                 }
             } else {
@@ -723,7 +719,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    eprintln!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
                     std::process::exit(1);
                 }
             }
@@ -740,25 +736,16 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     let json = serde_json::to_string_pretty(&index)?;
                     println!("{}", json);
                 } else {
-                    println!("Resource index saved to: {}", output_path.display());
-                    println!();
-                    println!("SCSS files ({}):", index.scss.len());
+                    crate::log_ok!("Resource index saved to: {}", output_path.display());
+                    crate::log_info!("SCSS files ({}):", index.scss.len());
                     for resource in &index.scss {
-                        println!(
-                            "  {} -> {} (hash: {})",
-                            resource.source, resource.output, resource.hash
-                        );
+                        crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
                     }
-                    println!();
-                    println!("SVG files ({}):", index.svg.len());
+                    crate::log_info!("SVG files ({}):", index.svg.len());
                     for resource in &index.svg {
-                        println!(
-                            "  {} -> {} (hash: {})",
-                            resource.source, resource.id, resource.hash
-                        );
+                        crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
                     }
-                    println!();
-                    println!("Total: {} resources indexed", index.count());
+                    crate::log_ok!("Total: {} resources indexed", index.count());
                 }
             }
             ResourcesCommands::List { r#type, format } => {
@@ -768,7 +755,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     .join(crate::resources::INDEX_FILE);
 
                 if !index_path.exists() {
-                    eprintln!("No resource index found. Run 'tairitsu resources index' first.");
+                    crate::log_fail!("No resource index found. Run 'tairitsu resources index' first.");
                     std::process::exit(1);
                 }
 
@@ -793,43 +780,29 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 } else {
                     match r#type.as_deref() {
                         Some("scss") => {
-                            println!("SCSS files ({}):", index.scss.len());
+                            crate::log_info!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                println!(
-                                    "  {} -> {} (hash: {})",
-                                    resource.source, resource.output, resource.hash
-                                );
+                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
                             }
                         }
                         Some("svg") => {
-                            println!("SVG files ({}):", index.svg.len());
+                            crate::log_info!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                println!(
-                                    "  {} -> {} (hash: {})",
-                                    resource.source, resource.id, resource.hash
-                                );
+                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
                             }
                         }
                         _ => {
-                            println!("SCSS files ({}):", index.scss.len());
+                            crate::log_info!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                println!(
-                                    "  {} -> {} (hash: {})",
-                                    resource.source, resource.output, resource.hash
-                                );
+                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
                             }
-                            println!();
-                            println!("SVG files ({}):", index.svg.len());
+                            crate::log_info!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                println!(
-                                    "  {} -> {} (hash: {})",
-                                    resource.source, resource.id, resource.hash
-                                );
+                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
                             }
                         }
                     }
-                    println!();
-                    println!("Total: {} resources", index.count());
+                    crate::log_ok!("Total: {} resources", index.count());
                 }
             }
         },
@@ -837,7 +810,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             if cli.status || cli.shutdown || cli.daemon {
                 return Ok(());
             }
-            eprintln!("No command specified. Use --help for usage information.");
+            crate::log_fail!("No command specified. Use --help for usage information.");
             std::process::exit(1);
         }
     }

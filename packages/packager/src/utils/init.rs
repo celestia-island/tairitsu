@@ -58,9 +58,9 @@ pub extern "C" fn bootstrap() {
     let msg = t.cli.init_project_created.replace("{name}", &name);
     pb.finish_with_message(msg);
 
-    println!("\n{}:", t.cli.init_next_steps);
-    println!("  cd {}", name);
-    println!("  tairitsu dev");
+    crate::log_ok!("{}:", t.cli.init_next_steps);
+    crate::log_info!("  cd {}", name);
+    crate::log_info!("  tairitsu dev");
 
     Ok(())
 }
