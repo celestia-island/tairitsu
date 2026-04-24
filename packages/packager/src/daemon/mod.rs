@@ -72,7 +72,11 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
             if content.trim() == "ready" {
                 return Ok(true);
             } else {
-                crate::log_fail!("Daemon initial build failed: {}", content.trim());
+                let trimmed = content.trim();
+                crate::log_fail!("Daemon initial build failed");
+                for line in trimmed.lines() {
+                    eprintln!("{}", line);
+                }
                 return Ok(false);
             }
         }
@@ -85,7 +89,11 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
                     if content.trim() == "ready" {
                         return Ok(true);
                     }
-                    crate::log_fail!("Daemon initial build failed: {}", content.trim());
+                    let trimmed = content.trim();
+                    crate::log_fail!("Daemon initial build failed");
+                    for line in trimmed.lines() {
+                        eprintln!("{}", line);
+                    }
                     return Ok(false);
                 }
                 let _ = fs::remove_file(&ready_path);

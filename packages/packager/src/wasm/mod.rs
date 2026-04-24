@@ -232,37 +232,30 @@ fn build_wasm_component(
 
     let stdout = child.stdout.take().expect("stdout should be piped");
 
-    // Clone the progress bar for the thread
     let pb_clone = pb.clone();
 
-    // Helper: extract crate name from package_id
-    // Format: "registry+https://github.com/rust-lang/crates.io-index#name@version"
-    // or: "path+file:///path#name@version"
     fn extract_crate_name(package_id: &str) -> &str {
-        // Try to find the part after '#' and before '@'
         if let Some(after_hash) = package_id.split('#').nth(1)
             && let Some(name) = after_hash.split('@').next()
         {
             return name;
         }
-        // Fallback: return the whole thing
         package_id
     }
 
-    // Thread: parse JSON messages from stdout and update the progress bar
+    let diagnostics = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
+    let diag_clone = diagnostics.clone();
+
     std::thread::spawn(move || {
         for line in std::io::BufReader::new(stdout).lines() {
             let Ok(line) = line else { continue };
-            // Try to parse as cargo JSON message
             if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line)
                 && let Some(reason) = msg.get("reason").and_then(|r| r.as_str())
             {
                 match reason {
                     "compiler-artifact" => {
-                        // A crate is being compiled
                         if let Some(package_id) = msg.get("package_id").and_then(|p| p.as_str()) {
                             let crate_name = extract_crate_name(package_id);
-                            // Only update for lib crates (not build scripts)
                             if let Some(target) = msg.get("target")
                                 && target
                                     .get("kind")
@@ -276,14 +269,16 @@ fn build_wasm_component(
                         }
                     }
                     "compiler-message" => {
-                        // This contains actual compiler output (errors, warnings)
                         if let Some(rendered) = msg
                             .get("message")
                             .and_then(|m| m.get("rendered"))
                             .and_then(|r| r.as_str())
                         {
-                            // Print the rendered diagnostic above the progress bar
                             pb_clone.println(rendered);
+                            if let Ok(mut d) = diag_clone.lock() {
+                                d.push_str(rendered);
+                                d.push('\n');
+                            }
                         }
                     }
                     "build-script-executed" => {
@@ -292,9 +287,7 @@ fn build_wasm_component(
                             pb_clone.set_message(format!("build script {}", crate_name));
                         }
                     }
-                    "build-finished" => {
-                        // Keep the original message
-                    }
+                    "build-finished" => {}
                     _ => {}
                 }
             }
@@ -302,10 +295,12 @@ fn build_wasm_component(
     });
 
     let status = child.wait()?;
-    // Don't finish/clear here - the caller manages the progress bar lifecycle
 
     if !status.success() {
-        // Log failed build if in daemon mode
+        let diag_text = diagnostics
+            .lock()
+            .map(|d| d.trim().to_string())
+            .unwrap_or_default();
         if daemon::is_daemon() {
             let _ = daemon::append_build_log(
                 "component",
@@ -314,7 +309,11 @@ fn build_wasm_component(
             );
         }
         return Err(crate::TairitsuPackagerError::BuildError(
-            "cargo build --target wasm32-wasip2 failed".to_string(),
+            if diag_text.is_empty() {
+                "cargo build --target wasm32-wasip2 failed".to_string()
+            } else {
+                diag_text
+            },
         ));
     }
 
