@@ -291,16 +291,22 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
         } else {
             crate::log_progress!("Starting daemon...");
         }
+        daemon::cleanup_ready_file();
         let child_pid = match daemon::fork_daemon() {
             Ok(pid) => pid,
             Err(error) => return Some(Err(error.into())),
         };
         match daemon::wait_for_child_signal(120, Some(child_pid)) {
-            Ok(true) => {
-                if was_running { crate::log_ok!("Daemon restarted (PID {}).", child_pid); }
-                else { crate::log_ok!("Daemon started (PID {}).", child_pid); }
+            Ok(Some(port)) => {
+                let port_info = if port > 0 {
+                    format!(" — http://localhost:{}", port)
+                } else {
+                    String::new()
+                };
+                if was_running { crate::log_ok!("Daemon restarted (PID {}){}", child_pid, port_info); }
+                else { crate::log_ok!("Daemon started (PID {}){}", child_pid, port_info); }
             }
-            Ok(false) => {
+            Ok(None) => {
                 crate::log_fail!("Daemon failed to start. Check logs for details.");
                 std::process::exit(1);
             }

@@ -1813,7 +1813,6 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     let initial_elapsed = initial_started.elapsed();
 
     if crate::daemon::is_daemon() {
-        let _ = crate::daemon::signal_ready();
         crate::daemon::daemonize_self().map_err(|e| {
             crate::TairitsuPackagerError::BuildError(format!("daemonize failed: {}", e))
         })?;
@@ -1938,6 +1937,10 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
+
+    if crate::daemon::is_daemon() {
+        let _ = crate::daemon::signal_ready(actual_port);
+    }
     let mut last_build_line = format_last_build_line(true, initial_elapsed, None);
 
     let port_switched = if actual_port != port {
