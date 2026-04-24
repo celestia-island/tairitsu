@@ -41,12 +41,13 @@ fn ready_file_path() -> PathBuf {
     daemon_dir().join("tairitsu-packager.ready")
 }
 
-/// Write the daemon readiness signal (called by child after successful initial build)
-pub fn signal_ready() -> std::io::Result<()> {
+/// Write the daemon readiness signal with the actual bound port.
+/// Called by child once the HTTP server is listening.
+pub fn signal_ready(port: u16) -> std::io::Result<()> {
     if let Some(parent) = ready_file_path().parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(ready_file_path(), "ready")
+    fs::write(ready_file_path(), format!("ready:{port}"))
 }
 
 /// Write the daemon failure signal (called by child when initial build fails)
@@ -57,11 +58,33 @@ pub fn signal_failed(error: &str) -> std::io::Result<()> {
     fs::write(ready_file_path(), error)
 }
 
+/// Try to parse ready-file content into a port number.
+/// Returns `Some(port)` for `"ready"` or `"ready:<port>"`, `None` for error messages.
+fn parse_ready_port(content: &str) -> Option<u16> {
+    let trimmed = content.trim();
+    if let Some(port_str) = trimmed.strip_prefix("ready:") {
+        port_str.parse().ok()
+    } else if trimmed == "ready" {
+        Some(0)
+    } else {
+        None
+    }
+}
+
+fn print_signal_failure(content: &str) {
+    let trimmed = content.trim();
+    crate::log_fail!("Daemon initial build failed");
+    for line in trimmed.lines() {
+        eprintln!("{}", line);
+    }
+}
+
 /// Wait for the daemon child to signal readiness or failure.
 /// If `child_pid` is provided, detects early child-exit so the parent
 /// doesn't sit idle for the full timeout after a crash.
-/// Returns `Ok(true)` if ready, `Ok(false)` if failed (error printed), `Err` on timeout/io.
-pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::io::Result<bool> {
+/// Returns `Ok(Some(port))` if ready (port 0 = unknown),
+/// `Ok(None)` if failed (error printed), `Err` on timeout/io.
+pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::io::Result<Option<u16>> {
     let ready_path = ready_file_path();
     let start = std::time::Instant::now();
     let timeout = std::time::Duration::from_secs(timeout_secs);
@@ -69,16 +92,11 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
     while start.elapsed() < timeout {
         if let Ok(content) = fs::read_to_string(&ready_path) {
             let _ = fs::remove_file(&ready_path);
-            if content.trim() == "ready" {
-                return Ok(true);
-            } else {
-                let trimmed = content.trim();
-                crate::log_fail!("Daemon initial build failed");
-                for line in trimmed.lines() {
-                    eprintln!("{}", line);
-                }
-                return Ok(false);
+            if let Some(port) = parse_ready_port(&content) {
+                return Ok(Some(port));
             }
+            print_signal_failure(&content);
+            return Ok(None);
         }
 
         if let Some(pid) = child_pid {
@@ -86,15 +104,11 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
                 std::thread::sleep(std::time::Duration::from_millis(500));
                 if let Ok(content) = fs::read_to_string(&ready_path) {
                     let _ = fs::remove_file(&ready_path);
-                    if content.trim() == "ready" {
-                        return Ok(true);
+                    if let Some(port) = parse_ready_port(&content) {
+                        return Ok(Some(port));
                     }
-                    let trimmed = content.trim();
-                    crate::log_fail!("Daemon initial build failed");
-                    for line in trimmed.lines() {
-                        eprintln!("{}", line);
-                    }
-                    return Ok(false);
+                    print_signal_failure(&content);
+                    return Ok(None);
                 }
                 let _ = fs::remove_file(&ready_path);
                 return Err(std::io::Error::new(
