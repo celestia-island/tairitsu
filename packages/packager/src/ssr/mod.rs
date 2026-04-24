@@ -40,13 +40,8 @@ pub async fn ssr_dev_server(
 ) -> crate::Result<()> {
     use crate::wasm::build_component;
     use std::time::Instant;
-    use tracing::info;
 
-    let divider = panel_divider();
-    println!("{}", divider);
-    println!("  Tairitsu  SSR  Development Server");
-    println!("{}", divider);
-    println!();
+    crate::log_info!("Tairitsu SSR development server");
 
     // Initial build
     let initial_started = Instant::now();
@@ -140,14 +135,14 @@ pub async fn ssr_dev_server(
     if open || config.dev.open_browser {
         let url = format!("http://localhost:{}", actual_port);
         match webbrowser::open(&url) {
-            Ok(_) => println!("  Opening browser..."),
-            Err(e) => warn!("Failed to open browser: {}", e),
+            Ok(_) => crate::log_ok!("Opening browser..."),
+            Err(e) => {
+                warn!("Failed to open browser: {}", e);
+            }
         }
     }
 
-    println!();
-    info!("Server running at http://localhost:{}", actual_port);
-    println!();
+    crate::log_ok!("Server running at http://localhost:{}", actual_port);
 
     axum::serve(listener, app).await?;
 
@@ -239,13 +234,6 @@ async fn no_cache_headers(request: Request, next: Next) -> Response {
     response
 }
 
-/// Print the divider panel
-#[cfg(feature = "dev-server")]
-fn panel_divider() -> String {
-    "-".repeat(40)
-}
-
-/// Format the last build line
 #[cfg(feature = "dev-server")]
 fn format_last_build_line(
     success: bool,
@@ -259,7 +247,6 @@ fn format_last_build_line(
     }
 }
 
-/// Print the status panel
 #[cfg(feature = "dev-server")]
 fn print_status_panel(
     port: u16,
@@ -267,19 +254,14 @@ fn print_status_panel(
     build_line: Option<&str>,
     port_note: Option<&str>,
 ) {
-    println!("  Server:");
-    println!("    Local:  http://localhost:{}", port);
+    crate::log_ok!("Local:  http://localhost:{}", port);
     if let Some(note) = port_note {
-        println!("    Note:   {}", note);
+        crate::log_info!("Note:   {}", note);
     }
-    println!();
-    println!("  Output:");
-    println!("    {}", dist_dir.display());
+    crate::log_info!("Output: {}", dist_dir.display());
     if let Some(line) = build_line {
-        println!();
-        println!("  {}", line);
+        crate::log_info!("{}", line);
     }
-    println!();
 }
 
 /// Pre-render routes for static site generation
