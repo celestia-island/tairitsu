@@ -50,8 +50,30 @@ fn format_tag(level: &Level, use_color: bool) -> String {
     }
 }
 
+fn is_daemon() -> bool {
+    if std::env::var("TAIRITSU_DAEMON").is_ok() {
+        return true;
+    }
+    #[cfg(windows)]
+    {
+        static CACHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        static INIT: std::sync::Once = std::sync::Once::new();
+        INIT.call_once(|| {
+            let v = std::env::args_os()
+                .skip(1)
+                .any(|arg| arg == std::ffi::OsStr::new("--daemon-child-process"));
+            CACHED.store(v, std::sync::atomic::Ordering::Relaxed);
+        });
+        CACHED.load(std::sync::atomic::Ordering::Relaxed)
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
 fn should_timestamp() -> bool {
-    crate::daemon::is_daemon() && !stdout_is_tty()
+    is_daemon() && !stdout_is_tty()
 }
 
 fn emit(level: Level, stream: StdStream, args: fmt::Arguments<'_>) {
