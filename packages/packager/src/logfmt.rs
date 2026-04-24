@@ -51,6 +51,12 @@ fn format_tag(level: &Level, use_color: bool) -> String {
 }
 
 fn is_daemon() -> bool {
+    #[cfg(feature = "tokio")]
+    {
+        if crate::daemon::is_daemon() {
+            return true;
+        }
+    }
     if std::env::var("TAIRITSU_DAEMON").is_ok() {
         return true;
     }
