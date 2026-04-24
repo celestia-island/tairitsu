@@ -82,16 +82,25 @@ fn print_signal_failure(content: &str) {
 /// Wait for the daemon child to signal readiness or failure.
 /// If `child_pid` is provided, detects early child-exit so the parent
 /// doesn't sit idle for the full timeout after a crash.
+///
+/// While waiting, streams the child's stderr log to the parent's stderr
+/// so the user sees real-time build output.
+///
 /// Returns `Ok(Some(port))` if ready (port 0 = unknown),
 /// `Ok(None)` if failed (error printed), `Err` on timeout/io.
 pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::io::Result<Option<u16>> {
     let ready_path = ready_file_path();
+    let stdout_path = daemon_log_path().with_extension("stdout");
     let start = std::time::Instant::now();
     let timeout = std::time::Duration::from_secs(timeout_secs);
+    let mut log_cursor: u64 = 0;
 
     while start.elapsed() < timeout {
+        stream_new_content(&stdout_path, &mut log_cursor);
+
         if let Ok(content) = fs::read_to_string(&ready_path) {
             let _ = fs::remove_file(&ready_path);
+            stream_new_content(&stdout_path, &mut log_cursor);
             if let Some(port) = parse_ready_port(&content) {
                 return Ok(Some(port));
             }
@@ -102,6 +111,7 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
         if let Some(pid) = child_pid {
             if !check_process_exists(pid) {
                 std::thread::sleep(std::time::Duration::from_millis(500));
+                stream_new_content(&stdout_path, &mut log_cursor);
                 if let Ok(content) = fs::read_to_string(&ready_path) {
                     let _ = fs::remove_file(&ready_path);
                     if let Some(port) = parse_ready_port(&content) {
@@ -113,7 +123,7 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
                 let _ = fs::remove_file(&ready_path);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
-                    format!("Daemon child process (PID {}) exited unexpectedly. Check logs at {}", pid, daemon_log_path().with_extension("stdout").display()),
+                    format!("Daemon child process (PID {}) exited unexpectedly. Check logs at {}", pid, stdout_path.display()),
                 ));
             }
         }
@@ -127,7 +137,7 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
         format!(
             "Daemon did not signal within {}s. Check logs at {}",
             timeout_secs,
-            daemon_log_path().with_extension("stdout").display()
+            stdout_path.display()
         ),
     ))
 }
@@ -135,6 +145,43 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
 /// Clean up the readiness signal file
 pub fn cleanup_ready_file() {
     let _ = fs::remove_file(ready_file_path());
+}
+
+/// Truncate daemon log files so the parent can stream fresh output.
+pub fn truncate_log_files() -> std::io::Result<()> {
+    let stdout_path = daemon_log_path().with_extension("stdout");
+    let stderr_path = daemon_log_path().with_extension("stderr");
+    if let Some(parent) = stdout_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::File::create(&stdout_path)?;
+    fs::File::create(&stderr_path)?;
+    Ok(())
+}
+
+/// Read new bytes appended to `path` since `cursor` and write them to
+/// the current process' stderr.  Used by the parent to relay the child's
+/// build output in real time.
+fn stream_new_content(path: &std::path::Path, cursor: &mut u64) {
+    use std::io::{Read, Seek, SeekFrom, Write};
+    let Ok(meta) = fs::metadata(path) else {
+        return;
+    };
+    if meta.len() <= *cursor {
+        return;
+    }
+    let Ok(mut file) = std::fs::File::open(path) else {
+        return;
+    };
+    if file.seek(SeekFrom::Start(*cursor)).is_err() {
+        return;
+    }
+    let len = (meta.len() - *cursor) as usize;
+    let mut buf = vec![0u8; len];
+    if file.read_exact(&mut buf).is_ok() {
+        let _ = std::io::stderr().write_all(&buf);
+        *cursor = meta.len();
+    }
 }
 
 /// Daemon status and log entry

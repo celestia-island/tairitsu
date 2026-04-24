@@ -292,6 +292,7 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
             crate::log_progress!("Starting daemon...");
         }
         daemon::cleanup_ready_file();
+        let _ = daemon::truncate_log_files();
         let child_pid = match daemon::fork_daemon() {
             Ok(pid) => pid,
             Err(error) => return Some(Err(error.into())),
@@ -329,6 +330,13 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
 }
 
 pub fn run_tokio() {
+    if daemon::is_daemon() {
+        if let Err(e) = daemon::daemonize_self() {
+            let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
+            std::process::exit(1);
+        }
+    }
+
     #[tokio::main]
     async fn inner() -> crate::Result<()> {
         run().await

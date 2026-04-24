@@ -1812,12 +1812,6 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     }
     let initial_elapsed = initial_started.elapsed();
 
-    if crate::daemon::is_daemon() {
-        crate::daemon::daemonize_self().map_err(|e| {
-            crate::TairitsuPackagerError::BuildError(format!("daemonize failed: {}", e))
-        })?;
-    }
-
     let dist_dir = if config.build.output_dir.is_relative() {
         config.manifest_dir.join(&config.build.output_dir)
     } else {
