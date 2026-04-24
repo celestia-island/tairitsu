@@ -182,18 +182,48 @@ impl Parse for RsxRoot {
             Ok(RsxRoot::Match(input.parse()?))
         } else if input.peek(Token![for]) {
             Ok(RsxRoot::For(Box::new(input.parse()?)))
-        } else if input.peek(Ident) {
-            // Parse first element
-            let first: RsxElement = input.parse()?;
+        } else if input.peek(syn::token::Brace) {
+            let first_expr: Expr = input.parse()?;
+            let first_child = RsxChild::Dynamic(first_expr);
 
-            // Check if there are more elements after this one
             if !input.is_empty()
                 && (input.peek(Ident)
                     || input.peek(Token![if])
                     || input.peek(Token![match])
-                    || input.peek(Token![for]))
+                    || input.peek(Token![for])
+                    || input.peek(syn::token::Brace))
             {
-                // Multiple root elements - parse as fragment
+                let mut children = vec![first_child];
+                while !input.is_empty() {
+                    if input.peek(Ident) {
+                        children.push(RsxChild::Element(input.parse()?));
+                    } else if input.peek(Token![if]) {
+                        children.push(RsxChild::If(input.parse()?));
+                    } else if input.peek(Token![match]) {
+                        children.push(RsxChild::Match(input.parse()?));
+                    } else if input.peek(Token![for]) {
+                        children.push(RsxChild::For(Box::new(input.parse()?)));
+                    } else if input.peek(syn::token::Brace) {
+                        let expr: Expr = input.parse()?;
+                        children.push(RsxChild::Dynamic(expr));
+                    } else {
+                        break;
+                    }
+                }
+                Ok(RsxRoot::Fragment(children))
+            } else {
+                Ok(RsxRoot::Fragment(vec![first_child]))
+            }
+        } else if input.peek(Ident) {
+            let first: RsxElement = input.parse()?;
+
+            if !input.is_empty()
+                && (input.peek(Ident)
+                    || input.peek(Token![if])
+                    || input.peek(Token![match])
+                    || input.peek(Token![for])
+                    || input.peek(syn::token::Brace))
+            {
                 let mut children = vec![RsxChild::Element(first)];
                 while !input.is_empty() {
                     if input.peek(Ident) {
@@ -204,6 +234,9 @@ impl Parse for RsxRoot {
                         children.push(RsxChild::Match(input.parse()?));
                     } else if input.peek(Token![for]) {
                         children.push(RsxChild::For(Box::new(input.parse()?)));
+                    } else if input.peek(syn::token::Brace) {
+                        let expr: Expr = input.parse()?;
+                        children.push(RsxChild::Dynamic(expr));
                     } else {
                         break;
                     }
@@ -215,7 +248,7 @@ impl Parse for RsxRoot {
         } else {
             Err(syn::Error::new(
                 input.span(),
-                "Expected element or control flow",
+                "Expected element, braced expression, or control flow",
             ))
         }
     }

@@ -77,6 +77,41 @@ pub fn list_component() -> VNode {
     }
 }
 
+fn make_text_node(s: &str) -> VNode {
+    VNode::Text(tairitsu_vdom::VText::new(s))
+}
+
+pub fn single_brace_root() -> VNode {
+    rsx! {
+        {make_text_node("hello")}
+    }
+}
+
+pub fn mixed_roots_with_brace() -> VNode {
+    rsx! {
+        div { "first" }
+        {make_text_node("second")}
+        span { "third" }
+    }
+}
+
+pub fn mixed_brace_and_control_flow() -> VNode {
+    let show = true;
+    rsx! {
+        {make_text_node("dynamic")}
+        if show {
+            span { "conditional" }
+        }
+    }
+}
+
+pub fn multiple_brace_roots() -> VNode {
+    rsx! {
+        {make_text_node("a")}
+        {make_text_node("b")}
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,6 +152,62 @@ mod tests {
                 assert_eq!(elem.children.len(), 3);
             }
             _ => panic!("Expected list element"),
+        }
+    }
+
+    #[test]
+    fn test_single_brace_root() {
+        let node = single_brace_root();
+        match node {
+            VNode::Fragment(children) => {
+                assert_eq!(children.len(), 1);
+                match &children[0] {
+                    VNode::Text(t) => assert_eq!(t.text, "hello"),
+                    _ => panic!("Expected text node"),
+                }
+            }
+            _ => panic!("Expected fragment, got {:?}", node),
+        }
+    }
+
+    #[test]
+    fn test_mixed_roots_with_brace() {
+        let node = mixed_roots_with_brace();
+        match node {
+            VNode::Fragment(children) => {
+                assert_eq!(children.len(), 3);
+                match &children[0] {
+                    VNode::Element(e) => assert_eq!(e.tag, "div"),
+                    _ => panic!("Expected element"),
+                }
+                match &children[2] {
+                    VNode::Element(e) => assert_eq!(e.tag, "span"),
+                    _ => panic!("Expected element"),
+                }
+            }
+            _ => panic!("Expected fragment"),
+        }
+    }
+
+    #[test]
+    fn test_mixed_brace_and_control_flow() {
+        let node = mixed_brace_and_control_flow();
+        match node {
+            VNode::Fragment(children) => {
+                assert_eq!(children.len(), 2);
+            }
+            _ => panic!("Expected fragment"),
+        }
+    }
+
+    #[test]
+    fn test_multiple_brace_roots() {
+        let node = multiple_brace_roots();
+        match node {
+            VNode::Fragment(children) => {
+                assert_eq!(children.len(), 2);
+            }
+            _ => panic!("Expected fragment"),
         }
     }
 }
