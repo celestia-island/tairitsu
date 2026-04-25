@@ -317,19 +317,12 @@ watch:
 # Web development
 # ============================================================================
 
-# Start web demo development server (using tairitsu-packager)
-# Usage: just dev                 — foreground watch mode
-#        just dev --daemon        — start or restart background daemon
-#        just dev --daemon --dry-run — check daemon status only
-#        just dev --shutdown      — stop running daemon
-#        just dev --status        — check daemon status
-dev *FLAGS: init
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Starting Tairitsu dev server  (watch mode)..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo ""
-    @{{python}} scripts/install_packager.py --quick || (echo "Building tairitsu CLI..." && cargo build --release --package tairitsu-packager && {{python}} scripts/install_packager.py)
-    tairitsu --manifest-path examples/website dev --watch {{FLAGS}}
+# Development mode for website
+#   just dev             - Blocking foreground with hot-reload
+#   just dev --daemon    - Start/restart daemon (non-blocking)
+#   just dev --daemon stop - Stop daemon
+dev *FLAGS="":
+    cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init
