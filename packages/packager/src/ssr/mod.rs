@@ -10,8 +10,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 #[cfg(feature = "ssr")]
-use tracing::info;
-use tracing::{error, warn};
+use tracing::error;
 #[cfg(feature = "dev-server")]
 use {
     axum::{
@@ -62,7 +61,7 @@ pub async fn ssr_dev_server(
     // Read the template HTML
     let template_path = dist_dir.join("index.html");
     let template = std::fs::read_to_string(&template_path).unwrap_or_else(|e| {
-        warn!("Failed to read index.html: {}", e);
+        crate::log_warn!("Failed to read index.html: {}", e);
         default_template(&config.package.name)
     });
 
@@ -137,7 +136,7 @@ pub async fn ssr_dev_server(
         match webbrowser::open(&url) {
             Ok(_) => crate::log_ok!("Opening browser..."),
             Err(e) => {
-                warn!("Failed to open browser: {}", e);
+                crate::log_warn!("Failed to open browser: {}", e);
             }
         }
     }
@@ -212,7 +211,7 @@ async fn bind_listener_with_fallback(port: u16) -> Result<(tokio::net::TcpListen
     match TcpListener::bind(("127.0.0.1", try_port)).await {
         Ok(listener) => Ok((listener, try_port)),
         Err(e) if try_port < 65535 => {
-            warn!("Port {} unavailable: {}", try_port, e);
+            crate::log_warn!("Port {} unavailable: {}", try_port, e);
             let listener = TcpListener::bind(("127.0.0.1", try_port + 1)).await?;
             Ok((listener, try_port + 1))
         }
@@ -282,7 +281,7 @@ pub fn prerender_routes(
             routes.to_vec()
         };
 
-        info!("Pre-rendering {} routes...", effective_routes.len());
+        crate::log_info!("Pre-rendering {} routes...", effective_routes.len());
 
         // Build the component first
         crate::wasm::build_component(config, true, None)?;
@@ -300,7 +299,7 @@ pub fn prerender_routes(
         // Read the template HTML
         let template_path = dist_dir.join("index.html");
         let template = fs::read_to_string(&template_path).unwrap_or_else(|e| {
-            warn!("Failed to read index.html: {}", e);
+            crate::log_warn!("Failed to read index.html: {}", e);
             default_template(&config.package.name)
         });
 
@@ -311,7 +310,7 @@ pub fn prerender_routes(
         fs::create_dir_all(output_dir)?;
 
         for route in &effective_routes {
-            info!("  Rendering /{}...", route);
+            crate::log_info!("  Rendering /{}...", route);
 
             let clean_route = route.trim_start_matches('/');
 
@@ -336,10 +335,10 @@ pub fn prerender_routes(
             };
 
             fs::write(&output_path, activated_html)?;
-            info!("    -> {}", output_path.display());
+            crate::log_info!("    -> {}", output_path.display());
         }
 
-        info!(
+        crate::log_info!(
             "Pre-rendering complete! Output in: {}",
             output_dir.display()
         );

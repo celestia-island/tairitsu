@@ -68,7 +68,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 
     let output_dir = &prerender_config.output_dir;
 
-    tracing::info!(
+    crate::log_info!(
         "Pre-rendering {} routes to {}...",
         prerender_config.routes.len(),
         output_dir.display()
@@ -90,7 +90,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
     // Read the template HTML
     let template_path = dist_dir.join("index.html");
     let template = fs::read_to_string(&template_path).unwrap_or_else(|e| {
-        tracing::warn!("Failed to read index.html: {}", e);
+        crate::log_warn!("Failed to read index.html: {}", e);
         default_template(&config.package.name)
     });
 
@@ -110,7 +110,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
         );
 
         for route in &prerender_config.routes {
-            tracing::info!("  Rendering /{}...", route);
+            crate::log_info!("  Rendering /{}...", route);
 
             let html =
                 render_full_page(&wasm_bytes, ssr_config.clone(), &template).map_err(|e| {
@@ -130,12 +130,12 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
             };
 
             fs::write(&output_path, html)?;
-            tracing::info!("    -> {}", output_path.display());
+            crate::log_info!("    -> {}", output_path.display());
         }
 
         // Copy assets if requested
         if prerender_config.include_assets {
-            tracing::info!("Copying assets...");
+            crate::log_info!("Copying assets...");
             copy_assets(dist_dir, output_dir)?;
         }
     }
@@ -150,7 +150,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
 
     #[cfg(feature = "ssr")]
     {
-        tracing::info!(
+        crate::log_info!(
             "Pre-rendering complete! Output in: {}",
             output_dir.display()
         );

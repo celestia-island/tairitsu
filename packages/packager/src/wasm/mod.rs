@@ -101,23 +101,23 @@ pub fn build_component(
 
     let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
 
-    tracing::info!("Creating output directory: {}", output_dir.display());
+    crate::log_info!("Creating output directory: {}", output_dir.display());
     std::fs::create_dir_all(&output_dir)?;
 
-    tracing::info!(
+    crate::log_info!(
         "Copying WASM from {} to {}",
         wasm_path.display(),
         dest_wasm.display()
     );
     std::fs::copy(&wasm_path, &dest_wasm)?;
 
-    tracing::info!("Copying browser glue...");
+    crate::log_info!("Copying browser glue...");
     copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
 
-    tracing::info!("Copying static public assets...");
+    crate::log_info!("Copying static public assets...");
     copy_static_public_assets_with_output_dir(config, &output_dir)?;
 
-    tracing::info!("Compiling SCSS...");
+    crate::log_info!("Compiling SCSS...");
     compile_project_scss_with_output_dir(config, &output_dir)?;
     pb.println(format!(
         "     ✓  {:<28}  {:.1?}",
@@ -389,7 +389,7 @@ fn resolve_import_to_modules(
                 .or_default()
                 .push(clean.to_string());
         } else {
-            tracing::warn!(
+            crate::log_warn!(
                 "Glue symbol '{}' not found in any module (map has {} symbols)",
                 clean,
                 sym_map.len()
@@ -479,7 +479,7 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
         ))
     })?;
 
-    tracing::info!(
+    crate::log_info!(
         "Flattened barrel {} with {} modules ({} total symbols)",
         barrel_path.display(),
         module_syms.len(),
@@ -678,14 +678,14 @@ fn copy_browser_glue_with_output_dir(
             let top_barrel = dest_glue.join("index.js");
             if top_barrel.exists() {
                 if let Err(e) = flatten_barrel_exports(&top_barrel) {
-                    tracing::warn!("Failed to flatten top-level barrel: {}", e);
+                    crate::log_warn!("Failed to flatten top-level barrel: {}", e);
                 }
             }
             break;
         }
     }
     if !copied {
-        tracing::warn!("browser-glue dist not found — jco wrapper imports may fail at runtime");
+        crate::log_warn!("browser-glue dist not found — jco wrapper imports may fail at runtime");
     }
 
     Ok(())
@@ -704,10 +704,10 @@ fn copy_static_public_assets_with_output_dir(
     for extra in &config.assets.extra_public_dirs {
         let extra_path = config.manifest_dir.join(extra);
         if extra_path.exists() {
-            tracing::info!("Copying extra public assets from: {}", extra_path.display());
+            crate::log_info!("Copying extra public assets from: {}", extra_path.display());
             copy_dir_contents(&extra_path, output_dir)?;
         } else {
-            tracing::warn!("Extra public dir not found: {}", extra_path.display());
+            crate::log_warn!("Extra public dir not found: {}", extra_path.display());
         }
     }
 
@@ -744,7 +744,7 @@ fn compile_project_scss_with_output_dir(
 ) -> crate::Result<()> {
     let project_root = &config.manifest_dir;
 
-    tracing::info!("SCSS project root: {}", project_root.display());
+    crate::log_info!("SCSS project root: {}", project_root.display());
 
     // Use new SCSS configuration system
     let results = crate::styles::compile_scss_with_config(&config.scss, project_root, output_dir)
@@ -754,7 +754,7 @@ fn compile_project_scss_with_output_dir(
 
     // Log compiled files
     for result in results {
-        tracing::info!("Compiled SCSS: {}", result.output_path.display());
+        crate::log_info!("Compiled SCSS: {}", result.output_path.display());
     }
 
     Ok(())
@@ -1657,10 +1657,10 @@ fn generate_component_html_with_output_dir(
             match std::fs::read_to_string(&full_path) {
                 Ok(css_content) => {
                     html = injector.inject_style_into_html(&html, &css_content)?;
-                    tracing::info!("Inlined CSS into HTML: {}", css_path);
+                    crate::log_info!("Inlined CSS into HTML: {}", css_path);
                 }
                 Err(e) => {
-                    tracing::warn!(
+                    crate::log_warn!(
                         "CSS file not found for inline injection: {} ({})",
                         css_path,
                         e
@@ -1732,7 +1732,7 @@ fn generate_route_html_files(
         })?;
     }
 
-    tracing::info!(
+    crate::log_info!(
         "Generated {} route HTML files for direct URL access",
         non_root_routes.len()
     );

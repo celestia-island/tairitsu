@@ -28,8 +28,6 @@
 
 use std::path::{Path, PathBuf};
 
-use tracing::{info, warn};
-
 use super::{IconSource, MDI_DEFAULT_VERSION, metadata::IconMetadata};
 
 // ============================================================================
@@ -166,7 +164,7 @@ impl IconFetcher {
         }
 
         metadata.count = metadata.icons.len();
-        info!(
+        crate::log_info!(
             "Loaded {} icons from {}",
             metadata.count,
             icons_dir.display()
@@ -218,7 +216,7 @@ impl IconFetcher {
 
         // Load from cache if available and not forcing refresh
         if !force && self.is_cached() {
-            info!(
+            crate::log_info!(
                 "Loading {} icons from cache: {}",
                 self.source,
                 self.source_cache_dir().display()
@@ -242,7 +240,7 @@ impl IconFetcher {
         match self.source {
             IconSource::Custom => self.load_from_directory(),
             _ => {
-                warn!(
+                crate::log_warn!(
                     "HTTP icon fetching not available (compile without 'icon-fetch' feature). \
                      Use IconSource::Custom for local files."
                 );
@@ -302,7 +300,7 @@ mod http_fetch {
     impl IconFetcher {
         /// Fetch MDI icons from GitHub.
         pub(super) async fn fetch_mdi(&self) -> crate::Result<IconMetadata> {
-            info!("Fetching MDI icons v{}", self.version);
+            crate::log_info!("Fetching MDI icons v{}", self.version);
 
             // Fetch metadata from GitHub
             let content = fetch_url_async(MDI_GITHUB_META_URL).await?;
@@ -312,7 +310,7 @@ mod http_fetch {
             // Save metadata to cache
             std::fs::write(self.metadata_path(), &content)?;
 
-            info!("Fetched metadata for {} MDI icons", metadata.count);
+            crate::log_info!("Fetched metadata for {} MDI icons", metadata.count);
 
             // Load SVG paths from cache
             self.load_cached()
@@ -320,7 +318,7 @@ mod http_fetch {
 
         /// Fetch Lucene icons (stub implementation).
         pub(super) async fn fetch_lucide(&self) -> crate::Result<IconMetadata> {
-            warn!("Lucide icon source not yet implemented");
+            crate::log_warn!("Lucide icon source not yet implemented");
             Ok(IconMetadata::default())
         }
     }
@@ -405,7 +403,7 @@ pub fn fetch_icons(source: &IconSource, cache_dir: &Path) -> crate::Result<IconM
 
     #[cfg(not(feature = "icon-fetch"))]
     {
-        warn!(
+        crate::log_warn!(
             "HTTP icon fetching not available for {:?}. \
              Enable 'icon-fetch' feature or use IconSource::Custom for local files.",
             source
