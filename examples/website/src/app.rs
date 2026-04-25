@@ -1,7 +1,7 @@
 //! App root — assembles pages into a VNode tree based on current route.
 //!
 //! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme.
-//! Structure mirrors hikari-legacy website exactly.
+//! Structure mirrors hikari website exactly.
 
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
@@ -34,7 +34,7 @@ pub fn render() -> VNode {
 fn layout_shell(children: Vec<VNode>) -> VNode {
     rsx! {
         div { id: "hikari-app",
-            class: "hi-layout hi-layout-dark hi-layout-has-sidebar",
+            class: "hi-layout hi-layout-dark hi-layout-has-sidebar hi-ambient-bg",
             div { class: "hi-background" }
             ..vec![top_nav()],
             div { class: "hi-layout-body",
@@ -45,6 +45,11 @@ fn layout_shell(children: Vec<VNode>) -> VNode {
                 }
                 div { class: "hi-layout-main",
                     main { class: "hi-layout-content",
+                        nav { class: "hi-breadcrumb",
+                            a { href: "/", class: "hi-breadcrumb-link", "Home" }
+                            span { class: "hi-breadcrumb-sep", " / " }
+                            span { class: "hi-breadcrumb-current", "Home" }
+                        }
                         ..children
                     }
                 }
