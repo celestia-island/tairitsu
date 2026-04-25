@@ -117,27 +117,60 @@ a:hover {
    Dark Theme Background Gradient
    ============================================ */
 
-.hi-background {
+.hi-layout-dark .hi-background {
   background: radial-gradient(
     circle at 70% 50.4%,
     var(--bg-color-1) 0%,
     var(--bg-color-2) 100%
-  ) !important;
+  );
 }
 
 /* ============================================
    Header / Aside dark overrides
    ============================================ */
 
-.hi-header {
-  background: var(--hi-header-surface) !important;
-  border-bottom-color: var(--hi-color-border) !important;
+.hi-layout-dark .hi-header {
+  background: rgba(15, 23, 32, 0.95);
+  border-bottom: 1px solid var(--hi-color-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.hi-aside,
-.hi-aside-drawer {
-  background: var(--hi-aside-surface) !important;
-  border-right-color: var(--hi-color-border) !important;
+.hi-layout-dark .hi-header-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--hi-color-text-primary);
+}
+
+.hi-layout-dark .hi-logo {
+  font-size: 1.4rem;
+  color: var(--ts-color-primary);
+}
+
+.hi-layout-dark .hi-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hi-layout-dark .hi-aside,
+.hi-layout-dark .hi-aside-drawer {
+  background: rgba(15, 23, 32, 0.95);
+  border-right: 1px solid var(--hi-color-border);
+}
+
+/* ============================================
+   Main content area — must be dark
+   ============================================ */
+
+.hi-layout-dark .hi-layout-main {
+  background: var(--hi-color-background);
+}
+
+.hi-layout-dark .hi-layout-content {
+  background: transparent;
+  min-height: calc(100vh - var(--ts-header-height, 64px));
 }
 
 /* ============================================
@@ -456,7 +489,7 @@ a:hover {
   padding: var(--ts-spacing-xl) 0;
 }
 
-.page-section__title {
+.hi-layout-dark .page-section__title {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--hi-color-text-primary);
