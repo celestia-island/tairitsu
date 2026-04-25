@@ -9,7 +9,7 @@ use tairitsu_vdom::{VElement, VNode, VText};
 
 use crate::pages::components as page_components;
 use crate::{
-    components::{aside_footer, sidebar, top_nav},
+    components::{sidebar, top_nav},
     pages::{guides, home, not_found, packages, system},
     theme,
 };
@@ -41,12 +41,9 @@ fn layout_shell(children: Vec<VNode>) -> VNode {
             style: theme_style,
             div { class: "hi-background" }
             ..vec![top_nav()],
-            div { class: "hi-layout-body",
-                div { id: "drawer-overlay", class: "hi-layout-overlay" }
-                aside { class: "hi-aside hi-aside-drawer hi-aside-lg",
-                    div { class: "hi-aside-content", ..vec![sidebar()] }
-                    ..vec![aside_footer()]
-                }
+                div { class: "hi-layout-body",
+                    div { id: "drawer-overlay", class: "hi-layout-overlay" }
+                    ..vec![sidebar()]
                 div { class: "hi-layout-main",
                     main { class: "hi-layout-content",
                         nav { class: "hi-breadcrumb",
