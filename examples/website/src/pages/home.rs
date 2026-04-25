@@ -1,12 +1,12 @@
-//! Home page — mirrors hikari-legacy home page structure (dark theme variant).
+//! Home page — mirrors hikari home page structure exactly (dark theme variant).
 //!
-//! Centered hero with gradient text title, subtitle, description,
-//! and two CTA buttons — matching hikari's Layout > Container > Section > Row structure.
+//! Uses identical CSS class names: page-hero, page-hero__inner, card-grid, card, etc.
+//! Only differences: dark-themed content, tairitsu branding/text.
 
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
 
-use crate::components::svg_icon;
+use crate::components::{glow_wrapper, svg_icon};
 use hikari_icons::MdiIcon;
 
 fn txt(s: &str) -> VNode {
@@ -16,75 +16,109 @@ fn el(tag: &str) -> VElement {
     VElement::new(tag)
 }
 
-pub fn render() -> VNode {
-    rsx! {
-        div { id: "page-home", class: "hikari-page is-active",
-            section { class: "hero-section",
-                div { class: "hero-content",
-                    div { class: "hero-logo",
-                        ..vec![svg_icon(MdiIcon::CubeOutline, 64, "hero-logo-icon")]
-                    }
-                    h1 { class: "hero-title", "Tairitsu" }
-                    p { class: "hero-subtitle",
-                        "A comprehensive WASM Component Runtime Engine."
-                    }
-                    p { class: "hero-description",
-                        "Built with a reactive virtual DOM, compiled to WebAssembly.",
-                        " Tairitsu provides a rich set of components from basic primitives",
-                        " to complex data visualisations \u{2014} all rendered without JavaScript."
-                    }
-                    p { class: "hero-tagline",
-                        "Docker-like architecture for WASM modules. Type-safe via WIT."
-                    }
-                }
-                div { class: "hero-actions",
-                    a {
-                        href: "/components/layer1/button",
-                        class: "hi-button hi-button-primary hi-button-lg hero-btn",
-                        "Explore Components"
-                    }
-                    a {
-                        href: "/guides/quick-start",
-                        class: "hi-button hi-button-secondary hi-button-lg hero-btn",
-                        "Quick Start"
-                    }
-                }
-            }
-            div { class: "hero-spacer" }
-            section { class: "features-section",
-                h2 { class: "features-title", "What is Tairitsu?" }
-                div { class: "features-grid",
-                    ..vec![
-                        feature_card(
-                            "Component Library",
-                            "Layered architecture: Layer 1 (base primitives), Layer 2 (composed patterns), Layer 3 (complex widgets).",
-                            MdiIcon::Package,
-                        ),
-                        feature_card(
-                            "Design System",
-                            "500+ traditional Chinese colours, CSS utility classes, icon library, animations, and i18n system.",
-                            MdiIcon::Palette,
-                        ),
-                        feature_card(
-                            "WebAssembly First",
-                            "Ships as a wasm32-wasip2 component. Rendered with the Tairitsu virtual DOM \u{2014} no JavaScript framework required.",
-                            MdiIcon::CubeOutline,
-                        ),
-                    ]
-                }
-            }
-        }
+fn glow_btn(href: &str, class: &str, text: &str, arrow: Option<&str>) -> VNode {
+    let mut btn = VElement::new("a")
+        .attr("href", href)
+        .class(class)
+        .child(txt(text));
+    if let Some(arrow_text) = arrow {
+        btn = btn.child(VNode::Element(
+            VElement::new("span")
+                .class("btn-arrow")
+                .child(txt(arrow_text)),
+        ));
     }
+    glow_wrapper(
+        "medium",
+        "soft",
+        "rgba(20,110,116,0.5)",
+        VNode::Element(btn),
+    )
 }
 
-fn feature_card(title: &str, desc: &str, icon: MdiIcon) -> VNode {
-    VNode::Element(el("div").class("feature-card").children(vec![
-        VNode::Element(el("div").class("feature-icon-wrap").child(svg_icon(
-            icon,
-            36,
-            "feature-icon",
-        ))),
-        VNode::Element(el("h3").class("feature-card-title").child(txt(title))),
-        VNode::Element(el("p").class("feature-card-desc").child(txt(desc))),
-    ]))
+fn glow_card(title: &str, body: &str) -> VNode {
+    let card = VNode::Element(
+        el("div")
+            .class("card")
+            .child(VNode::Element(
+                el("h3").class("card__title").child(txt(title)),
+            ))
+            .child(VNode::Element(
+                el("p").class("card__body").child(txt(body)),
+            )),
+    );
+    glow_wrapper("medium", "dim", "rgba(20,110,116,0.3)", card)
+}
+
+pub fn render() -> VNode {
+    let logo = VNode::Element(
+        el("div")
+            .class("page-hero__logo")
+            .child(svg_icon(MdiIcon::CubeOutline, 64, "page-hero-logo-icon")),
+    );
+
+    let title = VNode::Element(el("h1").class("page-hero__title").child(txt("Tairitsu")));
+
+    let subtitle = VNode::Element(
+        el("p")
+            .class("page-hero__subtitle")
+            .child(txt("A comprehensive WASM Component Runtime Engine.")),
+    );
+
+    let tagline = VNode::Element(
+        el("p")
+            .class("page-hero__tagline")
+            .child(txt("Built with a reactive virtual DOM, compiled to WebAssembly. Tairitsu provides a rich set of components from basic primitives to complex data visualisations \u{2014} all rendered without JavaScript.")),
+    );
+
+    let btn1 = glow_btn("/components/layer1/button", "hi-button hi-button-primary hi-button-lg", "Explore Components ", Some("\u{2192}"));
+    let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", "Quick Start", None);
+
+    let actions = VNode::Element(
+        el("div").class("page-hero__actions").children(vec![btn1, btn2]),
+    );
+
+    let hero_inner = VNode::Element(
+        el("div")
+            .class("page-hero__inner")
+            .children(vec![logo, title, subtitle, tagline, actions]),
+    );
+
+    let hero_section = VNode::Element(
+        el("section").class("page-hero").child(hero_inner),
+    );
+
+    let section_title = VNode::Element(
+        el("h2").class("page-section__title").child(txt("What is Tairitsu?")),
+    );
+
+    let card1 = glow_card(
+        "Component Library",
+        "Layered architecture: Layer 1 (base primitives), Layer 2 (composed patterns), Layer 3 (complex widgets).",
+    );
+    let card2 = glow_card(
+        "Design System",
+        "500+ traditional Chinese colours, CSS utility classes, icon library, animations, and i18n system.",
+    );
+    let card3 = glow_card(
+        "WebAssembly First",
+        "Ships as a wasm32-wasip2 component. Rendered with the Tairitsu virtual DOM \u{2014} no JavaScript framework required.",
+    );
+
+    let card_grid = VNode::Element(
+        el("div").class("card-grid").children(vec![card1, card2, card3]),
+    );
+
+    let section = VNode::Element(
+        el("section")
+            .class("page-section")
+            .children(vec![section_title, card_grid]),
+    );
+
+    VNode::Element(
+        el("div")
+            .attr("id", "page-home")
+            .class("hikari-page is-active")
+            .children(vec![hero_section, section]),
+    )
 }

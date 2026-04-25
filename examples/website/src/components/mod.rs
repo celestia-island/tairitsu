@@ -1,7 +1,8 @@
-//! Shared layout components: top nav, sidebar, and aside footer.
+//! Shared layout components: top nav, sidebar, aside footer, and glow wrapper.
 //!
 //! Uses hikari-icons (SVG-based MDI icons) matching hikari-legacy's
 //! component library icon system, rendered under tairitsu dark theme.
+//! Sidebar structure mirrors hikari exactly: hi-menu-list > hi-submenu > hi-submenu-title/list.
 
 use hikari_icons::{get, MdiIcon};
 use tairitsu_macros::rsx;
@@ -15,8 +16,6 @@ fn el(tag: &str) -> VElement {
 }
 
 /// Render an MDI SVG icon as a VNode using VElement builder.
-/// Builds the SVG as real VNode children so the diff/patch system
-/// can properly create and update DOM nodes (inner_html is SSR-only).
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     let name = icon.to_string();
     let (view_box, path_d) = match get(&name) {
@@ -43,23 +42,33 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
     )
 }
 
-fn sidebar_icon(icon: MdiIcon) -> VNode {
-    svg_icon(icon, 16, "hi-sidebar-icon")
-}
-
-fn arrow_icon() -> VNode {
-    svg_icon(MdiIcon::ChevronRight, 10, "hi-sidebar-arrow")
+fn icon_el(icon: MdiIcon) -> VNode {
+    let icon_name = icon.to_string();
+    let svg_str = get(&icon_name)
+        .map(|data| {
+            format!(
+                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}" width="14" height="14"><path fill="currentColor" d="{}"/></svg>"#,
+                data.view_box.as_deref().unwrap_or("0 0 24 24"),
+                data.path.as_deref().unwrap_or("")
+            )
+        })
+        .unwrap_or_else(|| String::from(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>"#
+        ));
+    VNode::Element(
+        el("span")
+            .class("hi-menu-item-icon hikari-icon")
+            .inner_html(svg_str),
+    )
 }
 
 /// Glow effect wrapper with native Rust mouse-tracking.
-/// Uses set_style() directly in event callbacks for CSS custom properties,
-/// matching hikari-legacy's Glow component architecture but built on tairitsu's own infrastructure
-/// (MouseEvent, get_bounding_client_rect, set_style via WIT bindings).
-fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VNode {
+pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VNode {
     let opacity = match intensity {
         "dim" => "0.07",
         "soft" => "0.15",
         "bright" => "0.30",
+        "subtle" => "0.10",
         _ => "0.15",
     };
 
@@ -109,60 +118,6 @@ fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -> VN
     )
 }
 
-fn submenu_title(icon: MdiIcon, label: &str) -> VNode {
-    glow_wrapper(
-        "medium",
-        "subtle",
-        "rgba(128,128,128,0.4)",
-        VNode::Element(
-            el("div")
-                .class("hi-menu-height-compact hi-menu-submenu-title")
-                .child(sidebar_icon(icon))
-                .child(arrow_icon())
-                .child(VNode::Element(
-                    el("span").class("hi-menu-item-content").child(txt(label)),
-                )),
-        ),
-    )
-}
-
-fn submenu_list(items: &[(&str, &str, MdiIcon)], open: bool) -> VNode {
-    let children: Vec<VNode> = items
-        .iter()
-        .map(|(label, href, icon)| menu_item(*icon, label, href))
-        .collect();
-    let mut list = el("ul").attr("role", "menu").class("hi-menu-submenu-list");
-    if open {
-        list = list.class("hi-menu-submenu-list-open");
-        list = list.attr("style", "display:block;opacity:1;transform:translateX(0)");
-    }
-    VNode::Element(list.children(children))
-}
-
-fn submenu_section(
-    key: &str,
-    icon: MdiIcon,
-    label: &str,
-    items: &[(&str, &str, MdiIcon)],
-    open: bool,
-) -> VNode {
-    let mut li = el("li")
-        .attr("role", "none")
-        .class("hi-menu-submenu")
-        .attr("data_key", key);
-    if open {
-        li = li.class("hi-menu-submenu-list-open");
-    }
-    let li_el = li
-        .child(submenu_title(icon, label))
-        .child(submenu_list(items, open));
-    VNode::Element(
-        el("ul")
-            .class("hi-menu hi-menu-vertical hi-menu-compact")
-            .child(VNode::Element(li_el)),
-    )
-}
-
 // ============================================================
 // Top Navigation (Header)
 // ============================================================
@@ -172,6 +127,7 @@ pub fn top_nav() -> VNode {
         header { class: "hi-header hi-header-sticky hi-header-md",
             div { class: "hi-header-left",
                 button { class: "hi-header-toggle", id: "drawer-toggle",
+                    "aria-label": "Toggle menu",
                     svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24",
                         stroke: "currentColor", stroke_width: "2", stroke_linecap: "round", stroke_linejoin: "round",
                         path { d: "M4 6h16M4 12h16M4 18h16" }
@@ -184,13 +140,15 @@ pub fn top_nav() -> VNode {
             }
             div { class: "hi-header-right",
                 nav { class: "hi-header-nav",
-                    a { href: "/components/layer1/button", class: "hi-header-link", "Components" }
-                    a { href: "/system", class: "hi-header-link", "System" }
-                    a { href: "/packages", class: "hi-header-link", "Packages" }
-                    a { href: "https://github.com/langyo/tairitsu", class: "hi-header-link",
-                        target: "_blank", rel: "noopener noreferrer",
-                        "GitHub"
-                    }
+                    a { href: "/components/layer1/button", class: "hikari-topnav__link", "Components" }
+                    a { href: "/system", class: "hikari-topnav__link", "System" }
+                    a { href: "/packages", class: "hikari-topnav__link", "Packages" }
+                }
+                a {
+                    href: "https://github.com/langyo/tairitsu",
+                    target: "_blank",
+                    class: "hi-header-github",
+                    "GitHub"
                 }
             }
         }
@@ -198,190 +156,248 @@ pub fn top_nav() -> VNode {
 }
 
 // ============================================================
-// Sidebar Navigation — SVG icons via hikari-icons
+// Sidebar Navigation — mirrors hikari sidebar structure
 // ============================================================
 
+struct NavItem {
+    label: &'static str,
+    icon: MdiIcon,
+    href: &'static str,
+}
+
+struct NavSubcategory {
+    label: &'static str,
+    href: &'static str,
+    items: &'static [NavItem],
+}
+
+struct NavCategory {
+    label: &'static str,
+    default_open: bool,
+    subcategories: &'static [NavSubcategory],
+}
+
+const NAV_CATEGORIES: &[NavCategory] = &[
+    NavCategory {
+        label: "Home",
+        default_open: true,
+        subcategories: &[NavSubcategory {
+            label: "Home",
+            href: "/",
+            items: &[],
+        }],
+    },
+    NavCategory {
+        label: "Components",
+        default_open: true,
+        subcategories: &[
+            NavSubcategory {
+                label: "Layer 1 — Base",
+                href: "/components/layer1",
+                items: &[
+                    NavItem { label: "Button", icon: MdiIcon::Cursor, href: "/components/layer1/button" },
+                    NavItem { label: "Form", icon: MdiIcon::TextBoxEdit, href: "/components/layer1/form" },
+                    NavItem { label: "Number Input", icon: MdiIcon::FormatListNumbered, href: "/components/layer1/number-input" },
+                    NavItem { label: "Search", icon: MdiIcon::Magnify, href: "/components/layer1/search" },
+                    NavItem { label: "Switch", icon: MdiIcon::ToggleSwitch, href: "/components/layer1/switch" },
+                    NavItem { label: "Feedback", icon: MdiIcon::Alert, href: "/components/layer1/feedback" },
+                    NavItem { label: "Display", icon: MdiIcon::Image, href: "/components/layer1/display" },
+                    NavItem { label: "Avatar", icon: MdiIcon::Account, href: "/components/layer1/avatar" },
+                    NavItem { label: "Image", icon: MdiIcon::Image, href: "/components/layer1/image" },
+                    NavItem { label: "Tag", icon: MdiIcon::Star, href: "/components/layer1/tag" },
+                    NavItem { label: "Empty", icon: MdiIcon::ViewDashboard, href: "/components/layer1/empty" },
+                    NavItem { label: "Comment", icon: MdiIcon::Chat, href: "/components/layer1/comment" },
+                    NavItem { label: "Description List", icon: MdiIcon::FormatListBulleted, href: "/components/layer1/description-list" },
+                ],
+            },
+            NavSubcategory {
+                label: "Layer 2 — Composed",
+                href: "/components/layer2",
+                items: &[
+                    NavItem { label: "Navigation", icon: MdiIcon::FormatListBulleted, href: "/components/layer2/navigation" },
+                    NavItem { label: "Collapsible", icon: MdiIcon::ArrowExpandHorizontal, href: "/components/layer2/collapsible" },
+                    NavItem { label: "Data", icon: MdiIcon::Graph, href: "/components/layer2/data" },
+                    NavItem { label: "Table", icon: MdiIcon::Table, href: "/components/layer2/table" },
+                    NavItem { label: "Tree", icon: MdiIcon::SourceBranch, href: "/components/layer2/tree" },
+                    NavItem { label: "Pagination", icon: MdiIcon::ChevronLeft, href: "/components/layer2/pagination" },
+                    NavItem { label: "QRCode", icon: MdiIcon::ViewDashboard, href: "/components/layer2/qrcode" },
+                    NavItem { label: "Timeline", icon: MdiIcon::ChartTimeline, href: "/components/layer2/timeline" },
+                    NavItem { label: "Form", icon: MdiIcon::TextBoxEdit, href: "/components/layer2/form" },
+                    NavItem { label: "Cascader", icon: MdiIcon::ChevronDown, href: "/components/layer2/cascader" },
+                    NavItem { label: "Transfer", icon: MdiIcon::SwapHorizontal, href: "/components/layer2/transfer" },
+                    NavItem { label: "Feedback", icon: MdiIcon::Bell, href: "/components/layer2/feedback" },
+                ],
+            },
+            NavSubcategory {
+                label: "Layer 3 — Complex",
+                href: "/components/layer3",
+                items: &[
+                    NavItem { label: "Media", icon: MdiIcon::Play, href: "/components/layer3/media" },
+                    NavItem { label: "Editor", icon: MdiIcon::FormatBold, href: "/components/layer3/editor" },
+                    NavItem { label: "Visualization", icon: MdiIcon::CubeOutline, href: "/components/layer3/visualization" },
+                    NavItem { label: "User Guide", icon: MdiIcon::BookOpen, href: "/components/layer3/user-guide" },
+                    NavItem { label: "Zoom Controls", icon: MdiIcon::MagnifyPlus, href: "/components/layer3/zoom-controls" },
+                ],
+            },
+        ],
+    },
+    NavCategory {
+        label: "System",
+        default_open: false,
+        subcategories: &[
+            NavSubcategory { label: "Overview", href: "/system", items: &[] },
+            NavSubcategory { label: "Runtime Engine", href: "/system/runtime", items: &[] },
+            NavSubcategory { label: "WIT Pipeline", href: "/system/wit-pipeline", items: &[] },
+            NavSubcategory { label: "Web Backends", href: "/system/web-backends", items: &[] },
+            NavSubcategory { label: "Versioning", href: "/system/versioning", items: &[] },
+            NavSubcategory { label: "CSS Utilities", href: "/system/css", items: &[] },
+            NavSubcategory { label: "Icons", href: "/system/icons", items: &[] },
+            NavSubcategory { label: "Color Palette", href: "/system/palette", items: &[] },
+            NavSubcategory { label: "Animations", href: "/system/animations", items: &[] },
+            NavSubcategory { label: "i18n", href: "/system/i18n", items: &[] },
+            NavSubcategory { label: "Animation Demo", href: "/animations", items: &[] },
+        ],
+    },
+    NavCategory {
+        label: "Demos",
+        default_open: false,
+        subcategories: &[NavSubcategory {
+            label: "All Demos",
+            href: "/demos",
+            items: &[
+                NavItem { label: "Form Demo", icon: MdiIcon::TextBoxEdit, href: "/demos/form" },
+                NavItem { label: "Dashboard", icon: MdiIcon::ViewColumn, href: "/demos/dashboard" },
+                NavItem { label: "Video & Audio", icon: MdiIcon::Play, href: "/demos/video" },
+            ],
+        }],
+    },
+];
+
 pub fn sidebar() -> VNode {
-    let home = glow_wrapper(
-        "medium",
-        "subtle",
-        "rgba(128,128,128,0.3)",
-        VNode::Element(
-            el("ul")
-                .class("hi-menu hi-menu-vertical hi-menu-compact")
-                .child(VNode::Element(
-                    el("li")
-                        .attr("role", "menuitem")
-                        .class("hi-menu-item hi-menu-item--home hi-menu-height-compact")
-                        .attr("data_key", "Home")
-                        .child(VNode::Element(el("a").attr("href", "/").children(vec![
-                            sidebar_icon(MdiIcon::Home),
-                            VNode::Element(el("span").class("hi-sidebar-label").child(txt("Home"))),
-                        ]))),
-                )),
-        ),
+    let mut category_nodes: Vec<VNode> = Vec::new();
+
+    for category in NAV_CATEGORIES {
+        if category.subcategories.len() == 1 && category.subcategories[0].items.is_empty() {
+            let sub = &category.subcategories[0];
+            category_nodes.push(plain_menu_item(sub.href, sub.label, 1));
+            continue;
+        }
+
+        let mut subcategory_nodes: Vec<VNode> = Vec::new();
+
+        for subcategory in category.subcategories {
+            if subcategory.items.is_empty() {
+                subcategory_nodes.push(plain_menu_item(subcategory.href, subcategory.label, 2));
+            } else {
+                let item_nodes: Vec<VNode> = subcategory
+                    .items
+                    .iter()
+                    .map(|item| menu_item(item.href, item.label, item.icon))
+                    .collect();
+                subcategory_nodes.push(submenu(subcategory.label, 2, item_nodes, true));
+            }
+        }
+
+        category_nodes.push(submenu(
+            category.label,
+            1,
+            subcategory_nodes,
+            category.default_open,
+        ));
+    }
+
+    let menu_list = VNode::Element(
+        el("ul")
+            .class("hi-menu-list")
+            .children(category_nodes),
     );
-
-    let layer1_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Button", "/components/layer1/button", MdiIcon::ToggleSwitch),
-        ("Form", "/components/layer1/form", MdiIcon::TextBoxEdit),
-        (
-            "Number Input",
-            "/components/layer1/number-input",
-            MdiIcon::FormatListNumbered,
-        ),
-        ("Search", "/components/layer1/search", MdiIcon::Magnify),
-        ("Switch", "/components/layer1/switch", MdiIcon::ToggleSwitch),
-        ("Feedback", "/components/layer1/feedback", MdiIcon::Alert),
-        ("Display", "/components/layer1/display", MdiIcon::ViewColumn),
-        ("Avatar", "/components/layer1/avatar", MdiIcon::Account),
-        ("Image", "/components/layer1/image", MdiIcon::Image),
-        ("Tag", "/components/layer1/tag", MdiIcon::Tag),
-        (
-            "Empty",
-            "/components/layer1/empty",
-            MdiIcon::CheckboxMarkedCircle,
-        ),
-        ("Comment", "/components/layer1/comment", MdiIcon::Chat),
-        (
-            "Description List",
-            "/components/layer1/description-list",
-            MdiIcon::FormatListBulleted,
-        ),
-    ];
-
-    let layer2_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Navigation", "/components/layer2/navigation", MdiIcon::Menu),
-        (
-            "Collapsible",
-            "/components/layer2/collapsible",
-            MdiIcon::ChevronDown,
-        ),
-        ("Data", "/components/layer2/data", MdiIcon::Table),
-        ("Table", "/components/layer2/table", MdiIcon::Table),
-        ("Tree", "/components/layer2/tree", MdiIcon::Tree),
-        (
-            "Pagination",
-            "/components/layer2/pagination",
-            MdiIcon::ChevronDoubleRight,
-        ),
-        (
-            "QRCode",
-            "/components/layer2/qrcode",
-            MdiIcon::ViewDashboard,
-        ),
-        (
-            "Timeline",
-            "/components/layer2/timeline",
-            MdiIcon::ChartTimeline,
-        ),
-        ("Form", "/components/layer2/form", MdiIcon::TextBoxEdit),
-        (
-            "Cascader",
-            "/components/layer2/cascader",
-            MdiIcon::ChevronDown,
-        ),
-        (
-            "Transfer",
-            "/components/layer2/transfer",
-            MdiIcon::SwapHorizontal,
-        ),
-        ("Feedback", "/components/layer2/feedback", MdiIcon::Alert),
-    ];
-
-    let layer3_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Media", "/components/layer3/media", MdiIcon::Play),
-        ("Editor", "/components/layer3/editor", MdiIcon::FileEdit),
-        (
-            "Visualization",
-            "/components/layer3/visualization",
-            MdiIcon::ChartTimeline,
-        ),
-        (
-            "User Guide",
-            "/components/layer3/user-guide",
-            MdiIcon::BookOpen,
-        ),
-        (
-            "Zoom Controls",
-            "/components/layer3/zoom-controls",
-            MdiIcon::MagnifyPlus,
-        ),
-    ];
-
-    let system_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Overview", "/system/overview", MdiIcon::Information),
-        ("Runtime Engine", "/system/runtime", MdiIcon::CubeOutline),
-        ("WIT Pipeline", "/system/wit-pipeline", MdiIcon::FileEdit),
-        (
-            "Web Backends",
-            "/system/web-backends",
-            MdiIcon::SourceBranch,
-        ),
-        ("Versioning", "/system/versioning", MdiIcon::Tag),
-        ("CSS Utilities", "/system/css", MdiIcon::FormatAlignLeft),
-        ("Icons", "/system/icons", MdiIcon::Star),
-        ("Color Palette", "/system/palette", MdiIcon::Palette),
-        ("Animations", "/system/animations", MdiIcon::LightningBolt),
-        ("i18n", "/system/i18n", MdiIcon::Translate),
-        ("Animation Demo", "/animations", MdiIcon::Play),
-    ];
-
-    let demo_items: Vec<(&str, &str, MdiIcon)> = vec![
-        ("Form Demo", "/demos/form", MdiIcon::TextBoxEdit),
-        ("Dashboard", "/demos/dashboard", MdiIcon::ViewDashboard),
-        ("Video & Audio", "/demos/video", MdiIcon::Play),
-    ];
-
-    let sections: Vec<VNode> = vec![
-        home,
-        submenu_section("components", MdiIcon::Package, "Components", &[], true),
-        submenu_section(
-            "layer1",
-            MdiIcon::Layers,
-            "Layer 1 — Base",
-            &layer1_items,
-            true,
-        ),
-        submenu_section(
-            "layer2",
-            MdiIcon::SourceBranch,
-            "Layer 2 — Composed",
-            &layer2_items,
-            false,
-        ),
-        submenu_section(
-            "layer3",
-            MdiIcon::CubeOutline,
-            "Layer 3 — Complex",
-            &layer3_items,
-            false,
-        ),
-        submenu_section("system", MdiIcon::Cog, "System", &system_items, false),
-        submenu_section("demos", MdiIcon::TrophyAward, "Demos", &demo_items, false),
-    ];
 
     VNode::Element(
         el("aside")
             .attr("id", "hikari-aside")
-            .class("hi-aside hi-aside-drawer hi-aside-lg")
-            .children(sections),
+            .class("hi-aside hi-aside-drawer hi-aside-lg hi-aside-light")
+            .child(VNode::Element(
+                el("div")
+                    .class("hi-aside-content")
+                    .child(VNode::Element(
+                        el("nav")
+                            .class("hi-menu hi-menu-vertical hi-menu-compact")
+                            .child(menu_list),
+                    )),
+            ))
+            .child(aside_footer()),
     )
 }
 
-fn menu_item(icon: MdiIcon, label: &str, href: &str) -> VNode {
+fn menu_item(href: &str, label: &str, icon: MdiIcon) -> VNode {
+    let inner = VNode::Element(
+        el("a")
+            .attr("href", href)
+            .class("hi-menu-item-inner")
+            .child(icon_el(icon))
+            .child(VNode::Element(
+                el("span")
+                    .class("hi-menu-item-content")
+                    .child(txt(label)),
+            )),
+    );
     glow_wrapper(
         "medium",
-        "subtle",
+        "dim",
         "rgba(128,128,128,0.3)",
         VNode::Element(
             el("li")
-                .attr("role", "menuitem")
                 .class("hi-menu-item hi-menu-height-compact")
-                .child(VNode::Element(el("a").attr("href", href).children(vec![
-                    sidebar_icon(icon),
-                    VNode::Element(el("span").class("hi-sidebar-label").child(txt(label))),
-                ]))),
+                .child(inner),
+        ),
+    )
+}
+
+fn submenu_title(label: &str, _level: u32) -> VNode {
+    let arrow = icon_el(MdiIcon::ChevronRight);
+    VNode::Element(
+        el("div")
+            .class(format!("hi-submenu-title hi-menu-height-compact"))
+            .child(arrow)
+            .child(txt(label)),
+    )
+}
+
+fn submenu(label: &str, level: u32, children: Vec<VNode>, open: bool) -> VNode {
+    let title = submenu_title(label, level);
+    let list = VNode::Element(
+        el("ul")
+            .class("hi-submenu-list")
+            .style(format!("padding-left:{}em", level))
+            .children(children),
+    );
+    let mut el = VElement::new("li").class("hi-submenu");
+    el = el.child(title).child(list);
+    if !open {
+        el = el.attr("data-collapsed", "");
+    }
+    VNode::Element(el)
+}
+
+fn plain_menu_item(href: &str, label: &str, _level: u32) -> VNode {
+    let inner = VNode::Element(
+        el("a")
+            .attr("href", href)
+            .class("hi-menu-item-inner")
+            .child(VNode::Element(
+                el("span")
+                    .class("hi-menu-item-content")
+                    .child(txt(label)),
+            )),
+    );
+    glow_wrapper(
+        "medium",
+        "dim",
+        "rgba(128,128,128,0.3)",
+        VNode::Element(
+            el("li")
+                .class(format!("hi-menu-item hi-menu-height-compact"))
+                .child(inner),
         ),
     )
 }
@@ -415,18 +431,22 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
 }
 
 // ============================================================
-// Aside Footer — SVG icons (moon + lang)
+// Aside Footer
 // ============================================================
 
 pub fn aside_footer() -> VNode {
     rsx! {
         div { class: "hi-aside-footer",
-            button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                id: "theme-toggle", title: "Toggle theme",
-                ..vec![svg_icon(MdiIcon::MoonWaningCrescent, 20, "")]
+            button { class: "hi-aside-footer__btn", title: "Toggle theme",
+                span { class: "hi-aside-footer__icon", "\u{263E}" }
             }
-            button { class: "hi-button hi-button-borderless hi-icon-button hi-icon-button-40",
-                id: "lang-toggle", title: "Language", "A"
+            div { class: "hi-select hi-select-sm",
+                div { class: "hi-select-trigger hi-select-sm",
+                    span { class: "hi-select-value", "A" }
+                    span { class: "hi-select-arrow",
+                        inner_html: r#"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>"#
+                    }
+                }
             }
         }
     }

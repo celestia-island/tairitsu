@@ -243,7 +243,35 @@ a:hover {
    Top Nav Active State
    ============================================ */
 
-.hi-header-link.is-active {
+.hikari-topnav__link {
+  color: var(--hi-color-text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.15s ease;
+  padding: 0.25rem 0.5rem;
+}
+
+.hikari-topnav__link:hover {
+  color: var(--hi-color-secondary);
+}
+
+.hi-header-github {
+  color: var(--hi-color-text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border: 1px solid var(--hi-color-border);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.hi-header-github:hover {
+  color: var(--hi-color-primary);
+  border-color: var(--ts-color-primary);
+}
+
+.hi-header-link.is-active,
+.hikari-topnav__link.is-active {
   color: var(--hi-color-secondary) !important;
   font-weight: 600;
   border-bottom: 2px solid var(--hi-color-secondary);
@@ -320,21 +348,29 @@ a:hover {
 
 .page-hero {
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 4rem 2rem;
   background: linear-gradient(
     135deg,
-    rgba(20, 110, 116, 0.25) 0%,
-    rgba(20, 110, 116, 0.12) 30%,
-    rgba(26, 35, 50, 0.08) 70%,
-    rgba(26, 35, 50, 0.02) 100%
+    rgba(20, 110, 116, 0.15) 0%,
+    rgba(20, 110, 116, 0.06) 40%,
+    transparent 100%
   );
-  border-radius: 12px;
-  margin-bottom: 1rem;
 }
 
 .page-hero__inner {
   max-width: 700px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-hero__logo {
+  margin-bottom: 1rem;
+}
+
+.page-hero__logo .hikari-icon {
+  color: var(--hi-color-text-secondary);
 }
 
 .page-hero__title {
@@ -345,16 +381,18 @@ a:hover {
 }
 
 .page-hero__subtitle {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   color: var(--hi-color-text-secondary);
   margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 
-.page-hero__desc {
-  font-size: 0.9375rem;
-  color: var(--hi-color-text-disabled);
+.page-hero__tagline {
+  font-size: 1rem;
+  color: var(--hi-color-text-secondary);
   margin-bottom: 1.5rem;
   line-height: 1.6;
+  font-style: italic;
 }
 
 .page-hero__actions {
@@ -363,6 +401,11 @@ a:hover {
   justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.btn-arrow {
+  margin-left: 0.25rem;
+  font-weight: 400;
 }
 
 /* ============================================
@@ -428,9 +471,97 @@ a:hover {
 }
 
 /* ============================================
-   Sidebar Icons & Labels — matches hikari-legacy sidebar
+   Sidebar — hikari-matching menu structure
    ============================================ */
 
+.hi-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hi-submenu {
+  list-style: none;
+}
+
+.hi-submenu-title {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--hi-color-text-secondary);
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hi-submenu-title:hover {
+  color: var(--hi-color-secondary);
+}
+
+.hi-submenu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hi-menu-item-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--hi-color-text-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hi-menu-item-inner:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--hi-color-text-primary);
+}
+
+.hi-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--hi-color-text-disabled);
+}
+
+.hi-menu-item-content {
+  color: inherit;
+}
+
+/* Aside Footer — simplified dark theme */
+.hi-aside-footer__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--hi-color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hi-aside-footer__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--hi-color-primary);
+}
+
+.hi-aside-footer__icon {
+  font-size: 1rem;
+}
+
+/* Legacy sidebar icon/label compat */
 .hi-sidebar-icon {
   display: inline-flex;
   align-items: center;
