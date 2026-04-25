@@ -287,6 +287,8 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
     }
 
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
+        // SAFETY: single-threaded at this point
+        unsafe { std::env::set_var("TAIRITSU_LOG_TS", "1"); }
         let was_running = daemon::is_daemon_running();
         if was_running {
             crate::log_progress!("Restarting daemon...");
