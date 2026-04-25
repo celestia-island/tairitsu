@@ -1,7 +1,7 @@
 mod metadata;
 mod routes;
 
-pub use routes::{discover_routes, DiscoveredRoute};
+pub use routes::{DiscoveredRoute, discover_routes};
 
 use serde::Deserialize;
 use std::path::{Path, PathBuf};

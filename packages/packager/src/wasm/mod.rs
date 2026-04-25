@@ -168,7 +168,11 @@ pub fn build_component(
         } else {
             format!("{:.1} KB", size_bytes as f64 / 1024.0)
         };
-        crate::log_info!("package {} ({} bytes)", wasm_file.file_name().unwrap_or_default().to_string_lossy(), size_str);
+        crate::log_info!(
+            "package {} ({} bytes)",
+            wasm_file.file_name().unwrap_or_default().to_string_lossy(),
+            size_str
+        );
     }
 
     // Log successful build if in daemon mode
@@ -376,13 +380,10 @@ fn resolve_import_to_modules(
                 .entry(mod_name.clone())
                 .or_default()
                 .push(clean.to_string());
-        } else if let Some((alias_mod, _)) = sym_map
-            .iter()
-            .find(|(k, _)| {
-                let clean_str: &str = clean;
-                k.ends_with(clean_str) && k.len() > clean_str.len()
-            })
-        {
+        } else if let Some((alias_mod, _)) = sym_map.iter().find(|(k, _)| {
+            let clean_str: &str = clean;
+            k.ends_with(clean_str) && k.len() > clean_str.len()
+        }) {
             module_imports
                 .entry(alias_mod.clone())
                 .or_default()
@@ -417,14 +418,17 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
     let content = std::fs::read_to_string(barrel_path).map_err(|e| {
         crate::TairitsuPackagerError::BuildError(format!(
             "Failed to read barrel {}: {}",
-            barrel_path.display(), e
+            barrel_path.display(),
+            e
         ))
     })?;
 
     let mut needs_flatten = false;
     for line in content.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("export * as ") || (trimmed.contains("export * from") && trimmed.contains("glue/index")) {
+        if trimmed.starts_with("export * as ")
+            || (trimmed.contains("export * from") && trimmed.contains("glue/index"))
+        {
             needs_flatten = true;
             break;
         }
@@ -435,7 +439,9 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
     }
 
     let glue_dir = barrel_path.parent().map(|p| p.join("glue"));
-    let Some(glue_dir) = glue_dir else { return Ok(()); };
+    let Some(glue_dir) = glue_dir else {
+        return Ok(());
+    };
 
     let sym_map = build_symbol_module_map(&glue_dir);
 
@@ -468,7 +474,8 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
     std::fs::write(barrel_path, lines.join("\n")).map_err(|e| {
         crate::TairitsuPackagerError::BuildError(format!(
             "Failed to write flattened barrel {}: {}",
-            barrel_path.display(), e
+            barrel_path.display(),
+            e
         ))
     })?;
 
@@ -484,9 +491,10 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
 fn build_symbol_module_map(
     glue_dir: &std::path::Path,
 ) -> std::collections::HashMap<String, String> {
-    let mut map: std::collections::HashMap<String, (String, bool)> = std::collections::HashMap::new();
+    let mut map: std::collections::HashMap<String, (String, bool)> =
+        std::collections::HashMap::new();
     let Ok(entries) = std::fs::read_dir(glue_dir) else {
-        return std::collections::HashMap::new()
+        return std::collections::HashMap::new();
     };
     for entry in entries.flatten() {
         let path = entry.path();
@@ -496,7 +504,9 @@ fn build_symbol_module_map(
         let Some(module_name) = path.file_stem().and_then(|s| s.to_str()) else {
             continue;
         };
-        let Ok(content) = std::fs::read_to_string(&path) else { continue };
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            continue;
+        };
         for line in content.lines() {
             let trimmed = line.trim();
             let export_start = trimmed
@@ -584,13 +594,10 @@ fn rewrite_glue_import_line(
                 .entry(mod_name.clone())
                 .or_default()
                 .push(clean.to_string());
-        } else if let Some((alias_mod, _)) = sym_map
-            .iter()
-            .find(|(k, _)| {
-                let clean_str: &str = clean;
-                k.ends_with(clean_str) && k.len() > clean_str.len()
-            })
-        {
+        } else if let Some((alias_mod, _)) = sym_map.iter().find(|(k, _)| {
+            let clean_str: &str = clean;
+            k.ends_with(clean_str) && k.len() > clean_str.len()
+        }) {
             module_imports
                 .entry(alias_mod.clone())
                 .or_default()
@@ -608,7 +615,10 @@ fn rewrite_glue_import_line(
         }
         lines.push(format!(
             "import {{ {} }} from {}../browser-glue/glue/{}.js{}",
-            syms.join(", "), q, mod_name, q
+            syms.join(", "),
+            q,
+            mod_name,
+            q
         ));
     }
     // Drop unknown symbols silently — they're likely unimplemented WIT stubs
@@ -633,9 +643,9 @@ fn copy_browser_glue_with_output_dir(
     // Try tairitsu workspace first (where browser-glue is built), then local.
     let glue_dist_candidates: &[&str] = &[
         "../../../tairitsu/packages/browser-glue/dist", // hikari/examples/website → tairitsu
-        "../../packages/browser-glue/dist",          // tairitsu/examples/website → tairitsu
-        "../packages/browser-glue/dist",             // any project examples/* → workspace root
-        "packages/browser-glue/dist",               // workspace root itself
+        "../../packages/browser-glue/dist",             // tairitsu/examples/website → tairitsu
+        "../packages/browser-glue/dist",                // any project examples/* → workspace root
+        "packages/browser-glue/dist",                   // workspace root itself
     ];
     let mut copied = false;
     for candidate in glue_dist_candidates {
@@ -645,11 +655,16 @@ fn copy_browser_glue_with_output_dir(
             std::fs::create_dir_all(&dest_glue)?;
             for entry in walkdir::WalkDir::new(&glue_dist) {
                 let entry = entry.map_err(|e| {
-                    crate::TairitsuPackagerError::BuildError(format!("Failed to walk browser-glue dist: {}", e))
+                    crate::TairitsuPackagerError::BuildError(format!(
+                        "Failed to walk browser-glue dist: {}",
+                        e
+                    ))
                 })?;
                 let path = entry.path();
                 let rel = path.strip_prefix(&glue_dist).map_err(|_| {
-                    crate::TairitsuPackagerError::BuildError("Failed to compute relative path".to_string())
+                    crate::TairitsuPackagerError::BuildError(
+                        "Failed to compute relative path".to_string(),
+                    )
                 })?;
                 let dest = dest_glue.join(rel);
                 if path.is_dir() {
@@ -699,10 +714,7 @@ fn copy_static_public_assets_with_output_dir(
     Ok(())
 }
 
-fn copy_dir_contents(
-    src_dir: &std::path::Path,
-    output_dir: &std::path::Path,
-) -> crate::Result<()> {
+fn copy_dir_contents(src_dir: &std::path::Path, output_dir: &std::path::Path) -> crate::Result<()> {
     for entry in walkdir::WalkDir::new(src_dir) {
         let entry = entry.map_err(|e| {
             crate::TairitsuPackagerError::BuildError(format!("Failed to walk directory: {}", e))
@@ -972,7 +984,9 @@ fn try_generate_component_wrapper(
                                     let mut map_syms = Vec::new();
                                     for sym in m1.trim().split(',') {
                                         let s = sym.trim();
-                                        if s.is_empty() { continue; }
+                                        if s.is_empty() {
+                                            continue;
+                                        }
                                         // All interfaces now provided by __tairitsu_glue__.js import map
                                         map_syms.push(s.to_string());
                                     }
@@ -981,10 +995,11 @@ fn try_generate_component_wrapper(
                                     if !map_syms.is_empty() {
                                         parts.push(format!(
                                             "import {{ {} }} from '@tairitsu-glue/{}';",
-                                            map_syms.join(", "), m2
+                                            map_syms.join(", "),
+                                            m2
                                         ));
                                     }
-                                        // Resolve each symbol to its own module
+                                    // Resolve each symbol to its own module
                                     parts.join("\n  ")
                                 })
                                 .to_string();
@@ -1001,7 +1016,9 @@ fn try_generate_component_wrapper(
                                     let mut map_syms = Vec::new();
                                     for sym in m1.trim().split(',') {
                                         let s = sym.trim();
-                                        if s.is_empty() { continue; }
+                                        if s.is_empty() {
+                                            continue;
+                                        }
                                         map_syms.push(s.to_string());
                                     }
 
@@ -1009,7 +1026,8 @@ fn try_generate_component_wrapper(
                                     if !map_syms.is_empty() {
                                         parts.push(format!(
                                             "import {{ {} }} from \"@tairitsu-glue/{}\";",
-                                            map_syms.join(", "), m2
+                                            map_syms.join(", "),
+                                            m2
                                         ));
                                     }
                                     parts.join("\n  ")
@@ -1043,7 +1061,10 @@ fn try_generate_component_wrapper(
                                     "if (!(e instanceof {})) {{\n      throw new TypeError('Resource error: Not a valid {} resource.');\n    }}",
                                     class_name, label
                                 );
-                                let comment = format!("/* {} instanceof check patched for browser compat */", class_name);
+                                let comment = format!(
+                                    "/* {} instanceof check patched for browser compat */",
+                                    class_name
+                                );
                                 content = content.replace(&check, &comment);
                                 content = content.replace(&catch_check, &comment);
                             }
@@ -1669,10 +1690,7 @@ fn generate_route_html_files(
         return Ok(());
     }
 
-    let non_root_routes: Vec<&DiscoveredRoute> = routes
-        .iter()
-        .filter(|r| !r.is_root())
-        .collect();
+    let non_root_routes: Vec<&DiscoveredRoute> = routes.iter().filter(|r| !r.is_root()).collect();
 
     if non_root_routes.is_empty() {
         return Ok(());
@@ -1681,7 +1699,8 @@ fn generate_route_html_files(
     let route_preload_script = |route_path: &str| -> String {
         format!(
             "<script>if(history.replaceState){{history.replaceState(null,null,{path})}}</script>",
-            path = serde_json::to_string(route_path).unwrap_or_else(|_| format!("'{}'", route_path))
+            path =
+                serde_json::to_string(route_path).unwrap_or_else(|_| format!("'{}'", route_path))
         )
     };
 
@@ -1752,9 +1771,8 @@ async fn no_cache_headers(
 #[cfg(feature = "dev-server")]
 fn is_asset_request(path: &str) -> bool {
     const ASSET_EXTENSIONS: &[&str] = &[
-        ".js", ".mjs", ".cjs", ".wasm", ".css", ".map", ".svg", ".png",
-        ".jpg", ".jpeg", ".gif", ".ico", ".webp", ".woff", ".woff2",
-        ".ttf", ".otf", ".eot",
+        ".js", ".mjs", ".cjs", ".wasm", ".css", ".map", ".svg", ".png", ".jpg", ".jpeg", ".gif",
+        ".ico", ".webp", ".woff", ".woff2", ".ttf", ".otf", ".eot",
     ];
     ASSET_EXTENSIONS.iter().any(|ext| path.ends_with(ext))
 }
@@ -1822,7 +1840,9 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
                         msg.push_str(&format!("\n  Executable: {}", exe.display()));
                     }
                 }
-                msg.push_str("\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,");
+                msg.push_str(
+                    "\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,",
+                );
                 return Err(crate::TairitsuPackagerError::BuildError(msg));
             }
         }
@@ -1873,7 +1893,11 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
 
     crate::log_ok!("Initial build succeeded ({:.1?})", initial_elapsed);
     crate::log_info!("workspace  {}", config.manifest_dir.display());
-    crate::log_info!("package    {} v{}", config.package.name, config.package.version);
+    crate::log_info!(
+        "package    {} v{}",
+        config.package.name,
+        config.package.version
+    );
     crate::log_info!("output     {} ({})", dist_dir.display(), pkg_size_str);
 
     let dist_for_index = dist_dir.clone();
@@ -1895,7 +1919,11 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         async move {
             let path = req.uri().path().trim_end_matches('/');
 
-            let route_file = if !path.is_empty() && routes.iter().any(|r| r == path || format!("{}/", r) == *path) {
+            let route_file = if !path.is_empty()
+                && routes
+                    .iter()
+                    .any(|r| r == path || format!("{}/", r) == *path)
+            {
                 let clean_path = path.strip_prefix('/').unwrap_or(path);
                 Some(dist.join(clean_path).join("index.html"))
             } else {
@@ -1909,9 +1937,7 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
                     "no route file",
                 )),
             }
-            .or_else(|_| {
-                std::fs::read_to_string(dist.join("index.html"))
-            })
+            .or_else(|_| std::fs::read_to_string(dist.join("index.html")))
             .unwrap_or_else(|_| {
                 format!(
                     "<!DOCTYPE html><html><head><title>{}</title></head>\
@@ -1925,26 +1951,34 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
     let reload_tx_for_route = reload_tx.clone();
     let dist_state = std::sync::Arc::new(dist_dir.clone());
     let app = Router::new()
-        .route("/__tairitsu_reload", get(move || {
-            let tx = reload_tx_for_route.clone();
-            async move {
-                use axum::response::sse::{Event, Sse};
-                use axum::response::IntoResponse;
-                use futures::stream::StreamExt;
-                let receiver = tx.subscribe();
-                let stream = tokio_stream::wrappers::BroadcastStream::new(receiver).map(|result| {
-                    match result {
-                        Ok(()) => Ok::<_, std::io::Error>(Event::default().data("reload")),
-                        Err(_) => Err(std::io::Error::new(std::io::ErrorKind::Other, "lagged")),
-                    }
-                });
-                Sse::new(stream).keep_alive(
-                    axum::response::sse::KeepAlive::new()
-                        .interval(Duration::from_secs(15))
-                        .text("ping"),
-                ).into_response()
-            }
-        }))
+        .route(
+            "/__tairitsu_reload",
+            get(move || {
+                let tx = reload_tx_for_route.clone();
+                async move {
+                    use axum::response::IntoResponse;
+                    use axum::response::sse::{Event, Sse};
+                    use futures::stream::StreamExt;
+                    let receiver = tx.subscribe();
+                    let stream =
+                        tokio_stream::wrappers::BroadcastStream::new(receiver).map(|result| {
+                            match result {
+                                Ok(()) => Ok::<_, std::io::Error>(Event::default().data("reload")),
+                                Err(_) => {
+                                    Err(std::io::Error::new(std::io::ErrorKind::Other, "lagged"))
+                                }
+                            }
+                        });
+                    Sse::new(stream)
+                        .keep_alive(
+                            axum::response::sse::KeepAlive::new()
+                                .interval(Duration::from_secs(15))
+                                .text("ping"),
+                        )
+                        .into_response()
+                }
+            }),
+        )
         .route(
             "/",
             get(move || {

@@ -304,8 +304,11 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
                 } else {
                     String::new()
                 };
-                if was_running { crate::log_ok!("Daemon restarted (PID {}){}", child_pid, port_info); }
-                else { crate::log_ok!("Daemon started (PID {}){}", child_pid, port_info); }
+                if was_running {
+                    crate::log_ok!("Daemon restarted (PID {}){}", child_pid, port_info);
+                } else {
+                    crate::log_ok!("Daemon started (PID {}){}", child_pid, port_info);
+                }
             }
             Ok(None) => {
                 crate::log_fail!("Daemon failed to start. Check logs for details.");
@@ -424,9 +427,15 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
 
     // Early check: daemon already running, foreground dev blocked
     if !cli.daemon && daemon::is_daemon_running() {
-        let is_dev_command = matches!(cli.command, Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. }));
+        let is_dev_command = matches!(
+            cli.command,
+            Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. })
+        );
         if is_dev_command {
-            crate::log_fail!("A daemon is already running (PID {}).", daemon::read_pid().unwrap_or(0));
+            crate::log_fail!(
+                "A daemon is already running (PID {}).",
+                daemon::read_pid().unwrap_or(0)
+            );
             crate::log_info!("Use --daemon   to restart the daemon");
             crate::log_info!("Use --shutdown to stop it first");
             crate::log_info!("Use --status   to check daemon state");
@@ -446,7 +455,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         .with_target(false)
         .init();
 
-    let is_dev_command = matches!(cli.command, Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. }));
+    let is_dev_command = matches!(
+        cli.command,
+        Some(Commands::Dev { .. }) | Some(Commands::Ssr { .. })
+    );
 
     if !is_interactive && !is_daemon() && is_dev_command {
         daemon::print_non_tty_hint();
@@ -474,7 +486,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!(
+                        "SSR feature is not enabled. Please enable the 'ssr' feature."
+                    );
                     std::process::exit(1);
                 }
             } else {
@@ -486,7 +500,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
-                    crate::log_fail!("Dev server feature is not enabled. Please enable the 'dev-server' feature.");
+                    crate::log_fail!(
+                        "Dev server feature is not enabled. Please enable the 'dev-server' feature."
+                    );
                     std::process::exit(1);
                 }
             }
@@ -525,7 +541,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                         }
                         #[cfg(not(feature = "ssr"))]
                         {
-                            crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                            crate::log_fail!(
+                                "SSR feature is not enabled. Please enable the 'ssr' feature."
+                            );
                             std::process::exit(1);
                         }
                     }
@@ -537,7 +555,8 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 _ => {
                     crate::log_fail!(
                         "{}: {}. Use 'component' or 'native'",
-                        t.cli.unknown_target, target
+                        t.cli.unknown_target,
+                        target
                     );
                     std::process::exit(1);
                 }
@@ -721,7 +740,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!(
+                        "SSR feature is not enabled. Please enable the 'ssr' feature."
+                    );
                     std::process::exit(1);
                 }
             } else {
@@ -733,7 +754,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
                 #[cfg(not(feature = "ssr"))]
                 {
-                    crate::log_fail!("SSR feature is not enabled. Please enable the 'ssr' feature.");
+                    crate::log_fail!(
+                        "SSR feature is not enabled. Please enable the 'ssr' feature."
+                    );
                     std::process::exit(1);
                 }
             }
@@ -753,11 +776,21 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     crate::log_ok!("Resource index saved to: {}", output_path.display());
                     crate::log_info!("SCSS files ({}):", index.scss.len());
                     for resource in &index.scss {
-                        crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                        crate::log_info!(
+                            "  {} -> {} (hash: {})",
+                            resource.source,
+                            resource.output,
+                            resource.hash
+                        );
                     }
                     crate::log_info!("SVG files ({}):", index.svg.len());
                     for resource in &index.svg {
-                        crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                        crate::log_info!(
+                            "  {} -> {} (hash: {})",
+                            resource.source,
+                            resource.id,
+                            resource.hash
+                        );
                     }
                     crate::log_ok!("Total: {} resources indexed", index.count());
                 }
@@ -769,7 +802,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     .join(crate::resources::INDEX_FILE);
 
                 if !index_path.exists() {
-                    crate::log_fail!("No resource index found. Run 'tairitsu resources index' first.");
+                    crate::log_fail!(
+                        "No resource index found. Run 'tairitsu resources index' first."
+                    );
                     std::process::exit(1);
                 }
 
@@ -796,23 +831,43 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                         Some("scss") => {
                             crate::log_info!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                                crate::log_info!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source,
+                                    resource.output,
+                                    resource.hash
+                                );
                             }
                         }
                         Some("svg") => {
                             crate::log_info!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                                crate::log_info!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source,
+                                    resource.id,
+                                    resource.hash
+                                );
                             }
                         }
                         _ => {
                             crate::log_info!("SCSS files ({}):", index.scss.len());
                             for resource in &index.scss {
-                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.output, resource.hash);
+                                crate::log_info!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source,
+                                    resource.output,
+                                    resource.hash
+                                );
                             }
                             crate::log_info!("SVG files ({}):", index.svg.len());
                             for resource in &index.svg {
-                                crate::log_info!("  {} -> {} (hash: {})", resource.source, resource.id, resource.hash);
+                                crate::log_info!(
+                                    "  {} -> {} (hash: {})",
+                                    resource.source,
+                                    resource.id,
+                                    resource.hash
+                                );
                             }
                         }
                     }

@@ -124,12 +124,21 @@ fn compile_with_swc(workspace_root: &Path) -> Option<String> {
             if let Ok(content) = std::fs::read_to_string(&out_file) {
                 return Some(content);
             }
-            println!("cargo:warning=esbuild succeeded but output file not readable: {}", out_file.display());
+            println!(
+                "cargo:warning=esbuild succeeded but output file not readable: {}",
+                out_file.display()
+            );
         }
         Ok(output) => {
             println!("cargo:warning=esbuild failed (status={}):", output.status);
-            println!("cargo:warning=  stdout: {}", String::from_utf8_lossy(&output.stdout));
-            println!("cargo:warning=  stderr: {}", String::from_utf8_lossy(&output.stderr));
+            println!(
+                "cargo:warning=  stdout: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+            println!(
+                "cargo:warning=  stderr: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
         Err(e) => {
             println!("cargo:warning=esbuild command '{}' not found: {}", npx, e);

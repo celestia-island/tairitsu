@@ -317,13 +317,12 @@ pub fn prerender_routes(
 
             let ssr_config = SsrConfig::with_route(1920, 1080, route);
 
-            let html =
-                render_full_page(&wasm_bytes, ssr_config, &template).map_err(|e| {
-                    crate::TairitsuPackagerError::BuildError(format!(
-                        "Failed to render route '{}': {}",
-                        route, e
-                    ))
-                })?;
+            let html = render_full_page(&wasm_bytes, ssr_config, &template).map_err(|e| {
+                crate::TairitsuPackagerError::BuildError(format!(
+                    "Failed to render route '{}': {}",
+                    route, e
+                ))
+            })?;
 
             let activated_html = activate_route_in_html(&html, route);
 
@@ -374,37 +373,88 @@ fn activate_route_in_html(html: &str, route: &str) -> String {
         ("/components".to_string(), "components"),
         ("/components/layer1/button".to_string(), "component-button"),
         ("/components/layer1/form".to_string(), "component-form"),
-        ("/components/layer1/number-input".to_string(), "component-number-input"),
+        (
+            "/components/layer1/number-input".to_string(),
+            "component-number-input",
+        ),
         ("/components/layer1/search".to_string(), "component-search"),
         ("/components/layer1/switch".to_string(), "component-switch"),
-        ("/components/layer1/feedback".to_string(), "component-feedback"),
-        ("/components/layer1/display".to_string(), "component-display"),
+        (
+            "/components/layer1/feedback".to_string(),
+            "component-feedback",
+        ),
+        (
+            "/components/layer1/display".to_string(),
+            "component-display",
+        ),
         ("/components/layer1/avatar".to_string(), "component-avatar"),
         ("/components/layer1/image".to_string(), "component-image"),
         ("/components/layer1/tag".to_string(), "component-tag"),
         ("/components/layer1/empty".to_string(), "component-empty"),
-        ("/components/layer1/comment".to_string(), "component-comment"),
-        ("/components/layer1/description-list".to_string(), "component-description-list"),
-        ("/components/layer2/navigation".to_string(), "component-navigation"),
+        (
+            "/components/layer1/comment".to_string(),
+            "component-comment",
+        ),
+        (
+            "/components/layer1/description-list".to_string(),
+            "component-description-list",
+        ),
+        (
+            "/components/layer2/navigation".to_string(),
+            "component-navigation",
+        ),
         ("/components/layer2/data".to_string(), "component-data"),
         ("/components/layer2/table".to_string(), "component-table"),
         ("/components/layer2/tree".to_string(), "component-tree"),
-        ("/components/layer2/pagination".to_string(), "component-pagination"),
+        (
+            "/components/layer2/pagination".to_string(),
+            "component-pagination",
+        ),
         ("/components/layer2/qrcode".to_string(), "component-qrcode"),
-        ("/components/layer2/timeline".to_string(), "component-timeline"),
-        ("/components/layer2/form".to_string(), "component-form-composed"),
-        ("/components/layer2/cascader".to_string(), "component-cascader"),
-        ("/components/layer2/transfer".to_string(), "component-transfer"),
-        ("/components/layer2/collapsible".to_string(), "component-collapsible"),
-        ("/components/layer2/feedback".to_string(), "component-feedback-composed"),
+        (
+            "/components/layer2/timeline".to_string(),
+            "component-timeline",
+        ),
+        (
+            "/components/layer2/form".to_string(),
+            "component-form-composed",
+        ),
+        (
+            "/components/layer2/cascader".to_string(),
+            "component-cascader",
+        ),
+        (
+            "/components/layer2/transfer".to_string(),
+            "component-transfer",
+        ),
+        (
+            "/components/layer2/collapsible".to_string(),
+            "component-collapsible",
+        ),
+        (
+            "/components/layer2/feedback".to_string(),
+            "component-feedback-composed",
+        ),
         ("/components/layer3/media".to_string(), "component-media"),
         ("/components/layer3/editor".to_string(), "component-editor"),
-        ("/components/layer3/visualization".to_string(), "component-visualization"),
-        ("/components/layer3/user-guide".to_string(), "component-user-guide"),
-        ("/components/layer3/zoom-controls".to_string(), "component-zoom-controls"),
+        (
+            "/components/layer3/visualization".to_string(),
+            "component-visualization",
+        ),
+        (
+            "/components/layer3/user-guide".to_string(),
+            "component-user-guide",
+        ),
+        (
+            "/components/layer3/zoom-controls".to_string(),
+            "component-zoom-controls",
+        ),
         ("/system/architecture".to_string(), "system-architecture"),
         ("/system/design-tokens".to_string(), "system-design-tokens"),
-        ("/guides/getting-started".to_string(), "guide-getting-started"),
+        (
+            "/guides/getting-started".to_string(),
+            "guide-getting-started",
+        ),
         ("/guides/theminging".to_string(), "guide-theming"),
         ("/demos/showcase".to_string(), "demos-showcase"),
         ("/demos/form".to_string(), "demos-form"),
@@ -415,7 +465,10 @@ fn activate_route_in_html(html: &str, route: &str) -> String {
     .cloned()
     .collect();
 
-    match page_id_map.get(&format!("/{}", clean_route)).or(page_id_map.get(route)) {
+    match page_id_map
+        .get(&format!("/{}", clean_route))
+        .or(page_id_map.get(route))
+    {
         Some(page_id) => {
             let target_id = format!("page-{}", page_id);
             html.replace(

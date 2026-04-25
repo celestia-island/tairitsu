@@ -90,10 +90,7 @@ fn emit(level: Level, stream: StdStream, args: fmt::Arguments<'_>) {
     let tag = format_tag(&level, use_color);
     let msg = args.to_string();
     let ts = if should_timestamp() {
-        format!(
-            "{} ",
-            chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3f")
-        )
+        format!("{} ", chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.3f"))
     } else {
         String::new()
     };
