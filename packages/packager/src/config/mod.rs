@@ -83,7 +83,7 @@ pub struct DevConfig {
 }
 
 fn default_port() -> u16 {
-    3001
+    3000
 }
 
 fn default_hot_reload() -> bool {
@@ -327,7 +327,7 @@ mod tests {
     #[test]
     fn test_default_dev_config() {
         let config = DevConfig::default();
-        assert_eq!(config.port, 3001);
+        assert_eq!(config.port, 3000);
         assert!(config.hot_reload);
         assert!(!config.open_browser);
     }
@@ -419,7 +419,7 @@ version = "1.0.0"
         assert_eq!(config.package.name, "test-app");
         assert_eq!(config.package.version, "1.0.0");
         assert_eq!(config.build.target, "component"); // default from BuildConfig
-        assert_eq!(config.dev.port, 3001); // default
+        assert_eq!(config.dev.port, 3000); // default
     }
 
     #[test]

@@ -54,7 +54,7 @@ struct Cli {
 enum Commands {
     /// Start development server with hot reload
     Dev {
-        /// Port to listen on (default: 3001)
+        /// Port to listen on (default: 3000)
         #[arg(short, long)]
         port: Option<u16>,
 
@@ -99,7 +99,7 @@ enum Commands {
 
     /// Preview production build
     Preview {
-        /// Port to listen on (default: 3001)
+        /// Port to listen on (default: 3000)
         #[arg(short, long)]
         port: Option<u16>,
     },
@@ -569,7 +569,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Preview { port }) => {
             info!("{}", t.cli.preview_starting);
-            let port = port.unwrap_or(3001);
+            let port = port.unwrap_or(3000);
             let _port = port;
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);

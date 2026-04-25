@@ -70,7 +70,7 @@ version = "1.0.0"
         assert!(metadata.description.is_none());
         // Default values from BuildConfig::default()
         assert_eq!(metadata.build.target, "component");
-        assert_eq!(metadata.dev.port, 3001);
+        assert_eq!(metadata.dev.port, 3000);
     }
 
     #[test]
@@ -124,6 +124,6 @@ target = 123
         assert!(metadata.description.is_none());
         // Default values from Default impl
         assert_eq!(metadata.build.target, "component");
-        assert_eq!(metadata.dev.port, 3001);
+        assert_eq!(metadata.dev.port, 3000);
     }
 }

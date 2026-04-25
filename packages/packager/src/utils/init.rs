@@ -35,7 +35,7 @@ app-name = "{}"
 target = "component"
 
 [package.metadata.tairitsu.dev]
-port = 3001
+port = 3000
 "#,
         name, name
     );
