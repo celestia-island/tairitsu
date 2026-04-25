@@ -106,7 +106,7 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
 
     VNode::Element(
         el("div")
-            .class(format!("hi-glow-wrapper hi-glow-{} hi-glow-{}", blur, intensity).as_str())
+            .class(format!("hi-glow-wrapper hi-glow-blur-{} hi-glow-{}", blur, intensity).as_str())
             .attr("style", &format!(
                 "--glow-x:50%;--glow-y:50%;--glow-color:{};--glow-opacity:0;--glow-intensity-scale:0;",
                 color
@@ -210,7 +210,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
         subcategories: &[
             NavSubcategory {
                 label: "Layer 1 — Foundations",
-                href: "/components/foundations",
+                href: "/system/runtime",
                 items: &[
                     NavItem { label: "Runtime", icon: MdiIcon::Cog, href: "/system/runtime" },
                     NavItem { label: "Macros", icon: MdiIcon::Code, href: "/packages" },
@@ -219,7 +219,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label: "Layer 2 — Platform",
-                href: "/components/platform",
+                href: "/system/web-backends",
                 items: &[
                     NavItem { label: "Web Adapters", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
                     NavItem { label: "Browser Worlds", icon: MdiIcon::Layers, href: "/system" },
@@ -228,7 +228,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label: "Layer 3 — Tooling",
-                href: "/components/tooling",
+                href: "/packages/list",
                 items: &[
                     NavItem { label: "Packager", icon: MdiIcon::Package, href: "/packages/list" },
                     NavItem { label: "Style", icon: MdiIcon::Palette, href: "/packages" },
@@ -252,11 +252,6 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             NavSubcategory { label: "WIT Pipeline", href: "/system/wit-pipeline", items: &[] },
             NavSubcategory { label: "Web Backends", href: "/system/web-backends", items: &[] },
             NavSubcategory { label: "Versioning", href: "/system/versioning", items: &[] },
-            NavSubcategory { label: "CSS Utilities", href: "/system/css", items: &[] },
-            NavSubcategory { label: "Icons", href: "/system/icons", items: &[] },
-            NavSubcategory { label: "Color Palette", href: "/system/palette", items: &[] },
-            NavSubcategory { label: "Animations", href: "/system/animations", items: &[] },
-            NavSubcategory { label: "i18n", href: "/system/i18n", items: &[] },
         ],
     },
 ];

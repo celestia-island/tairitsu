@@ -46,11 +46,6 @@ fn layout_shell(children: Vec<VNode>) -> VNode {
                     ..vec![sidebar()]
                 div { class: "hi-layout-main",
                     main { class: "hi-layout-content",
-                        nav { class: "hi-breadcrumb",
-                            a { href: "/", class: "hi-breadcrumb-link", "Home" }
-                            span { class: "hi-breadcrumb-sep", " / " }
-                            span { class: "hi-breadcrumb-current", "Home" }
-                        }
                         ..children
                     }
                 }
