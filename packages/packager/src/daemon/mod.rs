@@ -494,38 +494,41 @@ pub fn kill_daemon() -> std::io::Result<bool> {
         && pid > 0
         && check_process_exists(pid)
     {
-        #[cfg(unix)]
-        {
-            let _ = Command::new("kill")
-                .arg("-TERM")
-                .arg(pid.to_string())
-                .output();
-        }
-
-        #[cfg(windows)]
-        {
-            let _ = Command::new("taskkill")
-                .args(&["/PID", &pid.to_string(), "/F"])
-                .output();
-        }
-
-        // Wait for the process to actually exit (up to 5s)
-        let start = std::time::Instant::now();
-        while start.elapsed() < std::time::Duration::from_secs(5) {
-            if !check_process_exists(pid) {
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(100));
-        }
-
-        if check_process_exists(pid) {
-            crate::log_warn!("daemon process {} did not exit within 5s", pid);
-        }
-
+        kill_process_by_pid(pid);
         let _ = fs::remove_file(pid_file_path());
         return Ok(true);
     }
     Ok(false)
+}
+
+/// Kill an arbitrary process by PID and wait for it to exit (up to 5s).
+pub fn kill_process_by_pid(pid: u32) {
+    #[cfg(unix)]
+    {
+        let _ = Command::new("kill")
+            .arg("-TERM")
+            .arg(pid.to_string())
+            .output();
+    }
+
+    #[cfg(windows)]
+    {
+        let _ = Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/F"])
+            .output();
+    }
+
+    let start = std::time::Instant::now();
+    while start.elapsed() < std::time::Duration::from_secs(5) {
+        if !check_process_exists(pid) {
+            return;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+
+    if check_process_exists(pid) {
+        crate::log_warn!("process {} did not exit within 5s", pid);
+    }
 }
 
 #[cfg(windows)]

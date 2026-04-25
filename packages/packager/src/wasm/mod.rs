@@ -1804,8 +1804,14 @@ async fn reject_missing_assets(
 }
 
 #[cfg(feature = "dev-server")]
-pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> crate::Result<()> {
-    use axum::{Router, middleware, response::Html, routing::get};
+pub async fn dev_server(
+    config: &Config,
+    port: u16,
+    open: bool,
+    watch: bool,
+    force: bool,
+) -> crate::Result<()> {
+    use axum::{middleware, response::Html, routing::get, Router};
     use tower_http::services::ServeDir;
 
     if watch {
@@ -1825,25 +1831,65 @@ pub async fn dev_server(config: &Config, port: u16, open: bool, watch: bool) -> 
         if let Err(ref err) = probe {
             if err.kind() == std::io::ErrorKind::AddrInUse {
                 let owner = crate::daemon::port_owner_info(port);
+                let our_pid = crate::daemon::read_pid().unwrap_or(0);
+
                 if let Some(ref info) = owner {
-                    if info.pid == crate::daemon::read_pid().unwrap_or(0) {
+                    if info.pid == our_pid {
                         return Err(crate::TairitsuPackagerError::BuildError(format!(
                             "Port {} is already in use by tairitsu daemon (PID {}). Use --daemon to attach or --shutdown to stop.",
                             port, info.pid
                         )));
                     }
-                }
-                let mut msg = format!("Port {} is already in use by another process.", port);
-                if let Some(info) = owner {
-                    msg.push_str(&format!(" (PID {})", info.pid));
-                    if let Some(exe) = info.exe_path {
-                        msg.push_str(&format!("\n  Executable: {}", exe.display()));
+
+                    let is_tairitsu = info.exe_path.as_ref().map(|exe| {
+                        let exe_str = exe.to_string_lossy().to_lowercase();
+                        exe_str.contains("tairitsu")
+                    }).unwrap_or(false);
+
+                    if is_tairitsu {
+                        if !force {
+                            let mut msg = format!(
+                                "Port {} is already in use by another tairitsu daemon (PID {}).",
+                                port, info.pid
+                            );
+                            if let Some(ref exe) = info.exe_path {
+                                msg.push_str(&format!(
+                                    "\n  Executable: {}",
+                                    exe.display()
+                                ));
+                            }
+                            msg.push_str(
+                                "\n  Use --force to kill it and take over the port.",
+                            );
+                            return Err(crate::TairitsuPackagerError::BuildError(msg));
+                        }
+
+                        crate::log_warn!(
+                            "Force-killing foreign tairitsu daemon (PID {}) on port {}...",
+                            info.pid, port
+                        );
+                        crate::daemon::kill_process_by_pid(info.pid);
+                        std::thread::sleep(std::time::Duration::from_millis(500));
                     }
                 }
-                msg.push_str(
-                    "\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,",
-                );
-                return Err(crate::TairitsuPackagerError::BuildError(msg));
+
+                let probe2 = std::net::TcpListener::bind(("127.0.0.1", port));
+                if let Err(ref err2) = probe2 {
+                    if err2.kind() == std::io::ErrorKind::AddrInUse {
+                        let mut msg = format!("Port {} is already in use by another process.", port);
+                        if let Some(info) = owner {
+                            msg.push_str(&format!(" (PID {})", info.pid));
+                            if let Some(exe) = info.exe_path {
+                                msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                            }
+                        }
+                        msg.push_str(
+                            "\n  Use a different port in Cargo.toml [package.metadata.tairitsu.dev].port,",
+                        );
+                        return Err(crate::TairitsuPackagerError::BuildError(msg));
+                    }
+                }
+                drop(probe2);
             }
         }
         drop(probe);
