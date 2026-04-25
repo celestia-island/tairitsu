@@ -18,6 +18,8 @@ tairitsu-style = { path = "../style", optional = true }
 tairitsu-ssr = { path = "../ssr", optional = true }
 tairitsu-packager = { path = "../packager", optional = true }
 
+iso639_enum = { version = "0.6", optional = true }
+
 # Basic language and tools
 anyhow = "^1"
 
@@ -47,7 +49,7 @@ data-fetcher = ["ssr"]
 hmr = ["ssr"]
 fast-refresh = ["ssr", "hmr"]
 error-overlay = ["ssr", "hmr"]
-i18n = ["hooks"]
+i18n = ["hooks", "dep:iso639_enum"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]
 # Browser-only features (without SSR/server dependencies)

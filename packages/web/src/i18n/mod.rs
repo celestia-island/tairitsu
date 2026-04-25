@@ -6,7 +6,7 @@
 //!
 //! - **[`I18nProvider`]** — Reactive context-based locale provider
 //! - **[`I18nState`]** — Core state: current locale + all translations
-//! - **[`Language`]** — Type-safe locale representation (9 languages)
+//! - **[`Language`]** — Type-safe locale representation (full ISO 639-1/639-3 coverage via `iso639_enum`)
 //! - **[`t!`]** — Translate macro: `t!("common.button.submit")` → `String`
 //! - **[`tr!`]** — Translate macro returning `Option<String>`
 //! - **[`provide_i18n`]** — Shorthand to provide i18n context
