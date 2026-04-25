@@ -1,6 +1,7 @@
 //! App root — assembles pages into a VNode tree based on current route.
 //!
-//! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme.
+//! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme
+//! injected via hikari's palette system (theme::tairitsu_style).
 //! Structure mirrors hikari website exactly.
 
 use tairitsu_macros::rsx;
@@ -10,6 +11,7 @@ use crate::pages::components as page_components;
 use crate::{
     components::{aside_footer, sidebar, top_nav},
     pages::{guides, home, not_found, packages, system},
+    theme,
 };
 
 fn txt(s: &str) -> VNode {
@@ -32,9 +34,11 @@ pub fn render() -> VNode {
 }
 
 fn layout_shell(children: Vec<VNode>) -> VNode {
+    let theme_style = theme::tairitsu_style();
     rsx! {
         div { id: "hikari-app",
             class: "hi-layout hi-layout-dark hi-layout-has-sidebar hi-ambient-bg",
+            style: theme_style,
             div { class: "hi-background" }
             ..vec![top_nav()],
             div { class: "hi-layout-body",

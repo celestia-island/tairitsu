@@ -1,117 +1,16 @@
 /**
- * Tairitsu Website — Dark Theme Overrides
+ * Tairitsu Website — Component Demo & Layout Styles
  *
  * Compiled by tairitsu-packager's SCSS compiler.
  * Loads AFTER hikari's bundle.css.
- * Only: CSS variable overrides + surface patches + scrollbar.
+ *
+ * Theme colors are injected via hikari's palette system (theme::tairitsu_style)
+ * as inline CSS variables on #hikari-app. This file contains ONLY:
+ * - Layout structure overrides (.hi-layout-dark prefix)
+ * - Component demo block styles
+ * - Page-specific styles (hero, cards, sections)
+ * - Scrollbar & utility styles
  */
-
-/* ============================================
-   CSS Variables — Override hikari light → tairitsu dark
-   ============================================ */
-
-:root {
-  /* === Tairitsu Custom Variables === */
-  --ts-color-primary: #146e74;
-  --ts-color-secondary: #ffc773;
-  --ts-color-accent: #fbc02d;
-  --ts-glow-color: rgba(20, 110, 116, 0.5);
-  --ts-glow-primary: rgba(20, 110, 116, 0.8);
-  --ts-font-sans: 'Noto Sans SC', 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  --ts-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --ts-duration-fast: 150ms;
-  --ts-duration-normal: 250ms;
-  --ts-ease: cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* === Override ALL hikari light-theme variables to dark === */
-  --hi-color-background: #1a2332;
-  --hi-color-surface: rgba(22, 32, 45, 0.92);
-  --hi-color-surface-secondary: rgba(22, 32, 45, 0.7);
-  --hi-color-primary: #146e74;
-  --hi-color-primary-dark: #0f5559;
-  --hi-color-secondary: #ffc773;
-  --hi-color-secondary-dark: #e5b060;
-  --hi-color-danger: #FF4C00;
-  --hi-color-danger-dark: #CC3300;
-  --hi-color-success: #0EB840;
-  --hi-color-text-primary: rgba(255, 255, 255, 0.92);
-  --hi-color-text-secondary: rgba(255, 255, 255, 0.65);
-  --hi-color-text-disabled: rgba(255, 255, 255, 0.28);
-  --hi-color-border: rgba(255, 255, 255, 0.08);
-  --hi-color-accent: #fbc02d;
-
-  /* Ghost variant colors */
-  --hi-ghost-text: rgba(255, 255, 255, 0.88);
-  --hi-ghost-border: rgba(255, 255, 255, 0.15);
-  --hi-ghost-glow: rgba(20, 110, 116, 0.4);
-
-  /* Button glow */
-  --hi-glow-button-primary: 0 4px 20px rgba(20, 110, 116, 0.5);
-  --hi-glow-button-secondary: 0 4px 20px rgba(255, 199, 115, 0.4);
-  --hi-glow-button-danger: 0 4px 20px rgba(255, 76, 0, 0.4);
-
-  /* Text-on-colored backgrounds */
-  --hi-color-text-on-primary: #ffffff;
-  --hi-color-text-on-secondary: #1a2332;
-  --hi-color-text-on-danger: #ffffff;
-  --hi-color-text-on-success: #ffffff;
-
-  /* Background gradient */
-  --bg-color-1: rgb(26, 35, 50);
-  --bg-color-2: rgb(40, 55, 75);
-
-  /* Surface aliases */
-  --hi-header-surface: rgba(22, 32, 45, 0.88);
-  --hi-aside-surface: rgba(22, 32, 45, 0.88);
-
-  /* Spacing */
-  --ts-spacing-xs: 0.25rem;
-  --ts-spacing-sm: 0.5rem;
-  --ts-spacing-md: 1rem;
-  --ts-spacing-lg: 1.5rem;
-  --ts-spacing-xl: 2rem;
-  --ts-spacing-2xl: 3rem;
-
-  /* Layout */
-  --ts-sidebar-ratio: 35%;
-  --ts-sidebar-max: 420px;
-  --ts-sidebar-min: 220px;
-  --ts-header-height: 64px;
-}
-
-/* ============================================
-   Reset & Base
-   ============================================ */
-
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: var(--ts-font-sans);
-  line-height: 1.6;
-  color: var(--hi-color-text-primary);
-  background: var(--hi-color-background);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-a {
-  color: var(--ts-color-primary);
-  text-decoration: none;
-  transition: color var(--ts-duration-fast) var(--ts-ease);
-}
-
-a:hover {
-  color: var(--hi-color-secondary);
-}
 
 /* ============================================
    Dark Theme Background Gradient
@@ -120,8 +19,8 @@ a:hover {
 .hi-layout-dark .hi-background {
   background: radial-gradient(
     circle at 70% 50.4%,
-    var(--bg-color-1) 0%,
-    var(--bg-color-2) 100%
+    var(--hi-color-background) 0%,
+    var(--hi-color-surface, rgba(40, 55, 75, 1)) 100%
   );
 }
 
@@ -143,9 +42,18 @@ a:hover {
   color: var(--hi-color-text-primary);
 }
 
+.hi-header-logo-img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .hi-layout-dark .hi-logo {
   font-size: 1.4rem;
-  color: var(--ts-color-primary);
+  color: var(--hi-color-primary);
 }
 
 .hi-layout-dark .hi-header-left {
@@ -177,12 +85,46 @@ a:hover {
    Button dark theme fixes
    ============================================ */
 
+.hi-layout-dark {
+  --hi-color-primary: #144A74;
+  --hi-color-secondary: #FFC773;
+  --hi-primary: #144A74;
+  --hi-secondary: #FFC773;
+
+  --hi-button-primary: var(--hi-color-primary, #144A74);
+  --hi-button-primary-hover: rgba(20, 110, 116, 0.85);
+  --hi-button-primary-light: #1a6d73;
+  --hi-button-primary-dark: #0f5559;
+
+  --hi-button-secondary: var(--hi-color-secondary, #FFC773);
+  --hi-button-secondary-hover: rgba(255, 199, 115, 0.8);
+  --hi-button-secondary-light: #ffd99e;
+  --hi-button-secondary-dark: #cc9f5c;
+
+  --hi-button-danger: var(--hi-color-danger, #EF4444);
+  --hi-button-danger-hover: rgba(239, 68, 68, 0.8);
+  --hi-button-danger-light: #ff7a33;
+  --hi-button-danger-dark: #cc3d00;
+
+  --hi-button-success: var(--hi-color-success, #10B981);
+  --hi-button-success-hover: rgba(16, 185, 129, 0.8);
+  --hi-button-success-light: #3dc86e;
+  --hi-button-success-dark: #0a8f33;
+
+  --hi-glow-primary-sm: 0 0 8px rgba(20, 110, 116, 0.3);
+  --hi-glow-primary-md: 0 0 16px rgba(20, 110, 116, 0.5);
+  --hi-glow-primary-lg: 0 0 24px rgba(20, 110, 116, 0.4);
+
+  --hi-button-bg: rgba(255, 255, 255, 0.08);
+  --hi-button-bg-hover: rgba(255, 255, 255, 0.12);
+}
+
 .hi-button-primary {
-  color: var(--hi-color-text-on-primary, #fff) !important;
+  color: var(--hi-color-text-on-primary, #fff);
 }
 
 .hi-button-secondary {
-  color: var(--hi-color-text-on-secondary) !important;
+  color: var(--hi-color-text-on-secondary);
 }
 
 /* ============================================
@@ -264,12 +206,12 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ts-color-secondary);
+  background: var(--hi-color-secondary);
 }
 
 /* ============================================
@@ -300,12 +242,12 @@ a:hover {
 
 .hi-header-github:hover {
   color: var(--hi-color-primary);
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
 }
 
 .hi-header-link.is-active,
 .hikari-topnav__link.is-active {
-  color: var(--hi-color-secondary) !important;
+  color: var(--hi-color-secondary);
   font-weight: 600;
   border-bottom: 2px solid var(--hi-color-secondary);
 }
@@ -322,9 +264,9 @@ a:hover {
 }
 
 .hi-menu-submenu-list-open {
-  display: block !important;
-  opacity: 1 !important;
-  transform: translateX(0) !important;
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .hi-menu-submenu-title {
@@ -462,7 +404,7 @@ a:hover {
 }
 
 .card:hover {
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   box-shadow: 0 4px 16px rgba(20, 110, 116, 0.15);
   transform: translateY(-2px);
 }
@@ -627,7 +569,7 @@ a:hover {
 .hi-menu-item--home {
   font-weight: 600;
   font-size: 0.875rem;
-  padding: 0.4rem 1rem !important;
+  padding: 0.4rem 1rem;
   margin-bottom: 0.25rem;
 }
 
@@ -809,8 +751,6 @@ a:hover {
   cursor: pointer;
 }
 
-/* Lock text colour on every pseudo-class so it never
-   oscillates between white / primary / secondary. */
 .hi-button:focus,
 .hi-button:hover,
 .hi-button:active {
@@ -820,22 +760,21 @@ a:hover {
 .hi-button-primary:focus,
 .hi-button-primary:hover,
 .hi-button-primary:active {
-  color: var(--hi-color-text-on-primary, #ffffff) !important;
+  color: var(--hi-color-text-on-primary, #ffffff);
 }
 
 .hi-button-secondary:focus,
 .hi-button-secondary:hover,
 .hi-button-secondary:active {
-  color: var(--hi-color-text-on-secondary, #1a2332) !important;
+  color: var(--hi-color-text-on-secondary, #1a2332);
 }
 
 .hi-button-tertiary:focus,
 .hi-button-tertiary:hover,
 .hi-button-tertiary:active {
-  color: var(--hi-color-text-primary) !important;
+  color: var(--hi-color-text-primary);
 }
 
-/* Subtle background shift only — no translateZ / scale gimmicks */
 .hi-button:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -852,9 +791,8 @@ a:hover {
   box-shadow: none;
 }
 
-/* Remove any outline ring that the base hikari sheet may inject */
 .hi-button:focus-visible {
-  outline: 2px solid var(--ts-color-primary);
+  outline: 2px solid var(--hi-color-primary);
   outline-offset: 2px;
 }
 
@@ -885,6 +823,62 @@ a:hover {
 }
 
 /* ============================================
+   Tairitsu Custom Variables (non-theme, layout-only)
+   ============================================ */
+
+:root {
+  --ts-font-sans: 'Noto Sans SC', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --ts-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --ts-duration-fast: 150ms;
+  --ts-duration-normal: 250ms;
+  --ts-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ts-glow-color: rgba(20, 110, 116, 0.5);
+  --ts-glow-primary: rgba(20, 110, 116, 0.8);
+
+  --ts-spacing-xs: 0.25rem;
+  --ts-spacing-sm: 0.5rem;
+  --ts-spacing-md: 1rem;
+  --ts-spacing-lg: 1.5rem;
+  --ts-spacing-xl: 2rem;
+  --ts-spacing-2xl: 3rem;
+
+  --ts-sidebar-ratio: 35%;
+  --ts-sidebar-max: 420px;
+  --ts-sidebar-min: 220px;
+  --ts-header-height: 64px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--ts-font-sans);
+  line-height: 1.6;
+  color: var(--hi-color-text-primary);
+  background: var(--hi-color-background);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--hi-color-primary);
+  text-decoration: none;
+  transition: color var(--ts-duration-fast) var(--ts-ease);
+}
+
+a:hover {
+  color: var(--hi-color-secondary);
+}
+
+/* ============================================
    Package Components (packages page)
    ============================================ */
 
@@ -903,7 +897,7 @@ a:hover {
 }
 
 .package-card:hover {
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(20, 110, 116, 0.12);
 }
@@ -970,27 +964,24 @@ a:hover {
   overflow: hidden;
 }
 
-/* Outer sidebar container (layout-framework rendered): dynamic 35% */
 .hi-layout-has-sidebar .hi-layout-body > aside,
 .hi-layout-body > .hi-aside {
-  width: var(--ts-sidebar-ratio, 35%) !important;
-  max-width: var(--ts-sidebar-max, 340px) !important;
-  min-width: var(--ts-sidebar-min, 220px) !important;
-  flex-shrink: 0 !important;
+  width: var(--ts-sidebar-ratio, 35%);
+  max-width: var(--ts-sidebar-max, 340px);
+  min-width: var(--ts-sidebar-min, 220px);
+  flex-shrink: 0;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* Inner #hikari-aside (our sidebar component): fill parent */
 #hikari-aside {
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 0 !important;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
   height: 100%;
 }
 
-/* Main content: fills remaining ~65% */
 .hi-layout-has-sidebar .hi-layout-main,
 .hi-layout-body > .hi-layout-main {
   flex: 1;
@@ -999,7 +990,6 @@ a:hover {
   overflow-y: auto;
 }
 
-/* Tablet: slightly narrower sidebar (30%) */
 @media (min-width: 641px) and (max-width: 1024px) {
   .hi-layout-body > .hi-aside,
   .hi-layout-has-sidebar .hi-layout-body > aside {
@@ -1009,7 +999,6 @@ a:hover {
   }
 }
 
-/* Mobile: drawer mode — fixed overlay on OUTER aside */
 @media (max-width: 640px) {
   .hi-layout-body {
     position: relative;
@@ -1018,14 +1007,14 @@ a:hover {
   .hi-layout-body > .hi-aside,
   .hi-layout-has-sidebar .hi-layout-body > aside,
   .hi-aside-drawer {
-    position: fixed !important;
+    position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     z-index: 200;
-    width: 80% !important;
-    max-width: 300px !important;
-    min-width: 0 !important;
+    width: 80%;
+    max-width: 300px;
+    min-width: 0;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     border-radius: 0;
@@ -1038,7 +1027,6 @@ a:hover {
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   }
 
-  /* Overlay backdrop */
   #drawer-overlay,
   .hi-layout-overlay {
     display: none;
@@ -1054,26 +1042,24 @@ a:hover {
     display: block;
   }
 
-  /* Main content takes full width on mobile */
   .hi-layout-has-sidebar .hi-layout-main,
   .hi-layout-body > .hi-layout-main {
-    width: 100% !important;
+    width: 100%;
     flex: none;
   }
 
-  /* Show hamburger toggle */
   .hi-header-toggle {
-    display: flex !important;
+    display: flex;
   }
 }
 
 @media (min-width: 641px) {
   .hi-header-toggle {
-    display: none !important;
+    display: none;
   }
   #drawer-overlay,
   .hi-layout-overlay {
-    display: none !important;
+    display: none;
   }
 }
 
@@ -1145,7 +1131,7 @@ a:hover {
 .form-input-wrapper textarea:focus,
 .form-input-wrapper select:focus {
   outline: none;
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
 }
 
@@ -1303,7 +1289,7 @@ textarea {
 }
 
 .hi-switch input:checked + .hi-switch-slider {
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
 }
 
 .hi-switch input:checked + .hi-switch-slider::before {
@@ -1352,7 +1338,7 @@ textarea {
 
 .hi-alert-info {
   background: rgba(20, 110, 116, 0.12);
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   color: var(--hi-color-text-primary);
 }
 
@@ -1520,7 +1506,7 @@ textarea {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   color: #fff;
   font-weight: 600;
   user-select: none;
@@ -1687,7 +1673,7 @@ textarea {
 }
 
 .num-input-wrap:focus-within {
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
 }
 
@@ -1735,7 +1721,7 @@ textarea {
 
 .num-input-btn:active {
   background: rgba(20, 110, 116, 0.15);
-  color: var(--ts-color-secondary);
+  color: var(--hi-color-secondary);
 }
 
 /* ============================================
@@ -1762,7 +1748,7 @@ textarea {
 
 .search-wrapper input:focus {
   outline: none;
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
   box-shadow: 0 0 0 3px rgba(20, 110, 116, 0.15);
 }
 
@@ -1829,8 +1815,8 @@ textarea {
 }
 
 .hi-tab-active {
-  color: var(--ts-color-primary);
-  border-bottom-color: var(--ts-color-primary);
+  color: var(--hi-color-primary);
+  border-bottom-color: var(--hi-color-primary);
   font-weight: 500;
 }
 
@@ -1939,7 +1925,7 @@ textarea {
 
 .hi-button-link {
   font-size: 0.8125rem;
-  color: var(--ts-color-primary);
+  color: var(--hi-color-primary);
   text-decoration: none;
   cursor: pointer;
 }
@@ -2060,7 +2046,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Navigation
+   Component Demo — Navigation (L2)
    ============================================ */
 
 .hi-pagination {
@@ -2088,8 +2074,8 @@ textarea {
 
 .hi-pagination-prev:hover,
 .hi-pagination-next:hover {
-  border-color: var(--ts-color-primary);
-  color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
+  color: var(--hi-color-primary);
 }
 
 .hi-pagination-item {
@@ -2111,8 +2097,8 @@ textarea {
 }
 
 .hi-pagination-active {
-  background: var(--ts-color-primary) !important;
-  color: #fff !important;
+  background: var(--hi-color-primary);
+  color: #fff;
   font-weight: 600;
 }
 
@@ -2127,7 +2113,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Timeline
+   Component Demo — Timeline (L2)
    ============================================ */
 
 .hi-timeline {
@@ -2161,7 +2147,7 @@ textarea {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border: 2px solid var(--hi-color-background);
 }
 
@@ -2206,7 +2192,7 @@ textarea {
 
 .hi-progress-fill {
   height: 100%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -2261,7 +2247,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Transfer
+   Component Demo — Transfer (L2)
    ============================================ */
 
 .transfer-panel {
@@ -2312,7 +2298,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Editor
+   Component Demo — Editor (L3)
    ============================================ */
 
 .editor-toolbar {
@@ -2341,7 +2327,7 @@ textarea {
 
 .editor-textarea:focus {
   outline: none;
-  border-color: var(--ts-color-primary);
+  border-color: var(--hi-color-primary);
 }
 
 .editor-preview {
@@ -2356,7 +2342,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — Zoom Controls
+   Component Demo — Zoom Controls (L3)
    ============================================ */
 
 .zoom-toolbar {
@@ -2380,7 +2366,7 @@ textarea {
 }
 
 /* ============================================
-   Component Demo — User Guide Steps
+   Component Demo — User Guide Steps (L3)
    ============================================ */
 
 .user-guide-steps {
@@ -2404,7 +2390,7 @@ textarea {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 600;
@@ -2657,7 +2643,7 @@ textarea {
 }
 
 .sidebar-menu__link--active {
-  color: var(--ts-color-primary);
+  color: var(--hi-color-primary);
   background: rgba(20, 110, 116, 0.1);
 }
 
@@ -2801,7 +2787,7 @@ textarea {
 }
 
 .step-circle--active {
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   color: #fff;
 }
 
@@ -2837,7 +2823,7 @@ textarea {
 
 .step-progress-fill {
   height: 100%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 2px;
 }
 
@@ -2950,7 +2936,7 @@ textarea {
 
 .media-progress-fill {
   height: 100%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 2px;
 }
 
@@ -2978,7 +2964,7 @@ textarea {
 .audio-player-artwork {
   width: 48px;
   height: 48px;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -3047,7 +3033,7 @@ textarea {
 
 .viz-bar-fill {
   width: 100%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 4px 4px 0 0;
 }
 
@@ -3117,7 +3103,7 @@ textarea {
 }
 
 .viz-sparkline-bar--primary {
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   opacity: 0.7;
 }
 
@@ -3209,7 +3195,7 @@ textarea {
 
 .zoom-slider-fill {
   height: 100%;
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
   border-radius: 2px;
 }
 
@@ -3222,7 +3208,7 @@ textarea {
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid var(--ts-color-primary);
+  border: 2px solid var(--hi-color-primary);
 }
 
 .zoom-viewport {
@@ -3290,7 +3276,7 @@ textarea {
 }
 
 .guide-dot--active {
-  background: var(--ts-color-primary);
+  background: var(--hi-color-primary);
 }
 
 /* ============================================
