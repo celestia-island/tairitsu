@@ -84,6 +84,9 @@ fn is_daemon() -> bool {
 }
 
 fn should_timestamp() -> bool {
+    if std::env::var("TAIRITSU_LOG_TS").is_ok() {
+        return true;
+    }
     is_daemon() && !stdout_is_tty()
 }
 
