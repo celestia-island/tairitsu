@@ -41,6 +41,10 @@ struct Cli {
     #[arg(long, global = true)]
     status: bool,
 
+    /// Force: kill a foreign daemon occupying the port before starting
+    #[arg(long, global = true)]
+    force: bool,
+
     /// Force TTY interactive mode
     #[arg(long, global = true)]
     tty: bool,
@@ -496,7 +500,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 let port = port.unwrap_or(config.dev.port);
                 #[cfg(feature = "dev-server")]
                 {
-                    crate::wasm::dev_server(&config, port, open, watch).await?;
+                    crate::wasm::dev_server(&config, port, open, watch, cli.force).await?;
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
