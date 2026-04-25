@@ -281,7 +281,8 @@ mod tests {
     #[test]
     fn test_inject_style_into_html() {
         let injector = StyleInjector::new();
-        let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>"#;
+        let html =
+            r#"<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>"#;
         let css = "body { margin: 0; }";
 
         let result = injector.inject_style_into_html(html, css).unwrap();

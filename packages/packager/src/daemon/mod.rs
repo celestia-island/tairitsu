@@ -88,7 +88,10 @@ fn print_signal_failure(content: &str) {
 ///
 /// Returns `Ok(Some(port))` if ready (port 0 = unknown),
 /// `Ok(None)` if failed (error printed), `Err` on timeout/io.
-pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::io::Result<Option<u16>> {
+pub fn wait_for_child_signal(
+    timeout_secs: u64,
+    child_pid: Option<u32>,
+) -> std::io::Result<Option<u16>> {
     let ready_path = ready_file_path();
     let stdout_path = daemon_log_path().with_extension("stdout");
     let start = std::time::Instant::now();
@@ -123,7 +126,11 @@ pub fn wait_for_child_signal(timeout_secs: u64, child_pid: Option<u32>) -> std::
                 let _ = fs::remove_file(&ready_path);
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
-                    format!("Daemon child process (PID {}) exited unexpectedly. Check logs at {}", pid, stdout_path.display()),
+                    format!(
+                        "Daemon child process (PID {}) exited unexpectedly. Check logs at {}",
+                        pid,
+                        stdout_path.display()
+                    ),
                 ));
             }
         }
@@ -835,15 +842,26 @@ pub fn print_daemon_status() -> std::io::Result<()> {
     let status = read_daemon_status()?;
     let uptime = Utc::now() - status.start_time;
 
-    crate::log_ok!("Daemon is running  PID={}  uptime={}", status.pid, format_duration(uptime));
-    crate::log_info!("Running since {}", status.start_time.format("%Y-%m-%d %H:%M:%S UTC"));
+    crate::log_ok!(
+        "Daemon is running  PID={}  uptime={}",
+        status.pid,
+        format_duration(uptime)
+    );
+    crate::log_info!(
+        "Running since {}",
+        status.start_time.format("%Y-%m-%d %H:%M:%S UTC")
+    );
 
     if !status.build_logs.is_empty() {
         for log in status.build_logs.iter().rev().take(10) {
             if log.success {
                 crate::log_ok!("{}  {}  OK", log.timestamp.format("%H:%M:%S"), log.module);
             } else {
-                crate::log_fail!("{}  {}  FAILED", log.timestamp.format("%H:%M:%S"), log.module);
+                crate::log_fail!(
+                    "{}  {}  FAILED",
+                    log.timestamp.format("%H:%M:%S"),
+                    log.module
+                );
                 if let Some(error) = &log.error {
                     crate::log_fail!("  {}", error);
                 }
