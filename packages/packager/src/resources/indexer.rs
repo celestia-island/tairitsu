@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
-use tracing::{debug, info, warn};
+use tracing::debug;
 
 use super::{INDEX_FILE, RESOURCE_DIR};
 use crate::resources::{ScssResource, SvgResource};
@@ -112,7 +112,7 @@ impl ResourceIndexer {
     pub fn scan(&self) -> crate::Result<ResourceIndex> {
         let mut index = ResourceIndex::new();
 
-        info!("Scanning for resources in {}", self.root.display());
+        crate::log_info!("Scanning for resources in {}", self.root.display());
 
         // Scan for SCSS files
         let scss_files = self.scan_files("scss")?;
@@ -123,7 +123,7 @@ impl ResourceIndexer {
                     index.scss.push(resource);
                 }
                 Err(e) => {
-                    warn!("Failed to process SCSS file {}: {}", file.display(), e);
+                    crate::log_warn!("Failed to process SCSS file {}: {}", file.display(), e);
                 }
             }
         }
@@ -140,12 +140,12 @@ impl ResourceIndexer {
                     index.svg.push(resource);
                 }
                 Err(e) => {
-                    warn!("Failed to process SVG file {}: {}", file.display(), e);
+                    crate::log_warn!("Failed to process SVG file {}: {}", file.display(), e);
                 }
             }
         }
 
-        info!(
+        crate::log_info!(
             "Indexed {} SCSS files and {} SVG files",
             index.scss.len(),
             index.svg.len()

@@ -13,7 +13,7 @@ use tairitsu_browser_wit_resolver::{
     cache::Cache,
     resolver::{PackageSpec, ResolveOptions, Resolver},
 };
-use tracing::{error, info};
+use tracing::error;
 
 /// Determine the workspace target directory.
 fn resolve_target_dir(workspace_root: &Path) -> PathBuf {
@@ -60,9 +60,9 @@ pub fn cmd_fetch(workspace_root: &Path, specs: &[String], offline: bool) -> Resu
         match resolver.resolve(spec) {
             Ok(pkg) => {
                 if pkg.from_cache {
-                    info!("{} (already cached at {})", pkg.id, pkg.wit_dir.display());
+                    crate::log_info!("{} (already cached at {})", pkg.id, pkg.wit_dir.display());
                 } else {
-                    info!("{} → {}", pkg.id, pkg.wit_dir.display());
+                    crate::log_info!("{} → {}", pkg.id, pkg.wit_dir.display());
                 }
             }
             Err(e) => {
@@ -97,7 +97,7 @@ pub fn cmd_verify(workspace_root: &Path, specs: &[String]) -> Result<()> {
     };
 
     if specs_to_check.is_empty() {
-        info!("No packages in cache — nothing to verify.");
+        crate::log_info!("No packages in cache — nothing to verify.");
         return Ok(());
     }
 
@@ -107,7 +107,7 @@ pub fn cmd_verify(workspace_root: &Path, specs: &[String]) -> Result<()> {
     for spec in &specs_to_check {
         match cache.lookup(spec) {
             Ok(Some(_)) => {
-                info!("✓ {}", spec.id());
+                crate::log_info!("✓ {}", spec.id());
                 ok_count += 1;
             }
             Ok(None) => {
@@ -121,7 +121,7 @@ pub fn cmd_verify(workspace_root: &Path, specs: &[String]) -> Result<()> {
         }
     }
 
-    info!("{ok_count} ok, {fail_count} failed");
+    crate::log_info!("{ok_count} ok, {fail_count} failed");
     if fail_count > 0 {
         anyhow::bail!("{fail_count} package(s) failed verification");
     }

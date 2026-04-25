@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use tracing::info;
+
 
 use crate::daemon::{self, is_daemon, is_tty};
 
@@ -484,7 +484,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             if ssr {
                 #[cfg(feature = "ssr")]
                 {
-                    info!("Starting SSR development server...");
+crate::log_info!("Starting SSR development server...");
                     let port = port.unwrap_or(3000);
                     crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
                 }
@@ -496,7 +496,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     std::process::exit(1);
                 }
             } else {
-                info!("{}", t.cli.starting_dev_server);
+                crate::log_info!("{}", t.cli.starting_dev_server);
                 let port = port.unwrap_or(config.dev.port);
                 #[cfg(feature = "dev-server")]
                 {
@@ -520,7 +520,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             let release = !debug;
-            info!("{} {}...", t.cli.building_for, target);
+            crate::log_info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
                 "component" => {
                     crate::wasm::build_component(&config, release, None)?;
@@ -540,7 +540,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                                 routes
                             };
                             let output_dir = std::path::PathBuf::from("dist/prerendered");
-                            info!("Pre-rendering {} routes...", effective_routes.len());
+                            crate::log_info!("Pre-rendering {} routes...", effective_routes.len());
                             crate::ssr::prerender_routes(&config, &effective_routes, &output_dir)?;
                         }
                         #[cfg(not(feature = "ssr"))]
@@ -567,29 +567,29 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             }
         }
         Some(Commands::Package { platform }) => {
-            info!("{} {}...", t.cli.packaging_for, platform);
+            crate::log_info!("{} {}...", t.cli.packaging_for, platform);
             crate::log_fail!("{}", t.cli.packaging_not_implemented);
             std::process::exit(1);
         }
         Some(Commands::Preview { port }) => {
-            info!("{}", t.cli.preview_starting);
+            crate::log_info!("{}", t.cli.preview_starting);
             let port = port.unwrap_or(3000);
             let _port = port;
             crate::log_fail!("{}", t.cli.preview_not_implemented);
             std::process::exit(1);
         }
         Some(Commands::Init { name }) => {
-            info!("{}", t.cli.init_starting);
+            crate::log_info!("{}", t.cli.init_starting);
             let name = name.unwrap_or_else(|| "my-tairitsu-app".to_string());
             crate::utils::init_project(&name)?;
         }
         Some(Commands::Wit { action }) => match action {
             WitCommands::Fetch { specs, offline } => {
-                info!("Fetching WIT packages...");
+                crate::log_info!("Fetching WIT packages...");
                 crate::wit_cmd::cmd_fetch(&manifest_path, &specs, offline)?;
             }
             WitCommands::Verify { specs } => {
-                info!("Verifying WIT package cache...");
+                crate::log_info!("Verifying WIT package cache...");
                 crate::wit_cmd::cmd_verify(&manifest_path, &specs)?;
             }
             WitCommands::List => {
@@ -598,7 +598,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         },
         Some(Commands::Icons { action }) => match action {
             IconsCommands::Fetch { source, force } => {
-                info!("Fetching icons from {}...", source);
+                crate::log_info!("Fetching icons from {}...", source);
                 let target_dir = std::path::PathBuf::from("target");
                 let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
                 let cache_dir = target_dir
@@ -610,14 +610,14 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 } else {
                     crate::icons::fetch_icons(&icon_source, &cache_dir)?;
                 }
-                info!("Icons cached successfully.");
+                crate::log_info!("Icons cached successfully.");
             }
             IconsCommands::Build {
                 output,
                 icons,
                 tags,
             } => {
-                info!("Building icon module...");
+                crate::log_info!("Building icon module...");
 
                 // Load Cargo.toml to get configuration
                 let cargo_toml_path = if manifest_path.is_dir() {
@@ -661,7 +661,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 let target_dir = std::path::PathBuf::from("target");
                 let result = crate::icons::build_icons(&icon_config, &target_dir)?;
 
-                info!(
+                crate::log_info!(
                     "Generated {} icons to {}",
                     result.icons_count,
                     result.output_path.display()
@@ -672,7 +672,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 tag,
                 search,
             } => {
-                info!("Listing icons from {}...", source);
+                crate::log_info!("Listing icons from {}...", source);
 
                 let icon_source: crate::icons::IconSource = source.parse().unwrap_or_default();
                 let target_dir = std::path::PathBuf::from("target");
@@ -733,7 +733,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                     .map(std::path::PathBuf::from)
                     .unwrap_or_else(|| std::path::PathBuf::from("dist/prerendered"));
 
-                info!(
+                crate::log_info!(
                     "Pre-rendering {} routes to {}...",
                     effective_routes.len(),
                     output_dir.display()
@@ -751,7 +751,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
                 }
             } else {
                 // Dev server mode
-                info!("Starting SSR development server...");
+                crate::log_info!("Starting SSR development server...");
                 #[cfg(feature = "ssr")]
                 {
                     crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
@@ -767,7 +767,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         Some(Commands::Resources { action }) => match action {
             ResourcesCommands::Index { format } => {
-                info!("Indexing resources...");
+                crate::log_info!("Indexing resources...");
 
                 let target_dir = std::path::PathBuf::from("target");
                 let indexer = crate::resources::ResourceIndexer::new(&manifest_path);

@@ -33,7 +33,7 @@ pub fn compile_scss_with_config(
         })
         .collect();
 
-    tracing::info!("SCSS resolved load_paths: {:?}", resolved_load_paths);
+    crate::log_info!("SCSS resolved load_paths: {:?}", resolved_load_paths);
 
     let compiler = ScssCompiler::with_options(compiler::CompilerOptions {
         minify: true,
@@ -45,7 +45,7 @@ pub fn compile_scss_with_config(
     let mut results = Vec::new();
 
     // Collect entries to process
-    tracing::info!(
+    crate::log_info!(
         "SCSS config: {} entries, load_paths: {:?}",
         config.entries.len(),
         config.load_paths
@@ -53,7 +53,7 @@ pub fn compile_scss_with_config(
 
     let entries = if !config.entries.is_empty() {
         // Use explicit multi-entry configuration
-        tracing::info!("Using multi-entry configuration");
+        crate::log_info!("Using multi-entry configuration");
         config.entries.clone()
     } else if let Some(entry) = &config.entry {
         // Use single entry configuration
@@ -75,11 +75,11 @@ pub fn compile_scss_with_config(
 
     // Process each entry
     for entry in entries {
-        tracing::info!("Processing SCSS entry: {} -> {}", entry.entry, entry.output);
+        crate::log_info!("Processing SCSS entry: {} -> {}", entry.entry, entry.output);
         let entry_path = project_root.join(&entry.entry);
 
         if !entry_path.exists() {
-            tracing::warn!("SCSS entry not found: {}", entry_path.display());
+            crate::log_warn!("SCSS entry not found: {}", entry_path.display());
             continue;
         }
 
@@ -94,7 +94,7 @@ pub fn compile_scss_with_config(
                         all_css.push('\n');
                     }
                     Err(e) => {
-                        tracing::warn!("Failed to compile {}: {}", scss_file.display(), e);
+                        crate::log_warn!("Failed to compile {}: {}", scss_file.display(), e);
                     }
                 }
             }
@@ -104,7 +104,7 @@ pub fn compile_scss_with_config(
             match compiler.compile_file(&entry_path) {
                 Ok(css) => css,
                 Err(e) => {
-                    tracing::warn!("Failed to compile {}: {}", entry_path.display(), e);
+                    crate::log_warn!("Failed to compile {}: {}", entry_path.display(), e);
                     continue;
                 }
             }
@@ -126,7 +126,7 @@ pub fn compile_scss_with_config(
             output_path: output_path.clone(),
         });
 
-        tracing::info!(
+        crate::log_info!(
             "Compiled SCSS: {} -> {}",
             entry.entry,
             output_path.display()
