@@ -880,6 +880,27 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.hi-button-ghost {
+  color: var(--hi-color-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+}
+.hi-button-ghost:hover {
+  color: var(--hi-color-primary);
+  background: rgba(20, 110, 116, 0.08);
+}
+
+.hi-button-borderless {
+  color: var(--hi-color-text-secondary);
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+}
+.hi-button-borderless:hover {
+  color: var(--hi-color-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* ============================================
    Tairitsu Custom Variables (non-theme, layout-only)
    ============================================ */
