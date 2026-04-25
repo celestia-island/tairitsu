@@ -1111,6 +1111,22 @@ fn try_generate_component_wrapper(
     Ok(false)
 }
 
+fn collect_css_output_paths(scss_config: &crate::config::ScssConfig) -> Vec<String> {
+    let mut paths = Vec::new();
+
+    if !scss_config.entries.is_empty() {
+        for entry in &scss_config.entries {
+            paths.push(entry.output.clone());
+        }
+    } else if scss_config.entry.is_some() {
+        paths.push(scss_config.output.clone());
+    } else {
+        paths.push("styles.css".to_string());
+    }
+
+    paths
+}
+
 fn generate_component_html_with_output_dir(
     config: &Config,
     output_dir: &std::path::Path,
@@ -1608,6 +1624,30 @@ fn generate_component_html_with_output_dir(
         wasm_file = wasm_file,
         v = v,
     );
+
+    let mut html = html;
+
+    if config.html.inline_css {
+        let injector = crate::styles::StyleInjector::new();
+        let css_paths = collect_css_output_paths(&config.scss);
+
+        for css_path in &css_paths {
+            let full_path = output_dir.join(css_path);
+            match std::fs::read_to_string(&full_path) {
+                Ok(css_content) => {
+                    html = injector.inject_style_into_html(&html, &css_content)?;
+                    tracing::info!("Inlined CSS into HTML: {}", css_path);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "CSS file not found for inline injection: {} ({})",
+                        css_path,
+                        e
+                    );
+                }
+            }
+        }
+    }
 
     let html_path = output_dir.join("index.html");
     std::fs::write(&html_path, &html)?;

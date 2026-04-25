@@ -66,6 +66,24 @@ impl StyleInjector {
             Ok(html.to_string())
         }
     }
+
+    pub fn generate_style_block(&self, css: &str) -> String {
+        format!("<style>\n{}\n</style>", css)
+    }
+
+    pub fn inject_style_into_html(&self, html: &str, css: &str) -> Result<String> {
+        let style_block = self.generate_style_block(css);
+
+        if let Some(head_pos) = html.find("</head>") {
+            let mut result = String::with_capacity(html.len() + style_block.len());
+            result.push_str(&html[..head_pos]);
+            result.push_str(&style_block);
+            result.push_str(&html[head_pos..]);
+            Ok(result)
+        } else {
+            Ok(html.to_string())
+        }
+    }
 }
 
 impl Default for StyleInjector {
@@ -240,5 +258,94 @@ mod tests {
         // Both styles should be injected
         assert!(result2.contains(".a { color: red; }"));
         assert!(result2.contains(".b { color: blue; }"));
+    }
+
+    #[test]
+    fn test_generate_style_block() {
+        let injector = StyleInjector::new();
+        let css = ".test { color: red; }";
+
+        let block = injector.generate_style_block(css);
+        assert!(block.starts_with("<style>"));
+        assert!(block.ends_with("</style>"));
+        assert!(block.contains(".test { color: red; }"));
+    }
+
+    #[test]
+    fn test_generate_style_block_empty() {
+        let injector = StyleInjector::new();
+        let block = injector.generate_style_block("");
+        assert_eq!(block, "<style>\n\n</style>");
+    }
+
+    #[test]
+    fn test_inject_style_into_html() {
+        let injector = StyleInjector::new();
+        let html = r#"<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>"#;
+        let css = "body { margin: 0; }";
+
+        let result = injector.inject_style_into_html(html, css).unwrap();
+        assert!(result.contains("<style>"));
+        assert!(result.contains("</style>"));
+        assert!(result.contains("</head>"));
+        assert!(result.contains("body { margin: 0; }"));
+
+        let head_close_pos = result.find("</head>").unwrap();
+        let style_open_pos = result.find("<style>").unwrap();
+        assert!(style_open_pos < head_close_pos);
+    }
+
+    #[test]
+    fn test_inject_style_into_html_without_head() {
+        let injector = StyleInjector::new();
+        let html = r#"<!DOCTYPE html><html><body>No head tag</body></html>"#;
+        let css = ".test { color: red; }";
+
+        let result = injector.inject_style_into_html(html, css).unwrap();
+        assert_eq!(result, html);
+    }
+
+    #[test]
+    fn test_inject_style_into_html_with_complex_css() {
+        let injector = StyleInjector::new();
+        let html = "<html><head></head><body></body></html>";
+        let css = r#"
+            .container { display: flex; }
+            @media (max-width: 768px) { .container { flex-direction: column; } }
+        "#;
+
+        let result = injector.inject_style_into_html(html, css).unwrap();
+        assert!(result.contains("display: flex"));
+        assert!(result.contains("@media"));
+    }
+
+    #[test]
+    fn test_inject_style_into_html_multiple_css() {
+        let injector = StyleInjector::new();
+        let html = "<html><head></head><body></body></html>";
+        let css1 = ".a { color: red; }";
+        let css2 = ".b { color: blue; }";
+
+        let result1 = injector.inject_style_into_html(html, css1).unwrap();
+        let result2 = injector.inject_style_into_html(&result1, css2).unwrap();
+
+        assert!(result2.contains("<style>"));
+        assert!(result2.contains(".a { color: red; }"));
+        assert!(result2.contains(".b { color: blue; }"));
+    }
+
+    #[test]
+    fn test_inject_style_vs_script_injection() {
+        let injector = StyleInjector::new();
+        let html = "<html><head></head><body></body></html>";
+        let css = ".test { color: red; }";
+
+        let style_result = injector.inject_style_into_html(html, css).unwrap();
+        let script_result = injector.inject_into_html(html, css).unwrap();
+
+        assert!(style_result.contains("<style>"));
+        assert!(!style_result.contains("<script>"));
+        assert!(script_result.contains("<script>"));
+        assert!(!script_result.contains("<style>"));
     }
 }
