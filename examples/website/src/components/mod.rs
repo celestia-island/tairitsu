@@ -134,7 +134,13 @@ pub fn top_nav() -> VNode {
                     }
                 }
                 a { href: "/", class: "hi-header-brand",
-                    span { class: "hi-logo", "\u{273F}" }
+                    img {
+                        class: "hi-header-logo-img",
+                        src: "/images/logo-tairitsu.png",
+                        alt: "Tairitsu",
+                        width: "28",
+                        height: "28"
+                    }
                     span { style: "font-weight:700;font-size:1.15rem;margin-left:8px;", "Tairitsu" }
                 }
             }
@@ -188,6 +194,17 @@ const NAV_CATEGORIES: &[NavCategory] = &[
         }],
     },
     NavCategory {
+        label: "Getting Started",
+        default_open: true,
+        subcategories: &[
+            NavSubcategory { label: "Quick Start", href: "/guides/quick-start", items: &[] },
+            NavSubcategory { label: "Workspace Map", href: "/guides/workspace-map", items: &[] },
+            NavSubcategory { label: "Build & Test", href: "/guides/build-test-release", items: &[] },
+            NavSubcategory { label: "Migration Guide", href: "/guides/migration", items: &[] },
+            NavSubcategory { label: "Glossary", href: "/guides/glossary", items: &[] },
+        ],
+    },
+    NavCategory {
         label: "Components",
         default_open: true,
         subcategories: &[
@@ -216,23 +233,23 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                 items: &[
                     NavItem { label: "Navigation", icon: MdiIcon::FormatListBulleted, href: "/components/layer2/navigation" },
                     NavItem { label: "Collapsible", icon: MdiIcon::ArrowExpandHorizontal, href: "/components/layer2/collapsible" },
-                    NavItem { label: "Data", icon: MdiIcon::Graph, href: "/components/layer2/data" },
+                    NavItem { label: "Data Display", icon: MdiIcon::Graph, href: "/components/layer2/data" },
                     NavItem { label: "Table", icon: MdiIcon::Table, href: "/components/layer2/table" },
                     NavItem { label: "Tree", icon: MdiIcon::SourceBranch, href: "/components/layer2/tree" },
                     NavItem { label: "Pagination", icon: MdiIcon::ChevronLeft, href: "/components/layer2/pagination" },
                     NavItem { label: "QRCode", icon: MdiIcon::ViewDashboard, href: "/components/layer2/qrcode" },
                     NavItem { label: "Timeline", icon: MdiIcon::ChartTimeline, href: "/components/layer2/timeline" },
-                    NavItem { label: "Form", icon: MdiIcon::TextBoxEdit, href: "/components/layer2/form" },
+                    NavItem { label: "Form (L2)", icon: MdiIcon::TextBoxEdit, href: "/components/layer2/form" },
                     NavItem { label: "Cascader", icon: MdiIcon::ChevronDown, href: "/components/layer2/cascader" },
                     NavItem { label: "Transfer", icon: MdiIcon::SwapHorizontal, href: "/components/layer2/transfer" },
-                    NavItem { label: "Feedback", icon: MdiIcon::Bell, href: "/components/layer2/feedback" },
+                    NavItem { label: "Feedback (L2)", icon: MdiIcon::Bell, href: "/components/layer2/feedback" },
                 ],
             },
             NavSubcategory {
                 label: "Layer 3 — Complex",
                 href: "/components/layer3",
                 items: &[
-                    NavItem { label: "Media", icon: MdiIcon::Play, href: "/components/layer3/media" },
+                    NavItem { label: "Media Player", icon: MdiIcon::Play, href: "/components/layer3/media" },
                     NavItem { label: "Editor", icon: MdiIcon::FormatBold, href: "/components/layer3/editor" },
                     NavItem { label: "Visualization", icon: MdiIcon::CubeOutline, href: "/components/layer3/visualization" },
                     NavItem { label: "User Guide", icon: MdiIcon::BookOpen, href: "/components/layer3/user-guide" },
@@ -259,17 +276,12 @@ const NAV_CATEGORIES: &[NavCategory] = &[
         ],
     },
     NavCategory {
-        label: "Demos",
+        label: "Packages",
         default_open: false,
-        subcategories: &[NavSubcategory {
-            label: "All Demos",
-            href: "/demos",
-            items: &[
-                NavItem { label: "Form Demo", icon: MdiIcon::TextBoxEdit, href: "/demos/form" },
-                NavItem { label: "Dashboard", icon: MdiIcon::ViewColumn, href: "/demos/dashboard" },
-                NavItem { label: "Video & Audio", icon: MdiIcon::Play, href: "/demos/video" },
-            ],
-        }],
+        subcategories: &[
+            NavSubcategory { label: "Overview", href: "/packages", items: &[] },
+            NavSubcategory { label: "All Packages", href: "/packages/list", items: &[] },
+        ],
     },
 ];
 
