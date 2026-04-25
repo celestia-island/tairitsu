@@ -60,12 +60,13 @@ favicon = "public/favicon.ico"
 inline_css = true
 head = """
 <meta name="theme-color" content="#146e74">
+<link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles/bundle.css">
-<link rel="stylesheet" href="./styles/spa.css">
-<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="/styles/bundle.css">
+<link rel="stylesheet" href="/styles/spa.css">
+<link rel="stylesheet" href="/styles.css">
 <script>
 (function() {
     'use strict';
@@ -270,13 +271,18 @@ head = """
     }
 
     function updateSidebarActiveState(pageId) {
+        /* Clear all first, then activate only the FIRST match */
         document.querySelectorAll('.hi-menu-item').forEach(function(item) {
             item.classList.remove('hi-menu-item-active');
-            var link = item.querySelector('a');
-            if (link && ROUTES[link.getAttribute('href')] === pageId) {
-                item.classList.add('hi-menu-item-active');
-            }
         });
+        var items = document.querySelectorAll('.hi-menu-item');
+        for (var i = 0; i < items.length; i++) {
+            var link = items[i].querySelector('a');
+            if (link && ROUTES[link.getAttribute('href')] === pageId) {
+                items[i].classList.add('hi-menu-item-active');
+                break;
+            }
+        }
     }
 
     function updateTopNavActiveState(pageId) {

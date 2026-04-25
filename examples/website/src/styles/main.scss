@@ -396,8 +396,8 @@
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
   padding: 0.5rem 0;
 }
 
@@ -424,7 +424,7 @@
 
 .card__body {
   font-size: 0.875rem;
-  color: var(--hi-color-text-secondary, #c8d4dc);
+  color: #f0f4f8 !important;
   line-height: 1.6;
   margin-bottom: var(--ts-spacing-md);
 }
@@ -506,12 +506,64 @@
   color: var(--hi-color-text-primary);
 }
 
+/* Fix: constrain glow to single item, prevent multi-highlight bleed */
+.hi-menu-item {
+  position: relative;
+
+  /* Reset any inherited active/hover backgrounds from hikari bundle.css */
+  &.is-active,
+  &[class*="active"] {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Only show glow on direct hover, not parent hover */
+  .hi-glow-wrapper::before {
+    opacity: 0 !important;
+  }
+
+  &:hover .hi-glow-wrapper::before,
+  &.is-active .hi-glow-wrapper::before,
+  &.hi-menu-item-active .hi-glow-wrapper::before {
+    opacity: var(--glow-opacity, 0) !important;
+  }
+}
+
+/* Explicit active state for current-page menu item */
+/* SPA JS uses 'hi-menu-item-active' class; also match 'is-active' for compat */
+.hi-menu-item.is-active > .hi-menu-item-inner,
+.hi-menu-item.hi-menu-item-active > .hi-menu-item-inner,
+.hi-menu-item.is-active > a,
+.hi-menu-item.hi-menu-item-active > a,
+.hi-menu-item-inner.is-active,
+.hi-menu-item-inner.hi-menu-item-active {
+  background: var(--hi-button-primary, rgba(20, 110, 116, 0.6));
+  color: #ffffff;
+  font-weight: 500;
+}
+
 .hi-menu-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--hi-color-text-disabled);
+}
+
+/* White icon/text when inside active item — target SVG paths too */
+.hi-menu-item.is-active .hi-menu-item-icon,
+.hi-menu-item.hi-menu-item-active .hi-menu-item-icon,
+.hi-menu-item.is-active .hi-menu-item-content,
+.hi-menu-item.hi-menu-item-active .hi-menu-item-content {
+  color: #ffffff !important;
+}
+
+.hi-menu-item.is-active .hi-menu-item-icon svg,
+.hi-menu-item.hi-menu-item-active .hi-menu-item-icon svg,
+.hi-menu-item.is-active .hi-menu-item-icon svg path,
+.hi-menu-item.hi-menu-item-active .hi-menu-item-icon svg path {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .hi-menu-item-content {
@@ -890,8 +942,8 @@ a:hover {
 
 .package-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
 }
 
 .package-card {
@@ -922,9 +974,16 @@ a:hover {
   font-weight: 600;
 }
 
+.package-card-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
 .package-card-desc {
   font-size: 0.875rem;
-  color: var(--hi-color-text-secondary);
+  color: #f0f4f8 !important;
   line-height: 1.5;
 }
 

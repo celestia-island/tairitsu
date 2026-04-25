@@ -212,9 +212,9 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                 label: "Layer 1 — Foundations",
                 href: "/components/foundations",
                 items: &[
-                    NavItem { label: "Runtime", icon: MdiIcon::Cog, href: "/packages" },
+                    NavItem { label: "Runtime", icon: MdiIcon::Cog, href: "/system/runtime" },
                     NavItem { label: "Macros", icon: MdiIcon::Code, href: "/packages" },
-                    NavItem { label: "VDOM", icon: MdiIcon::FileEdit, href: "/packages" },
+                    NavItem { label: "VDOM", icon: MdiIcon::FileEdit, href: "/packages/list" },
                 ],
             },
             NavSubcategory {
@@ -222,7 +222,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                 href: "/components/platform",
                 items: &[
                     NavItem { label: "Web Adapters", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
-                    NavItem { label: "Browser Worlds", icon: MdiIcon::Layers, href: "/system/web-backends" },
+                    NavItem { label: "Browser Worlds", icon: MdiIcon::Layers, href: "/system" },
                     NavItem { label: "WIT Resolver", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline" },
                 ],
             },
@@ -230,10 +230,10 @@ const NAV_CATEGORIES: &[NavCategory] = &[
                 label: "Layer 3 — Tooling",
                 href: "/components/tooling",
                 items: &[
-                    NavItem { label: "Packager", icon: MdiIcon::Package, href: "/packages" },
-                    NavItem { label: "Style", icon: MdiIcon::Palette, href: "/system/css" },
-                    NavItem { label: "Browser Glue", icon: MdiIcon::Code, href: "/system/browser-glue" },
-                    NavItem { label: "E2E Tests", icon: MdiIcon::CheckboxMarkedCircle, href: "/system/runtime" },
+                    NavItem { label: "Packager", icon: MdiIcon::Package, href: "/packages/list" },
+                    NavItem { label: "Style", icon: MdiIcon::Palette, href: "/packages" },
+                    NavItem { label: "Browser Glue", icon: MdiIcon::Code, href: "/system/runtime" },
+                    NavItem { label: "E2E Tests", icon: MdiIcon::CheckboxMarkedCircle, href: "/system/versioning" },
                 ],
             },
         ],
