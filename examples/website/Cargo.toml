@@ -57,6 +57,7 @@ lang = "zh-CN"
 charset = "UTF-8"
 viewport = "width=device-width, initial-scale=1.0"
 favicon = "public/favicon.ico"
+inline_css = true
 head = """
 <meta name="theme-color" content="#146e74">
 <link rel="preconnect" href="https://fonts.googleapis.com">

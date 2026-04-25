@@ -144,6 +144,8 @@ pub struct HtmlConfig {
     pub head: String,
     #[serde(default)]
     pub body_class: String,
+    #[serde(default)]
+    pub inline_css: bool,
 }
 
 fn default_lang() -> String {
@@ -168,6 +170,7 @@ impl Default for HtmlConfig {
             title: None,
             head: String::new(),
             body_class: String::new(),
+            inline_css: false,
         }
     }
 }
@@ -339,6 +342,7 @@ mod tests {
         assert!(config.title.is_none());
         assert!(config.head.is_empty());
         assert!(config.body_class.is_empty());
+        assert!(!config.inline_css);
     }
 
     #[test]
