@@ -1826,7 +1826,7 @@ pub async fn dev_server(
         crate::log_info!("Use --daemon to attach, or --shutdown to stop it.");
     }
 
-    if !crate::daemon::is_daemon() {
+    {
         let probe = std::net::TcpListener::bind(("127.0.0.1", port));
         if let Err(ref err) = probe {
             if err.kind() == std::io::ErrorKind::AddrInUse {
@@ -1834,7 +1834,7 @@ pub async fn dev_server(
                 let our_pid = crate::daemon::read_pid().unwrap_or(0);
 
                 if let Some(ref info) = owner {
-                    if info.pid == our_pid {
+                    if info.pid == our_pid && !crate::daemon::is_daemon() {
                         return Err(crate::TairitsuPackagerError::BuildError(format!(
                             "Port {} is already in use by tairitsu daemon (PID {}). Use --daemon to attach or --shutdown to stop.",
                             port, info.pid

@@ -454,10 +454,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         _ => tracing::Level::TRACE,
     };
 
-    tracing_subscriber::fmt()
-        .with_max_level(log_level)
-        .with_target(false)
-        .init();
+    crate::logfmt::init_tracing(log_level);
 
     let is_dev_command = matches!(
         cli.command,

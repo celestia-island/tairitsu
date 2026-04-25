@@ -1,6 +1,8 @@
 use std::fmt;
 use std::io::Write;
 
+use tracing_subscriber::layer::SubscriberExt;
+
 fn stdout_is_tty() -> bool {
     atty::is(atty::Stream::Stdout)
 }
@@ -15,6 +17,7 @@ enum Level {
     Fail,
     Info,
     Progress,
+    Debug,
 }
 
 impl Level {
@@ -25,6 +28,7 @@ impl Level {
             Level::Fail => " FAIL ",
             Level::Info => " INFO ",
             Level::Progress => "  ..  ",
+            Level::Debug => " DEBUG ",
         }
     }
 
@@ -35,6 +39,7 @@ impl Level {
             Level::Fail => "\x1b[1;31m",
             Level::Info => "\x1b[1;36m",
             Level::Progress => "\x1b[2m",
+            Level::Debug => "\x1b[2m",
         }
     }
 }
@@ -128,6 +133,7 @@ logfn!(warn, Level::Warn, StdStream::Stderr);
 logfn!(fail, Level::Fail, StdStream::Stderr);
 logfn!(info, Level::Info, StdStream::Stdout);
 logfn!(progress, Level::Progress, StdStream::Stdout);
+logfn!(debug_log, Level::Debug, StdStream::Stderr);
 
 #[macro_export]
 macro_rules! log_ok {
@@ -152,4 +158,66 @@ macro_rules! log_info {
 #[macro_export]
 macro_rules! log_progress {
     ($($arg:tt)*) => { $crate::logfmt::progress(format_args!($($arg)*)) }
+}
+
+pub struct LogfmtLayer {
+    max_level: tracing::Level,
+}
+
+impl LogfmtLayer {
+    pub fn new(max_level: tracing::Level) -> Self {
+        Self { max_level }
+    }
+}
+
+impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for LogfmtLayer {
+    fn enabled(&self, metadata: &tracing::Metadata<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) -> bool {
+        metadata.level() <= &self.max_level
+    }
+
+    fn on_event(&self, event: &tracing::Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
+        let mut visitor = EventVisitor(String::new());
+        event.record(&mut visitor);
+
+        let (level, stream) = match *event.metadata().level() {
+            tracing::Level::ERROR => (Level::Fail, StdStream::Stderr),
+            tracing::Level::WARN => (Level::Warn, StdStream::Stderr),
+            tracing::Level::INFO => (Level::Info, StdStream::Stdout),
+            tracing::Level::DEBUG => (Level::Debug, StdStream::Stderr),
+            tracing::Level::TRACE => (Level::Debug, StdStream::Stderr),
+        };
+
+        let args = format_args!("{}", visitor.0);
+        emit(level, stream, args);
+    }
+}
+
+struct EventVisitor(String);
+
+impl tracing::field::Visit for EventVisitor {
+    fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+        if field.name() == "message" {
+            self.0 = value.to_string();
+        } else if !self.0.is_empty() {
+            self.0.push_str(&format!(" {}={}", field.name(), value));
+        } else {
+            self.0 = format!("{}={}", field.name(), value);
+        }
+    }
+
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        if field.name() == "message" {
+            self.0 = format!("{:?}", value);
+        } else if !self.0.is_empty() {
+            self.0.push_str(&format!(" {}={:?}", field.name(), value));
+        } else {
+            self.0 = format!("{}={:?}", field.name(), value);
+        }
+    }
+}
+
+pub fn init_tracing(max_level: tracing::Level) {
+    let layer = LogfmtLayer::new(max_level);
+    let subscriber = tracing_subscriber::registry().with(layer);
+    let _ = tracing::subscriber::set_global_default(subscriber);
 }
