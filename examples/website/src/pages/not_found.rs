@@ -3,7 +3,7 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
 
-use crate::i18n::{self, Locale};
+use crate::i18n::{self, Language};
 
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
@@ -14,7 +14,7 @@ fn el(tag: &str) -> VElement {
 }
 
 pub fn render() -> VNode {
-    let t = i18n::text(Locale::EnUs);
+    let t = i18n::text(Language::ENGLISH);
     rsx! {
         div { id: "page-not-found", class: "hikari-page",
             div { class: "hi-container hi-container-md",

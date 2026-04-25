@@ -17,16 +17,16 @@
 //!
 //! // Load translations for multiple locales
 //! let mut translations: HashMap<Language, HashMap<String, String>> = HashMap::new();
-//! translations.insert(Language::English, load_toml_flat(include_str!("en.toml")).unwrap());
-//! translations.insert(Language::ChineseSimplified, load_toml_flat(include_str!("zh.toml")).unwrap());
+//! translations.insert(Language::ENGLISH, load_toml_flat(include_str!("en.toml")).unwrap());
+//! translations.insert(Language::CHINESE_SIMPLIFIED, load_toml_flat(include_str!("zh.toml")).unwrap());
 //!
 //! // Provide i18n to the component tree
-//! let provider = I18nProvider::new(translations, Language::English);
+//! let provider = I18nProvider::new(translations, Language::ENGLISH);
 //! provider.provide();
 //!
 //! // In any component:
 //! //   let locale = tairitsu_i18n::use_locale();
-//! //   let text = tairitsu_i18n::set_locale(Language::ChineseSimplified);
+//! //   let text = tairitsu_i18n::set_locale(Language::CHINESE_SIMPLIFIED);
 //! //   let msg = t!("common.button.submit");  // dot-path lookup
 //! ```
 
@@ -209,21 +209,21 @@ mod tests {
         zh.insert("greeting".to_string(), "你好".to_string());
 
         let mut translations = HashMap::new();
-        translations.insert(Language::English, en);
-        translations.insert(Language::ChineseSimplified, zh);
+        translations.insert(Language::ENGLISH, en);
+        translations.insert(Language::CHINESE_SIMPLIFIED, zh);
         translations
     }
 
     #[test]
     fn test_i18n_state_new() {
-        let state = I18nState::new(make_translations(), Language::English);
-        assert_eq!(state.current, Language::English);
-        assert_eq!(state.fallback, Language::English);
+        let state = I18nState::new(make_translations(), Language::ENGLISH);
+        assert_eq!(state.current, Language::ENGLISH);
+        assert_eq!(state.fallback, Language::ENGLISH);
     }
 
     #[test]
     fn test_i18n_state_translate() {
-        let state = I18nState::new(make_translations(), Language::English);
+        let state = I18nState::new(make_translations(), Language::ENGLISH);
         assert_eq!(state.t("common.button.submit"), Some("Submit"));
         assert_eq!(state.t("common.button.cancel"), Some("Cancel"));
         assert_eq!(state.t("greeting"), Some("Hello"));
@@ -235,37 +235,37 @@ mod tests {
         let mut translations = make_translations();
         let mut ja: HashMap<String, String> = HashMap::new();
         ja.insert("greeting".to_string(), "こんにちは".to_string());
-        translations.insert(Language::Japanese, ja);
+        translations.insert(Language::JAPANESE, ja);
 
         let state =
-            I18nState::new(translations, Language::Japanese).with_fallback(Language::English);
+            I18nState::new(translations, Language::JAPANESE).with_fallback(Language::ENGLISH);
         assert_eq!(state.t("greeting"), Some("こんにちは"));
         assert_eq!(state.t("common.button.submit"), Some("Submit"));
     }
 
     #[test]
     fn test_i18n_state_t_or_key() {
-        let state = I18nState::new(make_translations(), Language::English);
+        let state = I18nState::new(make_translations(), Language::ENGLISH);
         assert_eq!(state.t_or_key("common.button.submit"), "Submit");
         assert_eq!(state.t_or_key("nonexistent.key"), "nonexistent.key");
     }
 
     #[test]
     fn test_i18n_provider_new_and_locale() {
-        let provider = I18nProvider::new(make_translations(), Language::English);
-        assert_eq!(provider.locale(), Language::English);
+        let provider = I18nProvider::new(make_translations(), Language::ENGLISH);
+        assert_eq!(provider.locale(), Language::ENGLISH);
     }
 
     #[test]
     fn test_i18n_provider_set_locale() {
-        let provider = I18nProvider::new(make_translations(), Language::English);
-        provider.set_locale(Language::ChineseSimplified);
-        assert_eq!(provider.locale(), Language::ChineseSimplified);
+        let provider = I18nProvider::new(make_translations(), Language::ENGLISH);
+        provider.set_locale(Language::CHINESE_SIMPLIFIED);
+        assert_eq!(provider.locale(), Language::CHINESE_SIMPLIFIED);
     }
 
     #[test]
     fn test_i18n_provider_translate() {
-        let provider = I18nProvider::new(make_translations(), Language::English);
+        let provider = I18nProvider::new(make_translations(), Language::ENGLISH);
         assert_eq!(
             provider.t("common.button.submit"),
             Some("Submit".to_string())
@@ -275,56 +275,56 @@ mod tests {
 
     #[test]
     fn test_i18n_provider_translate_after_locale_change() {
-        let provider = I18nProvider::new(make_translations(), Language::English);
+        let provider = I18nProvider::new(make_translations(), Language::ENGLISH);
         assert_eq!(
             provider.t("common.button.submit"),
             Some("Submit".to_string())
         );
-        provider.set_locale(Language::ChineseSimplified);
+        provider.set_locale(Language::CHINESE_SIMPLIFIED);
         assert_eq!(provider.t("common.button.submit"), Some("提交".to_string()));
     }
 
     #[test]
     fn test_provide_and_use_locale() {
-        provide_i18n(Language::English, make_translations());
-        assert_eq!(use_locale(), Language::English);
+        provide_i18n(Language::ENGLISH, make_translations());
+        assert_eq!(use_locale(), Language::ENGLISH);
     }
 
     #[test]
     fn test_set_locale_via_function() {
-        provide_i18n(Language::English, make_translations());
-        assert_eq!(use_locale(), Language::English);
-        set_locale(Language::ChineseSimplified);
-        assert_eq!(use_locale(), Language::ChineseSimplified);
+        provide_i18n(Language::ENGLISH, make_translations());
+        assert_eq!(use_locale(), Language::ENGLISH);
+        set_locale(Language::CHINESE_SIMPLIFIED);
+        assert_eq!(use_locale(), Language::CHINESE_SIMPLIFIED);
     }
 
     #[test]
     fn test_translate_via_function() {
-        provide_i18n(Language::English, make_translations());
+        provide_i18n(Language::ENGLISH, make_translations());
         assert_eq!(
             translate("common.button.submit"),
             Some("Submit".to_string())
         );
-        set_locale(Language::ChineseSimplified);
+        set_locale(Language::CHINESE_SIMPLIFIED);
         assert_eq!(translate("common.button.submit"), Some("提交".to_string()));
     }
 
     #[test]
     fn test_translate_or_key_via_function() {
-        provide_i18n(Language::English, make_translations());
+        provide_i18n(Language::ENGLISH, make_translations());
         assert_eq!(translate_or_key("common.button.submit"), "Submit");
         assert_eq!(translate_or_key("missing.key"), "missing.key");
     }
 
     #[test]
     fn test_context_shared_between_consumers() {
-        let provider = I18nProvider::new(make_translations(), Language::English);
+        let provider = I18nProvider::new(make_translations(), Language::ENGLISH);
         provider.provide();
 
-        assert_eq!(use_locale(), Language::English);
+        assert_eq!(use_locale(), Language::ENGLISH);
 
-        set_locale(Language::ChineseSimplified);
-        assert_eq!(use_locale(), Language::ChineseSimplified);
+        set_locale(Language::CHINESE_SIMPLIFIED);
+        assert_eq!(use_locale(), Language::CHINESE_SIMPLIFIED);
         assert_eq!(translate("common.button.cancel"), Some("取消".to_string()));
     }
 }

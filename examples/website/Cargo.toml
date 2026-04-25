@@ -17,6 +17,7 @@ tairitsu-macros = { path = "../../packages/macros" }
 # For wasm builds, use only browser features (not server-side features like ssr/packager)
 tairitsu-web = { path = "../../packages/web", features = [
     "browser",
+    "i18n",
     "vdom",
     "wit-bindings",
 ], default-features = false }

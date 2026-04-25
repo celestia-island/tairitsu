@@ -1,14 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Locale {
-    EnUs,
-    ZhChs,
-    ZhCht,
-    JaJp,
-    KoKr,
-    FrFr,
-    EsEs,
-    RuRu,
-}
+pub use tairitsu_web::i18n::Language;
 
 pub struct SiteText {
     pub brand: &'static str,
@@ -39,48 +29,20 @@ pub struct SiteText {
     pub not_found_action: &'static str,
 }
 
-pub const LOCALES: [Locale; 8] = [
-    Locale::EnUs,
-    Locale::ZhChs,
-    Locale::ZhCht,
-    Locale::JaJp,
-    Locale::KoKr,
-    Locale::FrFr,
-    Locale::EsEs,
-    Locale::RuRu,
+pub const LOCALES: [Language; 8] = [
+    Language::ENGLISH,
+    Language::CHINESE_SIMPLIFIED,
+    Language::CHINESE_TRADITIONAL,
+    Language::JAPANESE,
+    Language::KOREAN,
+    Language::FRENCH,
+    Language::SPANISH,
+    Language::RUSSIAN,
 ];
 
-impl Locale {
-    pub fn code(self) -> &'static str {
-        match self {
-            Locale::EnUs => "en-US",
-            Locale::ZhChs => "zh-CHS",
-            Locale::ZhCht => "zh-CHT",
-            Locale::JaJp => "ja-JP",
-            Locale::KoKr => "ko-KR",
-            Locale::FrFr => "fr-FR",
-            Locale::EsEs => "es-ES",
-            Locale::RuRu => "ru-RU",
-        }
-    }
-
-    pub fn label(self) -> &'static str {
-        match self {
-            Locale::EnUs => "English",
-            Locale::ZhChs => "简体中文",
-            Locale::ZhCht => "繁體中文",
-            Locale::JaJp => "日本語",
-            Locale::KoKr => "한국어",
-            Locale::FrFr => "Français",
-            Locale::EsEs => "Español",
-            Locale::RuRu => "Русский",
-        }
-    }
-}
-
-pub fn text(locale: Locale) -> SiteText {
+pub fn text(locale: Language) -> SiteText {
     match locale {
-        Locale::EnUs => SiteText {
+        Language::ENGLISH => SiteText {
             brand: "Tairitsu Framework Demo",
             hero_title: "From Bootstrap Placeholder To Real Website",
             hero_copy: "This demo translates core docs concepts into a visible website: architecture, dual backends, WIT pipeline, and package layering.",
@@ -108,7 +70,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "The page you requested does not exist. Check the URL or go home.",
             not_found_action: "Go Home",
         },
-        Locale::ZhChs => SiteText {
+        Language::CHINESE_SIMPLIFIED => SiteText {
             brand: "Tairitsu Framework Demo",
             hero_title: "从占位启动到可读 Demo",
             hero_copy: "这一版先把 docs 里的核心设计翻成可见页面：架构、双后端、WIT 流水线与包分层。",
@@ -136,7 +98,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "请求的页面不存在。请检查 URL 或返回首页。",
             not_found_action: "返回首页",
         },
-        Locale::ZhCht => SiteText {
+        Language::CHINESE_TRADITIONAL => SiteText {
             brand: "Tairitsu Framework Demo",
             hero_title: "從啟動占位到可讀 Demo",
             hero_copy: "先把 docs 的核心概念落成可見網站：架構、雙後端、WIT 流水線與套件分層。",
@@ -164,7 +126,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "請求的頁面不存在。請檢查 URL 或返回首頁。",
             not_found_action: "返回首頁",
         },
-        Locale::JaJp => SiteText {
+        Language::JAPANESE => SiteText {
             brand: "Tairitsu Framework Demo",
             hero_title: "起動プレースホルダーから実用デモへ",
             hero_copy: "docs の主要設計を可視化したサイトを先に整備します。構成、二系統バックエンド、WIT パイプラインを表示します。",
@@ -192,7 +154,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "お探しのページは存在しません。URLをご確認の上、ホームに戻ってください。",
             not_found_action: "ホームに戻る",
         },
-        Locale::KoKr => SiteText {
+        Language::KOREAN => SiteText {
             brand: "Tairitsu Framework Demo",
             hero_title: "부트스트랩 자리표시자에서 실제 데모로",
             hero_copy: "docs 핵심 설계를 먼저 화면으로 옮깁니다. 아키텍처, 이중 백엔드, WIT 파이프라인을 바로 확인할 수 있습니다.",
@@ -220,7 +182,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "요청한 페이지가 존재하지 않습니다. URL을 확인하거나 홈으로 가세요.",
             not_found_action: "홈으로",
         },
-        Locale::FrFr => SiteText {
+        Language::FRENCH => SiteText {
             brand: "Démo du Framework Tairitsu",
             hero_title: "Du placeholder de démarrage à un vrai site",
             hero_copy: "Cette démo rend visibles les concepts clés de la doc: architecture, double backend Web, pipeline WIT et couches de paquets.",
@@ -248,7 +210,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "La page demandée n'existe pas. Vérifiez l'URL ou retournez à l'accueil.",
             not_found_action: "Aller à l'accueil",
         },
-        Locale::EsEs => SiteText {
+        Language::SPANISH => SiteText {
             brand: "Demo del Framework Tairitsu",
             hero_title: "De texto de arranque a sitio real",
             hero_copy: "Esta demo convierte en página visible los conceptos clave de la documentación: arquitectura, doble backend Web y pipeline WIT.",
@@ -276,7 +238,7 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "La página solicitada no existe. Verifique la URL o vaya al inicio.",
             not_found_action: "Ir al inicio",
         },
-        Locale::RuRu => SiteText {
+        Language::RUSSIAN => SiteText {
             brand: "Демо Tairitsu Framework",
             hero_title: "От заглушки запуска к рабочему сайту",
             hero_copy: "В этой версии ключевые идеи из docs вынесены в видимый сайт: архитектура, два Web-бэкенда, WIT-конвейер и слои пакетов.",
@@ -304,5 +266,6 @@ pub fn text(locale: Locale) -> SiteText {
             not_found_desc: "Запрашиваемая страница не существует. Проверьте URL или вернитесь на главную.",
             not_found_action: "На главную",
         },
+        _ => text(Language::ENGLISH),
     }
 }
