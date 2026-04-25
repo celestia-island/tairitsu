@@ -359,6 +359,7 @@ pub fn run_tokio() {
 }
 
 pub async fn run() -> crate::Result<()> {
+    crate::logfmt::init();
     run_with_cli(Cli::parse()).await
 }
 
