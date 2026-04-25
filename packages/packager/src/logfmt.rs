@@ -87,11 +87,15 @@ fn should_timestamp() -> bool {
     is_daemon() && !stdout_is_tty()
 }
 
+fn should_color() -> bool {
+    if std::env::var("TAIRITSU_COLOR").is_ok() {
+        return true;
+    }
+    stdout_is_tty() || stderr_is_tty()
+}
+
 fn emit(level: Level, stream: StdStream, args: fmt::Arguments<'_>) {
-    let use_color = match stream {
-        StdStream::Stdout => stdout_is_tty(),
-        StdStream::Stderr => stderr_is_tty(),
-    };
+    let use_color = should_color();
     let tag = format_tag(&level, use_color);
     let msg = args.to_string();
     let ts = if should_timestamp() {
@@ -217,7 +221,34 @@ impl tracing::field::Visit for EventVisitor {
 }
 
 pub fn init_tracing(max_level: tracing::Level) {
+    enable_ansi();
     let layer = LogfmtLayer::new(max_level);
     let subscriber = tracing_subscriber::registry().with(layer);
     let _ = tracing::subscriber::set_global_default(subscriber);
+}
+
+pub fn init() {
+    enable_ansi();
+}
+
+fn enable_ansi() {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE;
+        use windows_sys::Win32::System::Console::{
+            GetConsoleMode, GetStdHandle, SetConsoleMode, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE,
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+        };
+        unsafe {
+            for handle_id in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE] {
+                let handle = GetStdHandle(handle_id);
+                if handle != INVALID_HANDLE_VALUE && !handle.is_null() {
+                    let mut mode: u32 = 0;
+                    if GetConsoleMode(handle, &mut mode) != 0 {
+                        SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+                    }
+                }
+            }
+        }
+    }
 }

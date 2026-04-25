@@ -805,6 +805,7 @@ where
 
         let child = Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
+            .env("TAIRITSU_COLOR", if atty::is(atty::Stream::Stderr) { "1" } else { "0" })
             .args(&args)
             .spawn()?;
 
@@ -827,6 +828,14 @@ where
         let log_path = daemon_log_path();
         if let Some(parent) = log_path.parent() {
             fs::create_dir_all(parent)?;
+        }
+
+        // SAFETY: single-threaded at this point, no concurrent env access
+        unsafe {
+            env::set_var(
+                "TAIRITSU_COLOR",
+                if atty::is(atty::Stream::Stderr) { "1" } else { "0" },
+            );
         }
 
         let pid = spawn_daemon_process_windows(&exe, &args)?;
