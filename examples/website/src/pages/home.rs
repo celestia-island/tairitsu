@@ -3,7 +3,6 @@
 //! Uses identical CSS class names: page-hero, page-hero__inner, card-grid, card, etc.
 //! Only differences: dark-themed content, tairitsu branding/text.
 
-use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
 
 use crate::components::{glow_wrapper, svg_icon};

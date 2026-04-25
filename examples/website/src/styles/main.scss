@@ -117,14 +117,19 @@
 
   --hi-button-bg: rgba(255, 255, 255, 0.08);
   --hi-button-bg-hover: rgba(255, 255, 255, 0.12);
+
+  --hi-color-text-secondary: #c8d4dc;
+  --hi-text-secondary: #c8d4dc;
 }
 
 .hi-button-primary {
   color: var(--hi-color-text-on-primary, #fff);
+  border-color: transparent;
 }
 
 .hi-button-secondary {
   color: var(--hi-color-text-on-secondary);
+  border-color: transparent;
 }
 
 /* ============================================
@@ -150,6 +155,7 @@
 .hi-markdown-content p {
   margin-bottom: var(--ts-spacing-md);
   line-height: 1.8;
+  color: #d0dae0;
 }
 
 .hi-markdown-content ul,
@@ -418,7 +424,7 @@
 
 .card__body {
   font-size: 0.875rem;
-  color: var(--hi-color-text-secondary);
+  color: var(--hi-color-text-secondary, #c8d4dc);
   line-height: 1.6;
   margin-bottom: var(--ts-spacing-md);
 }
