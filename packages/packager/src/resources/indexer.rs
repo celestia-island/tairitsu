@@ -261,7 +261,7 @@ fn path_relative_to(root: &Path, target: &Path) -> crate::Result<String> {
             root.display()
         ))
     })?;
-    Ok(relative.to_string_lossy().to_string())
+    Ok(relative.to_string_lossy().replace('\\', "/"))
 }
 
 #[cfg(test)]
