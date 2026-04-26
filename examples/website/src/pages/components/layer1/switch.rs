@@ -46,9 +46,10 @@ fn switch(state_index: usize, _default_checked: bool, extra_class: &str) -> VNod
 pub fn render() -> VNode {
     SWITCH_STATES.with(|s| {
         let mut states = s.borrow_mut();
-        states.clear();
-        for &init in &[true, false, false, true, true, true, true, false] {
-            states.push(Cell::new(init));
+        if states.is_empty() {
+            for &init in &[true, false, false, true, true, true, true, false] {
+                states.push(Cell::new(init));
+            }
         }
     });
     rsx! {
