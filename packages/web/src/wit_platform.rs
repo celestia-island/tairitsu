@@ -1927,25 +1927,30 @@ pub mod wasm_impl {
                 }
             }
 
-            Patch::AddEvent { name } => {
-                // This is a no-op for patches - event handlers are managed by the VNode
-                // and are not directly applied through patches
-                log_info(&format!(
-                    "AddEvent patch for '{}': event handler managed by VNode",
-                    name
-                ));
+            Patch::AddEvent { name, handler } => {
+                let handler = handler.clone();
+                platform.add_event_listener(
+                    element,
+                    name,
+                    Box::new(move |event| {
+                        (handler.borrow_mut())(event);
+                    }),
+                );
             }
 
-            Patch::UpdateEvent { name } => {
-                // This is a no-op for patches - event handlers are managed by the VNode
-                log_info(&format!(
-                    "UpdateEvent patch for '{}': event handler managed by VNode",
-                    name
-                ));
+            Patch::UpdateEvent { name, handler } => {
+                platform.remove_event_listener(element, name);
+                let handler = handler.clone();
+                platform.add_event_listener(
+                    element,
+                    name,
+                    Box::new(move |event| {
+                        (handler.borrow_mut())(event);
+                    }),
+                );
             }
 
             Patch::RemoveEvent { name } => {
-                // Remove the event listener
                 platform.remove_event_listener(element, name);
             }
         }

@@ -81,14 +81,16 @@ fn diff_element(old: &VElement, new: &VElement, patches: &mut Vec<Patch>) {
         });
     }
 
-    for event_name in new.event_handlers.keys() {
+    for (event_name, handler) in &new.event_handlers {
         if old.event_handlers.contains_key(event_name) {
             patches.push(Patch::UpdateEvent {
                 name: event_name.clone(),
+                handler: handler.clone(),
             });
         } else {
             patches.push(Patch::AddEvent {
                 name: event_name.clone(),
+                handler: handler.clone(),
             });
         }
     }

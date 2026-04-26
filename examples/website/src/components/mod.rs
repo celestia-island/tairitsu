@@ -4,6 +4,8 @@
 //! component library icon system, rendered under tairitsu dark theme.
 //! Sidebar structure mirrors hikari exactly: hi-menu-list > hi-submenu > hi-submenu-title/list.
 
+use std::cell::Cell;
+
 use hikari_icons::{get, MdiIcon};
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, VText};
@@ -417,20 +419,62 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
 // Aside Footer
 // ============================================================
 
+thread_local! {
+    static LANG_DROPDOWN_OPEN: Cell<bool> = const { Cell::new(false) };
+}
+
 pub fn aside_footer() -> VNode {
+    let open = LANG_DROPDOWN_OPEN.with(|c| c.get());
+    let theme_btn = el("button")
+        .class("hi-aside-footer__btn")
+        .attr("title", "Toggle theme")
+        .on_event("click", move |_event| {
+            super::app::rerender();
+        })
+        .child(VNode::Element(
+            el("span").class("hi-aside-footer__icon").child(txt("\u{263E}")),
+        ));
+    let trigger = el("div")
+        .class(format!(
+            "hi-select-trigger hi-select-sm{}",
+            if open { " hi-select-trigger--open" } else { "" }
+        ))
+        .on_event("click", move |_event| {
+            LANG_DROPDOWN_OPEN.with(|c| c.set(!c.get()));
+            super::app::rerender();
+        })
+        .child(VNode::Element(el("span").class("hi-select-value").child(txt("A"))))
+        .child(VNode::Element(
+            el("span")
+                .class("hi-select-arrow")
+                .inner_html(r#"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>"#),
+        ));
+    let dropdown = if open {
+        let opts: Vec<VNode> = ["en-US", "zh-CHS", "ja-JP", "ko-KR"]
+            .iter()
+            .map(|&lang| {
+                VNode::Element(
+                    el("div")
+                        .class("hi-select-option")
+                        .on_event("click", move |_event| {
+                            LANG_DROPDOWN_OPEN.with(|c| c.set(false));
+                            super::app::rerender();
+                        })
+                        .child(txt(lang)),
+                )
+            })
+            .collect();
+        VNode::Element(el("div").class("hi-select-dropdown hi-select-dropdown--open").children(opts))
+    } else {
+        VNode::Element(el("div").class("hi-select-dropdown"))
+    };
+    let select_el = el("div")
+        .class("hi-select hi-select-sm")
+        .child(VNode::Element(trigger))
+        .child(dropdown);
     rsx! {
         div { class: "hi-aside-footer",
-            button { class: "hi-aside-footer__btn", title: "Toggle theme",
-                span { class: "hi-aside-footer__icon", "\u{263E}" }
-            }
-            div { class: "hi-select hi-select-sm",
-                div { class: "hi-select-trigger hi-select-sm",
-                    span { class: "hi-select-value", "A" }
-                    span { class: "hi-select-arrow",
-                        inner_html: r#"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>"#
-                    }
-                }
-            }
+            ..vec![VNode::Element(theme_btn), VNode::Element(select_el)]
         }
     }
 }
