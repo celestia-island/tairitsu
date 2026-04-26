@@ -14,6 +14,15 @@ use crate::{
     theme,
 };
 
+pub fn rerender() {
+    #[cfg(target_family = "wasm")]
+    {
+        if let Ok(platform) = tairitsu_web::WitPlatform::new() {
+            let _ = platform.mount_vnode_to_app(&App.render());
+        }
+    }
+}
+
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
 }

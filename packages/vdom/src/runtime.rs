@@ -263,6 +263,12 @@ fn render_component(id: ComponentId) {
             }
         } else {
             trace!("Initial render for component {}", id);
+            let patches = vec![Patch::CreateNode { node: new_vnode }];
+            if let Some(apply_patches_cb) = &rt.apply_patches_callback {
+                let cb = Rc::clone(apply_patches_cb);
+                (cb.borrow_mut())(id, patches);
+                trace!("Applied initial render patches for component {}", id);
+            }
         }
     });
 }
