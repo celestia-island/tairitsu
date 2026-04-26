@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{set_style, MouseEvent, VNode, VText};
+use tairitsu_vdom::{MouseEvent, VNode, VText};
 
 thread_local! {
     static CLICK_COUNT: Cell<usize> = const { Cell::new(0) };
@@ -16,7 +16,7 @@ pub fn render() -> VNode {
         div { id: "page-event-test", class: "hikari-page",
             h2 { class: "page-section__title", "Event Bridge Test" }
             p { class: "page-section__description",
-                "Verifies that on_event(\"click\") handlers fire through the WIT bridge. Click the button."
+                "Click button → handler increments Cell → modifies button label via WIT."
             }
 
             div { class: "demo-block",
@@ -25,30 +25,26 @@ pub fn render() -> VNode {
                     button {
                         id: "event-test-btn",
                         class: "hi-button hi-button-primary",
-                        onclick: move |e: MouseEvent| {
+                        onclick: move |_e: MouseEvent| {
                             CLICK_COUNT.with(|c| c.set(c.get() + 1));
-                            if let Some(target) = e.target {
-                                let h = tairitsu_vdom::DomHandle::from_raw(target);
-                                set_style(h, "transform", "scale(0.95)");
-                            }
                         },
                         "Click Me"
                     }
                     span {
                         id: "event-test-count",
-                        style: "font-family: monospace; font-size: 1.2em; font-weight: bold; padding: 4px 12px; background: rgba(22,32,45,0.92); border-radius: 6px;",
+                        style: "font-family: monospace; font-size: 1.1em; font-weight: bold; padding: 6px 14px; background: rgba(22,32,45,0.92); border-radius: 6px;",
                         ..vec![count_display]
                     }
                 }
             }
 
             div { class: "demo-block",
-                h3 { class: "demo-block__title", "Status" }
+                h3 { class: "demo-block__title", "Result" }
                 div { class: "demo-block__body",
                     div {
-                        id: "event-test-status",
-                        style: "padding: 12px; border-radius: 6px; background: #f0f9ff; border: 1px solid #bae6fd;",
-                        "Click the button. If it shrinks (scale transform), the event bridge works."
+                        id: "event-test-result",
+                        style: "padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85em; white-space: pre-wrap; background: #f0f9ff; border: 1px solid #bae6fd;",
+                        "Click the button and check:"
                     }
                 }
             }
