@@ -1,5 +1,7 @@
 #[cfg(feature = "wit-bindings")]
 pub mod batch_ops;
+#[cfg(feature = "wit-bindings")]
+pub mod runtime_integration;
 #[cfg(feature = "browser")]
 pub mod browser;
 #[cfg(feature = "wit-bindings")]
@@ -36,6 +38,8 @@ pub use wit_platform::prevent_event_default;
 pub use wit_platform::{
     get_pathname, push_state, replace_state, WitElement, WitEvent, WitPlatform,
 };
+#[cfg(feature = "wit-bindings")]
+pub use runtime_integration::init_runtime;
 
 #[cfg(all(feature = "router", feature = "wit-bindings", target_family = "wasm"))]
 pub mod client_router;

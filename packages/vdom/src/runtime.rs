@@ -192,7 +192,10 @@ fn schedule_render(rt: &mut RuntimeInner) {
         (cb.borrow_mut())(render_fn);
         trace!("Scheduled render via callback");
     } else {
-        trace!("Schedule callback not set, render will be manual");
+        rt.scheduled = false;
+        let _ = rt;
+        flush_render();
+        trace!("Flushed render synchronously (no scheduler)");
     }
 }
 
@@ -270,6 +273,12 @@ fn render_component(id: ComponentId) {
                 trace!("Applied initial render patches for component {}", id);
             }
         }
+    });
+}
+
+pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
+    RUNTIME.with(|runtime| {
+        runtime.borrow_mut().component_vnodes.insert(id, vnode);
     });
 }
 
