@@ -564,3 +564,23 @@ info:
     @echo "  - packages/browser-worlds:        WIT world definitions (0.1.x hand-written,"
     @echo "                                    0.2.x generated from W3C WebIDL)"
     @echo "  - packages/browser-glue:          TypeScript/SWC browser API glue"
+    @echo ""
+    @echo "E2E testing:"
+    @echo "  just e2e-capture   - Batch screenshot all demo pages"
+    @echo "  just e2e-verify    - Capture + verify event bridge + report"
+
+# ============================================================================
+# E2E Testing (PLAN2: Playwright-based visual regression)
+# ============================================================================
+
+# Batch-screenshot all demo pages via Playwright
+e2e-capture:
+    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-capture.ps1
+
+# Full verification: screenshots + WASM bridge check + report
+e2e-verify:
+    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-verify.ps1
+
+# Install Playwright dependencies for web-test package
+e2e-install:
+    cd packages/web-test && npm install && npx playwright install chromium
