@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{MouseEvent, rerender, VNode, VText};
+use tairitsu_vdom::{MouseEvent, VNode, VText};
 
 thread_local! {
     static CLICK_COUNT: Cell<usize> = const { Cell::new(0) };

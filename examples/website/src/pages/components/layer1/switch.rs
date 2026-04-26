@@ -1,6 +1,11 @@
 use crate::components::breadcrumb;
+use std::cell::Cell;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode};
+
+thread_local! {
+    static WIFI_STATE: Cell<bool> = const { Cell::new(true) };
+}
 
 fn el(tag: &str) -> VElement {
     VElement::new(tag)
@@ -21,11 +26,31 @@ fn switch(checked: bool, extra_class: &str) -> VNode {
         VNode::Element(el("span").class("hi-switch-slider")),
     ]))
 }
+fn interactive_switch(checked: bool, extra_class: &str) -> VNode {
+    let cb = VNode::Element(if checked {
+        el("input").attr("type", "checkbox").attr("checked", "true")
+    } else {
+        el("input").attr("type", "checkbox")
+    });
+    let class_str = if extra_class.is_empty() {
+        "hi-switch".to_string()
+    } else {
+        format!("hi-switch {}", extra_class)
+    };
+    VNode::Element(el("label").class(class_str.as_str()).on_event("click", move |_e: Box<dyn tairitsu_vdom::EventData>| {
+        WIFI_STATE.with(|c| c.set(!c.get()));
+        tairitsu_vdom::rerender();
+    }).children(vec![
+        cb,
+        VNode::Element(el("span").class("hi-switch-slider")),
+    ]))
+}
 
 pub fn render() -> VNode {
+    let wifi_checked = WIFI_STATE.with(|c| c.get());
     rsx! {
         div { id: "page-component-switch", class: "hikari-page",
-            ..vec![breadcrumb(&[("Home", "/"), ("Components", "/components"), ("Layer 1 \u{2014} Base", "/components/layer1/switch"), ("Switch", "")])]
+            ..vec![breadcrumb(&[("Home", "/"), ("Components", "/"), ("Layer 1 \u{2014} Base", "/components/layer1/switch"), ("Switch", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title", "Switch" }
                 p { class: "page-section__description",
@@ -35,8 +60,8 @@ pub fn render() -> VNode {
                     h3 { class: "demo-block__title", "Basic Switches" }
                     div { class: "demo-block__body",
                         div { class: "switch-row",
-                            label { class: "switch-label", "Wi-Fi" }
-                            ..vec![switch(true, "")]
+                            label { class: "switch-label", id: "switch-wifi", "Wi-Fi" }
+                            ..vec![interactive_switch(wifi_checked, "")]
                         }
                         div { class: "switch-row",
                             label { class: "switch-label", "Bluetooth" }
