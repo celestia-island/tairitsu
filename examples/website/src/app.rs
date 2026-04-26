@@ -10,18 +10,9 @@ use tairitsu_vdom::{VElement, VNode, VText};
 use crate::pages::components as page_components;
 use crate::{
     components::{sidebar, top_nav},
-    pages::{guides, home, not_found, packages, system},
+    pages::{event_test, guides, home, not_found, packages, system},
     theme,
 };
-
-pub fn rerender() {
-    #[cfg(target_family = "wasm")]
-    {
-        if let Ok(platform) = tairitsu_web::WitPlatform::new() {
-            let _ = platform.mount_vnode_to_app(&App.render());
-        }
-    }
-}
 
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
@@ -37,6 +28,7 @@ pub fn render() -> VNode {
     content.extend(page_components::render_all());
     content.extend(guides::render_all());
     content.extend(system::render_all());
+    content.push(event_test::render());
     content.extend(packages::render_all());
     content.push(not_found::render());
     layout_shell(content)
