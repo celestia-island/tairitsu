@@ -530,8 +530,6 @@ pub mod wasm_impl {
     /// Dispatch an event to the registered callback with error handling.
     fn dispatch_event(listener_id: u64, _event_type: &str, event: Box<dyn EventData>) {
         EVENT_CALLBACKS.with(|m| {
-            // Temporarily remove the handler to release the borrow,
-            // allowing re-entrant calls (e.g., mousemove → rAF → dispatch).
             let mut handler_opt = m.borrow_mut().remove(&listener_id);
             if let Some(handler) = &mut handler_opt {
                 handler(event);
@@ -2034,7 +2032,7 @@ pub mod wasm_impl {
                 for (event_name, handler) in &velement.event_handlers {
                     let handler = handler.clone();
                     platform.add_event_listener(
-                        element,
+                        &element,
                         event_name,
                         Box::new(move |event| {
                             (handler.borrow_mut())(event);

@@ -46,6 +46,7 @@ Thumbs.db
 
 # MCP server configs (local tooling)
 .mcp.json
+.playwright-mcp/
 package.json
 !packages/npm/*/package.json
 !packages/browser-glue/package.json
