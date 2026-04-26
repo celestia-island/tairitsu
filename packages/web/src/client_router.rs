@@ -68,7 +68,7 @@ fn do_navigate(path: &str) {
 
 fn do_render(inner: &RouterServiceInner, path: &str) {
     let vnode = (inner.render_fn)(path);
-    if let Err(e) = inner.platform.mount_vnode_to_app(&vnode) {
+    if let Err(e) = inner.platform.mount_vnode_to_app(vnode) {
         tracing::error!("Failed to mount route '{}': {}", path, e);
     }
 }

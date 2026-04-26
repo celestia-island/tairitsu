@@ -146,7 +146,7 @@ fn render_app() -> VNode {
 pub fn run_app() -> anyhow::Result<()> {
     let platform = tairitsu_web::WitPlatform::new()?;
     let vnode = render_app();
-    platform.mount_vnode_to_app(&vnode)?;
+    platform.mount_vnode_to_app(vnode)?;
     Ok(())
 }
 

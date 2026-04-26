@@ -19,7 +19,7 @@ pub fn run_app() -> Result<()> {
 
     let platform = WitPlatform::new()?;
     let vnode = App.render();
-    platform.mount_vnode_to_app(&vnode)?;
+    platform.mount_vnode_to_app(vnode)?;
 
     info!("Tairitsu Website loaded and rendered!");
     Ok(())

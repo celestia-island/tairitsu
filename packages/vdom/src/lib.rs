@@ -31,8 +31,8 @@ pub use platform::{
 pub use portal::{FixedPosition, Portal, PortalManager, PortalMaskMode, PortalPosition};
 pub use reactive::{EffectHandle, Signal, batch, create_effect};
 pub use runtime::{
-    ComponentId, cleanup_component, flush_render, mark_dirty, notify_signal, subscribe_component,
-    use_component, with_component,
+    ComponentId, cleanup_component, flush_render, mark_dirty, notify_signal, request_rerender,
+    rerender, subscribe_component, use_component, with_component,
 };
 pub use scheduler::Scheduler;
 pub use svg::SafeSvg;

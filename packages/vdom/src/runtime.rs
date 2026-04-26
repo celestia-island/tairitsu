@@ -323,6 +323,31 @@ pub fn get_current_vnode(id: ComponentId) -> Option<VNode> {
     RUNTIME.with(|runtime| runtime.borrow().component_vnodes.get(&id).cloned())
 }
 
+/// Request a re-render of the given component.
+///
+/// This is the primary API for event handlers to trigger UI updates
+/// after modifying state. It marks the component as dirty and schedules
+/// a re-render via requestAnimationFrame (or immediate if no scheduler).
+///
+/// For the common single-component case, use `request_rerender()` without
+/// arguments to re-render the most recently registered component.
+pub fn request_rerender(id: Option<ComponentId>) {
+    let target_id = id.unwrap_or_else(|| {
+        RUNTIME.with(|runtime| {
+            let rt = runtime.borrow();
+            rt.next_id - 1
+        })
+    });
+    mark_dirty(target_id);
+}
+
+/// Request re-render of the most recently registered component.
+///
+/// Convenience function for event handlers that don't track component IDs.
+pub fn rerender() {
+    request_rerender(None);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
