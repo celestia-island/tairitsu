@@ -87,6 +87,7 @@ head = """
         '/system/wit-pipeline': 'system-wit-pipeline',
         '/system/web-backends': 'system-web-backends',
         '/system/versioning': 'system-versioning',
+        '/event-test': 'event-test',
         '/packages': 'packages-overview',
         '/packages/list': 'packages-list',
         '/components/layer1/button': 'component-button',
