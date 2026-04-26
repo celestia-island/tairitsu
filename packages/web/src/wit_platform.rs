@@ -74,7 +74,7 @@ impl EventHandle for WitEvent {
 ///
 /// [`tairitsu_vdom::Platform`] is only implemented on `wasm32` targets.
 /// On native hosts [`WitPlatform::new`] returns `Err`.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg(feature = "wit-bindings")]
 pub struct WitPlatform;
 
@@ -115,7 +115,7 @@ impl WitPlatform {
     ///
     /// This replaces the bootstrap text set by `lifecycle.start` and mounts
     /// the actual app view tree so users can see real UI content.
-    pub fn mount_vnode_to_app(&self, _vnode: &tairitsu_vdom::VNode) -> Result<()> {
+    pub fn mount_vnode_to_app(&self, _vnode: tairitsu_vdom::VNode) -> Result<()> {
         #[cfg(not(target_family = "wasm"))]
         anyhow::bail!("mount_vnode_to_app is only available on wasm32 targets (wasm32-wasip2)");
 
@@ -1727,10 +1727,8 @@ pub mod wasm_impl {
         }
     }
 
-    pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: &VNode) -> Result<()> {
-        // Document handle for non-element-parent-node operations (getElementById)
-        // Document implements NonElementParentNode, so we use its handle
-        let doc_handle: u64 = 0; // Global document singleton uses handle 0
+    pub(super) fn mount_vnode_to_app(platform: &WitPlatform, vnode: VNode) -> Result<()> {
+        let doc_handle: u64 = 0;
 
         let app = if let Some(handle) =
             bindings::tairitsu_browser::full::non_element_parent_node::get_element_by_id(
@@ -1746,10 +1744,9 @@ pub mod wasm_impl {
             WitElement(div)
         };
 
-        // set_text_content takes option<string>, returns void
         bindings::tairitsu_browser::full::node::set_text_content(app.0, Some(""));
 
-        render_vnode(platform, vnode, &app)
+        render_vnode(platform, &vnode, &app)
     }
 
     fn render_vnode(platform: &WitPlatform, vnode: &VNode, parent: &WitElement) -> Result<()> {

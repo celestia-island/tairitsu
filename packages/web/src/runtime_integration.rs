@@ -115,7 +115,7 @@ impl ComponentRenderer {
     }
 
     /// Mount a VNode to the root element.
-    pub fn mount(&self, vnode: &tairitsu_vdom::VNode) -> anyhow::Result<()> {
+    pub fn mount(&self, vnode: tairitsu_vdom::VNode) -> anyhow::Result<()> {
         #[cfg(target_family = "wasm")]
         {
             if let Ok(platform) = crate::WitPlatform::new() {

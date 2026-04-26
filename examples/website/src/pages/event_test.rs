@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{MouseEvent, VNode, VText};
+use tairitsu_vdom::{MouseEvent, rerender, VNode, VText};
 
 thread_local! {
     static CLICK_COUNT: Cell<usize> = const { Cell::new(0) };
@@ -27,6 +27,7 @@ pub fn render() -> VNode {
                         class: "hi-button hi-button-primary",
                         onclick: move |_e: MouseEvent| {
                             CLICK_COUNT.with(|c| c.set(c.get() + 1));
+                            tairitsu_vdom::rerender();
                         },
                         "Click Me"
                     }
