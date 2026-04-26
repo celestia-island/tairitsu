@@ -4,10 +4,25 @@
 //! injected via hikari's palette system (theme::tairitsu_style).
 //! Structure mirrors hikari website exactly.
 
+use std::cell::Cell;
+
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
 
 use crate::pages::components as page_components;
+
+thread_local! {
+    static DARK_MODE: Cell<bool> = const { Cell::new(true) };
+}
+
+pub fn is_dark_mode() -> bool {
+    DARK_MODE.with(|c| c.get())
+}
+
+pub fn toggle_dark_mode() {
+    DARK_MODE.with(|c| c.set(!c.get()));
+    tairitsu_vdom::rerender();
+}
 use crate::{
     components::{sidebar, top_nav},
     pages::{event_test, guides, home, not_found, packages, system},
@@ -36,9 +51,11 @@ pub fn render() -> VNode {
 
 fn layout_shell(children: Vec<VNode>) -> VNode {
     let theme_style = theme::tairitsu_style();
+    let dark_class = if is_dark_mode() { " hi-layout-dark" } else { "" };
+    let layout_class = format!("hi-layout{} hi-layout-has-sidebar hi-ambient-bg", dark_class);
     rsx! {
         div { id: "hikari-app",
-            class: "hi-layout hi-layout-dark hi-layout-has-sidebar hi-ambient-bg",
+            class: layout_class,
             style: theme_style,
             div { class: "hi-background" }
             ..vec![top_nav()],
