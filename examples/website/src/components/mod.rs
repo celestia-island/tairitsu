@@ -5,8 +5,13 @@
 //! Sidebar structure mirrors hikari exactly: hi-menu-list > hi-submenu > hi-submenu-title/list.
 
 use hikari_icons::{get, MdiIcon};
+use std::cell::Cell;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, VText};
+
+thread_local! {
+    static LANG_OPEN: Cell<bool> = const { Cell::new(false) };
+}
 
 fn txt(s: &str) -> VNode {
     VNode::Text(VText::new(s))
@@ -418,17 +423,42 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
 // ============================================================
 
 pub fn aside_footer() -> VNode {
+    let lang_open = LANG_OPEN.with(|c| c.get());
     rsx! {
         div { class: "hi-aside-footer",
-            button { class: "hi-aside-footer__btn", title: "Toggle theme",
+            button { class: "hi-aside-footer__btn", id: "dark-mode-toggle", title: "Toggle theme",
+                onclick: move |_e: tairitsu_vdom::MouseEvent| {
+                    crate::app::toggle_dark_mode();
+                },
                 span { class: "hi-aside-footer__icon", "\u{263E}" }
             }
-            div { class: "hi-select hi-select-sm",
-                div { class: "hi-select-trigger hi-select-sm",
+            div { id: "lang-selector",
+                class: "hi-select hi-select-sm",
+                div {
+                    class: "hi-select-trigger hi-select-sm",
+                    onclick: move |_e: tairitsu_vdom::MouseEvent| {
+                        LANG_OPEN.with(|c| c.set(!c.get()));
+                        tairitsu_vdom::rerender();
+                    },
                     span { class: "hi-select-value", "A" }
                     span { class: "hi-select-arrow",
                         inner_html: r#"<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>"#
                     }
+                }
+                ..if lang_open {
+                    vec![VNode::Element(
+                        el("div")
+                            .class("hi-select-dropdown")
+                            .children(vec![
+                                VNode::Element(el("div").class("hi-select-option").child(txt("English"))),
+                                VNode::Element(el("div").class("hi-select-option").child(txt("简体中文"))),
+                                VNode::Element(el("div").class("hi-select-option").child(txt("繁體中文"))),
+                                VNode::Element(el("div").class("hi-select-option").child(txt("日本語"))),
+                                VNode::Element(el("div").class("hi-select-option").child(txt("한국어"))),
+                            ])
+                    )]
+                } else {
+                    vec![]
                 }
             }
         }
