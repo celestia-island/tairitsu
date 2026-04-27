@@ -69,25 +69,25 @@ def main():
             sys.exit(1)
 
     try:
-        shutil.copy2(str(source), str(dest))
-    except PermissionError:
-        if is_windows and dest.exists():
-            old = dest.with_suffix(".old.exe")
-            if old.exists():
+        tmp = dest.with_suffix(".tmp")
+        try:
+            if tmp.exists():
+                tmp.unlink()
+            shutil.copy2(str(source), str(tmp))
+            os.replace(str(tmp), str(dest))
+        except BaseException:
+            if tmp.exists():
                 try:
-                    old.unlink()
-                except PermissionError:
+                    tmp.unlink()
+                except OSError:
                     pass
-            dest.rename(old)
-            try:
-                shutil.copy2(str(source), str(dest))
-            except PermissionError:
-                eprint = lambda msg: print(f"[ERROR] {msg}", file=sys.stderr)
-                eprint(f"Cannot replace '{dest}' — it is locked by a running process.")
-                eprint("Stop the daemon first:  just dev --daemon --shutdown")
-                sys.exit(1)
-        else:
             raise
+    except PermissionError:
+        print(f"[ERROR] Cannot replace '{dest}' — permission denied.", file=sys.stderr)
+        sys.exit(1)
+    except OSError as e:
+        print(f"[ERROR] Cannot replace '{dest}' — {e}", file=sys.stderr)
+        sys.exit(1)
     stamp = project_root / "target" / ".tairitsu-install-stamp"
     stamp.write_text(str(source.resolve()))
     print(f"[OK] Installed '{exe_name}' CLI to {bin_dir}")
