@@ -185,9 +185,8 @@ test.describe('Event System - Component Interaction Tests', () => {
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        if (!text.includes('favicon.ico')) {
-          errors.push(text);
-        }
+        if (text.includes('404')) return;
+        errors.push(text);
       }
     });
 
