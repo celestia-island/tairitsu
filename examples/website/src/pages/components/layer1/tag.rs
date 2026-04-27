@@ -68,6 +68,25 @@ pub fn render() -> VNode {
                     }
                 }
                 div { class: "demo-block",
+                    h3 { class: "demo-block__title", "Closable Tag" }
+                    div { class: "demo-block__body",
+                        div { class: "demo-row",
+                            span { class: "hi-tag hi-tag-closable hi-tag-primary",
+                                "Closable"
+                                svg { class: "hi-tag-close-btn", xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: "14", height: "14", fill: "none", stroke: "currentColor", "stroke-width": "2",
+                                    path { d: "M18 6L6 18M6 6l12 12" }
+                                }
+                            }
+                            span { class: "hi-tag hi-tag-closable hi-tag-success",
+                                "Published"
+                                svg { class: "hi-tag-close-btn", xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", width: "14", height: "14", fill: "none", stroke: "currentColor", "stroke-width": "2",
+                                    path { d: "M18 6L6 18M6 6l12 12" }
+                                }
+                            }
+                        }
+                    }
+                }
+                div { class: "demo-block",
                     h3 { class: "demo-block__title", "API" }
                     div { class: "demo-block__body",
                         table { class: "api-table",

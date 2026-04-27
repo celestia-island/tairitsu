@@ -33,7 +33,7 @@ export const PAGES: PageSpec[] = [
     category: 'layer1',
     description: 'Button component variants',
     interactions: [
-      { action: 'hover', selector: '.hi-button-primary', suffix: '_hover_primary' },
+      { action: 'hover', selector: '#page-component-button .demo-block .hi-button-primary', suffix: '_hover_primary' },
     ],
   },
   {
