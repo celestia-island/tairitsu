@@ -24,8 +24,8 @@
 # Configure Windows to use PowerShell (UTF-8 encoding)
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $PSDefaultParameterValues['*:Encoding'] = 'utf8';"]
 
-# Python interpreter — Windows ships as 'python', Unix as '{{python}}'
-python := if os_family() == "windows" { "python" } else { "{{python}}" }
+# Python interpreter — Windows ships as 'python', Unix as 'python3'
+python := if os_family() == "windows" { "python" } else { "python3" }
 
 # Default: show help information
 default:
