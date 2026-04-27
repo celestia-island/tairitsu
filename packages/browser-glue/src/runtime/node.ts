@@ -30,4 +30,23 @@ export const node_exports = {
     if (!first) return undefined;
     return globalThis.__storeNode(first);
   },
+  getChildNodes(self) {
+    const node = globalThis.__lookupNode(self);
+    if (!node) return undefined;
+    const children = node.childNodes;
+    if (!globalThis.__nodeListHandles) {
+      globalThis.__nodeListHandles = new Map();
+      globalThis.__nextNodeList = 1n;
+    }
+    const handle = globalThis.__nextNodeList++;
+    globalThis.__nodeListHandles.set(handle, children);
+    return handle;
+  },
+  insertBefore(self, newChild, referenceChild) {
+    const parent = globalThis.__lookupNode(self);
+    const child = globalThis.__lookupNode(newChild);
+    const refChild = referenceChild !== undefined ? globalThis.__lookupNode(referenceChild) : null;
+    const result = parent.insertBefore(child, refChild);
+    return globalThis.__storeNode(result);
+  },
 };

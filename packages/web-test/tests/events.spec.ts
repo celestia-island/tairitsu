@@ -5,7 +5,8 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 test.describe('Event System - WASM Bridge Verification', () => {
   test('page loads with WASM runtime initialized', async ({ page }) => {
     await page.goto('/event-test');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const wasmReady = await page.evaluate(() => {
       return !!globalThis.__wasmExports &&
@@ -18,7 +19,8 @@ test.describe('Event System - WASM Bridge Verification', () => {
 
   test('click event listener is registered on button', async ({ page }) => {
     await page.goto('/event-test');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const listenerInfo = await page.evaluate(() => {
       const btn = document.getElementById('event-test-btn');
@@ -48,7 +50,8 @@ test.describe('Event System - WASM Bridge Verification', () => {
 
   test('WIT onMouseEvent fires on button click', async ({ page }) => {
     await page.goto('/event-test');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const result = await page.evaluate(() => {
       return new Promise((resolve) => {
@@ -96,7 +99,8 @@ test.describe('Event System - WASM Bridge Verification', () => {
 
   test('event handler closure executes (Cell mutation)', async ({ page }) => {
     await page.goto('/event-test');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const countBefore = await page.evaluate(() => {
       const el = document.getElementById('event-test-count');
@@ -130,7 +134,8 @@ test.describe('Event System - WASM Bridge Verification', () => {
 
   test('DOM element is reachable via __elementHandles', async ({ page }) => {
     await page.goto('/event-test');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const handleInfo = await page.evaluate(() => {
       const btn = document.getElementById('event-test-btn');
@@ -157,7 +162,8 @@ test.describe('Event System - WASM Bridge Verification', () => {
 test.describe('Event System - Component Interaction Tests', () => {
   test('switch component has clickable element', async ({ page }) => {
     await page.goto('/components/layer1/switch');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
 
     const switchEl = page.locator('.hi-switch').first();
     await expect(switchEl).toBeVisible();
@@ -195,7 +201,8 @@ test.describe('Event System - Component Interaction Tests', () => {
 
     for (const url of pagesToCheck) {
       await page.goto(url);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
     }
 
     expect(errors).toHaveLength(0);
