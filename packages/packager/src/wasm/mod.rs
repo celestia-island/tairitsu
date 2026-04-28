@@ -8,6 +8,14 @@ fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
 }
 
+macro_rules! fmt_tmpl {
+    ($tmpl:expr, $($key:ident => $val:expr),* $(,)?) => {{
+        let mut s = $tmpl.to_string();
+        $( s = s.replace(concat!("{", stringify!($key), "}"), &$val); )*
+        s
+    }};
+}
+
 fn find_workspace_root(manifest_dir: &std::path::Path) -> crate::Result<std::path::PathBuf> {
     let output = std::process::Command::new("cargo")
         .args([
@@ -96,10 +104,10 @@ pub fn build_component(
 
         let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
 
-        crate::log_info!("{}", b.creating_output_dir.replace("{}", &format!("{}", output_dir.display())));
+        crate::log_info!("{}", fmt_tmpl!(b.creating_output_dir, dir => output_dir.display().to_string()));
         std::fs::create_dir_all(&output_dir)?;
 
-        crate::log_info!("{}", b.copying_wasm.replace("{}", &format!("{}", wasm_path.display())).replace("{}", &format!("{}", dest_wasm.display())));
+        crate::log_info!("{}", fmt_tmpl!(b.copying_wasm, src => wasm_path.display().to_string(), dst => dest_wasm.display().to_string()));
         std::fs::copy(&wasm_path, &dest_wasm)?;
 
         crate::log_info!("{}", b.copying_glue);
@@ -140,9 +148,8 @@ pub fn build_component(
     let elapsed = build_start.elapsed();
     let output_dir_display = config.build.output_dir.display();
     crate::log_ok!(
-        "build complete  {:.1?}  ->  {}",
-        elapsed,
-        output_dir_display
+        "{}",
+        fmt_tmpl!(locale().build.build_complete, elapsed => format!("{:.1?}", elapsed), dir => output_dir_display.to_string())
     );
 
     let output_dir = if config.build.output_dir.is_relative() {
@@ -159,9 +166,11 @@ pub fn build_component(
             format!("{:.1} KB", size_bytes as f64 / 1024.0)
         };
         crate::log_info!(
-            "package {} ({} bytes)",
-            wasm_file.file_name().unwrap_or_default().to_string_lossy(),
-            size_str
+            "{}",
+            fmt_tmpl!(locale().build.package_info,
+                name => wasm_file.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                size => size_str
+            )
         );
     }
 
@@ -370,13 +379,13 @@ fn build_wasm_component(
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(locale().build.diagnostic_count.replace("{}", &n_err.to_string()));
+                parts.push(fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()));
             }
             if n_warn > 0 {
-                parts.push(locale().build.warning_count.replace("{}", &n_warn.to_string()));
+                parts.push(fmt_tmpl!(locale().build.warning_count, n => n_warn.to_string()));
             }
             if !parts.is_empty() {
-                crate::log_progress!("{}", locale().build.compilation_failed.replace("{}", &parts.join(", ")));
+                crate::log_progress!("{}", fmt_tmpl!(locale().build.compilation_failed, details => parts.join(", ")));
             }
         }
         let diag_text = diagnostics
@@ -417,12 +426,12 @@ fn build_wasm_component(
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(locale().build.diagnostic_count.replace("{}", &n_err.to_string()));
+                parts.push(fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()));
             }
             if n_warn > 0 {
-                parts.push(locale().build.warning_count.replace("{}", &n_warn.to_string()));
+                parts.push(fmt_tmpl!(locale().build.warning_count, n => n_warn.to_string()));
             }
-            crate::log_progress!("{}", locale().build.compiled_with.replace("{}", &parts.join(", ")));
+            crate::log_progress!("{}", fmt_tmpl!(locale().build.compiled_with, details => parts.join(", ")));
         }
     }
 
@@ -436,7 +445,7 @@ fn build_wasm_component(
 
     if !wasm_path.exists() {
         return Err(crate::TairitsuPackagerError::BuildError(
-            locale().build.component_not_found.replace("{}", &wasm_path.display().to_string())
+            fmt_tmpl!(locale().build.component_not_found, path => wasm_path.display().to_string())
         ));
     }
 
@@ -1895,7 +1904,9 @@ async fn reject_missing_assets(
 ) -> axum::response::Response {
     use axum::response::IntoResponse;
     let path = request.uri().path();
-    if is_asset_request(path) && request.method() == axum::http::Method::GET {
+    let is_get_or_head = *request.method() == axum::http::Method::GET
+        || *request.method() == axum::http::Method::HEAD;
+    if is_asset_request(path) && is_get_or_head {
         let clean = path.trim_start_matches('/');
         let file_path = dist.join(clean);
         if !file_path.exists() {
@@ -2005,7 +2016,7 @@ pub async fn dev_server(
     let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
 
     let initial_started = Instant::now();
-    crate::log_progress!("{}", locale().build.building_component.replace("{}", &config.package.name));
+    crate::log_progress!("{}", fmt_tmpl!(locale().build.building_component, name => config.package.name.clone()));
     match config.build.target.as_str() {
         "component" => build_component(config, false, None, verbose).inspect_err(|e| {
             if crate::daemon::is_daemon() {
@@ -2014,7 +2025,7 @@ pub async fn dev_server(
         })?,
         other => {
             let err = crate::TairitsuPackagerError::BuildError(
-                locale().build.unknown_build_target.replace("{}", other)
+                fmt_tmpl!(locale().build.unknown_build_target, target => other.to_string())
             );
             if crate::daemon::is_daemon() {
                 let _ = crate::daemon::signal_failed(&err.to_string());
@@ -2043,15 +2054,15 @@ pub async fn dev_server(
         Err(_) => String::from("unknown"),
     };
 
-    crate::log_ok!("{}", locale().build.initial_build_ok.replace("{:.1?}", &format!("{:.1?}", initial_elapsed)));
-    crate::log_info!("{}", locale().build.workspace_label.replace("{}", &config.manifest_dir.display().to_string()));
+    crate::log_ok!("{}", fmt_tmpl!(locale().build.initial_build_ok, elapsed => format!("{:.1?}", initial_elapsed)));
+    crate::log_info!("{}", fmt_tmpl!(locale().build.workspace_label, dir => config.manifest_dir.display().to_string()));
     crate::log_info!(
         "{}",
-        locale().build.package_label.replace("{}", &config.package.name).replace("{}", &config.package.version)
+        fmt_tmpl!(locale().build.package_label, name => config.package.name.clone(), version => config.package.version.clone())
     );
     crate::log_info!(
         "{}",
-        locale().build.output_label.replace("{}", &dist_dir.display().to_string()).replace("{}", &pkg_size_str)
+        fmt_tmpl!(locale().build.output_label, dir => dist_dir.display().to_string(), size => pkg_size_str)
     );
 
     let dist_for_index = dist_dir.clone();
@@ -2463,6 +2474,10 @@ async fn run_watch_loop(
 
             _ = tokio::signal::ctrl_c() => {
                 crate::log_ok!("{}", locale().dev.stopping);
+                crate::logfmt::clear_active_pb();
+                use std::io::Write;
+                let _ = std::io::stdout().write_all(b"\x1b[?25h");
+                let _ = std::io::stdout().flush();
                 std::process::exit(0);
             }
         };
