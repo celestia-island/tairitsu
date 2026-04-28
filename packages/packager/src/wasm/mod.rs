@@ -1291,6 +1291,7 @@ fn generate_component_html_with_output_dir(
 </head>
 <body class="{body_class}" data-booting>
     <style>[data-booting] {{ visibility: hidden !important; }}</style>
+    <script>setTimeout(function(){{document.body.removeAttribute('data-booting')}},10000)</script>
     <div id="app">Loading...</div>
     <!-- Import map (WASI preview2-shim + tairitsu-glue interfaces) is created
          dynamically by __tairitsu_glue__.js, which runs synchronously before
@@ -1414,6 +1415,7 @@ fn generate_component_html_with_output_dir(
             // when no jco wrapper is available.  The shim is loaded from esm.sh CDN.
             if (!globalThis.__wasiShimModules) {{
                 try {{
+                    const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('CDN import timed out')), ms))]);
                     const [
                         wasiIo,
                         wasiCli,
@@ -1421,14 +1423,14 @@ fn generate_component_html_with_output_dir(
                         wasiClocks,
                         wasiFilesystem,
                         wasiSockets,
-                    ] = await Promise.all([
+                    ] = await withTimeout(Promise.all([
                         import('https://esm.sh/@bytecodealliance/preview2-shim/io'),
                         import('https://esm.sh/@bytecodealliance/preview2-shim/cli'),
                         import('https://esm.sh/@bytecodealliance/preview2-shim/random'),
                         import('https://esm.sh/@bytecodealliance/preview2-shim/clocks'),
                         import('https://esm.sh/@bytecodealliance/preview2-shim/filesystem'),
                         import('https://esm.sh/@bytecodealliance/preview2-shim/sockets'),
-                    ]);
+                    ]), 15000);
                     globalThis.__wasiShimModules = {{ wasiIo: wasiIo, wasiCli: wasiCli, wasiRandom: wasiRandom, wasiClocks: wasiClocks, wasiFilesystem: wasiFilesystem, wasiSockets: wasiSockets }};
                 }} catch (e) {{
                     console.warn('[tairitsu] Could not load WASI preview2 shim:', e);
