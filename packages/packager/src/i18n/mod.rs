@@ -110,26 +110,26 @@ yuuka::derive_struct!(
     }
 );
 
-const EN_CLI: &str = include_str!("../../res/locales/en/cli.toml");
-const EN_DEV: &str = include_str!("../../res/locales/en/dev.toml");
-const EN_ICONS: &str = include_str!("../../res/locales/en/icons.toml");
-const ZHS_CLI: &str = include_str!("../../res/locales/zhs/cli.toml");
-const ZHS_DEV: &str = include_str!("../../res/locales/zhs/dev.toml");
-const ZHS_ICONS: &str = include_str!("../../res/locales/zhs/icons.toml");
-const ZHT_CLI: &str = include_str!("../../res/locales/zht/cli.toml");
-const ZHT_DEV: &str = include_str!("../../res/locales/zht/dev.toml");
-const JA_CLI: &str = include_str!("../../res/locales/ja/cli.toml");
-const JA_DEV: &str = include_str!("../../res/locales/ja/dev.toml");
-const KO_CLI: &str = include_str!("../../res/locales/ko/cli.toml");
-const KO_DEV: &str = include_str!("../../res/locales/ko/dev.toml");
-const FR_CLI: &str = include_str!("../../res/locales/fr/cli.toml");
-const FR_DEV: &str = include_str!("../../res/locales/fr/dev.toml");
-const ES_CLI: &str = include_str!("../../res/locales/es/cli.toml");
-const ES_DEV: &str = include_str!("../../res/locales/es/dev.toml");
-const RU_CLI: &str = include_str!("../../res/locales/ru/cli.toml");
-const RU_DEV: &str = include_str!("../../res/locales/ru/dev.toml");
-const AR_CLI: &str = include_str!("../../res/locales/ar/cli.toml");
-const AR_DEV: &str = include_str!("../../res/locales/ar/dev.toml");
+const EN_CLI: &str = include_str!("../../res/i18n/packager/en/cli.toml");
+const EN_DEV: &str = include_str!("../../res/i18n/packager/en/dev.toml");
+const EN_ICONS: &str = include_str!("../../res/i18n/packager/en/icons.toml");
+const ZHS_CLI: &str = include_str!("../../res/i18n/packager/zhs/cli.toml");
+const ZHS_DEV: &str = include_str!("../../res/i18n/packager/zhs/dev.toml");
+const ZHS_ICONS: &str = include_str!("../../res/i18n/packager/zhs/icons.toml");
+const ZHT_CLI: &str = include_str!("../../res/i18n/packager/zht/cli.toml");
+const ZHT_DEV: &str = include_str!("../../res/i18n/packager/zht/dev.toml");
+const JA_CLI: &str = include_str!("../../res/i18n/packager/ja/cli.toml");
+const JA_DEV: &str = include_str!("../../res/i18n/packager/ja/dev.toml");
+const KO_CLI: &str = include_str!("../../res/i18n/packager/ko/cli.toml");
+const KO_DEV: &str = include_str!("../../res/i18n/packager/ko/dev.toml");
+const FR_CLI: &str = include_str!("../../res/i18n/packager/fr/cli.toml");
+const FR_DEV: &str = include_str!("../../res/i18n/packager/fr/dev.toml");
+const ES_CLI: &str = include_str!("../../res/i18n/packager/es/cli.toml");
+const ES_DEV: &str = include_str!("../../res/i18n/packager/es/dev.toml");
+const RU_CLI: &str = include_str!("../../res/i18n/packager/ru/cli.toml");
+const RU_DEV: &str = include_str!("../../res/i18n/packager/ru/dev.toml");
+const AR_CLI: &str = include_str!("../../res/i18n/packager/ar/cli.toml");
+const AR_DEV: &str = include_str!("../../res/i18n/packager/ar/dev.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
