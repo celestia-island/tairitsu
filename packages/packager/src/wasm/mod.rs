@@ -71,11 +71,7 @@ pub fn build_component(
         pb.set_message("check wasm32-wasip2");
         let t = Instant::now();
         check_wasip2_target()?;
-        pb.println(format!(
-            "     ✓  {:<28}  {:.1?}",
-            "check wasm32-wasip2",
-            t.elapsed()
-        ));
+        crate::log_ok!("{:<28} {:.1?}", "check wasm32-wasip2", t.elapsed());
         pb.inc(1);
 
         // -- 2/5  compile ----------------------------------------------------------
@@ -83,11 +79,7 @@ pub fn build_component(
         pb.set_message("compile WASM component");
         let t = Instant::now();
         let wasm_path = build_wasm_component(config, release, pb.clone(), verbose)?;
-        pb.println(format!(
-            "     ✓  {:<28}  {:.1?}",
-            "compile WASM component",
-            t.elapsed()
-        ));
+        crate::log_ok!("{:<28} {:.1?}", "compile WASM component", t.elapsed());
         pb.inc(1);
 
         // -- 3/5  bundle assets ----------------------------------------------------
@@ -122,11 +114,7 @@ pub fn build_component(
 
         crate::log_info!("Compiling SCSS...");
         compile_project_scss_with_output_dir(config, &output_dir)?;
-        pb.println(format!(
-            "     ✓  {:<28}  {:.1?}",
-            "bundle assets",
-            t.elapsed()
-        ));
+        crate::log_ok!("{:<28} {:.1?}", "bundle assets", t.elapsed());
         pb.inc(1);
 
         // -- 4/5  component wrapper ------------------------------------------------
@@ -134,11 +122,7 @@ pub fn build_component(
         pb.set_message("component wrapper");
         let t = Instant::now();
         prepare_component_wrapper_fallback(config, &dest_wasm, &output_dir, &pb)?;
-        pb.println(format!(
-            "     ✓  {:<28}  {:.1?}",
-            "component wrapper",
-            t.elapsed()
-        ));
+        crate::log_ok!("{:<28} {:.1?}", "component wrapper", t.elapsed());
         pb.inc(1);
 
         // -- 5/5  HTML -------------------------------------------------------------
@@ -146,11 +130,7 @@ pub fn build_component(
         pb.set_message("generate HTML");
         let t = Instant::now();
         generate_component_html_with_output_dir(config, &output_dir)?;
-        pb.println(format!(
-            "     ✓  {:<28}  {:.1?}",
-            "generate HTML",
-            t.elapsed()
-        ));
+        crate::log_ok!("{:<28} {:.1?}", "generate HTML", t.elapsed());
         pb.inc(1);
 
         Ok(())
