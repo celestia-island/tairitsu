@@ -44,7 +44,7 @@ pub async fn ssr_dev_server(
 
     // Initial build
     let initial_started = Instant::now();
-    build_component(config, false, None)?;
+    build_component(config, false, None, false)?;
     let initial_elapsed = initial_started.elapsed();
 
     let dist_dir = config.build.output_dir.clone();
@@ -284,7 +284,7 @@ pub fn prerender_routes(
         crate::log_info!("Pre-rendering {} routes...", effective_routes.len());
 
         // Build the component first
-        crate::wasm::build_component(config, true, None)?;
+        crate::wasm::build_component(config, true, None, false)?;
 
         let dist_dir = &config.build.output_dir;
         let wasm_path = dist_dir.join(format!("{}.wasm", config.package.name));
