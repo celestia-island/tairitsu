@@ -1,7 +1,24 @@
+use std::cell::RefCell;
 use std::fmt;
 use std::io::Write;
 
 use tracing_subscriber::layer::SubscriberExt;
+
+thread_local! {
+    static ACTIVE_PB: RefCell<Option<indicatif::ProgressBar>> = const { RefCell::new(None) };
+}
+
+pub fn set_active_pb(pb: &indicatif::ProgressBar) {
+    ACTIVE_PB.with(|cell| {
+        *cell.borrow_mut() = Some(pb.clone());
+    });
+}
+
+pub fn clear_active_pb() {
+    ACTIVE_PB.with(|cell| {
+        *cell.borrow_mut() = None;
+    });
+}
 
 fn stdout_is_tty() -> bool {
     atty::is(atty::Stream::Stdout)
@@ -110,8 +127,18 @@ fn emit(level: Level, stream: StdStream, args: fmt::Arguments<'_>) {
 
     match stream {
         StdStream::Stdout => {
-            let _ = writeln!(std::io::stdout(), "{}", line);
-            let _ = std::io::stdout().flush();
+            let handled = ACTIVE_PB.with(|cell| {
+                if let Some(ref pb) = *cell.borrow() {
+                    pb.println(line.clone());
+                    true
+                } else {
+                    false
+                }
+            });
+            if !handled {
+                let _ = writeln!(std::io::stdout(), "{}", line);
+                let _ = std::io::stdout().flush();
+            }
         }
         StdStream::Stderr => {
             let _ = writeln!(std::io::stderr(), "{}", line);

@@ -62,95 +62,104 @@ pub fn build_component(
         None => pb_raw,
     };
 
-    // -- 1/5  check target -----------------------------------------------------
-    pb.set_prefix("[1/5]");
-    pb.set_message("check wasm32-wasip2");
-    let t = Instant::now();
-    check_wasip2_target()?;
-    pb.println(format!(
-        "     ✓  {:<28}  {:.1?}",
-        "check wasm32-wasip2",
-        t.elapsed()
-    ));
-    pb.inc(1);
+    crate::logfmt::set_active_pb(&pb);
 
-    // -- 2/5  compile ----------------------------------------------------------
-    pb.set_prefix("[2/5]");
-    pb.set_message("compile WASM component");
-    let t = Instant::now();
-    // Pass the progress bar so cargo compilation can update it directly
-    let wasm_path = build_wasm_component(config, release, pb.clone())?;
-    pb.println(format!(
-        "     ✓  {:<28}  {:.1?}",
-        "compile WASM component",
-        t.elapsed()
-    ));
-    pb.inc(1);
+    let build_result: crate::Result<()> = (|| {
+        // -- 1/5  check target -----------------------------------------------------
+        pb.set_prefix("[1/5]");
+        pb.set_message("check wasm32-wasip2");
+        let t = Instant::now();
+        check_wasip2_target()?;
+        pb.println(format!(
+            "     ✓  {:<28}  {:.1?}",
+            "check wasm32-wasip2",
+            t.elapsed()
+        ));
+        pb.inc(1);
 
-    // -- 3/5  bundle assets ----------------------------------------------------
-    pb.set_prefix("[3/5]");
-    pb.set_message("bundle assets");
-    let t = Instant::now();
+        // -- 2/5  compile ----------------------------------------------------------
+        pb.set_prefix("[2/5]");
+        pb.set_message("compile WASM component");
+        let t = Instant::now();
+        // Pass the progress bar so cargo compilation can update it directly
+        let wasm_path = build_wasm_component(config, release, pb.clone())?;
+        pb.println(format!(
+            "     ✓  {:<28}  {:.1?}",
+            "compile WASM component",
+            t.elapsed()
+        ));
+        pb.inc(1);
 
-    // Resolve output_dir relative to manifest_dir
-    let output_dir = if config.build.output_dir.is_relative() {
-        config.manifest_dir.join(&config.build.output_dir)
-    } else {
-        config.build.output_dir.clone()
-    };
+        // -- 3/5  bundle assets ----------------------------------------------------
+        pb.set_prefix("[3/5]");
+        pb.set_message("bundle assets");
+        let t = Instant::now();
 
-    let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
+        // Resolve output_dir relative to manifest_dir
+        let output_dir = if config.build.output_dir.is_relative() {
+            config.manifest_dir.join(&config.build.output_dir)
+        } else {
+            config.build.output_dir.clone()
+        };
 
-    crate::log_info!("Creating output directory: {}", output_dir.display());
-    std::fs::create_dir_all(&output_dir)?;
+        let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
 
-    crate::log_info!(
-        "Copying WASM from {} to {}",
-        wasm_path.display(),
-        dest_wasm.display()
-    );
-    std::fs::copy(&wasm_path, &dest_wasm)?;
+        crate::log_info!("Creating output directory: {}", output_dir.display());
+        std::fs::create_dir_all(&output_dir)?;
 
-    crate::log_info!("Copying browser glue...");
-    copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
+        crate::log_info!(
+            "Copying WASM from {} to {}",
+            wasm_path.display(),
+            dest_wasm.display()
+        );
+        std::fs::copy(&wasm_path, &dest_wasm)?;
 
-    crate::log_info!("Copying static public assets...");
-    copy_static_public_assets_with_output_dir(config, &output_dir)?;
+        crate::log_info!("Copying browser glue...");
+        copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
 
-    crate::log_info!("Compiling SCSS...");
-    compile_project_scss_with_output_dir(config, &output_dir)?;
-    pb.println(format!(
-        "     ✓  {:<28}  {:.1?}",
-        "bundle assets",
-        t.elapsed()
-    ));
-    pb.inc(1);
+        crate::log_info!("Copying static public assets...");
+        copy_static_public_assets_with_output_dir(config, &output_dir)?;
 
-    // -- 4/5  component wrapper ------------------------------------------------
-    pb.set_prefix("[4/5]");
-    pb.set_message("component wrapper");
-    let t = Instant::now();
-    prepare_component_wrapper_fallback(config, &dest_wasm, &output_dir, &pb)?;
-    pb.println(format!(
-        "     ✓  {:<28}  {:.1?}",
-        "component wrapper",
-        t.elapsed()
-    ));
-    pb.inc(1);
+        crate::log_info!("Compiling SCSS...");
+        compile_project_scss_with_output_dir(config, &output_dir)?;
+        pb.println(format!(
+            "     ✓  {:<28}  {:.1?}",
+            "bundle assets",
+            t.elapsed()
+        ));
+        pb.inc(1);
 
-    // -- 5/5  HTML -------------------------------------------------------------
-    pb.set_prefix("[5/5]");
-    pb.set_message("generate HTML");
-    let t = Instant::now();
-    generate_component_html_with_output_dir(config, &output_dir)?;
-    pb.println(format!(
-        "     ✓  {:<28}  {:.1?}",
-        "generate HTML",
-        t.elapsed()
-    ));
-    pb.inc(1);
+        // -- 4/5  component wrapper ------------------------------------------------
+        pb.set_prefix("[4/5]");
+        pb.set_message("component wrapper");
+        let t = Instant::now();
+        prepare_component_wrapper_fallback(config, &dest_wasm, &output_dir, &pb)?;
+        pb.println(format!(
+            "     ✓  {:<28}  {:.1?}",
+            "component wrapper",
+            t.elapsed()
+        ));
+        pb.inc(1);
+
+        // -- 5/5  HTML -------------------------------------------------------------
+        pb.set_prefix("[5/5]");
+        pb.set_message("generate HTML");
+        let t = Instant::now();
+        generate_component_html_with_output_dir(config, &output_dir)?;
+        pb.println(format!(
+            "     ✓  {:<28}  {:.1?}",
+            "generate HTML",
+            t.elapsed()
+        ));
+        pb.inc(1);
+
+        Ok(())
+    })();
 
     pb.finish_and_clear();
+    crate::logfmt::clear_active_pb();
+
+    build_result?;
 
     let elapsed = build_start.elapsed();
     let output_dir_display = config.build.output_dir.display();
@@ -160,6 +169,11 @@ pub fn build_component(
         output_dir_display
     );
 
+    let output_dir = if config.build.output_dir.is_relative() {
+        config.manifest_dir.join(&config.build.output_dir)
+    } else {
+        config.build.output_dir.clone()
+    };
     let wasm_file = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
     if let Ok(meta) = std::fs::metadata(&wasm_file) {
         let size_bytes = meta.len();
