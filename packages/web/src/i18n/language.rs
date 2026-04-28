@@ -63,17 +63,15 @@ impl Language {
     }
 
     pub fn code(&self) -> String {
-        let lang_code = self.iso.iso639_1().unwrap_or(self.iso.iso639_3());
-        let region = self.default_region();
-        format!("{}-{}", lang_code.to_uppercase(), region)
+        match self.script {
+            ScriptVariant::Hans => "zhs".to_string(),
+            ScriptVariant::Hant => "zht".to_string(),
+            _ => self.iso.iso639_1().unwrap_or(self.iso.iso639_3()).to_lowercase(),
+        }
     }
 
     pub fn url_prefix(&self) -> String {
-        match self.script {
-            ScriptVariant::Hans => "zh-chs".to_string(),
-            ScriptVariant::Hant => "zh-cht".to_string(),
-            _ => self.iso.iso639_1().unwrap_or(self.iso.iso639_3()).to_lowercase(),
-        }
+        self.code()
     }
 
     pub fn native_name(&self) -> &str {
@@ -141,19 +139,19 @@ impl Language {
     pub fn from_code(code: &str) -> Option<Self> {
         let code = code.trim();
         match code {
-            "en-US" | "en-us" | "en" => return Some(Self::ENGLISH),
-            "zh-CHS" | "zh-chs" | "zh-Hans" | "zh-CN" | "zh-cn" => {
+            "en" | "en-US" | "en-us" => return Some(Self::ENGLISH),
+            "zhs" | "zh-CHS" | "zh-chs" | "zh-Hans" | "zh-CN" | "zh-cn" => {
                 return Some(Self::CHINESE_SIMPLIFIED)
             }
-            "zh-CHT" | "zh-cht" | "zh-Hant" | "zh-TW" | "zh-tw" => {
+            "zht" | "zh-CHT" | "zh-cht" | "zh-Hant" | "zh-TW" | "zh-tw" => {
                 return Some(Self::CHINESE_TRADITIONAL)
             }
-            "fr-FR" | "fr-fr" | "fr" => return Some(Self::FRENCH),
-            "ru-RU" | "ru-ru" | "ru" => return Some(Self::RUSSIAN),
-            "es-ES" | "es-es" | "es" => return Some(Self::SPANISH),
-            "ar-SA" | "ar-sa" | "ar" => return Some(Self::ARABIC),
-            "ja-JP" | "ja-jp" | "ja" => return Some(Self::JAPANESE),
-            "ko-KR" | "ko-kr" | "ko" => return Some(Self::KOREAN),
+            "fr" | "fr-FR" | "fr-fr" => return Some(Self::FRENCH),
+            "ru" | "ru-RU" | "ru-ru" => return Some(Self::RUSSIAN),
+            "es" | "es-ES" | "es-es" => return Some(Self::SPANISH),
+            "ar" | "ar-SA" | "ar-sa" => return Some(Self::ARABIC),
+            "ja" | "ja-JP" | "ja-jp" => return Some(Self::JAPANESE),
+            "ko" | "ko-KR" | "ko-kr" => return Some(Self::KOREAN),
             _ => {}
         }
 
