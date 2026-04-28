@@ -3,16 +3,16 @@ use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum Language {
-    CHS,
-    CHT,
+    Ar,
     #[default]
     En,
+    Es,
+    Fr,
     Ja,
     Ko,
-    Fr,
-    Es,
     Ru,
-    Ar,
+    Zhs,
+    Zht,
 }
 
 impl Language {
@@ -25,9 +25,9 @@ impl Language {
                 || norm.contains("hk")
                 || norm.contains("mo")
             {
-                return Self::CHT;
+                return Self::Zht;
             }
-            return Self::CHS;
+            return Self::Zhs;
         }
 
         if norm.starts_with("ja") {
@@ -113,11 +113,11 @@ yuuka::derive_struct!(
 const EN_CLI: &str = include_str!("../../res/locales/en/cli.toml");
 const EN_DEV: &str = include_str!("../../res/locales/en/dev.toml");
 const EN_ICONS: &str = include_str!("../../res/locales/en/icons.toml");
-const CHS_CLI: &str = include_str!("../../res/locales/chs/cli.toml");
-const CHS_DEV: &str = include_str!("../../res/locales/chs/dev.toml");
-const CHS_ICONS: &str = include_str!("../../res/locales/chs/icons.toml");
-const CHT_CLI: &str = include_str!("../../res/locales/cht/cli.toml");
-const CHT_DEV: &str = include_str!("../../res/locales/cht/dev.toml");
+const ZHS_CLI: &str = include_str!("../../res/locales/zhs/cli.toml");
+const ZHS_DEV: &str = include_str!("../../res/locales/zhs/dev.toml");
+const ZHS_ICONS: &str = include_str!("../../res/locales/zhs/icons.toml");
+const ZHT_CLI: &str = include_str!("../../res/locales/zht/cli.toml");
+const ZHT_DEV: &str = include_str!("../../res/locales/zht/dev.toml");
 const JA_CLI: &str = include_str!("../../res/locales/ja/cli.toml");
 const JA_DEV: &str = include_str!("../../res/locales/ja/dev.toml");
 const KO_CLI: &str = include_str!("../../res/locales/ko/cli.toml");
@@ -133,8 +133,8 @@ const AR_DEV: &str = include_str!("../../res/locales/ar/dev.toml");
 
 fn toml_for(lang: Language) -> String {
     match lang {
-        Language::CHS => [CHS_CLI, CHS_DEV, CHS_ICONS].join("\n"),
-        Language::CHT => [CHT_CLI, CHT_DEV, EN_ICONS].join("\n"),
+        Language::Zhs => [ZHS_CLI, ZHS_DEV, ZHS_ICONS].join("\n"),
+        Language::Zht => [ZHT_CLI, ZHT_DEV, EN_ICONS].join("\n"),
         Language::Ja => [JA_CLI, JA_DEV, EN_ICONS].join("\n"),
         Language::Ko => [KO_CLI, KO_DEV, EN_ICONS].join("\n"),
         Language::Fr => [FR_CLI, FR_DEV, EN_ICONS].join("\n"),
