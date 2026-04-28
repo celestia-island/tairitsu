@@ -4,7 +4,6 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::{config::Config, daemon};
 
-#[cfg(feature = "dev-server")]
 fn locale() -> &'static crate::i18n::Translations {
     crate::i18n::translations()
 }
@@ -66,25 +65,26 @@ pub fn build_component(
     crate::logfmt::set_active_pb(&pb);
 
     let build_result: crate::Result<()> = (|| {
+        let b = &locale().build;
         // -- 1/5  check target -----------------------------------------------------
         pb.set_prefix("[1/5]");
-        pb.set_message("check wasm32-wasip2");
+        pb.set_message(&b.step_check_target);
         let t = Instant::now();
         check_wasip2_target()?;
-        crate::log_ok!("{:<28} {:.1?}", "check wasm32-wasip2", t.elapsed());
+        crate::log_ok!("{:<28} {:.1?}", b.step_check_target, t.elapsed());
         pb.inc(1);
 
         // -- 2/5  compile ----------------------------------------------------------
         pb.set_prefix("[2/5]");
-        pb.set_message("compile WASM component");
+        pb.set_message(&b.step_compile);
         let t = Instant::now();
         let wasm_path = build_wasm_component(config, release, pb.clone(), verbose)?;
-        crate::log_ok!("{:<28} {:.1?}", "compile WASM component", t.elapsed());
+        crate::log_ok!("{:<28} {:.1?}", b.step_compile, t.elapsed());
         pb.inc(1);
 
         // -- 3/5  bundle assets ----------------------------------------------------
         pb.set_prefix("[3/5]");
-        pb.set_message("bundle assets");
+        pb.set_message(&b.step_bundle);
         let t = Instant::now();
 
         // Resolve output_dir relative to manifest_dir
@@ -96,41 +96,37 @@ pub fn build_component(
 
         let dest_wasm = output_dir.join(format!("{}.wasm", config.package.name.replace('-', "_")));
 
-        crate::log_info!("Creating output directory: {}", output_dir.display());
+        crate::log_info!("{}", b.creating_output_dir.replace("{}", &format!("{}", output_dir.display())));
         std::fs::create_dir_all(&output_dir)?;
 
-        crate::log_info!(
-            "Copying WASM from {} to {}",
-            wasm_path.display(),
-            dest_wasm.display()
-        );
+        crate::log_info!("{}", b.copying_wasm.replace("{}", &format!("{}", wasm_path.display())).replace("{}", &format!("{}", dest_wasm.display())));
         std::fs::copy(&wasm_path, &dest_wasm)?;
 
-        crate::log_info!("Copying browser glue...");
+        crate::log_info!("{}", b.copying_glue);
         copy_browser_glue_with_output_dir(config, &output_dir, &pb)?;
 
-        crate::log_info!("Copying static public assets...");
+        crate::log_info!("{}", b.copying_public);
         copy_static_public_assets_with_output_dir(config, &output_dir)?;
 
-        crate::log_info!("Compiling SCSS...");
+        crate::log_info!("{}", b.compiling_scss);
         compile_project_scss_with_output_dir(config, &output_dir)?;
-        crate::log_ok!("{:<28} {:.1?}", "bundle assets", t.elapsed());
+        crate::log_ok!("{:<28} {:.1?}", b.step_bundle, t.elapsed());
         pb.inc(1);
 
         // -- 4/5  component wrapper ------------------------------------------------
         pb.set_prefix("[4/5]");
-        pb.set_message("component wrapper");
+        pb.set_message(&b.step_wrapper);
         let t = Instant::now();
         prepare_component_wrapper_fallback(config, &dest_wasm, &output_dir, &pb)?;
-        crate::log_ok!("{:<28} {:.1?}", "component wrapper", t.elapsed());
+        crate::log_ok!("{:<28} {:.1?}", b.step_wrapper, t.elapsed());
         pb.inc(1);
 
         // -- 5/5  HTML -------------------------------------------------------------
         pb.set_prefix("[5/5]");
-        pb.set_message("generate HTML");
+        pb.set_message(&b.step_generate_html);
         let t = Instant::now();
         generate_component_html_with_output_dir(config, &output_dir)?;
-        crate::log_ok!("{:<28} {:.1?}", "generate HTML", t.elapsed());
+        crate::log_ok!("{:<28} {:.1?}", b.step_generate_html, t.elapsed());
         pb.inc(1);
 
         Ok(())
@@ -185,7 +181,7 @@ fn check_wasip2_target() -> crate::Result<()> {
     let targets = String::from_utf8_lossy(&output.stdout);
     if !targets.contains("wasm32-wasip2") {
         return Err(crate::TairitsuPackagerError::BuildError(
-            "wasm32-wasip2 target not installed. Run: rustup target add wasm32-wasip2".to_string(),
+            locale().build.target_not_installed.to_string(),
         ));
     }
 
@@ -374,13 +370,13 @@ fn build_wasm_component(
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(format!("{} error(s)", n_err));
+                parts.push(locale().build.diagnostic_count.replace("{}", &n_err.to_string()));
             }
             if n_warn > 0 {
-                parts.push(format!("{} warning(s)", n_warn));
+                parts.push(locale().build.warning_count.replace("{}", &n_warn.to_string()));
             }
             if !parts.is_empty() {
-                crate::log_progress!("compilation failed — {}", parts.join(", "));
+                crate::log_progress!("{}", locale().build.compilation_failed.replace("{}", &parts.join(", ")));
             }
         }
         let diag_text = diagnostics
@@ -421,12 +417,12 @@ fn build_wasm_component(
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(format!("{} error(s)", n_err));
+                parts.push(locale().build.diagnostic_count.replace("{}", &n_err.to_string()));
             }
             if n_warn > 0 {
-                parts.push(format!("{} warning(s)", n_warn));
+                parts.push(locale().build.warning_count.replace("{}", &n_warn.to_string()));
             }
-            crate::log_progress!("compiled with {}", parts.join(", "));
+            crate::log_progress!("{}", locale().build.compiled_with.replace("{}", &parts.join(", ")));
         }
     }
 
@@ -439,10 +435,9 @@ fn build_wasm_component(
         .join(format!("{}.wasm", pkg_name.replace('-', "_")));
 
     if !wasm_path.exists() {
-        return Err(crate::TairitsuPackagerError::BuildError(format!(
-            "Expected component at {} but not found",
-            wasm_path.display()
-        )));
+        return Err(crate::TairitsuPackagerError::BuildError(
+            locale().build.component_not_found.replace("{}", &wasm_path.display().to_string())
+        ));
     }
 
     Ok(wasm_path)
@@ -2008,7 +2003,7 @@ pub async fn dev_server(
     let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
 
     let initial_started = Instant::now();
-    crate::log_progress!("Building {} component...", config.package.name);
+    crate::log_progress!("{}", locale().build.building_component.replace("{}", &config.package.name));
     match config.build.target.as_str() {
         "component" => build_component(config, false, None, verbose).inspect_err(|e| {
             if crate::daemon::is_daemon() {
@@ -2016,10 +2011,9 @@ pub async fn dev_server(
             }
         })?,
         other => {
-            let err = crate::TairitsuPackagerError::BuildError(format!(
-                "Unknown build target '{}'. Only 'component' is supported.",
-                other
-            ));
+            let err = crate::TairitsuPackagerError::BuildError(
+                locale().build.unknown_build_target.replace("{}", other)
+            );
             if crate::daemon::is_daemon() {
                 let _ = crate::daemon::signal_failed(&err.to_string());
             }
@@ -2047,14 +2041,16 @@ pub async fn dev_server(
         Err(_) => String::from("unknown"),
     };
 
-    crate::log_ok!("Initial build succeeded ({:.1?})", initial_elapsed);
-    crate::log_info!("workspace  {}", config.manifest_dir.display());
+    crate::log_ok!("{}", locale().build.initial_build_ok.replace("{:.1?}", &format!("{:.1?}", initial_elapsed)));
+    crate::log_info!("{}", locale().build.workspace_label.replace("{}", &config.manifest_dir.display().to_string()));
     crate::log_info!(
-        "package    {} v{}",
-        config.package.name,
-        config.package.version
+        "{}",
+        locale().build.package_label.replace("{}", &config.package.name).replace("{}", &config.package.version)
     );
-    crate::log_info!("output     {} ({})", dist_dir.display(), pkg_size_str);
+    crate::log_info!(
+        "{}",
+        locale().build.output_label.replace("{}", &dist_dir.display().to_string()).replace("{}", &pkg_size_str)
+    );
 
     let dist_for_index = dist_dir.clone();
     let pkg_name = config.package.name.clone();
