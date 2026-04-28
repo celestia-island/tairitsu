@@ -46,6 +46,7 @@ pub fn build_component(
     config: &Config,
     release: bool,
     multi: Option<std::sync::Arc<MultiProgress>>,
+    verbose: bool,
 ) -> crate::Result<()> {
     let build_start = Instant::now();
     let pb_raw = ProgressBar::new(5);
@@ -81,8 +82,7 @@ pub fn build_component(
         pb.set_prefix("[2/5]");
         pb.set_message("compile WASM component");
         let t = Instant::now();
-        // Pass the progress bar so cargo compilation can update it directly
-        let wasm_path = build_wasm_component(config, release, pb.clone())?;
+        let wasm_path = build_wasm_component(config, release, pb.clone(), verbose)?;
         pb.println(format!(
             "     ✓  {:<28}  {:.1?}",
             "compile WASM component",
@@ -216,14 +216,13 @@ fn build_wasm_component(
     config: &Config,
     release: bool,
     pb: ProgressBar,
+    verbose: bool,
 ) -> crate::Result<std::path::PathBuf> {
     use std::io::BufRead;
     use std::process::Stdio;
 
     let pkg_name = &config.package.name;
 
-    // Use JSON message format to get structured compiler output.
-    // This allows us to intercept cargo's progress and render our own.
     let mut cmd = std::process::Command::new("cargo");
     cmd.args([
         "build",
@@ -242,9 +241,8 @@ fn build_wasm_component(
         cmd.args(["--profile", "dev-wasm"]);
     }
 
-    // Capture stdout (JSON messages) and suppress stderr (cargo's native progress bars)
     cmd.stdout(Stdio::piped());
-    cmd.stderr(Stdio::null()); // Suppress cargo's native progress bars entirely
+    cmd.stderr(Stdio::null());
 
     let mut child = cmd.spawn()?;
 
@@ -264,7 +262,18 @@ fn build_wasm_component(
     let diagnostics = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
     let diag_clone = diagnostics.clone();
 
-    std::thread::spawn(move || {
+    #[derive(Clone)]
+    struct DiagEntry {
+        level: String,
+        message: String,
+        location: Option<String>,
+    }
+    let diag_entries: std::sync::Arc<
+        std::sync::Mutex<Vec<DiagEntry>>,
+    > = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let entries_clone = diag_entries.clone();
+
+    let handle = std::thread::spawn(move || {
         for line in std::io::BufReader::new(stdout).lines() {
             let Ok(line) = line else { continue };
             if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&line)
@@ -292,10 +301,62 @@ fn build_wasm_component(
                             .and_then(|m| m.get("rendered"))
                             .and_then(|r| r.as_str())
                         {
-                            pb_clone.println(rendered);
+                            if verbose {
+                                pb_clone.println(rendered);
+                            }
                             if let Ok(mut d) = diag_clone.lock() {
                                 d.push_str(rendered);
                                 d.push('\n');
+                            }
+                            if !verbose {
+                                let level = msg
+                                    .get("message")
+                                    .and_then(|m| m.get("level"))
+                                    .and_then(|l| l.as_str())
+                                    .unwrap_or("")
+                                    .to_string();
+                                let diag_msg = msg
+                                    .get("message")
+                                    .and_then(|m| m.get("message"))
+                                    .and_then(|m| m.as_str())
+                                    .unwrap_or("")
+                                    .to_string();
+                                let location = msg.get("message").and_then(|m| {
+                                    m.get("spans")
+                                        .and_then(|s| s.as_array())
+                                        .and_then(|a| a.first())
+                                        .and_then(|span| {
+                                            let file = span
+                                                .get("file_name")
+                                                .and_then(|f| f.as_str())
+                                                .unwrap_or("");
+                                            let line = span
+                                                .get("line_start")
+                                                .and_then(|l| l.as_u64())
+                                                .unwrap_or(0);
+                                            if file.is_empty() {
+                                                return None;
+                                            }
+                                            let name = std::path::Path::new(file)
+                                                .file_name()
+                                                .and_then(|n| n.to_str())
+                                                .unwrap_or(file);
+                                            Some(if line > 0 {
+                                                format!("{}:{}", name, line)
+                                            } else {
+                                                name.to_string()
+                                            })
+                                        })
+                                });
+                                if matches!(level.as_str(), "warning" | "error") {
+                                    if let Ok(mut entries) = entries_clone.lock() {
+                                        entries.push(DiagEntry {
+                                            level,
+                                            message: diag_msg,
+                                            location,
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -313,8 +374,35 @@ fn build_wasm_component(
     });
 
     let status = child.wait()?;
+    handle.join().ok();
 
     if !status.success() {
+        if !verbose {
+            let entries = diag_entries.lock().map(|e| e.clone()).unwrap_or_default();
+            let n_err = entries.iter().filter(|e| e.level == "error").count();
+            let n_warn = entries.iter().filter(|e| e.level == "warning").count();
+            for entry in &entries {
+                match &entry.location {
+                    Some(loc) => crate::log_progress!(
+                        "{}: {} — {}",
+                        entry.level,
+                        entry.message,
+                        loc
+                    ),
+                    None => crate::log_progress!("{}: {}", entry.level, entry.message),
+                }
+            }
+            let mut parts = Vec::new();
+            if n_err > 0 {
+                parts.push(format!("{} error(s)", n_err));
+            }
+            if n_warn > 0 {
+                parts.push(format!("{} warning(s)", n_warn));
+            }
+            if !parts.is_empty() {
+                crate::log_progress!("compilation failed — {}", parts.join(", "));
+            }
+        }
         let diag_text = diagnostics
             .lock()
             .map(|d| d.trim().to_string())
@@ -333,6 +421,33 @@ fn build_wasm_component(
                 diag_text
             },
         ));
+    }
+
+    if !verbose {
+        let entries = diag_entries.lock().map(|e| e.clone()).unwrap_or_default();
+        let n_warn = entries.iter().filter(|e| e.level == "warning").count();
+        let n_err = entries.iter().filter(|e| e.level == "error").count();
+        if n_warn > 0 || n_err > 0 {
+            for entry in &entries {
+                match &entry.location {
+                    Some(loc) => crate::log_progress!(
+                        "{}: {} — {}",
+                        entry.level,
+                        entry.message,
+                        loc
+                    ),
+                    None => crate::log_progress!("{}: {}", entry.level, entry.message),
+                }
+            }
+            let mut parts = Vec::new();
+            if n_err > 0 {
+                parts.push(format!("{} error(s)", n_err));
+            }
+            if n_warn > 0 {
+                parts.push(format!("{} warning(s)", n_warn));
+            }
+            crate::log_progress!("compiled with {}", parts.join(", "));
+        }
     }
 
     let workspace_root = find_workspace_root(&config.manifest_dir)?;
@@ -1824,6 +1939,7 @@ pub async fn dev_server(
     open: bool,
     watch: bool,
     force: bool,
+    verbose: bool,
 ) -> crate::Result<()> {
     use axum::{middleware, response::Html, routing::get, Router};
     use tower_http::services::ServeDir;
@@ -1914,7 +2030,7 @@ pub async fn dev_server(
     let initial_started = Instant::now();
     crate::log_progress!("Building {} component...", config.package.name);
     match config.build.target.as_str() {
-        "component" => build_component(config, false, None).inspect_err(|e| {
+        "component" => build_component(config, false, None, verbose).inspect_err(|e| {
             if crate::daemon::is_daemon() {
                 let _ = crate::daemon::signal_failed(&e.to_string());
             }
@@ -2109,6 +2225,7 @@ pub async fn dev_server(
             &config.build.output_dir,
             &mut last_build_line,
             reload_tx,
+            verbose,
         )
         .await?;
     } else {
@@ -2223,6 +2340,7 @@ async fn run_watch_loop(
     output_dir: &std::path::Path,
     last_build_line: &mut String,
     reload_tx: tokio::sync::broadcast::Sender<()>,
+    verbose: bool,
 ) -> crate::Result<()> {
     use notify::{EventKind, RecursiveMode, Watcher};
 
@@ -2393,7 +2511,7 @@ async fn run_watch_loop(
         let target = config.build.target.clone();
         let target_for_build = target.clone();
         let result = tokio::task::spawn_blocking(move || match target_for_build.as_str() {
-            "component" => build_component(&config_clone, false, None),
+            "component" => build_component(&config_clone, false, None, verbose),
             other => Err(crate::TairitsuPackagerError::BuildError(format!(
                 "Unknown build target '{}'. Only 'component' is supported.",
                 other

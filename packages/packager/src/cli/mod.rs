@@ -500,7 +500,7 @@ crate::log_info!("Starting SSR development server...");
                 let port = port.unwrap_or(config.dev.port);
                 #[cfg(feature = "dev-server")]
                 {
-                    crate::wasm::dev_server(&config, port, open, watch, cli.force).await?;
+                    crate::wasm::dev_server(&config, port, open, watch, cli.force, cli.verbose > 0).await?;
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
@@ -523,7 +523,7 @@ crate::log_info!("Starting SSR development server...");
             crate::log_info!("{} {}...", t.cli.building_for, target);
             match target.as_str() {
                 "component" => {
-                    crate::wasm::build_component(&config, release, None)?;
+                    crate::wasm::build_component(&config, release, None, cli.verbose > 0)?;
 
                     // Handle SSR pre-rendering if requested
                     if ssr {

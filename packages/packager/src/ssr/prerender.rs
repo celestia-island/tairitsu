@@ -75,7 +75,7 @@ pub fn prerender(config: &Config, prerender_config: &PrerenderConfig) -> crate::
     );
 
     // Build the component first
-    crate::wasm::build_component(config, true, None)?;
+    crate::wasm::build_component(config, true, None, false)?;
 
     let dist_dir = &config.build.output_dir;
     let wasm_path = dist_dir.join(format!("{}.wasm", config.package.name));
