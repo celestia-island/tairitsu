@@ -116,6 +116,8 @@ pub fn build_component(
         crate::log_info!("{}", b.copying_public);
         copy_static_public_assets_with_output_dir(config, &output_dir)?;
 
+        write_browser_glue_bundle(config, &output_dir)?;
+
         crate::log_info!("{}", b.compiling_scss);
         compile_project_scss_with_output_dir(config, &output_dir)?;
         crate::log_ok!("{:<28} {:.1?}", b.step_bundle, t.elapsed());
@@ -774,8 +776,6 @@ fn copy_browser_glue_with_output_dir(
     output_dir: &std::path::Path,
     _pb: &ProgressBar,
 ) -> crate::Result<()> {
-    write_browser_glue_bundle(config, output_dir)?;
-
     // Also copy the full browser-glue dist so that jco-generated wrapper
     // ES module imports (e.g. `import { setProperty } from '@tairitsu/browser-glue'`)
     // can resolve. The dist contains index.js (main barrel) + glue/*.js submodules.
