@@ -42,8 +42,13 @@ install-tools:
     rustup component add clippy
     {{python}} scripts/download_wasi_adapters.py
 
+# Build browser-glue runtime bundle (IIFE for HTML <script> tag)
+build-glue-runtime:
+    mkdir -p packages/browser-glue/dist
+    npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
+
 # Install tairitsu-packager CLI binary (tairitsu) to ~/.cargo/bin
-install-packager:
+install-packager: (build-glue-runtime)
     cargo build --release --package tairitsu-packager
     {{python}} scripts/install_packager.py
 
