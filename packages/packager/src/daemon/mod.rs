@@ -527,7 +527,7 @@ pub fn kill_process_by_pid(pid: u32) {
     }
 
     if check_process_exists(pid) {
-        crate::log_warn!("process {} did not exit within 5s", pid);
+        crate::log_warn!("{}", crate::fmt_tmpl!(crate::i18n::translations().dev.process_kill_timeout, pid => pid.to_string()));
     }
 }
 
@@ -845,9 +845,10 @@ where
 
 /// Print daemon status and recent logs
 pub fn print_daemon_status() -> std::io::Result<()> {
+    let loc = crate::i18n::translations();
     if !is_daemon_running() {
-        crate::log_info!("No daemon is currently running.");
-        crate::log_info!("Start a daemon with: tairitsu dev --daemon");
+        crate::log_info!("{}", loc.dev.daemon_not_running);
+        crate::log_info!("{}", loc.dev.daemon_start_hint);
         return Ok(());
     }
 
@@ -855,13 +856,17 @@ pub fn print_daemon_status() -> std::io::Result<()> {
     let uptime = Utc::now() - status.start_time;
 
     crate::log_ok!(
-        "Daemon is running  PID={}  uptime={}",
-        status.pid,
-        format_duration(uptime)
+        "{}",
+        crate::fmt_tmpl!(loc.dev.daemon_running,
+            pid => status.pid.to_string(),
+            uptime => format_duration(uptime)
+        )
     );
     crate::log_info!(
-        "Running since {}",
-        status.start_time.format("%Y-%m-%d %H:%M:%S UTC")
+        "{}",
+        crate::fmt_tmpl!(loc.dev.daemon_running_since,
+            time => status.start_time.format("%Y-%m-%d %H:%M:%S UTC").to_string()
+        )
     );
 
     if !status.build_logs.is_empty() {
@@ -898,10 +903,11 @@ fn format_duration(duration: chrono::Duration) -> String {
 
 /// Print non-TTY message with daemon hint
 pub fn print_non_tty_hint() {
-    crate::log_warn!("Not running in a TTY - running in non-interactive mode.");
-    crate::log_info!("For development with hot-reload, use daemon mode:");
+    let loc = crate::i18n::translations();
+    crate::log_warn!("{}", loc.dev.non_tty_warning);
+    crate::log_info!("{}", loc.dev.daemon_mode_hint);
     crate::log_info!("  tairitsu dev --daemon");
-    crate::log_info!("Daemon controls:");
+    crate::log_info!("{}", loc.dev.daemon_controls);
     crate::log_info!("  tairitsu dev --daemon           # Start or restart daemon");
     crate::log_info!("  tairitsu dev --daemon --force   # Force restart");
     crate::log_info!("  tairitsu dev --daemon --shutdown # Stop daemon");
