@@ -593,10 +593,13 @@ fn flatten_barrel_exports(barrel_path: &std::path::Path) -> crate::Result<()> {
     })?;
 
     crate::log_info!(
-        "Flattened barrel {} with {} modules ({} total symbols)",
-        barrel_path.display(),
-        module_syms.len(),
-        sym_map.len()
+        "{}",
+        fmt_tmpl!(
+            locale().build.flattened_barrel,
+            path => barrel_path.display().to_string(),
+            modules => module_syms.len().to_string(),
+            symbols => sym_map.len().to_string()
+        )
     );
     Ok(())
 }
@@ -817,10 +820,10 @@ fn copy_static_public_assets_with_output_dir(
     for extra in &config.assets.extra_public_dirs {
         let extra_path = config.manifest_dir.join(extra);
         if extra_path.exists() {
-            crate::log_info!("Copying extra public assets from: {}", extra_path.display());
+            crate::log_info!("{}", fmt_tmpl!(locale().build.copying_extra_public, path => extra_path.display().to_string()));
             copy_dir_contents(&extra_path, output_dir)?;
         } else {
-            crate::log_warn!("Extra public dir not found: {}", extra_path.display());
+            crate::log_warn!("{}", fmt_tmpl!(locale().build.extra_public_not_found, path => extra_path.display().to_string()));
         }
     }
 
@@ -857,7 +860,7 @@ fn compile_project_scss_with_output_dir(
 ) -> crate::Result<()> {
     let project_root = &config.manifest_dir;
 
-    crate::log_info!("SCSS project root: {}", project_root.display());
+    crate::log_info!("{}", fmt_tmpl!(locale().build.scss_project_root, path => project_root.display().to_string()));
 
     // Use new SCSS configuration system
     let results = crate::styles::compile_scss_with_config(&config.scss, project_root, output_dir)
@@ -867,7 +870,7 @@ fn compile_project_scss_with_output_dir(
 
     // Log compiled files
     for result in results {
-        crate::log_info!("Compiled SCSS: {}", result.output_path.display());
+        crate::log_info!("{}", fmt_tmpl!(locale().build.compiled_scss, path => result.output_path.display().to_string()));
     }
 
     Ok(())
@@ -1772,7 +1775,7 @@ fn generate_component_html_with_output_dir(
             match std::fs::read_to_string(&full_path) {
                 Ok(css_content) => {
                     html = injector.inject_style_into_html(&html, &css_content)?;
-                    crate::log_info!("Inlined CSS into HTML: {}", css_path);
+                    crate::log_info!("{}", fmt_tmpl!(locale().build.inlined_css, path => css_path.to_string()));
                 }
                 Err(e) => {
                     crate::log_warn!(
@@ -1848,8 +1851,8 @@ fn generate_route_html_files(
     }
 
     crate::log_info!(
-        "Generated {} route HTML files for direct URL access",
-        non_root_routes.len()
+        "{}",
+        fmt_tmpl!(locale().build.generated_routes, n => non_root_routes.len().to_string())
     );
 
     Ok(())
@@ -1933,15 +1936,15 @@ pub async fn dev_server(
     use tower_http::services::ServeDir;
 
     if watch {
-        crate::log_info!("Tairitsu dev server (watch mode)");
+        crate::log_info!("{}", locale().build.dev_server_watch);
     } else {
-        crate::log_info!("Tairitsu dev server");
+        crate::log_info!("{}", locale().build.dev_server);
     }
 
     if !crate::daemon::is_daemon() && crate::daemon::is_daemon_running() {
         let pid = crate::daemon::read_pid().unwrap_or(0);
-        crate::log_warn!("A tairitsu daemon is already running (PID {}).", pid);
-        crate::log_info!("Use --daemon to attach, or --shutdown to stop it.");
+        crate::log_warn!("{}", fmt_tmpl!(locale().build.daemon_already_running, pid => pid.to_string()));
+        crate::log_info!("{}", locale().build.daemon_attach_hint);
     }
 
     {
@@ -1983,8 +1986,12 @@ pub async fn dev_server(
                         }
 
                         crate::log_warn!(
-                            "Force-killing foreign tairitsu daemon (PID {}) on port {}...",
-                            info.pid, port
+                            "{}",
+                            fmt_tmpl!(
+                                locale().build.force_killing_daemon,
+                                pid => info.pid.to_string(),
+                                port => port.to_string()
+                            )
                         );
                         crate::daemon::kill_process_by_pid(info.pid);
                         std::thread::sleep(std::time::Duration::from_millis(500));
@@ -2244,7 +2251,8 @@ fn print_status_panel(
 
 #[cfg(feature = "dev-server")]
 fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>) -> String {
-    let status = if ok { "OK" } else { "FAIL" };
+    let b = &locale().build;
+    let status = if ok { b.status_ok.as_str() } else { b.status_fail.as_str() };
     let mut line = format!("{} | {:.1?}", status, elapsed);
     if let Some(hint) = error_hint {
         let display = if hint.len() > 50 { &hint[..50] } else { hint };
