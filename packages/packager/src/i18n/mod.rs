@@ -97,6 +97,19 @@ yuuka::derive_struct!(
             shortcuts_full: String,
             shortcuts_compact: String,
             stopping: String,
+            daemon_not_running: String,
+            daemon_start_hint: String,
+            daemon_running: String,
+            daemon_running_since: String,
+            non_tty_warning: String,
+            daemon_mode_hint: String,
+            daemon_controls: String,
+            process_kill_timeout: String,
+            port_in_use_daemon: String,
+            port_in_use_other_daemon: String,
+            port_use_force: String,
+            port_in_use_other: String,
+            port_change_hint: String,
         },
         build: Build {
             step_check_target: String,
@@ -210,6 +223,15 @@ fn load_translations(language: Language) -> Translations {
             toml::from_str(&en).expect("invalid en locale")
         }
     }
+}
+
+#[macro_export]
+macro_rules! fmt_tmpl {
+    ($tmpl:expr, $($key:ident => $val:expr),* $(,)?) => {{
+        let mut s = $tmpl.to_string();
+        $( s = s.replace(concat!("{", stringify!($key), "}"), &$val); )*
+        s
+    }};
 }
 
 static TRANSLATIONS: OnceLock<Translations> = OnceLock::new();
