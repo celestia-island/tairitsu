@@ -452,8 +452,30 @@ fn build_wasm_component(
     Ok(wasm_path)
 }
 
-mod browser_glue_bundle {
-    include!(concat!(env!("OUT_DIR"), "/browser_glue_bundle.rs"));
+fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<String> {
+    let candidates: &[&str] = &[
+        "../../../tairitsu/packages/browser-glue/dist/runtime.js",
+        "../../packages/browser-glue/dist/runtime.js",
+        "../packages/browser-glue/dist/runtime.js",
+        "packages/browser-glue/dist/runtime.js",
+        "../browser-glue/dist/runtime.js",
+    ];
+    for candidate in candidates {
+        let path = manifest_dir.join(candidate);
+        if path.exists() {
+            return std::fs::read_to_string(&path).map_err(|e| {
+                crate::TairitsuPackagerError::BuildError(format!(
+                    "Failed to read browser-glue runtime bundle {}: {}",
+                    path.display(),
+                    e
+                ))
+            });
+        }
+    }
+    Err(crate::TairitsuPackagerError::BuildError(
+        "browser-glue runtime bundle (dist/runtime.js) not found in any candidate path"
+            .to_string(),
+    ))
 }
 
 fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> crate::Result<()> {
@@ -464,7 +486,8 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
         std::fs::create_dir_all(parent)?;
     }
 
-    std::fs::write(&bundle_dest, browser_glue_bundle::BROWSER_GLUE_BUNDLE)?;
+    let bundle = resolve_glue_runtime_bundle(&config.manifest_dir)?;
+    std::fs::write(&bundle_dest, &bundle)?;
 
     Ok(())
 }
