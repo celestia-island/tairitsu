@@ -11,6 +11,7 @@ members = [
     "packages/browser-wit-resolver",
     "packages/browser-worlds",
     "packages/browser-test",
+    "packages/web-test",
     "packages/ssr",
     "examples/wit-compile-time",
     "examples/wit-runtime",
