@@ -73,6 +73,14 @@ enum Commands {
         /// Enable server-side rendering
         #[arg(long)]
         ssr: bool,
+
+        /// Enable debug/inspection API server for agent automation (screenshots, DOM query, click/input)
+        #[arg(long)]
+        debug: bool,
+
+        /// Port for debug API server (default: same as dev port + 1, or 3001)
+        #[arg(long)]
+        debug_port: Option<u16>,
     },
 
     /// Build for production
@@ -479,6 +487,8 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             open,
             watch,
             ssr,
+            debug,
+            debug_port,
         }) => {
             let config = crate::config::Config::load(&manifest_path)?;
             if ssr {
@@ -500,7 +510,7 @@ crate::log_info!("Starting SSR development server...");
                 let port = port.unwrap_or(config.dev.port);
                 #[cfg(feature = "dev-server")]
                 {
-                    crate::wasm::dev_server(&config, port, open, watch, cli.force, cli.verbose > 0).await?;
+                    crate::wasm::dev_server(&config, port, open, watch, cli.force, cli.verbose > 0, debug, debug_port).await?;
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {

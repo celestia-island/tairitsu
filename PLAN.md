@@ -1,51 +1,49 @@
-# PLAN: WASM Event System — Complete
+# PLAN2: Playwright-Based Visual Regression & Batch Style Testing
 
-## Status: ✅ ALL DONE
+## ✅ Phase 1 Complete (archived)
 
-## Summary
+Phase 1 delivered a self-contained `packages/web-test/` Playwright suite (13 pages,
+event bridge verification, batch screenshot scripts, justfile recipes).
+See git history for details.
 
-### Phase 1: Event Bridge (3 bugs fixed, verified end-to-end)
-1. **Patch system didn't carry handler closures** → Fixed in `patch.rs`, `diff.rs`
-2. **`apply_patch()` was no-op for events** → Fixed in `wit_platform.rs:1930-1955`
-3. **Runtime initial render silent drop** → Fixed in `runtime.rs:264-271`
+---
 
-### Phase 2: Re-render Mechanism (new)
-4. **`init_runtime()` not called by website** → Wired into `lib.rs` with cfg-gated WASM path
-5. **No initial VNode for diffing** → Added `store_initial_vnode()` to inject mounted VNode
-6. **Sync fallback when no rAF scheduler** → Modified `schedule_render()` to call `flush_render()` directly
-7. **Missing jco wrapper imports** → Added `nodeList.ts`, `getChildNodes()`, `insertBefore()` to runtime
+## Remaining Work
 
-### Interactive Components (new)
-8. **Wi-Fi switch toggle** → `Cell<bool>` + `on_event("click", ...)` + `rerender()`
-9. **Dark mode toggle** → `DARK_MODE Cell` + conditional `hi-layout-dark` class
-10. **Language selector dropdown** → `LANG_OPEN Cell` + show/hide dropdown
+### Phase 2: Embedded Debug API Server (`--debug` flag) — In Progress
 
-## Acceptance Criteria (all met)
-- [x] Clicking `.hi-switch` toggles visual state
-- [x] Dark mode button switches theme
-- [x] Language selector shows/hides dropdown
-- [x] Event test page shows incrementing counter
-- [x] 13 pages render via Playwright E2E (baseline snapshots saved)
-- [x] 6/7 event bridge tests pass (1 pre-existing 404 noise)
+**Goal:** `just dev --daemon --debug` starts the dev server *plus* an inspection API
+on `/__tairitsu_debug/*`. Agents connect via HTTP to take screenshots, query DOM,
+simulate clicks/inputs — no separate browser process needed; the server drives a
+headless browser internally.
 
-## Event Flow (verified working)
-```
-RSX onclick: |e| { CLICK_COUNT.set(n+1); rerender(); }
-  → VElement.event_handlers["click"] = EventHandler(Rc<RefCell<Closure>>)
-  → render_vnode() → platform.add_event_listener(el, "click", handler)
-    → WIT bindings → JS glue → element.addEventListener("click", listener_fn)
-  → User clicks button
-    → listener_fn(event) fires
-      → callbacks.onMouseEvent(listenerId, eventHandle, data)
-        → Rust BrowserComponent::on_mouse_event(...)
-          → dispatch_event(id, "mouse", event)
-            → EVENT_CALLBACKS[id](event)  // user's closure runs
-              → CLICK_COUNT.increment + mark_dirty(id)
-                → schedule_render() → flush_render()
-                  → render_component(id): App.render() → diff(old, new) → apply_patches(DOM)
-```
+- [x] Add `--debug` / `--debug-port` CLI flags to `Dev` command
+- [x] Create `packages/packager/src/debug/mod.rs` — debug route handlers
+- [x] Implement debug endpoints (stub/skeleton — browser integration pending):
+  - [x] `GET  /health`          — liveness + version
+  - [x] `GET  /info`            — server state (port, pid, dist dir, uptime)
+  - [x] `POST /navigate`         — URL resolution (browser nav pending CDP)
+  - [x] `POST /screenshot`       — stub (returns 503 until browser connected)
+  - [x] `POST /click`            — stub (returns 503 until browser connected)
+  - [x] `POST /type`             — stub (returns 503 until browser connected)
+  - [x] `POST /evaluate`         — stub (returns 503 until browser connected)
+  - [x] `GET  /console`          — in-memory log buffer
+  - [x] `GET  /dom`              — stub (returns 503 until browser connected)
+- [x] Wire debug router into `dev_server()` Axum app (spawned alongside main server)
+- [x] Create `docs/en/skills/debug-agent.md` — skill prompt for agent integration (protocol spec)
+- [x] Add justfile recipe: `just dev-debug` → `just dev --daemon --debug`
 
-## Commits to `dev`
-1. `d192f77` feat(reactive): wire re-render loop — init_runtime, store_initial_vnode, sync fallback, interactive switch
-2. `d97556e` feat(website): add interactive dark mode toggle and language selector dropdown
-3. `7c5ba91` fix(browser-glue): add missing node-list runtime + getChildNodes/insertBefore for jco wrapper
+**Next step:** Wire headless Chromium via CDP so screenshot/click/type/evaluate/dom
+endpoints perform real browser automation instead of returning 503 stubs.
+Dependencies to evaluate: `chromiumoxide` or raw CDP over HTTP via `reqwest`.
+
+### Phase 3: Visual Diffing (Future)
+- [ ] Pixel comparison against baseline (`imageMagick compare` or `rust-image`)
+- [ ] Tolerance threshold (< 1% pixel diff = pass)
+- [ ] HTML report with side-by-side slider view
+- [ ] CI gate: fail PR if any component exceeds threshold
+
+### Phase 4: CI Integration (Future)
+- [ ] GitHub Actions workflow running `just e2e-verify`
+- [ ] Automatic baseline updates on main branch
+- [ ] PR comment with diff report links
