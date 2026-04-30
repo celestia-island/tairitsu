@@ -24,7 +24,7 @@ tairitsu-web = { path = "../../packages/web", features = [
 
 # Hikari design system (direct path to hikari workspace)
 hikari-palette = { path = "../../../hikari/packages/palette" }
-hikari-components = { path = "../../../hikari/packages/components", default-features = false }
+hikari-components = { path = "../../../hikari/packages/components" }
 hikari-icons = { path = "../../../hikari/packages/icons", features = ["tairitsu"] }
 
 # Markdown rendering
@@ -90,36 +90,6 @@ head = """
         '/event-test': 'event-test',
         '/packages': 'packages-overview',
         '/packages/list': 'packages-list',
-        '/components/layer1/button': 'component-button',
-        '/components/layer1/form': 'component-form',
-        '/components/layer1/number-input': 'component-number-input',
-        '/components/layer1/search': 'component-search',
-        '/components/layer1/switch': 'component-switch',
-        '/components/layer1/feedback': 'component-feedback',
-        '/components/layer1/display': 'component-display',
-        '/components/layer1/avatar': 'component-avatar',
-        '/components/layer1/image': 'component-image',
-        '/components/layer1/tag': 'component-tag',
-        '/components/layer1/empty': 'component-empty',
-        '/components/layer1/comment': 'component-comment',
-        '/components/layer1/description-list': 'component-description-list',
-        '/components/layer2/navigation': 'component-navigation',
-        '/components/layer2/collapsible': 'component-collapsible',
-        '/components/layer2/data': 'component-data',
-        '/components/layer2/table': 'component-table',
-        '/components/layer2/tree': 'component-tree',
-        '/components/layer2/pagination': 'component-pagination',
-        '/components/layer2/qrcode': 'component-qrcode',
-        '/components/layer2/timeline': 'component-timeline',
-        '/components/layer2/form': 'component-form-2',
-        '/components/layer2/cascader': 'component-cascader',
-        '/components/layer2/transfer': 'component-transfer',
-        '/components/layer2/feedback': 'component-feedback-2',
-        '/components/layer3/media': 'component-media',
-        '/components/layer3/editor': 'component-editor',
-        '/components/layer3/visualization': 'component-visualization',
-        '/components/layer3/user-guide': 'component-user-guide',
-        '/components/layer3/zoom-controls': 'component-zoom-controls',
     };
 
     /* ===== DRAWER STATE ===== */
@@ -309,7 +279,7 @@ head = """
         if (!link) return;
         var href = link.getAttribute('href');
         if (!href || !href.startsWith('/')) return;
-        if (ROUTES[href] || /^\\/guides\\//.test(href) || /^\\/system\\//.test(href) || /^\\/packages\\//.test(href) || /^\\/components\\//.test(href)) {
+        if (ROUTES[href] || /^\\/guides\\//.test(href) || /^\\/system\\//.test(href) || /^\\/packages\\//.test(href)) {
             e.preventDefault();
             navigate(href);
         }

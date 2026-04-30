@@ -1,6 +1,4 @@
 //! Tairitsu Website - Documentation and Demo
-//!
-//! 照抄 Hikari 的 website demo 设计
 
 mod app;
 mod components;

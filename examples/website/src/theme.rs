@@ -1,8 +1,4 @@
 //! Theme integration — uses hikari's palette system to inject CSS variables.
-//!
-//! Mirrors hikari/examples/website/src/theme.rs exactly.
-//! All theme colors come from the registered "tairitsu" Palette,
-//! not from hardcoded SCSS values.
 
 use hikari_components::{ComponentPalette, Style, ThemePalette};
 use hikari_palette::{get_palette, Tairitsu};

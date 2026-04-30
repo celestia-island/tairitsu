@@ -1,7 +1,4 @@
-//! Home page — mirrors hikari home page structure exactly (dark theme variant).
-//!
-//! Uses identical CSS class names: page-hero, page-hero__inner, card-grid, card, etc.
-//! Only differences: dark-themed content, tairitsu branding/text.
+//! Home page — tairitsu framework documentation site.
 
 use tairitsu_vdom::{VElement, VNode, VText};
 
@@ -76,7 +73,7 @@ pub fn render() -> VNode {
             .child(txt("Built with a reactive virtual DOM, compiled to WebAssembly. Tairitsu provides a rich set of components from basic primitives to complex data visualisations \u{2014} all rendered without JavaScript.")),
     );
 
-    let btn1 = glow_btn("/components/layer1/button", "hi-button hi-button-primary hi-button-lg", "Explore Components ", Some("\u{2192}"));
+    let btn1 = glow_btn("/system", "hi-button hi-button-primary hi-button-lg", "Explore Architecture ", Some("\u{2192}"));
     let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", "Quick Start", None);
 
     let actions = VNode::Element(
@@ -98,16 +95,16 @@ pub fn render() -> VNode {
     );
 
     let card1 = glow_card(
-        "Component Library",
-        "Layered architecture: Layer 1 (base primitives), Layer 2 (composed patterns), Layer 3 (complex widgets).",
+        "WASM Component Runtime",
+        "Interface-first architecture with Image/Container model, dual web backends, and WIT pipeline.",
     );
     let card2 = glow_card(
-        "Design System",
-        "500+ traditional Chinese colours, CSS utility classes, icon library, animations, and i18n system.",
+        "Reactive Virtual DOM",
+        "Signal-based hooks (use_signal, use_effect, use_memo), rsx! macro, and typed event system.",
     );
     let card3 = glow_card(
         "WebAssembly First",
-        "Ships as a wasm32-wasip2 component. Rendered with the Tairitsu virtual DOM \u{2014} no JavaScript framework required.",
+        "Ships as a wasm32-wasip2 component. Rendered with the Tairitsu virtual DOM — no JavaScript framework required.",
     );
 
     let card_grid = VNode::Element(

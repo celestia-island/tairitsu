@@ -1,15 +1,9 @@
 //! App root — assembles pages into a VNode tree based on current route.
-//!
-//! Uses hikari's layout CSS classes (hi-layout-*) with tairitsu dark theme
-//! injected via hikari's palette system (theme::tairitsu_style).
-//! Structure mirrors hikari website exactly.
 
 use std::cell::Cell;
 
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{VElement, VNode, VText};
-
-use crate::pages::components as page_components;
 
 thread_local! {
     static DARK_MODE: Cell<bool> = const { Cell::new(true) };
@@ -40,7 +34,6 @@ fn el(tag: &str) -> VElement {
 pub fn render() -> VNode {
     let mut content: Vec<VNode> = Vec::new();
     content.push(home::render());
-    content.extend(page_components::render_all());
     content.extend(guides::render_all());
     content.extend(system::render_all());
     content.push(event_test::render());
