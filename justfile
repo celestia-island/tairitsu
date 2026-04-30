@@ -323,11 +323,16 @@ watch:
 # ============================================================================
 
 # Development mode for website
-#   just dev             - Blocking foreground with hot-reload
-#   just dev --daemon    - Start/restart daemon (non-blocking)
-#   just dev --daemon stop - Stop daemon
+#   just dev                  - Blocking foreground with hot-reload
+#   just dev --daemon         - Start/restart daemon (non-blocking)
+#   just dev --daemon --debug - Start daemon + debug API server (port 3001)
+#   just dev --daemon stop    - Stop daemon
 dev *FLAGS="":
     cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch {{FLAGS}}
+
+# Dev server with debug/inspection API for agent automation
+dev-debug *FLAGS="":
+    cd examples/website && tairitsu --manifest-path Cargo.toml dev --port 3000 --watch --daemon --debug {{FLAGS}}
 
 # Build web demo for production (using tairitsu-packager + CDN demo)
 build-web: init

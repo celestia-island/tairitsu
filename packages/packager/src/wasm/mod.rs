@@ -1945,6 +1945,8 @@ pub async fn dev_server(
     watch: bool,
     force: bool,
     verbose: bool,
+    debug: bool,
+    debug_port: Option<u16>,
 ) -> crate::Result<()> {
     use axum::{middleware, response::Html, routing::get, Router};
     use tower_http::services::ServeDir;
@@ -2180,6 +2182,21 @@ pub async fn dev_server(
         .layer(middleware::from_fn(no_cache_headers));
 
     let (listener, actual_port) = bind_listener_with_fallback(port).await?;
+
+    let effective_debug_port = debug_port.unwrap_or(actual_port + 1);
+    if debug {
+        let cfg = config.clone();
+        tokio::spawn(async move {
+            if let Err(e) = crate::debug::start_debug_server(&cfg, actual_port, effective_debug_port).await
+            {
+                crate::log_warn!("Debug API server error: {}", e);
+            }
+        });
+        crate::log_info!(
+            "Debug API enabled → http://localhost:{}",
+            effective_debug_port
+        );
+    }
 
     if crate::daemon::is_daemon() {
         let _ = crate::daemon::signal_ready(actual_port);

@@ -6,6 +6,8 @@
 #[cfg(feature = "cli")]
 pub mod cli;
 pub mod config;
+#[cfg(feature = "dev-server")]
+pub mod debug;
 #[cfg(feature = "tokio")]
 pub mod daemon;
 pub mod i18n;
