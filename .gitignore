@@ -52,6 +52,9 @@ package.json
 !packages/browser-glue/package.json
 screenshot-test.png
 
+# Debug JS injection scripts (intermediate artifacts, embedded as Rust strings)
+packages/packager/src/debug/*.js
+
 # W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
 scripts/idl-cache/
 scripts/idl-cache/
