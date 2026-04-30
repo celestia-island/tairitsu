@@ -262,13 +262,15 @@ async fn navigate_handler(
 }
 
 async fn screenshot_handler(
-    State(state): State<DebugState>,
-    Json(params): Json<ScreenshotParams>,
-) -> impl IntoResponse {
-    let _ = (&state, &params);
-    ResponseJson(ApiResponse::<ScreenshotResponse>::err(
-        "Browser not connected. Start with --debug-browser or ensure headless chromium is available.",
-    ))
+    State(_state): State<DebugState>,
+    Json(_params): Json<ScreenshotParams>,
+) -> (StatusCode, ResponseJson<ApiResponse<ScreenshotResponse>>) {
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        ResponseJson(ApiResponse::<ScreenshotResponse>::err(
+            "Browser not connected. Start with --debug-browser or ensure headless chromium is available.",
+        )),
+    )
 }
 
 async fn click_handler(
