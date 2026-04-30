@@ -60,6 +60,10 @@ axum = { version = "^0.8", optional = true }
 tower-http = { version = "^0.6", features = ["fs", "cors"], optional = true }
 tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
 
+# Embedded WebView for debug/inspection API (headless browser automation)
+# Uses CDP (Chrome DevTools Protocol) to connect to headless chromium — no GUI libs needed
+tokio-tungstenite = { version = "0.24", features = ["connect"], optional = true }
+
 # WASM tools (optional)
 # SCSS compiler
 grass = "^0.13"
@@ -110,6 +114,8 @@ dev-server = [
   "tokio",
   "tokio-stream",
 ]
+# Enable embedded WebView browser automation in debug API server
+debug-browser = ["dev-server", "tokio-tungstenite", "reqwest"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 # Enable remote icon fetching from MDI, Lucide, etc.
