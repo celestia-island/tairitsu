@@ -1,8 +1,4 @@
 //! Shared layout components: top nav, sidebar, aside footer, and glow wrapper.
-//!
-//! Uses hikari-icons (SVG-based MDI icons) matching hikari-legacy's
-//! component library icon system, rendered under tairitsu dark theme.
-//! Sidebar structure mirrors hikari exactly: hi-menu-list > hi-submenu > hi-submenu-title/list.
 
 use hikari_icons::{get, MdiIcon};
 use std::cell::Cell;
@@ -151,7 +147,7 @@ pub fn top_nav() -> VNode {
             }
             div { class: "hi-header-right",
                 nav { class: "hi-header-nav",
-                    a { href: "/components/layer1/button", class: "hikari-topnav__link", "Components" }
+                    a { href: "/guides/quick-start", class: "hikari-topnav__link", "Guides" }
                     a { href: "/system", class: "hikari-topnav__link", "System" }
                     a { href: "/packages", class: "hikari-topnav__link", "Packages" }
                 }
@@ -210,33 +206,33 @@ const NAV_CATEGORIES: &[NavCategory] = &[
         ],
     },
     NavCategory {
-        label: "Components",
+        label: "Architecture",
         default_open: true,
         subcategories: &[
             NavSubcategory {
-                label: "Layer 1 — Foundations",
+                label: "Core Packages",
                 href: "/system/runtime",
                 items: &[
-                    NavItem { label: "Runtime", icon: MdiIcon::Cog, href: "/system/runtime" },
-                    NavItem { label: "Macros", icon: MdiIcon::Code, href: "/packages" },
-                    NavItem { label: "VDOM", icon: MdiIcon::FileEdit, href: "/packages/list" },
+                    NavItem { label: "Runtime Engine", icon: MdiIcon::Cog, href: "/system/runtime" },
+                    NavItem { label: "VNode / VDOM", icon: MdiIcon::FileEdit, href: "/packages/list" },
+                    NavItem { label: "Reactive Hooks", icon: MdiIcon::Code, href: "/packages" },
                 ],
             },
             NavSubcategory {
-                label: "Layer 2 — Platform",
+                label: "Web Platform",
                 href: "/system/web-backends",
                 items: &[
-                    NavItem { label: "Web Adapters", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
+                    NavItem { label: "Web Backends", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
                     NavItem { label: "Browser Worlds", icon: MdiIcon::Layers, href: "/system" },
-                    NavItem { label: "WIT Resolver", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline" },
+                    NavItem { label: "WIT Pipeline", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline" },
                 ],
             },
             NavSubcategory {
-                label: "Layer 3 — Tooling",
+                label: "Tooling",
                 href: "/packages/list",
                 items: &[
                     NavItem { label: "Packager", icon: MdiIcon::Package, href: "/packages/list" },
-                    NavItem { label: "Style", icon: MdiIcon::Palette, href: "/packages" },
+                    NavItem { label: "Style System", icon: MdiIcon::Palette, href: "/packages" },
                     NavItem { label: "Browser Glue", icon: MdiIcon::Code, href: "/system/runtime" },
                     NavItem { label: "E2E Tests", icon: MdiIcon::CheckboxMarkedCircle, href: "/system/versioning" },
                 ],
