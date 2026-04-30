@@ -97,6 +97,10 @@ zip = { version = "^2", default-features = false, features = [
   "deflate",
 ], optional = true }
 
+# Image processing for visual diffing
+image = { version = "^0.25", optional = true }
+base64 = { version = "^0.22", optional = true }
+
 # Embed browser-glue at compile time
 include_dir = "^0.7"
 
@@ -120,6 +124,8 @@ ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 # Enable remote icon fetching from MDI, Lucide, etc.
 icon-fetch = ["reqwest", "zip"]
+# Enable visual diffing (pixel comparison, HTML report generation)
+visual-diff = ["image", "base64"]
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

@@ -8,6 +8,8 @@ pub mod cli;
 pub mod config;
 #[cfg(feature = "dev-server")]
 pub mod debug;
+#[cfg(feature = "visual-diff")]
+pub mod visual_diff;
 #[cfg(feature = "tokio")]
 pub mod daemon;
 pub mod i18n;

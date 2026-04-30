@@ -578,6 +578,11 @@ info:
     @echo "E2E testing:"
     @echo "  just e2e-capture   - Batch screenshot all demo pages"
     @echo "  just e2e-verify    - Capture + verify event bridge + report"
+    @echo ""
+    @echo "Visual regression:"
+    @echo "  just visual-capture - Capture screenshots via debug API"
+    @echo "  just visual-diff    - Compare screenshots against baseline"
+    @echo "  just visual-update  - Update baseline from actual screenshots"
 
 # ============================================================================
 # E2E Testing (PLAN2: Playwright-based visual regression)
@@ -594,3 +599,77 @@ e2e-verify:
 # Install Playwright dependencies for web-test package
 e2e-install:
     cd packages/web-test && npm install && npx playwright install chromium
+
+# ============================================================================
+# Visual Regression Testing (Phase 3: pixel comparison + HTML report)
+# ============================================================================
+
+# Capture screenshots via debug API server (requires running dev --debug)
+visual-capture:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    DEBUG_PORT="${DEBUG_PORT:-3001}"
+    BASE_URL="http://localhost:${DEBUG_PORT}"
+    OUTPUT_DIR="target/visual-diff/actual"
+    
+    mkdir -p "$OUTPUT_DIR"
+    
+    # Check debug server is running
+    if ! curl -sf "${BASE_URL}/health" > /dev/null 2>&1; then
+        echo "Error: Debug API not running at ${BASE_URL}"
+        echo "Start with: just dev-debug"
+        exit 1
+    fi
+    
+    PAGES=("home" "button" "form" "search" "switch" "feedback" "display" "avatar" "image" "tag" "empty" "comment")
+    
+    for page in "${PAGES[@]}"; do
+        echo -n "Capturing /${page}... "
+        
+        # Navigate to page
+        curl -sf -X POST "${BASE_URL}/navigate" \
+            -H 'Content-Type: application/json' \
+            -d "{\"url\":\"/${page}\"}" > /dev/null
+        
+        sleep 1
+        
+        # Take screenshot and decode base64 to PNG
+        RESPONSE=$(curl -sf -X POST "${BASE_URL}/screenshot" \
+            -H 'Content-Type: application/json' \
+            -d '{"full_page": false}')
+        
+        if [ $? -eq 0 ] && echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "$RESPONSE" | python3 -c "
+import sys, json, base64
+d = json.load(sys.stdin)
+if d.get('ok'):
+    img = base64.b64decode(d['data']['data'])
+    with open('${OUTPUT_DIR}/${page}.png', 'wb') as f:
+        f.write(img)
+    print('OK')
+else:
+    print('FAIL')
+    sys.exit(1)
+"
+        else
+            echo "SKIP (server returned error)"
+        fi
+    done
+    
+    echo ""
+    echo "Screenshots saved to ${OUTPUT_DIR}/"
+
+# Run visual diff comparison against baseline
+visual-diff:
+    cargo run --package tairitsu-packager --features visual-diff -- \
+        visual-diff \
+        --tolerance {{TOLERANCE:-0.01}}
+
+# Update baseline images from actual screenshots
+visual-update:
+    cargo run --package tairitsu-packager --features visual-diff -- \
+        visual-diff \
+        --update-baseline
+
+# Full visual regression pipeline: capture + diff + report
+visual-regression: visual-capture visual-diff

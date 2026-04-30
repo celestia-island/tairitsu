@@ -167,6 +167,33 @@ enum Commands {
         #[arg(long)]
         output: Option<String>,
     },
+
+    /// Visual regression testing (pixel comparison, HTML report generation)
+    VisualDiff {
+        /// Directory containing actual screenshots to compare against baseline
+        #[arg(short, long, default_value = "target/visual-diff/actual")]
+        actual_dir: String,
+
+        /// Baseline image directory
+        #[arg(short = 'b', long, default_value = "tests/visual/baseline")]
+        baseline_dir: String,
+
+        /// Output directory for diff images and report
+        #[arg(short = 'o', long, default_value = "target/visual-diff")]
+        output_dir: String,
+
+        /// Pixel difference tolerance ratio (default: 0.01 = 1%)
+        #[arg(long, default_value = "0.01")]
+        tolerance: f32,
+
+        /// Update baseline images from actual screenshots instead of comparing
+        #[arg(long)]
+        update_baseline: bool,
+
+        /// Skip HTML report generation
+        #[arg(long)]
+        no_report: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -889,6 +916,78 @@ crate::log_info!("Starting SSR development server...");
                 }
             }
         },
+        #[allow(unused_variables)]
+        Some(Commands::VisualDiff {
+            actual_dir,
+            baseline_dir,
+            output_dir,
+            tolerance,
+            update_baseline,
+            no_report,
+        }) => {
+            #[cfg(feature = "visual-diff")]
+            {
+                let actual_path = std::path::PathBuf::from(&actual_dir);
+                let baseline_path = std::path::PathBuf::from(&baseline_dir);
+                let output_path = std::path::PathBuf::from(&output_dir);
+
+                if update_baseline {
+                    let images: Vec<std::path::PathBuf> = actual_path
+                        .read_dir()?
+                        .filter_map(|e| e.ok())
+                        .map(|e| e.path())
+                        .filter(|p| p.extension().map(|e| e == "png").unwrap_or(false))
+                        .collect();
+                    if images.is_empty() {
+                        crate::log_fail!("No PNG files found in {}", actual_dir);
+                        std::process::exit(1);
+                    }
+                    let count = crate::visual_diff::update_baseline(&images, &baseline_path)?;
+                    crate::log_ok!("Updated {} baseline image(s) in {}", count, baseline_dir);
+                } else {
+                    let images: Vec<std::path::PathBuf> = actual_path
+                        .read_dir()?
+                        .filter_map(|e| e.ok())
+                        .map(|e| e.path())
+                        .filter(|p| p.extension().map(|e| e == "png").unwrap_or(false))
+                        .collect();
+                    if images.is_empty() {
+                        crate::log_fail!("No PNG files found in {}", actual_dir);
+                        std::process::exit(1);
+                    }
+                    let config = crate::visual_diff::DiffConfig {
+                        tolerance,
+                        output_dir: output_path.clone(),
+                        baseline_dir: baseline_path.clone(),
+                        generate_html: !no_report,
+                        fail_on_diff: true,
+                    };
+                    crate::log_info!("Running visual diff (tolerance: {:.1}%)...", tolerance * 100.0);
+                    let report = crate::visual_diff::run_visual_diff(&images, &config)?;
+
+                    crate::log_info!(
+                        "Results: {}/{} passed, {}/{} failed",
+                        report.passed,
+                        report.total,
+                        report.failed,
+                        report.total
+                    );
+                    if !no_report {
+                        crate::log_ok!("Report: {}/index.html", output_dir);
+                    }
+                    if report.failed > 0 {
+                        std::process::exit(1);
+                    }
+                }
+            }
+            #[cfg(not(feature = "visual-diff"))]
+            {
+                crate::log_fail!(
+                    "Visual diff feature is not enabled. Please enable the 'visual-diff' feature."
+                );
+                std::process::exit(1);
+            }
+        }
         None => {
             if cli.status || cli.shutdown || cli.daemon {
                 return Ok(());
