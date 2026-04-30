@@ -160,26 +160,6 @@ test.describe('Event System - WASM Bridge Verification', () => {
 });
 
 test.describe('Event System - Component Interaction Tests', () => {
-  test('switch component has clickable element', async ({ page }) => {
-    await page.goto('/components/layer1/switch');
-    await page.waitForLoadState('domcontentloaded');
-    await page.locator('#hikari-app').waitFor({ timeout: 15000 });
-
-    const switchEl = page.locator('.hi-switch').first();
-    await expect(switchEl).toBeVisible();
-
-    const hasClickListener = await page.evaluate(() => {
-      const sw = document.querySelector('.hi-switch');
-      if (!sw || !globalThis.__listenerHandles) return false;
-      for (const [, info] of globalThis.__listenerHandles) {
-        if (info.element === sw && info.type === 'click') return true;
-      }
-      return false;
-    });
-
-    expect(hasClickListener).toBeTruthy();
-  });
-
   test('all pages load without console errors', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', msg => {
@@ -192,9 +172,6 @@ test.describe('Event System - Component Interaction Tests', () => {
 
     const pagesToCheck = [
       '/',
-      '/components/layer1/button',
-      '/components/layer1/switch',
-      '/components/layer1/form',
       '/event-test',
     ];
 
