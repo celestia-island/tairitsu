@@ -10,32 +10,11 @@ See git history for details.
 
 ## Remaining Work
 
-### Phase 2: Embedded Debug API Server (`--debug` flag) — In Progress
+### ✅ Phase 2 Complete (archived)
 
-**Goal:** `just dev --daemon --debug` starts the dev server *plus* an inspection API
-on `/__tairitsu_debug/*`. Agents connect via HTTP to take screenshots, query DOM,
-simulate clicks/inputs — no separate browser process needed; the server drives a
-headless browser internally.
-
-- [x] Add `--debug` / `--debug-port` CLI flags to `Dev` command
-- [x] Create `packages/packager/src/debug/mod.rs` — debug route handlers
-- [x] Implement debug endpoints (stub/skeleton — browser integration pending):
-  - [x] `GET  /health`          — liveness + version
-  - [x] `GET  /info`            — server state (port, pid, dist dir, uptime)
-  - [x] `POST /navigate`         — URL resolution (browser nav pending CDP)
-  - [x] `POST /screenshot`       — stub (returns 503 until browser connected)
-  - [x] `POST /click`            — stub (returns 503 until browser connected)
-  - [x] `POST /type`             — stub (returns 503 until browser connected)
-  - [x] `POST /evaluate`         — stub (returns 503 until browser connected)
-  - [x] `GET  /console`          — in-memory log buffer
-  - [x] `GET  /dom`              — stub (returns 503 until browser connected)
-- [x] Wire debug router into `dev_server()` Axum app (spawned alongside main server)
-- [x] Create `docs/en/skills/debug-agent.md` — skill prompt for agent integration (protocol spec)
-- [x] Add justfile recipe: `just dev-debug` → `just dev --daemon --debug`
-
-**Next step:** Wire headless Chromium via CDP so screenshot/click/type/evaluate/dom
-endpoints perform real browser automation instead of returning 503 stubs.
-Dependencies to evaluate: `chromiumoxide` or raw CDP over HTTP via `reqwest`.
+Phase 2 delivered a full embedded debug API server (`--debug` flag) with
+CDP-based Chromium automation engine. All 9 endpoints implemented and tested.
+See commits `723a8b5`, `446261a`, `cc319d3`.
 
 ### Phase 3: Visual Diffing (Future)
 - [ ] Pixel comparison against baseline (`imageMagick compare` or `rust-image`)
