@@ -108,7 +108,7 @@ include_dir = "^0.7"
 tempfile = "3"
 
 [features]
-default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-browser", "visual-diff"]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-browser", "visual-diff", "test-runner"]
 native = ["tokio", "crossterm"]
 dev-server = [
   "axum",
@@ -123,6 +123,7 @@ ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
+test-runner = ["reqwest", "image", "base64"]
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
