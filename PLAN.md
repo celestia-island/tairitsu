@@ -1,45 +1,38 @@
-# PLAN2: Playwright-Based Visual Regression & Batch Style Testing
+# PLAN2: Debug Browser Automation & Visual Regression Testing
 
-## ✅ Phase 1 Complete (archived)
+## Phase 1 — ✅ Complete
 
-Phase 1 delivered a self-contained `packages/web-test/` Playwright suite (13 pages,
-event bridge verification, batch screenshot scripts, justfile recipes).
-See git history for details.
+Embedded debug API server (`--debug` flag) with wry-based WebView engine.
+- `packages/packager/src/debug/mod.rs` — Axum HTTP server + wry WebView engine
+- 9 endpoints: health, info, navigate, screenshot, click, type, evaluate, console, dom
+- IPC-based JS execution via `window.ipc.postMessage`
+- Cross-platform via wry+tao (WebKitGTK on Linux, WebKit on macOS, WebView2 on Windows)
+- Headless support via Xvfb on Linux
 
----
+## Phase 2 — ✅ Complete
 
-## Remaining Work
-
-### ✅ Phase 2 Complete (archived)
-
-Phase 2 delivered a full embedded debug API server (`--debug` flag) with
-CDP-based Chromium automation engine. All 9 endpoints implemented and tested.
-See commits `723a8b5`, `446261a`, `cc319d3`.
-
-### ✅ Phase 3 Complete (archived)
-
-Phase 3 delivered a pixel-level visual diffing engine using `image` crate v0.25:
-- `packages/packager/src/visual_diff/mod.rs` — core engine (compare, diff image, HTML report)
-- `VisualDiff` CLI subcommand (`tairitsu visual-diff`) with tolerance, baseline management
+Pixel-level visual diffing engine.
+- `packages/packager/src/visual_diff/mod.rs` — compare, diff image, HTML report
+- `VisualDiff` CLI subcommand with tolerance and baseline management
 - HTML report with side-by-side diff images, JSON report output
-- justfile recipes: `visual-capture`, `visual-diff`, `visual-update`, `visual-regression`
 
-### ✅ Phase 4 Complete (archived)
+## Phase 3 — ✅ Complete
 
-Phase 4 delivered CI integration for visual regression:
-- `.github/workflows/visual-regression.yml` — full pipeline:
-  - Build with debug-browser + visual-diff features
-  - Start dev server + debug API
-  - Capture screenshots via debug endpoint
-  - Run visual diff comparison
-  - Upload artifacts (HTML report + diff images)
-  - Auto baseline update on main branch push
-  - PR comment with results table
-  - Fail CI if any screenshot exceeds tolerance threshold
+CI integration pipeline.
+- `.github/workflows/visual-regression.yml` — build, capture, diff, upload artifacts
+- Auto baseline update on main push, PR comment with results
 
-### Remaining Work
+## Phase 4 — ✅ Complete
 
-None — all phases complete. Future enhancements may include:
+Unified `tairitsu test` CLI subcommand.
+- `packages/packager/src/test_runner/mod.rs` — visual regression + event bridge tests
+- `tairitsu test --url --baseline-dir --events --update-baselines`
+- Calls debug API directly via reqwest (no external browser binary needed)
+- `packages/web-test/` kept as standalone `cargo test` entry point (same logic)
+
+## Future Enhancements
+
 - [ ] SSIM/structural similarity metric alongside pixel diff ratio
-- [ ] Per-component threshold configuration
+- [ ] Per-component threshold configuration in Cargo.toml metadata
 - [ ] Interactive web UI for baseline review/approval
+- [ ] WASM event bridge click simulation fix (el.click() does not trigger WASM listeners)
