@@ -3,47 +3,39 @@ use serde::Deserialize;
 const BASE_URL: &str = "http://localhost:3001";
 
 #[derive(Deserialize)]
-struct ApiResponse<T: serde::de::DeserializeOwned> {
+struct ApiResponse {
     ok: bool,
-    data: Option<T>,
+    data: Option<serde_json::Value>,
     error: Option<String>,
 }
 
-#[derive(Deserialize)]
-struct EvalData {
-    result: serde_json::Value,
-    #[serde(rename = "type")]
-    r#type: String,
-}
-
-fn api_post<T: serde::Serialize>(path: &str, body: &T) -> reqwest::blocking::Response {
+fn api_post(path: &str, body: &serde_json::Value) -> String {
     reqwest::blocking::Client::new()
         .post(format!("{}{}", BASE_URL, path))
         .json(body)
         .send()
         .expect("debug API request failed")
+        .text()
+        .expect("response read failed")
 }
 
 fn navigate(url: &str) {
-    let resp = api_post("/navigate", &serde_json::json!({ "url": url }));
-    let text = resp.text().unwrap();
-    let msg: ApiResponse<serde_json::Value> = serde_json::from_str(&text).unwrap();
+    let text = api_post("/navigate", &serde_json::json!({ "url": url }));
+    let msg: ApiResponse = serde_json::from_str(&text).unwrap();
     assert!(msg.ok, "navigate failed: {:?}", msg.error);
     std::thread::sleep(std::time::Duration::from_millis(800));
 }
 
 fn evaluate(js: &str) -> serde_json::Value {
-    let resp = api_post("/evaluate", &serde_json::json!({ "expression": js, "await_promise": false }));
-    let text = resp.text().unwrap();
-    let msg: ApiResponse<EvalData> = serde_json::from_str(&text).unwrap();
-    assert!(msg.ok, "evaluate failed: {:?}", msg.error);
-    msg.data.unwrap().result
+    let text = api_post("/evaluate", &serde_json::json!({ "expression": js, "await_promise": false }));
+    let msg: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert!(msg["ok"].as_bool().unwrap(), "evaluate failed: {}", msg);
+    msg["data"]["result"].clone()
 }
 
 fn click(selector: &str) {
-    let resp = api_post("/click", &serde_json::json!({ "selector": selector }));
-    let text = resp.text().unwrap();
-    let msg: ApiResponse<serde_json::Value> = serde_json::from_str(&text).unwrap();
+    let text = api_post("/click", &serde_json::json!({ "selector": selector }));
+    let msg: ApiResponse = serde_json::from_str(&text).unwrap();
     assert!(msg.ok, "click failed: {:?}", msg.error);
     std::thread::sleep(std::time::Duration::from_millis(300));
 }
@@ -102,8 +94,7 @@ fn dom_element_reachable() {
 
 #[test]
 fn all_pages_no_console_errors() {
-    let pages = ["/", "/event-test"];
-    for url in &pages {
+    for url in &["/", "/event-test"] {
         navigate(url);
         let result = evaluate("document.getElementById('hikari-app') !== null");
         assert_eq!(result, serde_json::Value::Bool(true), "#hikari-app not found on {}", url);

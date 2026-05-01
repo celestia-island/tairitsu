@@ -162,10 +162,15 @@ mod engine {
     ) {
         use tao::event::{Event, WindowEvent};
         use tao::event_loop::{ControlFlow, EventLoopBuilder};
+        use tao::platform::unix::EventLoopBuilderExtUnix;
         use tao::window::WindowBuilder;
         use wry::WebViewBuilder;
 
-        let event_loop = EventLoopBuilder::<BrowserCommand>::with_user_event().build();
+        crate::log_info!("[wry] Creating event loop...");
+
+        let event_loop = EventLoopBuilder::<BrowserCommand>::with_user_event()
+            .with_any_thread(true)
+            .build();
         let proxy = event_loop.create_proxy();
 
         std::thread::spawn(move || {
@@ -176,20 +181,25 @@ mod engine {
             }
         });
 
+        crate::log_info!("[wry] Creating offscreen window...");
         let window = match WindowBuilder::new()
-            .with_visible(false)
+            .with_visible(true)
+            .with_inner_size(tao::dpi::LogicalSize::new(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H))
+            .with_title("Tairitsu Debug Browser")
             .build(&event_loop)
         {
             Ok(w) => w,
             Err(e) => {
-                crate::log_fail!("Failed to create offscreen window: {}", e);
+                crate::log_fail!("[wry] Failed to create offscreen window: {}", e);
                 return;
             }
         };
+        crate::log_info!("[wry] Window created OK");
 
         let pending: PendingMap = StdArc::new(Mutex::new(HashMap::new()));
         let pending_ipc = pending.clone();
 
+        crate::log_info!("[wry] Creating WebView with URL {}...", base_url);
         let webview = match WebViewBuilder::new()
             .with_url(&base_url)
             .with_ipc_handler(move |request| {
@@ -212,10 +222,11 @@ mod engine {
         {
             Ok(wv) => wv,
             Err(e) => {
-                crate::log_fail!("Failed to create WebView: {}", e);
+                crate::log_fail!("[wry] Failed to create WebView: {}", e);
                 return;
             }
         };
+        crate::log_info!("[wry] WebView created OK");
 
         *connected.blocking_write() = true;
         crate::log_ok!("Debug browser connected via wry");
