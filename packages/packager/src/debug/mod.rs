@@ -12,10 +12,11 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, oneshot, RwLock};
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::compression::CompressionLayer;
 
 use crate::config::Config;
 
-const DEBUG_API_VERSION: &str = "0.2.0";
+const DEBUG_API_VERSION: &str = "0.1.0";
 const DEFAULT_VIEWPORT_W: u32 = 1280;
 const DEFAULT_VIEWPORT_H: u32 = 720;
 const OP_TIMEOUT_SECS: u64 = 30;
@@ -119,6 +120,95 @@ struct ErrorEntry { message: String, stack: Option<String>, r#type: String, time
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ErrorsResponse { errors: Vec<ErrorEntry>, unhandled_rejections: Vec<ErrorEntry> }
 
+#[derive(Debug, Clone, Deserialize)]
+struct DragRequest { from_selector: String, to_selector: String, steps: Option<u32> }
+
+#[derive(Debug, Clone, Deserialize, Default)]
+struct A11yQueryParams { selector: Option<String>, depth: Option<u32> }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct A11yNode {
+    name: Option<String>,
+    role: Option<String>,
+    description: Option<String>,
+    states: Vec<String>,
+    tag: Option<String>,
+    children: Vec<A11yNode>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct BatchRequest { operations: Vec<BatchOperation> }
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "type")]
+enum BatchOperation {
+    #[serde(rename = "navigate")]
+    Navigate { url: String, wait_for: Option<String> },
+    #[serde(rename = "screenshot")]
+    Screenshot { selector: Option<String>, full_page: Option<bool>, mode: Option<String>, name: Option<String> },
+    #[serde(rename = "click")]
+    Click { selector: String },
+    #[serde(rename = "evaluate")]
+    Evaluate { expression: String },
+    #[serde(rename = "wait")]
+    Wait { ms: u64 },
+    #[serde(rename = "scroll")]
+    Scroll { selector: Option<String>, direction: Option<String>, amount: Option<f64> },
+    #[serde(rename = "resize")]
+    Resize { width: Option<u32>, height: Option<u32>, preset: Option<String> },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct BatchResult {
+    name: String,
+    op_type: String,
+    success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
+    duration_ms: u64,
+}
+
+#[derive(Debug, Clone, Deserialize, Default)]
+struct NetworkQueryParams { limit: Option<usize> }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct NetworkResource { name: String, r#type: String, duration: f64, size: f64, url: String }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct NetworkResponse { resources: Vec<NetworkResource> }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct PerformanceMetrics {
+    dom_content_loaded_ms: Option<f64>,
+    dom_complete_ms: Option<f64>,
+    load_event_ms: Option<f64>,
+    fcp_ms: Option<f64>,
+    lcp_ms: Option<f64>,
+    cls: Option<f64>,
+    dom_nodes: u32,
+    js_heap_used_mb: Option<f64>,
+    wasm_loaded: bool,
+    hydrated: bool,
+    timestamp: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct WebSocketInfo { active_count: u32, connections: Vec<WebSocketConn> }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct WebSocketConn { url: String, state: String, created_at_ms: Option<f64> }
+
+#[derive(Debug, Clone, Deserialize)]
+struct SourceMapRequest { stack: String }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SourceMapResponse { frames: Vec<StackFrame>, raw: String }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct StackFrame { file: String, line: Option<u32>, col: Option<u32>, func: Option<String>, raw: String }
+
 // ── Browser command channel ───────────────────────────────────────────────
 
 enum BrowserCommand {
@@ -133,6 +223,11 @@ enum BrowserCommand {
     Scroll { selector: Option<String>, x: f64, y: f64, resp: oneshot::Sender<Result<(), String>> },
     Resize { width: u32, height: u32, resp: oneshot::Sender<Result<(), String>> },
     Viewport { resp: oneshot::Sender<Result<ViewportResponse, String>> },
+    Drag { from_selector: String, to_selector: String, steps: u32, resp: oneshot::Sender<Result<(), String>> },
+    A11y { selector: Option<String>, depth: u32, resp: oneshot::Sender<Result<Vec<A11yNode>, String>> },
+    Network { resp: oneshot::Sender<Result<NetworkResponse, String>> },
+    Performance { resp: oneshot::Sender<Result<PerformanceMetrics, String>> },
+    WebSocket { resp: oneshot::Sender<Result<WebSocketInfo, String>> },
     Shutdown,
 }
 
@@ -267,25 +362,13 @@ mod engine {
                             let target = if url.starts_with("http") { url.clone() } else { format!("{}{}", base_url, url) };
                             let js = format!("window.location.href={:?}", target);
                             let _ = webview.evaluate_script(&js);
-                            let wait_ms = match wait_for.as_deref() {
-                                Some("hydration") | Some("ready") => 1500,
-                                Some("load") => 1000,
-                                _ => 500,
-                            };
-                            std::thread::sleep(Duration::from_millis(wait_ms));
+                            std::thread::sleep(Duration::from_millis(500));
                             if matches!(wait_for.as_deref(), Some("hydration") | Some("ready")) {
-                                for _ in 0..20 {
-                                    std::thread::sleep(Duration::from_millis(200));
-                                    let check_id = next_id; next_id += 1;
-                                    let check_js = format!(r#"(()=>{{try{{var r=document.documentElement.dataset.tairitsuReady==='hydrated';window.ipc.postMessage(JSON.stringify({{id:{check_id},ok:true,data:String(r)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{check_id},ok:false,error:e.message}}))}}}})()"#);
-                                    let (tx, rx) = std::sync::mpsc::channel();
-                                    pending.lock().unwrap().insert(check_id, Box::new(move |result| { let _ = tx.send(result); }));
-                                    let _ = webview.evaluate_script(&check_js);
-                                    match rx.recv_timeout(Duration::from_secs(1)) {
-                                        Ok(Ok(data)) if data == "true" => break,
-                                        _ => continue,
-                                    }
+                                for _ in 0..15 {
+                                    std::thread::sleep(Duration::from_millis(300));
                                 }
+                            } else if matches!(wait_for.as_deref(), Some("load")) {
+                                std::thread::sleep(Duration::from_millis(500));
                             }
                             let _ = resp.send(Ok(NavigateResponse { url: target, title: String::new() }));
                         }
@@ -303,7 +386,7 @@ mod engine {
                                 }
                             }
                             let id = next_id; next_id += 1;
-                            let js = build_screenshot_js(id, selector.as_deref(), full_page);
+                            let eval_js = build_screenshot_eval_js(selector.as_deref(), full_page);
                             let r = resp;
                             pending.lock().unwrap().insert(id, Box::new(move |result| {
                                 match result {
@@ -311,7 +394,10 @@ mod engine {
                                     Err(e) => { let _ = r.send(Err(e)); }
                                 }
                             }));
-                            let _ = webview.evaluate_script(&js);
+                            let wrapper = format!(
+                                r#"(()=>{{try{{var r=({eval_js});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
+                            );
+                            let _ = webview.evaluate_script(&wrapper);
                         }
                         BrowserCommand::Click { selector, resp } => {
                             let js = format!(r#"(()=>{{var el=document.querySelector({:?});if(!el)return;el.click()}})()"#, selector);
@@ -437,6 +523,85 @@ mod engine {
                             }));
                             let _ = webview.evaluate_script(&js);
                         }
+                        BrowserCommand::Drag { from_selector, to_selector, steps, resp } => {
+                            let js = format!(r#"(()=>{{try{{var src=document.querySelector({from:?});var dst=document.querySelector({to:?});if(!src||!dst){{window.ipc.postMessage(JSON.stringify({{id:-1,ok:false,error:'element not found'}}));return}}var sr=src.getBoundingClientRect();var dr=dst.getBoundingClientRect();var sx=sr.x+sr.width/2,sy=sr.y+sr.height/2;var dx=dr.x+dr.width/2,dy=dr.y+dr.height/2;src.dispatchEvent(new MouseEvent('mousedown',{{clientX:sx,clientY:sy,bubbles:true}}));for(var i=1;i<={steps};i++){{var t=i/{steps};var cx=sx+(dx-sx)*t,cy=sy+(dy-sy)*t;document.dispatchEvent(new MouseEvent('mousemove',{{clientX:cx,clientY:cy,bubbles:true}}))}}dst.dispatchEvent(new MouseEvent('mouseup',{{clientX:dx,clientY:dy,bubbles:true}}));dst.dispatchEvent(new MouseEvent('drop',{{clientX:dx,clientY:dy,bubbles:true}}))}}catch(e){{}}}})()"#,
+                                from = from_selector, to = to_selector, steps = steps);
+                            let _ = webview.evaluate_script(&js);
+                            std::thread::sleep(Duration::from_millis(200));
+                            let _ = resp.send(Ok(()));
+                        }
+                        BrowserCommand::A11y { selector, depth, resp } => {
+                            let id = next_id; next_id += 1;
+                            let sel_js = match &selector {
+                                Some(s) => format!("document.querySelector({:?})", s),
+                                None => "document.body".to_string(),
+                            };
+                            let js = build_a11y_js(id, &sel_js, depth);
+                            let r = resp;
+                            pending.lock().unwrap().insert(id, Box::new(move |result| {
+                                match result {
+                                    Ok(data) => {
+                                        match serde_json::from_str::<Vec<A11yNode>>(&data) {
+                                            Ok(nodes) => { let _ = r.send(Ok(nodes)); }
+                                            Err(_) => { let _ = r.send(Err(format!("a11y parse: {}", data))); }
+                                        }
+                                    }
+                                    Err(e) => { let _ = r.send(Err(e)); }
+                                }
+                            }));
+                            let _ = webview.evaluate_script(&js);
+                        }
+                        BrowserCommand::Network { resp } => {
+                            let id = next_id; next_id += 1;
+                            let js = format!(r#"(()=>{{try{{var entries=performance.getEntriesByType('resource').slice(0,100).map(function(e){{return{{name:e.name,type:e.initiatorType||'unknown',duration:Math.round(e.duration*100)/100,size:e.transferSize||0,url:e.name}}}});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{resources:entries}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#);
+                            let r = resp;
+                            pending.lock().unwrap().insert(id, Box::new(move |result| {
+                                match result {
+                                    Ok(data) => {
+                                        match serde_json::from_str::<NetworkResponse>(&data) {
+                                            Ok(n) => { let _ = r.send(Ok(n)); }
+                                            Err(_) => { let _ = r.send(Err(format!("network parse: {}", data))); }
+                                        }
+                                    }
+                                    Err(e) => { let _ = r.send(Err(e)); }
+                                }
+                            }));
+                            let _ = webview.evaluate_script(&js);
+                        }
+                        BrowserCommand::Performance { resp } => {
+                            let id = next_id; next_id += 1;
+                            let js = build_performance_js(id);
+                            let r = resp;
+                            pending.lock().unwrap().insert(id, Box::new(move |result| {
+                                match result {
+                                    Ok(data) => {
+                                        match serde_json::from_str::<PerformanceMetrics>(&data) {
+                                            Ok(p) => { let _ = r.send(Ok(p)); }
+                                            Err(_) => { let _ = r.send(Err(format!("perf parse: {}", data))); }
+                                        }
+                                    }
+                                    Err(e) => { let _ = r.send(Err(e)); }
+                                }
+                            }));
+                            let _ = webview.evaluate_script(&js);
+                        }
+                        BrowserCommand::WebSocket { resp } => {
+                            let id = next_id; next_id += 1;
+                            let js = build_websocket_js(id);
+                            let r = resp;
+                            pending.lock().unwrap().insert(id, Box::new(move |result| {
+                                match result {
+                                    Ok(data) => {
+                                        match serde_json::from_str::<WebSocketInfo>(&data) {
+                                            Ok(w) => { let _ = r.send(Ok(w)); }
+                                            Err(_) => { let _ = r.send(Err(format!("ws parse: {}", data))); }
+                                        }
+                                    }
+                                    Err(e) => { let _ = r.send(Err(e)); }
+                                }
+                            }));
+                            let _ = webview.evaluate_script(&js);
+                        }
                         BrowserCommand::Shutdown => {
                             *connected.blocking_write() = false;
                             *control_flow = ControlFlow::Exit;
@@ -507,6 +672,55 @@ mod engine {
         { Err("pixel capture not supported on this platform".into()) }
     }
 
+    fn build_screenshot_eval_js(selector: Option<&str>, full_page: bool) -> String {
+        let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
+        let capture_logic = if selector.is_some() {
+            "ctx.fillRect(0,0,w,h)".to_string()
+        } else {
+            r#"ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,300).forEach(function(e){var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;ctx.fillStyle=getComputedStyle(e).backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)})"#.to_string()
+        };
+        format!(
+            r#"function(){{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var c=document.createElement('canvas');c.width=w;c.height=h;var ctx=c.getContext('2d');{capture_logic};return c.toDataURL('image/png').split(',')[1]}}()"#
+        )
+    }
+
+    fn build_a11y_js(id: i32, sel_js: &str, depth: u32) -> String {
+        let js_body = r#"
+(function(){
+try{
+function getA11y(el,d,maxD){
+if(!el||d>maxD)return null;
+var tagRoles={BUTTON:'button',SELECT:'listbox',OPTION:'option',A:'link',H1:'heading',H2:'heading',H3:'heading',H4:'heading',H5:'heading',H6:'heading',NAV:'navigation',MAIN:'main',HEADER:'banner',FOOTER:'contentinfo',ASIDE:'complementary',FORM:'form',TABLE:'table',UL:'list',OL:'list',LI:'listitem',IMG:'img',SVG:'img',PROGRESS:'progressbar',METER:'meter',DIALOG:'dialog',DETAILS:'group',SUMMARY:'button',FIELDSET:'group'};
+var inputRoles={checkbox:'checkbox',radio:'radio'};
+var role=el.getAttribute('role')||(el.tagName?(tagRoles[el.tagName]||(el.tagName==='INPUT'?(inputRoles[el.getAttribute('type')]||'textbox'):(el.tagName==='TEXTAREA'?'textbox':undefined))):undefined);
+var name=el.getAttribute('aria-label')||el.getAttribute('title')||((el.tagName==='INPUT'||el.tagName==='TEXTAREA')?el.getAttribute('placeholder'):null)||(el.tagName==='IMG'?el.getAttribute('alt'):null)||null;
+var desc=el.getAttribute('aria-description')||null;
+var states=[];
+if(el.disabled)states.push('disabled');
+if(el.getAttribute('aria-hidden')==='true')states.push('hidden');
+if(el.getAttribute('aria-expanded')==='true')states.push('expanded');
+if(el.getAttribute('aria-expanded')==='false')states.push('collapsed');
+if(el.getAttribute('aria-selected')==='true')states.push('selected');
+if(el.getAttribute('aria-checked')==='true')states.push('checked');
+if(el.getAttribute('aria-checked')==='mixed')states.push('mixed');
+var children=[];
+if(d<maxD){for(var i=0;i<el.children.length;i++){var child=getA11y(el.children[i],d+1,maxD);if(child)children.push(child)}}
+return{name:name,role:role||null,description:desc,states:states,tag:el.tagName?el.tagName.toLowerCase():null,children:children}
+}
+var root=SEL_JS;
+if(!root)throw'element not found';
+var tree=getA11y(root,0,DEPTH);
+return JSON.stringify([tree])
+}catch(e){throw e}
+})()"#;
+        let eval_js = js_body
+            .replace("SEL_JS", sel_js)
+            .replace("DEPTH", &depth.to_string());
+        format!(
+            r#"(()=>{{try{{var r=({eval_js});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
+        )
+    }
+
     fn build_screenshot_js(id: i32, selector: Option<&str>, full_page: bool) -> String {
         let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
         let capture_logic = if let Some(sel) = selector {
@@ -516,11 +730,23 @@ mod engine {
             )
         } else {
             format!(
-                r#"c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);document.querySelectorAll('*').forEach(function(e){{var er=e.getBoundingClientRect();ctx.fillStyle=getComputedStyle(e).backgroundColor||'transparent';if(er.width>0&&er.height>0&&er.bottom>0&&er.right>0&&er.top<h&&er.left<w)ctx.fillRect(er.x,er.y,er.width,er.height)}});document.querySelectorAll('*').forEach(function(e){{var er=e.getBoundingClientRect();var s=getComputedStyle(e);if(e.childNodes.length===1&&e.childNodes[0].nodeType===3&&er.width>0&&er.height>0){{ctx.font=s.fontSize+' '+(s.fontFamily||'sans-serif');ctx.fillStyle=s.color||'inherit';ctx.textBaseline='top';var txt=e.childNodes[0].textContent.trim();if(txt)ctx.fillText(txt.substring(0,Math.floor(er.width/8)),er.x,er.y+parseInt(s.paddingTop||0))}}}})"#
+                r#"c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;var s=getComputedStyle(e);ctx.fillStyle=s.backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)}});Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();var s=getComputedStyle(e);if(er.width<1||er.height<1)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){{ctx.font=(s.fontSize||'16px')+' '+(s.fontFamily||'sans-serif');ctx.fillStyle=s.color||'#000';ctx.textBaseline='top';var txt=(e.childNodes[0].textContent||'').trim();if(txt)ctx.fillText(txt.substring(0,Math.floor(er.width/8)),er.x,er.y)}}}})"#
             )
         };
         format!(
             r#"(()=>{{try{{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var dpr=window.devicePixelRatio||1;var c=document.createElement('canvas');var ctx=c.getContext('2d');{capture_logic}var base64=c.toDataURL('image/png').split(',')[1];window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:base64}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
+        )
+    }
+
+    fn build_performance_js(id: i32) -> String {
+        format!(
+            r#"(()=>{{try{{var nav=performance.getEntriesByType('navigation')[0]||{{}};var fcp=null;try{{fcp=performance.getEntriesByName('first-contentful-paint')[0].startTime||null}}catch(e){{}}var dn=document.querySelectorAll('*').length;var heap=null;try{{heap=Math.round((performance.memory?performance.memory.usedJSHeapSize:0)/1048576*100)/100}}catch(e){{}}var d={{dom_content_loaded_ms:Math.round((nav.domContentLoadedEventEnd-nav.startTime)*100)/100||null,dom_complete_ms:Math.round((nav.domComplete-nav.startTime)*100)/100||null,load_event_ms:Math.round((nav.loadEventEnd-nav.startTime)*100)/100||null,fcp_ms:fcp?Math.round(fcp*100)/100:null,lcp_ms:null,cls:null,dom_nodes:dn,js_heap_used_mb:heap,wasm_loaded:!!globalThis.__wasmExports,hydrated:document.documentElement.dataset.tairitsuReady==='hydrated',timestamp:new Date().toISOString()}};window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify(d)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
+        )
+    }
+
+    fn build_websocket_js(id: i32) -> String {
+        format!(
+            r#"(()=>{{try{{var c=0;var conns=[];var t=window._wsTracker||[];t.forEach(function(ws){{c++;conns.push({{url:ws.url||'unknown',state:ws.readyState===0?'connecting':ws.readyState===1?'open':ws.readyState===2?'closing':'closed',created_at_ms:null}})}});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{active_count:c,connections:conns}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
         )
     }
 }
@@ -558,6 +784,40 @@ pub async fn start_debug_server(
     let base_url = format!("http://localhost:{}", dev_port);
     let console_log = Arc::new(RwLock::new(Vec::new()));
 
+    #[cfg(target_os = "linux")]
+    {
+        if std::env::var("DISPLAY").map(|d| d.is_empty()).unwrap_or(true) {
+            crate::log_info!("[debug-headless] DISPLAY not set, auto-detecting Xvfb...");
+            let check = std::process::Command::new("xdpyinfo")
+                .env("DISPLAY", ":99")
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status();
+            if check.map(|s| s.success()).unwrap_or(false) {
+                unsafe { std::env::set_var("DISPLAY", ":99"); }
+                crate::log_ok!("[debug-headless] Using DISPLAY=:99 (Xvfb detected)");
+            } else {
+                crate::log_info!("[debug-headless] No Xvfb on :99, attempting to start...");
+                let started = std::process::Command::new("Xvfb")
+                    .args([":99", "-screen", "0", "1920x1080x24", "-ac", "-nolisten", "tcp"])
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .spawn()
+                    .map(|mut c| {
+                        std::thread::sleep(Duration::from_millis(500));
+                        c.try_wait().ok().flatten().map(|s| s.success()).unwrap_or(true)
+                    })
+                    .unwrap_or(false);
+                if started {
+                    unsafe { std::env::set_var("DISPLAY", ":99"); }
+                    crate::log_ok!("[debug-headless] Xvfb started on :99");
+                } else {
+                    crate::log_fail!("[debug-headless] Failed to start Xvfb. Install: apt install xvfb");
+                }
+            }
+        }
+    }
+
     let browser = engine::spawn_browser(base_url.clone(), None, console_log.clone())
         .ok().map(Arc::new);
 
@@ -592,11 +852,19 @@ pub async fn start_debug_server(
         .route("/viewport", get(viewport_handler))
         .route("/resize", post(resize_handler))
         .route("/errors", get(errors_handler))
+        .route("/drag", post(drag_handler))
+        .route("/a11y", get(a11y_handler))
+        .route("/batch", post(batch_handler))
+        .route("/network", get(network_handler))
+        .route("/performance", get(performance_handler))
+        .route("/websocket", get(websocket_handler))
+        .route("/source-map", post(source_map_handler))
+        .layer(CompressionLayer::new())
         .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
         .with_state(state);
 
     crate::log_ok!("Debug API v{} listening on http://localhost:{}", DEBUG_API_VERSION, debug_port);
-    crate::log_info!("Endpoints: /health /info /ready /navigate /screenshot /click /type /press /scroll /evaluate /console /dom /dom/computed /viewport /resize /errors");
+    crate::log_info!("Endpoints: /health /info /ready /navigate /screenshot /click /type /press /scroll /evaluate /console /dom /dom/computed /viewport /resize /errors /drag /a11y /batch /network /performance /websocket /source-map");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
@@ -760,6 +1028,180 @@ async fn errors_handler(State(state): State<DebugState>) -> impl IntoResponse {
         errors: state.errors.read().await.clone(),
         unhandled_rejections: state.rejections.read().await.clone(),
     }))
+}
+
+async fn drag_handler(State(state): State<DebugState>, Json(req): Json<DragRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+    let (tx, rx) = oneshot::channel();
+    if br.send(BrowserCommand::Drag { from_selector: req.from_selector, to_selector: req.to_selector, steps: req.steps.unwrap_or(10), resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    await_op(rx).await
+}
+
+async fn a11y_handler(State(state): State<DebugState>, Query(params): Query<A11yQueryParams>) -> impl IntoResponse {
+    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<Vec<A11yNode>>() };
+    let (tx, rx) = oneshot::channel();
+    if br.send(BrowserCommand::A11y { selector: params.selector, depth: params.depth.unwrap_or(5), resp: tx }).await.is_err() { return chan_closed::<Vec<A11yNode>>(); }
+    await_op(rx).await
+}
+
+async fn batch_handler(State(state): State<DebugState>, Json(req): Json<BatchRequest>) -> impl IntoResponse {
+    let mut results = Vec::with_capacity(req.operations.len());
+    for (i, op) in req.operations.into_iter().enumerate() {
+        let start = Instant::now();
+        let name = match &op {
+            BatchOperation::Screenshot { name, .. } => name.clone().unwrap_or_else(|| format!("screenshot_{}", i)),
+            _ => format!("op_{}", i),
+        };
+        let op_type = match &op {
+            BatchOperation::Navigate { .. } => "navigate",
+            BatchOperation::Screenshot { .. } => "screenshot",
+            BatchOperation::Click { .. } => "click",
+            BatchOperation::Evaluate { .. } => "evaluate",
+            BatchOperation::Wait { .. } => "wait",
+            BatchOperation::Scroll { .. } => "scroll",
+            BatchOperation::Resize { .. } => "resize",
+        }.to_string();
+
+        let (success, data, error) = match execute_batch_op(&state, op).await {
+            Ok(d) => (true, Some(d), None),
+            Err(e) => (false, None, Some(e)),
+        };
+        results.push(BatchResult {
+            name, op_type, success, data, error,
+            duration_ms: start.elapsed().as_millis() as u64,
+        });
+    }
+    ResponseJson(ApiResponse::ok(serde_json::json!({ "results": results })))
+}
+
+async fn execute_batch_op(state: &DebugState, op: BatchOperation) -> Result<serde_json::Value, String> {
+    let br = state.browser.as_ref().ok_or("No browser")?;
+    match op {
+        BatchOperation::Navigate { url, wait_for } => {
+            let target = if url.starts_with("http") { url } else { format!("{}{}", state.base_url, url) };
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Navigate { url: target, wait_for, resp: tx }).await.map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            r.map(|nav| serde_json::to_value(nav).unwrap_or_default())
+        }
+        BatchOperation::Screenshot { selector, full_page, mode, .. } => {
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Screenshot { selector, full_page: full_page.unwrap_or(false), mode: mode.unwrap_or_default(), resp: tx }).await.map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            r.map(|ss| serde_json::json!({ "mode": ss.mode, "width": ss.width, "height": ss.height, "data_len": ss.data.len() }))
+        }
+        BatchOperation::Click { selector } => {
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Click { selector, resp: tx }).await.map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            Ok(serde_json::json!({ "clicked": true }))
+        }
+        BatchOperation::Evaluate { expression } => {
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Evaluate { expression, await_promise: false, resp: tx }).await.map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            r.map(|ev| serde_json::json!({ "result": ev.result, "type": ev.r#type }))
+        }
+        BatchOperation::Wait { ms } => {
+            tokio::time::sleep(Duration::from_millis(ms)).await;
+            Ok(serde_json::json!({ "waited_ms": ms }))
+        }
+        BatchOperation::Scroll { selector, direction, amount } => {
+            let (x, y) = match direction.as_deref() {
+                Some("up") => (0.0, -(amount.unwrap_or(300.0))),
+                Some("down") => (0.0, amount.unwrap_or(300.0)),
+                Some("left") => (-(amount.unwrap_or(300.0)), 0.0),
+                Some("right") => (amount.unwrap_or(300.0), 0.0),
+                _ => (0.0, amount.unwrap_or(300.0)),
+            };
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Scroll { selector, x, y, resp: tx }).await.map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            Ok(serde_json::json!({ "scrolled": true }))
+        }
+        BatchOperation::Resize { width, height, preset } => {
+            let (w, h) = match preset.as_deref() {
+                Some("mobile") => (375, 812),
+                Some("tablet") => (768, 1024),
+                Some("desktop") => (1280, 720),
+                Some("wide") => (1920, 1080),
+                _ => (width.unwrap_or(DEFAULT_VIEWPORT_W), height.unwrap_or(DEFAULT_VIEWPORT_H)),
+            };
+            let (tx, rx) = oneshot::channel();
+            br.send(BrowserCommand::Resize { width: w, height: h, resp: tx }).await.map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            Ok(serde_json::json!({ "resized": [w, h] }))
+        }
+    }
+}
+
+async fn network_handler(State(state): State<DebugState>) -> impl IntoResponse {
+    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<NetworkResponse>() };
+    let (tx, rx) = oneshot::channel();
+    if br.send(BrowserCommand::Network { resp: tx }).await.is_err() { return chan_closed::<NetworkResponse>(); }
+    await_op(rx).await
+}
+
+async fn performance_handler(State(state): State<DebugState>) -> impl IntoResponse {
+    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<PerformanceMetrics>() };
+    let (tx, rx) = oneshot::channel();
+    if br.send(BrowserCommand::Performance { resp: tx }).await.is_err() { return chan_closed::<PerformanceMetrics>(); }
+    await_op(rx).await
+}
+
+async fn websocket_handler(State(state): State<DebugState>) -> impl IntoResponse {
+    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<WebSocketInfo>() };
+    let (tx, rx) = oneshot::channel();
+    if br.send(BrowserCommand::WebSocket { resp: tx }).await.is_err() { return chan_closed::<WebSocketInfo>(); }
+    await_op(rx).await
+}
+
+async fn source_map_handler(Json(req): Json<SourceMapRequest>) -> impl IntoResponse {
+    let frames = parse_wasm_stack(&req.stack);
+    ResponseJson(ApiResponse::ok(SourceMapResponse { frames, raw: req.stack }))
+}
+
+fn parse_wasm_stack(stack: &str) -> Vec<StackFrame> {
+    let mut frames = Vec::new();
+    for line in stack.lines() {
+        let line = line.trim();
+        if line.is_empty() { continue; }
+        let raw = line.to_string();
+        let (func, rest) = if let Some(at_pos) = line.find(" at ") {
+            (Some(line[..at_pos].trim().to_string()), &line[at_pos + 4..])
+        } else {
+            (None, line)
+        };
+        let (file, line_num, col) = if let Some(paren_start) = rest.find('(') {
+            let inner = if let Some(paren_end) = rest.rfind(')') {
+                &rest[paren_start + 1..paren_end]
+            } else {
+                &rest[paren_start + 1..]
+            };
+            parse_location(inner)
+        } else {
+            parse_location(rest)
+        };
+        frames.push(StackFrame { file, line: line_num, col, func, raw });
+    }
+    frames
+}
+
+fn parse_location(s: &str) -> (String, Option<u32>, Option<u32>) {
+    let s = s.trim();
+    if let Some(colon_pos) = s.rfind(':') {
+        let after_colon = &s[colon_pos + 1..];
+        if let Ok(col) = after_colon.parse::<u32>() {
+            let before_col = &s[..colon_pos];
+            if let Some(colon2) = before_col.rfind(':') {
+                if let Ok(line) = before_col[colon2 + 1..].parse::<u32>() {
+                    return (before_col[..colon2].to_string(), Some(line), Some(col));
+                }
+            }
+            return (before_col.to_string(), None, Some(col));
+        }
+    }
+    (s.to_string(), None, None)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
