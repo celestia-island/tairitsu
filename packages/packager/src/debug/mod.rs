@@ -248,7 +248,7 @@ impl BrowserHandle {
 #[cfg(feature = "debug-browser")]
 mod engine {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::sync::{Arc as StdArc, Mutex};
 
     type PendingCallback = Box<dyn Send + FnOnce(Result<String, String>)>;
@@ -377,12 +377,22 @@ mod engine {
                                 if let Some(win_id) = x11_window_id {
                                     match capture_x11_window(win_id) {
                                         Ok((png_bytes, w, h)) => {
+                                            let unique_threshold = (w * h / 100).max(10) as usize;
                                             let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png_bytes);
-                                            let _ = resp.send(Ok(ScreenshotResponse { data: b64, mime_type: "image/png".into(), width: w, height: h, mode: "pixel".into() }));
+                                            if let Ok(img) = image::load_from_memory(&png_bytes) {
+                                                let rgba = img.to_rgba8();
+                                                let mut colors = std::collections::HashSet::new();
+                                                for px in rgba.pixels().take(5000) {
+                                                    colors.insert([px[0], px[1], px[2]]);
+                                                }
+                                                if colors.len() > 3 {
+                                                    let _ = resp.send(Ok(ScreenshotResponse { data: b64, mime_type: "image/png".into(), width: w, height: h, mode: "pixel".into() }));
+                                                    return;
+                                                }
+                                            }
                                         }
-                                        Err(e) => { let _ = resp.send(Err(format!("pixel capture: {}", e))); }
+                                        Err(_) => {}
                                     }
-                                    return;
                                 }
                             }
                             let id = next_id; next_id += 1;
@@ -639,8 +649,12 @@ mod engine {
     fn capture_x11_window(window_id: u32) -> Result<(Vec<u8>, u32, u32), String> {
         #[cfg(target_os = "linux")]
         {
-            use base64::Engine;
             let (conn, _) = x11rb::connect(None).map_err(|e| format!("x11 connect: {}", e))?;
+            let _ = x11rb::protocol::composite::redirect_window(
+                &conn, window_id,
+                x11rb::protocol::composite::Redirect::AUTOMATIC,
+            ).map_err(|e| format!("composite redirect: {}", e));
+            std::thread::sleep(Duration::from_millis(50));
             let geom = x11rb::protocol::xproto::get_geometry(&conn, window_id)
                 .map_err(|e| format!("get_geometry: {}", e))?
                 .reply()
@@ -653,14 +667,21 @@ mod engine {
             ).map_err(|e| format!("get_image: {}", e))?
             .reply().map_err(|e| format!("image reply: {}", e))?;
 
-            let bpp = if img.depth <= 8 { 1 } else if img.depth <= 16 { 2 } else if img.depth <= 24 { 3 } else { 4 };
+            let stride = if h > 0 { img.data.len() / h as usize } else { w as usize * 4 };
+            let pixel_bytes = if w > 0 { stride / w as usize } else { 4 };
             let mut rgba = Vec::with_capacity((w * h * 4) as usize);
-            for chunk in img.data.chunks(bpp as usize) {
-                match bpp {
-                    4 => { rgba.extend_from_slice(&[chunk[2], chunk[1], chunk[0], 255]); }
-                    3 => { rgba.extend_from_slice(&[chunk[2], chunk[1], chunk[0], 255]); }
-                    2 => { rgba.extend_from_slice(&[chunk[1], chunk[0], 0, 255]); }
-                    _ => { rgba.extend_from_slice(&[chunk[0], chunk[0], chunk[0], 255]); }
+            for row in 0..h as usize {
+                let row_start = row * stride;
+                for col in 0..w as usize {
+                    let px_start = row_start + col * pixel_bytes;
+                    if px_start + pixel_bytes > img.data.len() { break; }
+                    let px = &img.data[px_start..px_start + pixel_bytes];
+                    match pixel_bytes {
+                        4 => { rgba.extend_from_slice(&[px[2], px[1], px[0], px[3]]); }
+                        3 => { rgba.extend_from_slice(&[px[2], px[1], px[0], 255]); }
+                        2 => { rgba.extend_from_slice(&[px[1], px[0], 0, 255]); }
+                        _ => { rgba.extend_from_slice(&[px[0], px[0], px[0], 255]); }
+                    }
                 }
             }
             let buffer = image::RgbaImage::from_raw(w, h, rgba).ok_or("invalid image dims")?;
@@ -677,7 +698,7 @@ mod engine {
         let capture_logic = if selector.is_some() {
             "ctx.fillRect(0,0,w,h)".to_string()
         } else {
-            r#"ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,300).forEach(function(e){var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;ctx.fillStyle=getComputedStyle(e).backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)})"#.to_string()
+            r#"ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);var allEls=document.body.querySelectorAll('*');var els=[];for(var i=0;i<allEls.length;i++){var er=allEls[i].getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)continue;els.push(allEls[i])}els.forEach(function(e){var er=e.getBoundingClientRect();var cs=getComputedStyle(e);ctx.fillStyle=cs.backgroundColor;if(ctx.fillStyle!=='rgba(0, 0, 0, 0)'&&ctx.fillStyle!=='transparent'){ctx.fillRect(er.x,er.y,er.width,er.height)}ctx.fillStyle=cs.borderColor;if(ctx.fillStyle!=='rgba(0, 0, 0, 0)'&&ctx.fillStyle!=='transparent'){var bw=parseFloat(cs.borderWidth)||1;if(bw>0){ctx.fillRect(er.x,er.y,er.width,bw);ctx.fillRect(er.x,er.y+er.height-bw,er.width,bw);ctx.fillRect(er.x,er.y,bw,er.height);ctx.fillRect(er.x+er.width-bw,er.y,bw,er.height)}}if(e.shadowRoot)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){var txt=(e.childNodes[0].textContent||'').trim();if(txt&&txt.length<200){var fs=parseFloat(cs.fontSize)||16;ctx.font=cs.fontWeight+' '+fs+'px '+(cs.fontFamily||'sans-serif');ctx.fillStyle=cs.color||'#000';ctx.textBaseline='top';var maxW=er.width-4;if(maxW>0)ctx.fillText(txt.substring(0,100),er.x+2,er.y+2,maxW)}}})"#.to_string()
         };
         format!(
             r#"function(){{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var c=document.createElement('canvas');c.width=w;c.height=h;var ctx=c.getContext('2d');{capture_logic};return c.toDataURL('image/png').split(',')[1]}}()"#

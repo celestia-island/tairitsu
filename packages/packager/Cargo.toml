@@ -127,7 +127,7 @@ test-runner = ["reqwest", "image", "base64"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
-x11rb = "0.13"
+x11rb = { version = "0.13", features = ["composite"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
