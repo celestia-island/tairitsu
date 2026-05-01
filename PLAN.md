@@ -130,7 +130,7 @@ No remaining gaps. All P0–P4 items implemented and tested (28/28 endpoints pas
 
 | # | Requirement | Status | Priority |
 |---|------------|--------|----------|
-| **5.1** Pixel screenshots | ✅ Done | P0 |
+| **5.1** Pixel screenshots | ✅ Fixed | P0 |
 | **5.2** Hydration readiness | ✅ Done | P1 |
 | **5.3** Batch operations | ✅ Done | P2 |
 | **5.4** Enhanced DOM + A11y | ✅ Done | P1 |
@@ -146,3 +146,30 @@ No remaining gaps. All P0–P4 items implemented and tested (28/28 endpoints pas
 | 5.14 Batch endpoint | ✅ Done | P2 |
 | 5.15 Performance metrics | ✅ Done | P3 |
 | 5.16 Source-map + WebSocket | ✅ Done | P3 |
+
+---
+
+## Phase 5.3 — Bug Reports & Fixes Needed from Tairitsu Side
+
+### BUG-1 — `capture_x11_window` produces vertical stripes (P0 BLOCKER) ✅ FIXED
+
+**Root Cause:** BPP calculated from `img.depth` (depth=24 → bpp=3), but Xvfb returns 4 bytes/pixel (BGRX with padding).
+Each row shifted by `width * (4-3) = 1280` bytes → vertical stripes.
+
+**Fix:** Calculate stride from actual data (`data.len() / height`) and pixel bytes from stride (`stride / width`).
+Also added `CompositeRedirectWindow` for compositing-aware capture.
+
+WebKitGTK renders to its own offscreen buffer (not X11 pixmap), so `XGetImage` returns single-color.
+Added auto-fallback: if captured image has ≤3 unique colors, fall back to improved canvas mode.
+
+### BUG-2 — Canvas mode returns black screen (P1) ✅ FIXED
+
+**Root Cause:** Canvas JS only drew `backgroundColor` rects. Most elements have transparent/inherit backgrounds → invisible.
+
+**Fix:** Canvas JS now draws:
+1. White background fill
+2. Non-transparent background colors per element
+3. Border colors (top/bottom/left/right rects)
+4. Text content for leaf text nodes (font size/family/color from computed style)
+
+Result: 5KB → 83KB, 1 color → 1242 unique colors, meaningful layout structure captured.
