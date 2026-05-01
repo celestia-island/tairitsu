@@ -125,8 +125,9 @@ icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
 test-runner = ["reqwest", "image", "base64"]
 
-[target.'cfg(unix)'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
+x11rb = "0.13"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [

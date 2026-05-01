@@ -1652,9 +1652,8 @@ fn generate_component_html_with_output_dir(
             }}
 
             document.body.removeAttribute('data-booting');
+            document.documentElement.dataset.tairitsuReady='hydrated';
         }})();
-
-        // Glow mouse-following spotlight effect
         (function initGlow() {{
             let rafId = null;
             const activeGlow = new Map();
