@@ -194,6 +194,33 @@ enum Commands {
         #[arg(long)]
         no_report: bool,
     },
+
+    /// Run visual regression + event bridge tests via debug API
+    Test {
+        /// Debug API base URL (default: http://localhost:3001)
+        #[arg(short, long, default_value = "http://localhost:3001")]
+        url: String,
+
+        /// Baseline image directory
+        #[arg(short = 'b', long, default_value = "tests/visual/baseline")]
+        baseline_dir: String,
+
+        /// Actual screenshot output directory
+        #[arg(short, long, default_value = "target/test-runner/actual")]
+        actual_dir: String,
+
+        /// Pixel difference tolerance ratio (default: 0.05 = 5%)
+        #[arg(long, default_value = "0.05")]
+        tolerance: f32,
+
+        /// Update baseline images instead of comparing
+        #[arg(long)]
+        update_baselines: bool,
+
+        /// Also run event bridge verification tests
+        #[arg(long)]
+        events: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -984,6 +1011,94 @@ crate::log_info!("Starting SSR development server...");
             {
                 crate::log_fail!(
                     "Visual diff feature is not enabled. Please enable the 'visual-diff' feature."
+                );
+                std::process::exit(1);
+            }
+        }
+        Some(Commands::Test {
+            url,
+            baseline_dir,
+            actual_dir,
+            tolerance,
+            update_baselines,
+            events,
+        }) => {
+            #[cfg(feature = "test-runner")]
+            {
+                use crate::test_runner::{PageSpec, TestConfig};
+
+                let pages = vec![
+                    PageSpec {
+                        url: "/",
+                        name: "home",
+                        interactions: &[],
+                    },
+                    PageSpec {
+                        url: "/event-test",
+                        name: "event_test",
+                        interactions: &[("click", "#event-test-btn")],
+                    },
+                ];
+
+                let config = TestConfig {
+                    base_url: url.clone(),
+                    baseline_dir: PathBuf::from(&baseline_dir),
+                    actual_dir: PathBuf::from(&actual_dir),
+                    tolerance,
+                    update_baselines,
+                    pages,
+                };
+
+                crate::log_info!("Running visual regression tests via {}", url);
+
+                let report = match crate::test_runner::run_tests(&config) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        crate::log_fail!("Test runner error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                for r in &report.results {
+                    if r.passed {
+                        crate::log_ok!("{}: {}", r.name, r.detail);
+                    } else {
+                        crate::log_fail!("{}: {}", r.name, r.detail);
+                    }
+                }
+                crate::log_info!(
+                    "Results: {}/{} passed, {}/{} failed",
+                    report.passed,
+                    report.total,
+                    report.failed,
+                    report.total
+                );
+
+                if events {
+                    crate::log_info!("Running event bridge tests...");
+                    let client = reqwest::blocking::Client::new();
+                    let event_pages = vec![
+                        PageSpec { url: "/", name: "home", interactions: &[] },
+                        PageSpec { url: "/event-test", name: "event_test", interactions: &[] },
+                    ];
+                    let results = crate::test_runner::run_events(&client, &url, &event_pages);
+                    for r in &results {
+                        if r.passed {
+                            crate::log_ok!("{}: {}", r.name, r.detail);
+                        } else {
+                            crate::log_fail!("{}: {}", r.name, r.detail);
+                        }
+                    }
+                }
+
+                if report.failed > 0 {
+                    std::process::exit(1);
+                }
+            }
+            #[cfg(not(feature = "test-runner"))]
+            {
+                crate::log_fail!(
+                    "Test runner feature is not enabled. Please enable the 'test-runner' feature."
                 );
                 std::process::exit(1);
             }

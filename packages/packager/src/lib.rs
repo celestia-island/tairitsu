@@ -10,6 +10,8 @@ pub mod config;
 pub mod debug;
 #[cfg(feature = "visual-diff")]
 pub mod visual_diff;
+#[cfg(feature = "test-runner")]
+pub mod test_runner;
 #[cfg(feature = "tokio")]
 pub mod daemon;
 pub mod i18n;
