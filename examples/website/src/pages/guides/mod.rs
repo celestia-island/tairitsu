@@ -1,6 +1,7 @@
 //! Guides pages - documentation for getting started and development
 
 pub mod build_test_release;
+pub mod debug_api;
 pub mod glossary;
 pub mod migration;
 pub mod quick_start;
@@ -18,6 +19,7 @@ pub fn render_all() -> Vec<VNode> {
         quick_start::render(),
         workspace_map::render(),
         build_test_release::render(),
+        debug_api::render(),
         migration::render(),
         glossary::render(),
     ]
@@ -58,6 +60,15 @@ pub fn render_overview() -> VNode {
                         p { class: "card__body", "完整的构建流程和发布策略。" }
                         a {
                             href: "/guides/build-test-release",
+                            class: "hi-button hi-button-secondary",
+                            "阅读文档"
+                        }
+                    }
+                    div { class: "card",
+                        h3 { class: "card__title", "Debug API" }
+                        p { class: "card__body", "内置调试接口使用指南：浏览器自动化、截图、DOM 检查、性能监控。" }
+                        a {
+                            href: "/guides/debug-api",
                             class: "hi-button hi-button-secondary",
                             "阅读文档"
                         }
