@@ -485,6 +485,7 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
     Ok(())
 }
 
+#[allow(dead_code)]
 fn resolve_import_to_modules(
     full_import: &str,
     symbols_str: &str,
@@ -692,6 +693,7 @@ fn build_symbol_module_map(
     map.into_iter().map(|(k, (v, _))| (k, v)).collect()
 }
 
+#[allow(dead_code)]
 fn rewrite_glue_import_line(
     import_line: &str,
     sym_map: &std::collections::HashMap<String, String>,

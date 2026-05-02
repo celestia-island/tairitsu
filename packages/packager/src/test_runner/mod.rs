@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
@@ -42,6 +42,7 @@ pub struct PageResult {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct ApiResp {
     ok: bool,
     data: Option<serde_json::Value>,

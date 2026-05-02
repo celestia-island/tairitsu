@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use image::{GenericImageView, ImageBuffer, Pixel, Rgba};
+use image::{GenericImageView, ImageBuffer, Rgba};
 use serde::Serialize;
 
 pub struct DiffConfig {
@@ -49,6 +49,7 @@ pub struct DiffReport {
     pub results: Vec<DiffResult>,
 }
 
+#[allow(dead_code)]
 fn rgba_distance(a: &Rgba<u8>, b: &Rgba<u8>) -> f32 {
     let dr = a[0].abs_diff(b[0]) as f32;
     let dg = a[1].abs_diff(b[1]) as f32;
@@ -264,7 +265,7 @@ fn generate_html_report(report: &DiffReport, config: &DiffConfig) -> Result<()> 
 }
 
 fn build_html_report(report: &DiffReport, _config: &DiffConfig) -> String {
-    let status_class = if report.failed == 0 { "pass" } else { "fail" };
+    let _status_class = if report.failed == 0 { "pass" } else { "fail" };
     let rows: Vec<String> = report.results.iter().map(|r| {
         let cls = if r.passed { "pass" } else { "fail" };
         let diff_img = match &r.diff_image_path {
