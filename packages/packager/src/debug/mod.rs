@@ -322,6 +322,13 @@ mod engine {
         let pending_ipc = pending.clone();
 
         crate::log_info!("[wry] Creating WebView with URL {}...", base_url);
+        #[cfg(target_os = "linux")]
+        {
+            unsafe {
+                std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+                std::env::set_var("WEBKIT_FORCE_SOFTWARE_RENDERER", "1");
+            }
+        }
         let webview = match WebViewBuilder::new()
             .with_url(&base_url)
             .with_ipc_handler(move |request| {
