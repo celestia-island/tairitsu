@@ -318,13 +318,6 @@ mod engine {
         let pending_ipc = pending.clone();
 
         crate::log_info!("[wry] Creating WebView with URL {}...", base_url);
-        #[cfg(target_os = "linux")]
-        {
-            unsafe {
-                std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
-                std::env::set_var("WEBKIT_FORCE_SOFTWARE_RENDERER", "1");
-            }
-        }
         let webview = match WebViewBuilder::new()
             .with_url(&base_url)
             .with_ipc_handler(move |request| {
@@ -375,19 +368,7 @@ mod engine {
                             }
                             let _ = resp.send(Ok(NavigateResponse { url: target, title: String::new() }));
                         }
-                        BrowserCommand::Screenshot { selector, full_page, mode, resp } => {
-                            if mode == "pixel" {
-                                match capture_webkit_snapshot(&webview) {
-                                    Ok((png_bytes, w, h)) => {
-                                        let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png_bytes);
-                                        let _ = resp.send(Ok(ScreenshotResponse { data: b64, mime_type: "image/png".into(), width: w, height: h, mode: "pixel".into() }));
-                                        return;
-                                    }
-                                    Err(e) => {
-                                        crate::log_fail!("[screenshot] webkit snapshot failed: {}, falling back to canvas", e);
-                                    }
-                                }
-                            }
+                        BrowserCommand::Screenshot { selector, full_page, mode: _, resp } => {
                             let id = next_id; next_id += 1;
                             let eval_js = build_screenshot_eval_js(selector.as_deref(), full_page);
                             let r = resp;
@@ -639,73 +620,6 @@ mod engine {
         }
     }
 
-    #[cfg(target_os = "linux")]
-    fn capture_webkit_snapshot(webview: &wry::WebView) -> Result<(Vec<u8>, u32, u32), String> {
-        use wry::WebViewExtUnix;
-        use webkit2gtk::{SnapshotRegion, SnapshotOptions, WebViewExt};
-        use std::sync::mpsc;
-
-        let wk = webview.webview();
-        let (tx, rx) = mpsc::channel();
-        wk.snapshot(
-            SnapshotRegion::Visible,
-            SnapshotOptions::NONE,
-            None::<&gtk::gio::Cancellable>,
-            move |result| { let _ = tx.send(result); },
-        );
-
-        let deadline = Instant::now() + Duration::from_secs(5);
-        let surface = loop {
-            if let Ok(r) = rx.try_recv() {
-                break r.map_err(|e| format!("snapshot: {}", e))?;
-            }
-            if Instant::now() > deadline {
-                return Err("snapshot timed out".into());
-            }
-            gtk::main_iteration_do(false);
-            std::thread::sleep(Duration::from_millis(10));
-        };
-
-        let mut png = Vec::new();
-        {
-            let s = &surface;
-            let w = unsafe { cairo_sys::cairo_image_surface_get_width(s.to_raw_none()) as u32 };
-            let h = unsafe { cairo_sys::cairo_image_surface_get_height(s.to_raw_none()) as u32 };
-            let stride = unsafe { cairo_sys::cairo_image_surface_get_stride(s.to_raw_none()) as usize };
-            let data_ptr = unsafe { cairo_sys::cairo_image_surface_get_data(s.to_raw_none()) };
-            if w == 0 || h == 0 || data_ptr.is_null() {
-                return Err("empty cairo surface".into());
-            }
-            let data = unsafe { std::slice::from_raw_parts(data_ptr, h as usize * stride) };
-            let mut rgba = Vec::with_capacity((w * h * 4) as usize);
-            for row in 0..h as usize {
-                for col in 0..w as usize {
-                    let off = row * stride + col * 4;
-                    if off + 4 > data.len() { break; }
-                    let px = &data[off..off + 4];
-                    rgba.extend_from_slice(&[px[2], px[1], px[0], px[3]]);
-                }
-            }
-            let buffer = image::RgbaImage::from_raw(w, h, rgba).ok_or("invalid image dims")?;
-            buffer.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
-                .map_err(|e| format!("png encode: {}", e))?;
-        }
-        if png.is_empty() {
-            return Err("empty PNG output".into());
-        }
-
-        let (w, h) = {
-            let img = image::load_from_memory(&png)
-                .map_err(|e| format!("parse png: {}", e))?;
-            (img.width(), img.height())
-        };
-        Ok((png, w, h))
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    fn capture_webkit_snapshot(_webview: &wry::WebView) -> Result<(Vec<u8>, u32, u32), String> {
-        Err("pixel capture not supported on this platform".into())
-    }
 
     fn build_screenshot_eval_js(selector: Option<&str>, full_page: bool) -> String {
         let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
