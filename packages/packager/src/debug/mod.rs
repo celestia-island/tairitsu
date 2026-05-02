@@ -53,12 +53,14 @@ struct NavigateRequest { url: String, wait_for: Option<String> }
 struct NavigateResponse { url: String, title: String }
 
 #[derive(Debug, Clone, Deserialize, Default)]
+#[allow(dead_code)]
 struct ScreenshotParams { selector: Option<String>, full_page: Option<bool>, format: Option<String>, mode: Option<String> }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ScreenshotResponse { data: String, mime_type: String, width: u32, height: u32, mode: String }
 
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 struct ClickRequest { selector: String, button: Option<String>, modifiers: Option<Vec<String>> }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -171,6 +173,7 @@ struct BatchResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Default)]
+#[allow(dead_code)]
 struct NetworkQueryParams { limit: Option<usize> }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -228,6 +231,7 @@ enum BrowserCommand {
     Network { resp: oneshot::Sender<Result<NetworkResponse, String>> },
     Performance { resp: oneshot::Sender<Result<PerformanceMetrics, String>> },
     WebSocket { resp: oneshot::Sender<Result<WebSocketInfo, String>> },
+    #[allow(dead_code)]
     Shutdown,
 }
 
@@ -248,7 +252,7 @@ impl BrowserHandle {
 #[cfg(feature = "debug-browser")]
 mod engine {
     use super::*;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashMap;
     use std::sync::{Arc as StdArc, Mutex};
 
     type PendingCallback = Box<dyn Send + FnOnce(Result<String, String>)>;
@@ -284,7 +288,6 @@ mod engine {
         use tao::event_loop::{ControlFlow, EventLoopBuilder};
         use tao::platform::unix::EventLoopBuilderExtUnix;
         use tao::window::WindowBuilder;
-        use tao::rwh_06::HasWindowHandle;
         use wry::WebViewBuilder;
 
         crate::log_info!("[wry] Creating event loop...");
@@ -310,13 +313,6 @@ mod engine {
             Err(e) => { crate::log_fail!("[wry] Failed to create window: {}", e); return; }
         };
         crate::log_info!("[wry] Window created OK");
-
-        let x11_window_id: Option<u32> = window.window_handle().ok().and_then(|h| {
-            match h.as_raw() {
-                tao::rwh_06::RawWindowHandle::Xlib(x) => Some(x.window as u32),
-                _ => None,
-            }
-        });
 
         let pending: PendingMap = StdArc::new(Mutex::new(HashMap::new()));
         let pending_ipc = pending.clone();
@@ -381,24 +377,14 @@ mod engine {
                         }
                         BrowserCommand::Screenshot { selector, full_page, mode, resp } => {
                             if mode == "pixel" {
-                                if let Some(win_id) = x11_window_id {
-                                    match capture_x11_window(win_id) {
-                                        Ok((png_bytes, w, h)) => {
-                                            let unique_threshold = (w * h / 100).max(10) as usize;
-                                            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png_bytes);
-                                            if let Ok(img) = image::load_from_memory(&png_bytes) {
-                                                let rgba = img.to_rgba8();
-                                                let mut colors = std::collections::HashSet::new();
-                                                for px in rgba.pixels().take(5000) {
-                                                    colors.insert([px[0], px[1], px[2]]);
-                                                }
-                                                if colors.len() > 3 {
-                                                    let _ = resp.send(Ok(ScreenshotResponse { data: b64, mime_type: "image/png".into(), width: w, height: h, mode: "pixel".into() }));
-                                                    return;
-                                                }
-                                            }
-                                        }
-                                        Err(_) => {}
+                                match capture_webkit_snapshot(&webview) {
+                                    Ok((png_bytes, w, h)) => {
+                                        let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png_bytes);
+                                        let _ = resp.send(Ok(ScreenshotResponse { data: b64, mime_type: "image/png".into(), width: w, height: h, mode: "pixel".into() }));
+                                        return;
+                                    }
+                                    Err(e) => {
+                                        crate::log_fail!("[screenshot] webkit snapshot failed: {}, falling back to canvas", e);
                                     }
                                 }
                             }
@@ -653,51 +639,72 @@ mod engine {
         }
     }
 
-    fn capture_x11_window(window_id: u32) -> Result<(Vec<u8>, u32, u32), String> {
-        #[cfg(target_os = "linux")]
-        {
-            let (conn, _) = x11rb::connect(None).map_err(|e| format!("x11 connect: {}", e))?;
-            let _ = x11rb::protocol::composite::redirect_window(
-                &conn, window_id,
-                x11rb::protocol::composite::Redirect::AUTOMATIC,
-            ).map_err(|e| format!("composite redirect: {}", e));
-            std::thread::sleep(Duration::from_millis(50));
-            let geom = x11rb::protocol::xproto::get_geometry(&conn, window_id)
-                .map_err(|e| format!("get_geometry: {}", e))?
-                .reply()
-                .map_err(|e| format!("geom reply: {}", e))?;
-            let w = geom.width as u32;
-            let h = geom.height as u32;
-            let img = x11rb::protocol::xproto::get_image(
-                &conn, x11rb::protocol::xproto::ImageFormat::Z_PIXMAP,
-                window_id, 0, 0, geom.width, geom.height, u32::MAX,
-            ).map_err(|e| format!("get_image: {}", e))?
-            .reply().map_err(|e| format!("image reply: {}", e))?;
+    #[cfg(target_os = "linux")]
+    fn capture_webkit_snapshot(webview: &wry::WebView) -> Result<(Vec<u8>, u32, u32), String> {
+        use wry::WebViewExtUnix;
+        use webkit2gtk::{SnapshotRegion, SnapshotOptions, WebViewExt};
+        use std::sync::mpsc;
 
-            let stride = if h > 0 { img.data.len() / h as usize } else { w as usize * 4 };
-            let pixel_bytes = if w > 0 { stride / w as usize } else { 4 };
+        let wk = webview.webview();
+        let (tx, rx) = mpsc::channel();
+        wk.snapshot(
+            SnapshotRegion::Visible,
+            SnapshotOptions::NONE,
+            None::<&gtk::gio::Cancellable>,
+            move |result| { let _ = tx.send(result); },
+        );
+
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let surface = loop {
+            if let Ok(r) = rx.try_recv() {
+                break r.map_err(|e| format!("snapshot: {}", e))?;
+            }
+            if Instant::now() > deadline {
+                return Err("snapshot timed out".into());
+            }
+            gtk::main_iteration_do(false);
+            std::thread::sleep(Duration::from_millis(10));
+        };
+
+        let mut png = Vec::new();
+        {
+            let s = &surface;
+            let w = unsafe { cairo_sys::cairo_image_surface_get_width(s.to_raw_none()) as u32 };
+            let h = unsafe { cairo_sys::cairo_image_surface_get_height(s.to_raw_none()) as u32 };
+            let stride = unsafe { cairo_sys::cairo_image_surface_get_stride(s.to_raw_none()) as usize };
+            let data_ptr = unsafe { cairo_sys::cairo_image_surface_get_data(s.to_raw_none()) };
+            if w == 0 || h == 0 || data_ptr.is_null() {
+                return Err("empty cairo surface".into());
+            }
+            let data = unsafe { std::slice::from_raw_parts(data_ptr, h as usize * stride) };
             let mut rgba = Vec::with_capacity((w * h * 4) as usize);
             for row in 0..h as usize {
-                let row_start = row * stride;
                 for col in 0..w as usize {
-                    let px_start = row_start + col * pixel_bytes;
-                    if px_start + pixel_bytes > img.data.len() { break; }
-                    let px = &img.data[px_start..px_start + pixel_bytes];
-                    match pixel_bytes {
-                        4 => { rgba.extend_from_slice(&[px[2], px[1], px[0], px[3]]); }
-                        3 => { rgba.extend_from_slice(&[px[2], px[1], px[0], 255]); }
-                        2 => { rgba.extend_from_slice(&[px[1], px[0], 0, 255]); }
-                        _ => { rgba.extend_from_slice(&[px[0], px[0], px[0], 255]); }
-                    }
+                    let off = row * stride + col * 4;
+                    if off + 4 > data.len() { break; }
+                    let px = &data[off..off + 4];
+                    rgba.extend_from_slice(&[px[2], px[1], px[0], px[3]]);
                 }
             }
             let buffer = image::RgbaImage::from_raw(w, h, rgba).ok_or("invalid image dims")?;
-            let mut png = Vec::new();
-            buffer.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).map_err(|e| format!("png encode: {}", e))?;
-            Ok((png, w, h))
+            buffer.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+                .map_err(|e| format!("png encode: {}", e))?;
         }
-        #[cfg(not(target_os = "linux"))]
-        { Err("pixel capture not supported on this platform".into()) }
+        if png.is_empty() {
+            return Err("empty PNG output".into());
+        }
+
+        let (w, h) = {
+            let img = image::load_from_memory(&png)
+                .map_err(|e| format!("parse png: {}", e))?;
+            (img.width(), img.height())
+        };
+        Ok((png, w, h))
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    fn capture_webkit_snapshot(_webview: &wry::WebView) -> Result<(Vec<u8>, u32, u32), String> {
+        Err("pixel capture not supported on this platform".into())
     }
 
     fn build_screenshot_eval_js(selector: Option<&str>, full_page: bool) -> String {
@@ -749,6 +756,7 @@ return JSON.stringify([tree])
         )
     }
 
+    #[allow(dead_code)]
     fn build_screenshot_js(id: i32, selector: Option<&str>, full_page: bool) -> String {
         let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
         let capture_logic = if let Some(sel) = selector {
@@ -791,6 +799,7 @@ struct DebugState {
 }
 
 impl DebugState {
+    #[allow(dead_code)]
     fn new(config: Config, dev_port: u16, debug_port: u16) -> Self {
         Self {
             base_url: format!("http://localhost:{}", dev_port),
@@ -1017,7 +1026,6 @@ async fn dom_query_handler(State(state): State<DebugState>, Query(params): Query
 async fn computed_style_handler(State(state): State<DebugState>, Json(params): Json<ComputedStyleParams>) -> impl IntoResponse {
     let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ComputedStyleResponse>() };
     let (tx, rx) = oneshot::channel();
-    let props = params.properties.clone();
     if br.send(BrowserCommand::DomQuery { selector: params.selector.clone(), attribute: None, computed: params.properties, resp: tx }).await.is_err() { return chan_closed::<ComputedStyleResponse>(); }
     match tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await {
         Ok(Ok(Ok(dom))) => {

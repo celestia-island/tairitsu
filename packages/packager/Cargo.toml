@@ -126,8 +126,11 @@ visual-diff = ["image", "base64"]
 test-runner = ["reqwest", "image", "base64"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
-x11rb = { version = "0.13", features = ["composite"] }
+ libc = "0.2"
+ webkit2gtk = "=2.0.1"
+cairo-rs = { version = "0.18", features = ["png"] }
+cairo-sys-rs = "0.18"
+gtk = "0.18"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
