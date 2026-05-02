@@ -81,6 +81,7 @@ head = """
         '/guides/build-test-release': 'guides-build-test-release',
         '/guides/migration': 'guides-migration',
         '/guides/glossary': 'guides-glossary',
+        '/guides/debug-api': 'guides-debug-api',
         '/system': 'system',
         '/system/overview': 'system-overview',
         '/system/runtime': 'system-runtime',

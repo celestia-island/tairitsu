@@ -199,6 +199,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
         default_open: true,
         subcategories: &[
             NavSubcategory { label: "Quick Start", href: "/guides/quick-start", items: &[] },
+            NavSubcategory { label: "Debug API", href: "/guides/debug-api", items: &[] },
             NavSubcategory { label: "Workspace Map", href: "/guides/workspace-map", items: &[] },
             NavSubcategory { label: "Build & Test", href: "/guides/build-test-release", items: &[] },
             NavSubcategory { label: "Migration Guide", href: "/guides/migration", items: &[] },
