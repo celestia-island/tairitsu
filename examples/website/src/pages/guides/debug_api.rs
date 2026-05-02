@@ -46,7 +46,7 @@ curl http://localhost:3001/ready
 # 截取像素级截图
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "API 端点一览" }
@@ -76,7 +76,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "方法" } th { "路径" } th { "说明" } th { "参数" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "页面导航" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "截图" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "截图" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "点击元素" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "输入文本" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "按键" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -90,7 +90,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "截图" }
-        p { "截图通过 Canvas 模式实现，跨平台兼容。通过 JS 将页面内容绘制到 Canvas 再导出为 PNG（1280x720）。", code { "mode" }, " 参数已废弃，所有请求统一使用 canvas 模式。" }
+        p { "截图通过 Canvas 实现，跨平台兼容。通过 JS 将页面内容绘制到 Canvas 再导出为 PNG（1280x720）。" }
 
         h3 { "批量操作" }
         p { "使用 ", code { "/batch" }, " 端点可以一次执行多个操作，每个操作按顺序执行：", }
@@ -101,7 +101,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -130,7 +130,7 @@ curl http://localhost:3001/ready
 # Take a pixel-perfect screenshot
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "API Endpoints" }
@@ -160,7 +160,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "Method" } th { "Path" } th { "Description" } th { "Parameters" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "Navigate to URL" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Take screenshot" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Take screenshot" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "Click element" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "Type text" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "Press key" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -174,7 +174,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "Screenshots" }
-        p { "Screenshots use Canvas mode for cross-platform compatibility. Page content is drawn to a Canvas via JS and exported as PNG (1280x720). The ", code { "mode" }, " parameter is deprecated — all requests use canvas mode." }
+        p { "Screenshots use Canvas for cross-platform compatibility. Page content is drawn to a Canvas via JS and exported as PNG (1280x720)." }
 
         h3 { "Batch Operations" }
         p { "Use ", code { "/batch" }, " to execute multiple operations sequentially:" }
@@ -185,7 +185,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -214,7 +214,7 @@ curl http://localhost:3001/ready
 # ピクセル単位のスクリーンショットを取得
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "APIエンドポイント一覧" }
@@ -244,7 +244,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "メソッド" } th { "パス" } th { "説明" } th { "パラメータ" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "ページナビゲーション" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "スクリーンショット" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "スクリーンショット" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "要素をクリック" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "テキスト入力" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "キーを押す" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -258,7 +258,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "スクリーンショット" }
-        p { "スクリーンショットはクロスプラットフォーム互換のCanvasモードを使用します。JSでページ内容をCanvasに描画し、PNG（1280x720）としてエクスポートします。", code { "mode" }, " パラメータは非推奨です。すべてのリクエストでcanvasモードが使用されます。" }
+        p { "スクリーンショットはクロスプラットフォーム互換のCanvasを使用します。JSでページ内容をCanvasに描画し、PNG（1280x720）としてエクスポートします。" }
 
         h3 { "バッチ操作" }
         p { code { "/batch" }, " を使用して複数の操作を順次実行します：" }
@@ -269,7 +269,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -298,7 +298,7 @@ curl http://localhost:3001/ready
 # 픽셀 단위 스크린샷 캡처
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "API 엔드포인트" }
@@ -328,7 +328,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "메서드" } th { "경로" } th { "설명" } th { "매개변수" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "페이지 탐색" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "스크린샷" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "스크린샷" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "요소 클릭" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "텍스트 입력" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "키 누르기" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -342,7 +342,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "스크린샷" }
-        p { "스크린샷은 크로스 플랫폼 호환을 위해 Canvas 모드를 사용합니다. JS로 페이지 내용을 Canvas에 그린 후 PNG(1280x720)로 내보냅니다. ", code { "mode" }, " 매개변수는 더 이상 사용되지 않으며, 모든 요청에서 canvas 모드가 사용됩니다." }
+        p { "스크린샷은 크로스 플랫폼 호환을 위해 Canvas를 사용합니다. JS로 페이지 내용을 Canvas에 그린 후 PNG(1280x720)로 내보냅니다." }
 
         h3 { "배치 작업" }
         p { code { "/batch" }, " 를 사용하여 여러 작업을 순차적으로 실행합니다：" }
@@ -353,7 +353,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -381,7 +381,7 @@ curl http://localhost:3001/ready
 # Capturer une capture d'écran pixel-parfaite
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "Endpoints de l'API" }
@@ -411,7 +411,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "Méthode" } th { "Chemin" } th { "Description" } th { "Paramètres" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "Navigation de page" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Capture d'écran" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Capture d'écran" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "Cliquer sur un élément" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "Saisir du texte" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "Appuyer sur une touche" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -425,7 +425,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "Captures d'écran" }
-        p { "Les captures d'écran utilisent le mode Canvas pour la compatibilité multiplateforme. Le contenu de la page est dessiné sur un Canvas via JS et exporté en PNG (1280x720). Le paramètre ", code { "mode" }, " est obsolète — toutes les requêtes utilisent le mode canvas." }
+        p { "Les captures d'écran utilisent Canvas pour la compatibilité multiplateforme. Le contenu de la page est dessiné sur un Canvas via JS et exporté en PNG (1280x720)." }
 
         h3 { "Opérations par lot" }
         p { "Utilisez ", code { "/batch" }, " pour exécuter plusieurs opérations séquentiellement :" }
@@ -436,7 +436,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -464,7 +464,7 @@ curl http://localhost:3001/ready
 # Pixelgenauen Screenshot erstellen
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "API-Endpunkte" }
@@ -494,7 +494,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "Methode" } th { "Pfad" } th { "Beschreibung" } th { "Parameter" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "Seitennavigation" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Screenshot" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Screenshot" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "Element anklicken" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "Text eingeben" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "Taste drücken" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -508,7 +508,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "Screenshots" }
-        p { "Screenshots verwenden den Canvas-Modus für Plattformübergreifende Kompatibilität. Seiteninhalte werden über JS auf ein Canvas gezeichnet und als PNG (1280x720) exportiert. Der ", code { "mode" }, " Parameter ist veraltet — alle Anfragen verwenden den Canvas-Modus." }
+        p { "Screenshots verwenden Canvas für Plattformübergreifende Kompatibilität. Seiteninhalte werden über JS auf ein Canvas gezeichnet und als PNG (1280x720) exportiert." }
 
         h3 { "Stapelverarbeitung" }
         p { "Verwenden Sie ", code { "/batch" }, " für die sequenzielle Ausführung mehrerer Operationen:" }
@@ -519,7 +519,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -547,7 +547,7 @@ curl http://localhost:3001/ready
 # Capturar pantalla pixel-perfecta
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "Endpoints de la API" }
@@ -577,7 +577,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "Método" } th { "Ruta" } th { "Descripción" } th { "Parámetros" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "Navegación de página" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Captura de pantalla" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Captura de pantalla" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "Hacer clic en elemento" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "Escribir texto" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "Pulsar tecla" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -591,7 +591,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "Capturas de pantalla" }
-        p { "Las capturas de pantalla usan el modo Canvas para compatibilidad multiplataforma. El contenido de la página se dibuja en un Canvas vía JS y se exporta como PNG (1280x720). El parámetro ", code { "mode" }, " está obsoleto — todas las solicitudes usan el modo canvas." }
+        p { "Las capturas de pantalla usan Canvas para compatibilidad multiplataforma. El contenido de la página se dibuja en un Canvas vía JS y se exporta como PNG (1280x720)." }
 
         h3 { "Operaciones por lotes" }
         p { "Use ", code { "/batch" }, " para ejecutar múltiples operaciones secuencialmente:" }
@@ -602,7 +602,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"
@@ -630,7 +630,7 @@ curl http://localhost:3001/ready
 # Capturar tela pixel-perfeita
 curl -X POST http://localhost:3001/screenshot \\
   -H 'Content-Type: application/json' \\
-  -d '{\"mode\":\"pixel\"}'"
+  -d '{}'"
         } } }
 
         h3 { "Endpoints da API" }
@@ -660,7 +660,7 @@ curl -X POST http://localhost:3001/screenshot \\
             thead { tr { th { "Método" } th { "Caminho" } th { "Descrição" } th { "Parâmetros" } } }
             tbody {
                 tr { td { code { "POST" } } td { code { "/navigate" } } td { "Navegação de página" } td { code { "{\"url\":\"...\"}" } } }
-                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Captura de tela" } td { code { "{\"mode\":\"canvas\"}" } } }
+                tr { td { code { "POST" } } td { code { "/screenshot" } } td { "Captura de tela" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/click" } } td { "Clicar no elemento" } td { code { "{\"selector\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/type" } } td { "Digitar texto" } td { code { "{\"selector\":\"...\",\"text\":\"...\"}" } } }
                 tr { td { code { "POST" } } td { code { "/press" } } td { "Pressionar tecla" } td { code { "{\"key\":\"Enter|Escape|Tab...\"}" } } }
@@ -674,7 +674,7 @@ curl -X POST http://localhost:3001/screenshot \\
         } }
 
         h3 { "Capturas de tela" }
-        p { "As capturas de tela usam o modo Canvas para compatibilidade multiplataforma. O conteúdo da página é desenhado em um Canvas via JS e exportado como PNG (1280x720). O parâmetro ", code { "mode" }, " está obsoleto — todas as requisições usam o modo canvas." }
+        p { "As capturas de tela usam Canvas para compatibilidade multiplataforma. O conteúdo da página é desenhado em um Canvas via JS e exportado como PNG (1280x720)." }
 
         h3 { "Operações em lote" }
         p { "Use ", code { "/batch" }, " para executar múltiplas operações sequencialmente:" }
@@ -685,7 +685,7 @@ curl -X POST http://localhost:3001/screenshot \\
     \"operations\": [
       {\"type\": \"navigate\", \"url\": \"http://localhost:3000/\"},
       {\"type\": \"evaluate\", \"expression\": \"document.title\"},
-      {\"type\": \"screenshot\", \"mode\": \"pixel\"},
+      {\"type\": \"screenshot\"},
       {\"type\": \"click\", \"selector\": \"#my-button\"}
     ]
   }'"

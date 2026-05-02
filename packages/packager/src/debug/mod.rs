@@ -54,10 +54,10 @@ struct NavigateResponse { url: String, title: String }
 
 #[derive(Debug, Clone, Deserialize, Default)]
 #[allow(dead_code)]
-struct ScreenshotParams { selector: Option<String>, full_page: Option<bool>, format: Option<String>, mode: Option<String> }
+struct ScreenshotParams { selector: Option<String>, full_page: Option<bool>, format: Option<String> }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ScreenshotResponse { data: String, mime_type: String, width: u32, height: u32, mode: String }
+struct ScreenshotResponse { data: String, mime_type: String, width: u32, height: u32 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[allow(dead_code)]
@@ -147,7 +147,7 @@ enum BatchOperation {
     #[serde(rename = "navigate")]
     Navigate { url: String, wait_for: Option<String> },
     #[serde(rename = "screenshot")]
-    Screenshot { selector: Option<String>, full_page: Option<bool>, mode: Option<String>, name: Option<String> },
+    Screenshot { selector: Option<String>, full_page: Option<bool>, name: Option<String> },
     #[serde(rename = "click")]
     Click { selector: String },
     #[serde(rename = "evaluate")]
@@ -216,7 +216,7 @@ struct StackFrame { file: String, line: Option<u32>, col: Option<u32>, func: Opt
 
 enum BrowserCommand {
     Navigate { url: String, wait_for: Option<String>, resp: oneshot::Sender<Result<NavigateResponse, String>> },
-    Screenshot { selector: Option<String>, full_page: bool, mode: String, resp: oneshot::Sender<Result<ScreenshotResponse, String>> },
+    Screenshot { selector: Option<String>, full_page: bool, resp: oneshot::Sender<Result<ScreenshotResponse, String>> },
     Click { selector: String, resp: oneshot::Sender<Result<(), String>> },
     TypeText { selector: String, text: String, clear_first: bool, submit: bool, resp: oneshot::Sender<Result<(), String>> },
     Evaluate { expression: String, await_promise: bool, resp: oneshot::Sender<Result<EvaluateResponse, String>> },
@@ -368,13 +368,13 @@ mod engine {
                             }
                             let _ = resp.send(Ok(NavigateResponse { url: target, title: String::new() }));
                         }
-                        BrowserCommand::Screenshot { selector, full_page, mode: _, resp } => {
+                        BrowserCommand::Screenshot { selector, full_page, resp } => {
                             let id = next_id; next_id += 1;
                             let eval_js = build_screenshot_eval_js(selector.as_deref(), full_page);
                             let r = resp;
                             pending.lock().unwrap().insert(id, Box::new(move |result| {
                                 match result {
-                                    Ok(data) => { let _ = r.send(Ok(ScreenshotResponse { data, mime_type: "image/png".into(), width: DEFAULT_VIEWPORT_W, height: DEFAULT_VIEWPORT_H, mode: "canvas".into() })); }
+                                    Ok(data) => { let _ = r.send(Ok(ScreenshotResponse { data, mime_type: "image/png".into(), width: DEFAULT_VIEWPORT_W, height: DEFAULT_VIEWPORT_H })); }
                                     Err(e) => { let _ = r.send(Err(e)); }
                                 }
                             }));
@@ -862,8 +862,7 @@ async fn navigate_handler(State(state): State<DebugState>, Json(req): Json<Navig
 async fn screenshot_handler(State(state): State<DebugState>, Json(params): Json<ScreenshotParams>) -> impl IntoResponse {
     let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ScreenshotResponse>() };
     let (tx, rx) = oneshot::channel();
-    let mode = params.mode.clone().unwrap_or_default();
-    if br.send(BrowserCommand::Screenshot { selector: params.selector, full_page: params.full_page.unwrap_or(false), mode, resp: tx }).await.is_err() { return chan_closed::<ScreenshotResponse>(); }
+    if br.send(BrowserCommand::Screenshot { selector: params.selector, full_page: params.full_page.unwrap_or(false), resp: tx }).await.is_err() { return chan_closed::<ScreenshotResponse>(); }
     await_op(rx).await
 }
 
@@ -1034,11 +1033,11 @@ async fn execute_batch_op(state: &DebugState, op: BatchOperation) -> Result<serd
             let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
             r.map(|nav| serde_json::to_value(nav).unwrap_or_default())
         }
-        BatchOperation::Screenshot { selector, full_page, mode, .. } => {
+        BatchOperation::Screenshot { selector, full_page, .. } => {
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Screenshot { selector, full_page: full_page.unwrap_or(false), mode: mode.unwrap_or_default(), resp: tx }).await.map_err(|e| e.to_string())?;
+            br.send(BrowserCommand::Screenshot { selector, full_page: full_page.unwrap_or(false), resp: tx }).await.map_err(|e| e.to_string())?;
             let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
-            r.map(|ss| serde_json::json!({ "mode": ss.mode, "width": ss.width, "height": ss.height, "data_len": ss.data.len() }))
+            r.map(|ss| serde_json::json!({ "width": ss.width, "height": ss.height, "data_len": ss.data.len() }))
         }
         BatchOperation::Click { selector } => {
             let (tx, rx) = oneshot::channel();
