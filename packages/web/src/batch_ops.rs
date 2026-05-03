@@ -60,7 +60,7 @@ impl BatchOps {
     pub fn add_style(&self, element: WitElement, name: &str, value: &str) {
         let mut styles = self.styles.borrow_mut();
         styles
-            .entry(element.0)
+            .entry(element.as_raw())
             .or_default()
             .push((name.to_string(), value.to_string()));
     }
@@ -77,25 +77,10 @@ impl BatchOps {
         styles: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
     ) {
         let mut map = self.styles.borrow_mut();
-        let entry = map.entry(element.0).or_default();
+        let entry = map.entry(element.as_raw()).or_default();
         for (name, value) in styles {
             entry.push((name.as_ref().to_string(), value.as_ref().to_string()));
         }
-    }
-
-    /// Add an attribute operation to the batch.
-    ///
-    /// # Arguments
-    ///
-    /// * `element` - Element to set attribute on
-    /// * `name` - Attribute name
-    /// * `value` - Attribute value
-    pub fn add_attr(&self, element: WitElement, name: &str, value: &str) {
-        let mut attrs = self.attrs.borrow_mut();
-        attrs
-            .entry(element.0)
-            .or_default()
-            .push((name.to_string(), value.to_string()));
     }
 
     /// Add multiple attribute operations to the batch.
@@ -110,7 +95,7 @@ impl BatchOps {
         attrs: impl IntoIterator<Item = (impl AsRef<str>, impl AsRef<str>)>,
     ) {
         let mut map = self.attrs.borrow_mut();
-        let entry = map.entry(element.0).or_default();
+        let entry = map.entry(element.as_raw()).or_default();
         for (name, value) in attrs {
             entry.push((name.as_ref().to_string(), value.as_ref().to_string()));
         }
@@ -217,7 +202,7 @@ impl BatchOps {
             {
                 // Invalidate cache first
                 crate::handle_cache::HandleCache::with(|cache| {
-                    cache.invalidate_style_handle(element.0);
+                    cache.invalidate_style_handle(element.as_raw());
                 });
 
                 // Remove from parent (assuming parent is known or using a default)
@@ -255,7 +240,7 @@ mod tests {
     #[test]
     fn test_batch_ops_add_style() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
         assert_eq!(batch.len(), 1);
@@ -265,7 +250,7 @@ mod tests {
     #[test]
     fn test_batch_ops_add_styles() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_styles(element, [("color", "red"), ("background", "blue")]);
         assert_eq!(batch.len(), 2);
@@ -274,7 +259,7 @@ mod tests {
     #[test]
     fn test_batch_ops_add_attr() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_attr(element, "id", "test");
         assert_eq!(batch.len(), 1);
@@ -283,7 +268,7 @@ mod tests {
     #[test]
     fn test_batch_ops_add_attrs() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_attrs(element, [("id", "test"), ("class", "foo")]);
         assert_eq!(batch.len(), 2);
@@ -292,8 +277,8 @@ mod tests {
     #[test]
     fn test_batch_ops_multiple_elements() {
         let batch = BatchOps::new();
-        let elem1 = WitElement(1);
-        let elem2 = WitElement(2);
+        let elem1 = WitElement::from_raw(1);
+        let elem2 = WitElement::from_raw(2);
 
         batch.add_style(elem1, "color", "red");
         batch.add_style(elem2, "color", "blue");
@@ -305,7 +290,7 @@ mod tests {
     #[test]
     fn test_batch_ops_clear() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
         assert_eq!(batch.len(), 1);
@@ -318,7 +303,7 @@ mod tests {
     #[test]
     fn test_batch_ops_add_removal() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_removal(element);
         assert_eq!(batch.len(), 1);
@@ -327,7 +312,7 @@ mod tests {
     #[test]
     fn test_batch_ops_apply_returns_count() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
         batch.add_attr(element, "id", "test");
@@ -340,7 +325,7 @@ mod tests {
     #[test]
     fn test_batch_ops_apply_and_clear() {
         let batch = BatchOps::new();
-        let element = WitElement(42);
+        let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
         batch.add_attr(element, "id", "test");
