@@ -2,36 +2,38 @@
 //!
 //! This example shows how to:
 //! 1. Create an element ref using `use_element_ref()`
-//! 2. Attach it to an element using the `ref_:` attribute in rsx!
+//! 2. Attach it to an element using the `ref_()` method
 //! 3. Access the element handle after mounting
+//!
+//! Note: On non-wasm targets, `ElementRef<u64>` stores raw `u64` values directly.
+//! On wasm32, the platform stores `WitElement`. Use `resolve_element_ref()` to
+//! extract a `DomHandle` safely on any platform.
 
 use tairitsu_hooks::use_element_ref;
-use tairitsu_vdom::{VElement, VNode};
+use tairitsu_vdom::{VElement, VNode, resolve_element_ref};
 
 /// Component demonstrating basic element ref usage.
 ///
 /// The ref will be populated with the element handle when
 /// this component is mounted to the DOM.
 pub fn ref_example() -> VNode {
-    // Create an element ref for u64-based element handles (e.g., WitElement)
     let div_ref = use_element_ref::<u64>();
 
-    // Initially, the ref is None
     assert!(div_ref.get().is_none());
 
-    // Create a VElement with the ref attached
+    let any_ref = div_ref.as_any_ref();
     let element = VElement::new("div")
-        .ref_(div_ref.as_any_ref())
+        .ref_(any_ref)
         .child(VNode::Text(tairitsu_vdom::VText::new("Hello with ref!")));
 
-    // Simulate what happens during mounting:
-    // The platform would call div_ref.set(element_handle) when the element is created
-    // For demonstration:
     div_ref.set(42u64);
 
-    // Now the ref has the element handle
     if let Some(handle) = div_ref.get() {
-        println!("Element handle: {}", handle);
+        println!("Element handle (typed): {}", handle);
+    }
+
+    if let Some(handle) = resolve_element_ref(&div_ref.as_any_ref()) {
+        println!("Element handle (resolved): {:?}", handle);
     }
 
     VNode::Element(element)

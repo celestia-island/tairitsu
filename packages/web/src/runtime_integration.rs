@@ -25,7 +25,7 @@ use crate::WitElement;
 /// use tairitsu_web::WitElement;
 ///
 /// # fn main() -> anyhow::Result<()> {
-/// let root = WitElement(0); // Your root element handle
+/// let root = WitElement::from_raw(0); // Your root element handle
 /// init_runtime(root);
 /// # Ok(())
 /// # }

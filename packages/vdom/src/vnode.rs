@@ -346,10 +346,18 @@ impl VElement {
         self
     }
 
-    /// Set an element reference that will be populated when this element is mounted.
+    /// Attach a type-erased reference to this element.
     ///
-    /// The ref must be an `Rc<RefCell<Option<Box<dyn Any>>>>` which will be
-    /// populated with the element handle when the element is created in the DOM.
+    /// After the VDOM tree is mounted, `ref_` will be populated with the
+    /// platform's native element handle:
+    ///
+    /// | Platform | Stored type inside `Box<dyn Any>` |
+    /// |----------|--------------------------------------|
+    /// | `tairitsu_web` (wasm32) | `WitElement` |
+    /// | Mock/test | Implementation-defined |
+    ///
+    /// Use [`resolve_element_ref()`](crate::resolve_element_ref) to safely extract
+    /// a [`DomHandle`](crate::DomHandle). Avoid manual `downcast_ref`.
     ///
     /// # Example
     ///

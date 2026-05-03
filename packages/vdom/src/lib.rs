@@ -14,7 +14,7 @@ pub mod vnode;
 pub use callback::{Callback, EventHandler};
 pub use dom_ops::{
     DomHandle, DomFuncs, get_bounding_client_rect, register_dom_functions,
-    register_wit_functions, set_attribute, set_style,
+    register_ref_resolver, register_wit_functions, resolve_element_ref, set_attribute, set_style,
 };
 pub use events::{
     AnimationEvent, ChangeEvent, DataTransfer, DragEvent, Event, EventData, EventWitHandle,
@@ -36,7 +36,7 @@ pub use runtime::{
 };
 pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
-pub use vnode::{Classes, IntoAttrValue, Style, VElement, VNode, VText, empty_vnode};
+pub use vnode::{AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText, empty_vnode};
 
 #[cfg(target_family = "wasm")]
 mod wasm_export {
