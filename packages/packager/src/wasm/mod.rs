@@ -2247,7 +2247,24 @@ pub async fn dev_server(
         .await?;
     } else {
         crate::log_info!("{}", locale().dev.press_ctrl_c_to_stop);
-        axum::serve(listener, app).await?;
+        let shutdown = async {
+            #[cfg(unix)]
+            {
+                use tokio::signal::unix::{SignalKind, signal};
+                let mut sigterm = signal(SignalKind::terminate()).unwrap();
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {},
+                    _ = sigterm.recv() => {},
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                tokio::signal::ctrl_c().await.ok();
+            }
+        };
+        axum::serve(listener, app)
+            .with_graceful_shutdown(shutdown)
+            .await?;
     }
 
     Ok(())
@@ -2501,13 +2518,27 @@ async fn run_watch_loop(
                 }
             }
 
-            _ = tokio::signal::ctrl_c() => {
+            _ = async {
+                #[cfg(unix)]
+                {
+                    use tokio::signal::unix::{SignalKind, signal};
+                    let mut sigterm = signal(SignalKind::terminate()).unwrap();
+                    tokio::select! {
+                        _ = tokio::signal::ctrl_c() => {},
+                        _ = sigterm.recv() => {},
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    tokio::signal::ctrl_c().await.ok();
+                }
+            } => {
                 crate::log_ok!("{}", locale().dev.stopping);
                 crate::logfmt::clear_active_pb();
                 use std::io::Write;
                 let _ = std::io::stdout().write_all(b"\x1b[?25h");
                 let _ = std::io::stdout().flush();
-                std::process::exit(0);
+                break 'watch;
             }
         };
 

@@ -82,9 +82,6 @@ chrono = { version = "0.4", default-features = false, features = [
   "serde",
 ] }
 
-# TTY detection
-atty = "0.2"
-
 # HTTP client for icon fetching (optional)
 reqwest = { version = "^0.12", features = [
   "blocking",

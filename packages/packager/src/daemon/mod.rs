@@ -4,6 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::io::IsTerminal;
 use std::{env, fs, path::PathBuf, process::Command, sync::OnceLock};
 
 static PROJECT_ROOT: OnceLock<PathBuf> = OnceLock::new();
@@ -217,7 +218,7 @@ pub struct BuildLogEntry {
 
 /// Check if running in a TTY
 pub fn is_tty() -> bool {
-    atty::is(atty::Stream::Stdout)
+    std::io::stdin().is_terminal() || std::io::stderr().is_terminal()
 }
 
 /// Check if the current process is a daemon (already backgrounded)
@@ -805,7 +806,7 @@ where
 
         let child = Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
-            .env("TAIRITSU_COLOR", if atty::is(atty::Stream::Stderr) { "1" } else { "0" })
+            .env("TAIRITSU_COLOR", if std::io::stderr().is_terminal() { "1" } else { "0" })
             .args(&args)
             .spawn()?;
 
@@ -834,7 +835,7 @@ where
         unsafe {
             env::set_var(
                 "TAIRITSU_COLOR",
-                if atty::is(atty::Stream::Stderr) { "1" } else { "0" },
+                if std::io::stderr().is_terminal() { "1" } else { "0" },
             );
         }
 
