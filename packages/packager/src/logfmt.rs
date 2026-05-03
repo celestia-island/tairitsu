@@ -21,11 +21,13 @@ pub fn clear_active_pb() {
 }
 
 fn stdout_is_tty() -> bool {
-    atty::is(atty::Stream::Stdout)
+    use std::io::IsTerminal;
+    std::io::stdout().is_terminal()
 }
 
 fn stderr_is_tty() -> bool {
-    atty::is(atty::Stream::Stderr)
+    use std::io::IsTerminal;
+    std::io::stderr().is_terminal()
 }
 
 enum Level {
