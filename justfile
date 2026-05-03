@@ -575,30 +575,10 @@ info:
     @echo "                                    0.2.x generated from W3C WebIDL)"
     @echo "  - packages/browser-glue:          TypeScript/SWC browser API glue"
     @echo ""
-    @echo "E2E testing:"
-    @echo "  just e2e-capture   - Batch screenshot all demo pages"
-    @echo "  just e2e-verify    - Capture + verify event bridge + report"
-    @echo ""
     @echo "Visual regression:"
     @echo "  just visual-capture - Capture screenshots via debug API"
     @echo "  just visual-diff    - Compare screenshots against baseline"
     @echo "  just visual-update  - Update baseline from actual screenshots"
-
-# ============================================================================
-# E2E Testing (PLAN2: Playwright-based visual regression)
-# ============================================================================
-
-# Batch-screenshot all demo pages via Playwright
-e2e-capture:
-    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-capture.ps1
-
-# Full verification: screenshots + WASM bridge check + report
-e2e-verify:
-    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/e2e-verify.ps1
-
-# Install Playwright dependencies for web-test package
-e2e-install:
-    cd packages/web-test && npm install && npx playwright install chromium
 
 # ============================================================================
 # Visual Regression Testing (Phase 3: pixel comparison + HTML report)

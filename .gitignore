@@ -9,20 +9,18 @@ Cargo.lock
 /.idea/
 /.vscode/
 
-# Web demo build output
-examples/web-demo/dist/
-
 # Python bytecode cache
 **/__pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
 
 # Node.js
 node_modules/
 package-lock.json
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
+yarn-error-log*
 
 # Build outputs
 dist/
@@ -30,7 +28,7 @@ dist/
 *.d.ts.map
 .cache/
 
-# But keep npm package source and config files
+# Keep npm package source and config files (gitignored above, un-ignore here)
 !packages/npm/**/package.json
 !packages/npm/**/src/*.ts
 !packages/npm/**/*.ts
@@ -40,21 +38,23 @@ dist/
 *.css
 !*.scss
 
-# IDE
+# IDE / OS
 .DS_Store
 Thumbs.db
 
 # MCP server configs (local tooling)
 .mcp.json
 .playwright-mcp/
-package.json
+
+# Keep sub-project package.json files (root package.json is gitignored)
 !packages/npm/*/package.json
 !packages/browser-glue/package.json
-screenshot-test.png
 
 # Debug JS injection scripts (intermediate artifacts, embedded as Rust strings)
 packages/packager/src/debug/*.js
 
 # W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
 scripts/idl-cache/
-scripts/idl-cache/
+
+# Test artifacts
+screenshot-test.png
