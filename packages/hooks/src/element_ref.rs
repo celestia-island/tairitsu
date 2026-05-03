@@ -5,15 +5,22 @@
 //! `ElementRef` is specifically designed to hold platform DOM element handles that
 //! are automatically populated during the rendering/mounting process.
 //!
+//! # Platform differences
+//!
+//! On wasm32, the platform stores [`WitElement`](tairitsu_web::wit_platform::WitElement)
+//! into element refs at mount time. On non-wasm targets, raw `u64` may be used.
+//!
+//! Use [`tairitsu_vdom::resolve_element_ref()`] to safely extract a
+//! [`DomHandle`](tairitsu_vdom::DomHandle) regardless of platform, or use
+//! [`crate::use_dom_ref`] for a pre-typed convenience wrapper.
+//!
 //! # Example
 //!
 //! ```rust
 //! use tairitsu_hooks::use_element_ref;
 //!
-//! // Create an element reference for u64-based handles (WIT platform)
 //! let div_ref = use_element_ref::<u64>();
 //!
-//! // Initially empty - will be populated when mounted
 //! assert!(div_ref.get().is_none());
 //! ```
 

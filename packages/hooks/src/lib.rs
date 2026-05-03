@@ -1,6 +1,7 @@
 pub mod animation;
 pub mod callback;
 pub mod context;
+pub mod dom_ref;
 pub mod effect;
 pub mod element_ref;
 pub mod memo;
@@ -17,6 +18,7 @@ pub use animation::{
 };
 pub use callback::{Callback, use_callback, use_return_callback, use_void_callback};
 pub use context::{Context, consume_context, provide_context, use_context};
+pub use dom_ref::{DomRef, use_dom_ref};
 pub use element_ref::{ElementRef, use_element_ref};
 
 // Dioxus compatibility alias

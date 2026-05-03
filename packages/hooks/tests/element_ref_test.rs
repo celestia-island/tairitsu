@@ -1,22 +1,24 @@
 //! Integration test for `use_element_ref` hook.
 //!
 //! This test verifies that element refs work correctly.
+//!
+//! Note: On non-wasm targets, `ElementRef<u64>` stores raw `u64` values directly.
+//! On wasm32, the platform stores `WitElement` instead. The `resolve_element_ref()`
+//! function from `tairitsu_vdom` handles this difference transparently.
 
 use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_hooks::use_element_ref;
+use tairitsu_vdom::resolve_element_ref;
 
 #[test]
 fn test_element_ref_basic() {
     let ref_handle: Rc<RefCell<Option<Box<dyn std::any::Any>>>> = Rc::new(RefCell::new(None));
 
-    // Initially, the ref is None
     assert!(ref_handle.borrow().is_none());
 
-    // Simulate what happens during mounting - set the element
     *ref_handle.borrow_mut() = Some(Box::new(42u64) as Box<dyn std::any::Any>);
 
-    // Now the ref has a value
     let ref_value = ref_handle.borrow();
     assert!(ref_value.is_some());
     let value = ref_value.as_ref().unwrap();
@@ -25,6 +27,25 @@ fn test_element_ref_basic() {
     } else {
         panic!("Failed to downcast to u64");
     }
+}
+
+#[test]
+fn test_resolve_element_ref_with_u64() {
+    let ref_handle: Rc<RefCell<Option<Box<dyn std::any::Any>>>> = Rc::new(RefCell::new(None));
+
+    assert!(resolve_element_ref(&ref_handle).is_none());
+
+    *ref_handle.borrow_mut() = Some(Box::new(42u64) as Box<dyn std::any::Any>);
+
+    let handle = resolve_element_ref(&ref_handle);
+    assert!(handle.is_some());
+    assert!(handle.unwrap().is_valid());
+}
+
+#[test]
+fn test_resolve_element_ref_empty() {
+    let ref_handle: Rc<RefCell<Option<Box<dyn std::any::Any>>>> = Rc::new(RefCell::new(None));
+    assert!(resolve_element_ref(&ref_handle).is_none());
 }
 
 #[test]

@@ -11,9 +11,11 @@
 //! component bootstrap via [`register_wit_functions`] and
 //! [`register_dom_functions`].
 
+use std::any::Any;
 use std::sync::Mutex;
 
 use crate::platform::DomRect;
+use crate::vnode::AnyElementRef;
 
 // ---------------------------------------------------------------------------
 // DomHandle
@@ -30,9 +32,26 @@ pub struct DomHandle(u64);
 impl DomHandle {
     /// Construct a handle from a raw host id.
     ///
-    /// This should only be called by platform implementation code that
-    /// receives a handle from the WIT host.
+    /// # Warning: type safety
+    ///
+    /// When reading from a [`VElement::ref_()`](crate::VElement::ref_) callback,
+    /// the stored value is **NOT** a raw `u64` — it is platform-specific
+    /// (e.g. `WitElement` on the web platform).
+    /// Use [`resolve_element_ref()`] instead.
+    ///
+    /// This function is intended only for:
+    /// - Platform implementation code that receives handles directly from WIT bindings
+    /// - `MouseEvent::current_target` / `.target` fields which ARE raw `u64`
     pub const fn from_raw(id: u64) -> Self {
+        Self(id)
+    }
+
+    /// Construct a handle from a raw host id (internal use).
+    ///
+    /// Same as [`from_raw`](Self::from_raw) but without the type-safety warning.
+    /// For use by platform internals and tests that knowingly pass raw `u64`.
+    #[allow(dead_code)]
+    pub(crate) const fn from_raw_internal(id: u64) -> Self {
         Self(id)
     }
 
@@ -52,6 +71,59 @@ impl DomHandle {
     /// that require the raw id.
     pub const fn get_inner_id(&self) -> u64 {
         self.0
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Element ref resolution
+// ---------------------------------------------------------------------------
+
+static REF_RESOLVER: Mutex<Option<fn(&Box<dyn Any>) -> Option<u64>>> = Mutex::new(None);
+
+/// Register the platform-specific element ref resolver.
+///
+/// Called once during platform bootstrap. The resolver function takes a
+/// `Box<dyn Any>` from an element ref and returns the raw `u64` host id
+/// if the stored type is recognised, or `None` otherwise.
+///
+/// # Safety
+/// Caller must ensure the pointer remains valid for the program lifetime.
+pub fn register_ref_resolver(resolver: fn(&Box<dyn Any>) -> Option<u64>) {
+    *REF_RESOLVER.lock().unwrap() = Some(resolver);
+}
+
+/// Resolve a VDOM element ref to a [`DomHandle`], if the element has been mounted.
+///
+/// This is the **only correct way** to extract a usable DOM handle from a ref
+/// that was passed to [`VElement::ref_()`](crate::VElement::ref_).
+///
+/// # Platform contract
+///
+/// The web platform stores `WitElement` into element refs at mount time.
+/// Do **not** use manual `downcast_ref::<u64>()` — the stored type is **not** `u64`.
+///
+/// # Example
+/// ```ignore
+/// let ref_handle: Rc<RefCell<Option<Box<dyn Any>>>> = Rc::new(RefCell::new(None));
+/// let vnode = VElement::new("div").ref_(ref_handle.clone());
+/// // ... after mounting ...
+/// if let Some(handle) = tairitsu_vdom::resolve_element_ref(&ref_handle) {
+///     tairitsu_vdom::set_style(handle, "display", "block");
+/// }
+/// ```
+pub fn resolve_element_ref(ref_: &AnyElementRef) -> Option<DomHandle> {
+    let resolver = REF_RESOLVER.lock().unwrap();
+    if let Some(resolve) = *resolver {
+        ref_
+            .borrow()
+            .as_ref()
+            .and_then(|any| resolve(any))
+            .map(DomHandle::from_raw)
+    } else {
+        ref_
+            .borrow()
+            .as_ref()
+            .and_then(|any| any.downcast_ref::<u64>().map(|id| DomHandle::from_raw(*id)))
     }
 }
 
