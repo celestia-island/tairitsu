@@ -5,6 +5,8 @@ use std::cell::Cell;
 use tairitsu_macros::rsx;
 use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, VText};
 
+use crate::i18n::{self, Language};
+
 thread_local! {
     static LANG_OPEN: Cell<bool> = const { Cell::new(false) };
 }
@@ -124,6 +126,7 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
 // ============================================================
 
 pub fn top_nav() -> VNode {
+    let t = i18n::text(Language::default_lang());
     rsx! {
         header { class: "hi-header hi-header-sticky hi-header-md",
             div { class: "hi-header-left",
@@ -147,15 +150,15 @@ pub fn top_nav() -> VNode {
             }
             div { class: "hi-header-right",
                 nav { class: "hi-header-nav",
-                    a { href: "/guides/quick-start", class: "hikari-topnav__link", "Guides" }
-                    a { href: "/system", class: "hikari-topnav__link", "System" }
-                    a { href: "/packages", class: "hikari-topnav__link", "Packages" }
+                    a { href: "/guides/quick-start", class: "hikari-topnav__link", t.nav_guides }
+                    a { href: "/system", class: "hikari-topnav__link", t.nav_backend }
+                    a { href: "/packages", class: "hikari-topnav__link", t.nav_packages }
                 }
                 a {
                     href: "https://github.com/langyo/tairitsu",
                     target: "_blank",
                     class: "hi-header-github",
-                    "GitHub"
+                    t.nav_github
                 }
             }
         }
@@ -167,104 +170,140 @@ pub fn top_nav() -> VNode {
 // ============================================================
 
 struct NavItem {
-    label: &'static str,
+    label_key: &'static str,
     icon: MdiIcon,
     href: &'static str,
 }
 
 struct NavSubcategory {
-    label: &'static str,
+    label_key: &'static str,
     href: &'static str,
     items: &'static [NavItem],
 }
 
 struct NavCategory {
-    label: &'static str,
+    label_key: &'static str,
     default_open: bool,
     subcategories: &'static [NavSubcategory],
 }
 
+fn sidebar_label(key: &str, t: &i18n::SiteText) -> &str {
+    match key {
+        "sidebar_home" => t.sidebar_home,
+        "sidebar_getting_started" => t.sidebar_getting_started,
+        "sidebar_architecture" => t.sidebar_architecture,
+        "sidebar_packages_category" => t.sidebar_packages_category,
+        "sidebar_system" => t.sidebar_system,
+        "sidebar_quick_start" => t.sidebar_quick_start,
+        "sidebar_debug_api" => t.sidebar_debug_api,
+        "sidebar_workspace_map" => t.sidebar_workspace_map,
+        "sidebar_build_test" => t.sidebar_build_test,
+        "sidebar_migration" => t.sidebar_migration,
+        "sidebar_glossary" => t.sidebar_glossary,
+        "sidebar_core_packages" => t.sidebar_core_packages,
+        "sidebar_runtime_engine" => t.sidebar_runtime_engine,
+        "sidebar_vnode_vdom" => t.sidebar_vnode_vdom,
+        "sidebar_reactive_hooks" => t.sidebar_reactive_hooks,
+        "sidebar_web_platform" => t.sidebar_web_platform,
+        "sidebar_web_backends" => t.sidebar_web_backends,
+        "sidebar_browser_worlds" => t.sidebar_browser_worlds,
+        "sidebar_wit_pipeline" => t.sidebar_wit_pipeline,
+        "sidebar_tooling" => t.sidebar_tooling,
+        "sidebar_packager" => t.sidebar_packager,
+        "sidebar_style_system" => t.sidebar_style_system,
+        "sidebar_browser_glue" => t.sidebar_browser_glue,
+        "sidebar_e2e_tests" => t.sidebar_e2e_tests,
+        "sidebar_overview" => t.sidebar_overview,
+        "sidebar_wit_pipeline_item" => t.sidebar_wit_pipeline_item,
+        "sidebar_web_backends_item" => t.sidebar_web_backends_item,
+        "sidebar_versioning" => t.sidebar_versioning,
+        "sidebar_all_packages" => t.sidebar_all_packages,
+        _ => key,
+    }
+}
+
 const NAV_CATEGORIES: &[NavCategory] = &[
     NavCategory {
-        label: "Home",
+        label_key: "sidebar_home",
         default_open: true,
         subcategories: &[NavSubcategory {
-            label: "Home",
+            label_key: "sidebar_home",
             href: "/",
             items: &[],
         }],
     },
     NavCategory {
-        label: "Getting Started",
+        label_key: "sidebar_getting_started",
         default_open: true,
         subcategories: &[
-            NavSubcategory { label: "Quick Start", href: "/guides/quick-start", items: &[] },
-            NavSubcategory { label: "Debug API", href: "/guides/debug-api", items: &[] },
-            NavSubcategory { label: "Workspace Map", href: "/guides/workspace-map", items: &[] },
-            NavSubcategory { label: "Build & Test", href: "/guides/build-test-release", items: &[] },
-            NavSubcategory { label: "Migration Guide", href: "/guides/migration", items: &[] },
-            NavSubcategory { label: "Glossary", href: "/guides/glossary", items: &[] },
+            NavSubcategory { label_key: "sidebar_quick_start", href: "/guides/quick-start", items: &[] },
+            NavSubcategory { label_key: "sidebar_debug_api", href: "/guides/debug-api", items: &[] },
+            NavSubcategory { label_key: "sidebar_workspace_map", href: "/guides/workspace-map", items: &[] },
+            NavSubcategory { label_key: "sidebar_build_test", href: "/guides/build-test-release", items: &[] },
+            NavSubcategory { label_key: "sidebar_migration", href: "/guides/migration", items: &[] },
+            NavSubcategory { label_key: "sidebar_glossary", href: "/guides/glossary", items: &[] },
         ],
     },
     NavCategory {
-        label: "Architecture",
+        label_key: "sidebar_architecture",
         default_open: true,
         subcategories: &[
             NavSubcategory {
-                label: "Core Packages",
+                label_key: "sidebar_core_packages",
                 href: "/system/runtime",
                 items: &[
-                    NavItem { label: "Runtime Engine", icon: MdiIcon::Cog, href: "/system/runtime" },
-                    NavItem { label: "VNode / VDOM", icon: MdiIcon::FileEdit, href: "/packages/list" },
-                    NavItem { label: "Reactive Hooks", icon: MdiIcon::Code, href: "/packages" },
+                    NavItem { label_key: "sidebar_runtime_engine", icon: MdiIcon::Cog, href: "/system/runtime" },
+                    NavItem { label_key: "sidebar_vnode_vdom", icon: MdiIcon::FileEdit, href: "/packages/list" },
+                    NavItem { label_key: "sidebar_reactive_hooks", icon: MdiIcon::Code, href: "/packages" },
                 ],
             },
             NavSubcategory {
-                label: "Web Platform",
+                label_key: "sidebar_web_platform",
                 href: "/system/web-backends",
                 items: &[
-                    NavItem { label: "Web Backends", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
-                    NavItem { label: "Browser Worlds", icon: MdiIcon::Layers, href: "/system" },
-                    NavItem { label: "WIT Pipeline", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline" },
+                    NavItem { label_key: "sidebar_web_backends", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
+                    NavItem { label_key: "sidebar_browser_worlds", icon: MdiIcon::Layers, href: "/system" },
+                    NavItem { label_key: "sidebar_wit_pipeline", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline" },
                 ],
             },
             NavSubcategory {
-                label: "Tooling",
+                label_key: "sidebar_tooling",
                 href: "/packages/list",
                 items: &[
-                    NavItem { label: "Packager", icon: MdiIcon::Package, href: "/packages/list" },
-                    NavItem { label: "Style System", icon: MdiIcon::Palette, href: "/packages" },
-                    NavItem { label: "Browser Glue", icon: MdiIcon::Code, href: "/system/runtime" },
-                    NavItem { label: "E2E Tests", icon: MdiIcon::CheckboxMarkedCircle, href: "/system/versioning" },
+                    NavItem { label_key: "sidebar_packager", icon: MdiIcon::Package, href: "/packages/list" },
+                    NavItem { label_key: "sidebar_style_system", icon: MdiIcon::Palette, href: "/packages" },
+                    NavItem { label_key: "sidebar_browser_glue", icon: MdiIcon::Code, href: "/system/runtime" },
+                    NavItem { label_key: "sidebar_e2e_tests", icon: MdiIcon::CheckboxMarkedCircle, href: "/system/versioning" },
                 ],
             },
         ],
     },
     NavCategory {
-        label: "Packages",
+        label_key: "sidebar_packages_category",
         default_open: false,
-        subcategories: &[NavSubcategory { label: "All Packages", href: "/packages/list", items: &[] }],
+        subcategories: &[NavSubcategory { label_key: "sidebar_all_packages", href: "/packages/list", items: &[] }],
     },
     NavCategory {
-        label: "System",
+        label_key: "sidebar_system",
         default_open: false,
         subcategories: &[
-            NavSubcategory { label: "Overview", href: "/system", items: &[] },
-            NavSubcategory { label: "Runtime Engine", href: "/system/runtime", items: &[] },
-            NavSubcategory { label: "WIT Pipeline", href: "/system/wit-pipeline", items: &[] },
-            NavSubcategory { label: "Web Backends", href: "/system/web-backends", items: &[] },
-            NavSubcategory { label: "Versioning", href: "/system/versioning", items: &[] },
+            NavSubcategory { label_key: "sidebar_overview", href: "/system", items: &[] },
+            NavSubcategory { label_key: "sidebar_runtime_engine", href: "/system/runtime", items: &[] },
+            NavSubcategory { label_key: "sidebar_wit_pipeline_item", href: "/system/wit-pipeline", items: &[] },
+            NavSubcategory { label_key: "sidebar_web_backends_item", href: "/system/web-backends", items: &[] },
+            NavSubcategory { label_key: "sidebar_versioning", href: "/system/versioning", items: &[] },
         ],
     },
 ];
 
 pub fn sidebar() -> VNode {
+    let t = i18n::text(Language::default_lang());
     let mut category_nodes: Vec<VNode> = Vec::new();
 
     for category in NAV_CATEGORIES {
         if category.subcategories.len() == 1 && category.subcategories[0].items.is_empty() {
             let sub = &category.subcategories[0];
-            category_nodes.push(plain_menu_item(sub.href, sub.label, 1));
+            category_nodes.push(plain_menu_item(sub.href, sidebar_label(sub.label_key, &t), 1));
             continue;
         }
 
@@ -272,19 +311,19 @@ pub fn sidebar() -> VNode {
 
         for subcategory in category.subcategories {
             if subcategory.items.is_empty() {
-                subcategory_nodes.push(plain_menu_item(subcategory.href, subcategory.label, 2));
+                subcategory_nodes.push(plain_menu_item(subcategory.href, sidebar_label(subcategory.label_key, &t), 2));
             } else {
                 let item_nodes: Vec<VNode> = subcategory
                     .items
                     .iter()
-                    .map(|item| menu_item(item.href, item.label, item.icon))
+                    .map(|item| menu_item(item.href, sidebar_label(item.label_key, &t), item.icon))
                     .collect();
-                subcategory_nodes.push(submenu(subcategory.label, 2, item_nodes, true));
+                subcategory_nodes.push(submenu(sidebar_label(subcategory.label_key, &t), 2, item_nodes, true));
             }
         }
 
         category_nodes.push(submenu(
-            category.label,
+            sidebar_label(category.label_key, &t),
             1,
             subcategory_nodes,
             category.default_open,
@@ -420,10 +459,11 @@ pub fn breadcrumb(items: &[(&str, &str)]) -> VNode {
 // ============================================================
 
 pub fn aside_footer() -> VNode {
+    let t = i18n::text(Language::default_lang());
     let lang_open = LANG_OPEN.with(|c| c.get());
     rsx! {
         div { class: "hi-aside-footer",
-            button { class: "hi-aside-footer__btn", id: "dark-mode-toggle", title: "Toggle theme",
+            button { class: "hi-aside-footer__btn", id: "dark-mode-toggle", title: t.toggle_theme,
                 onclick: move |_e: tairitsu_vdom::MouseEvent| {
                     crate::app::toggle_dark_mode();
                 },
