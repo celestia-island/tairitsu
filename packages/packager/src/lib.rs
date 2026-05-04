@@ -12,8 +12,12 @@ pub mod debug;
 pub mod visual_diff;
 #[cfg(feature = "test-runner")]
 pub mod test_runner;
+#[cfg(any(feature = "debug-api", feature = "dev-server"))]
+pub mod debug_api;
 #[cfg(feature = "tokio")]
 pub mod daemon;
+#[cfg(feature = "cli")]
+pub mod mcp;
 pub mod i18n;
 pub mod icons;
 pub mod logfmt;
