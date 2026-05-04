@@ -25,6 +25,7 @@ pub mod utils;
 #[cfg(feature = "tokio")]
 pub mod wasm;
 pub mod wit_cmd;
+pub mod wit_check;
 
 #[cfg(feature = "cli")]
 pub use cli::run;

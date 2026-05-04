@@ -1,9 +1,27 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
-
 use crate::daemon::{self, is_daemon, is_tty};
+
+/// Walk up from `start` directory looking for a workspace root (contains `packages/`).
+fn find_workspace_root(start: &Path) -> PathBuf {
+    let mut current = if start.is_file() {
+        start.parent().unwrap_or(start).to_path_buf()
+    } else {
+        start.to_path_buf()
+    };
+
+    loop {
+        if current.join("packages").is_dir() && current.join("Cargo.toml").is_file() {
+            return current;
+        }
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => return start.to_path_buf(),
+        }
+    }
+}
 
 #[derive(Parser)]
 #[command(name = "tairitsu")]
@@ -244,6 +262,22 @@ enum WitCommands {
 
     /// List all WIT packages in the local cache
     List,
+
+    /// Check that every WIT interface function has a browser-glue implementation
+    /// (catches missing exports like location::reload before they hit production)
+    CheckCompleteness {
+        /// Verbose: show covered functions too, not just missing ones
+        #[arg(short, long)]
+        verbose: bool,
+
+        /// Path to browser-glue source directory (auto-detected by default)
+        #[arg(long)]
+        glue_src: Option<PathBuf>,
+
+        /// Path to browser-glue runtime bundle (auto-detected by default)
+        #[arg(long)]
+        glue_runtime: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -658,6 +692,28 @@ crate::log_info!("Starting SSR development server...");
             }
             WitCommands::List => {
                 crate::wit_cmd::cmd_list(&manifest_path)?;
+            }
+            WitCommands::CheckCompleteness { verbose, glue_src, glue_runtime } => {
+                let start_path = if manifest_path.is_file() {
+                    manifest_path.parent().map(|p| p.to_path_buf()).unwrap_or(manifest_path)
+                } else {
+                    manifest_path.clone()
+                };
+
+                let ws_root = find_workspace_root(&start_path);
+
+                crate::log_info!("Checking WIT-to-glue completeness...");
+                let report = crate::wit_check::check_completeness(
+                    &ws_root,
+                    glue_runtime.as_deref(),
+                    glue_src.as_deref(),
+                )?;
+
+                crate::wit_check::print_report(&report, verbose);
+
+                if !report.is_fully_covered() {
+                    std::process::exit(1);
+                }
             }
         },
         Some(Commands::Icons { action }) => match action {
