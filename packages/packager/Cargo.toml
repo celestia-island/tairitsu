@@ -71,6 +71,9 @@ grass = "^0.13"
 # Regex for extraction
 regex = "^1"
 
+# WIT parsing (for glue completeness validation)
+wit-parser = "^0.243"
+
 # Hashing for resource cache busting
 sha2 = "^0.10"
 
