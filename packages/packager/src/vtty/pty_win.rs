@@ -4,7 +4,8 @@
 //! On Unix: forkpty via native_pty_system()
 
 use std::io::{self, Read, Write};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
+use std::time::Duration;
 
 use portable_pty::{
     CommandBuilder, native_pty_system, PtySize,
@@ -65,11 +66,26 @@ impl ConPty {
         }
     }
 
-    /// Read available data from PTY output (non-blocking clone reader).
+    /// Read available data from PTY output with a 100ms timeout.
+    /// Returns 0 if no data is available within the timeout.
     pub fn read_nonblocking(&self, buf: &mut [u8]) -> io::Result<usize> {
-        match self.master.try_clone_reader() {
-            Ok(mut reader) => reader.read(buf),
-            Err(e) => Err(to_io(e)),
+        let reader = self.master.try_clone_reader().map_err(to_io)?;
+        let (tx, rx) = std::sync::mpsc::channel();
+        let mut owned_buf = vec![0u8; buf.len()];
+        std::thread::spawn(move || {
+            let n = {
+                let mut r = reader;
+                r.read(&mut owned_buf)
+            };
+            let _ = tx.send((n, owned_buf));
+        });
+        match rx.recv_timeout(Duration::from_millis(100)) {
+            Ok((n, data)) => {
+                let len = n.unwrap_or(0).min(buf.len().min(data.len()));
+                buf[..len].copy_from_slice(&data[..len]);
+                Ok(len)
+            }
+            Err(_) => Ok(0),
         }
     }
 

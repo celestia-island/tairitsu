@@ -160,3 +160,126 @@ impl Perform for Vt100Screen {
 
     fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_basic_print() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"Hello World");
+        assert_eq!(s.get_text(), "Hello World");
+    }
+
+    #[test]
+    fn test_newline_and_carriage_return() {
+        let mut s = Vt100Screen::new(20, 5);
+        s.process(b"line1\r\nline2");
+        assert_eq!(s.get_line(0), "line1");
+        assert_eq!(s.get_line(1), "line2");
+    }
+
+    #[test]
+    fn test_cursor_movement_csi() {
+        let mut s = Vt100Screen::new(20, 3);
+        s.process(b"ABC\x1b[2;1HXY");
+        assert_eq!(s.get_line(0), "ABC");
+        assert_eq!(s.get_line(1), "XY");
+    }
+
+    #[test]
+    fn test_clear_screen() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process(b"fill this line\x1b[2J");
+        assert_eq!(s.get_text(), "");
+    }
+
+    #[test]
+    fn test_clear_to_end_of_line() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"ABCDEFGH\x1b[1;3HX");
+        assert_eq!(s.get_line(0), "ABXDEFGH");
+    }
+
+    #[test]
+    fn test_scroll_up() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process(b"line0\r\nline1\r\nline2\r\nline3");
+        assert_eq!(s.get_line(0), "line1");
+        assert_eq!(s.get_line(1), "line2");
+        assert_eq!(s.get_line(2), "line3");
+    }
+
+    #[test]
+    fn test_tab_stop() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"A\tB");
+        let line = s.get_line(0);
+        assert_eq!(line.as_bytes()[0], b'A');
+        assert_eq!(line.as_bytes()[8], b'B');
+    }
+
+    #[test]
+    fn test_backspace() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"abc\x08X");
+        assert_eq!(s.get_line(0), "abX");
+    }
+
+    #[test]
+    fn test_save_restore_cursor() {
+        let mut s = Vt100Screen::new(20, 3);
+        s.process(b"AAA\x1b[s\x1b[2;1HBBB\x1b[uCC");
+        assert_eq!(s.get_line(0), "AAACC");
+        assert_eq!(s.get_line(1), "BBB");
+    }
+
+    #[test]
+    fn test_find_text() {
+        let mut s = Vt100Screen::new(30, 2);
+        s.process(b"hello world\r\nfoo bar baz");
+        let hits = s.find_text("bar");
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0], (1, 4));
+    }
+
+    #[test]
+    fn test_resize_preserves_content() {
+        let mut s = Vt100Screen::new(10, 3);
+        s.process(b"keep me\r\nand this");
+        s.resize(15, 5);
+        assert_eq!(s.cols_count(), 15);
+        assert_eq!(s.line_count(), 5);
+        assert_eq!(s.get_line(0), "keep me");
+        assert_eq!(s.get_line(1), "and this");
+    }
+
+    #[test]
+    fn test_sgr_bold_italic_underline() {
+        let mut s = Vt100Screen::new(20, 2);
+        s.process(b"\x1b[1;3;4mstyled\x1b[0m normal");
+        assert_eq!(s.get_line(0), "styled normal");
+    }
+
+    #[test]
+    fn test_empty_screen() {
+        let s = Vt100Screen::new(10, 3);
+        assert_eq!(s.get_text(), "");
+    }
+
+    #[test]
+    fn test_get_line_out_of_bounds() {
+        let s = Vt100Screen::new(10, 3);
+        assert_eq!(s.get_line(99), "");
+    }
+
+    #[test]
+    fn test_cursor_up_down_left_right() {
+        let mut s = Vt100Screen::new(20, 4);
+        s.process(b"row0\r\nrow1\r\nrow2");
+        s.process(b"\x1b[A"); // cursor up
+        s.process(b"!");
+        assert_eq!(s.get_line(1), "row1!");
+    }
+}

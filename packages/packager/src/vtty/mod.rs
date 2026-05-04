@@ -221,7 +221,8 @@ impl VttyManager {
         let session = self.get(sid)?;
         let mut guard = session.lock().map_err(|_| "session lock poisoned".to_string())?;
         let info = guard.info();
-        guard.kill()?;
+        let _ = guard.kill();
+        drop(guard);
         self.sessions.lock().map_err(|_| "lock poisoned".to_string())?.remove(sid);
         Ok(info)
     }
@@ -249,7 +250,7 @@ impl Default for VttyManager {
 // Key parsing — maps key names to terminal escape sequences
 // ─────────────────────────────────────────────────────
 
-fn parse_keys(keys_str: &str) -> Result<Vec<u8>, String> {
+pub fn parse_keys(keys_str: &str) -> Result<Vec<u8>, String> {
     let mut buf = Vec::new();
     for part in keys_str.split(' ') {
         let upper = part.to_uppercase();
@@ -297,9 +298,127 @@ fn parse_keys(keys_str: &str) -> Result<Vec<u8>, String> {
                 for ch in part[6..].chars() { buf.push(ch as u8); }
             }
             s => {
-                for ch in s.chars() { buf.push(ch as u8); }
+                for ch in part.chars() { buf.push(ch as u8); }
             }
         }
     }
     Ok(buf)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_enter() {
+        assert_eq!(parse_keys("ENTER").unwrap(), b"\r");
+        assert_eq!(parse_keys("RETURN").unwrap(), b"\r");
+    }
+
+    #[test]
+    fn test_parse_tab_esc() {
+        assert_eq!(parse_keys("TAB").unwrap(), b"\t");
+        assert_eq!(parse_keys("ESCAPE").unwrap(), b"\x1b");
+        assert_eq!(parse_keys("ESC").unwrap(), b"\x1b");
+    }
+
+    #[test]
+    fn test_parse_backspace_delete() {
+        assert_eq!(parse_keys("BACKSPACE").unwrap(), b"\x7f");
+        assert_eq!(parse_keys("BS").unwrap(), b"\x7f");
+        assert_eq!(parse_keys("DELETE").unwrap(), b"\x1b[3~");
+        assert_eq!(parse_keys("DEL").unwrap(), b"\x1b[3~");
+    }
+
+    #[test]
+    fn test_parse_arrow_keys() {
+        assert_eq!(parse_keys("UP").unwrap(), b"\x1b[A");
+        assert_eq!(parse_keys("DOWN").unwrap(), b"\x1b[B");
+        assert_eq!(parse_keys("RIGHT").unwrap(), b"\x1b[C");
+        assert_eq!(parse_keys("LEFT").unwrap(), b"\x1b[D");
+    }
+
+    #[test]
+    fn test_parse_home_end_pagenav() {
+        assert_eq!(parse_keys("HOME").unwrap(), b"\x1b[H");
+        assert_eq!(parse_keys("END").unwrap(), b"\x1b[F");
+        assert_eq!(parse_keys("PAGEUP").unwrap(), b"\x1b[5~");
+        assert_eq!(parse_keys("PAGE_DOWN").unwrap(), b"\x1b[6~");
+    }
+
+    #[test]
+    fn test_parse_fkeys() {
+        assert_eq!(parse_keys("F1").unwrap(), b"\x1bOP");
+        assert_eq!(parse_keys("F4").unwrap(), b"\x1bOS");
+        assert_eq!(parse_keys("F5").unwrap(), b"\x1b[15~");
+        assert_eq!(parse_keys("F12").unwrap(), b"\x1b[24~");
+    }
+
+    #[test]
+    fn test_parse_ctrl_keys() {
+        assert_eq!(parse_keys("CTRL+C").unwrap(), &[0x03]);
+        assert_eq!(parse_keys("CTRL+Z").unwrap(), &[0x1a]);
+        assert_eq!(parse_keys("ctrl+a").unwrap(), &[0x01]);
+    }
+
+    #[test]
+    fn test_parse_alt_keys() {
+        let r = parse_keys("ALT+F").unwrap();
+        assert_eq!(r, &[0x1b, b'F']);
+    }
+
+    #[test]
+    fn test_parse_space() {
+        assert_eq!(parse_keys("SPACE").unwrap(), b" ");
+    }
+
+    #[test]
+    fn test_parse_literal_text() {
+        assert_eq!(parse_keys("hello").unwrap(), b"hello");
+    }
+
+    #[test]
+    fn test_parse_combined_sequence() {
+        let r = parse_keys("echo ENTER").unwrap();
+        assert_eq!(&r[..4], b"echo");
+        assert_eq!(r[4], 0x0d);
+    }
+
+    #[test]
+    fn test_invalid_ctrl_key() {
+        assert!(parse_keys("CTRL+").is_err());
+    }
+
+    #[test]
+    fn test_session_info_serialization() {
+        let info = SessionInfo {
+            id: "vtty-0".into(),
+            name: "test".into(),
+            command: "cmd".into(),
+            cols: 80,
+            rows: 24,
+            alive: true,
+            pid: Some(12345),
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let roundtrip: SessionInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtrip.id, "vtty-0");
+        assert_eq!(roundtrip.pid, Some(12345));
+        assert!(roundtrip.alive);
+    }
+
+    #[test]
+    fn test_session_info_no_pid() {
+        let info = SessionInfo {
+            id: "vtty-0".into(),
+            name: "test".into(),
+            command: "cmd".into(),
+            cols: 80,
+            rows: 24,
+            alive: false,
+            pid: None,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        assert!(!json.contains("pid"));
+    }
 }
