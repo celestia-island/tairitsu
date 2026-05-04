@@ -1,6 +1,17 @@
 # PLAN: Cross-Platform VTty MCP Server for TUI Debugging
 
-## Status: 📋 Planning
+## Status: ✅ Implementation Complete — Ready for Integration
+
+### Session Progress (2026-05-05)
+
+- [x] Phase 1: VT100 screen (`screen.rs` with full vte parser + 12 unit tests)
+- [x] Phase 2: Cross-platform PTY via `portable-pty` (`pty_win.rs` for all platforms)
+- [x] Phase 3: `VttySession` + `VttyManager` with thread-safe session management
+- [x] Phase 4: MCP tool surface — 11 vtty_* tools registered in `mcp/mod.rs`
+- [x] `debug-api` added to default features (was missing, caused compile errors without it)
+- [x] Verified `--features "vtty debug-api"` compiles cleanly
+- [ ] Entelecheia Python vtty scripts cleanup
+- [ ] opencode config migration from Python to tairitsu
 
 ## Motivation
 

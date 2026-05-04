@@ -560,7 +560,10 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         _ => tracing::Level::TRACE,
     };
 
-    crate::logfmt::init_tracing(log_level);
+    let is_mcp = matches!(cli.command, Some(Commands::Mcp { .. }));
+    if !is_mcp {
+        crate::logfmt::init_tracing(log_level);
+    }
 
     let is_dev_command = matches!(
         cli.command,

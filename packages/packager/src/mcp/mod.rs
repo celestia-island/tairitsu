@@ -34,7 +34,18 @@ impl Default for McpConfig {
 
 pub async fn run(config: McpConfig) -> crate::Result<()> {
     let base_url = if config.base_url.is_empty() {
-        resolve_daemon_url().await?
+        match resolve_daemon_url().await {
+            Ok(url) => url,
+            Err(e) => {
+                #[cfg(feature = "vtty")]
+                {
+                    tracing::debug!("[tairitsu-mcp] Warning: {}", e);
+                    String::new()
+                }
+                #[cfg(not(feature = "vtty"))]
+                return Err(e);
+            }
+        }
     } else {
         config.base_url
     };
@@ -45,7 +56,7 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     #[cfg(not(feature = "vtty"))]
     let state = McpState { base_url, http };
 
-    eprintln!("[tairitsu-mcp] Connected — browser + {}vtty tools available", if cfg!(feature = "vtty") { "" } else { "(no " });
+    tracing::info!("[tairitsu-mcp] Connected — browser + {}vtty tools available", if cfg!(feature = "vtty") { "" } else { "(no " });
 
     run_jsonrpc_loop(state).await;
 
@@ -91,6 +102,16 @@ struct McpState {
     http: reqwest::Client,
     #[cfg(feature = "vtty")]
     vtty: std::sync::Arc<crate::vtty::VttyManager>,
+}
+
+impl McpState {
+    fn require_daemon(&self) -> Result<(), String> {
+        if self.base_url.is_empty() {
+            Err("Browser tools require a running daemon. Start with: tairitsu dev --daemon".to_string())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────
@@ -158,8 +179,8 @@ fn tool_list() -> Vec<serde_json::Value> {
             },
             "required": ["url"]
         })),
-        tool("browser_navigate_back", "Go back to the previous page", json!({})),
-        tool("browser_navigate_forward", "Go forward to the next page", json!({})),
+        tool("browser_navigate_back", "Go back to the previous page", json!({"type": "object", "properties": {}})),
+        tool("browser_navigate_forward", "Go forward to the next page", json!({"type": "object", "properties": {}})),
 
         // --- Page inspection ---
         tool("browser_snapshot", "Capture accessibility snapshot of the current page (DOM tree with roles, names, text). Better than screenshot for understanding page structure.", json!({
@@ -284,7 +305,7 @@ fn tool_list() -> Vec<serde_json::Value> {
                 "textGone": {"type": "string", "description": "Wait for this text to disappear from the page"}
             }
         })),
-        tool("browser_close", "Close the current tab or entire browser session", json!({})),
+        tool("browser_close", "Close the current tab or entire browser session", json!({"type": "object", "properties": {}})),
         tool("browser_resize", "Resize the browser window", json!({
             "type": "object",
             "properties": {
@@ -363,7 +384,7 @@ fn tool_list() -> Vec<serde_json::Value> {
             "required": ["session_id", "cols", "rows"]
         })),
         #[cfg(feature = "vtty")]
-        tool("vtty_list", "List all active virtual terminal sessions", json!({})),
+        tool("vtty_list", "List all active virtual terminal sessions", json!({"type": "object", "properties": {}})),
         #[cfg(feature = "vtty")]
         tool("vtty_ping", "Check if a VTty session's child process is still alive and refresh screen state", json!({
             "type": "object",
@@ -398,17 +419,27 @@ async fn run_jsonrpc_loop(state: McpState) {
                 let trimmed = line.trim().to_string();
                 if trimmed.is_empty() { continue; }
 
+                let is_notification = serde_json::from_str::<serde_json::Value>(&trimmed)
+                    .ok()
+                    .and_then(|v| v.as_object().cloned())
+                    .map_or(true, |obj| !obj.contains_key("id"));
+
                 match serde_json::from_str::<JsonRpcRequest>(&trimmed) {
                     Ok(req) => {
-                        let resp = handle_request(&state, req).await;
-                        let output = serde_json::to_string(&resp).unwrap_or_default();
-                        writeln!(stdout, "{}", output).ok();
-                        stdout.flush().ok();
+                        if is_notification {
+                            handle_notification(&state, &req).await;
+                        } else if let Some(resp) = handle_request(&state, req).await {
+                            let output = serde_json::to_string(&resp).unwrap_or_default();
+                            writeln!(stdout, "{}", output).ok();
+                            stdout.flush().ok();
+                        }
                     }
                     Err(e) => {
-                        let resp = JsonRpcResponse::err(None, -32700, format!("Parse error: {}", e));
-                        writeln!(stdout, "{}", serde_json::to_string(&resp).unwrap_or_default()).ok();
-                        stdout.flush().ok();
+                        if !is_notification {
+                            let resp = JsonRpcResponse::err(None, -32700, format!("Parse error: {}", e));
+                            writeln!(stdout, "{}", serde_json::to_string(&resp).unwrap_or_default()).ok();
+                            stdout.flush().ok();
+                        }
                     }
                 }
             }
@@ -417,14 +448,16 @@ async fn run_jsonrpc_loop(state: McpState) {
     }
 }
 
-async fn handle_request(state: &McpState, req: JsonRpcRequest) -> JsonRpcResponse {
+async fn handle_notification(_state: &McpState, _req: &JsonRpcRequest) {
+}
+
+async fn handle_request(state: &McpState, req: JsonRpcRequest) -> Option<JsonRpcResponse> {
     match req.method.as_str() {
-        "initialize" => handle_initialize(req.id),
-        "notifications/initialized" => JsonRpcResponse::ok(None, serde_json::json!(null)),
-        "tools/list" => handle_tools_list(req.id),
-        "tools/call" => handle_tools_call(state, req.id, req.params).await,
-        "ping" => JsonRpcResponse::ok(req.id, serde_json::json!({})),
-        _ => JsonRpcResponse::err(req.id, -32601, format!("Method not found: {}", req.method)),
+        "initialize" => Some(handle_initialize(req.id)),
+        "tools/list" => Some(handle_tools_list(req.id)),
+        "tools/call" => Some(handle_tools_call(state, req.id, req.params).await),
+        "ping" => Some(JsonRpcResponse::ok(req.id, serde_json::json!({}))),
+        _ => Some(JsonRpcResponse::err(req.id, -32601, format!("Method not found: {}", req.method))),
     }
 }
 
@@ -491,6 +524,10 @@ async fn invoke_tool(
     args: &serde_json::Value,
 ) -> Result<String, String> {
     let api = |path: &str| format!("{}/__tairitsu_debug/{}", state.base_url, path);
+
+    if tool_name.starts_with("browser_") {
+        state.require_daemon()?;
+    }
 
     match tool_name {
         // --- Navigation ---
