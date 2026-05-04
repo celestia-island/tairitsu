@@ -2241,7 +2241,7 @@ pub async fn dev_server(
             tokio::spawn(async move {
                 use std::time::Duration;
                 tokio::time::sleep(Duration::from_millis(500)).await;
-                if let Err(e) = debug.launch_browser(&app_url, true).await {
+                if let Err(e) = debug.launch_browser(&app_url).await {
                     crate::log_warn!("Debug browser launch failed: {}", e);
                 }
             });
