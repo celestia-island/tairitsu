@@ -239,6 +239,13 @@ enum Commands {
         #[arg(long)]
         events: bool,
     },
+
+    /// MCP server — exposes browser automation tools to AI coding assistants
+    Mcp {
+        /// Base URL of the tairitsu daemon debug API (auto-detected if omitted)
+        #[arg(short, long)]
+        url: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -884,6 +891,13 @@ crate::log_info!("Starting SSR development server...");
                     std::process::exit(1);
                 }
             }
+        },
+        #[allow(unused_variables)]
+        Some(Commands::Mcp { url }) => {
+            let config = crate::mcp::McpConfig {
+                base_url: url.unwrap_or_default(),
+            };
+            crate::mcp::run(config).await?;
         }
         Some(Commands::Resources { action }) => match action {
             ResourcesCommands::Index { format } => {
