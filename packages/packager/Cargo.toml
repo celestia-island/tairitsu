@@ -119,6 +119,7 @@ dev-server = [
   "tokio-stream",
 ]
 debug-browser = ["dev-server", "reqwest"]
+debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
