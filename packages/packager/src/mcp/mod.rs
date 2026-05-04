@@ -1,7 +1,7 @@
-//! Tairitsu Virtual Browser — MCP (Model Context Protocol) server.
+//! Tairitsu Virtual Browser + VTty — MCP (Model Context Protocol) server.
 //!
-//! Provides browser automation tools to AI coding assistants (opencode, Claude,
-//! Cursor, etc.) by connecting to a running tairitsu daemon's debug API.
+//! Provides browser automation AND virtual terminal (VTty) tools to AI coding assistants.
+//! All requests go through tairitsu packager CLI via stdio JSON-RPC 2.0.
 //!
 //! # Usage
 //!
@@ -40,9 +40,12 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     };
 
     let http = reqwest::Client::new();
+    #[cfg(feature = "vtty")]
+    let state = McpState { base_url, http, vtty: std::sync::Arc::new(crate::vtty::VttyManager::new()) };
+    #[cfg(not(feature = "vtty"))]
     let state = McpState { base_url, http };
 
-    eprintln!("[tairitsu-virtual-browser] Connected to daemon at {}", state.base_url);
+    eprintln!("[tairitsu-mcp] Connected — browser + {}vtty tools available", if cfg!(feature = "vtty") { "" } else { "(no " });
 
     run_jsonrpc_loop(state).await;
 
@@ -86,6 +89,8 @@ fn try_read_ready_port() -> Option<u16> {
 struct McpState {
     base_url: String,
     http: reqwest::Client,
+    #[cfg(feature = "vtty")]
+    vtty: std::sync::Arc<crate::vtty::VttyManager>,
 }
 
 // ─────────────────────────────────────────────────────
@@ -288,6 +293,85 @@ fn tool_list() -> Vec<serde_json::Value> {
             },
             "required": ["width", "height"]
         })),
+
+        // ── VTty: Virtual Terminal (ConPTY on Windows, forkpty on Unix) ──
+        #[cfg(feature = "vtty")]
+        tool("vtty_launch", "Launch a command in a virtual terminal session", json!({
+            "type": "object",
+            "properties": {
+                "command": {"type": "string", "description": "Shell command to run"},
+                "cols": {"type": "number", "description": "Terminal width in columns (default 120)"},
+                "rows": {"type": "number", "description": "Terminal height in rows (default 40)"},
+                "env": {"type": "string", "description": "Extra env vars as KEY=VAL KEY2=VAL2 string (optional)"},
+                "cwd": {"type": "string", "description": "Working directory (optional)"},
+                "name": {"type": "string", "description": "Friendly name for the session (optional)"}
+            },
+            "required": ["command"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_kill", "Kill a virtual terminal session", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID returned by vtty_launch"}
+            },
+            "required": ["session_id"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_send_keys", "Send key sequences to a virtual terminal. Supports Enter, Tab, Escape, Backspace, Delete, Arrow keys, Home/End, PageUp/PageDown, F1-F12, Ctrl+X, Alt+X", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"},
+                "keys": {"type": "string", "description": "Key sequence, e.g. 'Enter', 'Ctrl+C', 'Up Down Up Down Left Right B A' (space-separated)"}
+            },
+            "required": ["session_id", "keys"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_send_text", "Send text string to a virtual terminal", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"},
+                "text": {"type": "string", "description": "Text to type into the terminal"}
+            },
+            "required": ["session_id", "text"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_screenshot", "Capture current terminal screen content as text", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"}
+            },
+            "required": ["session_id"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_wait", "Wait for duration or until text appears on screen", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"},
+                "seconds": {"type": "number", "description": "Wait time in seconds (default 5)"},
+                "pattern": {"type": "string", "description": "Wait for this text pattern to appear on screen (optional)"}
+            },
+            "required": ["session_id"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_resize", "Resize a virtual terminal", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"},
+                "cols": {"type": "number", "description": "New width in columns"},
+                "rows": {"type": "number", "description": "New height in rows"}
+            },
+            "required": ["session_id", "cols", "rows"]
+        })),
+        #[cfg(feature = "vtty")]
+        tool("vtty_list", "List all active virtual terminal sessions", json!({})),
+        #[cfg(feature = "vtty")]
+        tool("vtty_ping", "Check if a VTty session's child process is still alive and refresh screen state", json!({
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Session ID"}
+            },
+            "required": ["session_id"]
+        })),
     ]
 }
 
@@ -350,10 +434,10 @@ fn handle_initialize(id: Option<serde_json::Value>) -> JsonRpcResponse {
         json!({
             "protocolVersion": MCP_PROTOCOL_VERSION,
             "capabilities": { "tools": {} },
-            "serverInfo": {
-                "name": "tairitsu-virtual-browser",
-                "version": env!("CARGO_PKG_VERSION")
-            }
+                "serverInfo": {
+                    "name": if cfg!(feature = "vtty") { "tairitsu-mcp" } else { "tairitsu-virtual-browser" },
+                    "version": env!("CARGO_PKG_VERSION")
+                }
         }),
     )
 }
@@ -599,6 +683,105 @@ async fn invoke_tool(
             let w = args.get("width").and_then(|v| v.as_u64()).unwrap_or(1280);
             let h = args.get("height").and_then(|v| v.as_u64()).unwrap_or(720);
             Ok(format!("Resized to {}x{}", w, h))
+        }
+
+        // ── VTty tools (pure Rust, no Python) ──
+        #[cfg(feature = "vtty")]
+        "vtty_launch" => {
+            let cmd = arg_str(args, "command")?;
+            let cols = args.get("cols").and_then(|v| v.as_u64()).unwrap_or(120) as u16;
+            let rows = args.get("rows").and_then(|v| v.as_u64()).unwrap_or(40) as u16;
+            let env = args.get("env").and_then(|v| v.as_str()).unwrap_or("");
+            let cwd = args.get("cwd").and_then(|v| v.as_str());
+            let name = args.get("name").and_then(|v| v.as_str()).unwrap_or("");
+            let info = state.vtty.launch(cmd, cols, rows, env, cwd, name).map_err(|e| e.to_string())?;
+            Ok(serde_json::to_string_pretty(&info).unwrap_or_default())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_kill" => {
+            let sid = arg_str(args, "session_id")?;
+            let info = state.vtty.kill(sid).map_err(|e| e.to_string())?;
+            Ok(serde_json::to_string_pretty(&info).unwrap_or_default())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_send_keys" => {
+            let sid = arg_str(args, "session_id")?;
+            let keys = arg_str(args, "keys")?;
+            let session = state.vtty.get(sid).map_err(|e| e)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            guard.send_keys(keys).map_err(|e| e.to_string())?;
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            let _ = guard.read_and_update();
+            Ok(json!({"session_id": sid, "keys": keys, "sent": true}).to_string())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_send_text" => {
+            let sid = arg_str(args, "session_id")?;
+            let text = arg_str(args, "text")?;
+            let session = state.vtty.get(sid).map_err(|e| e)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            guard.send_text(text).map_err(|e| e.to_string())?;
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            let _ = guard.read_and_update();
+            Ok(json!({"session_id": sid, "length": text.len(), "sent": true}).to_string())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_screenshot" => {
+            let sid = arg_str(args, "session_id")?;
+            let session = state.vtty.get(sid).map_err(|e| e)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            let _ = guard.read_and_update();
+            let text = guard.screenshot();
+            let alive = guard.is_alive();
+            Ok(json!({"session_id": sid, "alive": alive, "rows": guard.rows, "cols": guard.cols, "text": text}).to_string())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_wait" => {
+            let sid = arg_str(args, "session_id")?;
+            let secs = args.get("seconds").and_then(|v| v.as_f64()).unwrap_or(5.0);
+            let pattern = args.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
+            let session = state.vtty.get(sid).map_err(|e| e)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            if !pattern.is_empty() {
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
+                while std::time::Instant::now() < deadline && guard.is_alive() {
+                    let _ = guard.read_and_update();
+                    if !guard.find_text(pattern).is_empty() {
+                        return Ok(json!({"session_id": sid, "pattern": pattern, "found": true, "alive": true}).to_string());
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(300));
+                }
+                Ok(json!({"session_id": sid, "pattern": pattern, "found": false, "alive": guard.is_alive()}).to_string())
+            } else {
+                let wait_secs = secs.min(1800.0) as u64;
+                for _ in 0..(wait_secs * 20) { // 50ms intervals
+                    if !guard.is_alive() { break; }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                Ok(json!({"session_id": sid, "seconds_waited": secs, "alive": guard.is_alive()}).to_string())
+            }
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_resize" => {
+            let sid = arg_str(args, "session_id")?;
+            let cols = args.get("cols").and_then(|v| v.as_u64()).ok_or_else(|| "Missing: cols".to_string())? as u16;
+            let rows = args.get("rows").and_then(|v| v.as_u64()).ok_or_else(|| "Missing: rows".to_string())? as u16;
+            let session = state.vtty.get(sid).map_err(|e| e)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            let old_cols = guard.cols; let old_rows = guard.rows;
+            guard.resize(cols, rows).map_err(|e| e.to_string())?;
+            Ok(json!({"session_id": sid, "old": {"cols": old_cols, "rows": old_rows}, "new": {"cols": cols, "rows": rows}}).to_string())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_list" => {
+            let sessions = state.vtty.list();
+            Ok(serde_json::to_string_pretty(&sessions).unwrap_or_else(|_| "[]".to_string()))
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_ping" => {
+            let sid = arg_str(args, "session_id")?;
+            let info = state.vtty.ping(sid).map_err(|e| e.to_string())?;
+            Ok(serde_json::to_string_pretty(&info).unwrap_or_default())
         }
 
         _ => Err(format!("Unknown tool: {}", tool_name)),
