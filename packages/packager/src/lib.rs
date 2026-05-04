@@ -18,6 +18,8 @@ pub mod debug_api;
 pub mod daemon;
 #[cfg(feature = "cli")]
 pub mod mcp;
+#[cfg(feature = "vtty")]
+pub mod vtty;
 pub mod i18n;
 pub mod icons;
 pub mod logfmt;
