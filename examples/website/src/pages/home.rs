@@ -3,6 +3,7 @@
 use tairitsu_vdom::{VElement, VNode, VText};
 
 use crate::components::{glow_wrapper, svg_icon};
+use crate::i18n::{self, Language};
 use hikari_icons::MdiIcon;
 
 fn txt(s: &str) -> VNode {
@@ -53,6 +54,8 @@ fn glow_card(title: &str, body: &str) -> VNode {
 }
 
 pub fn render() -> VNode {
+    let t = i18n::text(Language::default_lang());
+
     let logo = VNode::Element(
         el("div")
             .class("page-hero__logo")
@@ -64,17 +67,17 @@ pub fn render() -> VNode {
     let subtitle = VNode::Element(
         el("p")
             .class("page-hero__subtitle")
-            .child(txt("A comprehensive WASM Component Runtime Engine.")),
+            .child(txt(t.hero_copy)),
     );
 
     let tagline = VNode::Element(
         el("p")
             .class("page-hero__tagline")
-            .child(txt("Built with a reactive virtual DOM, compiled to WebAssembly. Tairitsu provides a rich set of components from basic primitives to complex data visualisations \u{2014} all rendered without JavaScript.")),
+            .child(txt(t.section_arch_lead)),
     );
 
-    let btn1 = glow_btn("/system", "hi-button hi-button-primary hi-button-lg", "Explore Architecture ", Some("\u{2192}"));
-    let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", "Quick Start", None);
+    let btn1 = glow_btn("/system", "hi-button hi-button-primary hi-button-lg", t.action_primary, Some("\u{2192}"));
+    let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", t.sidebar_quick_start, None);
 
     let actions = VNode::Element(
         el("div").class("page-hero__actions").children(vec![btn1, btn2]),
