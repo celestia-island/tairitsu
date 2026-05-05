@@ -6,12 +6,10 @@
 use std::{collections::HashSet, fs::File, io::Write, path::Path};
 
 fn main() {
-    // Only regenerate if the WIT files change
-    println!("cargo:rerun-if-changed=../../packages/browser-worlds/wit/browser-full.wit");
-    println!("cargo:rerun-if-changed=../../packages/browser-worlds/wit/composed");
+    println!("cargo:rerun-if-changed=wit/browser-full.wit");
+    println!("cargo:rerun-if-changed=wit/composed");
 
-    // Read the WIT file to extract interface names and functions
-    let wit_path = "../../packages/browser-worlds/wit/browser-full.wit";
+    let wit_path = "wit/browser-full.wit";
     let wit_content = match std::fs::read_to_string(wit_path) {
         Ok(content) => content,
         Err(e) => {
@@ -22,7 +20,8 @@ fn main() {
             let out_dir = std::env::var("OUT_DIR").unwrap();
             let generated_path = Path::new(&out_dir).join("ssr_stubs_gen.rs");
             let mut file = File::create(&generated_path).expect("Failed to create generated file");
-            let minimal_code = "// Minimal SSR stubs (WIT file not found)\n".to_string();
+            let minimal_code =
+                "// Minimal SSR stubs (WIT file not found)\npub fn register_all_auto_stubs(_linker: &mut Linker<SsrHostState>) -> Result<()> { Ok(()) }\n".to_string();
             file.write_all(minimal_code.as_bytes())
                 .expect("Failed to write generated code");
             println!("cargo:warning=Generated minimal stub implementations (WIT file not found)");
