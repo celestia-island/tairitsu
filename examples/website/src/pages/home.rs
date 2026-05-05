@@ -56,7 +56,7 @@ pub fn render() -> VNode {
             .child(svg_icon(MdiIcon::CubeOutline, 64, "page-hero-logo-icon")),
     );
 
-    let title = VNode::Element(el("h1").class("page-hero__title").child(txt("Tairitsu")));
+    let title = VNode::Element(el("h1").class("page-hero__title").child(txt(t.hero_title)));
 
     let subtitle = VNode::Element(
         el("p")
@@ -71,7 +71,7 @@ pub fn render() -> VNode {
     );
 
     let btn1 = glow_btn("/system", "hi-button hi-button-primary hi-button-lg", t.action_primary, Some("\u{2192}"));
-    let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", t.sidebar_quick_start, None);
+    let btn2 = glow_btn("/guides/quick-start", "hi-button hi-button-secondary hi-button-lg", t.action_secondary, None);
 
     let actions = VNode::Element(
         el("div").class("page-hero__actions").children(vec![btn1, btn2]),
@@ -88,20 +88,20 @@ pub fn render() -> VNode {
     );
 
     let section_title = VNode::Element(
-        el("h2").class("page-section__title").child(txt("What is Tairitsu?")),
+        el("h2").class("page-section__title").child(txt(t.section_packages)),
     );
 
     let card1 = glow_card(
-        "WASM Component Runtime",
-        "Interface-first architecture with Image/Container model, dual web backends, and WIT pipeline.",
+        t.section_arch,
+        t.section_arch_lead,
     );
     let card2 = glow_card(
-        "Reactive Virtual DOM",
-        "Signal-based hooks (use_signal, use_effect, use_memo), rsx! macro, and typed event system.",
+        t.section_runtime,
+        t.section_runtime_lead,
     );
     let card3 = glow_card(
-        "WebAssembly First",
-        "Ships as a wasm32-wasip2 component. Rendered with the Tairitsu virtual DOM — no JavaScript framework required.",
+        t.section_workspace,
+        t.section_workspace_lead,
     );
 
     let card_grid = VNode::Element(

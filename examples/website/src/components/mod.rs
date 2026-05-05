@@ -120,42 +120,43 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
 // ============================================================
 
 pub fn top_nav() -> VNode {
-    rsx! {
-        header { class: "hi-header hi-header-sticky hi-header-md",
-            div { class: "hi-header-left",
-                button { class: "hi-header-toggle", id: "drawer-toggle",
-                    "aria-label": "Toggle menu",
-                    svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24",
-                        stroke: "currentColor", stroke_width: "2", stroke_linecap: "round", stroke_linejoin: "round",
-                        path { d: "M4 6h16M4 12h16M4 18h16" }
-                    }
-                }
-                a { href: "/", class: "hi-header-brand",
-                    img {
-                        class: "hi-header-logo-img",
-                        src: "/images/logo-tairitsu.png",
-                        alt: "Tairitsu",
-                        width: "28",
-                        height: "28"
-                    }
-                    span { style: "font-weight:700;font-size:1.15rem;margin-left:8px;", "Tairitsu" }
-                }
-            }
-            div { class: "hi-header-right",
-                nav { class: "hi-header-nav",
-                    a { href: "/guides/quick-start", class: "ts-topnav__link", "Guides" }
-                    a { href: "/system", class: "ts-topnav__link", "System" }
-                    a { href: "/packages", class: "ts-topnav__link", "Packages" }
-                }
-                a {
-                    href: "https://github.com/langyo/tairitsu",
-                    target: "_blank",
-                    class: "hi-header-github",
-                    "GitHub"
-                }
-            }
-        }
-    }
+    let t = crate::i18n::text(Language::default_lang());
+
+    let nav_link = |href: &str, label: &str| -> VNode {
+        VNode::Element(el("a").attr("href", href).class("ts-topnav__link").child(txt(label)))
+    };
+
+    VNode::Element(
+        el("header").class("hi-header hi-header-sticky hi-header-md")
+            .child(VNode::Element(
+                el("div").class("hi-header-left")
+                    .child(VNode::Element(
+                        el("button").class("hi-header-toggle").attr("id", "drawer-toggle")
+                            .attr("aria-label", "Toggle menu")
+                            .inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>"#)
+                    ))
+                    .child(VNode::Element(
+                        el("a").attr("href", "/").class("hi-header-brand")
+                            .inner_html(r#"<img class="hi-header-logo-img" src="/images/logo-tairitsu.png" alt="Tairitsu" width="28" height="28"/><span style="font-weight:700;font-size:1.15rem;margin-left:8px;">Tairitsu</span>"#)
+                    ))
+            ))
+            .child(VNode::Element(
+                el("div").class("hi-header-right")
+                    .child(VNode::Element(
+                        el("nav").class("hi-header-nav")
+                            .child(nav_link("/guides/quick-start", t.nav_guides))
+                            .child(nav_link("/system", "System"))
+                            .child(nav_link("/packages", t.nav_packages))
+                    ))
+                    .child(VNode::Element(
+                        el("a")
+                            .attr("href", "https://github.com/langyo/tairitsu")
+                            .attr("target", "_blank")
+                            .class("hi-header-github")
+                            .child(txt(t.nav_github))
+                    ))
+            ))
+    )
 }
 
 // ============================================================
@@ -476,16 +477,13 @@ pub fn aside_footer() -> VNode {
                     }
                 }
                 ..if lang_open {
+                    let options: Vec<VNode> = i18n::LOCALES.iter().map(|lang| {
+                        VNode::Element(el("div").class("hi-select-option").child(txt(lang.native_name())))
+                    }).collect();
                     vec![VNode::Element(
                         el("div")
                             .class("hi-select-dropdown")
-                            .children(vec![
-                                VNode::Element(el("div").class("hi-select-option").child(txt("English"))),
-                                VNode::Element(el("div").class("hi-select-option").child(txt("简体中文"))),
-                                VNode::Element(el("div").class("hi-select-option").child(txt("繁體中文"))),
-                                VNode::Element(el("div").class("hi-select-option").child(txt("日本語"))),
-                                VNode::Element(el("div").class("hi-select-option").child(txt("한국어"))),
-                            ])
+                            .children(options)
                     )]
                 } else {
                     vec![]
