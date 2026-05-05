@@ -297,7 +297,7 @@ pub fn parse_keys(keys_str: &str) -> Result<Vec<u8>, String> {
             s if s.starts_with("SHIFT+") => {
                 for ch in part[6..].chars() { buf.push(ch as u8); }
             }
-            s => {
+            _s => {
                 for ch in part.chars() { buf.push(ch as u8); }
             }
         }

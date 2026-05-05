@@ -64,37 +64,83 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
 }
 
 async fn resolve_daemon_url() -> crate::Result<String> {
-    use crate::daemon;
+    if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
+        if !url.is_empty() {
+            tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
+            return Ok(url);
+        }
+    }
 
-    if let Some(port) = try_read_ready_port() {
+    let searched = search_project_roots();
+    if let Some((port, found_at)) = try_read_ready_port_from_candidates(&searched) {
+        tracing::debug!("[tairitsu-mcp] Found ready file at {}", found_at.display());
         return Ok(format!("http://localhost:{}", port));
     }
 
+    use crate::daemon;
     if daemon::is_daemon_running() {
         let pid = daemon::read_pid().unwrap_or(0);
         return Err(crate::TairitsuPackagerError::BuildError(format!(
-            "Daemon is running (PID {}) but port unknown. Try --port.",
-            pid
+            "Daemon is running (PID {}) but port unknown.\n\
+             Searched: {}\n\
+             Hint: set TAIRITSU_DAEMON_URL=http://localhost:<PORT> or pass --url",
+            pid,
+            searched.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", ")
         )));
     }
 
-    Err(crate::TairitsuPackagerError::BuildError(
-        "No running daemon found. Start with: tairitsu dev --daemon".to_string(),
-    ))
+    Err(crate::TairitsuPackagerError::BuildError(format!(
+        "No running tairitsu daemon found.\n\
+         Searched: {}\n\
+         Hint: start with `tairitsu dev --daemon` or set TAIRITSU_DAEMON_URL",
+        searched.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", ")
+    )))
 }
 
-fn try_read_ready_port() -> Option<u16> {
-    let ready_path = std::path::PathBuf::from("target")
-        .join("tairitsu-packager.ready");
-    let content = std::fs::read_to_string(&ready_path).ok()?;
-    let trimmed = content.trim();
-    if let Some(port_str) = trimmed.strip_prefix("ready:") {
-        port_str.parse().ok()
-    } else if trimmed == "ready" {
-        Some(3000)
-    } else {
-        None
+fn search_project_roots() -> Vec<std::path::PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(cwd) = std::env::current_dir() {
+        candidates.push(cwd.join("target"));
+        let mut dir = cwd.clone();
+        for _ in 0..5 {
+            if dir.join("Cargo.toml").exists() {
+                candidates.push(dir.join("target"));
+            }
+            if !dir.pop() { break; }
+        }
     }
+
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+        let p = std::path::PathBuf::from(root);
+        candidates.push(p.join("target"));
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+            candidates.push(parent.join("target"));
+        }
+    }
+
+    candidates.dedup();
+    candidates
+}
+
+fn try_read_ready_port_from_candidates(dirs: &[std::path::PathBuf]) -> Option<(u16, std::path::PathBuf)> {
+    for dir in dirs {
+        let ready_path = dir.join("tairitsu-packager.ready");
+        if let Ok(content) = std::fs::read_to_string(&ready_path) {
+            let trimmed = content.trim();
+            if let Some(port_str) = trimmed.strip_prefix("ready:") {
+                if let Ok(port) = port_str.parse::<u16>() {
+                    return Some((port, ready_path));
+                }
+            } else if trimmed == "ready" {
+                return Some((3000, ready_path));
+            }
+        }
+    }
+    None
 }
 
 struct McpState {
@@ -120,6 +166,7 @@ impl McpState {
 
 #[derive(Debug, Deserialize)]
 struct JsonRpcRequest {
+    #[allow(dead_code)]
     jsonrpc: String,
     id: Option<serde_json::Value>,
     method: String,
@@ -535,7 +582,7 @@ async fn invoke_tool(
             let url = arg_str(args, "url")?;
             let resp = state.http.post(&api("navigate")).json(&json!({"url": url}))
                 .send().await.map_err(|e| e.to_string())?;
-            let body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            let _body: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
             Ok(format!("Navigated to {}", url))
         }
         "browser_navigate_back" => {
@@ -567,7 +614,7 @@ async fn invoke_tool(
         // --- Interaction ---
         "browser_click" => {
             let target = arg_str(args, "target")?;
-            let resp = state.http.post(&api("click")).json(&json!({"selector": target}))
+            let _resp = state.http.post(&api("click")).json(&json!({"selector": target}))
                 .send().await.map_err(|e| e.to_string())?;
             Ok(format!("Clicked: {}", target))
         }
@@ -596,7 +643,7 @@ async fn invoke_tool(
                 "(function(){{document.dispatchEvent(new KeyboardEvent('keydown',{{key:'{}',code:'{}',bubbles:true}}));document.dispatchEvent(new KeyboardEvent('keyup',{{key:'{}',code:'{}',bubbles:true}}))}})()",
                 key, key_code, key, key_code
             );
-            let resp = state.http.post(&api("evaluate")).json(&json!({"script": js}))
+            let _resp = state.http.post(&api("evaluate")).json(&json!({"script": js}))
                 .send().await.map_err(|e| e.to_string())?;
             Ok(format!("Pressed key: {}", key))
         }

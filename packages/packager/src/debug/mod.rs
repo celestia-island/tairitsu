@@ -286,14 +286,20 @@ mod engine {
     ) {
         use tao::event::{Event, WindowEvent};
         use tao::event_loop::{ControlFlow, EventLoopBuilder};
+        #[cfg(unix)]
         use tao::platform::unix::EventLoopBuilderExtUnix;
+        #[cfg(windows)]
+        use tao::platform::windows::EventLoopBuilderExtWindows;
         use tao::window::WindowBuilder;
         use wry::WebViewBuilder;
 
         crate::log_info!("[wry] Creating event loop...");
-        let event_loop = EventLoopBuilder::<BrowserCommand>::with_user_event()
-            .with_any_thread(true)
-            .build();
+        let mut event_loop_builder = EventLoopBuilder::<BrowserCommand>::with_user_event();
+        #[cfg(unix)]
+        event_loop_builder.with_any_thread(true);
+        #[cfg(windows)]
+        event_loop_builder.with_any_thread(true);
+        let event_loop = event_loop_builder.build();
         let proxy = event_loop.create_proxy();
 
         std::thread::spawn(move || {
