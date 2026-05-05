@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::{debug, info, warn};
 use rand::Rng;
 
-use tairitsu::WitLoader;
+use tairitsu_web::WitLoader;
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()
@@ -62,13 +62,13 @@ fn main() -> Result<()> {
         }
         Err(e) => {
             warn!("Failed to load WIT definitions: {}", e);
-            info!("This is expected - using mock data for demonstration");
+            info!("This is expected - using fallback demonstration data");
 
-            info!("Mock world: tairitsu:core/tairitsu");
+            info!("Fallback world: tairitsu:core/tairitsu");
             info!(
-                "Mock exports: init, process, getname, getversion, getfeatures, shutdown, notify"
+                "Fallback exports: init, process, getname, getversion, getfeatures, shutdown, notify"
             );
-            info!("Mock imports: log, execute, timestamp, configset, configget");
+            info!("Fallback imports: log, execute, timestamp, configset, configget");
 
             return Ok(());
         }

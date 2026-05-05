@@ -1,0 +1,106 @@
+[package]
+name = "tairitsu-packager"
+version.workspace = true
+edition = "2024"
+description = "Build and packaging tool for Tairitsu applications"
+authors.workspace = true
+license = "MIT OR Apache-2.0"
+repository.workspace = true
+
+[[bin]]
+name = "tairitsu"
+path = "src/main.rs"
+
+[dependencies]
+tairitsu-vdom = { workspace = true, optional = true }
+tairitsu-browser-wit-resolver = { workspace = true }
+tairitsu-browser-worlds = { workspace = true }
+tairitsu-ssr = { workspace = true, optional = true }
+anyhow = "^1"
+thiserror = "^2"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+toml = "^0.8"
+tokio = { version = "^1", default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "rt-multi-thread",
+  "time",
+  "signal",
+], optional = true }
+futures = "^0.3"
+tracing = "^0.1"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
+clap = { version = "^4", features = ["derive"], optional = true }
+indicatif = "^0.17"
+webbrowser = "^1"
+walkdir = "^2"
+notify = { version = "^6", optional = true }
+axum = { version = "^0.8", optional = true }
+tower-http = { version = "^0.6", features = ["fs", "cors", "compression-gzip"], optional = true }
+tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
+wry = { version = "^0.48", optional = true }
+tao = { version = "^0.30", optional = true }
+grass = "^0.13"
+regex = "^1"
+wit-parser = "^0.243"
+sha2 = "^0.10"
+yuuka = "0.6"
+sys-locale = "0.3"
+crossterm = { version = "0.28", optional = true }
+chrono = { version = "0.4", default-features = false, features = [
+  "clock",
+  "serde",
+] }
+reqwest = { version = "^0.12", features = [
+  "blocking",
+  "json",
+  "stream",
+], optional = true }
+zip = { version = "^2", default-features = false, features = [
+  "deflate",
+], optional = true }
+image = { version = "^0.25", optional = true }
+base64 = { version = "^0.22", optional = true }
+include_dir = "^0.7"
+vte = { version = "^0.15", optional = true }
+portable-pty = { version = "^0.8", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+[features]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "vtty", "visual-diff", "test-runner"]
+native = ["tokio", "crossterm"]
+dev-server = [
+  "axum",
+  "tower-http",
+  "notify",
+  "tairitsu-ssr",
+  "tokio",
+  "tokio-stream",
+]
+debug-browser = ["dev-server", "reqwest", "wry", "tao"]
+debug-api = ["dev-server"]
+ssr = ["tairitsu-ssr", "tokio"]
+cli = ["clap"]
+icon-fetch = ["reqwest", "zip"]
+visual-diff = ["image", "base64"]
+test-runner = ["reqwest", "image", "base64"]
+vtty = ["vte", "portable-pty"]
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Console",
+  "Win32_System_Threading",
+  "Win32_System_Memory",
+] }
+libc = { version = "0.2", optional = true }

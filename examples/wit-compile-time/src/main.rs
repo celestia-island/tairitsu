@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::{debug, info, warn};
 use rand::Rng;
 
-use tairitsu::WitLoader;
+use tairitsu_web::WitLoader;
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()

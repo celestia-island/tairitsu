@@ -3,17 +3,18 @@
 //! This module provides a generic container implementation that can run any WASM component.
 //! Users need to implement WIT interface bindings and initialization themselves.
 
-use anyhow::{Context, Result};
+use anyhow::{Context as AnyhowContext, Result};
 
 use wasmtime::{
-    component::{Component, Linker},
     Store,
+    component::{Component, Linker},
+    error::Context,
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+use crate::Image;
 #[cfg(feature = "dynamic")]
 use crate::dynamic::host_imports::HostImportRegistry;
-use crate::Image;
 
 /// Base trait for host state
 ///
@@ -172,6 +173,8 @@ pub struct ContainerBuilder<T: HostStateImpl> {
     image: Image,
     host_state: T,
     #[allow(clippy::type_complexity)]
+    host_linker_init: Option<Box<dyn FnOnce(&mut Linker<T>) -> Result<(), anyhow::Error> + Send>>,
+    #[allow(clippy::type_complexity)]
     guest_initializer: Option<
         Box<
             dyn for<'a> FnOnce(GuestHandlerContext<'a, T>) -> Result<GuestInstance, anyhow::Error>
@@ -189,6 +192,7 @@ where
         Self {
             image,
             host_state: T::default(),
+            host_linker_init: None,
             guest_initializer: None,
         }
     }
@@ -198,6 +202,29 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
     /// Use custom host state
     pub fn with_host_state(mut self, state: T) -> Self {
         self.host_state = state;
+        self
+    }
+
+    /// Register additional host imports with the linker before guest instantiation.
+    ///
+    /// This is called after WASI is added to the linker but before the guest
+    /// initializer runs, allowing host imports to be available when the component
+    /// is instantiated.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let container = Container::builder(image)
+    ///     .with_host_linker(|linker| {
+    ///         MyHostImpl::add_to_linker(linker, |state| &mut state.my_data)
+    ///     })
+    ///     .with_guest_initializer(|ctx| { ... })
+    ///     .build();
+    /// ```
+    pub fn with_host_linker<F>(mut self, func: F) -> Self
+    where
+        F: FnOnce(&mut Linker<T>) -> Result<(), anyhow::Error> + Send + 'static,
+    {
+        self.host_linker_init = Some(Box::new(func));
         self
     }
 
@@ -238,6 +265,11 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
         wasmtime_wasi::p2::add_to_linker_sync(&mut linker)
             .context("Failed to add WASI to linker")?;
 
+        // Apply custom host linker configuration (e.g. registering host imports).
+        if let Some(linker_init) = self.host_linker_init {
+            linker_init(&mut linker).context("Failed to configure host linker")?;
+        }
+
         // Clone the component for type introspection
         // Component is reference-counted internally, so this is cheap
         let component = self.image.component().clone();
@@ -258,39 +290,11 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
         Ok(Container {
             store,
             guest: guest_instance,
-            component,
             #[cfg(feature = "dynamic")]
             dynamic_instance,
             #[cfg(feature = "dynamic")]
             host_imports: None,
         })
-    }
-
-    /// Register a host function with the linker
-    ///
-    /// This is a convenience method for adding custom host functions.
-    ///
-    /// # Arguments
-    /// * `func` - Function that receives mutable reference to linker
-    ///
-    /// # Example
-    /// ```ignore
-    /// let container = Container::builder(image)?
-    ///     .with_host_linker(|linker| {
-    ///         // Register your host functions here
-    ///         Ok(())
-    ///     })?
-    ///     .with_guest_initializer(...)?
-    ///     .build();
-    /// ```
-    pub fn with_host_linker<F>(self, _func: F) -> Result<Self>
-    where
-        F: for<'a> FnOnce(&'a mut Linker<T>) -> Result<(), anyhow::Error> + Send + 'static,
-    {
-        // We'll apply this during build
-        // For now, store it to apply later
-        // This is a placeholder for more advanced functionality
-        Ok(self)
     }
 }
 
@@ -300,8 +304,6 @@ impl<T: HostStateImpl> ContainerBuilder<T> {
 pub struct Container<T: HostStateImpl = HostState> {
     store: Store<T>,
     guest: GuestInstance,
-    #[allow(dead_code)] // Reserved for future use
-    component: Component,
 
     /// Dynamic instance for runtime function invocation (duplicated from guest for easier access)
     #[cfg(feature = "dynamic")]
@@ -367,9 +369,11 @@ impl<T: HostStateImpl> Container<T> {
     /// let result = container.call_guest_json("process", r#"{"input":"hello"}"#)?;
     /// ```
     pub fn call_guest_json(&mut self, function_name: &str, json_payload: &str) -> Result<String> {
-        // Placeholder - use raw_desc instead for better Rust type support
+        // JSON invocation is superseded by the RON-based call_guest_raw_desc() which
+        // preserves Rust type fidelity. This entry-point returns an error to guide
+        // callers to the preferred API.
         anyhow::bail!(
-            "JSON invocation deprecated. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
+            "JSON invocation is not supported. Use call_guest_raw_desc() instead with RON format for better Rust type compatibility. Function: {}, Payload: {}",
             function_name,
             json_payload
         )

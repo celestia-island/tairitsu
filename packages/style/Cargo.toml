@@ -1,0 +1,30 @@
+[package]
+name = "tairitsu-style"
+version.workspace = true
+edition.workspace = true
+description = "Type-safe CSS property builders for Tairitsu framework"
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tairitsu-vdom = { workspace = true }
+thiserror = "^2"
+serde = { version = "1.0", features = ["derive"], optional = true }
+pest = "2.7"
+pest_derive = "2.7"
+
+[build-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.50", features = ["macros"] }
+
+[features]
+default = ["serde"]
+parse = []
+serde = ["dep:serde"]

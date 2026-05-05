@@ -1,0 +1,48 @@
+consolidate-commits = true
+consolidate-pushes = true
+shared-version = true
+pre-release-commit-message = "chore: release v{{version}}"
+post-release-commit-message = "chore: start next development cycle"
+tag-message = "Release v{{version}}"
+tag-prefix = "v"
+allow-branch = ["dev", "main"]
+publish = true
+verify = true
+
+[[package]]
+name = "tairitsu-macros"
+
+[[package]]
+name = "tairitsu-browser-worlds"
+
+[[package]]
+name = "tairitsu-vdom"
+
+[[package]]
+name = "tairitsu"
+
+[[package]]
+name = "tairitsu-style"
+
+[[package]]
+name = "tairitsu-hooks"
+
+[[package]]
+name = "tairitsu-browser-wit-resolver"
+
+[[package]]
+name = "tairitsu-browser-test"
+publish = false
+
+[[package]]
+name = "tairitsu-ssr"
+
+[[package]]
+name = "tairitsu-web"
+
+[[package]]
+name = "tairitsu-e2e"
+publish = false
+
+[[package]]
+name = "tairitsu-packager"

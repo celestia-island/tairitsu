@@ -9,10 +9,10 @@
 use anyhow::Result;
 use log::{debug, error, info, warn};
 
-use tairitsu::{
-    dynamic::host_imports::HostImportRegistry,
-    ron::{typed_ron_tool, RonBinding, RonToolRegistry},
+use tairitsu_web::{
     Container, Image,
+    dynamic::host_imports::HostImportRegistry,
+    ron::{RonBinding, RonToolRegistry, typed_ron_tool},
 };
 
 // ============================================================================
@@ -53,9 +53,9 @@ fn main() -> Result<()> {
         .filter_level(log::LevelFilter::Info)
         .init();
 
-    info!("╔════════════════════════════════════════════════════════════╗");
-    info!("║  Tairitsu 0.3.0 Dynamic Invocation Example                ║");
-    info!("╚════════════════════════════════════════════════════════════╝");
+    info!("==========================================================");
+    info!("  Tairitsu 0.3.0 Dynamic Invocation Example               ");
+    info!("==========================================================");
 
     // ========================================================================
     // Scenario 1: Load WASM Component
@@ -196,7 +196,7 @@ fn main() -> Result<()> {
     // ========================================================================
     info!("\n🧪 Scenario 6: Complex Type Support Verification");
 
-    use tairitsu::dynamic::{ron_to_val, val_to_ron};
+    use tairitsu_web::dynamic::{ron_to_val, val_to_ron};
     use wasmtime::component::Val;
 
     // Test 1: List type

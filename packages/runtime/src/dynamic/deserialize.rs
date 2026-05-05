@@ -4,8 +4,9 @@
 //! to Wasmtime Component Model `Val` types, with full support for nested
 //! complex types.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use ron::Value as RonValue;
+
 use wasmtime::component::{Type, Val};
 
 /// Convert RON string to Wasmtime Val (requires type information)

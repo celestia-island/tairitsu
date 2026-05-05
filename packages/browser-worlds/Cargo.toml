@@ -1,0 +1,16 @@
+[package]
+name = "tairitsu-browser-worlds"
+version.workspace = true
+edition.workspace = true
+description = "WIT world definitions for browser/W3C APIs (DOM, Events, Fetch, Canvas)"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+include = ["src/**/*", "wit/**/*", "Cargo.toml", "README.md"]
+
+[dependencies]
+anyhow = "^1"
+
+[dev-dependencies]
+wit-parser = "^0.243"

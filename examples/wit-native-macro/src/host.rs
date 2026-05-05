@@ -4,7 +4,7 @@
 
 use log::info;
 
-use tairitsu::{wit_interface, wit_registry::WitCommandHandler};
+use tairitsu_web::{wit_interface, wit_registry::WitCommandHandler};
 
 // Generate three separate interfaces using the macro
 wit_interface! {

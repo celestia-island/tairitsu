@@ -1,0 +1,22 @@
+/// Component lifecycle and logging - NOT from W3C WebIDL.
+interface lifecycle {
+    start: func() -> result<_, string>;
+}
+
+/// Console interface - NOT from W3C WebIDL.
+interface console {
+    log: func(message: string);
+    warn: func(message: string);
+    error: func(message: string);
+}
+
+/// Event target - framework abstraction over W3C EventTarget.
+///
+/// Unlike W3C's addEventListener(type, callback, options), this returns
+/// a listener-id for later removal, which is a framework-level convenience.
+interface event-target {
+    add-event-listener: func(target: u64, event-type: string, use-capture: bool) -> result<u64, string>;
+    remove-event-listener: func(target: u64, listener-id: u64) -> result<_, string>;
+    prevent-default: func(event: u64);
+    stop-propagation: func(event: u64);
+}

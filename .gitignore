@@ -8,3 +8,53 @@ Cargo.lock
 *.iml
 /.idea/
 /.vscode/
+
+# Python bytecode cache
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error-log*
+
+# Build outputs
+dist/
+*.js.map
+*.d.ts.map
+.cache/
+
+# Keep npm package source and config files (gitignored above, un-ignore here)
+!packages/npm/**/package.json
+!packages/npm/**/src/*.ts
+!packages/npm/**/*.ts
+
+# Static assets policy: ignore public folders and compiled CSS, keep SCSS in git
+**/public/
+*.css
+!*.scss
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+
+# MCP server configs (local tooling)
+.mcp.json
+.playwright-mcp/
+
+# Keep sub-project package.json files (root package.json is gitignored)
+!packages/npm/*/package.json
+!packages/browser-glue/package.json
+
+# Debug JS injection scripts (intermediate artifacts, embedded as Rust strings)
+packages/packager/src/debug/*.js
+
+# W3C WebIDL cache (downloaded by fetch_w3c_idl.py)
+scripts/idl-cache/
+
+# Test artifacts
+screenshot-test.png

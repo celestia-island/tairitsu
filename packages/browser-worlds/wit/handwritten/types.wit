@@ -1,0 +1,7 @@
+/// Custom composite types not available from W3C WebIDL auto-generation.
+interface component-types {
+    record content-editable-state {
+        editable: bool,
+        focused: bool,
+    }
+}

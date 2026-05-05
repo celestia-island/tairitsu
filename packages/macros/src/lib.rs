@@ -1,6 +1,146 @@
+mod component;
+mod props_dsl;
+mod rsx;
+mod scss;
+mod svg;
+
+use component::expand_component;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
+use rsx::{RsxRoot, expand_rsx_root};
+use scss::expand_scss;
+use svg::expand_svg;
+use syn::{Data, DeriveInput, parse_macro_input};
+
+/// Component macro for automatic Props generation
+///
+/// # Example
+/// ```ignore
+/// #[component]
+/// fn Button(
+///     variant: ButtonVariant,
+///     #[children] children: Vec<VNode>,
+///     #[default] onclick: Option<Box<dyn FnMut(Box<dyn EventData>)>>,
+/// ) -> VNode {
+///     rsx! {
+///         button {
+///             class: "button",
+///             onclick: onclick,
+///             ..children
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn component(attr: TokenStream, item: TokenStream) -> TokenStream {
+    expand_component(attr, item)
+}
+
+/// RSX macro for declarative UI construction
+///
+/// # Example
+/// ```ignore
+/// rsx! {
+///     div {
+///         class: "container",
+///         "Hello, world!"
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn rsx(input: TokenStream) -> TokenStream {
+    let root = syn::parse_macro_input!(input as RsxRoot);
+    let expanded = expand_rsx_root(root);
+    TokenStream::from(expanded)
+}
+
+/// SCSS macro for compile-time CSS generation with class name hashing
+///
+/// Compiles SCSS syntax to CSS at compile time using grass compiler,
+/// and generates hashed class names for CSS Modules-style scoping.
+///
+/// # Features
+/// - Full SCSS syntax support via grass compiler
+/// - Automatic class name hashing (CSS Modules style)
+/// - Scope-based isolation
+/// - Support for inline content or file paths
+/// - Returns (css, class_map) tuple
+///
+/// # Example
+/// ```ignore
+/// // Basic usage - inline SCSS
+/// let (css, class_map) = scss! {
+///     .button {
+///         background: var(--primary);
+///         color: white;
+///         padding: 8px 16px;
+///         border-radius: 4px;
+///
+///         &:hover {
+///             background: var(--primary-dark);
+///         }
+///
+///         &.disabled {
+///             opacity: 0.5;
+///         }
+///     }
+/// };
+///
+/// // From file (relative to crate root)
+/// let (css, class_map) = scss! { file: "styles/main.scss" };
+///
+/// // With scope for isolation
+/// let (css, class_map) = scss! {
+///     .container {
+///         width: 100%;
+///     },
+///     scope: "MyComponent"
+/// };
+///
+/// // File with scope
+/// let (css, class_map) = scss! { file: "styles/button.scss", scope: "Button" };
+///
+/// // Use hashed class names
+/// let button_class = class_map.get("button").unwrap();
+/// ```
+#[proc_macro]
+pub fn scss(input: TokenStream) -> TokenStream {
+    expand_scss(input)
+}
+
+/// SVG macro for compile-time SVG embedding with XSS protection
+///
+/// This macro reads SVG content at compile time and creates a SafeSvg instance
+/// with built-in XSS sanitization.
+///
+/// # Features
+/// - Compile-time SVG embedding
+/// - XSS sanitization (removes scripts, event handlers, dangerous URLs)
+/// - Support for inline content, file paths, or resource ID lookup
+///
+/// # Example
+/// ```ignore
+/// // Inline SVG content
+/// let icon = svg! { r#"<path d="M12 2L2 22h20L12 2z"/>"# };
+///
+/// // From file (relative to crate root)
+/// let icon = svg! { file: "icons/sun.svg" };
+///
+/// // From resource index by ID (searches icons/, src/icons/, etc.)
+/// let icon = svg! { id: "sun" };
+///
+/// // Use with VElement
+/// rsx! {
+///     svg {
+///         viewBox: "0 0 24 24",
+///         safe_svg: icon,
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn svg(input: TokenStream) -> TokenStream {
+    expand_svg(input)
+}
 
 /// Derives WitCommand trait for an enum, automatically generating Response type and command routing
 ///
@@ -59,10 +199,10 @@ pub fn derive_wit_command(input: TokenStream) -> TokenStream {
 
 fn extract_response_type(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     for attr in attrs {
-        if attr.path().is_ident("wit_response") {
-            if let Ok(ty) = attr.parse_args::<syn::Type>() {
-                return quote! { #ty };
-            }
+        if attr.path().is_ident("wit_response")
+            && let Ok(ty) = attr.parse_args::<syn::Type>()
+        {
+            return quote! { #ty };
         }
     }
     quote! { String }
@@ -374,136 +514,74 @@ pub fn wit_guest_impl(input: TokenStream) -> TokenStream {
 }
 
 // AST structure for wit_guest_impl macro
-struct WitGuestImpl {
-    // Placeholder for parsing the macro input
-}
+struct WitGuestImpl {}
 
 impl syn::parse::Parse for WitGuestImpl {
-    fn parse(_input: syn::parse::ParseStream) -> syn::Result<Self> {
-        // For now, just succeed without parsing
-        // TODO: Implement proper parsing of the macro syntax
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        // Accept any token stream — wit_guest_impl! takes arbitrary key-value syntax
+        input.parse::<proc_macro2::TokenStream>()?;
         Ok(WitGuestImpl {})
     }
 }
 
-/// Helper macro to simplify wasmtime component bindgen usage
+// Parse arguments for wit_world!("package:world", "./wit/path")
+struct WitWorldArgs {
+    world: syn::LitStr,
+    path: syn::LitStr,
+}
+
+impl syn::parse::Parse for WitWorldArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let world: syn::LitStr = input.parse()?;
+        let _: syn::Token![,] = input.parse()?;
+        let path: syn::LitStr = input.parse()?;
+        Ok(WitWorldArgs { world, path })
+    }
+}
+
+/// Convenience wrapper around `wasmtime::component::bindgen!`.
 ///
-/// This macro wraps wasmtime::component::bindgen! with a simpler interface.
-/// Note: This is a procedural macro placeholder. For actual bindgen functionality,
-/// use wasmtime::component::bindgen! directly.
+/// Expands to `::wasmtime::component::bindgen!({ path: …, world: … })`.
+///
+/// The calling crate must declare `wasmtime` as a direct dependency (as it
+/// does when using the `tairitsu` runtime crate).
 ///
 /// # Example
 /// ```ignore
-/// use tairitsu_macros::wit_world;
+/// use tairitsu::wit_world;
 ///
-/// // This will generate the bindings for the specified world
 /// wit_world!("my-package:my-world", "./wit");
 /// ```
 #[proc_macro]
 pub fn wit_world(input: TokenStream) -> TokenStream {
-    // Parse input: "package:world", "./wit/path"
-    let input_str = input.to_string();
-
-    // Remove quotes if present
-    let input_str = input_str.trim_matches('"').trim_matches('\'');
-
-    // Split by comma to get world and path
-    let parts: Vec<&str> = input_str.split(',').collect();
-    let world = parts.first().map(|s| s.trim()).unwrap_or("");
-    let wit_path = parts.get(1).map(|s| s.trim()).unwrap_or("./wit");
-
-    // Generate code that uses wasmtime::component::bindgen!
-    let _world_ident = syn::Ident::new(
-        &world.replace([':', '-'], "_"),
-        proc_macro2::Span::call_site(),
-    );
+    let args = parse_macro_input!(input as WitWorldArgs);
+    let world = &args.world;
+    let path = &args.path;
 
     let expanded = quote! {
-        // This is a placeholder. In a real implementation, this would
-        // invoke wasmtime::component::bindgen! with the appropriate parameters.
-        //
-        // For now, users should use wasmtime::component::bindgen! directly:
-        //
-        // wasmtime::component::bindgen!({
-        //     path: #wit_path,
-        //     world: #world,
-        // });
-        //
-        // Or generate the bindings using wit-bindgen-cli:
-        // wit-bindgen rust --out-dir bindings #wit_path
-
-        compile_error!(concat!(
-            "wit_world! macro is a placeholder. Use wasmtime::component::bindgen! directly:\n",
-            "wasmtime::component::bindgen!({\n",
-            "    path: \"",
-            #wit_path,
-            "\",\n",
-            "    world: \"",
-            #world,
-            "\",\n",
-            "});"
-        ));
+        ::wasmtime::component::bindgen!({
+            path: #path,
+            world: #world,
+        });
     };
 
     TokenStream::from(expanded)
 }
 
-/// Helper macro to automatically generate add_to_linker calls
+/// Marker macro — reserved for future host-import registration codegen.
 ///
-/// This macro simplifies the process of registering host functions with the linker.
+/// Currently this macro accepts its input and emits no code, acting as a
+/// no-op. A future version will auto-generate `add_to_linker` boilerplate
+/// from annotated host structs, but that requires WIT interface knowledge
+/// at compile time that is not yet available here.
 ///
-/// # Example
-/// ```ignore
-/// use tairitsu_macros::register_host;
-///
-/// struct MyHost {
-///     // your host state
-/// }
-///
-/// register_host! {
-///     MyHost,
-///     functions: {
-///         my_function: |state, arg1, arg2| {
-///             // implementation
-///             Ok(())
-///         }
-///     }
-/// }
-/// ```
+/// Until then, implement the WIT traits manually and call
+/// `MyInterface::add_to_linker(&mut linker, |state| &mut state.data)`.
 #[proc_macro]
 pub fn register_host(input: TokenStream) -> TokenStream {
-    let _input = parse_macro_input!(input as syn::ItemStruct);
-
-    // Parse the struct to extract host type and functions
-    // For now, this is a placeholder that shows the intended usage
-
-    let expanded = quote! {
-        // This is a placeholder implementation.
-        //
-        // A full implementation would:
-        // 1. Parse the host struct and its methods
-        // 2. Generate trait implementations for WIT interfaces
-        // 3. Generate add_to_linker boilerplate
-        //
-        // For now, users should manually implement the WIT traits
-        // and call add_to_linker themselves:
-        //
-        // impl MyWit for MyHost {
-        //     fn my_function(&mut self, arg1: String, arg2: u32) -> Result<(), String> {
-        //         // implementation
-        //     }
-        // }
-        //
-        // Then use:
-        // MyWit::add_to_linker(&mut linker, |state| &mut state.my_data)?;
-
-        compile_error!(
-            "register_host! macro is a placeholder. \
-             Manually implement WIT traits and use add_to_linker for now."
-        );
-    };
-
-    TokenStream::from(expanded)
+    // Consume input to avoid "unused token" warnings; emit nothing.
+    let _ = proc_macro2::TokenStream::from(input);
+    TokenStream::new()
 }
 
 /// Derive macro to automatically implement Tool for a struct
@@ -553,11 +631,98 @@ pub fn derive_as_tool(input: TokenStream) -> TokenStream {
 
 fn extract_tool_name(attrs: &[syn::Attribute], default_name: &str) -> proc_macro2::TokenStream {
     for attr in attrs {
-        if attr.path().is_ident("tool_name") {
-            if let Ok(lit) = attr.parse_args::<syn::LitStr>() {
-                return quote! { #lit };
-            }
+        if attr.path().is_ident("tool_name")
+            && let Ok(lit) = attr.parse_args::<syn::LitStr>()
+        {
+            return quote! { #lit };
         }
     }
     quote! { #default_name }
+}
+
+/// Derive macro for Props structs.
+///
+/// This is a marker derive that indicates a struct is used as component props.
+/// The actual Default implementation should be derived separately using `#[derive(Default)]`
+/// or implemented manually with proper defaults for fields.
+///
+/// # Example
+/// ```ignore
+/// #[derive(Clone, Props, PartialEq, Default)]
+/// pub struct ButtonProps {
+///     pub variant: String,
+///     #[props(default)]
+///     pub disabled: bool,
+/// }
+/// ```
+#[proc_macro_derive(Props, attributes(props))]
+pub fn derive_props(input: TokenStream) -> TokenStream {
+    let _input = parse_macro_input!(input as DeriveInput);
+
+    // Props derive is just a marker - Default should be derived separately
+    let expanded = quote! {
+        // Props marker - no additional implementation
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Attribute macro for defining component props with cleaner DSL syntax.
+///
+/// This macro transforms a simplified struct definition into the verbose
+/// Props format required by the component system, automatically generating
+/// the `#[props(default = ...)]` attributes and `Default` implementation.
+///
+/// # Example
+/// ```ignore
+/// #[define_props]
+/// pub struct AvatarProps {
+///     src: Option<String> = None,
+///     alt: String = "Avatar".to_string(),
+///     size: AvatarSize = AvatarSize::Md,
+///     class: String = String::new(),
+/// }
+/// ```
+///
+/// Expands to:
+/// ```ignore
+/// #[derive(Clone, PartialEq, Props)]
+/// pub struct AvatarProps {
+///     #[props(default)]
+///     pub src: Option<String>,
+///     #[props(default = "Avatar".to_string())]
+///     pub alt: String,
+///     #[props(default = AvatarSize::Md)]
+///     pub size: AvatarSize,
+///     #[props(default)]
+///     pub class: String,
+/// }
+///
+/// impl Default for AvatarProps {
+///     fn default() -> Self {
+///         Self {
+///             src: None,
+///             alt: "Avatar".to_string(),
+///             size: AvatarSize::Md,
+///             class: String::new(),
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn define_props(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    match syn::parse::<props_dsl::PropsInput>(item.clone()) {
+        Ok(input) => {
+            let expanded = props_dsl::expand_define_props(input);
+            TokenStream::from(expanded)
+        }
+        Err(e) => {
+            // If parsing fails, output a compile_error with the error message
+            let msg = format!("define_props macro error: {}", e);
+            let ts = quote! {
+                compile_error!(#msg);
+            };
+            TokenStream::from(ts)
+        }
+    }
 }

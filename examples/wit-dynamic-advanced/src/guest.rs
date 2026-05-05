@@ -79,6 +79,7 @@ pub struct HostLogger;
 impl HostLogger {
     #[allow(dead_code)]
     pub fn log(_level: String, _message: String) {
-        // Placeholder for host logger implementation
+        // HostLogger.log is intentionally a no-op in this demo example;
+        // real host logging would forward to the host via a WIT import.
     }
 }

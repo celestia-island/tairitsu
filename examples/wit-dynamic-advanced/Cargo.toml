@@ -1,12 +1,14 @@
 [package]
 name = "tairitsu-example-wit-dynamic-advanced"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 [dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime", features = ["dynamic"] }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # Basic language and tools
 anyhow = "^1"
@@ -16,8 +18,8 @@ bytes = "^1"
 serde = { version = "^1", features = ["derive"] }
 
 # WASM dependencies (re-exported by tairitsu, but needed for direct use)
-wasmtime = { version = "^40", features = ["component-model"] }
-wasmtime-wasi = "^40"
+wasmtime = { version = "^43", features = ["component-model"] }
+wasmtime-wasi = "^43"
 
 # Logging
 env_logger = "^0.11"

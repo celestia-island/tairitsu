@@ -1,0 +1,102 @@
+/// Browser DOM world — core Document Object Model interfaces.
+///
+/// Covers: Element, HTMLElement, Document, Window, NodeList.
+/// Version: tairitsu-browser:dom@0.1.0
+///
+/// Status: initial subset — expanded coverage planned in Phase 2.
+
+package tairitsu-browser:dom@0.1.0;
+
+/// Core DOM node operations.
+interface node {
+    /// Unique handle to a DOM node held by the host (browser) side.
+    type node-handle = u64;
+
+    /// Append `child` as the last child of `parent`.
+    append-child: func(parent: node-handle, child: node-handle) -> result<_, string>;
+
+    /// Remove `child` from its parent.
+    remove-child: func(parent: node-handle, child: node-handle) -> result<_, string>;
+
+    /// Set a named attribute on an element node.
+    set-attribute: func(node: node-handle, name: string, value: string) -> result<_, string>;
+
+    /// Get a named attribute from an element node.
+    get-attribute: func(node: node-handle, name: string) -> option<string>;
+
+    /// Remove a named attribute from an element node.
+    remove-attribute: func(node: node-handle, name: string) -> result<_, string>;
+
+    /// Set the text content of a node.
+    set-text-content: func(node: node-handle, text: string) -> result<_, string>;
+
+    /// Get the text content of a node.
+    get-text-content: func(node: node-handle) -> option<string>;
+}
+
+/// Document-level operations.
+interface document {
+    use node.{node-handle};
+
+    /// Create a new element with the given tag name.
+    create-element: func(tag-name: string) -> result<node-handle, string>;
+
+    /// Create a new text node.
+    create-text-node: func(data: string) -> result<node-handle, string>;
+
+    /// Query the document for the first element matching `selector`.
+    query-selector: func(selector: string) -> option<node-handle>;
+
+    /// Query the document for all elements matching `selector`.
+    query-selector-all: func(selector: string) -> list<node-handle>;
+
+    /// Get the document body element.
+    body: func() -> option<node-handle>;
+
+    /// Get the document head element.
+    head: func() -> option<node-handle>;
+
+    /// Get an element by its id attribute.
+    get-element-by-id: func(id: string) -> option<node-handle>;
+}
+
+/// Window/global operations.
+interface window {
+    /// Get the inner width of the window in CSS pixels.
+    inner-width: func() -> f64;
+
+    /// Get the inner height of the window in CSS pixels.
+    inner-height: func() -> f64;
+
+    /// Write a message to the browser console at the log level.
+    console-log: func(message: string);
+
+    /// Write a message to the browser console at the warn level.
+    console-warn: func(message: string);
+
+    /// Write a message to the browser console at the error level.
+    console-error: func(message: string);
+}
+
+/// Style manipulation.
+interface style {
+    use node.{node-handle};
+
+    /// Set a CSS property on a node.
+    set-style-property: func(node: node-handle, property: string, value: string) -> result<_, string>;
+
+    /// Get a CSS property from a node.
+    get-style-property: func(node: node-handle, property: string) -> option<string>;
+
+    /// Remove a CSS property from a node.
+    remove-style-property: func(node: node-handle, property: string) -> result<_, string>;
+}
+
+/// Combined DOM world — a WASM component that targets the browser DOM imports
+/// this world.
+world dom-world {
+    import node;
+    import document;
+    import window;
+    import style;
+}

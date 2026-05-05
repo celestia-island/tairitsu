@@ -1,0 +1,111 @@
+{
+  "name": "@celestia/tairitsu-browser-glue",
+  "version": "0.1.0",
+  "description": "Auto-generated TypeScript glue for Tairitsu browser WIT interfaces (W3C WebIDL specs)",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "sideEffects": ["src/runtime/**/*.ts", "dist/runtime.js"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/runtime.js",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-org/tairitsu.git",
+    "directory": "packages/browser-glue"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./handles": {
+      "import": "./dist/handles.js",
+      "types": "./dist/handles.d.ts"
+    },
+    "./async": {
+      "import": "./dist/async.js",
+      "types": "./dist/async.d.ts"
+    },
+    "./dom": {
+      "import": "./dist/glue/dom.js",
+      "types": "./dist/glue/dom.d.ts"
+    },
+    "./events": {
+      "import": "./dist/glue/events.js",
+      "types": "./dist/glue/events.d.ts"
+    },
+    "./fetch": {
+      "import": "./dist/glue/fetch.js",
+      "types": "./dist/glue/fetch.d.ts"
+    },
+    "./canvas": {
+      "import": "./dist/glue/canvas.js",
+      "types": "./dist/glue/canvas.d.ts"
+    },
+    "./html": {
+      "import": "./dist/glue/html.js",
+      "types": "./dist/glue/html.d.ts"
+    },
+    "./css": {
+      "import": "./dist/glue/css.js",
+      "types": "./dist/glue/css.d.ts"
+    },
+    "./crypto": {
+      "import": "./dist/glue/crypto.js",
+      "types": "./dist/glue/crypto.d.ts"
+    },
+    "./media": {
+      "import": "./dist/glue/media.js",
+      "types": "./dist/glue/media.d.ts"
+    },
+    "./performance": {
+      "import": "./dist/glue/performance.js",
+      "types": "./dist/glue/performance.d.ts"
+    },
+    "./storage": {
+      "import": "./dist/glue/storage.js",
+      "types": "./dist/glue/storage.d.ts"
+    },
+    "./url": {
+      "import": "./dist/glue/url.js",
+      "types": "./dist/glue/url.d.ts"
+    },
+    "./workers": {
+      "import": "./dist/glue/workers.js",
+      "types": "./dist/glue/workers.d.ts"
+    },
+    "./webrtc": {
+      "import": "./dist/glue/webrtc.js",
+      "types": "./dist/glue/webrtc.d.ts"
+    },
+    "./websocket": {
+      "import": "./dist/glue/websocket.js",
+      "types": "./dist/glue/websocket.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:runtime && npm run build:glue && swc src -d dist --strip-leading-paths && tsc --emitDeclarationOnly",
+    "build:production": "npm run build:runtime && npm run build:glue && swc src -d dist --strip-leading-paths -C minify.compress=true -C minify.mangle=true && tsc --emitDeclarationOnly",
+    "build:runtime": "esbuild src/runtime/index.ts --bundle --outfile=dist/runtime.js --format=esm --platform=browser",
+    "build:watch": "swc src -d dist --strip-leading-paths --watch",
+    "build:glue": "python3 ../../scripts/generate_browser_glue.py",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@swc/cli": "^0.3.0",
+    "@swc/core": "^1.7.0",
+    "esbuild": "^0.25.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.5.0"
+  }
+}

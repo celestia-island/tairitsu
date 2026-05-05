@@ -1,0 +1,22 @@
+{
+  "name": "@celestia/tairitsu-hooks-wasm",
+  "version": "0.1.0",
+  "description": "Tairitsu Hooks \u2014 useState, useEffect, useMemo, etc.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "main": "./dist/wrapper/tairitsu_hooks.js",
+  "files": [
+    "dist/tairitsu_hooks.wasm",
+    "dist/wrapper/**/*.js",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celestia-org/tairitsu.git",
+    "directory": "packages/npm/tairitsu-hooks-wasm"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

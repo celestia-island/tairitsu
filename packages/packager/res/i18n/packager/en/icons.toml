@@ -1,0 +1,8 @@
+[icons]
+fetching = "Fetching icons..."
+cached = "Icons cached successfully."
+building = "Building icon module..."
+generated = "Generated {count} icons to {path}"
+listing = "Listing icons..."
+found = "Found {count} icons"
+source_not_implemented = "Icon source not yet implemented"

@@ -1,0 +1,72 @@
+[package]
+name = "tairitsu-web"
+version.workspace = true
+description = "Tairitsu Web Framework - Modular WebAssembly-first framework with SSR, CSR, SSG support"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+tairitsu = { workspace = true, optional = true }
+tairitsu-vdom = { workspace = true, optional = true }
+tairitsu-hooks = { workspace = true, optional = true }
+tairitsu-macros = { workspace = true, optional = true }
+tairitsu-style = { workspace = true, optional = true }
+tairitsu-ssr = { workspace = true, optional = true }
+tairitsu-packager = { workspace = true, optional = true }
+iso639_enum = { version = "0.6", optional = true }
+anyhow = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+toml = "^0.8"
+tracing = "^0.1"
+wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
+wasm-bindgen = { version = "^0.2", optional = true }
+wasm-bindgen-futures = { version = "^0.4", optional = true }
+
+[features]
+default = ["vdom", "hooks", "macros", "style", "ssr"]
+vdom = ["dep:tairitsu-vdom"]
+hooks = ["dep:tairitsu-hooks"]
+macros = ["dep:tairitsu-macros"]
+style = ["dep:tairitsu-style"]
+router = []
+data-fetcher = ["ssr"]
+hmr = ["ssr"]
+fast-refresh = ["ssr", "hmr"]
+error-overlay = ["ssr", "hmr"]
+i18n = ["hooks", "dep:iso639_enum"]
+ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
+packager = ["dep:tairitsu", "dep:tairitsu-packager"]
+browser = ["vdom", "hooks", "macros", "style", "router"]
+browser-full = [
+  "vdom",
+  "hooks",
+  "macros",
+  "style",
+  "router",
+  "data-fetcher",
+  "hmr",
+  "fast-refresh",
+  "error-overlay",
+]
+server = ["ssr", "packager"]
+full = ["browser-full", "server"]
+wit-bindings = ["dep:wit-bindgen"]
+runtime = ["dep:tairitsu"]
+
+[dev-dependencies]
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
+
+[build-dependencies]
+toml = "^0.8"
+
+[package.metadata.docs.rs]
+features = ["full"]
