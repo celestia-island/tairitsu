@@ -217,13 +217,13 @@ pub fn run_events(client: &reqwest::blocking::Client, base_url: &str, pages: &[P
             continue;
         }
 
-        let check = evaluate(client, base_url, "document.getElementById('hikari-app') !== null");
+        let check = evaluate(client, base_url, "document.getElementById('ts-app') !== null");
         match check {
             Ok(v) if v == serde_json::Value::Bool(true) => {
                 results.push(PageResult { name: format!("{}: app-mount", page.name), passed: true, detail: "ok".into() });
             }
             Ok(v) => {
-                results.push(PageResult { name: format!("{}: app-mount", page.name), passed: false, detail: format!("hikari-app not mounted: {:?}", v) });
+                results.push(PageResult { name: format!("{}: app-mount", page.name), passed: false, detail: format!("ts-app not mounted: {:?}", v) });
             }
             Err(e) => {
                 results.push(PageResult { name: format!("{}: app-mount", page.name), passed: false, detail: format!("{}", e) });

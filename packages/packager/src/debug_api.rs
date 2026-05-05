@@ -12,6 +12,7 @@ use std::sync::{mpsc, Arc, Mutex};
 // Command enum — sent from axum handlers to wry thread
 // ─────────────────────────────────────────────────────
 
+#[allow(dead_code)]
 enum ComCommand {
     Navigate { url: String },
     EvaluateScript { script: String, response_tx: Option<mpsc::Sender<String>> },
@@ -79,7 +80,6 @@ impl DebugApiState {
 // Wry thread — owns hidden tao window + wry WebView
 // ─────────────────────────────────────────────────────
 
-#[cfg(feature = "wry")]
 fn wry_thread_main(rx: mpsc::Receiver<ComCommand>) -> Result<(), String> {
     use tao::{
         event::{Event, WindowEvent},
@@ -97,10 +97,10 @@ fn wry_thread_main(rx: mpsc::Receiver<ComCommand>) -> Result<(), String> {
         .build(&event_loop)
         .map_err(|e| format!("Failed to create hidden window: {}", e))?;
 
-    let webview = WebViewBuilder::new(&window)
+    let webview = WebViewBuilder::new()
         .with_url("about:blank")
         .with_visible(false)
-        .build()
+        .build(&window)
         .map_err(|e| format!("Failed to create WebView: {}", e))?;
 
     let webview: Arc<Mutex<Option<wry::WebView>>> = Arc::new(Mutex::new(Some(webview)));
@@ -120,7 +120,7 @@ fn wry_thread_main(rx: mpsc::Receiver<ComCommand>) -> Result<(), String> {
                 }
                 _ => {}
             }
-            if let Ok(mut r) = crx.lock() {
+            if let Ok(r) = crx.lock() {
                 while let Ok(cmd) = r.try_recv() {
                     handle_command(cmd, &wv);
                 }
@@ -129,10 +129,7 @@ fn wry_thread_main(rx: mpsc::Receiver<ComCommand>) -> Result<(), String> {
     );
 }
 
-#[cfg(not(feature = "wry"))]
-fn wry_thread_main(_rx: mpsc::Receiver<ComCommand>) -> Result<(), String> {
-    Err("debug-api feature not enabled".into())
-}
+
 
 fn handle_command(cmd: ComCommand, webview: &Arc<Mutex<Option<wry::WebView>>>) {
     match cmd {

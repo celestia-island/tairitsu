@@ -487,7 +487,7 @@ fn write_browser_glue_bundle(config: &Config, output_dir: &std::path::Path) -> c
 
 #[allow(dead_code)]
 fn resolve_import_to_modules(
-    full_import: &str,
+    _full_import: &str,
     symbols_str: &str,
     sym_map: &std::collections::HashMap<String, String>,
     single_quote: bool,
@@ -700,7 +700,7 @@ fn rewrite_glue_import_line(
     single_quote: bool,
 ) -> String {
     let re_symbols = regex::Regex::new(r"\{([^}]+)\}").unwrap();
-    let re_source = if single_quote {
+    let _re_source = if single_quote {
         regex::Regex::new(r"'@tairitsu-glue/[^']*'").unwrap()
     } else {
         regex::Regex::new(r#""@tairitsu-glue/[^"]*""#).unwrap()
@@ -1104,13 +1104,13 @@ fn try_generate_component_wrapper(
 
                             content = re_import
                                 .replace_all(&content, |caps: &regex::Captures| {
-                                    let m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                    let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                     let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                     let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                     if m1.is_empty() {
                                         return String::new();
                                     }
-                                    let iface_name = m2.split('/').next().unwrap_or("");
+                                    let _iface_name = m2.split('/').next().unwrap_or("");
 
                                     // Split symbols: import-map-available vs needs-glue-fallback
                                     let mut map_syms = Vec::new();
@@ -1137,13 +1137,13 @@ fn try_generate_component_wrapper(
                                 .to_string();
                             content = re_import_d
                                 .replace_all(&content, |caps: &regex::Captures| {
-                                    let m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+                                    let _m0 = caps.get(0).map(|m| m.as_str()).unwrap_or("");
                                     let m1 = caps.get(1).map(|m| m.as_str()).unwrap_or("");
                                     let m2 = caps.get(2).map(|m| m.as_str()).unwrap_or("");
                                     if m1.is_empty() {
                                         return String::new();
                                     }
-                                    let iface_name = m2.split('/').next().unwrap_or("");
+                                    let _iface_name = m2.split('/').next().unwrap_or("");
 
                                     let mut map_syms = Vec::new();
                                     for sym in m1.trim().split(',') {
@@ -1601,7 +1601,7 @@ fn generate_component_html_with_output_dir(
         // The WASM boot function may spawn async DOM work (rAF, setTimeout,
         // etc.) that finishes *after* the await resolves.  A single rAF
         // is not enough — we wait for DOM mutations inside #app to settle
-        // before calling navigate(), so every .hikari-page element exists.
+        // before calling navigate(), so every .ts-page element exists.
         const waitForDomSettle = (root, maxWait) => {{
             return new Promise(resolve => {{
                 const deadline = Date.now() + maxWait;

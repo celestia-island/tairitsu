@@ -35,7 +35,14 @@ impl ConPty {
         };
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
-        let mut cmd = CommandBuilder::new(command);
+        let mut cmd = if cfg!(target_os = "windows") {
+            let mut c = CommandBuilder::new("cmd.exe");
+            c.arg("/C");
+            c.arg(command);
+            c
+        } else {
+            CommandBuilder::new(command)
+        };
         if let Some(dir) = cwd { cmd.cwd(dir); }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
 

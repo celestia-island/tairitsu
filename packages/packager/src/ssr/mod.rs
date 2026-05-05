@@ -472,7 +472,7 @@ fn activate_route_in_html(html: &str, route: &str) -> String {
             let target_id = format!("page-{}", page_id);
             html.replace(
                 &format!(r#"id="{}""#, target_id),
-                &format!(r#"id="{}" class="hikari-page is-active""#, target_id),
+                &format!(r#"id="{}" class="ts-page is-active""#, target_id),
             )
         }
         None => html.to_string(),
