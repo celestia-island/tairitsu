@@ -1,37 +1,174 @@
 name: Publish crates.io
+
 on:
   push:
     tags: [v*]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Dry run (skip actual publish)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+env:
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_API_TOKEN }}
 
 jobs:
+  verify-versions:
+    name: Verify tag matches crate versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract tag version
+        id: tag
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Check all crate versions match tag
+        run: |
+          TAG_VERSION="${{ steps.tag.outputs.version }}"
+          MISMATCH=""
+          for tomlfile in packages/*/Cargo.toml; do
+            pkg=$(grep '^name' "$tomlfile" | head -1 | sed 's/.*= *"\(.*\)"/\1/')
+            ver=$(grep '^version' "$tomlfile" | head -1 | sed 's/.*= *"\(.*\)"/\1/')
+            # Skip already-published crates at 0.3.0 (runtime, macros)
+            if [ "$pkg" = "tairitsu" ] || [ "$pkg" = "tairitsu-macros" ]; then
+              echo "  SKIP $pkg ($ver) — already published at 0.3.x"
+              continue
+            fi
+            if [ "$ver" != "$TAG_VERSION" ]; then
+              echo "  MISMATCH $pkg: Cargo.toml=$ver tag=$TAG_VERSION"
+              MISMATCH=1
+            else
+              echo "  OK $pkg $ver"
+            fi
+          done
+          if [ -n "$MISMATCH" ]; then
+            echo "::error::Version mismatch detected — aborting publish"
+            exit 1
+          fi
+
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
+    needs: verify-versions
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
-      - run: cargo install cargo-release
 
-      - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
-      - run: |-
-          cargo release \
-            publish \
-            --all-features \
-            --allow-branch HEAD \
-            --no-confirm \
-            --no-verify \
-            --execute \
-            -p tairitsu-macros
-      - run: |-
-          cargo release \
-            publish \
-            --all-features \
-            --allow-branch HEAD \
-            --no-confirm \
-            --no-verify \
-            --execute \
-            -p tairitsu
+      - name: Install cargo-release
+        run: cargo install cargo-release
+
+      - name: Login to crates.io
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
+
+      # --- Publish in topological order ---
+      # Layer 0: no internal deps
+      - name: Publish tairitsu-browser-worlds
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-browser-worlds"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      - name: Publish tairitsu-browser-wit-resolver
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-browser-wit-resolver"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      # Layer 1: depends only on Layer 0 or external
+      - name: Publish tairitsu-vdom
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-vdom"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      - name: Publish tairitsu-hooks
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-hooks"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      - name: Publish tairitsu-style
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-style"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      # Layer 2: depends on Layer 1
+      - name: Publish tairitsu-ssr
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-ssr"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      - name: Publish tairitsu-packager
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-packager"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi
+
+      - name: Wait for index sync
+        if: github.event_name == 'push' || inputs.dry-run == 'false'
+        run: sleep 30
+
+      # Layer 3: umbrella crate
+      - name: Publish tairitsu-web
+        run: |
+          ARGS="publish --all-features --allow-branch HEAD --no-confirm --no-verify -p tairitsu-web"
+          if [ "${{ inputs.dry-run }}" != "false" ] && [ "${{ github.event_name }}" != "push" ]; then
+            cargo release $ARGS
+          else
+            cargo release $ARGS --execute
+          fi

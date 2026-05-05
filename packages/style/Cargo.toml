@@ -1,23 +1,19 @@
 [package]
 name = "tairitsu-style"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 description = "Type-safe CSS property builders for Tairitsu framework"
 license.workspace = true
 authors.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# Workspace dependencies
-tairitsu-vdom = { path = "../vdom" }
-
-# Basic language and tools
+tairitsu-vdom = { workspace = true }
 thiserror = "^2"
 serde = { version = "1.0", features = ["derive"], optional = true }
-
-# Parsing
 pest = "2.7"
 pest_derive = "2.7"
 

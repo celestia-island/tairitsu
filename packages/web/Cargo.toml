@@ -1,40 +1,27 @@
 [package]
 name = "tairitsu-web"
-version = "0.1.0"
+version.workspace = true
 description = "Tairitsu Web Framework - Modular WebAssembly-first framework with SSR, CSR, SSG support"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
+repository.workspace = true
 
 [dependencies]
-# Core Tairitsu runtime (optional - only needed for host-side code)
-tairitsu = { path = "../runtime", optional = true }
-
-# Optional dependencies based on features
-tairitsu-vdom = { path = "../vdom", optional = true }
-tairitsu-hooks = { path = "../hooks", optional = true }
-tairitsu-macros = { path = "../macros", optional = true }
-tairitsu-style = { path = "../style", optional = true }
-tairitsu-ssr = { path = "../ssr", optional = true }
-tairitsu-packager = { path = "../packager", optional = true }
-
+tairitsu = { workspace = true, optional = true }
+tairitsu-vdom = { workspace = true, optional = true }
+tairitsu-hooks = { workspace = true, optional = true }
+tairitsu-macros = { workspace = true, optional = true }
+tairitsu-style = { workspace = true, optional = true }
+tairitsu-ssr = { workspace = true, optional = true }
+tairitsu-packager = { workspace = true, optional = true }
 iso639_enum = { version = "0.6", optional = true }
-
-# Basic language and tools
 anyhow = "^1"
-
-# Data and serialization
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 toml = "^0.8"
-
-# Logging and tracing
 tracing = "^0.1"
-
-# WIT component-model binding generator (wasm32-wasip2 target, optional)
 wit-bindgen = { version = "^0.50", features = ["macros"], optional = true }
-
-# TypeScript bindings integration (optional)
 wasm-bindgen = { version = "^0.2", optional = true }
 wasm-bindgen-futures = { version = "^0.4", optional = true }
 
@@ -52,7 +39,6 @@ error-overlay = ["ssr", "hmr"]
 i18n = ["hooks", "dep:iso639_enum"]
 ssr = ["dep:tairitsu", "dep:tairitsu-ssr"]
 packager = ["dep:tairitsu", "dep:tairitsu-packager"]
-# Browser-only features (without SSR/server dependencies)
 browser = ["vdom", "hooks", "macros", "style", "router"]
 browser-full = [
   "vdom",
