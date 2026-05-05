@@ -1,12 +1,8 @@
 //! Package listing pages for tairitsu framework.
 
-use tairitsu_vdom::{VElement, VNode, VText};
+use tairitsu_vdom::{VElement, VNode, txt};
 
 use crate::components::breadcrumb;
-
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
 
 pub fn render_all() -> Vec<VNode> {
     vec![render_overview(), render_list()]
@@ -59,7 +55,7 @@ pub fn render_overview() -> VNode {
     VNode::Element(
         VElement::new("div")
             .attr("id", "page-packages-overview")
-            .class("hikari-page")
+            .class("ts-page")
             .children(vec![
                 breadcrumb(&[("Home", "/"), ("Packages", "")]),
                 VNode::Element(
@@ -140,7 +136,7 @@ pub fn render_list() -> VNode {
     VNode::Element(
         VElement::new("div")
             .attr("id", "page-packages-list")
-            .class("hikari-page")
+            .class("ts-page")
             .children(vec![
                 breadcrumb(&[
                     ("Home", "/"),

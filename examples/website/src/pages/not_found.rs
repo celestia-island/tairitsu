@@ -1,22 +1,14 @@
 //! 404 Not Found page
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode, VText};
+use tairitsu_vdom::{VNode, el, txt};
 
 use crate::i18n::{self, Language};
-
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
-
-fn el(tag: &str) -> VElement {
-    VElement::new(tag)
-}
 
 pub fn render() -> VNode {
     let t = i18n::text(Language::ENGLISH);
     rsx! {
-        div { id: "page-not-found", class: "hikari-page",
+        div { id: "page-not-found", class: "ts-page",
             div { class: "hi-container hi-container-md",
                 section { class: "hi-section hi-section-lg",
                     div { class: "hi-section-body",

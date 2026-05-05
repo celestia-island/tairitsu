@@ -98,13 +98,13 @@ head = """
 
     function openDrawer() {
         drawerOpen = true;
-        document.getElementById('hikari-aside')?.classList.add('hi-aside-drawer-open');
+        document.getElementById('ts-aside')?.classList.add('hi-aside-drawer-open');
         document.getElementById('drawer-overlay')?.classList.add('hi-layout-overlay-open');
     }
 
     function closeDrawer() {
         drawerOpen = false;
-        document.getElementById('hikari-aside')?.classList.remove('hi-aside-drawer-open');
+        document.getElementById('ts-aside')?.classList.remove('hi-aside-drawer-open');
         document.getElementById('drawer-overlay')?.classList.remove('hi-layout-overlay-open');
     }
 
@@ -116,7 +116,7 @@ head = """
     var currentTheme = 'dark';
 
     function toggleTheme() {
-        var app = document.getElementById('hikari-app') || document.querySelector('.hi-layout');
+        var app = document.getElementById('ts-app') || document.querySelector('.hi-layout');
         if (!app) return;
         var btn = document.querySelector('.hi-aside-footer .hi-icon-button:first-child');
         if (currentTheme === 'dark') {
@@ -221,7 +221,7 @@ head = """
     }
 
     function hideAllPages() {
-        document.querySelectorAll('.hikari-page').forEach(function(p) {
+        document.querySelectorAll('.ts-page').forEach(function(p) {
             p.classList.remove('is-active');
             p.setAttribute('aria-hidden', 'true');
         });

@@ -3,7 +3,7 @@
 use hikari_icons::{get, MdiIcon};
 use std::cell::Cell;
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, VText};
+use tairitsu_vdom::{get_bounding_client_rect, set_style, svg::SafeSvg, DomHandle, VElement, VNode, el, txt};
 
 use crate::i18n::{self, Language};
 
@@ -11,12 +11,6 @@ thread_local! {
     static LANG_OPEN: Cell<bool> = const { Cell::new(false) };
 }
 
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
-fn el(tag: &str) -> VElement {
-    VElement::new(tag)
-}
 
 /// Render an MDI SVG icon as a VNode using VElement builder.
 pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
@@ -29,9 +23,9 @@ pub fn svg_icon(icon: MdiIcon, size: u32, class: &str) -> VNode {
         None => ("0 0 24 24", "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"),
     };
     let full_class = if class.is_empty() {
-        "hikari-icon".to_string()
+        "ts-icon".to_string()
     } else {
-        format!("hikari-icon {}", class)
+        format!("ts-icon {}", class)
     };
     let svg_html = format!(
         r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}"><path fill="currentColor" d="{}"/></svg>"#,
@@ -60,7 +54,7 @@ fn icon_el(icon: MdiIcon) -> VNode {
         ));
     VNode::Element(
         el("span")
-            .class("hi-menu-item-icon hikari-icon")
+            .class("hi-menu-item-icon ts-icon")
             .inner_html(svg_str),
     )
 }
@@ -126,7 +120,6 @@ pub fn glow_wrapper(blur: &str, intensity: &str, color: &str, children: VNode) -
 // ============================================================
 
 pub fn top_nav() -> VNode {
-    let t = i18n::text(Language::default_lang());
     rsx! {
         header { class: "hi-header hi-header-sticky hi-header-md",
             div { class: "hi-header-left",
@@ -150,15 +143,15 @@ pub fn top_nav() -> VNode {
             }
             div { class: "hi-header-right",
                 nav { class: "hi-header-nav",
-                    a { href: "/guides/quick-start", class: "hikari-topnav__link", t.nav_guides }
-                    a { href: "/system", class: "hikari-topnav__link", t.nav_backend }
-                    a { href: "/packages", class: "hikari-topnav__link", t.nav_packages }
+                    a { href: "/guides/quick-start", class: "ts-topnav__link", "Guides" }
+                    a { href: "/system", class: "ts-topnav__link", "System" }
+                    a { href: "/packages", class: "ts-topnav__link", "Packages" }
                 }
                 a {
                     href: "https://github.com/langyo/tairitsu",
                     target: "_blank",
                     class: "hi-header-github",
-                    t.nav_github
+                    "GitHub"
                 }
             }
         }
@@ -187,7 +180,7 @@ struct NavCategory {
     subcategories: &'static [NavSubcategory],
 }
 
-fn sidebar_label(key: &str, t: &i18n::SiteText) -> &str {
+fn sidebar_label<'a>(key: &'a str, t: &'a i18n::SiteText) -> &'a str {
     match key {
         "sidebar_home" => t.sidebar_home,
         "sidebar_getting_started" => t.sidebar_getting_started,
@@ -338,7 +331,7 @@ pub fn sidebar() -> VNode {
 
     VNode::Element(
         el("aside")
-            .attr("id", "hikari-aside")
+            .attr("id", "ts-aside")
             .class("hi-aside hi-aside-drawer hi-aside-lg hi-aside-light")
             .child(VNode::Element(
                 el("div")

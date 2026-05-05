@@ -5,7 +5,7 @@
  * Loads AFTER hikari's bundle.css.
  *
  * Theme colors are injected via hikari's palette system (theme::tairitsu_style)
- * as inline CSS variables on #hikari-app. This file contains ONLY:
+ * as inline CSS variables on #ts-app. This file contains ONLY:
  * - Layout structure overrides (.hi-layout-dark prefix)
  * - Component demo block styles
  * - Page-specific styles (hero, cards, sections)
@@ -224,7 +224,7 @@
    Top Nav Active State
    ============================================ */
 
-.hikari-topnav__link {
+.ts-topnav__link {
   color: var(--hi-color-text-secondary);
   text-decoration: none;
   font-size: 0.9rem;
@@ -232,7 +232,7 @@
   padding: 0.25rem 0.5rem;
 }
 
-.hikari-topnav__link:hover {
+.ts-topnav__link:hover {
   color: var(--hi-color-secondary);
 }
 
@@ -252,7 +252,7 @@
 }
 
 .hi-header-link.is-active,
-.hikari-topnav__link.is-active {
+.ts-topnav__link.is-active {
   color: var(--hi-color-secondary);
   font-weight: 600;
   border-bottom: 2px solid var(--hi-color-secondary);
@@ -350,7 +350,7 @@
   margin-bottom: 1rem;
 }
 
-.page-hero__logo .hikari-icon {
+.page-hero__logo .ts-icon {
   color: var(--hi-color-text-secondary);
 }
 
@@ -1061,7 +1061,7 @@ a:hover {
   overflow-x: hidden;
 }
 
-#hikari-aside {
+#ts-aside {
   width: 100%;
   max-width: none;
   min-width: 0;

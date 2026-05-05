@@ -7,7 +7,7 @@ use crate::components::breadcrumb;
 
 pub fn render() -> VNode {
     rsx! {
-        div { id: "page-system-runtime", class: "hikari-page",
+        div { id: "page-system-runtime", class: "ts-page",
             ..vec![breadcrumb(&[("Home", "/"), ("System", "/system"), ("Runtime", "")])]
             section { class: "page-section",
                 h2 { class: "page-section__title",

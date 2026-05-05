@@ -424,6 +424,16 @@ impl VText {
     }
 }
 
+/// Create a text [`VNode`].
+pub fn txt(s: &str) -> VNode {
+    VNode::Text(VText::new(s))
+}
+
+/// Create an element builder (shorthand for [`VElement::new`]).
+pub fn el(tag: &str) -> VElement {
+    VElement::new(tag)
+}
+
 impl VNode {
     /// Creates an empty text node
     pub fn empty() -> Self {
