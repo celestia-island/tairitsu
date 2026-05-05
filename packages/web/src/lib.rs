@@ -1,0 +1,45 @@
+#[cfg(feature = "wit-bindings")]
+pub mod batch_ops;
+#[cfg(feature = "browser")]
+pub mod browser;
+#[cfg(feature = "wit-bindings")]
+pub mod handle_cache;
+#[cfg(feature = "i18n")]
+pub mod i18n;
+#[cfg(feature = "wit-bindings")]
+pub mod navigation;
+pub mod prelude;
+#[cfg(feature = "router")]
+pub mod router;
+#[cfg(feature = "wit-bindings")]
+pub mod runtime_integration;
+#[cfg(feature = "ssr")]
+pub mod ssr;
+#[cfg(feature = "wit-bindings")]
+pub mod wit_platform;
+
+#[cfg(feature = "browser")]
+pub use browser::BrowserPlatform;
+#[cfg(feature = "i18n")]
+pub use i18n::{
+    I18nProvider, I18nState, Language, TextDirection, provide_i18n, set_locale, translate,
+    translate_or_key, use_locale,
+};
+#[cfg(feature = "wit-bindings")]
+pub use navigation::{current_path, navigate, replace};
+pub use prelude::*;
+#[cfg(feature = "router")]
+pub use router::*;
+#[cfg(feature = "wit-bindings")]
+pub use runtime_integration::init_runtime;
+#[cfg(feature = "ssr")]
+pub use ssr::SsrPlatform;
+#[cfg(all(feature = "wit-bindings", target_family = "wasm"))]
+pub use wit_platform::prevent_event_default;
+#[cfg(feature = "wit-bindings")]
+pub use wit_platform::{
+    WitElement, WitEvent, WitPlatform, get_pathname, push_state, replace_state,
+};
+
+#[cfg(all(feature = "router", feature = "wit-bindings", target_family = "wasm"))]
+pub mod client_router;

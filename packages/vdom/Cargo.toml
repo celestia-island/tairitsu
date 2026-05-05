@@ -1,0 +1,29 @@
+[package]
+name = "tairitsu-vdom"
+version.workspace = true
+description = "Virtual DOM core for Tairitsu - Platform abstraction, reactive system, and VNode"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow = "^1"
+serde = { version = "^1", features = ["derive"] }
+tracing = "^0.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.50", features = ["macros"] }
+
+[dev-dependencies]
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
+tairitsu-macros = { workspace = true }

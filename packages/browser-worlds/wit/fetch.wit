@@ -1,0 +1,79 @@
+/// Browser Fetch API world.
+///
+/// Version: tairitsu-browser:fetch@0.1.0
+///
+/// Status: initial subset — Request, Response, Headers.
+
+package tairitsu-browser:fetch@0.1.0;
+
+/// The Fetch API surface exposed to WASM guests.
+interface fetch-api {
+    /// HTTP method.
+    enum http-method {
+        get,
+        post,
+        put,
+        patch,
+        delete,
+        head,
+        options,
+    }
+
+    /// A single HTTP header entry.
+    record header-entry {
+        name: string,
+        value: string,
+    }
+
+    /// Request body variants.
+    variant request-body {
+        none,
+        text(string),
+        bytes(list<u8>),
+    }
+
+    /// A simplified HTTP request descriptor.
+    record request-descriptor {
+        url: string,
+        method: http-method,
+        headers: list<header-entry>,
+        body: request-body,
+    }
+
+    /// A simplified HTTP response.
+    record response-data {
+        status: u16,
+        status-text: string,
+        headers: list<header-entry>,
+        body: list<u8>,
+        ok: bool,
+    }
+
+    /// Perform an HTTP request and return the response synchronously.
+    ///
+    /// NOTE: True async fetch is handled via the async-fetch interface below
+    /// once WASM async support is stable. This sync variant is provided for
+    /// initial compatibility.
+    fetch-sync: func(request: request-descriptor) -> result<response-data, string>;
+}
+
+/// Async fetch interface used for browser-compatible network requests.
+interface async-fetch {
+    use fetch-api.{request-descriptor, response-data};
+
+    /// Enqueue an async HTTP request and return a handle that the guest can
+    /// poll for completion.
+    fetch-async: func(request: request-descriptor) -> result<u64, string>;
+
+    /// Poll a pending fetch handle. Returns `none` if still in flight.
+    poll-fetch: func(handle: u64) -> option<result<response-data, string>>;
+
+    /// Cancel a pending fetch.
+    cancel-fetch: func(handle: u64);
+}
+
+/// Fetch world.
+world fetch-world {
+    import fetch-api;
+    import async-fetch;
+}

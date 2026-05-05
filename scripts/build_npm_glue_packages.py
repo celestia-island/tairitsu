@@ -1,0 +1,487 @@
+#!/usr/bin/env python3
+"""Build all per-domain npm packages for @celestia/tairitsu-glue-*.
+
+Reads runtime modules from packages/browser-glue/src/runtime/
+and generates optimized per-domain npm packages under packages/npm/.
+
+Usage:
+    python scripts/build_npm_glue_packages.py          # Generate + build
+    python scripts/build_npm_glue_packages.py --gen     # Generate only
+    python scripts/build_npm_glue_packages.py --build   # Build only (must generate first)
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
+RUNTIME_DIR = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "runtime"
+NPM_DIR = WORKSPACE_ROOT / "packages" / "npm"
+VERSION = "0.1.0"
+SCOPE = "@celestia"
+
+DOMAIN_MAP = {
+    "dom": {
+        "description": "DOM manipulation glue — document, element, node operations",
+        "interfaces": {
+            "document": "document",
+            "element": "element",
+            "node": "node",
+            "non-element-parent-node": "nonElementParentNode",
+            "parent-node": "parentNode",
+        },
+        "runtime_modules": ["document", "element", "node", "nonElementParentNode", "parentNode"],
+    },
+    "events": {
+        "description": "Event handling glue — DOM events, event targets",
+        "interfaces": {
+            "event": "event",
+            "event-target": "eventTarget",
+        },
+        "runtime_modules": ["event", "eventTarget"],
+    },
+    "css": {
+        "description": "CSS glue — style declarations, inline styles, class lists",
+        "interfaces": {
+            "css-style-declaration": "cssStyleDeclaration",
+            "element-css-inline-style": "elementCssInlineStyle",
+            "dom-token-list": "domTokenList",
+        },
+        "runtime_modules": ["cssStyleDeclaration", "elementCssInlineStyle", "domTokenList"],
+    },
+    "html": {
+        "description": "HTML window glue — window, location, history APIs",
+        "interfaces": {
+            "window": "window",
+            "location": "location",
+            "history": "history",
+        },
+        "runtime_modules": ["window", "location", "history"],
+    },
+    "observers": {
+        "description": "Observer glue — mutation, intersection observers",
+        "interfaces": {
+            "observers": "observers",
+            "mutation-observer": "mutationObserver",
+            "mutation-record": "mutationRecord",
+        },
+        "runtime_modules": ["observers", "mutationObserver", "mutationRecord"],
+    },
+    "resize-observer": {
+        "description": "ResizeObserver glue — resize observer entries and sizes",
+        "interfaces": {
+            "resize-observer": "resizeObserver",
+            "resize-observer-entry": "resizeObserverEntry",
+            "resize-observer-size": "resizeObserverSize",
+        },
+        "runtime_modules": ["resizeObserver", "resizeObserverEntry", "resizeObserverSize"],
+    },
+    "platform": {
+        "description": "Platform helper glue — setTimeout, rAF, clipboard, geolocation, IndexedDB wrappers",
+        "interfaces": {
+            "platform-helpers": "platformHelpers",
+        },
+        "runtime_modules": ["platformHelpers"],
+    },
+}
+
+AUTOGEN_DOMAINS = [
+    "auth", "canvas", "crypto", "device", "fetch", "file-api",
+    "geolocation", "indexed-db", "media", "misc", "notifications",
+    "payments", "performance", "permissions", "service-workers",
+    "storage", "streams", "svg", "url", "wasm", "web-animations",
+    "webrtc", "websocket", "websockets", "workers",
+]
+
+
+def find_esbuild():
+    """Find esbuild binary, trying local node_modules first, then npx."""
+    candidates = []
+    if os.name == "nt":
+        candidates.append(("npx.cmd", ["npx.cmd", "esbuild", "--version"]))
+        candidates.append(("esbuild.cmd", ["esbuild.cmd", "--version"]))
+    candidates.append(("npx", ["npx", "esbuild", "--version"]))
+    candidates.append(("esbuild", ["esbuild", "--version"]))
+    for name, cmd in candidates:
+        try:
+            result = subprocess.run(cmd, capture_output=True, timeout=30)
+            if result.returncode == 0:
+                if name in ("npx", "npx.cmd"):
+                    return [name, "esbuild"]
+                return [name]
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+    raise RuntimeError("esbuild not found. Install with: npm install -g esbuild")
+
+
+def generate_core_package():
+    pkg_dir = NPM_DIR / "glue-core"
+    src_dir = pkg_dir / "src"
+    dist_dir = pkg_dir / "dist"
+    src_dir.mkdir(parents=True, exist_ok=True)
+    dist_dir.mkdir(parents=True, exist_ok=True)
+
+    handles_src = RUNTIME_DIR / "handles.ts"
+    helpers_src = RUNTIME_DIR / "helpers.ts"
+    async_src = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "async.ts"
+
+    index_lines = [
+        "// Auto-generated by build_npm_glue_packages.py — DO NOT EDIT",
+        "// @ts-nocheck",
+        "",
+    ]
+
+    if handles_src.exists():
+        content = handles_src.read_text(encoding="utf-8")
+        content = content.replace("// @ts-nocheck\n", "")
+        index_lines.append("// --- handles ---")
+        index_lines.append(content.strip())
+        index_lines.append("")
+
+    if helpers_src.exists():
+        content = helpers_src.read_text(encoding="utf-8")
+        content = content.replace("// @ts-nocheck\n", "")
+        index_lines.append("// --- helpers ---")
+        index_lines.append(content.strip())
+        index_lines.append("")
+
+    if async_src.exists():
+        content = async_src.read_text(encoding="utf-8")
+        content = content.replace("// @ts-nocheck\n", "")
+        content = content.replace("export type ", "export type ")
+        index_lines.append("// --- async ---")
+        index_lines.append(content.strip())
+        index_lines.append("")
+
+    index_content = "\n".join(index_lines)
+    (src_dir / "index.ts").write_text(index_content, encoding="utf-8")
+
+    print(f"  OK glue-core: {len(index_content)} chars")
+
+
+def generate_domain_package(domain_name: str, domain_info: dict):
+    pkg_name = f"glue-{domain_name}"
+    pkg_dir = NPM_DIR / pkg_name
+    src_dir = pkg_dir / "src"
+    src_dir.mkdir(parents=True, exist_ok=True)
+
+    interface_map = domain_info["interfaces"]
+    runtime_modules = domain_info["runtime_modules"]
+
+    lines = [
+        "// @ts-nocheck",
+        "// Auto-generated by build_npm_glue_packages.py",
+        "",
+    ]
+
+    all_exports = []
+    for module_name in runtime_modules:
+        src_file = RUNTIME_DIR / f"{module_name}.ts"
+        if not src_file.exists():
+            print(f"  WARN {domain_name}: missing {module_name}.ts")
+            continue
+
+        content = src_file.read_text(encoding="utf-8")
+        content = content.replace("// @ts-nocheck\n", "").strip()
+        lines.append(f"// === {module_name} ===")
+        lines.append(content)
+        lines.append("")
+
+        export_name = f"{module_name}_exports"
+        all_exports.append(export_name)
+
+    iface_entries = []
+    for wit_name, module_name in interface_map.items():
+        export_name = f"{module_name}_exports"
+        iface_entries.append(f'  "@tairitsu-glue/{wit_name}": {export_name},')
+
+    lines.append("// === Registry ===")
+    lines.append(f"export const INTERFACES = {{")
+    for entry in iface_entries:
+        lines.append(entry)
+    lines.append("};")
+    lines.append("")
+
+    (src_dir / "index.ts").write_text("\n".join(lines), encoding="utf-8")
+
+    pkg_json = {
+        "name": f"{SCOPE}/tairitsu-{pkg_name}",
+        "version": VERSION,
+        "description": domain_info["description"],
+        "license": "MIT OR Apache-2.0",
+        "type": "module",
+        "sideEffects": False,
+        "main": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "exports": {
+            ".": {
+                "import": "./dist/index.js",
+                "types": "./dist/index.d.ts",
+            }
+        },
+        "files": ["dist/**/*.js", "dist/**/*.d.ts"],
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/celestia-org/tairitsu.git",
+            "directory": f"packages/npm/{pkg_name}",
+        },
+        "publishConfig": {
+            "access": "public",
+            "registry": "https://registry.npmjs.org/",
+        },
+        "scripts": {
+            "build": f"esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
+            "clean": "rimraf dist",
+            "prepublishOnly": "npm run build",
+        },
+        "devDependencies": {
+            "esbuild": "^0.25.0",
+            "rimraf": "^5.0.0",
+        },
+    }
+    (pkg_dir / "package.json").write_text(
+        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
+    )
+
+    total_size = sum(
+        (RUNTIME_DIR / f"{m}.ts").stat().st_size
+        for m in runtime_modules
+        if (RUNTIME_DIR / f"{m}.ts").exists()
+    )
+    print(f"  OK {pkg_name}: {len(runtime_modules)} modules, {total_size} bytes source")
+
+
+def generate_autogen_stub(domain_name: str):
+    """Generate a stub package for auto-generated domains that have glue/*.ts but no runtime implementation."""
+    pkg_name = f"glue-{domain_name}"
+    pkg_dir = NPM_DIR / pkg_name
+    src_dir = pkg_dir / "src"
+    src_dir.mkdir(parents=True, exist_ok=True)
+
+    glue_file = WORKSPACE_ROOT / "packages" / "browser-glue" / "src" / "glue" / f"{domain_name}.ts"
+
+    if glue_file.exists():
+        content = glue_file.read_text(encoding="utf-8")
+        content = content.replace("// @ts-nocheck\n", "")
+        (src_dir / "index.ts").write_text(
+            "// @ts-nocheck\n// Auto-generated stub — delegates to browser-glue glue module\n\n"
+            + content,
+            encoding="utf-8",
+        )
+        glue_size = glue_file.stat().st_size
+    else:
+        (src_dir / "index.ts").write_text(
+            f"// @ts-nocheck\n// Stub for {domain_name} — no implementation yet\nexport const INTERFACES = {{}};\n",
+            encoding="utf-8",
+        )
+        glue_size = 0
+
+    pkg_json = {
+        "name": f"{SCOPE}/tairitsu-{pkg_name}",
+        "version": VERSION,
+        "description": f"Tairitsu browser glue stub for {domain_name} WIT domain",
+        "license": "MIT OR Apache-2.0",
+        "type": "module",
+        "sideEffects": False,
+        "main": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "exports": {
+            ".": {
+                "import": "./dist/index.js",
+                "types": "./dist/index.d.ts",
+            }
+        },
+        "files": ["dist/**/*.js", "dist/**/*.d.ts"],
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/celestia-org/tairitsu.git",
+            "directory": f"packages/npm/{pkg_name}",
+        },
+        "publishConfig": {
+            "access": "public",
+            "registry": "https://registry.npmjs.org/",
+        },
+        "scripts": {
+            "build": f"esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify",
+            "clean": "rimraf dist",
+            "prepublishOnly": "npm run build",
+        },
+        "devDependencies": {
+            "esbuild": "^0.25.0",
+            "rimraf": "^5.0.0",
+        },
+    }
+    (pkg_dir / "package.json").write_text(
+        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"  OK {pkg_name} (stub): {glue_size} bytes glue source")
+
+
+def generate_glue_full():
+    pkg_dir = NPM_DIR / "glue-full"
+    src_dir = pkg_dir / "src"
+    src_dir.mkdir(parents=True, exist_ok=True)
+
+    runtime_deps = [f"@{SCOPE[1:]}/tairitsu-glue-{d}" for d in DOMAIN_MAP]
+    stub_deps = [f"@{SCOPE[1:]}/tairitsu-glue-{d}" for d in AUTOGEN_DOMAINS]
+    all_deps = runtime_deps + stub_deps
+
+    lines = [
+        "// @ts-nocheck",
+        "// Auto-generated aggregation package",
+        "",
+    ]
+
+    for d in list(DOMAIN_MAP.keys()) + AUTOGEN_DOMAINS:
+        pkg_ref = f"@{SCOPE[1:]}/tairitsu-glue-{d}"
+        lines.append(f'import {{ INTERFACES as {d.replace("-", "_")} }} from "{pkg_ref}";')
+    lines.append("")
+
+    lines.append("export const INTERFACES = {")
+    for d in list(DOMAIN_MAP.keys()) + AUTOGEN_DOMAINS:
+        var_name = d.replace("-", "_")
+        lines.append(f"  ...{var_name},")
+    lines.append("};")
+    lines.append("")
+
+    (src_dir / "index.ts").write_text("\n".join(lines), encoding="utf-8")
+
+    pkg_json = {
+        "name": f"{SCOPE}/tairitsu-glue-full",
+        "version": VERSION,
+        "description": "Tairitsu browser glue — all WIT domain implementations aggregated",
+        "license": "MIT OR Apache-2.0",
+        "type": "module",
+        "sideEffects": False,
+        "main": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "exports": {
+            ".": {
+                "import": "./dist/index.js",
+                "types": "./dist/index.d.ts",
+            }
+        },
+        "files": ["dist/**/*.js", "dist/**/*.d.ts"],
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/celestia-org/tairitsu.git",
+            "directory": "packages/npm/glue-full",
+        },
+        "publishConfig": {
+            "access": "public",
+            "registry": "https://registry.npmjs.org/",
+        },
+        "dependencies": {dep: f"^{VERSION}" for dep in all_deps},
+        "scripts": {
+            "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm --platform=browser --minify --external:@celestia/tairitsu-glue-*",
+            "clean": "rimraf dist",
+            "prepublishOnly": "npm run build",
+        },
+        "devDependencies": {
+            "esbuild": "^0.25.0",
+            "rimraf": "^5.0.0",
+        },
+    }
+    (pkg_dir / "package.json").write_text(
+        json.dumps(pkg_json, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"  OK glue-full: aggregates {len(all_deps)} domain packages")
+
+
+def build_all():
+    """Run esbuild on all generated packages."""
+    npm_packages = sorted(NPM_DIR.iterdir())
+    built = 0
+    failed = []
+
+    for pkg_dir in npm_packages:
+        if not pkg_dir.is_dir():
+            continue
+        if not (pkg_dir / "package.json").exists():
+            continue
+        if pkg_dir.name == "runtime":
+            continue  # already has its own build
+
+        pkg_json = json.loads((pkg_dir / "package.json").read_text(encoding="utf-8"))
+        name = pkg_json.get("name", pkg_dir.name)
+
+        if not (pkg_dir / "src" / "index.ts").exists():
+            continue
+
+        dist_dir = pkg_dir / "dist"
+        dist_dir.mkdir(exist_ok=True)
+
+        src_file = str(pkg_dir / "src" / "index.ts")
+        out_file = str(pkg_dir / "dist" / "index.js")
+
+        try:
+            esbuild_cmd = find_esbuild()
+            result = subprocess.run(
+                esbuild_cmd + [
+                    src_file,
+                    "--bundle",
+                    f"--outfile={out_file}",
+                    "--format=esm",
+                    "--platform=browser",
+                    "--minify",
+                    "--tree-shaking=true",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=str(pkg_dir),
+                timeout=30,
+            )
+            if result.returncode == 0:
+                out_size = (pkg_dir / "dist" / "index.js").stat().st_size
+                print(f"  OK {name}: {out_size:,} bytes")
+                built += 1
+            else:
+                print(f"  X {name}: {result.stderr.strip()}")
+                failed.append(name)
+        except Exception as e:
+            print(f"  X {name}: {e}")
+            failed.append(name)
+
+    print(f"\n  Built: {built} packages, Failed: {len(failed)}")
+    if failed:
+        print(f"  Failed: {', '.join(failed)}")
+
+
+def main():
+    args = set(sys.argv[1:])
+
+    if "--build" not in args:
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("Generating per-domain npm packages...")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+        print("\n[1/3] Core package:")
+        generate_core_package()
+
+        print("\n[2/3] Runtime domain packages:")
+        for domain_name, domain_info in DOMAIN_MAP.items():
+            generate_domain_package(domain_name, domain_info)
+
+        print("\n[3/3] Auto-generated stub packages:")
+        for domain_name in AUTOGEN_DOMAINS:
+            generate_autogen_stub(domain_name)
+
+        print("\n[4/4] Aggregation package:")
+        generate_glue_full()
+
+        print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print(f"Generated {len(DOMAIN_MAP)} runtime + {len(AUTOGEN_DOMAINS)} stub = {len(DOMAIN_MAP) + len(AUTOGEN_DOMAINS)} domain packages")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    if "--gen" not in args:
+        print("\nBuilding all packages with esbuild (minified)...")
+        build_all()
+
+
+if __name__ == "__main__":
+    main()

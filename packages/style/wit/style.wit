@@ -1,0 +1,70 @@
+package tairitsu:style;
+
+interface types {
+    enum display-value {
+        flex, grid, block, inline, inline-block, inline-flex, inline-grid,
+        inline-block-alt, contents, list-item, table, inline-table, none,
+    }
+    enum position-value { static-pos, relative, absolute, fixed, sticky }
+    enum flex-direction-value { row, column, row-reverse, column-reverse }
+    enum flex-wrap-value { nowrap, wrap, wrap-reverse }
+    enum justify-content-value {
+        center, space-between, space-around, space-evenly,
+        flex-start, flex-end, start, end,
+    }
+    enum align-items-value { center, stretch, baseline, flex-start, flex-end }
+    enum text-align-value { left, right, center, justify, start, end }
+    enum overflow-value { visible, hidden, scroll, auto, clip }
+    enum cursor-value {
+        auto, default, pointer, crosshair, move, text, wait, help,
+        progress, not-allowed, grab,
+    }
+    enum length-unit { px, percent, em, rem, vw, vh, vmin, vmax }
+    enum css-value { auto, none, inherit, initial, unset, revert }
+
+    record style-declaration {
+        property: string,
+        value: string,
+    }
+
+    enum css-category {
+        layout, box-model, flexbox, grid, typography, color, visual,
+        transform, transition, animation, interaction, list-style, table,
+        paged, generated-content, flex-grid-gap, miscellaneous,
+        motion-path, scroll-driven, houdini, svg, hardware,
+    }
+
+    variant property {
+        known(string),
+        custom(string),
+    }
+}
+
+interface builder {
+    build-style-string: func(declarations: list<tuple<string, string>>) -> string;
+    css-property-to-string: func(name: string) -> string;
+    css-length-to-string: func(value: f64, unit: string) -> string;
+}
+
+interface utility {
+    generate-utility-css: func(class-name: string) -> option<string>;
+    generate-stylesheet: func(class-names: list<string>) -> string;
+    parse-utility-base: func(class-name: string) -> string;
+}
+
+interface classes {
+    build-classes: func(classes: list<string>) -> string;
+    build-classes-conditional: func(classes: list<tuple<string, bool>>) -> string;
+}
+
+interface version {
+    get-version: func() -> string;
+}
+
+world style {
+    export version;
+    export types;
+    export builder;
+    export utility;
+    export classes;
+}

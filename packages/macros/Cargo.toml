@@ -1,19 +1,22 @@
 [package]
 name = "tairitsu-macros"
-version = "0.3.0"
-edition = "2021"
-
-publish = true
-authors = ["langyo <langyo.china@gmail.com>"]
-description = "A WebAssembly runtime for running component-model based WASM modules"
-license = "Apache-2.0"
-repository = "https://github.com/celestia-island/tairitsu"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Procedural macros for Tairitsu framework (rsx!, scss!, component, wit_interface!, etc.)"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-# Basic language and tools
 proc-macro2 = "^1"
 quote = "^1"
 syn = { version = "^2", features = ["full", "parsing"] }
+grass = "^0.13"
+sha2 = "^0.10"
+hex = "^0.4"
+regex = "^1"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"

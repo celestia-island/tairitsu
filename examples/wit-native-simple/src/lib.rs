@@ -23,7 +23,7 @@ pub mod guest {
     }
 
     /// Get guest information
-    pub fn get_info() -> tairitsu::GuestInfo {
+    pub fn get_info() -> tairitsu_web::GuestInfo {
         tairitsu::GuestInfo {
             name: "tairitsu-simple-guest".to_string(),
             version: "0.1.0".to_string(),

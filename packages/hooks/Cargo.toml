@@ -1,0 +1,32 @@
+[package]
+name = "tairitsu-hooks"
+version.workspace = true
+description = "Hooks system for Tairitsu"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+
+[dependencies]
+tairitsu-vdom = { workspace = true }
+anyhow = "^1"
+tracing = "^0.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { version = "^0.50", features = ["macros"] }
+
+[dev-dependencies]
+tokio = { workspace = true, default-features = false, features = [
+  "sync",
+  "macros",
+  "io-util",
+  "rt",
+  "time",
+] }
+tairitsu-macros = { workspace = true }

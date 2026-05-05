@@ -1,0 +1,59 @@
+package tairitsu:hooks;
+
+interface state-machine {
+    enum interaction-state { idle, hover, active, focused, disabled }
+    enum interaction-event {
+        mouse-enter, mouse-leave, mouse-down, mouse-up,
+        focus, blur, disable, enable,
+    }
+
+    transition: func(state: interaction-state, event: interaction-event) -> option<interaction-state>;
+    is-interactive: func(state: interaction-state) -> bool;
+}
+
+interface animation-types {
+    enum animation-state { idle, running, paused, finished }
+    enum animation-direction { normal, reverse, alternate, alternate-reverse }
+    variant easing-function {
+        linear,
+        ease,
+        ease-in,
+        ease-out,
+        ease-in-out,
+        cubic-bezier(tuple<f32, f32, f32, f32>),
+    }
+
+    evaluate-easing: func(easing: easing-function, t: f32) -> f32;
+    lerp-f32: func(start: f32, end: f32, t: f32) -> f32;
+}
+
+interface animation-builder {
+    use animation-types.{animation-direction, easing-function};
+
+    record animation-config {
+        duration-ms: u64,
+        delay-ms: u64,
+        iterations: u32,
+        direction: animation-direction,
+        easing: easing-function,
+    }
+
+    default-animation-config: func() -> animation-config;
+}
+
+interface async-resource {
+    enum resource-status { loading, ready, error }
+    resource-status-query: func(resource-id: u64) -> option<resource-status>;
+}
+
+interface version {
+    get-version: func() -> string;
+}
+
+world hooks {
+    export version;
+    export state-machine;
+    export animation-types;
+    export animation-builder;
+    export async-resource;
+}

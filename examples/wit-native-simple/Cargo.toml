@@ -1,9 +1,9 @@
 [package]
 name = "tairitsu-example-wit-native-simple"
 version = "0.1.0"
-edition = "2021"
-authors = ["langyo <langyo.china@gmail.com>"]
+edition = "2024"
 publish = false
+authors = ["langyo <langyo.china@gmail.com>"]
 
 # This example demonstrates simple trait-based composable WIT interfaces
 # without runtime serialization
@@ -26,6 +26,7 @@ log = { version = "^0.4", features = ["std"] }
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 # Workspace dependencies
 tairitsu = { path = "../../packages/runtime" }
+tairitsu-web = { path = "../../packages/web", features = ["full"] }
 
 # MCP / network and protocols
 wit-bindgen = "^0.50"

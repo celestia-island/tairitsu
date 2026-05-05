@@ -53,7 +53,7 @@ use anyhow::Result;
 use log::info;
 use std::path::PathBuf;
 
-use tairitsu::{Container, Registry};
+use tairitsu_web::{Container, Registry};
 
 fn main() -> Result<()> {
     env_logger::Builder::from_default_env()
@@ -76,8 +76,12 @@ fn main() -> Result<()> {
             info!("WASM file not found: {}", e);
             info!("This example requires a WASM guest module.");
             info!("To build it, run:");
-            info!("  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib");
-            info!("For now, this example will demonstrate the API usage without actual WASM execution.");
+            info!(
+                "  cargo build --target wasm32-wasip2 --release --package tairitsu-example-wit-native-macro --lib"
+            );
+            info!(
+                "For now, this example will demonstrate the API usage without actual WASM execution."
+            );
 
             info!("See the top of this file for detailed API usage examples.");
             info!("Key advantages:");
@@ -119,7 +123,7 @@ fn main() -> Result<()> {
             info!("[Guest Initializer] Would register macro-generated WIT bindings here");
             info!("[Guest Initializer] Would instantiate component here");
 
-            // This is a placeholder - in real usage you'd return an actual GuestInstance
+            // This is a demonstration — in real usage you would return an actual GuestInstance.
             Err(anyhow::anyhow!(
                 "WIT bindings not implemented - this is a demonstration"
             ))

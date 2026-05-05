@@ -3,7 +3,8 @@
 //! This module provides conversion from Wasmtime Component Model `Val` types
 //! to RON (Rust Object Notation), with full support for nested complex types.
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
+
 use wasmtime::component::Val;
 
 /// Convert Wasmtime Val to RON string
