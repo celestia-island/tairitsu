@@ -22,7 +22,6 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-# Local development version for easier debugging
 tairitsu-macros = { path = "packages/macros" }
 
 [profile.release]
@@ -39,13 +38,13 @@ codegen-units = 1
 panic = "abort"
 
 [workspace.package]
+version = "0.3.0"
 authors = ["langyo <langyo.china@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/celestia-island/tairitsu"
 
 [workspace.dependencies]
-# Tokio - only wasm-compatible features (sync,macros,io-util,rt,time,signal)
-# All packages should use: tokio = { workspace = true }
 tokio = { version = "^1", default-features = false, features = [
     "sync",
     "macros",
@@ -54,3 +53,13 @@ tokio = { version = "^1", default-features = false, features = [
     "time",
     "signal",
 ] }
+tairitsu = { version = "0.3", path = "packages/runtime" }
+tairitsu-macros = { version = "0.3", path = "packages/macros" }
+tairitsu-vdom = { version = "0.3", path = "packages/vdom" }
+tairitsu-hooks = { version = "0.3", path = "packages/hooks" }
+tairitsu-style = { version = "0.3", path = "packages/style" }
+tairitsu-ssr = { version = "0.3", path = "packages/ssr" }
+tairitsu-web = { version = "0.3", path = "packages/web" }
+tairitsu-browser-worlds = { version = "0.3", path = "packages/browser-worlds" }
+tairitsu-browser-wit-resolver = { version = "0.3", path = "packages/browser-wit-resolver" }
+tairitsu-packager = { version = "0.3", path = "packages/packager" }

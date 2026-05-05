@@ -1,28 +1,22 @@
 [package]
 name = "tairitsu-macros"
-version = "0.3.0"
+version.workspace = true
 edition.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Procedural macros for Tairitsu framework (rsx!, scss!, component, wit_interface!, etc.)"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-# Basic language and tools
 proc-macro2 = "^1"
 quote = "^1"
 syn = { version = "^2", features = ["full", "parsing"] }
-
-# SCSS compiler
 grass = "^0.13"
-
-# Hashing for class names
 sha2 = "^0.10"
 hex = "^0.4"
-
-# SVG sanitization
 regex = "^1"
-
-# JSON parsing for resource index
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"

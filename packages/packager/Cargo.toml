@@ -1,32 +1,26 @@
 [package]
 name = "tairitsu-packager"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 description = "Build and packaging tool for Tairitsu applications"
-authors = ["langyo <langyo.china@gmail.com>"]
+authors.workspace = true
 license = "MIT OR Apache-2.0"
+repository.workspace = true
 
 [[bin]]
 name = "tairitsu"
 path = "src/main.rs"
 
 [dependencies]
-# Workspace dependencies
-tairitsu-vdom = { path = "../vdom", optional = true }
-tairitsu-browser-wit-resolver = { path = "../browser-wit-resolver" }
-tairitsu-browser-worlds = { path = "../browser-worlds" }
-tairitsu-ssr = { path = "../ssr", optional = true }
-
-# Basic language and tools
+tairitsu-vdom = { workspace = true, optional = true }
+tairitsu-browser-wit-resolver = { workspace = true }
+tairitsu-browser-worlds = { workspace = true }
+tairitsu-ssr = { workspace = true, optional = true }
 anyhow = "^1"
 thiserror = "^2"
-
-# Data and serialization
 serde = { version = "^1", features = ["derive"] }
 serde_json = "^1"
 toml = "^0.8"
-
-# Async runtime (only for native targets)
 tokio = { version = "^1", default-features = false, features = [
   "sync",
   "macros",
@@ -37,46 +31,22 @@ tokio = { version = "^1", default-features = false, features = [
   "signal",
 ], optional = true }
 futures = "^0.3"
-
-# Logging and tracing
 tracing = "^0.1"
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
-
-# CLI (optional for build-only usage)
 clap = { version = "^4", features = ["derive"], optional = true }
-
-# Progress bars
 indicatif = "^0.17"
-
-# Browser opener
 webbrowser = "^1"
-
-# File system
 walkdir = "^2"
 notify = { version = "^6", optional = true }
-
-# HTTP server (for dev server)
 axum = { version = "^0.8", optional = true }
 tower-http = { version = "^0.6", features = ["fs", "cors", "compression-gzip"], optional = true }
 tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
-
-# Embedded WebView for debug/inspection API (cross-platform via wry)
 wry = "^0.48"
 tao = "^0.30"
-
-# WASM tools (optional)
-# SCSS compiler
 grass = "^0.13"
-
-# Regex for extraction
 regex = "^1"
-
-# WIT parsing (for glue completeness validation)
 wit-parser = "^0.243"
-
-# Hashing for resource cache busting
 sha2 = "^0.10"
-
 yuuka = "0.6"
 sys-locale = "0.3"
 crossterm = { version = "0.28", optional = true }
@@ -84,29 +54,18 @@ chrono = { version = "0.4", default-features = false, features = [
   "clock",
   "serde",
 ] }
-
-# HTTP client for icon fetching (optional)
 reqwest = { version = "^0.12", features = [
   "blocking",
   "json",
   "stream",
 ], optional = true }
-
-# ZIP file handling for icon packages (optional)
 zip = { version = "^2", default-features = false, features = [
   "deflate",
 ], optional = true }
-
-# Image processing for visual diffing
 image = { version = "^0.25", optional = true }
 base64 = { version = "^0.22", optional = true }
-
-# Embed browser-glue at compile time
 include_dir = "^0.7"
-
-# VT100 terminal emulation (for VTty feature)
 vte = { version = "^0.15", optional = true }
-# Cross-platform PTY abstraction (ConPTY on Windows, forkpty on Unix)
 portable-pty = { version = "^0.8", optional = true }
 
 [dev-dependencies]
@@ -130,7 +89,6 @@ cli = ["clap"]
 icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
 test-runner = ["reqwest", "image", "base64"]
-# VTty virtual terminal MCP server (ConPTY on Windows, forkpty on Unix)
 vtty = ["vte", "portable-pty"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -145,5 +103,4 @@ windows-sys = { version = "0.59", features = [
   "Win32_System_Threading",
   "Win32_System_Memory",
 ] }
-# For VTty ConPTY attribute list management on Windows
 libc = { version = "0.2", optional = true }

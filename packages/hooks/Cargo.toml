@@ -1,10 +1,11 @@
 [package]
 name = "tairitsu-hooks"
-version = "0.1.0"
+version.workspace = true
 description = "Hooks system for Tairitsu"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -13,15 +14,10 @@ crate-type = ["cdylib", "rlib"]
 default = []
 
 [dependencies]
-tairitsu-vdom = { path = "../vdom" }
-
-# Basic language and tools
+tairitsu-vdom = { workspace = true }
 anyhow = "^1"
-
-# Logging and tracing
 tracing = "^0.1"
 
-# WASM Component Model bindings (wasm32 target only)
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { version = "^0.50", features = ["macros"] }
 
@@ -33,4 +29,4 @@ tokio = { workspace = true, default-features = false, features = [
   "rt",
   "time",
 ] }
-tairitsu-macros = { path = "../macros" }
+tairitsu-macros = { workspace = true }
