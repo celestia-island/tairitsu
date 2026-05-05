@@ -619,18 +619,7 @@ visual-capture:
             -d '{"full_page": false}')
         
         if [ $? -eq 0 ] && echo "$RESPONSE" | grep -q '"ok":true'; then
-            echo "$RESPONSE" | python3 -c "
-import sys, json, base64
-d = json.load(sys.stdin)
-if d.get('ok'):
-    img = base64.b64decode(d['data']['data'])
-    with open('${OUTPUT_DIR}/${page}.png', 'wb') as f:
-        f.write(img)
-    print('OK')
-else:
-    print('FAIL')
-    sys.exit(1)
-"
+            echo "$RESPONSE" | python3 -c "import sys,json,base64;d=json.load(sys.stdin);open('${OUTPUT_DIR}/${page}.png','wb').write(base64.b64decode(d['data']['data'])) if d.get('ok') else sys.exit(1); print('OK')"
         else
             echo "SKIP (server returned error)"
         fi
@@ -640,10 +629,10 @@ else:
     echo "Screenshots saved to ${OUTPUT_DIR}/"
 
 # Run visual diff comparison against baseline
-visual-diff:
+visual-diff tolerance="0.01":
     cargo run --package tairitsu-packager --features visual-diff -- \
         visual-diff \
-        --tolerance {{TOLERANCE:-0.01}}
+        --tolerance {{tolerance}}
 
 # Update baseline images from actual screenshots
 visual-update:
