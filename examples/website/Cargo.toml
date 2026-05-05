@@ -296,6 +296,14 @@ head = """
         window.addEventListener('popstate', handlePopState);
         document.addEventListener('click', handleLinkClick, { passive: false });
 
+        /* Keyboard navigation */
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && drawerOpen) {
+                closeDrawer();
+                return;
+            }
+        });
+
         /* Event delegation for all interactive elements (binds on document, not on individual elements) */
         document.addEventListener('click', function(e) {
             var target = e.target;
