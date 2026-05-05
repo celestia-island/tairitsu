@@ -171,12 +171,14 @@ struct NavItem {
 
 struct NavSubcategory {
     label_key: &'static str,
+    icon: MdiIcon,
     href: &'static str,
     items: &'static [NavItem],
 }
 
 struct NavCategory {
     label_key: &'static str,
+    icon: MdiIcon,
     default_open: bool,
     subcategories: &'static [NavSubcategory],
 }
@@ -219,31 +221,36 @@ fn sidebar_label<'a>(key: &'a str, t: &'a i18n::SiteText) -> &'a str {
 const NAV_CATEGORIES: &[NavCategory] = &[
     NavCategory {
         label_key: "sidebar_home",
+        icon: MdiIcon::Home,
         default_open: true,
         subcategories: &[NavSubcategory {
             label_key: "sidebar_home",
+            icon: MdiIcon::Home,
             href: "/",
             items: &[],
         }],
     },
     NavCategory {
         label_key: "sidebar_getting_started",
+        icon: MdiIcon::LightningBolt,
         default_open: true,
         subcategories: &[
-            NavSubcategory { label_key: "sidebar_quick_start", href: "/guides/quick-start", items: &[] },
-            NavSubcategory { label_key: "sidebar_debug_api", href: "/guides/debug-api", items: &[] },
-            NavSubcategory { label_key: "sidebar_workspace_map", href: "/guides/workspace-map", items: &[] },
-            NavSubcategory { label_key: "sidebar_build_test", href: "/guides/build-test-release", items: &[] },
-            NavSubcategory { label_key: "sidebar_migration", href: "/guides/migration", items: &[] },
-            NavSubcategory { label_key: "sidebar_glossary", href: "/guides/glossary", items: &[] },
+            NavSubcategory { label_key: "sidebar_quick_start", icon: MdiIcon::LightningBolt, href: "/guides/quick-start", items: &[] },
+            NavSubcategory { label_key: "sidebar_debug_api", icon: MdiIcon::Code, href: "/guides/debug-api", items: &[] },
+            NavSubcategory { label_key: "sidebar_workspace_map", icon: MdiIcon::Marker, href: "/guides/workspace-map", items: &[] },
+            NavSubcategory { label_key: "sidebar_build_test", icon: MdiIcon::Cog, href: "/guides/build-test-release", items: &[] },
+            NavSubcategory { label_key: "sidebar_migration", icon: MdiIcon::SwapHorizontal, href: "/guides/migration", items: &[] },
+            NavSubcategory { label_key: "sidebar_glossary", icon: MdiIcon::Book, href: "/guides/glossary", items: &[] },
         ],
     },
     NavCategory {
         label_key: "sidebar_architecture",
+        icon: MdiIcon::ViewColumn,
         default_open: true,
         subcategories: &[
             NavSubcategory {
                 label_key: "sidebar_core_packages",
+                icon: MdiIcon::Package,
                 href: "/system/runtime",
                 items: &[
                     NavItem { label_key: "sidebar_runtime_engine", icon: MdiIcon::Cog, href: "/system/runtime" },
@@ -253,6 +260,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label_key: "sidebar_web_platform",
+                icon: MdiIcon::CubeOutline,
                 href: "/system/web-backends",
                 items: &[
                     NavItem { label_key: "sidebar_web_backends", icon: MdiIcon::CubeOutline, href: "/system/web-backends" },
@@ -262,6 +270,7 @@ const NAV_CATEGORIES: &[NavCategory] = &[
             },
             NavSubcategory {
                 label_key: "sidebar_tooling",
+                icon: MdiIcon::Cog,
                 href: "/packages/list",
                 items: &[
                     NavItem { label_key: "sidebar_packager", icon: MdiIcon::Package, href: "/packages/list" },
@@ -274,18 +283,20 @@ const NAV_CATEGORIES: &[NavCategory] = &[
     },
     NavCategory {
         label_key: "sidebar_packages_category",
+        icon: MdiIcon::Package,
         default_open: false,
-        subcategories: &[NavSubcategory { label_key: "sidebar_all_packages", href: "/packages/list", items: &[] }],
+        subcategories: &[NavSubcategory { label_key: "sidebar_all_packages", icon: MdiIcon::Package, href: "/packages/list", items: &[] }],
     },
     NavCategory {
         label_key: "sidebar_system",
+        icon: MdiIcon::ViewDashboard,
         default_open: false,
         subcategories: &[
-            NavSubcategory { label_key: "sidebar_overview", href: "/system", items: &[] },
-            NavSubcategory { label_key: "sidebar_runtime_engine", href: "/system/runtime", items: &[] },
-            NavSubcategory { label_key: "sidebar_wit_pipeline_item", href: "/system/wit-pipeline", items: &[] },
-            NavSubcategory { label_key: "sidebar_web_backends_item", href: "/system/web-backends", items: &[] },
-            NavSubcategory { label_key: "sidebar_versioning", href: "/system/versioning", items: &[] },
+            NavSubcategory { label_key: "sidebar_overview", icon: MdiIcon::ViewDashboard, href: "/system", items: &[] },
+            NavSubcategory { label_key: "sidebar_runtime_engine", icon: MdiIcon::Cog, href: "/system/runtime", items: &[] },
+            NavSubcategory { label_key: "sidebar_wit_pipeline_item", icon: MdiIcon::SourceBranch, href: "/system/wit-pipeline", items: &[] },
+            NavSubcategory { label_key: "sidebar_web_backends_item", icon: MdiIcon::Layers, href: "/system/web-backends", items: &[] },
+            NavSubcategory { label_key: "sidebar_versioning", icon: MdiIcon::Tag, href: "/system/versioning", items: &[] },
         ],
     },
 ];
@@ -297,7 +308,7 @@ pub fn sidebar() -> VNode {
     for category in NAV_CATEGORIES {
         if category.subcategories.len() == 1 && category.subcategories[0].items.is_empty() {
             let sub = &category.subcategories[0];
-            category_nodes.push(plain_menu_item(sub.href, sidebar_label(sub.label_key, &t), 1));
+            category_nodes.push(plain_menu_item(sub.href, sidebar_label(sub.label_key, &t), 1, sub.icon));
             continue;
         }
 
@@ -305,14 +316,14 @@ pub fn sidebar() -> VNode {
 
         for subcategory in category.subcategories {
             if subcategory.items.is_empty() {
-                subcategory_nodes.push(plain_menu_item(subcategory.href, sidebar_label(subcategory.label_key, &t), 2));
+                subcategory_nodes.push(plain_menu_item(subcategory.href, sidebar_label(subcategory.label_key, &t), 2, subcategory.icon));
             } else {
                 let item_nodes: Vec<VNode> = subcategory
                     .items
                     .iter()
                     .map(|item| menu_item(item.href, sidebar_label(item.label_key, &t), item.icon))
                     .collect();
-                subcategory_nodes.push(submenu(sidebar_label(subcategory.label_key, &t), 2, item_nodes, true));
+                subcategory_nodes.push(submenu(sidebar_label(subcategory.label_key, &t), 2, item_nodes, true, subcategory.icon));
             }
         }
 
@@ -321,6 +332,7 @@ pub fn sidebar() -> VNode {
             1,
             subcategory_nodes,
             category.default_open,
+            category.icon,
         ));
     }
 
@@ -371,8 +383,8 @@ fn menu_item(href: &str, label: &str, icon: MdiIcon) -> VNode {
     )
 }
 
-fn submenu_title(label: &str, _level: u32) -> VNode {
-    let arrow = icon_el(MdiIcon::ChevronRight);
+fn submenu_title(label: &str, _level: u32, icon: MdiIcon) -> VNode {
+    let arrow = icon_el(icon);
     VNode::Element(
         el("div")
             .class(format!("hi-submenu-title hi-menu-height-compact"))
@@ -381,8 +393,8 @@ fn submenu_title(label: &str, _level: u32) -> VNode {
     )
 }
 
-fn submenu(label: &str, level: u32, children: Vec<VNode>, open: bool) -> VNode {
-    let title = submenu_title(label, level);
+fn submenu(label: &str, level: u32, children: Vec<VNode>, open: bool, icon: MdiIcon) -> VNode {
+    let title = submenu_title(label, level, icon);
     let list = VNode::Element(
         el("ul")
             .class("hi-submenu-list")
@@ -397,11 +409,12 @@ fn submenu(label: &str, level: u32, children: Vec<VNode>, open: bool) -> VNode {
     VNode::Element(el)
 }
 
-fn plain_menu_item(href: &str, label: &str, _level: u32) -> VNode {
+fn plain_menu_item(href: &str, label: &str, _level: u32, icon: MdiIcon) -> VNode {
     let inner = VNode::Element(
         el("a")
             .attr("href", href)
             .class("hi-menu-item-inner")
+            .child(icon_el(icon))
             .child(VNode::Element(
                 el("span")
                     .class("hi-menu-item-content")

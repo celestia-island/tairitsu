@@ -3,6 +3,7 @@
 mod app;
 mod components;
 mod i18n;
+mod markdown;
 mod pages;
 mod theme;
 
