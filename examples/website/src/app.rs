@@ -3,7 +3,7 @@
 use std::cell::Cell;
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{VElement, VNode, VText};
+use tairitsu_vdom::VNode;
 
 thread_local! {
     static DARK_MODE: Cell<bool> = const { Cell::new(true) };
@@ -23,12 +23,7 @@ use crate::{
     theme,
 };
 
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
-fn el(tag: &str) -> VElement {
-    VElement::new(tag)
-}
+
 
 /// Render the full app — all pages included for JS-based SPA show/hide.
 pub fn render() -> VNode {
@@ -47,7 +42,7 @@ fn layout_shell(children: Vec<VNode>) -> VNode {
     let dark_class = if is_dark_mode() { " hi-layout-dark" } else { "" };
     let layout_class = format!("hi-layout{} hi-layout-has-sidebar hi-ambient-bg", dark_class);
     rsx! {
-        div { id: "hikari-app",
+        div { id: "ts-app",
             class: layout_class,
             style: theme_style,
             div { class: "hi-background" }

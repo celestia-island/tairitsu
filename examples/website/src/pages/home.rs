@@ -1,17 +1,11 @@
 //! Home page — tairitsu framework documentation site.
 
-use tairitsu_vdom::{VElement, VNode, VText};
+use tairitsu_vdom::{VElement, VNode, el, txt};
 
 use crate::components::{glow_wrapper, svg_icon};
 use crate::i18n::{self, Language};
 use hikari_icons::MdiIcon;
 
-fn txt(s: &str) -> VNode {
-    VNode::Text(VText::new(s))
-}
-fn el(tag: &str) -> VElement {
-    VElement::new(tag)
-}
 
 fn glow_btn(href: &str, class: &str, text: &str, arrow: Option<&str>) -> VNode {
     let mut btn = VElement::new("a")
@@ -123,7 +117,7 @@ pub fn render() -> VNode {
     VNode::Element(
         el("div")
             .attr("id", "page-home")
-            .class("hikari-page is-active")
+            .class("ts-page is-active")
             .children(vec![hero_section, section]),
     )
 }

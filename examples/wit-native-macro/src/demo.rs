@@ -172,7 +172,7 @@ fn test_random_operations(handler: &mut FilesystemHandler) -> Result<(), String>
         let random_size: usize = rng.gen_range(10..100);
 
         let path = format!("/random/test_{}.dat", random_id);
-        let random_data: Vec<u8> = (0..random_size).map(|_| rand::random()).collect();
+        let random_data: Vec<u8> = (0..random_size).map(|_| rand::random::<u8>()).collect();
 
         let write_cmd = FilesystemCommands::Write {
             path: path.clone(),

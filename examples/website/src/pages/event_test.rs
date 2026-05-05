@@ -13,7 +13,7 @@ pub fn render() -> VNode {
     let count_display = VNode::Text(VText::new(count_str.as_str()));
 
     rsx! {
-        div { id: "page-event-test", class: "hikari-page",
+        div { id: "page-event-test", class: "ts-page",
             h2 { class: "page-section__title", "Event Bridge Test" }
             p { class: "page-section__description",
                 "Click button → handler increments Cell → modifies button label via WIT."

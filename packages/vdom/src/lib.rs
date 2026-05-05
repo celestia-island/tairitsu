@@ -36,7 +36,7 @@ pub use runtime::{
 };
 pub use scheduler::Scheduler;
 pub use svg::SafeSvg;
-pub use vnode::{AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText, empty_vnode};
+pub use vnode::{AnyElementRef, Classes, IntoAttrValue, Style, VElement, VNode, VText, el, empty_vnode, txt};
 
 #[cfg(target_family = "wasm")]
 mod wasm_export {
