@@ -110,10 +110,7 @@ impl StyleIntegrationTests {
             return Ok(TestResult {
                 component: "Generated Property Enum".into(),
                 status: TestStatus::Failure,
-                message: format!(
-                    "generated.rs not found at {}",
-                    generated_path.display()
-                ),
+                message: format!("generated.rs not found at {}", generated_path.display()),
                 duration_ms: start.elapsed().as_millis() as u64,
                 screenshot_path: None,
             });
@@ -556,9 +553,7 @@ impl StyleIntegrationTests {
                 .await?,
         );
 
-        let hover_el = driver
-            .find(thirtyfour::By::Css("#e2e-hover"))
-            .await?;
+        let hover_el = driver.find(thirtyfour::By::Css("#e2e-hover")).await?;
         driver
             .action_chain()
             .move_to_element_center(&hover_el)
@@ -630,10 +625,8 @@ impl StyleIntegrationTests {
         let builder_content = std::fs::read_to_string(root.join("src/builder.rs"))?;
         let classes_content = std::fs::read_to_string(root.join("src/classes.rs"))?;
         let utility_content = std::fs::read_to_string(root.join("src/utility.rs"))?;
-        let _category_content =
-            std::fs::read_to_string(root.join("src/properties/category.rs"))?;
-        let generated_content =
-            std::fs::read_to_string(root.join("src/properties/generated.rs"))?;
+        let _category_content = std::fs::read_to_string(root.join("src/properties/category.rs"))?;
+        let generated_content = std::fs::read_to_string(root.join("src/properties/generated.rs"))?;
 
         let mut issues = Vec::new();
 
@@ -714,10 +707,7 @@ impl Test for StyleIntegrationTests {
                     Ok(r) => results.push(r),
                     Err(e) => {
                         tracing::error!("{} failed: {}", stringify!($method), e);
-                        results.push(TestResult::error(
-                            stringify!($method),
-                            &e.to_string(),
-                        ));
+                        results.push(TestResult::error(stringify!($method), &e.to_string()));
                     }
                 }
             };
@@ -726,10 +716,7 @@ impl Test for StyleIntegrationTests {
                     Ok(r) => results.push(r),
                     Err(e) => {
                         tracing::error!("{} failed: {}", stringify!($method), e);
-                        results.push(TestResult::error(
-                            stringify!($method),
-                            &e.to_string(),
-                        ));
+                        results.push(TestResult::error(stringify!($method), &e.to_string()));
                     }
                 }
             };

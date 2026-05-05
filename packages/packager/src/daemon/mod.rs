@@ -112,28 +112,28 @@ pub fn wait_for_child_signal(
             return Ok(None);
         }
 
-        if let Some(pid) = child_pid {
-            if !check_process_exists(pid) {
-                std::thread::sleep(std::time::Duration::from_millis(500));
-                stream_new_content(&stdout_path, &mut log_cursor);
-                if let Ok(content) = fs::read_to_string(&ready_path) {
-                    let _ = fs::remove_file(&ready_path);
-                    if let Some(port) = parse_ready_port(&content) {
-                        return Ok(Some(port));
-                    }
-                    print_signal_failure(&content);
-                    return Ok(None);
-                }
+        if let Some(pid) = child_pid
+            && !check_process_exists(pid)
+        {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            stream_new_content(&stdout_path, &mut log_cursor);
+            if let Ok(content) = fs::read_to_string(&ready_path) {
                 let _ = fs::remove_file(&ready_path);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::UnexpectedEof,
-                    format!(
-                        "Daemon child process (PID {}) exited unexpectedly. Check logs at {}",
-                        pid,
-                        stdout_path.display()
-                    ),
-                ));
+                if let Some(port) = parse_ready_port(&content) {
+                    return Ok(Some(port));
+                }
+                print_signal_failure(&content);
+                return Ok(None);
             }
+            let _ = fs::remove_file(&ready_path);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::UnexpectedEof,
+                format!(
+                    "Daemon child process (PID {}) exited unexpectedly. Check logs at {}",
+                    pid,
+                    stdout_path.display()
+                ),
+            ));
         }
 
         std::thread::sleep(std::time::Duration::from_millis(200));
@@ -437,7 +437,7 @@ fn find_pid_on_port(port: u16) -> Option<u32> {
     #[cfg(unix)]
     {
         let output = Command::new("lsof")
-            .args(&["-ti", &format!(":{}", port), "-sTCP:LISTEN"])
+            .args(["-ti", &format!(":{}", port), "-sTCP:LISTEN"])
             .output()
             .ok()?;
         let text = String::from_utf8_lossy(&output.stdout);
@@ -528,7 +528,10 @@ pub fn kill_process_by_pid(pid: u32) {
     }
 
     if check_process_exists(pid) {
-        crate::log_warn!("{}", crate::fmt_tmpl!(crate::i18n::translations().dev.process_kill_timeout, pid => pid.to_string()));
+        crate::log_warn!(
+            "{}",
+            crate::fmt_tmpl!(crate::i18n::translations().dev.process_kill_timeout, pid => pid.to_string())
+        );
     }
 }
 
@@ -806,7 +809,14 @@ where
 
         let child = Command::new(&exe)
             .env("TAIRITSU_DAEMON", "1")
-            .env("TAIRITSU_COLOR", if std::io::stderr().is_terminal() { "1" } else { "0" })
+            .env(
+                "TAIRITSU_COLOR",
+                if std::io::stderr().is_terminal() {
+                    "1"
+                } else {
+                    "0"
+                },
+            )
             .args(&args)
             .spawn()?;
 
@@ -835,7 +845,11 @@ where
         unsafe {
             env::set_var(
                 "TAIRITSU_COLOR",
-                if std::io::stderr().is_terminal() { "1" } else { "0" },
+                if std::io::stderr().is_terminal() {
+                    "1"
+                } else {
+                    "0"
+                },
             );
         }
 

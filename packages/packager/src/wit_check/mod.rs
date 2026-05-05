@@ -6,7 +6,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 #[derive(Debug)]
 pub struct InterfaceCoverage {
@@ -17,10 +17,15 @@ pub struct InterfaceCoverage {
 }
 
 impl InterfaceCoverage {
-    pub fn is_complete(&self) -> bool { self.missing.is_empty() }
+    pub fn is_complete(&self) -> bool {
+        self.missing.is_empty()
+    }
     pub fn coverage_pct(&self) -> f32 {
-        if self.total_functions == 0 { 100.0 }
-        else { (self.covered.len() as f32 / self.total_functions as f32) * 100.0 }
+        if self.total_functions == 0 {
+            100.0
+        } else {
+            (self.covered.len() as f32 / self.total_functions as f32) * 100.0
+        }
     }
 }
 
@@ -36,12 +41,16 @@ pub struct CompletenessReport {
 }
 
 impl CompletenessReport {
-    pub fn is_fully_covered(&self) -> bool { self.total_missing == 0 }
+    pub fn is_fully_covered(&self) -> bool {
+        self.total_missing == 0
+    }
 
     pub fn summary(&self) -> String {
         let pct = if self.total_functions > 0 {
             (self.total_covered as f32 / self.total_functions as f32) * 100.0
-        } else { 100.0 };
+        } else {
+            100.0
+        };
         format!(
             "{}/{} functions covered ({:.1}%), {}/{} interfaces complete",
             self.total_covered,
@@ -75,13 +84,15 @@ fn parse_browser_full_imports(wit_path: &Path) -> Result<Vec<String>> {
         if trimmed == "}" && in_world {
             break;
         }
-        if !in_world { continue; }
+        if !in_world {
+            continue;
+        }
 
         // Match: `import event-callbacks;`
-        if let Some(cap) = import_re.captures(trimmed) {
-            if let Some(name) = cap.get(1) {
-                imports.push(name.as_str().to_string());
-            }
+        if let Some(cap) = import_re.captures(trimmed)
+            && let Some(name) = cap.get(1)
+        {
+            imports.push(name.as_str().to_string());
         }
     }
 
@@ -112,16 +123,17 @@ fn parse_interface_functions(wit_path: &Path) -> Result<Vec<String>> {
             in_interface = false;
             continue;
         }
-        if !in_interface { continue; }
+        if !in_interface {
+            continue;
+        }
 
         // Match WIT function syntax: `func-name: func(params) -> result;`
-        if let Some(cap) = func_re.captures(trimmed) {
-            if let Some(name) = cap.get(1) {
-                let n = name.as_str();
-                // Skip resource constructors/destructors
-                if !matches!(n, "constructor" | "<clinit>" | "<drop>") {
-                    funcs.push(n.to_string());
-                }
+        if let Some(cap) = func_re.captures(trimmed)
+            && let Some(name) = cap.get(1)
+        {
+            let n = name.as_str();
+            if !matches!(n, "constructor" | "<clinit>" | "<drop>") {
+                funcs.push(n.to_string());
             }
         }
     }
@@ -138,12 +150,12 @@ fn build_wit_index(wit_base: &Path) -> HashMap<String, PathBuf> {
     if let Ok(entries) = std::fs::read_dir(wit_base.join("composed")) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map(|e| e == "wit").unwrap_or(false) {
-                if let Ok(c) = std::fs::read_to_string(&p) {
-                    for cap in iface_re.captures_iter(&c) {
-                        if let Some(name) = cap.get(1) {
-                            index.insert(name.as_str().to_string(), p.clone());
-                        }
+            if p.extension().map(|e| e == "wit").unwrap_or(false)
+                && let Ok(c) = std::fs::read_to_string(&p)
+            {
+                for cap in iface_re.captures_iter(&c) {
+                    if let Some(name) = cap.get(1) {
+                        index.insert(name.as_str().to_string(), p.clone());
                     }
                 }
             }
@@ -154,12 +166,12 @@ fn build_wit_index(wit_base: &Path) -> HashMap<String, PathBuf> {
     if let Ok(entries) = std::fs::read_dir(wit_base.join("handwritten")) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map(|e| e == "wit").unwrap_or(false) {
-                if let Ok(c) = std::fs::read_to_string(&p) {
-                    for cap in iface_re.captures_iter(&c) {
-                        if let Some(name) = cap.get(1) {
-                            index.insert(name.as_str().to_string(), p.clone());
-                        }
+            if p.extension().map(|e| e == "wit").unwrap_or(false)
+                && let Ok(c) = std::fs::read_to_string(&p)
+            {
+                for cap in iface_re.captures_iter(&c) {
+                    if let Some(name) = cap.get(1) {
+                        index.insert(name.as_str().to_string(), p.clone());
                     }
                 }
             }
@@ -170,11 +182,11 @@ fn build_wit_index(wit_base: &Path) -> HashMap<String, PathBuf> {
     if let Ok(entries) = std::fs::read_dir(wit_base.join("generated")) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map(|e| e == "wit").unwrap_or(false) {
-                if let Some(stem) = p.file_stem() {
-                    let name = stem.to_string_lossy().replace('_', "-");
-                    index.insert(name, p);
-                }
+            if p.extension().map(|e| e == "wit").unwrap_or(false)
+                && let Some(stem) = p.file_stem()
+            {
+                let name = stem.to_string_lossy().replace('_', "-");
+                index.insert(name, p);
             }
         }
     }
@@ -184,7 +196,10 @@ fn build_wit_index(wit_base: &Path) -> HashMap<String, PathBuf> {
 
 /// Find the .wit file that defines a given interface name.
 /// Uses pre-built index for O(1) lookup.
-fn find_interface_file<'a>(interface_name: &str, wit_index: &'a HashMap<String, PathBuf>) -> Option<&'a PathBuf> {
+fn find_interface_file<'a>(
+    interface_name: &str,
+    wit_index: &'a HashMap<String, PathBuf>,
+) -> Option<&'a PathBuf> {
     wit_index.get(interface_name)
 }
 
@@ -193,8 +208,7 @@ pub fn check_completeness(
     glue_runtime_path: Option<&Path>,
     glue_src_dir: Option<&Path>,
 ) -> Result<CompletenessReport> {
-    let wit_file = workspace_root
-        .join("packages/browser-worlds/wit/composed/browser-full.wit");
+    let wit_file = workspace_root.join("packages/browser-worlds/wit/composed/browser-full.wit");
     let wit_base = workspace_root.join("packages/browser-worlds/wit");
 
     if !wit_file.exists() {
@@ -207,21 +221,32 @@ pub fn check_completeness(
     // Step 2: Build index of all interface definitions
     eprintln!("[ INFO ] Building WIT file index...");
     let wit_index = build_wit_index(&wit_base);
-    eprintln!("[ INFO ] Indexed {} interfaces from WIT files", wit_index.len());
+    eprintln!(
+        "[ INFO ] Indexed {} interfaces from WIT files",
+        wit_index.len()
+    );
 
     // Step 3: For each imported interface, extract functions
     let mut wit_funcs: Vec<(String, Vec<String>)> = Vec::new();
     for (i, iface_name) in imported_interfaces.iter().enumerate() {
         if i % 100 == 0 {
-            eprintln!("[ INFO ] Processing {}/{}: {}", i + 1, imported_interfaces.len(), iface_name);
+            eprintln!(
+                "[ INFO ] Processing {}/{}: {}",
+                i + 1,
+                imported_interfaces.len(),
+                iface_name
+            );
         }
         match find_interface_file(iface_name, &wit_index) {
             Some(file_path) => {
-                let funcs = parse_interface_functions(&file_path)?;
+                let funcs = parse_interface_functions(file_path)?;
                 wit_funcs.push((iface_name.clone(), funcs));
             }
             None => {
-                eprintln!("[WARN] Could not find WIT file for interface '{}'", iface_name);
+                eprintln!(
+                    "[WARN] Could not find WIT file for interface '{}'",
+                    iface_name
+                );
                 wit_funcs.push((iface_name.clone(), Vec::new()));
             }
         }
@@ -229,13 +254,12 @@ pub fn check_completeness(
 
     // Scan glue implementations
     let default_glue_src = workspace_root.join("packages/browser-glue/src/glue");
-    let default_glue_runtime =
-        workspace_root.join("packages/browser-glue/dist/runtime.js");
+    let default_glue_runtime = workspace_root.join("packages/browser-glue/dist/runtime.js");
 
     let glue_dir = glue_src_dir.unwrap_or(default_glue_src.as_path());
     let runtime_path = glue_runtime_path.unwrap_or(default_glue_runtime.as_path());
 
-    let (mut glue_exports, files_scanned) = scan_glue_exports(&glue_dir, &runtime_path)?;
+    let (mut glue_exports, files_scanned) = scan_glue_exports(glue_dir, runtime_path)?;
 
     // Also add runtime registry exports
     let registry_path = workspace_root.join("packages/browser-glue/src/runtime/registry.ts");
@@ -258,7 +282,7 @@ pub fn check_completeness(
             .next()
             .unwrap_or(iface_name.as_str())
             .rsplit('/')
-            .last()
+            .next_back()
             .unwrap_or(iface_name.as_str())
             .to_string();
 
@@ -305,9 +329,13 @@ fn scan_glue_exports(glue_dir: &Path, runtime_bundle: &Path) -> Result<(HashSet<
     if glue_dir.is_dir() {
         for entry in walkdir::WalkDir::new(glue_dir).sort_by_file_name() {
             let entry = entry?;
-            if !entry.file_type().is_file() { continue; }
+            if !entry.file_type().is_file() {
+                continue;
+            }
             let path = entry.path();
-            if path.extension().map(|e| e != "ts").unwrap_or(true) { continue; }
+            if path.extension().map(|e| e != "ts").unwrap_or(true) {
+                continue;
+            }
             all_exports.extend(extract_ts_exports_from_str(
                 &std::fs::read_to_string(path)
                     .with_context(|| format!("Failed to read {}", path.display()))?,
@@ -355,27 +383,48 @@ fn extract_ts_exports_from_str(content: &str) -> HashSet<String> {
 }
 
 fn is_method_name(s: &str) -> bool {
-    let first = match s.chars().next() { Some(c) => c, None => return false };
-    if !first.is_ascii_lowercase() || s.len() < 2 { return false; }
+    let first = match s.chars().next() {
+        Some(c) => c,
+        None => return false,
+    };
+    if !first.is_ascii_lowercase() || s.len() < 2 {
+        return false;
+    }
     !matches!(
         s,
         "if" | "for"
-            | "while" | "switch"
-            | "catch" | "function"
-            | "class" | "return"
-            | "typeof" | "import"
-            | "export" | "from"
-            | "const" | "let"
-            | "var" | "new"
-            | "throw" | "try"
-            | "else" | "in"
-            | "of" | "do"
-            | "case" | "default"
-            | "break" | "continue"
-            | "yield" | "async"
-            | "await" | "this"
-            | "super" | "null"
-            | "undefined" | "true"
+            | "while"
+            | "switch"
+            | "catch"
+            | "function"
+            | "class"
+            | "return"
+            | "typeof"
+            | "import"
+            | "export"
+            | "from"
+            | "const"
+            | "let"
+            | "var"
+            | "new"
+            | "throw"
+            | "try"
+            | "else"
+            | "in"
+            | "of"
+            | "do"
+            | "case"
+            | "default"
+            | "break"
+            | "continue"
+            | "yield"
+            | "async"
+            | "await"
+            | "this"
+            | "super"
+            | "null"
+            | "undefined"
+            | "true"
             | "false"
     )
 }
@@ -389,14 +438,16 @@ fn extract_js_runtime_exports(content: &str) -> HashSet<String> {
     for cap in obj_re.captures_iter(content) {
         if let Some(prefix) = cap.get(1) {
             // Now find all method assignments in this object
-            let method_re = regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str())).unwrap();
+            let method_re =
+                regex::Regex::new(&format!(r"{}\s*:\s*function\s+(\w+)", prefix.as_str())).unwrap();
             for m in method_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());
                 }
             }
             // Also match shorthand methods: name(params)
-            let short_re = regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str())).unwrap();
+            let short_re =
+                regex::Regex::new(&format!(r"{}\s*\{{\s*(\w+)\s*\(", prefix.as_str())).unwrap();
             for m in short_re.captures_iter(content) {
                 if let Some(name) = m.get(1) {
                     exports.insert(name.as_str().to_string());
@@ -434,15 +485,25 @@ pub fn print_report(report: &CompletenessReport, verbose: bool) {
     );
 
     for iface in &report.interfaces {
-        if iface.is_complete() && !verbose { continue; }
+        if iface.is_complete() && !verbose {
+            continue;
+        }
         let status = if iface.is_complete() { "✅" } else { "❌" };
         println!(
             "  {} {} ({}/{} — {:.0}%)",
-            status, iface.short_name, iface.covered.len(), iface.total_functions, iface.coverage_pct(),
+            status,
+            iface.short_name,
+            iface.covered.len(),
+            iface.total_functions,
+            iface.coverage_pct(),
         );
-        for m in &iface.missing { println!("      ✗  {}()", m); }
+        for m in &iface.missing {
+            println!("      ✗  {}()", m);
+        }
         if verbose && !iface.covered.is_empty() {
-            for c in &iface.covered { println!("      ✓  {}()", c); }
+            for c in &iface.covered {
+                println!("      ✓  {}()", c);
+            }
         }
     }
 

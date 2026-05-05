@@ -3,16 +3,11 @@ use std::sync::LazyLock;
 
 use iso639_enum::{IsoCompat, Language as IsoLang};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum TextDirection {
+    #[default]
     Ltr,
     Rtl,
-}
-
-impl Default for TextDirection {
-    fn default() -> Self {
-        TextDirection::Ltr
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -36,18 +31,48 @@ impl Hash for Language {
 }
 
 impl Language {
-    pub const ENGLISH: Self = Self { iso: IsoLang::Eng, script: ScriptVariant::Default };
-    pub const CHINESE_SIMPLIFIED: Self = Self { iso: IsoLang::Cmn, script: ScriptVariant::Hans };
-    pub const CHINESE_TRADITIONAL: Self = Self { iso: IsoLang::Cmn, script: ScriptVariant::Hant };
-    pub const FRENCH: Self = Self { iso: IsoLang::Fra, script: ScriptVariant::Default };
-    pub const RUSSIAN: Self = Self { iso: IsoLang::Rus, script: ScriptVariant::Default };
-    pub const SPANISH: Self = Self { iso: IsoLang::Spa, script: ScriptVariant::Default };
-    pub const ARABIC: Self = Self { iso: IsoLang::Ara, script: ScriptVariant::Default };
-    pub const JAPANESE: Self = Self { iso: IsoLang::Jpn, script: ScriptVariant::Default };
-    pub const KOREAN: Self = Self { iso: IsoLang::Kor, script: ScriptVariant::Default };
+    pub const ENGLISH: Self = Self {
+        iso: IsoLang::Eng,
+        script: ScriptVariant::Default,
+    };
+    pub const CHINESE_SIMPLIFIED: Self = Self {
+        iso: IsoLang::Cmn,
+        script: ScriptVariant::Hans,
+    };
+    pub const CHINESE_TRADITIONAL: Self = Self {
+        iso: IsoLang::Cmn,
+        script: ScriptVariant::Hant,
+    };
+    pub const FRENCH: Self = Self {
+        iso: IsoLang::Fra,
+        script: ScriptVariant::Default,
+    };
+    pub const RUSSIAN: Self = Self {
+        iso: IsoLang::Rus,
+        script: ScriptVariant::Default,
+    };
+    pub const SPANISH: Self = Self {
+        iso: IsoLang::Spa,
+        script: ScriptVariant::Default,
+    };
+    pub const ARABIC: Self = Self {
+        iso: IsoLang::Ara,
+        script: ScriptVariant::Default,
+    };
+    pub const JAPANESE: Self = Self {
+        iso: IsoLang::Jpn,
+        script: ScriptVariant::Default,
+    };
+    pub const KOREAN: Self = Self {
+        iso: IsoLang::Kor,
+        script: ScriptVariant::Default,
+    };
 
     pub fn new(iso: IsoLang) -> Self {
-        Self { iso, script: ScriptVariant::Default }
+        Self {
+            iso,
+            script: ScriptVariant::Default,
+        }
     }
 
     pub fn with_script(iso: IsoLang, script: ScriptVariant) -> Self {
@@ -66,7 +91,11 @@ impl Language {
         match self.script {
             ScriptVariant::Hans => "zhs".to_string(),
             ScriptVariant::Hant => "zht".to_string(),
-            _ => self.iso.iso639_1().unwrap_or(self.iso.iso639_3()).to_lowercase(),
+            _ => self
+                .iso
+                .iso639_1()
+                .unwrap_or(self.iso.iso639_3())
+                .to_lowercase(),
         }
     }
 
@@ -141,10 +170,10 @@ impl Language {
         match code {
             "en" | "en-US" | "en-us" => return Some(Self::ENGLISH),
             "zhs" | "zh-CHS" | "zh-chs" | "zh-Hans" | "zh-CN" | "zh-cn" => {
-                return Some(Self::CHINESE_SIMPLIFIED)
+                return Some(Self::CHINESE_SIMPLIFIED);
             }
             "zht" | "zh-CHT" | "zh-cht" | "zh-Hant" | "zh-TW" | "zh-tw" => {
-                return Some(Self::CHINESE_TRADITIONAL)
+                return Some(Self::CHINESE_TRADITIONAL);
             }
             "fr" | "fr-FR" | "fr-fr" => return Some(Self::FRENCH),
             "ru" | "ru-RU" | "ru-ru" => return Some(Self::RUSSIAN),

@@ -88,6 +88,7 @@ impl HtmlChunk {
     ///
     /// For content chunks, returns the HTML directly.
     /// For suspense chunks, wraps the content in appropriate script tags.
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         match self {
             HtmlChunk::Content(html) => html.clone(),

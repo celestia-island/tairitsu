@@ -161,7 +161,7 @@ pub fn build_component(
         crate::log_info!(
             "{}",
             crate::fmt_tmpl!(locale().build.package_info,
-                name => wasm_file.file_name().unwrap_or_default().to_string_lossy().to_string(),
+                name => wasm_file.file_name().unwrap_or_default().to_string_lossy(),
                 size => size_str
             )
         );
@@ -246,9 +246,8 @@ fn build_wasm_component(
         message: String,
         location: Option<String>,
     }
-    let diag_entries: std::sync::Arc<
-        std::sync::Mutex<Vec<DiagEntry>>,
-    > = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let diag_entries: std::sync::Arc<std::sync::Mutex<Vec<DiagEntry>>> =
+        std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let entries_clone = diag_entries.clone();
 
     let handle = std::thread::spawn(move || {
@@ -326,14 +325,14 @@ fn build_wasm_component(
                                             })
                                         })
                                 });
-                                if matches!(level.as_str(), "warning" | "error") {
-                                    if let Ok(mut entries) = entries_clone.lock() {
-                                        entries.push(DiagEntry {
-                                            level,
-                                            message: diag_msg,
-                                            location,
-                                        });
-                                    }
+                                if matches!(level.as_str(), "warning" | "error")
+                                    && let Ok(mut entries) = entries_clone.lock()
+                                {
+                                    entries.push(DiagEntry {
+                                        level,
+                                        message: diag_msg,
+                                        location,
+                                    });
                                 }
                             }
                         }
@@ -361,24 +360,26 @@ fn build_wasm_component(
             let n_warn = entries.iter().filter(|e| e.level == "warning").count();
             for entry in &entries {
                 match &entry.location {
-                    Some(loc) => crate::log_progress!(
-                        "{}: {} — {}",
-                        entry.level,
-                        entry.message,
-                        loc
-                    ),
+                    Some(loc) => {
+                        crate::log_progress!("{}: {} — {}", entry.level, entry.message, loc)
+                    }
                     None => crate::log_progress!("{}: {}", entry.level, entry.message),
                 }
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(crate::fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()));
+                parts.push(
+                    crate::fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()),
+                );
             }
             if n_warn > 0 {
                 parts.push(crate::fmt_tmpl!(locale().build.warning_count, n => n_warn.to_string()));
             }
             if !parts.is_empty() {
-                crate::log_progress!("{}", crate::fmt_tmpl!(locale().build.compilation_failed, details => parts.join(", ")));
+                crate::log_progress!(
+                    "{}",
+                    crate::fmt_tmpl!(locale().build.compilation_failed, details => parts.join(", "))
+                );
             }
         }
         let diag_text = diagnostics
@@ -408,23 +409,25 @@ fn build_wasm_component(
         if n_warn > 0 || n_err > 0 {
             for entry in &entries {
                 match &entry.location {
-                    Some(loc) => crate::log_progress!(
-                        "{}: {} — {}",
-                        entry.level,
-                        entry.message,
-                        loc
-                    ),
+                    Some(loc) => {
+                        crate::log_progress!("{}: {} — {}", entry.level, entry.message, loc)
+                    }
                     None => crate::log_progress!("{}: {}", entry.level, entry.message),
                 }
             }
             let mut parts = Vec::new();
             if n_err > 0 {
-                parts.push(crate::fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()));
+                parts.push(
+                    crate::fmt_tmpl!(locale().build.diagnostic_count, n => n_err.to_string()),
+                );
             }
             if n_warn > 0 {
                 parts.push(crate::fmt_tmpl!(locale().build.warning_count, n => n_warn.to_string()));
             }
-            crate::log_progress!("{}", crate::fmt_tmpl!(locale().build.compiled_with, details => parts.join(", ")));
+            crate::log_progress!(
+                "{}",
+                crate::fmt_tmpl!(locale().build.compiled_with, details => parts.join(", "))
+            );
         }
     }
 
@@ -438,7 +441,7 @@ fn build_wasm_component(
 
     if !wasm_path.exists() {
         return Err(crate::TairitsuPackagerError::BuildError(
-            crate::fmt_tmpl!(locale().build.component_not_found, path => wasm_path.display().to_string())
+            crate::fmt_tmpl!(locale().build.component_not_found, path => wasm_path.display().to_string()),
         ));
     }
 
@@ -466,8 +469,7 @@ fn resolve_glue_runtime_bundle(manifest_dir: &std::path::Path) -> crate::Result<
         }
     }
     Err(crate::TairitsuPackagerError::BuildError(
-        "browser-glue runtime bundle (dist/runtime.js) not found in any candidate path"
-            .to_string(),
+        "browser-glue runtime bundle (dist/runtime.js) not found in any candidate path".to_string(),
     ))
 }
 
@@ -631,7 +633,7 @@ fn build_symbol_module_map(
     };
     for entry in entries.flatten() {
         let path = entry.path();
-        if !path.extension().map_or(false, |e| e == "js") {
+        if path.extension().is_none_or(|e| e != "js") {
             continue;
         }
         let Some(module_name) = path.file_stem().and_then(|s| s.to_str()) else {
@@ -663,27 +665,25 @@ fn build_symbol_module_map(
             } else {
                 continue;
             };
-            if let Some(rest) = after_export.strip_prefix(prefix) {
-                if let Some(sym_full) = rest.split_whitespace().next() {
-                    let sym_name = sym_full
-                        .split('(')
-                        .next()
-                        .unwrap_or(sym_full)
-                        .trim()
-                        .to_string();
-                    if !sym_name.is_empty() {
-                        // Check if first param is 'self' — prefer non-self versions
-                        let has_self = rest.contains("(self)") || rest.contains("(self,");
-                        match map.get(&sym_name) {
-                            Some((_other_mod, other_has_self)) => {
-                                // Prefer non-self over self-parameterized versions
-                                if *other_has_self && !has_self {
-                                    map.insert(sym_name, (module_name.to_string(), has_self));
-                                }
-                            }
-                            None => {
+            if let Some(rest) = after_export.strip_prefix(prefix)
+                && let Some(sym_full) = rest.split_whitespace().next()
+            {
+                let sym_name = sym_full
+                    .split('(')
+                    .next()
+                    .unwrap_or(sym_full)
+                    .trim()
+                    .to_string();
+                if !sym_name.is_empty() {
+                    let has_self = rest.contains("(self)") || rest.contains("(self,");
+                    match map.get(&sym_name) {
+                        Some((_other_mod, other_has_self)) => {
+                            if *other_has_self && !has_self {
                                 map.insert(sym_name, (module_name.to_string(), has_self));
                             }
+                        }
+                        None => {
+                            map.insert(sym_name, (module_name.to_string(), has_self));
                         }
                     }
                 }
@@ -808,10 +808,10 @@ fn copy_browser_glue_with_output_dir(
             copied = true;
 
             let top_barrel = dest_glue.join("index.js");
-            if top_barrel.exists() {
-                if let Err(e) = flatten_barrel_exports(&top_barrel) {
-                    crate::log_warn!("Failed to flatten top-level barrel: {}", e);
-                }
+            if top_barrel.exists()
+                && let Err(e) = flatten_barrel_exports(&top_barrel)
+            {
+                crate::log_warn!("Failed to flatten top-level barrel: {}", e);
             }
             break;
         }
@@ -836,10 +836,16 @@ fn copy_static_public_assets_with_output_dir(
     for extra in &config.assets.extra_public_dirs {
         let extra_path = config.manifest_dir.join(extra);
         if extra_path.exists() {
-            crate::log_info!("{}", crate::fmt_tmpl!(locale().build.copying_extra_public, path => extra_path.display().to_string()));
+            crate::log_info!(
+                "{}",
+                crate::fmt_tmpl!(locale().build.copying_extra_public, path => extra_path.display().to_string())
+            );
             copy_dir_contents(&extra_path, output_dir)?;
         } else {
-            crate::log_warn!("{}", crate::fmt_tmpl!(locale().build.extra_public_not_found, path => extra_path.display().to_string()));
+            crate::log_warn!(
+                "{}",
+                crate::fmt_tmpl!(locale().build.extra_public_not_found, path => extra_path.display().to_string())
+            );
         }
     }
 
@@ -876,7 +882,10 @@ fn compile_project_scss_with_output_dir(
 ) -> crate::Result<()> {
     let project_root = &config.manifest_dir;
 
-    crate::log_info!("{}", crate::fmt_tmpl!(locale().build.scss_project_root, path => project_root.display().to_string()));
+    crate::log_info!(
+        "{}",
+        crate::fmt_tmpl!(locale().build.scss_project_root, path => project_root.display().to_string())
+    );
 
     // Use new SCSS configuration system
     let results = crate::styles::compile_scss_with_config(&config.scss, project_root, output_dir)
@@ -886,7 +895,10 @@ fn compile_project_scss_with_output_dir(
 
     // Log compiled files
     for result in results {
-        crate::log_info!("{}", crate::fmt_tmpl!(locale().build.compiled_scss, path => result.output_path.display().to_string()));
+        crate::log_info!(
+            "{}",
+            crate::fmt_tmpl!(locale().build.compiled_scss, path => result.output_path.display().to_string())
+        );
     }
 
     Ok(())
@@ -1064,6 +1076,13 @@ fn try_generate_component_wrapper(
 
     let mut missing_commands = Vec::new();
 
+    let re_import =
+        regex::Regex::new(r"(?:import\s*\{([^}]+)\}\s*from\s*'@tairitsu-glue/([^']*)'\s*;?)")
+            .unwrap();
+    let re_import_d =
+        regex::Regex::new(r#"(?:import\s*\{([^}]+)\}\s*from\s*"@tairitsu-glue/([^"]*)"\s*;?)"#)
+            .unwrap();
+
     for (bin, args) in attempts {
         let command_preview = format!("{} {}", bin, args.join(" "));
         match std::process::Command::new(bin).args(&args).output() {
@@ -1082,25 +1101,13 @@ fn try_generate_component_wrapper(
                             && let Ok(mut content) = std::fs::read_to_string(&js_file)
                         {
                             let original = content.clone();
-                            // Step 1: WIT world names → @tairitsu-glue intermediate
                             content = content
                                 .replace("from 'tairitsu-browser:full/", "from '@tairitsu-glue/");
                             content = content
                                 .replace("from \"tairitsu-browser:full/", "from \"@tairitsu-glue/");
 
-                            // Step 2: All @tairitsu-glue/ imports now route through import map
-                            // (__tairitsu_glue__.js provides all needed interfaces with shared handles)
                             let _import_map_interfaces: std::collections::HashSet<&str> =
                                 [].into_iter().collect();
-
-                            let re_import = regex::Regex::new(
-                                r"(?:import\s*\{([^}]+)\}\s*from\s*'@tairitsu-glue/([^']*)'\s*;?)",
-                            )
-                            .unwrap();
-                            let re_import_d = regex::Regex::new(
-                                r#"(?:import\s*\{([^}]+)\}\s*from\s*"@tairitsu-glue/([^"]*)"\s*;?)"#,
-                            )
-                            .unwrap();
 
                             content = re_import
                                 .replace_all(&content, |caps: &regex::Captures| {
@@ -1790,7 +1797,10 @@ fn generate_component_html_with_output_dir(
             match std::fs::read_to_string(&full_path) {
                 Ok(css_content) => {
                     html = injector.inject_style_into_html(&html, &css_content)?;
-                    crate::log_info!("{}", crate::fmt_tmpl!(locale().build.inlined_css, path => css_path.to_string()));
+                    crate::log_info!(
+                        "{}",
+                        crate::fmt_tmpl!(locale().build.inlined_css, path => css_path.to_string())
+                    );
                 }
                 Err(e) => {
                     crate::log_warn!(
@@ -1939,6 +1949,7 @@ async fn reject_missing_assets(
 }
 
 #[cfg(feature = "dev-server")]
+#[allow(clippy::too_many_arguments)]
 pub async fn dev_server(
     config: &Config,
     port: u16,
@@ -1949,7 +1960,7 @@ pub async fn dev_server(
     debug: bool,
     debug_port: Option<u16>,
 ) -> crate::Result<()> {
-    use axum::{middleware, response::Html, routing::get, Router};
+    use axum::{Router, middleware, response::Html, routing::get};
     use tower_http::services::ServeDir;
 
     if watch {
@@ -1960,68 +1971,76 @@ pub async fn dev_server(
 
     if !crate::daemon::is_daemon() && crate::daemon::is_daemon_running() {
         let pid = crate::daemon::read_pid().unwrap_or(0);
-        crate::log_warn!("{}", crate::fmt_tmpl!(locale().build.daemon_already_running, pid => pid.to_string()));
+        crate::log_warn!(
+            "{}",
+            crate::fmt_tmpl!(locale().build.daemon_already_running, pid => pid.to_string())
+        );
         crate::log_info!("{}", locale().build.daemon_attach_hint);
     }
 
     {
         let probe = std::net::TcpListener::bind(("127.0.0.1", port));
-        if let Err(ref err) = probe {
-            if err.kind() == std::io::ErrorKind::AddrInUse {
-                let owner = crate::daemon::port_owner_info(port);
-                let our_pid = crate::daemon::read_pid().unwrap_or(0);
+        if let Err(ref err) = probe
+            && err.kind() == std::io::ErrorKind::AddrInUse
+        {
+            let owner = crate::daemon::port_owner_info(port);
+            let our_pid = crate::daemon::read_pid().unwrap_or(0);
 
-                if let Some(ref info) = owner {
-                    if info.pid == our_pid && !crate::daemon::is_daemon() {
-                        return Err(crate::TairitsuPackagerError::BuildError(
-                            crate::fmt_tmpl!(locale().dev.port_in_use_daemon, port => port.to_string(), pid => info.pid.to_string())
-                        ));
-                    }
+            if let Some(ref info) = owner {
+                if info.pid == our_pid && !crate::daemon::is_daemon() {
+                    return Err(crate::TairitsuPackagerError::BuildError(
+                        crate::fmt_tmpl!(locale().dev.port_in_use_daemon, port => port.to_string(), pid => info.pid.to_string()),
+                    ));
+                }
 
-                    let is_tairitsu = info.exe_path.as_ref().map(|exe| {
+                let is_tairitsu = info
+                    .exe_path
+                    .as_ref()
+                    .map(|exe| {
                         let exe_str = exe.to_string_lossy().to_lowercase();
                         exe_str.contains("tairitsu")
-                    }).unwrap_or(false);
+                    })
+                    .unwrap_or(false);
 
-                    if is_tairitsu {
-                        if !force {
-                            let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other_daemon, port => port.to_string(), pid => info.pid.to_string());
-                            if let Some(ref exe) = info.exe_path {
-                                msg.push_str(&format!("\n  Executable: {}", exe.display()));
-                            }
-                            msg.push_str(&format!("\n  {}", locale().dev.port_use_force));
-                            return Err(crate::TairitsuPackagerError::BuildError(msg));
+                if is_tairitsu {
+                    if !force {
+                        let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other_daemon, port => port.to_string(), pid => info.pid.to_string());
+                        if let Some(ref exe) = info.exe_path {
+                            msg.push_str(&format!("\n  Executable: {}", exe.display()));
                         }
-
-                        crate::log_warn!(
-                            "{}",
-                            crate::fmt_tmpl!(
-                                locale().build.force_killing_daemon,
-                                pid => info.pid.to_string(),
-                                port => port.to_string()
-                            )
-                        );
-                        crate::daemon::kill_process_by_pid(info.pid);
-                        std::thread::sleep(std::time::Duration::from_millis(500));
-                    }
-                }
-
-                let probe2 = std::net::TcpListener::bind(("127.0.0.1", port));
-                if let Err(ref err2) = probe2 {
-                    if err2.kind() == std::io::ErrorKind::AddrInUse {
-                        let mut msg = crate::fmt_tmpl!(locale().dev.port_in_use_other, port => port.to_string());
-                        if let Some(info) = owner {
-                            msg.push_str(&format!(" (PID {})", info.pid));
-                            if let Some(exe) = info.exe_path {
-                                msg.push_str(&format!("\n  Executable: {}", exe.display()));
-                            }
-                        }
-                        msg.push_str(&format!("\n  {}", locale().dev.port_change_hint));
+                        msg.push_str(&format!("\n  {}", locale().dev.port_use_force));
                         return Err(crate::TairitsuPackagerError::BuildError(msg));
                     }
+
+                    crate::log_warn!(
+                        "{}",
+                        crate::fmt_tmpl!(
+                            locale().build.force_killing_daemon,
+                            pid => info.pid.to_string(),
+                            port => port.to_string()
+                        )
+                    );
+                    crate::daemon::kill_process_by_pid(info.pid);
+                    std::thread::sleep(std::time::Duration::from_millis(500));
                 }
-                drop(probe2);
             }
+
+            let probe2 = std::net::TcpListener::bind(("127.0.0.1", port));
+            if let Err(ref err2) = probe2
+                && err2.kind() == std::io::ErrorKind::AddrInUse
+            {
+                let mut msg =
+                    crate::fmt_tmpl!(locale().dev.port_in_use_other, port => port.to_string());
+                if let Some(info) = owner {
+                    msg.push_str(&format!(" (PID {})", info.pid));
+                    if let Some(exe) = info.exe_path {
+                        msg.push_str(&format!("\n  Executable: {}", exe.display()));
+                    }
+                }
+                msg.push_str(&format!("\n  {}", locale().dev.port_change_hint));
+                return Err(crate::TairitsuPackagerError::BuildError(msg));
+            }
+            drop(probe2);
         }
         drop(probe);
     }
@@ -2029,7 +2048,10 @@ pub async fn dev_server(
     let (reload_tx, _) = tokio::sync::broadcast::channel::<()>(8);
 
     let initial_started = Instant::now();
-    crate::log_progress!("{}", crate::fmt_tmpl!(locale().build.building_component, name => config.package.name.clone()));
+    crate::log_progress!(
+        "{}",
+        crate::fmt_tmpl!(locale().build.building_component, name => config.package.name.clone())
+    );
     match config.build.target.as_str() {
         "component" => build_component(config, false, None, verbose).inspect_err(|e| {
             if crate::daemon::is_daemon() {
@@ -2038,7 +2060,7 @@ pub async fn dev_server(
         })?,
         other => {
             let err = crate::TairitsuPackagerError::BuildError(
-                crate::fmt_tmpl!(locale().build.unknown_build_target, target => other.to_string())
+                crate::fmt_tmpl!(locale().build.unknown_build_target, target => &other),
             );
             if crate::daemon::is_daemon() {
                 let _ = crate::daemon::signal_failed(&err.to_string());
@@ -2067,8 +2089,14 @@ pub async fn dev_server(
         Err(_) => String::from("unknown"),
     };
 
-    crate::log_ok!("{}", crate::fmt_tmpl!(locale().build.initial_build_ok, elapsed => format!("{:.1?}", initial_elapsed)));
-    crate::log_info!("{}", crate::fmt_tmpl!(locale().build.workspace_label, dir => config.manifest_dir.display().to_string()));
+    crate::log_ok!(
+        "{}",
+        crate::fmt_tmpl!(locale().build.initial_build_ok, elapsed => format!("{:.1?}", initial_elapsed))
+    );
+    crate::log_info!(
+        "{}",
+        crate::fmt_tmpl!(locale().build.workspace_label, dir => config.manifest_dir.display().to_string())
+    );
     crate::log_info!(
         "{}",
         crate::fmt_tmpl!(locale().build.package_label, name => config.package.name.clone(), version => config.package.version.clone())
@@ -2129,9 +2157,9 @@ pub async fn dev_server(
     let reload_tx_for_route = reload_tx.clone();
     let dist_state = std::sync::Arc::new(dist_dir.clone());
 
-    #[cfg(feature = "debug-api")]
+    #[cfg(feature = "debug-browser")]
     let debug_state = crate::debug_api::DebugApiState::new(0);
-    #[cfg(feature = "debug-api")]
+    #[cfg(feature = "debug-browser")]
     let debug_state_clone = debug_state.clone();
 
     let app = Router::new()
@@ -2148,9 +2176,7 @@ pub async fn dev_server(
                         tokio_stream::wrappers::BroadcastStream::new(receiver).map(|result| {
                             match result {
                                 Ok(()) => Ok::<_, std::io::Error>(Event::default().data("reload")),
-                                Err(_) => {
-                                    Err(std::io::Error::new(std::io::ErrorKind::Other, "lagged"))
-                                }
+                                Err(_) => Err(std::io::Error::other("lagged")),
                             }
                         });
                     Sse::new(stream)
@@ -2182,19 +2208,40 @@ pub async fn dev_server(
             }),
         );
 
-    #[cfg(feature = "debug-api")]
+    #[cfg(feature = "debug-browser")]
     let app = {
         let app_debug_state = debug_state.clone();
         app.nest(
             "/__tairitsu_debug",
             axum::Router::new()
-                .route("/status", axum::routing::get(crate::debug_api::handle_status))
-                .route("/navigate", axum::routing::post(crate::debug_api::handle_navigate))
-                .route("/snapshot", axum::routing::get(crate::debug_api::handle_snapshot))
-                .route("/click", axum::routing::post(crate::debug_api::handle_click))
-                .route("/evaluate", axum::routing::post(crate::debug_api::handle_evaluate))
-                .route("/screenshot", axum::routing::get(crate::debug_api::handle_screenshot))
-                .route("/console", axum::routing::get(crate::debug_api::handle_console))
+                .route(
+                    "/status",
+                    axum::routing::get(crate::debug_api::handle_status),
+                )
+                .route(
+                    "/navigate",
+                    axum::routing::post(crate::debug_api::handle_navigate),
+                )
+                .route(
+                    "/snapshot",
+                    axum::routing::get(crate::debug_api::handle_snapshot),
+                )
+                .route(
+                    "/click",
+                    axum::routing::post(crate::debug_api::handle_click),
+                )
+                .route(
+                    "/evaluate",
+                    axum::routing::post(crate::debug_api::handle_evaluate),
+                )
+                .route(
+                    "/screenshot",
+                    axum::routing::get(crate::debug_api::handle_screenshot),
+                )
+                .route(
+                    "/console",
+                    axum::routing::get(crate::debug_api::handle_console),
+                )
                 .with_state(app_debug_state),
         )
     };
@@ -2213,7 +2260,8 @@ pub async fn dev_server(
     if debug {
         let cfg = config.clone();
         tokio::spawn(async move {
-            if let Err(e) = crate::debug::start_debug_server(&cfg, actual_port, effective_debug_port).await
+            if let Err(e) =
+                crate::debug::start_debug_server(&cfg, actual_port, effective_debug_port).await
             {
                 crate::log_warn!("Debug API server error: {}", e);
             }
@@ -2224,7 +2272,7 @@ pub async fn dev_server(
         );
     }
 
-    #[cfg(feature = "debug-api")]
+    #[cfg(feature = "debug-browser")]
     {
         debug_state.set_port(actual_port).await;
     }
@@ -2233,7 +2281,7 @@ pub async fn dev_server(
         let _ = crate::daemon::signal_ready(actual_port);
     }
 
-    #[cfg(feature = "debug-api")]
+    #[cfg(feature = "debug-browser")]
     {
         if crate::daemon::is_daemon() {
             let app_url = format!("http://localhost:{}", actual_port);
@@ -2335,7 +2383,11 @@ fn print_status_panel(
 #[cfg(feature = "dev-server")]
 fn format_last_build_line(ok: bool, elapsed: Duration, error_hint: Option<&str>) -> String {
     let b = &locale().build;
-    let status = if ok { b.status_ok.as_str() } else { b.status_fail.as_str() };
+    let status = if ok {
+        b.status_ok.as_str()
+    } else {
+        b.status_fail.as_str()
+    };
     let mut line = format!("{} | {:.1?}", status, elapsed);
     if let Some(hint) = error_hint {
         let display = if hint.len() > 50 { &hint[..50] } else { hint };

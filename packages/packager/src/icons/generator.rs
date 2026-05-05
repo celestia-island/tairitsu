@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_generate_icon_module() {
-        let icons = vec![
+        let icons = [
             IconEntry {
                 name: "account".to_string(),
                 aliases: vec![],

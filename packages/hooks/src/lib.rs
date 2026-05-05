@@ -187,7 +187,8 @@ mod wasm_export {
     }
 
     impl exports::tairitsu::hooks::animation_builder::Guest for HooksExports {
-        fn default_animation_config() -> exports::tairitsu::hooks::animation_builder::AnimationConfig {
+        fn default_animation_config() -> exports::tairitsu::hooks::animation_builder::AnimationConfig
+        {
             let cfg = animation::AnimationConfig::default();
             let easing = convert_easing(&cfg.easing);
             exports::tairitsu::hooks::animation_builder::AnimationConfig {
@@ -206,24 +207,48 @@ mod wasm_export {
     }
 
     impl exports::tairitsu::hooks::async_resource::Guest for HooksExports {
-        fn resource_status_query(resource_id: u64) -> Option<exports::tairitsu::hooks::async_resource::ResourceStatus> {
-            suspense::resource_state(suspense::ResourceId::from(resource_id as usize)).map(|s| match s {
-                suspense::ResourceStatus::Loading => exports::tairitsu::hooks::async_resource::ResourceStatus::Loading,
-                suspense::ResourceStatus::Ready => exports::tairitsu::hooks::async_resource::ResourceStatus::Ready,
-                suspense::ResourceStatus::Error => exports::tairitsu::hooks::async_resource::ResourceStatus::Error,
+        fn resource_status_query(
+            resource_id: u64,
+        ) -> Option<exports::tairitsu::hooks::async_resource::ResourceStatus> {
+            suspense::resource_state(suspense::ResourceId::from(resource_id as usize)).map(|s| {
+                match s {
+                    suspense::ResourceStatus::Loading => {
+                        exports::tairitsu::hooks::async_resource::ResourceStatus::Loading
+                    }
+                    suspense::ResourceStatus::Ready => {
+                        exports::tairitsu::hooks::async_resource::ResourceStatus::Ready
+                    }
+                    suspense::ResourceStatus::Error => {
+                        exports::tairitsu::hooks::async_resource::ResourceStatus::Error
+                    }
+                }
             })
         }
     }
 
-    fn convert_easing(e: &animation::EasingFunction) -> exports::tairitsu::hooks::animation_types::EasingFunction {
+    fn convert_easing(
+        e: &animation::EasingFunction,
+    ) -> exports::tairitsu::hooks::animation_types::EasingFunction {
         match e {
-            animation::EasingFunction::Linear => exports::tairitsu::hooks::animation_types::EasingFunction::Linear,
-            animation::EasingFunction::Ease => exports::tairitsu::hooks::animation_types::EasingFunction::Ease,
-            animation::EasingFunction::EaseIn => exports::tairitsu::hooks::animation_types::EasingFunction::EaseIn,
-            animation::EasingFunction::EaseOut => exports::tairitsu::hooks::animation_types::EasingFunction::EaseOut,
-            animation::EasingFunction::EaseInOut => exports::tairitsu::hooks::animation_types::EasingFunction::EaseInOut,
+            animation::EasingFunction::Linear => {
+                exports::tairitsu::hooks::animation_types::EasingFunction::Linear
+            }
+            animation::EasingFunction::Ease => {
+                exports::tairitsu::hooks::animation_types::EasingFunction::Ease
+            }
+            animation::EasingFunction::EaseIn => {
+                exports::tairitsu::hooks::animation_types::EasingFunction::EaseIn
+            }
+            animation::EasingFunction::EaseOut => {
+                exports::tairitsu::hooks::animation_types::EasingFunction::EaseOut
+            }
+            animation::EasingFunction::EaseInOut => {
+                exports::tairitsu::hooks::animation_types::EasingFunction::EaseInOut
+            }
             animation::EasingFunction::CubicBezier(a, b, c, d) => {
-                exports::tairitsu::hooks::animation_types::EasingFunction::CubicBezier((*a, *b, *c, *d))
+                exports::tairitsu::hooks::animation_types::EasingFunction::CubicBezier((
+                    *a, *b, *c, *d,
+                ))
             }
         }
     }

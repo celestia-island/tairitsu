@@ -58,11 +58,7 @@ fn rgba_distance(a: &Rgba<u8>, b: &Rgba<u8>) -> f32 {
     (dr * dr + dg * dg + db * db + da * da).sqrt() / 510.0
 }
 
-pub fn compare_images(
-    baseline: &Path,
-    actual: &Path,
-    config: &DiffConfig,
-) -> Result<DiffResult> {
+pub fn compare_images(baseline: &Path, actual: &Path, config: &DiffConfig) -> Result<DiffResult> {
     let name = actual
         .file_stem()
         .and_then(|s| s.to_str())
@@ -111,8 +107,8 @@ pub fn compare_images(
                 let inv_alpha = 256u16 - alpha_f;
                 let blended = Rgba([
                     ((ap[0] as u16 * inv_alpha + 255u16 * alpha_f) >> 8) as u8,
-                    ((ap[1] as u16 * inv_alpha + 0u16 * alpha_f) >> 8) as u8,
-                    ((ap[2] as u16 * inv_alpha + 0u16 * alpha_f) >> 8) as u8,
+                    ((ap[1] as u16 * inv_alpha) >> 8) as u8,
+                    ((ap[2] as u16 * inv_alpha) >> 8) as u8,
                     255u8,
                 ]);
                 diff_img.put_pixel(x, y, blended);
@@ -134,7 +130,8 @@ pub fn compare_images(
         let diff_filename = format!("{}_diff.png", name);
         let diff_path = config.output_dir.join(&diff_filename);
         fs::create_dir_all(&config.output_dir)?;
-        diff_img.save(&diff_path)
+        diff_img
+            .save(&diff_path)
             .with_context(|| format!("Failed to save diff image: {}", diff_path.display()))?;
         Some(diff_path.display().to_string())
     } else {
@@ -156,20 +153,18 @@ pub fn compare_images(
 }
 
 pub fn decode_screenshot(base64_data: &str, output: &Path) -> Result<()> {
-    let bytes =
-        base64::Engine::decode(&base64::engine::general_purpose::STANDARD, base64_data)
-            .context("Failed to decode base64 screenshot data")?;
+    let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, base64_data)
+        .context("Failed to decode base64 screenshot data")?;
     fs::create_dir_all(
-        output.parent().context("Output path has no parent directory")?,
+        output
+            .parent()
+            .context("Output path has no parent directory")?,
     )?;
     fs::write(output, bytes)?;
     Ok(())
 }
 
-pub fn run_visual_diff(
-    actual_images: &[PathBuf],
-    config: &DiffConfig,
-) -> Result<DiffReport> {
+pub fn run_visual_diff(actual_images: &[PathBuf], config: &DiffConfig) -> Result<DiffReport> {
     fs::create_dir_all(&config.output_dir)?;
     fs::create_dir_all(&config.baseline_dir)?;
 
@@ -182,9 +177,9 @@ pub fn run_visual_diff(
             .unwrap_or("unknown")
             .to_string();
 
-        let baseline_path = config.baseline_dir.join(
-            actual_path.file_name().context("Missing filename")?,
-        );
+        let baseline_path = config
+            .baseline_dir
+            .join(actual_path.file_name().context("Missing filename")?);
 
         if !baseline_path.exists() {
             results.push(DiffResult {

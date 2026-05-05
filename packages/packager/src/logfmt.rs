@@ -207,11 +207,19 @@ impl LogfmtLayer {
 }
 
 impl<S: tracing::Subscriber> tracing_subscriber::Layer<S> for LogfmtLayer {
-    fn enabled(&self, metadata: &tracing::Metadata<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) -> bool {
+    fn enabled(
+        &self,
+        metadata: &tracing::Metadata<'_>,
+        _ctx: tracing_subscriber::layer::Context<'_, S>,
+    ) -> bool {
         metadata.level() <= &self.max_level
     }
 
-    fn on_event(&self, event: &tracing::Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
+    fn on_event(
+        &self,
+        event: &tracing::Event<'_>,
+        _ctx: tracing_subscriber::layer::Context<'_, S>,
+    ) {
         let mut visitor = EventVisitor(String::new());
         event.record(&mut visitor);
 
@@ -268,8 +276,8 @@ fn enable_ansi() {
     {
         use windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE;
         use windows_sys::Win32::System::Console::{
-            GetConsoleMode, GetStdHandle, SetConsoleMode, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE,
-            ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING, GetConsoleMode, GetStdHandle, STD_ERROR_HANDLE,
+            STD_OUTPUT_HANDLE, SetConsoleMode,
         };
         unsafe {
             for handle_id in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE] {

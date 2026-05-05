@@ -19,7 +19,9 @@ mod fetcher;
 mod hooks;
 pub mod http_fetcher;
 
-pub use hooks::{use_fetch, use_fetch_json, use_fetch_json_with_fetcher, use_fetch_with_fetcher, use_lazy_fetch};
+pub use hooks::{
+    use_fetch, use_fetch_json, use_fetch_json_with_fetcher, use_fetch_with_fetcher, use_lazy_fetch,
+};
 
 /// A resource that represents the state of an async data fetch
 ///

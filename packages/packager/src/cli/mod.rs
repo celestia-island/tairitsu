@@ -391,7 +391,9 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
 
     if cli.daemon && !daemon::is_daemon() && !cli.dry_run {
         // SAFETY: single-threaded at this point
-        unsafe { std::env::set_var("TAIRITSU_LOG_TS", "1"); }
+        unsafe {
+            std::env::set_var("TAIRITSU_LOG_TS", "1");
+        }
         let was_running = daemon::is_daemon_running();
         if was_running {
             crate::log_progress!("Restarting daemon...");
@@ -442,11 +444,11 @@ pub fn handle_sync_daemon() -> Option<crate::Result<()>> {
 }
 
 pub fn run_tokio() {
-    if daemon::is_daemon() {
-        if let Err(e) = daemon::daemonize_self() {
-            let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
-            std::process::exit(1);
-        }
+    if daemon::is_daemon()
+        && let Err(e) = daemon::daemonize_self()
+    {
+        let _ = daemon::signal_failed(&format!("daemonize failed: {}", e));
+        std::process::exit(1);
     }
 
     #[tokio::main]
@@ -592,7 +594,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             if ssr {
                 #[cfg(feature = "ssr")]
                 {
-crate::log_info!("Starting SSR development server...");
+                    crate::log_info!("Starting SSR development server...");
                     let port = port.unwrap_or(3000);
                     crate::ssr::ssr_dev_server(&config, port, open, watch).await?;
                 }
@@ -608,7 +610,17 @@ crate::log_info!("Starting SSR development server...");
                 let port = port.unwrap_or(config.dev.port);
                 #[cfg(feature = "dev-server")]
                 {
-                    crate::wasm::dev_server(&config, port, open, watch, cli.force, cli.verbose > 0, debug, debug_port).await?;
+                    crate::wasm::dev_server(
+                        &config,
+                        port,
+                        open,
+                        watch,
+                        cli.force,
+                        cli.verbose > 0,
+                        debug,
+                        debug_port,
+                    )
+                    .await?;
                 }
                 #[cfg(not(feature = "dev-server"))]
                 {
@@ -703,9 +715,16 @@ crate::log_info!("Starting SSR development server...");
             WitCommands::List => {
                 crate::wit_cmd::cmd_list(&manifest_path)?;
             }
-            WitCommands::CheckCompleteness { verbose, glue_src, glue_runtime } => {
+            WitCommands::CheckCompleteness {
+                verbose,
+                glue_src,
+                glue_runtime,
+            } => {
                 let start_path = if manifest_path.is_file() {
-                    manifest_path.parent().map(|p| p.to_path_buf()).unwrap_or(manifest_path)
+                    manifest_path
+                        .parent()
+                        .map(|p| p.to_path_buf())
+                        .unwrap_or(manifest_path)
                 } else {
                     manifest_path.clone()
                 };
@@ -894,7 +913,7 @@ crate::log_info!("Starting SSR development server...");
                     std::process::exit(1);
                 }
             }
-        },
+        }
         #[allow(unused_variables)]
         Some(Commands::Mcp { url }) => {
             let config = crate::mcp::McpConfig {
@@ -1062,7 +1081,10 @@ crate::log_info!("Starting SSR development server...");
                         generate_html: !no_report,
                         fail_on_diff: true,
                     };
-                    crate::log_info!("Running visual diff (tolerance: {:.1}%)...", tolerance * 100.0);
+                    crate::log_info!(
+                        "Running visual diff (tolerance: {:.1}%)...",
+                        tolerance * 100.0
+                    );
                     let report = crate::visual_diff::run_visual_diff(&images, &config)?;
 
                     crate::log_info!(
@@ -1151,8 +1173,16 @@ crate::log_info!("Starting SSR development server...");
                     crate::log_info!("Running event bridge tests...");
                     let client = reqwest::blocking::Client::new();
                     let event_pages = vec![
-                        PageSpec { url: "/", name: "home", interactions: &[] },
-                        PageSpec { url: "/event-test", name: "event_test", interactions: &[] },
+                        PageSpec {
+                            url: "/",
+                            name: "home",
+                            interactions: &[],
+                        },
+                        PageSpec {
+                            url: "/event-test",
+                            name: "event_test",
+                            interactions: &[],
+                        },
                     ];
                     let results = crate::test_runner::run_events(&client, &url, &event_pages);
                     for r in &results {

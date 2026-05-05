@@ -237,7 +237,7 @@ fn test_large_dom() {
         let child = dom.create_element("div", None);
         dom.get_node_mut(child)
             .unwrap()
-            .set_attribute("data-index", &i.to_string());
+            .set_attribute("data-index", i.to_string());
         dom.append_child(root, child).unwrap();
     }
 
@@ -255,7 +255,7 @@ fn test_deep_dom() {
         let child = dom.create_element("div", None);
         dom.get_node_mut(child)
             .unwrap()
-            .set_attribute("data-depth", &i.to_string());
+            .set_attribute("data-depth", i.to_string());
         dom.append_child(parent, child).unwrap();
         parent = child;
     }

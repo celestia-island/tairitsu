@@ -56,13 +56,18 @@ fn client() -> reqwest::blocking::Client {
         .expect("reqwest client")
 }
 
-fn api_post(client: &reqwest::blocking::Client, base_url: &str, path: &str, body: &serde_json::Value) -> Result<String> {
+fn api_post(
+    client: &reqwest::blocking::Client,
+    base_url: &str,
+    path: &str,
+    body: &serde_json::Value,
+) -> Result<String> {
     let resp = client
         .post(format!("{}{}", base_url, path))
         .json(body)
         .send()
         .context("debug API request failed")?;
-    Ok(resp.text().context("reading response body")?)
+    resp.text().context("reading response body")
 }
 
 fn api_get(client: &reqwest::blocking::Client, base_url: &str, path: &str) -> Result<String> {
@@ -70,7 +75,7 @@ fn api_get(client: &reqwest::blocking::Client, base_url: &str, path: &str) -> Re
         .get(format!("{}{}", base_url, path))
         .send()
         .context("debug API request failed")?;
-    Ok(resp.text().context("reading response body")?)
+    resp.text().context("reading response body")
 }
 
 fn check_health(client: &reqwest::blocking::Client, base_url: &str) -> Result<()> {
@@ -83,7 +88,12 @@ fn check_health(client: &reqwest::blocking::Client, base_url: &str) -> Result<()
 }
 
 fn navigate(client: &reqwest::blocking::Client, base_url: &str, url: &str) -> Result<()> {
-    let text = api_post(client, base_url, "/navigate", &serde_json::json!({ "url": url }))?;
+    let text = api_post(
+        client,
+        base_url,
+        "/navigate",
+        &serde_json::json!({ "url": url }),
+    )?;
     let v: ApiResp = serde_json::from_str(&text)?;
     if !v.ok {
         anyhow::bail!("navigate {} failed: {:?}", url, v.error);
@@ -92,8 +102,17 @@ fn navigate(client: &reqwest::blocking::Client, base_url: &str, url: &str) -> Re
     Ok(())
 }
 
-fn evaluate(client: &reqwest::blocking::Client, base_url: &str, js: &str) -> Result<serde_json::Value> {
-    let text = api_post(client, base_url, "/evaluate", &serde_json::json!({ "expression": js, "await_promise": false }))?;
+fn evaluate(
+    client: &reqwest::blocking::Client,
+    base_url: &str,
+    js: &str,
+) -> Result<serde_json::Value> {
+    let text = api_post(
+        client,
+        base_url,
+        "/evaluate",
+        &serde_json::json!({ "expression": js, "await_promise": false }),
+    )?;
     let v: serde_json::Value = serde_json::from_str(&text)?;
     if v["ok"].as_bool() != Some(true) {
         anyhow::bail!("evaluate failed: {}", v);
@@ -102,7 +121,12 @@ fn evaluate(client: &reqwest::blocking::Client, base_url: &str, js: &str) -> Res
 }
 
 fn click(client: &reqwest::blocking::Client, base_url: &str, selector: &str) -> Result<()> {
-    let text = api_post(client, base_url, "/click", &serde_json::json!({ "selector": selector }))?;
+    let text = api_post(
+        client,
+        base_url,
+        "/click",
+        &serde_json::json!({ "selector": selector }),
+    )?;
     let v: ApiResp = serde_json::from_str(&text)?;
     if !v.ok {
         anyhow::bail!("click {} failed: {:?}", selector, v.error);
@@ -112,17 +136,28 @@ fn click(client: &reqwest::blocking::Client, base_url: &str, selector: &str) -> 
 }
 
 fn screenshot(client: &reqwest::blocking::Client, base_url: &str) -> Result<image::DynamicImage> {
-    let text = api_post(client, base_url, "/screenshot", &serde_json::json!({ "full_page": false }))?;
+    let text = api_post(
+        client,
+        base_url,
+        "/screenshot",
+        &serde_json::json!({ "full_page": false }),
+    )?;
     let v: serde_json::Value = serde_json::from_str(&text)?;
     if v["ok"].as_bool() != Some(true) {
         anyhow::bail!("screenshot failed: {}", v);
     }
     let b64 = v["data"]["data"].as_str().context("missing base64 data")?;
-    let bytes = base64::engine::general_purpose::STANDARD.decode(b64).context("base64 decode")?;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(b64)
+        .context("base64 decode")?;
     image::load_from_memory(&bytes).context("png decode")
 }
 
-fn compare_images(baseline: &image::DynamicImage, actual: &image::DynamicImage, tolerance: f32) -> (bool, f32, u64, u64) {
+fn compare_images(
+    baseline: &image::DynamicImage,
+    actual: &image::DynamicImage,
+    tolerance: f32,
+) -> (bool, f32, u64, u64) {
     use image::GenericImageView;
     let (bw, bh) = baseline.dimensions();
     let (aw, ah) = actual.dimensions();
@@ -140,7 +175,11 @@ fn compare_images(baseline: &image::DynamicImage, actual: &image::DynamicImage, 
             }
         }
     }
-    let ratio = if total > 0 { diff as f32 / total as f32 } else { 0.0 };
+    let ratio = if total > 0 {
+        diff as f32 / total as f32
+    } else {
+        0.0
+    };
     (ratio <= tolerance, ratio, diff, total)
 }
 
@@ -151,18 +190,31 @@ pub fn run_tests(config: &TestConfig) -> Result<TestReport> {
     std::fs::create_dir_all(&config.baseline_dir)?;
     std::fs::create_dir_all(&config.actual_dir)?;
 
-    let mut report = TestReport { total: 0, passed: 0, failed: 0, results: Vec::new() };
+    let mut report = TestReport {
+        total: 0,
+        passed: 0,
+        failed: 0,
+        results: Vec::new(),
+    };
 
     for page in &config.pages {
         report.total += 1;
         match run_page(&client, config, page) {
             Ok(detail) => {
                 report.passed += 1;
-                report.results.push(PageResult { name: page.name.to_string(), passed: true, detail });
+                report.results.push(PageResult {
+                    name: page.name.to_string(),
+                    passed: true,
+                    detail,
+                });
             }
             Err(e) => {
                 report.failed += 1;
-                report.results.push(PageResult { name: page.name.to_string(), passed: false, detail: format!("{}", e) });
+                report.results.push(PageResult {
+                    name: page.name.to_string(),
+                    passed: false,
+                    detail: format!("{}", e),
+                });
             }
         }
     }
@@ -206,27 +258,56 @@ fn run_page(
         let _ = screenshot(client, &config.base_url);
     }
 
-    Ok(format!("PASS ({:.4}% diff, {}/{})", ratio * 100.0, diff, total))
+    Ok(format!(
+        "PASS ({:.4}% diff, {}/{})",
+        ratio * 100.0,
+        diff,
+        total
+    ))
 }
 
-pub fn run_events(client: &reqwest::blocking::Client, base_url: &str, pages: &[PageSpec]) -> Vec<PageResult> {
+pub fn run_events(
+    client: &reqwest::blocking::Client,
+    base_url: &str,
+    pages: &[PageSpec],
+) -> Vec<PageResult> {
     let mut results = Vec::new();
     for page in pages {
         if let Err(e) = navigate(client, base_url, page.url) {
-            results.push(PageResult { name: format!("{}: navigate", page.name), passed: false, detail: format!("{}", e) });
+            results.push(PageResult {
+                name: format!("{}: navigate", page.name),
+                passed: false,
+                detail: format!("{}", e),
+            });
             continue;
         }
 
-        let check = evaluate(client, base_url, "document.getElementById('ts-app') !== null");
+        let check = evaluate(
+            client,
+            base_url,
+            "document.getElementById('ts-app') !== null",
+        );
         match check {
-            Ok(v) if v == serde_json::Value::Bool(true) => {
-                results.push(PageResult { name: format!("{}: app-mount", page.name), passed: true, detail: "ok".into() });
+            Ok(serde_json::Value::Bool(true)) => {
+                results.push(PageResult {
+                    name: format!("{}: app-mount", page.name),
+                    passed: true,
+                    detail: "ok".into(),
+                });
             }
             Ok(v) => {
-                results.push(PageResult { name: format!("{}: app-mount", page.name), passed: false, detail: format!("ts-app not mounted: {:?}", v) });
+                results.push(PageResult {
+                    name: format!("{}: app-mount", page.name),
+                    passed: false,
+                    detail: format!("ts-app not mounted: {:?}", v),
+                });
             }
             Err(e) => {
-                results.push(PageResult { name: format!("{}: app-mount", page.name), passed: false, detail: format!("{}", e) });
+                results.push(PageResult {
+                    name: format!("{}: app-mount", page.name),
+                    passed: false,
+                    detail: format!("{}", e),
+                });
             }
         }
     }

@@ -11,7 +11,7 @@ use std::{
 
 use tracing::trace;
 
-use crate::{platform::Platform, VNode};
+use crate::{VNode, platform::Platform};
 
 /// Global scheduler ID counter
 static NEXT_SCHEDULER_ID: AtomicUsize = AtomicUsize::new(1);
@@ -97,8 +97,7 @@ impl<P: Platform> Scheduler<P> {
             component.root_element = Some(element);
             trace!(
                 "Scheduler {}: Set root element for component {}",
-                inner.id,
-                component_id
+                inner.id, component_id
             );
         }
     }
@@ -110,8 +109,7 @@ impl<P: Platform> Scheduler<P> {
             component.render_fn = Some(render_fn);
             trace!(
                 "Scheduler {}: Set render function for component {}",
-                inner.id,
-                component_id
+                inner.id, component_id
             );
         }
     }
@@ -123,8 +121,7 @@ impl<P: Platform> Scheduler<P> {
             component.dirty = true;
             trace!(
                 "Scheduler {}: Marked component {} as dirty",
-                inner.id,
-                component_id
+                inner.id, component_id
             );
         }
         drop(inner);
@@ -182,8 +179,7 @@ impl<P: Platform> Scheduler<P> {
 
         trace!(
             "Scheduler {}: Scheduled render with rAF id {}",
-            inner.id,
-            raf_id
+            inner.id, raf_id
         );
     }
 
@@ -197,8 +193,7 @@ impl<P: Platform> Scheduler<P> {
                     None => {
                         trace!(
                             "Scheduler {}: Component {} has no render function, skipping",
-                            inner_ref.id,
-                            component_id
+                            inner_ref.id, component_id
                         );
                         drop(inner_ref);
                         let mut inner_mut = inner.borrow_mut();
@@ -234,16 +229,14 @@ impl<P: Platform> Scheduler<P> {
             } else {
                 trace!(
                     "Scheduler {}: Initial render for component {}",
-                    scheduler_id,
-                    component_id
+                    scheduler_id, component_id
                 );
             }
 
             component.dirty = false;
             trace!(
                 "Scheduler {}: Rendered component {}",
-                scheduler_id,
-                component_id
+                scheduler_id, component_id
             );
         }
     }
@@ -280,8 +273,7 @@ impl<P: Platform> Scheduler<P> {
                     // Initial render - mount the VNode
                     trace!(
                         "Scheduler {}: Initial render for component {}",
-                        inner.id,
-                        component_id
+                        inner.id, component_id
                     );
                 }
             }

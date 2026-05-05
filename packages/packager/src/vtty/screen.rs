@@ -13,7 +13,9 @@ struct Cell {
 }
 
 impl Default for Cell {
-    fn default() -> Self { Self { ch: ' ' } }
+    fn default() -> Self {
+        Self { ch: ' ' }
+    }
 }
 
 pub struct Vt100Screen {
@@ -41,10 +43,13 @@ impl Vt100Screen {
         }
     }
 
+    #[allow(clippy::needless_range_loop)]
     pub fn resize(&mut self, cols: usize, rows: usize) {
         let mut ng = vec![vec![Cell::default(); cols]; rows];
         for r in 0..rows.min(self.rows) {
-            for c in 0..cols.min(self.cols) { ng[r][c] = self.grid[r][c].clone(); }
+            for c in 0..cols.min(self.cols) {
+                ng[r][c] = self.grid[r][c].clone();
+            }
         }
         self.grid = ng;
         self.cols = cols;
@@ -59,42 +64,73 @@ impl Vt100Screen {
     }
 
     pub fn get_text(&self) -> String {
-        let lines: Vec<String> = self.grid.iter().map(|row| {
-            row.iter().map(|c| c.ch).collect::<String>().trim_end().to_string()
-        }).collect();
+        let lines: Vec<String> = self
+            .grid
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|c| c.ch)
+                    .collect::<String>()
+                    .trim_end()
+                    .to_string()
+            })
+            .collect();
         let mut out = lines.clone();
-        while out.last().map(|l| l.is_empty()).unwrap_or(false) { out.pop(); }
+        while out.last().map(|l| l.is_empty()).unwrap_or(false) {
+            out.pop();
+        }
         out.join("\n")
     }
 
     pub fn get_line(&self, row: usize) -> String {
-        if row >= self.rows { return String::new(); }
-        self.grid[row].iter().map(|c| c.ch).collect::<String>().trim_end().to_string()
+        if row >= self.rows {
+            return String::new();
+        }
+        self.grid[row]
+            .iter()
+            .map(|c| c.ch)
+            .collect::<String>()
+            .trim_end()
+            .to_string()
     }
 
     pub fn find_text(&self, pattern: &str) -> Vec<(usize, usize)> {
         let mut r = Vec::new();
         for (i, row) in self.grid.iter().enumerate() {
             let line: String = row.iter().map(|c| c.ch).collect();
-            if let Some(pos) = line.find(pattern) { r.push((i, pos)); }
+            if let Some(pos) = line.find(pattern) {
+                r.push((i, pos));
+            }
         }
         r
     }
 
-    pub fn line_count(&self) -> usize { self.rows }
-    pub fn cols_count(&self) -> usize { self.cols }
+    pub fn line_count(&self) -> usize {
+        self.rows
+    }
+    pub fn cols_count(&self) -> usize {
+        self.cols
+    }
 
     fn scroll_up(&mut self, n: usize) {
-        for _ in 0..n { self.grid.remove(0); self.grid.push(vec![Cell::default(); self.cols]); }
+        for _ in 0..n {
+            self.grid.remove(0);
+            self.grid.push(vec![Cell::default(); self.cols]);
+        }
     }
 
     fn ensure_cursor_in_bounds(&mut self) {
         if self.cursor_col >= self.cols {
-            self.cursor_col = 0; self.cursor_row += 1;
-            if self.cursor_row >= self.rows { self.scroll_up(1); self.cursor_row = self.rows - 1; }
+            self.cursor_col = 0;
+            self.cursor_row += 1;
+            if self.cursor_row >= self.rows {
+                self.scroll_up(1);
+                self.cursor_row = self.rows - 1;
+            }
         }
         if self.cursor_row >= self.rows {
-            self.scroll_up(self.cursor_row - self.rows + 1); self.cursor_row = self.rows - 1;
+            self.scroll_up(self.cursor_row - self.rows + 1);
+            self.cursor_row = self.rows - 1;
         }
     }
 }
@@ -111,9 +147,22 @@ impl Perform for Vt100Screen {
     fn execute(&mut self, byte: u8) {
         match byte {
             0x0D => self.cursor_col = 0,
-            0x0A => { self.cursor_row += 1; if self.cursor_row >= self.rows { self.scroll_up(1); self.cursor_row = self.rows - 1; } },
-            0x08 => { if self.cursor_col > 0 { self.cursor_col -= 1; } },
-            0x09 => { self.cursor_col = (self.cursor_col + 8) & !7; if self.cursor_col >= self.cols { self.cursor_col = self.cols - 1; } },
+            0x0A => {
+                self.cursor_row += 1;
+                if self.cursor_row >= self.rows {
+                    self.scroll_up(1);
+                    self.cursor_row = self.rows - 1;
+                }
+            }
+            0x08 if self.cursor_col > 0 => {
+                self.cursor_col -= 1;
+            }
+            0x09 => {
+                self.cursor_col = (self.cursor_col + 8) & !7;
+                if self.cursor_col >= self.cols {
+                    self.cursor_col = self.cols - 1;
+                }
+            }
             _ => {}
         }
     }
@@ -127,7 +176,9 @@ impl Perform for Vt100Screen {
         let pv: Vec<u16> = params.iter().flat_map(|p| p.iter().copied()).collect();
         let p = |i: usize| -> u16 { pv.get(i).copied().unwrap_or(0) };
         let p1 = |i: usize| -> u16 { pv.get(i).copied().unwrap_or(1).max(1) };
-        if !intermediates.is_empty() { return; }
+        if !intermediates.is_empty() {
+            return;
+        }
         match action {
             'A' => self.cursor_row = self.cursor_row.saturating_sub(p1(0) as usize),
             'B' => self.cursor_row = (self.cursor_row + p1(0) as usize).min(self.rows - 1),
@@ -139,20 +190,54 @@ impl Perform for Vt100Screen {
             }
             'J' => match p(0) {
                 0 => {
-                    for c in self.cursor_col..self.cols { self.grid[self.cursor_row][c] = Cell::default(); }
-                    for r in (self.cursor_row + 1)..self.rows { for c in 0..self.cols { self.grid[r][c] = Cell::default(); } }
+                    for c in self.cursor_col..self.cols {
+                        self.grid[self.cursor_row][c] = Cell::default();
+                    }
+                    for r in (self.cursor_row + 1)..self.rows {
+                        for c in 0..self.cols {
+                            self.grid[r][c] = Cell::default();
+                        }
+                    }
                 }
-                2 => { self.grid.clear(); self.grid.resize(self.rows, vec![Cell::default(); self.cols]); }
+                2 => {
+                    self.grid.clear();
+                    self.grid
+                        .resize(self.rows, vec![Cell::default(); self.cols]);
+                }
                 _ => {}
-            }
+            },
             'K' => match p(0) {
-                0 => { for c in self.cursor_col..self.cols { self.grid[self.cursor_row][c] = Cell::default(); } }
-                2 => { for c in 0..self.cols { self.grid[self.cursor_row][c] = Cell::default(); } }
+                0 => {
+                    for c in self.cursor_col..self.cols {
+                        self.grid[self.cursor_row][c] = Cell::default();
+                    }
+                }
+                2 => {
+                    for c in 0..self.cols {
+                        self.grid[self.cursor_row][c] = Cell::default();
+                    }
+                }
                 _ => {}
+            },
+            'm' => {
+                for &v in &pv {
+                    match v {
+                        0 => self.attrs = CellAttrs::default(),
+                        1 => self.attrs.bold = true,
+                        3 => self.attrs.italic = true,
+                        4 => self.attrs.underline = true,
+                        _ => {}
+                    }
+                }
             }
-            'm' => { for &v in &pv { match v { 0 => self.attrs = CellAttrs::default(), 1 => self.attrs.bold = true, 3 => self.attrs.italic = true, 4 => self.attrs.underline = true, _ => {} } } }
-            's' => { self.saved_row = self.cursor_row; self.saved_col = self.cursor_col; }
-            'u' => { self.cursor_row = self.saved_row; self.cursor_col = self.saved_col; }
+            's' => {
+                self.saved_row = self.cursor_row;
+                self.saved_col = self.cursor_col;
+            }
+            'u' => {
+                self.cursor_row = self.saved_row;
+                self.cursor_col = self.saved_col;
+            }
             'S' => self.scroll_up(p1(0) as usize),
             _ => {}
         }

@@ -32,7 +32,7 @@
 
 use std::collections::HashMap;
 
-use tairitsu_hooks::{consume_context, provide_context, use_context, Context};
+use tairitsu_hooks::{Context, consume_context, provide_context, use_context};
 
 use crate::i18n::language::Language;
 
@@ -73,17 +73,16 @@ impl I18nState {
     /// Key format: dot-separated path, e.g. `"common.button.submit"`.
     /// Returns `None` if the key is not found in either current or fallback locale.
     pub fn t(&self, key: &str) -> Option<&str> {
-        if let Some(map) = self.translations.get(&self.current) {
-            if let Some(value) = map.get(key) {
-                return Some(value.as_str());
-            }
+        if let Some(map) = self.translations.get(&self.current)
+            && let Some(value) = map.get(key)
+        {
+            return Some(value.as_str());
         }
-        if self.current != self.fallback {
-            if let Some(map) = self.translations.get(&self.fallback) {
-                if let Some(value) = map.get(key) {
-                    return Some(value.as_str());
-                }
-            }
+        if self.current != self.fallback
+            && let Some(map) = self.translations.get(&self.fallback)
+            && let Some(value) = map.get(key)
+        {
+            return Some(value.as_str());
         }
         None
     }

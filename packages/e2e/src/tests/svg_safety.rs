@@ -58,7 +58,10 @@ impl SvgSafetyTests {
 
         let ret = driver.execute(script, vec![]).await?;
         let json = ret.json();
-        let passed = json.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+        let passed = json
+            .get("passed")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let details = json
             .get("details")
             .and_then(|v| v.as_str())
@@ -71,7 +74,10 @@ impl SvgSafetyTests {
             TestStatus::Failure
         };
         let message = if passed {
-            format!("Script tags successfully stripped, safe elements preserved: {}", details)
+            format!(
+                "Script tags successfully stripped, safe elements preserved: {}",
+                details
+            )
         } else {
             format!("Script tag sanitization failed: {}", details)
         };
@@ -141,7 +147,10 @@ impl SvgSafetyTests {
 
         let ret = driver.execute(script, vec![]).await?;
         let json = ret.json();
-        let passed = json.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+        let passed = json
+            .get("passed")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let details = json
             .get("details")
             .and_then(|v| v.as_str())
@@ -224,7 +233,10 @@ impl SvgSafetyTests {
 
         let ret = driver.execute(script, vec![]).await?;
         let json = ret.json();
-        let passed = json.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+        let passed = json
+            .get("passed")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let details = json
             .get("details")
             .and_then(|v| v.as_str())
@@ -319,7 +331,10 @@ impl SvgSafetyTests {
 
         let ret = driver.execute(script, vec![]).await?;
         let json = ret.json();
-        let passed = json.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
+        let passed = json
+            .get("passed")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let details = json
             .get("details")
             .and_then(|v| v.as_str())
@@ -391,7 +406,10 @@ impl Test for SvgSafetyTests {
                 Ok(r) => results.push(r),
                 Err(e) => {
                     tracing::error!("Safe content preservation test error: {}", e);
-                    results.push(TestResult::error("Safe Content Preservation", &e.to_string()));
+                    results.push(TestResult::error(
+                        "Safe Content Preservation",
+                        &e.to_string(),
+                    ));
                 }
             }
 

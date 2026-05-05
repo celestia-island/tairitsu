@@ -2,6 +2,9 @@
 
 use std::{cell::RefCell, rc::Rc};
 
+#[cfg(feature = "data-fetcher")]
+use std::sync::Arc;
+
 use tairitsu_vdom::runtime;
 
 use super::{Fetcher, Resource, http_fetcher::HttpFetcher};
@@ -211,6 +214,7 @@ where
     F: Fn(&[u8]) -> Result<T, String> + Clone + Send + 'static,
 {
     let state = Rc::new(RefCell::new(Resource::Loading));
+    #[allow(unused_variables)]
     let state_clone = Rc::clone(&state);
     let url = url.to_string();
     let component_id = runtime::use_component(tairitsu_vdom::VNode::empty);

@@ -3,16 +3,16 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use axum::{
+    Router,
     extract::{Json, Query, State},
     http::StatusCode,
     response::{IntoResponse, Json as ResponseJson},
     routing::{delete, get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
-use tokio::sync::{mpsc, oneshot, RwLock};
-use tower_http::cors::{Any, CorsLayer};
+use tokio::sync::{RwLock, mpsc, oneshot};
 use tower_http::compression::CompressionLayer;
+use tower_http::cors::{Any, CorsLayer};
 
 use crate::config::Config;
 
@@ -31,102 +31,226 @@ struct ApiResponse<T: Serialize> {
 }
 
 impl<T: Serialize> ApiResponse<T> {
-    fn ok(data: T) -> Self { Self { ok: true, data: Some(data), error: None } }
-    fn err(msg: impl Into<String>) -> Self { Self { ok: false, data: None, error: Some(msg.into()) } }
+    fn ok(data: T) -> Self {
+        Self {
+            ok: true,
+            data: Some(data),
+            error: None,
+        }
+    }
+    fn err(msg: impl Into<String>) -> Self {
+        Self {
+            ok: false,
+            data: None,
+            error: Some(msg.into()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct HealthResponse { status: String, version: String, api_version: String, uptime_secs: u64 }
+struct HealthResponse {
+    status: String,
+    version: String,
+    api_version: String,
+    uptime_secs: u64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct InfoResponse {
-    version: String, api_version: String, dev_port: u16, debug_port: u16,
-    dist_dir: String, package_name: String, pid: u32,
-    started_at_iso: String, uptime_secs: u64,
-    browser_connected: bool, browser_engine: String, viewport: [u32; 2],
+    version: String,
+    api_version: String,
+    dev_port: u16,
+    debug_port: u16,
+    dist_dir: String,
+    package_name: String,
+    pid: u32,
+    started_at_iso: String,
+    uptime_secs: u64,
+    browser_connected: bool,
+    browser_engine: String,
+    viewport: [u32; 2],
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct NavigateRequest { url: String, wait_for: Option<String> }
+struct NavigateRequest {
+    url: String,
+    wait_for: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct NavigateResponse { url: String, title: String }
+struct NavigateResponse {
+    url: String,
+    title: String,
+}
 
 #[derive(Debug, Clone, Deserialize, Default)]
 #[allow(dead_code)]
-struct ScreenshotParams { selector: Option<String>, full_page: Option<bool>, format: Option<String> }
+struct ScreenshotParams {
+    selector: Option<String>,
+    full_page: Option<bool>,
+    format: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ScreenshotResponse { data: String, mime_type: String, width: u32, height: u32 }
+struct ScreenshotResponse {
+    data: String,
+    mime_type: String,
+    width: u32,
+    height: u32,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[allow(dead_code)]
-struct ClickRequest { selector: String, button: Option<String>, modifiers: Option<Vec<String>> }
+struct ClickRequest {
+    selector: String,
+    button: Option<String>,
+    modifiers: Option<Vec<String>>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct TypeRequest { selector: String, text: String, clear_first: Option<bool>, submit: Option<bool> }
+struct TypeRequest {
+    selector: String,
+    text: String,
+    clear_first: Option<bool>,
+    submit: Option<bool>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct EvaluateRequest { expression: String, await_promise: Option<bool> }
+struct EvaluateRequest {
+    expression: String,
+    await_promise: Option<bool>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct EvaluateResponse { result: serde_json::Value, r#type: String }
+struct EvaluateResponse {
+    result: serde_json::Value,
+    r#type: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ConsoleEntry { level: String, text: String, timestamp: String, source: Option<String> }
+struct ConsoleEntry {
+    level: String,
+    text: String,
+    timestamp: String,
+    source: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ConsoleResponse { entries: Vec<ConsoleEntry> }
+struct ConsoleResponse {
+    entries: Vec<ConsoleEntry>,
+}
 
 #[derive(Debug, Clone, Deserialize, Default)]
-struct DomQueryParams { selector: String, attribute: Option<String> }
+struct DomQueryParams {
+    selector: String,
+    attribute: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct DomNodeResponse {
-    tag: Option<String>, text: Option<String>, html: Option<String>,
+    tag: Option<String>,
+    text: Option<String>,
+    html: Option<String>,
     attributes: Option<serde_json::Map<String, serde_json::Value>>,
-    visible: Option<bool>, count: usize,
-    rect: Option<RectResponse>, computed: Option<serde_json::Map<String, serde_json::Value>>,
+    visible: Option<bool>,
+    count: usize,
+    rect: Option<RectResponse>,
+    computed: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct RectResponse { x: f64, y: f64, width: f64, height: f64, children_visible: Option<usize>, overflowing: Option<bool> }
+struct RectResponse {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    children_visible: Option<usize>,
+    overflowing: Option<bool>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ReadyResponse { ready: bool, wasm_loaded: bool, hydrated: bool, url: String }
+struct ReadyResponse {
+    ready: bool,
+    wasm_loaded: bool,
+    hydrated: bool,
+    url: String,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct ComputedStyleParams { selector: String, properties: Option<Vec<String>> }
+struct ComputedStyleParams {
+    selector: String,
+    properties: Option<Vec<String>>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ComputedStyleResponse { selector: String, properties: serde_json::Map<String, serde_json::Value> }
+struct ComputedStyleResponse {
+    selector: String,
+    properties: serde_json::Map<String, serde_json::Value>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct PressRequest { key: String, modifiers: Option<Vec<String>>, count: Option<u32> }
+struct PressRequest {
+    key: String,
+    modifiers: Option<Vec<String>>,
+    count: Option<u32>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct ScrollRequest { selector: Option<String>, x: Option<f64>, y: Option<f64>, direction: Option<String>, amount: Option<f64> }
+struct ScrollRequest {
+    selector: Option<String>,
+    x: Option<f64>,
+    y: Option<f64>,
+    direction: Option<String>,
+    amount: Option<f64>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct ResizeRequest { width: Option<u32>, height: Option<u32>, preset: Option<String> }
+struct ResizeRequest {
+    width: Option<u32>,
+    height: Option<u32>,
+    preset: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ViewportResponse { width: u32, height: u32, device_pixel_ratio: f64 }
+struct ViewportResponse {
+    width: u32,
+    height: u32,
+    device_pixel_ratio: f64,
+}
 
 #[derive(Debug, Clone, Deserialize, Default)]
-struct ConsoleQueryParams { level: Option<String>, source: Option<String>, limit: Option<usize> }
+struct ConsoleQueryParams {
+    level: Option<String>,
+    source: Option<String>,
+    limit: Option<usize>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ErrorEntry { message: String, stack: Option<String>, r#type: String, timestamp: String }
+struct ErrorEntry {
+    message: String,
+    stack: Option<String>,
+    r#type: String,
+    timestamp: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ErrorsResponse { errors: Vec<ErrorEntry>, unhandled_rejections: Vec<ErrorEntry> }
+struct ErrorsResponse {
+    errors: Vec<ErrorEntry>,
+    unhandled_rejections: Vec<ErrorEntry>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct DragRequest { from_selector: String, to_selector: String, steps: Option<u32> }
+struct DragRequest {
+    from_selector: String,
+    to_selector: String,
+    steps: Option<u32>,
+}
 
 #[derive(Debug, Clone, Deserialize, Default)]
-struct A11yQueryParams { selector: Option<String>, depth: Option<u32> }
+struct A11yQueryParams {
+    selector: Option<String>,
+    depth: Option<u32>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct A11yNode {
@@ -139,15 +263,24 @@ struct A11yNode {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct BatchRequest { operations: Vec<BatchOperation> }
+struct BatchRequest {
+    operations: Vec<BatchOperation>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type")]
 enum BatchOperation {
     #[serde(rename = "navigate")]
-    Navigate { url: String, wait_for: Option<String> },
+    Navigate {
+        url: String,
+        wait_for: Option<String>,
+    },
     #[serde(rename = "screenshot")]
-    Screenshot { selector: Option<String>, full_page: Option<bool>, name: Option<String> },
+    Screenshot {
+        selector: Option<String>,
+        full_page: Option<bool>,
+        name: Option<String>,
+    },
     #[serde(rename = "click")]
     Click { selector: String },
     #[serde(rename = "evaluate")]
@@ -155,9 +288,17 @@ enum BatchOperation {
     #[serde(rename = "wait")]
     Wait { ms: u64 },
     #[serde(rename = "scroll")]
-    Scroll { selector: Option<String>, direction: Option<String>, amount: Option<f64> },
+    Scroll {
+        selector: Option<String>,
+        direction: Option<String>,
+        amount: Option<f64>,
+    },
     #[serde(rename = "resize")]
-    Resize { width: Option<u32>, height: Option<u32>, preset: Option<String> },
+    Resize {
+        width: Option<u32>,
+        height: Option<u32>,
+        preset: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -174,13 +315,23 @@ struct BatchResult {
 
 #[derive(Debug, Clone, Deserialize, Default)]
 #[allow(dead_code)]
-struct NetworkQueryParams { limit: Option<usize> }
+struct NetworkQueryParams {
+    limit: Option<usize>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct NetworkResource { name: String, r#type: String, duration: f64, size: f64, url: String }
+struct NetworkResource {
+    name: String,
+    r#type: String,
+    duration: f64,
+    size: f64,
+    url: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct NetworkResponse { resources: Vec<NetworkResource> }
+struct NetworkResponse {
+    resources: Vec<NetworkResource>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PerformanceMetrics {
@@ -198,39 +349,116 @@ struct PerformanceMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct WebSocketInfo { active_count: u32, connections: Vec<WebSocketConn> }
+struct WebSocketInfo {
+    active_count: u32,
+    connections: Vec<WebSocketConn>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct WebSocketConn { url: String, state: String, created_at_ms: Option<f64> }
+struct WebSocketConn {
+    url: String,
+    state: String,
+    created_at_ms: Option<f64>,
+}
 
 #[derive(Debug, Clone, Deserialize)]
-struct SourceMapRequest { stack: String }
+struct SourceMapRequest {
+    stack: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct SourceMapResponse { frames: Vec<StackFrame>, raw: String }
+struct SourceMapResponse {
+    frames: Vec<StackFrame>,
+    raw: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct StackFrame { file: String, line: Option<u32>, col: Option<u32>, func: Option<String>, raw: String }
+struct StackFrame {
+    file: String,
+    line: Option<u32>,
+    col: Option<u32>,
+    func: Option<String>,
+    raw: String,
+}
 
 // ── Browser command channel ───────────────────────────────────────────────
 
 enum BrowserCommand {
-    Navigate { url: String, wait_for: Option<String>, resp: oneshot::Sender<Result<NavigateResponse, String>> },
-    Screenshot { selector: Option<String>, full_page: bool, resp: oneshot::Sender<Result<ScreenshotResponse, String>> },
-    Click { selector: String, resp: oneshot::Sender<Result<(), String>> },
-    TypeText { selector: String, text: String, clear_first: bool, submit: bool, resp: oneshot::Sender<Result<(), String>> },
-    Evaluate { expression: String, await_promise: bool, resp: oneshot::Sender<Result<EvaluateResponse, String>> },
-    DomQuery { selector: String, attribute: Option<String>, computed: Option<Vec<String>>, resp: oneshot::Sender<Result<DomNodeResponse, String>> },
-    IsReady { resp: oneshot::Sender<Result<ReadyResponse, String>> },
-    Press { key: String, modifiers: Vec<String>, count: u32, resp: oneshot::Sender<Result<(), String>> },
-    Scroll { selector: Option<String>, x: f64, y: f64, resp: oneshot::Sender<Result<(), String>> },
-    Resize { width: u32, height: u32, resp: oneshot::Sender<Result<(), String>> },
-    Viewport { resp: oneshot::Sender<Result<ViewportResponse, String>> },
-    Drag { from_selector: String, to_selector: String, steps: u32, resp: oneshot::Sender<Result<(), String>> },
-    A11y { selector: Option<String>, depth: u32, resp: oneshot::Sender<Result<Vec<A11yNode>, String>> },
-    Network { resp: oneshot::Sender<Result<NetworkResponse, String>> },
-    Performance { resp: oneshot::Sender<Result<PerformanceMetrics, String>> },
-    WebSocket { resp: oneshot::Sender<Result<WebSocketInfo, String>> },
+    Navigate {
+        url: String,
+        wait_for: Option<String>,
+        resp: oneshot::Sender<Result<NavigateResponse, String>>,
+    },
+    Screenshot {
+        selector: Option<String>,
+        full_page: bool,
+        resp: oneshot::Sender<Result<ScreenshotResponse, String>>,
+    },
+    Click {
+        selector: String,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    TypeText {
+        selector: String,
+        text: String,
+        clear_first: bool,
+        submit: bool,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    Evaluate {
+        expression: String,
+        await_promise: bool,
+        resp: oneshot::Sender<Result<EvaluateResponse, String>>,
+    },
+    DomQuery {
+        selector: String,
+        attribute: Option<String>,
+        computed: Option<Vec<String>>,
+        resp: oneshot::Sender<Result<DomNodeResponse, String>>,
+    },
+    IsReady {
+        resp: oneshot::Sender<Result<ReadyResponse, String>>,
+    },
+    Press {
+        key: String,
+        modifiers: Vec<String>,
+        count: u32,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    Scroll {
+        selector: Option<String>,
+        x: f64,
+        y: f64,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    Resize {
+        width: u32,
+        height: u32,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    Viewport {
+        resp: oneshot::Sender<Result<ViewportResponse, String>>,
+    },
+    Drag {
+        from_selector: String,
+        to_selector: String,
+        steps: u32,
+        resp: oneshot::Sender<Result<(), String>>,
+    },
+    A11y {
+        selector: Option<String>,
+        depth: u32,
+        resp: oneshot::Sender<Result<Vec<A11yNode>, String>>,
+    },
+    Network {
+        resp: oneshot::Sender<Result<NetworkResponse, String>>,
+    },
+    Performance {
+        resp: oneshot::Sender<Result<PerformanceMetrics, String>>,
+    },
+    WebSocket {
+        resp: oneshot::Sender<Result<WebSocketInfo, String>>,
+    },
     #[allow(dead_code)]
     Shutdown,
 }
@@ -244,7 +472,9 @@ impl BrowserHandle {
     async fn send(&self, cmd: BrowserCommand) -> Result<(), String> {
         self.tx.send(cmd).await.map_err(|e| e.to_string())
     }
-    async fn is_connected(&self) -> bool { *self.connected.read().await }
+    async fn is_connected(&self) -> bool {
+        *self.connected.read().await
+    }
 }
 
 // ── Wry-based Browser Engine ─────────────────────────────────────────────
@@ -276,7 +506,10 @@ mod engine {
             })
             .map_err(|e| format!("Failed to spawn browser thread: {}", e))?;
 
-        Ok(BrowserHandle { tx: cmd_tx, connected })
+        Ok(BrowserHandle {
+            tx: cmd_tx,
+            connected,
+        })
     }
 
     fn run_wry_engine(
@@ -304,19 +537,27 @@ mod engine {
 
         std::thread::spawn(move || {
             while let Some(cmd) = cmd_rx.blocking_recv() {
-                if proxy.send_event(cmd).is_err() { break; }
+                if proxy.send_event(cmd).is_err() {
+                    break;
+                }
             }
         });
 
         crate::log_info!("[wry] Creating offscreen window...");
         let window = match WindowBuilder::new()
             .with_visible(true)
-            .with_inner_size(tao::dpi::LogicalSize::new(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H))
+            .with_inner_size(tao::dpi::LogicalSize::new(
+                DEFAULT_VIEWPORT_W,
+                DEFAULT_VIEWPORT_H,
+            ))
             .with_title("Tairitsu Debug Browser")
             .build(&event_loop)
         {
             Ok(w) => w,
-            Err(e) => { crate::log_fail!("[wry] Failed to create window: {}", e); return; }
+            Err(e) => {
+                crate::log_fail!("[wry] Failed to create window: {}", e);
+                return;
+            }
         };
         crate::log_info!("[wry] Window created OK");
 
@@ -333,10 +574,18 @@ mod engine {
                     let mut map = pending_ipc.lock().unwrap();
                     if let Some(cb) = map.remove(&id) {
                         if msg.get("ok").and_then(|v| v.as_bool()).unwrap_or(false) {
-                            let data = msg.get("data").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                            let data = msg
+                                .get("data")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("")
+                                .to_string();
                             cb(Ok(data));
                         } else {
-                            let err = msg.get("error").and_then(|v| v.as_str()).unwrap_or("Unknown error").to_string();
+                            let err = msg
+                                .get("error")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("Unknown error")
+                                .to_string();
                             cb(Err(err));
                         }
                     }
@@ -345,7 +594,10 @@ mod engine {
             .build(&window)
         {
             Ok(wv) => wv,
-            Err(e) => { crate::log_fail!("[wry] Failed to create WebView: {}", e); return; }
+            Err(e) => {
+                crate::log_fail!("[wry] Failed to create WebView: {}", e);
+                return;
+            }
         };
         crate::log_info!("[wry] WebView created OK");
 
@@ -612,13 +864,21 @@ mod engine {
             return (serde_json::Value::Null, "null");
         }
         if data.starts_with('"') {
-            return (serde_json::Value::String(data.trim_matches('"').to_string()), "string");
+            return (
+                serde_json::Value::String(data.trim_matches('"').to_string()),
+                "string",
+            );
         }
         if data == "true" || data == "false" {
             return (serde_json::Value::Bool(data == "true"), "boolean");
         }
         if let Ok(n) = data.parse::<f64>() {
-            return (serde_json::Value::Number(serde_json::Number::from_f64(n).unwrap_or_else(|| serde_json::Number::from(0))), "number");
+            return (
+                serde_json::Value::Number(
+                    serde_json::Number::from_f64(n).unwrap_or_else(|| serde_json::Number::from(0)),
+                ),
+                "number",
+            );
         }
         match serde_json::from_str::<serde_json::Value>(data) {
             Ok(v) => (v, "object"),
@@ -626,9 +886,12 @@ mod engine {
         }
     }
 
-
     fn build_screenshot_eval_js(selector: Option<&str>, full_page: bool) -> String {
-        let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
+        let h_expr = if full_page {
+            "Math.max(document.documentElement.scrollHeight,window.innerHeight)"
+        } else {
+            "window.innerHeight"
+        };
         let capture_logic = if selector.is_some() {
             "ctx.fillRect(0,0,w,h)".to_string()
         } else {
@@ -678,16 +941,18 @@ return JSON.stringify([tree])
 
     #[allow(dead_code)]
     fn build_screenshot_js(id: i32, selector: Option<&str>, full_page: bool) -> String {
-        let h_expr = if full_page { "Math.max(document.documentElement.scrollHeight,window.innerHeight)" } else { "window.innerHeight" };
+        let h_expr = if full_page {
+            "Math.max(document.documentElement.scrollHeight,window.innerHeight)"
+        } else {
+            "window.innerHeight"
+        };
         let capture_logic = if let Some(sel) = selector {
             format!(
                 r#"var el=document.querySelector({:?});if(!el){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:'element not found'}}));return}}var r=el.getBoundingClientRect();c.width=Math.ceil(r.width*dpr);c.height=Math.ceil(r.height*dpr);ctx.scale(dpr,dpr);ctx.translate(-r.x,-r.y);document.querySelectorAll('*').forEach(function(e){{var er=e.getBoundingClientRect();ctx.fillStyle=getComputedStyle(e).backgroundColor;if(er.width>0&&er.height>0)ctx.fillRect(er.x,er.y,er.width,er.height)}})"#,
                 sel
             )
         } else {
-            format!(
-                r#"c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;var s=getComputedStyle(e);ctx.fillStyle=s.backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)}});Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();var s=getComputedStyle(e);if(er.width<1||er.height<1)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){{ctx.font=(s.fontSize||'16px')+' '+(s.fontFamily||'sans-serif');ctx.fillStyle=s.color||'#000';ctx.textBaseline='top';var txt=(e.childNodes[0].textContent||'').trim();if(txt)ctx.fillText(txt.substring(0,Math.floor(er.width/8)),er.x,er.y)}}}})"#
-            )
+            r#"c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;var s=getComputedStyle(e);ctx.fillStyle=s.backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)}});Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();var s=getComputedStyle(e);if(er.width<1||er.height<1)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){{ctx.font=(s.fontSize||'16px')+' '+(s.fontFamily||'sans-serif');ctx.fillStyle=s.color||'#000';ctx.textBaseline='top';var txt=(e.childNodes[0].textContent||'').trim();if(txt)ctx.fillText(txt.substring(0,Math.floor(er.width/8)),er.x,er.y)}}}})"#.to_string()
         };
         format!(
             r#"(()=>{{try{{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var dpr=window.devicePixelRatio||1;var c=document.createElement('canvas');var ctx=c.getContext('2d');{capture_logic}var base64=c.toDataURL('image/png').split(',')[1];window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:base64}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
@@ -711,11 +976,16 @@ return JSON.stringify([tree])
 
 #[derive(Clone)]
 struct DebugState {
-    config: Config, dev_port: u16, debug_port: u16, start_time: Instant,
-    base_url: String, console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
+    config: Config,
+    dev_port: u16,
+    debug_port: u16,
+    start_time: Instant,
+    base_url: String,
+    console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
     errors: Arc<RwLock<Vec<ErrorEntry>>>,
     rejections: Arc<RwLock<Vec<ErrorEntry>>>,
-    browser: Option<Arc<BrowserHandle>>, browser_engine: String,
+    browser: Option<Arc<BrowserHandle>>,
+    browser_engine: String,
 }
 
 impl DebugState {
@@ -723,27 +993,38 @@ impl DebugState {
     fn new(config: Config, dev_port: u16, debug_port: u16) -> Self {
         Self {
             base_url: format!("http://localhost:{}", dev_port),
-            config, dev_port, debug_port, start_time: Instant::now(),
+            config,
+            dev_port,
+            debug_port,
+            start_time: Instant::now(),
             console_log: Arc::new(RwLock::new(Vec::new())),
             errors: Arc::new(RwLock::new(Vec::new())),
             rejections: Arc::new(RwLock::new(Vec::new())),
-            browser: None, browser_engine: "none".into(),
+            browser: None,
+            browser_engine: "none".into(),
         }
     }
-    fn uptime_secs(&self) -> u64 { self.start_time.elapsed().as_secs() }
+    fn uptime_secs(&self) -> u64 {
+        self.start_time.elapsed().as_secs()
+    }
 }
 
 // ── Server startup ───────────────────────────────────────────────────────
 
 pub async fn start_debug_server(
-    config: &Config, dev_port: u16, debug_port: u16,
+    config: &Config,
+    dev_port: u16,
+    debug_port: u16,
 ) -> crate::Result<()> {
     let base_url = format!("http://localhost:{}", dev_port);
     let console_log = Arc::new(RwLock::new(Vec::new()));
 
     #[cfg(target_os = "linux")]
     {
-        if std::env::var("DISPLAY").map(|d| d.is_empty()).unwrap_or(true) {
+        if std::env::var("DISPLAY")
+            .map(|d| d.is_empty())
+            .unwrap_or(true)
+        {
             crate::log_info!("[debug-headless] DISPLAY not set, auto-detecting Xvfb...");
             let check = std::process::Command::new("xdpyinfo")
                 .env("DISPLAY", ":99")
@@ -751,43 +1032,80 @@ pub async fn start_debug_server(
                 .stderr(std::process::Stdio::null())
                 .status();
             if check.map(|s| s.success()).unwrap_or(false) {
-                unsafe { std::env::set_var("DISPLAY", ":99"); }
+                unsafe {
+                    std::env::set_var("DISPLAY", ":99");
+                }
                 crate::log_ok!("[debug-headless] Using DISPLAY=:99 (Xvfb detected)");
             } else {
                 crate::log_info!("[debug-headless] No Xvfb on :99, attempting to start...");
                 let started = std::process::Command::new("Xvfb")
-                    .args([":99", "-screen", "0", "1920x1080x24", "-ac", "-nolisten", "tcp"])
+                    .args([
+                        ":99",
+                        "-screen",
+                        "0",
+                        "1920x1080x24",
+                        "-ac",
+                        "-nolisten",
+                        "tcp",
+                    ])
                     .stdout(std::process::Stdio::null())
                     .stderr(std::process::Stdio::null())
                     .spawn()
                     .map(|mut c| {
                         std::thread::sleep(Duration::from_millis(500));
-                        c.try_wait().ok().flatten().map(|s| s.success()).unwrap_or(true)
+                        c.try_wait()
+                            .ok()
+                            .flatten()
+                            .map(|s| s.success())
+                            .unwrap_or(true)
                     })
                     .unwrap_or(false);
                 if started {
-                    unsafe { std::env::set_var("DISPLAY", ":99"); }
+                    unsafe {
+                        std::env::set_var("DISPLAY", ":99");
+                    }
                     crate::log_ok!("[debug-headless] Xvfb started on :99");
                 } else {
-                    crate::log_fail!("[debug-headless] Failed to start Xvfb. Install: apt install xvfb");
+                    crate::log_fail!(
+                        "[debug-headless] Failed to start Xvfb. Install: apt install xvfb"
+                    );
                 }
             }
         }
     }
 
+    #[cfg(feature = "debug-browser")]
     let browser = engine::spawn_browser(base_url.clone(), None, console_log.clone())
-        .ok().map(Arc::new);
+        .ok()
+        .map(Arc::new);
+    #[cfg(not(feature = "debug-browser"))]
+    let browser: Option<Arc<BrowserHandle>> = None;
 
     let browser_engine = if browser.is_some() {
-        #[cfg(feature = "debug-browser")] { "wry" }
-        #[cfg(not(feature = "debug-browser"))] { "none" }
-    } else { "none" }.to_string();
+        #[cfg(feature = "debug-browser")]
+        {
+            "wry"
+        }
+        #[cfg(not(feature = "debug-browser"))]
+        {
+            "none"
+        }
+    } else {
+        "none"
+    }
+    .to_string();
 
     let state = DebugState {
-        config: config.clone(), dev_port, debug_port,
-        base_url, console_log, errors: Arc::new(RwLock::new(Vec::new())),
+        config: config.clone(),
+        dev_port,
+        debug_port,
+        base_url,
+        console_log,
+        errors: Arc::new(RwLock::new(Vec::new())),
         rejections: Arc::new(RwLock::new(Vec::new())),
-        browser, browser_engine, start_time: Instant::now(),
+        browser,
+        browser_engine,
+        start_time: Instant::now(),
     };
 
     let addr = SocketAddr::from(([127, 0, 0, 1], debug_port));
@@ -817,11 +1135,22 @@ pub async fn start_debug_server(
         .route("/websocket", get(websocket_handler))
         .route("/source-map", post(source_map_handler))
         .layer(CompressionLayer::new())
-        .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any),
+        )
         .with_state(state);
 
-    crate::log_ok!("Debug API v{} listening on http://localhost:{}", DEBUG_API_VERSION, debug_port);
-    crate::log_info!("Endpoints: /health /info /ready /navigate /screenshot /click /type /press /scroll /evaluate /console /dom /dom/computed /viewport /resize /errors /drag /a11y /batch /network /performance /websocket /source-map");
+    crate::log_ok!(
+        "Debug API v{} listening on http://localhost:{}",
+        DEBUG_API_VERSION,
+        debug_port
+    );
+    crate::log_info!(
+        "Endpoints: /health /info /ready /navigate /screenshot /click /type /press /scroll /evaluate /console /dom /dom/computed /viewport /resize /errors /drag /a11y /batch /network /performance /websocket /source-map"
+    );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
@@ -832,101 +1161,248 @@ pub async fn start_debug_server(
 
 async fn health_handler(State(state): State<DebugState>) -> impl IntoResponse {
     ResponseJson(ApiResponse::ok(HealthResponse {
-        status: "ok".into(), version: crate::VERSION.into(),
-        api_version: DEBUG_API_VERSION.into(), uptime_secs: state.uptime_secs(),
+        status: "ok".into(),
+        version: crate::VERSION.into(),
+        api_version: DEBUG_API_VERSION.into(),
+        uptime_secs: state.uptime_secs(),
     }))
 }
 
 async fn info_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let bc = state.browser.as_ref().map_or(false, |b| futures::executor::block_on(b.is_connected()));
+    let bc = state
+        .browser
+        .as_ref()
+        .is_some_and(|b| futures::executor::block_on(b.is_connected()));
     ResponseJson(ApiResponse::ok(InfoResponse {
-        version: crate::VERSION.into(), api_version: DEBUG_API_VERSION.into(),
-        dev_port: state.dev_port, debug_port: state.debug_port,
+        version: crate::VERSION.into(),
+        api_version: DEBUG_API_VERSION.into(),
+        dev_port: state.dev_port,
+        debug_port: state.debug_port,
         dist_dir: state.config.build.output_dir.display().to_string(),
         package_name: state.config.package.name.clone(),
-        pid: std::process::id(), started_at_iso: chrono::Utc::now().to_rfc3339(),
-        uptime_secs: state.uptime_secs(), browser_connected: bc,
-        browser_engine: state.browser_engine.clone(), viewport: [DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H],
+        pid: std::process::id(),
+        started_at_iso: chrono::Utc::now().to_rfc3339(),
+        uptime_secs: state.uptime_secs(),
+        browser_connected: bc,
+        browser_engine: state.browser_engine.clone(),
+        viewport: [DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H],
     }))
 }
 
 async fn ready_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ReadyResponse>() };
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<ReadyResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::IsReady { resp: tx }).await.is_err() { return chan_closed::<ReadyResponse>(); }
+    if br.send(BrowserCommand::IsReady { resp: tx }).await.is_err() {
+        return chan_closed::<ReadyResponse>();
+    }
     await_op(rx).await
 }
 
-async fn navigate_handler(State(state): State<DebugState>, Json(req): Json<NavigateRequest>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<NavigateResponse>() };
-    let target = if req.url.starts_with("http") { req.url } else { format!("{}{}", state.base_url, req.url) };
+async fn navigate_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<NavigateRequest>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<NavigateResponse>(),
+    };
+    let target = if req.url.starts_with("http") {
+        req.url
+    } else {
+        format!("{}{}", state.base_url, req.url)
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Navigate { url: target, wait_for: req.wait_for, resp: tx }).await.is_err() { return chan_closed::<NavigateResponse>(); }
+    if br
+        .send(BrowserCommand::Navigate {
+            url: target,
+            wait_for: req.wait_for,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<NavigateResponse>();
+    }
     await_op(rx).await
 }
 
-async fn screenshot_handler(State(state): State<DebugState>, Json(params): Json<ScreenshotParams>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ScreenshotResponse>() };
+async fn screenshot_handler(
+    State(state): State<DebugState>,
+    Json(params): Json<ScreenshotParams>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<ScreenshotResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Screenshot { selector: params.selector, full_page: params.full_page.unwrap_or(false), resp: tx }).await.is_err() { return chan_closed::<ScreenshotResponse>(); }
+    if br
+        .send(BrowserCommand::Screenshot {
+            selector: params.selector,
+            full_page: params.full_page.unwrap_or(false),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<ScreenshotResponse>();
+    }
     await_op(rx).await
 }
 
-async fn click_handler(State(state): State<DebugState>, Json(req): Json<ClickRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn click_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<ClickRequest>,
+) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Click { selector: req.selector, resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    if br
+        .send(BrowserCommand::Click {
+            selector: req.selector,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
-async fn type_handler(State(state): State<DebugState>, Json(req): Json<TypeRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn type_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<TypeRequest>,
+) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::TypeText { selector: req.selector, text: req.text, clear_first: req.clear_first.unwrap_or(true), submit: req.submit.unwrap_or(false), resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    if br
+        .send(BrowserCommand::TypeText {
+            selector: req.selector,
+            text: req.text,
+            clear_first: req.clear_first.unwrap_or(true),
+            submit: req.submit.unwrap_or(false),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
-async fn press_handler(State(state): State<DebugState>, Json(req): Json<PressRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn press_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<PressRequest>,
+) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Press { key: req.key, modifiers: req.modifiers.unwrap_or_default(), count: req.count.unwrap_or(1), resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    if br
+        .send(BrowserCommand::Press {
+            key: req.key,
+            modifiers: req.modifiers.unwrap_or_default(),
+            count: req.count.unwrap_or(1),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
-async fn scroll_handler(State(state): State<DebugState>, Json(req): Json<ScrollRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn scroll_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<ScrollRequest>,
+) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (tx, rx) = oneshot::channel();
-        let (x, y) = match req.direction.as_deref() {
-            Some("up") => (0.0, -(req.amount.unwrap_or(300.0))),
-            Some("down") => (0.0, req.amount.unwrap_or(300.0)),
-            Some("left") => (-(req.amount.unwrap_or(300.0)), 0.0),
-            Some("right") => (req.amount.unwrap_or(300.0), 0.0),
-            _ => (req.x.unwrap_or(0.0), req.y.unwrap_or(0.0)),
-        };
-    if br.send(BrowserCommand::Scroll { selector: req.selector, x, y, resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    let (x, y) = match req.direction.as_deref() {
+        Some("up") => (0.0, -(req.amount.unwrap_or(300.0))),
+        Some("down") => (0.0, req.amount.unwrap_or(300.0)),
+        Some("left") => (-(req.amount.unwrap_or(300.0)), 0.0),
+        Some("right") => (req.amount.unwrap_or(300.0), 0.0),
+        _ => (req.x.unwrap_or(0.0), req.y.unwrap_or(0.0)),
+    };
+    if br
+        .send(BrowserCommand::Scroll {
+            selector: req.selector,
+            x,
+            y,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
-async fn evaluate_handler(State(state): State<DebugState>, Json(req): Json<EvaluateRequest>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<EvaluateResponse>() };
+async fn evaluate_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<EvaluateRequest>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<EvaluateResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Evaluate { expression: req.expression, await_promise: req.await_promise.unwrap_or(false), resp: tx }).await.is_err() { return chan_closed::<EvaluateResponse>(); }
+    if br
+        .send(BrowserCommand::Evaluate {
+            expression: req.expression,
+            await_promise: req.await_promise.unwrap_or(false),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<EvaluateResponse>();
+    }
     await_op(rx).await
 }
 
-async fn console_handler(State(state): State<DebugState>, Query(params): Query<ConsoleQueryParams>) -> impl IntoResponse {
+async fn console_handler(
+    State(state): State<DebugState>,
+    Query(params): Query<ConsoleQueryParams>,
+) -> impl IntoResponse {
     let entries = state.console_log.read().await;
-    let mut filtered: Vec<ConsoleEntry> = entries.iter().filter(|e| {
-        if let Some(ref levels) = params.level {
-            let allowed: Vec<&str> = levels.split(',').collect();
-            if !allowed.contains(&e.level.as_str()) { return false; }
-        }
-        if let Some(ref src) = params.source {
-            if e.source.as_deref() != Some(src.as_str()) { return false; }
-        }
-        true
-    }).cloned().collect();
-    if let Some(limit) = params.limit { filtered.truncate(limit); }
+    let mut filtered: Vec<ConsoleEntry> = entries
+        .iter()
+        .filter(|e| {
+            if let Some(ref levels) = params.level {
+                let allowed: Vec<&str> = levels.split(',').collect();
+                if !allowed.contains(&e.level.as_str()) {
+                    return false;
+                }
+            }
+            if let Some(ref src) = params.source
+                && e.source.as_deref() != Some(src.as_str())
+            {
+                return false;
+            }
+            true
+        })
+        .cloned()
+        .collect();
+    if let Some(limit) = params.limit {
+        filtered.truncate(limit);
+    }
     ResponseJson(ApiResponse::ok(ConsoleResponse { entries: filtered }))
 }
 
@@ -935,46 +1411,117 @@ async fn console_clear_handler(State(state): State<DebugState>) -> impl IntoResp
     ResponseJson(ApiResponse::ok(serde_json::json!({"cleared": true})))
 }
 
-async fn dom_query_handler(State(state): State<DebugState>, Query(params): Query<DomQueryParams>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<DomNodeResponse>() };
+async fn dom_query_handler(
+    State(state): State<DebugState>,
+    Query(params): Query<DomQueryParams>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<DomNodeResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::DomQuery { selector: params.selector, attribute: params.attribute, computed: None, resp: tx }).await.is_err() { return chan_closed::<DomNodeResponse>(); }
+    if br
+        .send(BrowserCommand::DomQuery {
+            selector: params.selector,
+            attribute: params.attribute,
+            computed: None,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<DomNodeResponse>();
+    }
     await_op(rx).await
 }
 
-async fn computed_style_handler(State(state): State<DebugState>, Json(params): Json<ComputedStyleParams>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ComputedStyleResponse>() };
+async fn computed_style_handler(
+    State(state): State<DebugState>,
+    Json(params): Json<ComputedStyleParams>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<ComputedStyleResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::DomQuery { selector: params.selector.clone(), attribute: None, computed: params.properties, resp: tx }).await.is_err() { return chan_closed::<ComputedStyleResponse>(); }
+    if br
+        .send(BrowserCommand::DomQuery {
+            selector: params.selector.clone(),
+            attribute: None,
+            computed: params.properties,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<ComputedStyleResponse>();
+    }
     match tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await {
         Ok(Ok(Ok(dom))) => {
             let computed = dom.computed.unwrap_or_default();
-            (StatusCode::OK, ResponseJson(ApiResponse::ok(ComputedStyleResponse { selector: params.selector, properties: computed })))
+            (
+                StatusCode::OK,
+                ResponseJson(ApiResponse::ok(ComputedStyleResponse {
+                    selector: params.selector,
+                    properties: computed,
+                })),
+            )
         }
         Ok(Ok(Err(e))) => (StatusCode::BAD_REQUEST, ResponseJson(ApiResponse::err(e))),
         Ok(Err(_)) => chan_closed::<ComputedStyleResponse>(),
-        Err(_) => (StatusCode::GATEWAY_TIMEOUT, ResponseJson(ApiResponse::err("Operation timed out"))),
+        Err(_) => (
+            StatusCode::GATEWAY_TIMEOUT,
+            ResponseJson(ApiResponse::err("Operation timed out")),
+        ),
     }
 }
 
 async fn viewport_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<ViewportResponse>() };
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<ViewportResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Viewport { resp: tx }).await.is_err() { return chan_closed::<ViewportResponse>(); }
+    if br
+        .send(BrowserCommand::Viewport { resp: tx })
+        .await
+        .is_err()
+    {
+        return chan_closed::<ViewportResponse>();
+    }
     await_op(rx).await
 }
 
-async fn resize_handler(State(state): State<DebugState>, Json(req): Json<ResizeRequest>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn resize_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<ResizeRequest>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (w, h) = match req.preset.as_deref() {
         Some("mobile") => (375, 812),
         Some("tablet") => (768, 1024),
         Some("desktop") => (1280, 720),
         Some("wide") => (1920, 1080),
-        _ => (req.width.unwrap_or(DEFAULT_VIEWPORT_W), req.height.unwrap_or(DEFAULT_VIEWPORT_H)),
+        _ => (
+            req.width.unwrap_or(DEFAULT_VIEWPORT_W),
+            req.height.unwrap_or(DEFAULT_VIEWPORT_H),
+        ),
     };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Resize { width: w, height: h, resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    if br
+        .send(BrowserCommand::Resize {
+            width: w,
+            height: h,
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
@@ -985,26 +1532,64 @@ async fn errors_handler(State(state): State<DebugState>) -> impl IntoResponse {
     }))
 }
 
-async fn drag_handler(State(state): State<DebugState>, Json(req): Json<DragRequest>) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<()>() };
+async fn drag_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<DragRequest>,
+) -> (StatusCode, ResponseJson<ApiResponse<()>>) {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<()>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Drag { from_selector: req.from_selector, to_selector: req.to_selector, steps: req.steps.unwrap_or(10), resp: tx }).await.is_err() { return chan_closed::<()>(); }
+    if br
+        .send(BrowserCommand::Drag {
+            from_selector: req.from_selector,
+            to_selector: req.to_selector,
+            steps: req.steps.unwrap_or(10),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<()>();
+    }
     await_op(rx).await
 }
 
-async fn a11y_handler(State(state): State<DebugState>, Query(params): Query<A11yQueryParams>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<Vec<A11yNode>>() };
+async fn a11y_handler(
+    State(state): State<DebugState>,
+    Query(params): Query<A11yQueryParams>,
+) -> impl IntoResponse {
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<Vec<A11yNode>>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::A11y { selector: params.selector, depth: params.depth.unwrap_or(5), resp: tx }).await.is_err() { return chan_closed::<Vec<A11yNode>>(); }
+    if br
+        .send(BrowserCommand::A11y {
+            selector: params.selector,
+            depth: params.depth.unwrap_or(5),
+            resp: tx,
+        })
+        .await
+        .is_err()
+    {
+        return chan_closed::<Vec<A11yNode>>();
+    }
     await_op(rx).await
 }
 
-async fn batch_handler(State(state): State<DebugState>, Json(req): Json<BatchRequest>) -> impl IntoResponse {
+async fn batch_handler(
+    State(state): State<DebugState>,
+    Json(req): Json<BatchRequest>,
+) -> impl IntoResponse {
     let mut results = Vec::with_capacity(req.operations.len());
     for (i, op) in req.operations.into_iter().enumerate() {
         let start = Instant::now();
         let name = match &op {
-            BatchOperation::Screenshot { name, .. } => name.clone().unwrap_or_else(|| format!("screenshot_{}", i)),
+            BatchOperation::Screenshot { name, .. } => {
+                name.clone().unwrap_or_else(|| format!("screenshot_{}", i))
+            }
             _ => format!("op_{}", i),
         };
         let op_type = match &op {
@@ -1015,53 +1600,105 @@ async fn batch_handler(State(state): State<DebugState>, Json(req): Json<BatchReq
             BatchOperation::Wait { .. } => "wait",
             BatchOperation::Scroll { .. } => "scroll",
             BatchOperation::Resize { .. } => "resize",
-        }.to_string();
+        }
+        .to_string();
 
         let (success, data, error) = match execute_batch_op(&state, op).await {
             Ok(d) => (true, Some(d), None),
             Err(e) => (false, None, Some(e)),
         };
         results.push(BatchResult {
-            name, op_type, success, data, error,
+            name,
+            op_type,
+            success,
+            data,
+            error,
             duration_ms: start.elapsed().as_millis() as u64,
         });
     }
     ResponseJson(ApiResponse::ok(serde_json::json!({ "results": results })))
 }
 
-async fn execute_batch_op(state: &DebugState, op: BatchOperation) -> Result<serde_json::Value, String> {
+async fn execute_batch_op(
+    state: &DebugState,
+    op: BatchOperation,
+) -> Result<serde_json::Value, String> {
     let br = state.browser.as_ref().ok_or("No browser")?;
     match op {
         BatchOperation::Navigate { url, wait_for } => {
-            let target = if url.starts_with("http") { url } else { format!("{}{}", state.base_url, url) };
+            let target = if url.starts_with("http") {
+                url
+            } else {
+                format!("{}{}", state.base_url, url)
+            };
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Navigate { url: target, wait_for, resp: tx }).await.map_err(|e| e.to_string())?;
-            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            br.send(BrowserCommand::Navigate {
+                url: target,
+                wait_for,
+                resp: tx,
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())?;
             r.map(|nav| serde_json::to_value(nav).unwrap_or_default())
         }
-        BatchOperation::Screenshot { selector, full_page, .. } => {
+        BatchOperation::Screenshot {
+            selector,
+            full_page,
+            ..
+        } => {
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Screenshot { selector, full_page: full_page.unwrap_or(false), resp: tx }).await.map_err(|e| e.to_string())?;
-            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            br.send(BrowserCommand::Screenshot {
+                selector,
+                full_page: full_page.unwrap_or(false),
+                resp: tx,
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())?;
             r.map(|ss| serde_json::json!({ "width": ss.width, "height": ss.height, "data_len": ss.data.len() }))
         }
         BatchOperation::Click { selector } => {
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Click { selector, resp: tx }).await.map_err(|e| e.to_string())?;
-            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            br.send(BrowserCommand::Click { selector, resp: tx })
+                .await
+                .map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())??;
             Ok(serde_json::json!({ "clicked": true }))
         }
         BatchOperation::Evaluate { expression } => {
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Evaluate { expression, await_promise: false, resp: tx }).await.map_err(|e| e.to_string())?;
-            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?;
+            br.send(BrowserCommand::Evaluate {
+                expression,
+                await_promise: false,
+                resp: tx,
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+            let r = tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())?;
             r.map(|ev| serde_json::json!({ "result": ev.result, "type": ev.r#type }))
         }
         BatchOperation::Wait { ms } => {
             tokio::time::sleep(Duration::from_millis(ms)).await;
             Ok(serde_json::json!({ "waited_ms": ms }))
         }
-        BatchOperation::Scroll { selector, direction, amount } => {
+        BatchOperation::Scroll {
+            selector,
+            direction,
+            amount,
+        } => {
             let (x, y) = match direction.as_deref() {
                 Some("up") => (0.0, -(amount.unwrap_or(300.0))),
                 Some("down") => (0.0, amount.unwrap_or(300.0)),
@@ -1070,57 +1707,111 @@ async fn execute_batch_op(state: &DebugState, op: BatchOperation) -> Result<serd
                 _ => (0.0, amount.unwrap_or(300.0)),
             };
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Scroll { selector, x, y, resp: tx }).await.map_err(|e| e.to_string())?;
-            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            br.send(BrowserCommand::Scroll {
+                selector,
+                x,
+                y,
+                resp: tx,
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())??;
             Ok(serde_json::json!({ "scrolled": true }))
         }
-        BatchOperation::Resize { width, height, preset } => {
+        BatchOperation::Resize {
+            width,
+            height,
+            preset,
+        } => {
             let (w, h) = match preset.as_deref() {
                 Some("mobile") => (375, 812),
                 Some("tablet") => (768, 1024),
                 Some("desktop") => (1280, 720),
                 Some("wide") => (1920, 1080),
-                _ => (width.unwrap_or(DEFAULT_VIEWPORT_W), height.unwrap_or(DEFAULT_VIEWPORT_H)),
+                _ => (
+                    width.unwrap_or(DEFAULT_VIEWPORT_W),
+                    height.unwrap_or(DEFAULT_VIEWPORT_H),
+                ),
             };
             let (tx, rx) = oneshot::channel();
-            br.send(BrowserCommand::Resize { width: w, height: h, resp: tx }).await.map_err(|e| e.to_string())?;
-            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await.map_err(|_| "timeout".to_string())?.map_err(|_| "channel closed".to_string())?.map_err(|e| e)?;
+            br.send(BrowserCommand::Resize {
+                width: w,
+                height: h,
+                resp: tx,
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+            tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx)
+                .await
+                .map_err(|_| "timeout".to_string())?
+                .map_err(|_| "channel closed".to_string())??;
             Ok(serde_json::json!({ "resized": [w, h] }))
         }
     }
 }
 
 async fn network_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<NetworkResponse>() };
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<NetworkResponse>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Network { resp: tx }).await.is_err() { return chan_closed::<NetworkResponse>(); }
+    if br.send(BrowserCommand::Network { resp: tx }).await.is_err() {
+        return chan_closed::<NetworkResponse>();
+    }
     await_op(rx).await
 }
 
 async fn performance_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<PerformanceMetrics>() };
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<PerformanceMetrics>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::Performance { resp: tx }).await.is_err() { return chan_closed::<PerformanceMetrics>(); }
+    if br
+        .send(BrowserCommand::Performance { resp: tx })
+        .await
+        .is_err()
+    {
+        return chan_closed::<PerformanceMetrics>();
+    }
     await_op(rx).await
 }
 
 async fn websocket_handler(State(state): State<DebugState>) -> impl IntoResponse {
-    let br = match &state.browser { Some(b) => b, None => return svc_unavailable::<WebSocketInfo>() };
+    let br = match &state.browser {
+        Some(b) => b,
+        None => return svc_unavailable::<WebSocketInfo>(),
+    };
     let (tx, rx) = oneshot::channel();
-    if br.send(BrowserCommand::WebSocket { resp: tx }).await.is_err() { return chan_closed::<WebSocketInfo>(); }
+    if br
+        .send(BrowserCommand::WebSocket { resp: tx })
+        .await
+        .is_err()
+    {
+        return chan_closed::<WebSocketInfo>();
+    }
     await_op(rx).await
 }
 
 async fn source_map_handler(Json(req): Json<SourceMapRequest>) -> impl IntoResponse {
     let frames = parse_wasm_stack(&req.stack);
-    ResponseJson(ApiResponse::ok(SourceMapResponse { frames, raw: req.stack }))
+    ResponseJson(ApiResponse::ok(SourceMapResponse {
+        frames,
+        raw: req.stack,
+    }))
 }
 
 fn parse_wasm_stack(stack: &str) -> Vec<StackFrame> {
     let mut frames = Vec::new();
     for line in stack.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         let raw = line.to_string();
         let (func, rest) = if let Some(at_pos) = line.find(" at ") {
             (Some(line[..at_pos].trim().to_string()), &line[at_pos + 4..])
@@ -1137,7 +1828,13 @@ fn parse_wasm_stack(stack: &str) -> Vec<StackFrame> {
         } else {
             parse_location(rest)
         };
-        frames.push(StackFrame { file, line: line_num, col, func, raw });
+        frames.push(StackFrame {
+            file,
+            line: line_num,
+            col,
+            func,
+            raw,
+        });
     }
     frames
 }
@@ -1148,10 +1845,10 @@ fn parse_location(s: &str) -> (String, Option<u32>, Option<u32>) {
         let after_colon = &s[colon_pos + 1..];
         if let Ok(col) = after_colon.parse::<u32>() {
             let before_col = &s[..colon_pos];
-            if let Some(colon2) = before_col.rfind(':') {
-                if let Ok(line) = before_col[colon2 + 1..].parse::<u32>() {
-                    return (before_col[..colon2].to_string(), Some(line), Some(col));
-                }
+            if let Some(colon2) = before_col.rfind(':')
+                && let Ok(line) = before_col[colon2 + 1..].parse::<u32>()
+            {
+                return (before_col[..colon2].to_string(), Some(line), Some(col));
             }
             return (before_col.to_string(), None, Some(col));
         }
@@ -1162,17 +1859,28 @@ fn parse_location(s: &str) -> (String, Option<u32>, Option<u32>) {
 // ── Helpers ───────────────────────────────────────────────────────────────
 
 fn svc_unavailable<T: Serialize>() -> (StatusCode, ResponseJson<ApiResponse<T>>) {
-    (StatusCode::SERVICE_UNAVAILABLE, ResponseJson(ApiResponse::<T>::err("No browser available")))
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        ResponseJson(ApiResponse::<T>::err("No browser available")),
+    )
 }
 fn chan_closed<T: Serialize>() -> (StatusCode, ResponseJson<ApiResponse<T>>) {
-    (StatusCode::SERVICE_UNAVAILABLE, ResponseJson(ApiResponse::<T>::err("Browser channel closed")))
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        ResponseJson(ApiResponse::<T>::err("Browser channel closed")),
+    )
 }
 
-async fn await_op<T: Serialize>(rx: oneshot::Receiver<Result<T, String>>) -> (StatusCode, ResponseJson<ApiResponse<T>>) {
+async fn await_op<T: Serialize>(
+    rx: oneshot::Receiver<Result<T, String>>,
+) -> (StatusCode, ResponseJson<ApiResponse<T>>) {
     match tokio::time::timeout(Duration::from_secs(OP_TIMEOUT_SECS), rx).await {
         Ok(Ok(Ok(d))) => (StatusCode::OK, ResponseJson(ApiResponse::ok(d))),
         Ok(Ok(Err(e))) => (StatusCode::BAD_REQUEST, ResponseJson(ApiResponse::err(e))),
         Ok(Err(_)) => chan_closed::<T>(),
-        Err(_) => (StatusCode::GATEWAY_TIMEOUT, ResponseJson(ApiResponse::err("Operation timed out"))),
+        Err(_) => (
+            StatusCode::GATEWAY_TIMEOUT,
+            ResponseJson(ApiResponse::err("Operation timed out")),
+        ),
     }
 }
