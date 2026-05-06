@@ -5,6 +5,9 @@ pub mod pty_unix;
 #[cfg(windows)]
 pub mod pty_win;
 
+#[cfg(feature = "vtty-visual")]
+pub mod render;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{
@@ -189,6 +192,12 @@ impl VttySession {
         self.screen.lock().map(|s| s.get_text()).unwrap_or_default()
     }
 
+    #[cfg(feature = "vtty-visual")]
+    pub fn visual_screenshot(&self, theme: &str) -> Result<Vec<u8>, String> {
+        let rd = self.screen.lock().map(|s| s.get_render_data()).map_err(|e| e.to_string())?;
+        render::render_terminal(&rd, theme)
+    }
+
     pub fn has_output(&self) -> bool {
         self.screen.lock().map(|s| s.has_output()).unwrap_or(false)
     }
@@ -200,6 +209,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
+    #[allow(dead_code)]
     pub fn get_line(&self, row: usize) -> String {
         self.screen
             .lock()
@@ -255,11 +265,10 @@ impl VttySession {
     pub fn kill(&mut self) -> Result<(), String> {
         self.alive.store(false, Ordering::Relaxed);
         self.reader_running.store(false, Ordering::Relaxed);
-        if let Ok(mut guard) = self.reader_handle.lock() {
-            if let Some(handle) = guard.take() {
+        if let Ok(mut guard) = self.reader_handle.lock()
+            && let Some(handle) = guard.take() {
                 let _ = handle.join();
             }
-        }
         let mut guard = self
             .pty
             .lock()

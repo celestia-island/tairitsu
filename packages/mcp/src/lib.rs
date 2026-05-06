@@ -64,12 +64,14 @@ struct ScreenshotArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct ClickArgs {
     element: Option<String>,
     target: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct TypeArgs {
     element: Option<String>,
     submit: Option<bool>,
@@ -81,12 +83,14 @@ struct TypeArgs {
 struct PressKeyArgs { key: String }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct HoverArgs {
     element: Option<String>,
     target: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct SelectOptionArgs {
     element: Option<String>,
     target: String,
@@ -94,6 +98,7 @@ struct SelectOptionArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct FillFormField {
     element: Option<String>,
     name: String,
@@ -107,6 +112,7 @@ struct FillFormField {
 struct FillFormArgs { fields: Vec<FillFormField> }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct EvaluateArgs {
     element: Option<String>,
     function: String,
@@ -164,6 +170,16 @@ struct VttyLaunchArgs {
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttySessionArgs {
     session_id: String,
+}
+
+#[cfg(feature = "vtty")]
+#[derive(Debug, Deserialize, JsonSchema)]
+struct VttyScreenshotArgs {
+    session_id: String,
+    #[serde(default)]
+    format: Option<String>,
+    #[serde(default)]
+    theme: Option<String>,
 }
 
 #[cfg(feature = "vtty")]
@@ -508,17 +524,66 @@ impl Server {
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Capture current terminal screen content as text")]
+    #[tool(description = "Capture current terminal screen content as text (text-only models) and/or as a rendered PNG image (vision-capable models). \
+        The 'format' parameter controls output: 'text' (default) returns plain text, 'image' returns a rendered PNG, 'both' returns both. \
+        The 'theme' parameter sets the color scheme: solarized-dark (default), solarized-light, one-half-dark, one-half-light, ibm-5153.")]
     async fn vtty_screenshot(
         &self,
-        Parameters(args): Parameters<VttySessionArgs>,
+        Parameters(args): Parameters<VttyScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-        let text = guard.screenshot();
-        let alive = guard.is_alive();
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "alive": alive, "rows": guard.rows, "cols": guard.cols, "text": text}).to_string()))
+        let fmt = args.format.as_deref().unwrap_or("text");
+        let theme = args.theme.as_deref().unwrap_or("solarized-dark");
+
+        let (text, alive, rows, cols) = {
+            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            (guard.screenshot(), guard.is_alive(), guard.rows, guard.cols)
+        };
+
+        match fmt {
+            "text" => {
+                Ok(Self::tool_result(json!({
+                    "session_id": args.session_id,
+                    "alive": alive,
+                    "rows": rows,
+                    "cols": cols,
+                    "text": text
+                }).to_string()))
+            }
+            #[cfg(feature = "vtty-visual")]
+            "image" => {
+                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                let png_data = guard.visual_screenshot(theme).map_err(|e| McpError::internal_error(e, None))?;
+                let b64 = vtty::render::encode_base64(&png_data);
+                Ok(CallToolResult::success(vec![Content::image(b64, "image/png")]))
+            }
+            #[cfg(feature = "vtty-visual")]
+            "both" => {
+                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                let png_data = guard.visual_screenshot(theme).map_err(|e| McpError::internal_error(e, None))?;
+                let b64 = vtty::render::encode_base64(&png_data);
+                Ok(CallToolResult::success(vec![
+                    Content::text(json!({
+                        "session_id": args.session_id,
+                        "alive": alive,
+                        "rows": rows,
+                        "cols": cols,
+                        "text": text
+                    }).to_string()),
+                    Content::image(b64, "image/png"),
+                ]))
+            }
+            _ => {
+                Ok(Self::tool_result(json!({
+                    "session_id": args.session_id,
+                    "alive": alive,
+                    "rows": rows,
+                    "cols": cols,
+                    "text": text
+                }).to_string()))
+            }
+        }
     }
 
     #[cfg(feature = "vtty")]
@@ -677,11 +742,10 @@ mod daemon {
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
             candidates.push(PathBuf::from(root).join("target"));
         }
-        if let Ok(exe) = std::env::current_exe() {
-            if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+        if let Ok(exe) = std::env::current_exe()
+            && let Some(parent) = exe.parent().and_then(|p| p.parent()) {
                 candidates.push(parent.join("target"));
             }
-        }
         candidates.dedup();
         candidates
     }
@@ -719,10 +783,7 @@ pub async fn run(config: McpConfig) -> Result<()> {
         let url = if !url_from_config.is_empty() {
             url_from_config
         } else {
-            match resolve_daemon_url().await {
-                Ok(u) => u,
-                Err(_) => String::new(),
-            }
+            resolve_daemon_url().await.unwrap_or_default()
         };
         *base_url_clone.write().await = url;
     });
