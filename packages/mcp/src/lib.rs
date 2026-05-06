@@ -1032,29 +1032,27 @@ impl ServerHandler for Server {}
 
 #[cfg(feature = "vtty")]
 async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<String> {
-    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
-        if !root.is_empty() {
-            return Some(root);
-        }
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT")
+        && !root.is_empty()
+    {
+        return Some(root);
     }
 
-    if let Some(info) = context.peer.peer_info() {
-        if info.capabilities.roots.is_some() {
-            if let Ok(result) = context.peer.list_roots().await {
-                if let Some(root) = result.roots.first() {
-                    let uri = &root.uri;
-                    let path = if let Some(p) = uri.strip_prefix("file://") {
-                        p.to_string()
-                    } else if let Some(p) = uri.strip_prefix("file:") {
-                        p.to_string()
-                    } else {
-                        uri.clone()
-                    };
-                    if !path.is_empty() {
-                        return Some(path);
-                    }
-                }
-            }
+    if let Some(info) = context.peer.peer_info()
+        && info.capabilities.roots.is_some()
+        && let Ok(result) = context.peer.list_roots().await
+        && let Some(root) = result.roots.first()
+    {
+        let uri = &root.uri;
+        let path = if let Some(p) = uri.strip_prefix("file://") {
+            p.to_string()
+        } else if let Some(p) = uri.strip_prefix("file:") {
+            p.to_string()
+        } else {
+            uri.clone()
+        };
+        if !path.is_empty() {
+            return Some(path);
         }
     }
 
