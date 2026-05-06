@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "packages/mcp",
     "packages/runtime",
     "packages/macros",
     "packages/vdom",
@@ -62,3 +63,4 @@ tairitsu-web = { version = "0.4.1", path = "packages/web" }
 tairitsu-browser-worlds = { version = "0.4.1", path = "packages/browser-worlds" }
 tairitsu-browser-wit-resolver = { version = "0.4.1", path = "packages/browser-wit-resolver" }
 tairitsu-packager = { version = "0.4.1", path = "packages/packager" }
+tairitsu-mcp = { version = "0.4.1", path = "packages/mcp" }

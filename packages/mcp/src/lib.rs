@@ -1,30 +1,30 @@
-//! Tairitsu Virtual Browser + VTty — MCP (Model Context Protocol) server.
-//!
-//! Provides browser automation AND virtual terminal (VTty) tools to AI coding assistants.
-//! All requests go through tairitsu packager CLI via stdio JSON-RPC 2.0.
-//!
-//! # Usage
-//!
-//! ```bash
-//!   tairitsu mcp [--port PORT] [--url BASE_URL]
-//! ```
-//!
-//! Speaks JSON-RPC 2.0 over stdin/stdout.  Designed for the `mcpServers`
-//! configuration in opencode.jsonc / opencode.json.
+//! Standalone Tairitsu MCP server — browser automation + VTty for AI coding assistants.
+//! Speaks JSON-RPC 2.0 over stdin/stdout.
 
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::io::{self, BufRead, Write};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU32, Ordering};
+
+#[cfg(feature = "vtty")]
+#[cfg(feature = "vtty")]
+use crate::vtty::VttyManager;
 
 const MCP_PROTOCOL_VERSION: &str = "2024-11-05";
 const TOOL_PREFIX: &str = "";
+static SESSION_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+#[cfg(feature = "vtty")]
+mod vtty;
 
 #[derive(Debug, Clone, Default)]
 pub struct McpConfig {
     pub base_url: String,
 }
 
-pub async fn run(config: McpConfig) -> crate::Result<()> {
+pub async fn run(config: McpConfig) -> Result<()> {
     let base_url = if config.base_url.is_empty() {
         match resolve_daemon_url().await {
             Ok(url) => url,
@@ -47,7 +47,7 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     let state = McpState {
         base_url,
         http,
-        vtty: std::sync::Arc::new(crate::vtty::VttyManager::new()),
+        vtty: std::sync::Arc::new(VttyManager::new()),
     };
     #[cfg(not(feature = "vtty"))]
     let state = McpState { base_url, http };
@@ -62,7 +62,7 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     Ok(())
 }
 
-async fn resolve_daemon_url() -> crate::Result<String> {
+async fn resolve_daemon_url() -> Result<String> {
     if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
         && !url.is_empty()
     {
@@ -76,23 +76,22 @@ async fn resolve_daemon_url() -> crate::Result<String> {
         return Ok(format!("http://localhost:{}", port));
     }
 
-    use crate::daemon;
-    if daemon::is_daemon_running() {
-        let pid = daemon::read_pid().unwrap_or(0);
-        return Err(crate::TairitsuPackagerError::BuildError(format!(
+    if daemon_is_running() {
+        let pid = daemon_read_pid().unwrap_or(0);
+        return Err(anyhow!(
             "Daemon is running (PID {}) but port unknown.\n\
              Searched: {}\n\
-             Hint: set TAIRITSU_DAEMON_URL=http://localhost:<PORT> or pass --url",
+             Hint: set TAIRITSU_DAEMON_URL=http://localhost:<PORT>",
             pid,
             searched
                 .iter()
                 .map(|p| p.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ")
-        )));
+        ));
     }
 
-    Err(crate::TairitsuPackagerError::BuildError(format!(
+    Err(anyhow!(
         "No running tairitsu daemon found.\n\
          Searched: {}\n\
          Hint: start with `tairitsu dev --daemon` or set TAIRITSU_DAEMON_URL",
@@ -101,64 +100,14 @@ async fn resolve_daemon_url() -> crate::Result<String> {
             .map(|p| p.display().to_string())
             .collect::<Vec<_>>()
             .join(", ")
-    )))
-}
-
-fn search_project_roots() -> Vec<std::path::PathBuf> {
-    let mut candidates = Vec::new();
-
-    if let Ok(cwd) = std::env::current_dir() {
-        candidates.push(cwd.join("target"));
-        let mut dir = cwd.clone();
-        for _ in 0..5 {
-            if dir.join("Cargo.toml").exists() {
-                candidates.push(dir.join("target"));
-            }
-            if !dir.pop() {
-                break;
-            }
-        }
-    }
-
-    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
-        let p = std::path::PathBuf::from(root);
-        candidates.push(p.join("target"));
-    }
-
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent().and_then(|p| p.parent())
-    {
-        candidates.push(parent.join("target"));
-    }
-
-    candidates.dedup();
-    candidates
-}
-
-fn try_read_ready_port_from_candidates(
-    dirs: &[std::path::PathBuf],
-) -> Option<(u16, std::path::PathBuf)> {
-    for dir in dirs {
-        let ready_path = dir.join("tairitsu-packager.ready");
-        if let Ok(content) = std::fs::read_to_string(&ready_path) {
-            let trimmed = content.trim();
-            if let Some(port_str) = trimmed.strip_prefix("ready:") {
-                if let Ok(port) = port_str.parse::<u16>() {
-                    return Some((port, ready_path));
-                }
-            } else if trimmed == "ready" {
-                return Some((3000, ready_path));
-            }
-        }
-    }
-    None
+    ))
 }
 
 struct McpState {
     base_url: String,
     http: reqwest::Client,
     #[cfg(feature = "vtty")]
-    vtty: std::sync::Arc<crate::vtty::VttyManager>,
+    vtty: std::sync::Arc<VttyManager>,
 }
 
 impl McpState {
@@ -1178,4 +1127,64 @@ fn map_key_name(key: &str) -> String {
         "Space" | "space" => "Space".to_string(),
         _ => key.to_string(),
     }
+}
+
+
+// ── Daemon check helpers (extracted from packager) ──
+
+fn search_project_roots() -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Ok(cwd) = std::env::current_dir() {
+        candidates.push(cwd.join("target"));
+        let mut dir = cwd.clone();
+        for _ in 0..5 {
+            if dir.join("Cargo.toml").exists() { candidates.push(dir.join("target")); }
+            if !dir.pop() { break; }
+        }
+    }
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+        candidates.push(PathBuf::from(root).join("target"));
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+            candidates.push(parent.join("target"));
+        }
+    }
+    candidates.dedup();
+    candidates
+}
+
+fn try_read_ready_port_from_candidates(dirs: &[PathBuf]) -> Option<(u16, PathBuf)> {
+    for dir in dirs {
+        let ready_path = dir.join("tairitsu-packager.ready");
+        if let Ok(content) = std::fs::read_to_string(&ready_path) {
+            let trimmed = content.trim();
+            if let Some(port_str) = trimmed.strip_prefix("ready:") {
+                if let Ok(port) = port_str.parse::<u16>() { return Some((port, ready_path)); }
+            } else if trimmed == "ready" { return Some((3000, ready_path)); }
+        }
+    }
+    None
+}
+
+fn daemon_is_running() -> bool {
+    if let Ok(pid) = daemon_read_pid() && pid > 0 { return check_process_exists(pid); }
+    false
+}
+
+fn daemon_read_pid() -> std::io::Result<u32> {
+    for dir in search_project_roots() {
+        let pid_path = dir.join("tairitsu-packager.pid");
+        if let Ok(content) = std::fs::read_to_string(&pid_path) {
+            return Ok(content.trim().parse().unwrap_or(0));
+        }
+    }
+    Err(std::io::Error::new(std::io::ErrorKind::NotFound, "no pid file"))
+}
+
+fn check_process_exists(pid: u32) -> bool {
+    #[cfg(unix)]
+    { std::process::Command::new("kill").arg("-0").arg(pid.to_string()).output().map(|o| o.status.success()).unwrap_or(false) }
+    #[cfg(windows)]
+    { std::process::Command::new("tasklist").args(&["/FI", &format!("PID eq {}", pid)]).output().map(|o| String::from_utf8_lossy(&o.stdout).contains(&pid.to_string())).unwrap_or(false) }
 }

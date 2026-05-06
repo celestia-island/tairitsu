@@ -1,3 +1,8 @@
+//! Cross-platform PTY backend using `portable-ty` crate.
+//!
+//! On Windows: ConPTY via native_pty_system()
+//! On Unix: forkpty via native_pty_system()
+
 use std::io::{self, Read, Write};
 use std::sync::Mutex;
 use std::time::Duration;
@@ -5,18 +10,25 @@ use std::time::Duration;
 use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
-    io::Error::other(e.to_string())
+    io::Error::new(io::ErrorKind::Other, e.to_string())
 }
 
-pub struct UnixPty {
+/// A cross-platform PTY session.
+pub struct ConPty {
     master: Box<dyn MasterPty + Send>,
     child: Mutex<Box<dyn Child + Send + Sync>>,
     killer: Box<dyn ChildKiller + Send + Sync>,
     writer: Mutex<Option<Box<dyn Write + Send>>>,
 }
 
-impl UnixPty {
-    pub fn spawn(command: &str, cols: u16, rows: u16, cwd: Option<&str>) -> io::Result<Self> {
+impl ConPty {
+    /// Spawn a command in a new PTY session.
+    pub fn spawn(
+        command: &str,
+        cols: u16,
+        rows: u16,
+        cwd: Option<&str>,
+    ) -> io::Result<(Self, u32)> {
         let pty_system = native_pty_system();
         let size = PtySize {
             rows,
@@ -26,24 +38,34 @@ impl UnixPty {
         };
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
-        let mut cmd = CommandBuilder::new("/bin/bash");
-        cmd.arg("-c");
-        cmd.arg(command);
+        let mut cmd = if cfg!(target_os = "windows") {
+            let mut c = CommandBuilder::new("cmd.exe");
+            c.arg("/C");
+            c.arg(command);
+            c
+        } else {
+            CommandBuilder::new(command)
+        };
         if let Some(dir) = cwd {
             cmd.cwd(dir);
         }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
 
+        let pid = child.process_id().unwrap_or(0);
         let killer = child.clone_killer();
 
-        Ok(Self {
-            master: pair.master,
-            child: Mutex::new(child),
-            killer,
-            writer: Mutex::new(None),
-        })
+        Ok((
+            Self {
+                master: pair.master,
+                child: Mutex::new(child),
+                killer,
+                writer: Mutex::new(None),
+            },
+            pid,
+        ))
     }
 
+    /// Write data to the PTY input.
     pub fn write(&self, data: &[u8]) -> io::Result<usize> {
         let mut guard = self
             .writer
@@ -59,6 +81,8 @@ impl UnixPty {
         }
     }
 
+    /// Read available data from PTY output with a 100ms timeout.
+    /// Returns 0 if no data is available within the timeout.
     pub fn read_nonblocking(&self, buf: &mut [u8]) -> io::Result<usize> {
         let reader = self.master.try_clone_reader().map_err(to_io)?;
         let (tx, rx) = std::sync::mpsc::channel();
@@ -80,6 +104,7 @@ impl UnixPty {
         }
     }
 
+    /// Resize the PTY.
     pub fn resize(&self, cols: u16, rows: u16) -> io::Result<()> {
         self.master
             .resize(PtySize {
@@ -91,6 +116,7 @@ impl UnixPty {
             .map_err(to_io)
     }
 
+    /// Check if child process is still alive.
     pub fn is_alive(&self) -> bool {
         let mut guard = match self.child.lock() {
             Ok(g) => g,
@@ -103,10 +129,12 @@ impl UnixPty {
         }
     }
 
+    /// Kill the child process and close PTY.
     pub fn kill(&mut self) -> io::Result<()> {
         self.killer.kill()
     }
 
+    /// Returns the PID of the child process.
     pub fn pid(&self) -> u32 {
         self.child
             .lock()
