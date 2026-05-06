@@ -143,6 +143,17 @@ impl VttySession {
         self.screen.lock().map(|s| s.get_text()).unwrap_or_default()
     }
 
+    pub fn has_output(&self) -> bool {
+        self.screen.lock().map(|s| s.has_output()).unwrap_or(false)
+    }
+
+    pub fn scrollback(&self) -> String {
+        self.screen
+            .lock()
+            .map(|s| s.get_scrollback_with_screen())
+            .unwrap_or_default()
+    }
+
     pub fn get_line(&self, row: usize) -> String {
         self.screen
             .lock()

@@ -7,10 +7,10 @@ pub mod pty_win;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-    use std::sync::{
-        Arc, Mutex,
-        atomic::Ordering,
-    };
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
+};
 
 use screen::Vt100Screen;
 
@@ -44,9 +44,12 @@ pub struct VttySession {
     pub cols: u16,
     pub rows: u16,
     pty: Mutex<Option<PtyHandle>>,
-    screen: Mutex<Vt100Screen>,
-    alive: std::sync::atomic::AtomicBool,
+    screen: Arc<Mutex<Vt100Screen>>,
+    alive: AtomicBool,
     pid: Option<u32>,
+    reader_running: Arc<AtomicBool>,
+    #[allow(dead_code)]
+    reader_handle: Mutex<Option<std::thread::JoinHandle<()>>>,
 }
 
 impl VttySession {
@@ -58,9 +61,11 @@ impl VttySession {
             cols,
             rows,
             pty: Mutex::new(None),
-            screen: Mutex::new(Vt100Screen::new(cols as usize, rows as usize)),
-            alive: std::sync::atomic::AtomicBool::new(true),
+            screen: Arc::new(Mutex::new(Vt100Screen::new(cols as usize, rows as usize))),
+            alive: AtomicBool::new(true),
             pid: None,
+            reader_running: Arc::new(AtomicBool::new(true)),
+            reader_handle: Mutex::new(None),
         }
     }
 
@@ -69,15 +74,27 @@ impl VttySession {
         {
             let (handle, pid) = pty_win::ConPty::spawn(&self.command, self.cols, self.rows, cwd)
                 .map_err(|e| format!("ConPTY spawn failed: {}", e))?;
-            self.pty = Mutex::new(Some(handle));
             self.pid = Some(pid);
+            self.pty = Mutex::new(Some(handle));
         }
         #[cfg(unix)]
         {
             let handle = pty_unix::UnixPty::spawn(&self.command, self.cols, self.rows, cwd)
                 .map_err(|e| format!("forkpty failed: {}", e))?;
+            let read_fd = handle.read_fd();
             self.pid = Some(handle.pid());
             self.pty = Mutex::new(Some(handle));
+
+            let screen = self.screen.clone();
+            let running = self.reader_running.clone();
+            let handle = std::thread::Builder::new()
+                .name(format!("vtty-reader-{}", self.id))
+                .stack_size(32 * 1024)
+                .spawn(move || {
+                    pty_unix::UnixPty::reader_loop(read_fd, screen, running);
+                })
+                .map_err(|e| format!("spawn reader thread failed: {}", e))?;
+            *self.reader_handle.lock().map_err(|e| format!("{}", e))? = Some(handle);
         }
         Ok(())
     }
@@ -96,8 +113,6 @@ impl VttySession {
         }
     }
 
-    // ... (keep rest of VttySession) ...
-
     pub fn send_keys(&self, keys: &str) -> Result<(), String> {
         let bytes = parse_keys(keys)?;
         self.write(&bytes)
@@ -109,38 +124,80 @@ impl VttySession {
     }
 
     pub fn read_and_update(&self) -> Result<usize, String> {
-        let mut buf = [0u8; 65536];
-        let mut total = 0;
-        loop {
-            let n = {
-                let guard = self
-                    .pty
-                    .lock()
-                    .map_err(|_| "PTY lock poisoned".to_string())?;
-                if let Some(ref pty) = *guard {
+        #[cfg(unix)]
+        {
+            let guard = self
+                .pty
+                .lock()
+                .map_err(|_| "PTY lock poisoned".to_string())?;
+            if let Some(ref pty) = *guard {
+                let mut buf = [0u8; 4096];
+                let mut total = 0;
+                loop {
                     match pty.read_nonblocking(&mut buf) {
                         Ok(0) => break,
-                        Ok(n) => n,
+                        Ok(n) => {
+                            self.screen
+                                .lock()
+                                .map_err(|_| "screen lock poisoned")?
+                                .process(&buf[..n]);
+                            total += n;
+                        }
                         Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
                         Err(e) => return Err(format!("PTY read error: {}", e)),
                     }
-                } else {
-                    break;
                 }
-            };
-            if n > 0 {
-                self.screen
-                    .lock()
-                    .map_err(|_| "screen lock poisoned")?
-                    .process(&buf[..n]);
-                total += n;
+                Ok(total)
+            } else {
+                Ok(0)
             }
         }
-        Ok(total)
+        #[cfg(windows)]
+        {
+            let mut buf = vec![0u8; 65536];
+            let mut total = 0;
+            loop {
+                let n = {
+                    let guard = self
+                        .pty
+                        .lock()
+                        .map_err(|_| "PTY lock poisoned".to_string())?;
+                    if let Some(ref pty) = *guard {
+                        match pty.read_nonblocking(&mut buf) {
+                            Ok(0) => break,
+                            Ok(n) => n,
+                            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                            Err(e) => return Err(format!("PTY read error: {}", e)),
+                        }
+                    } else {
+                        break;
+                    }
+                };
+                if n > 0 {
+                    self.screen
+                        .lock()
+                        .map_err(|_| "screen lock poisoned")?
+                        .process(&buf[..n]);
+                    total += n;
+                }
+            }
+            Ok(total)
+        }
     }
 
     pub fn screenshot(&self) -> String {
         self.screen.lock().map(|s| s.get_text()).unwrap_or_default()
+    }
+
+    pub fn has_output(&self) -> bool {
+        self.screen.lock().map(|s| s.has_output()).unwrap_or(false)
+    }
+
+    pub fn scrollback(&self) -> String {
+        self.screen
+            .lock()
+            .map(|s| s.get_scrollback_with_screen())
+            .unwrap_or_default()
     }
 
     pub fn get_line(&self, row: usize) -> String {
@@ -197,6 +254,12 @@ impl VttySession {
 
     pub fn kill(&mut self) -> Result<(), String> {
         self.alive.store(false, Ordering::Relaxed);
+        self.reader_running.store(false, Ordering::Relaxed);
+        if let Ok(mut guard) = self.reader_handle.lock() {
+            if let Some(handle) = guard.take() {
+                let _ = handle.join();
+            }
+        }
         let mut guard = self
             .pty
             .lock()
