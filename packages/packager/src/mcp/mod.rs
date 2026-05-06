@@ -56,7 +56,11 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
         }
     );
 
-    let http = reqwest::Client::new();
+    let http = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .connect_timeout(std::time::Duration::from_secs(5))
+        .build()
+        .unwrap_or_default();
     #[cfg(feature = "vtty")]
     let state = McpState {
         base_url,

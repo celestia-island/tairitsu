@@ -30,17 +30,79 @@ impl Server {
         format!("{}/__tairitsu_debug/{}", base, path)
     }
 
-    fn check_daemon(&self) -> Result<String, String> {
-        let url = self.base_url.blocking_read().clone();
-        if url.is_empty() {
-            Err("Browser tools require a running daemon. Start with: tairitsu dev --daemon".into())
-        } else {
-            Ok(url)
+    async fn ensure_daemon(&self) -> Result<String, McpError> {
+        {
+            let url = self.base_url.read().await.clone();
+            if !url.is_empty() {
+                return Ok(url);
+            }
         }
+        let resolved = resolve_daemon_url().await.unwrap_or_default();
+        if resolved.is_empty() {
+            return Err(McpError::internal_error(
+                "Browser tools require a running daemon. Start with: tairitsu dev --daemon",
+                None,
+            ));
+        }
+        *self.base_url.write().await = resolved.clone();
+        Ok(resolved)
     }
 
     fn tool_result(text: impl Into<String>) -> CallToolResult {
         CallToolResult::success(vec![Content::text(text)])
+    }
+
+    async fn http_post(
+        &self,
+        path: &str,
+        body: serde_json::Value,
+    ) -> Result<serde_json::Value, McpError> {
+        let resp = self
+            .http
+            .post(self.api(path))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
+        if !status.is_success() {
+            let msg = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("unknown error");
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {msg}"),
+                None,
+            ));
+        }
+        Ok(v)
+    }
+
+    async fn http_post_fire_and_forget(
+        &self,
+        path: &str,
+        body: serde_json::Value,
+    ) -> Result<(), McpError> {
+        let resp = self
+            .http
+            .post(self.api(path))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        if !status.is_success() {
+            let text = resp.text().await.unwrap_or_default();
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {text}"),
+                None,
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -235,15 +297,9 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let _resp = self
-            .http
-            .post(self.api("navigate"))
-            .json(&json!({"url": args.url}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
+            .await?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
     }
 
@@ -275,27 +331,13 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(t) = &args.target {
             body["selector"] = json!(t);
         }
-        let resp = self
-            .http
-            .post(self.api("snapshot"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let text = resp
-            .json::<serde_json::Value>()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let out = text
-            .get("snapshot")
-            .and_then(|v| v.as_str())
-            .unwrap_or("{}");
+        let v = self.http_post("snapshot", body).await?;
+        let out = v.get("snapshot").and_then(|v| v.as_str()).unwrap_or("{}");
         Ok(Self::tool_result(out.to_string()))
     }
 
@@ -307,8 +349,7 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(el) = &args.element {
             body["selector"] = json!(el);
@@ -319,17 +360,7 @@ impl Server {
         if let Some(t) = &args.image_type {
             body["type"] = json!(t);
         }
-        let resp = self
-            .http
-            .post(self.api("screenshot"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v = self.http_post("screenshot", body).await?;
         let success = v.get("success").and_then(|s| s.as_bool()).unwrap_or(false);
         let data = v
             .get("data")
@@ -354,14 +385,9 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("click"))
-            .json(&json!({"selector": args.target}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("click", json!({"selector": args.target}))
+            .await?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
     }
 
@@ -371,8 +397,7 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let js = format!(
             "const e=document.querySelector('{}');if(e){{e.focus();e.value='{}';e.dispatchEvent(new Event('input',{{bubbles:true}}));}}{}",
             args.target,
@@ -383,12 +408,8 @@ impl Server {
                 ""
             }
         );
-        self.http
-            .post(self.api("evaluate"))
-            .json(&json!({"function": js}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.http_post_fire_and_forget("evaluate", json!({"function": js}))
+            .await?;
         Ok(Self::tool_result(format!("Typed: {}", args.text)))
     }
 
@@ -398,14 +419,9 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("press-key"))
-            .json(&json!({"key": args.key}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("press-key", json!({"key": args.key}))
+            .await?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
     }
 
@@ -415,14 +431,9 @@ impl Server {
         Parameters(args): Parameters<HoverArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("hover"))
-            .json(&json!({"selector": args.target}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("hover", json!({"selector": args.target}))
+            .await?;
         Ok(Self::tool_result(format!("Hovered: {}", args.target)))
     }
 
@@ -432,14 +443,12 @@ impl Server {
         Parameters(args): Parameters<SelectOptionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("select-option"))
-            .json(&json!({"selector": args.target, "values": args.values}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget(
+            "select-option",
+            json!({"selector": args.target, "values": args.values}),
+        )
+        .await?;
         Ok(Self::tool_result(format!("Selected in: {}", args.target)))
     }
 
@@ -449,15 +458,16 @@ impl Server {
         Parameters(args): Parameters<FillFormArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let v: Vec<_> = args.fields.iter().map(|f| json!({"target": f.target, "name": f.name, "type": f.field_type, "value": f.value})).collect();
-        self.http
-            .post(self.api("fill-form"))
-            .json(&json!({"fields": v}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        let v: Vec<_> = args
+            .fields
+            .iter()
+            .map(|f| {
+                json!({"target": f.target, "name": f.name, "type": f.field_type, "value": f.value})
+            })
+            .collect();
+        self.http_post_fire_and_forget("fill-form", json!({"fields": v}))
+            .await?;
         Ok(Self::tool_result("Form filled".to_string()))
     }
 
@@ -467,23 +477,12 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({"function": args.function});
         if let Some(t) = &args.target {
             body["target"] = json!(t);
         }
-        let resp = self
-            .http
-            .post(self.api("evaluate"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v = self.http_post("evaluate", body).await?;
         Ok(Self::tool_result(
             v.get("result")
                 .and_then(|r| r.as_str())
@@ -498,8 +497,7 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(a) = args.all {
             body["all"] = json!(a);
@@ -507,17 +505,7 @@ impl Server {
         if let Some(l) = &args.level {
             body["level"] = json!(l);
         }
-        let resp = self
-            .http
-            .post(self.api("console-messages"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v = self.http_post("console-messages", body).await?;
         Ok(Self::tool_result(v.to_string()))
     }
 
@@ -527,8 +515,7 @@ impl Server {
         Parameters(args): Parameters<NetworkRequestsArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(f) = &args.filter {
             body["filter"] = json!(f);
@@ -536,17 +523,7 @@ impl Server {
         if let Some(s) = args.is_static {
             body["static"] = json!(s);
         }
-        let resp = self
-            .http
-            .post(self.api("network-requests"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v = self.http_post("network-requests", body).await?;
         Ok(Self::tool_result(v.to_string()))
     }
 
@@ -556,8 +533,7 @@ impl Server {
         Parameters(args): Parameters<BrowserTabsArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(a) = &args.action {
             body["action"] = json!(a);
@@ -568,17 +544,7 @@ impl Server {
         if let Some(u) = &args.url {
             body["url"] = json!(u);
         }
-        let resp = self
-            .http
-            .post(self.api("tabs"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v = self.http_post("tabs", body).await?;
         Ok(Self::tool_result(v.to_string()))
     }
 
@@ -590,8 +556,7 @@ impl Server {
         Parameters(args): Parameters<WaitForArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(t) = &args.text {
             body["text"] = json!(t);
@@ -602,12 +567,7 @@ impl Server {
         if let Some(t) = args.time {
             body["time"] = json!(t);
         }
-        self.http
-            .post(self.api("wait-for"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.http_post_fire_and_forget("wait-for", body).await?;
         Ok(Self::tool_result("Wait condition satisfied".to_string()))
     }
 
@@ -616,13 +576,8 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("close"))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("close", json!({})).await?;
         Ok(Self::tool_result("Browser closed".to_string()))
     }
 
@@ -632,14 +587,12 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("resize"))
-            .json(&json!({"width": args.width, "height": args.height}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget(
+            "resize",
+            json!({"width": args.width, "height": args.height}),
+        )
+        .await?;
         Ok(Self::tool_result(format!(
             "Resized to {}x{}",
             args.width, args.height
@@ -1153,7 +1106,11 @@ pub async fn run(config: McpConfig) -> Result<()> {
 
     let server = Server {
         base_url: base_url.clone(),
-        http: reqwest::Client::new(),
+        http: reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .connect_timeout(std::time::Duration::from_secs(5))
+            .build()
+            .unwrap_or_default(),
         #[cfg(feature = "vtty")]
         vtty: std::sync::Arc::new(vtty::VttyManager::new()),
     };
