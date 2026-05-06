@@ -8,7 +8,7 @@ fn main() {
 
     let config = tairitsu_mcp::McpConfig { base_url: String::new() };
 
-    tokio::runtime::Builder::new_current_thread()
+    tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .expect("tokio runtime")

@@ -21,12 +21,18 @@ tokio = { version = "^1", default-features = false, features = [
   "macros",
   "time",
   "io-util",
+  "io-std",
 ] }
 tracing = "^0.1"
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 reqwest = { version = "^0.12", features = ["json"] }
 vte = { version = "^0.15", optional = true }
 portable-pty = { version = "^0.8", optional = true }
+schemars = "1"
+rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "^0.2"
 
 [features]
 default = ["vtty"]

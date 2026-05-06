@@ -83,17 +83,24 @@ impl ConPty {
 
     /// Read available data from PTY output with a 100ms timeout.
     /// Returns 0 if no data is available within the timeout.
+    ///
+    /// Uses a thread-based approach with `recv_timeout` for cross-platform
+    /// compatibility. The spawned thread will exit when `tx` is dropped
+    /// (after the timeout) or when the read completes and `tx.send()` fails.
     pub fn read_nonblocking(&self, buf: &mut [u8]) -> io::Result<usize> {
         let reader = self.master.try_clone_reader().map_err(to_io)?;
         let (tx, rx) = std::sync::mpsc::channel();
         let mut owned_buf = vec![0u8; buf.len()];
-        std::thread::spawn(move || {
-            let n = {
-                let mut r = reader;
-                r.read(&mut owned_buf)
-            };
-            let _ = tx.send((n, owned_buf));
-        });
+        std::thread::Builder::new()
+            .stack_size(32 * 1024)
+            .spawn(move || {
+                let n = {
+                    let mut r = reader;
+                    r.read(&mut owned_buf)
+                };
+                let _ = tx.send((n, owned_buf));
+            })
+            .map_err(to_io)?;
         match rx.recv_timeout(Duration::from_millis(100)) {
             Ok((n, data)) => {
                 let len = n.unwrap_or(0).min(buf.len().min(data.len()));

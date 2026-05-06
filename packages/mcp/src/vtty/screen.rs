@@ -22,6 +22,7 @@ pub struct Vt100Screen {
     cols: usize,
     rows: usize,
     grid: Vec<Vec<Cell>>,
+    scrollback: Vec<Vec<Cell>>,
     cursor_row: usize,
     cursor_col: usize,
     saved_row: usize,
@@ -35,6 +36,7 @@ impl Vt100Screen {
             cols,
             rows,
             grid: vec![vec![Cell::default(); cols]; rows],
+            scrollback: Vec::new(),
             cursor_row: 0,
             cursor_col: 0,
             saved_row: 0,
@@ -112,10 +114,44 @@ impl Vt100Screen {
         self.cols
     }
 
+    pub fn has_output(&self) -> bool {
+        self.grid.iter().any(|row| row.iter().any(|c| c.ch != ' '))
+    }
+
+    pub fn get_scrollback(&self) -> String {
+        let lines: Vec<String> = self
+            .scrollback
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|c| c.ch)
+                    .collect::<String>()
+                    .trim_end()
+                    .to_string()
+            })
+            .collect();
+        lines.join("\n")
+    }
+
+    pub fn get_scrollback_with_screen(&self) -> String {
+        let sb = self.get_scrollback();
+        let screen = self.get_text();
+        if sb.is_empty() {
+            screen
+        } else if screen.is_empty() {
+            sb
+        } else {
+            format!("{}\n{}", sb, screen)
+        }
+    }
+
     fn scroll_up(&mut self, n: usize) {
         for _ in 0..n {
-            self.grid.remove(0);
+            self.scrollback.push(self.grid.remove(0));
             self.grid.push(vec![Cell::default(); self.cols]);
+        }
+        while self.scrollback.len() > 1000 {
+            self.scrollback.remove(0);
         }
     }
 
