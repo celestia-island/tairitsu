@@ -209,6 +209,7 @@ impl VttySession {
             .unwrap_or_default()
     }
 
+    #[allow(dead_code)]
     pub fn get_line(&self, row: usize) -> String {
         self.screen
             .lock()
@@ -264,11 +265,10 @@ impl VttySession {
     pub fn kill(&mut self) -> Result<(), String> {
         self.alive.store(false, Ordering::Relaxed);
         self.reader_running.store(false, Ordering::Relaxed);
-        if let Ok(mut guard) = self.reader_handle.lock() {
-            if let Some(handle) = guard.take() {
+        if let Ok(mut guard) = self.reader_handle.lock()
+            && let Some(handle) = guard.take() {
                 let _ = handle.join();
             }
-        }
         let mut guard = self
             .pty
             .lock()

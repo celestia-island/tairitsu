@@ -7,6 +7,7 @@ use super::screen::{Cell, ColorKind, RenderData};
 // ─── Color Schemes ──────────────────────────────────────────────────────────
 
 pub struct ColorScheme {
+    #[allow(dead_code)]
     pub name: &'static str,
     pub fg: [u8; 3],
     pub bg: [u8; 3],
@@ -150,6 +151,7 @@ pub fn get_scheme(name: &str) -> &'static ColorScheme {
     }
 }
 
+#[allow(dead_code)]
 pub fn scheme_names() -> &'static [&'static str] {
     &[
         "solarized-dark",
@@ -225,41 +227,33 @@ fn find_font_file(candidates: &[&str]) -> Option<std::path::PathBuf> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_file() {
-                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                        if candidates.iter().any(|c| name == *c) {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str())
+                        && candidates.contains(&name) {
                             return Some(path);
                         }
-                    }
-                } else if path.is_dir() {
-                    if let Ok(sub) = std::fs::read_dir(&path) {
+                } else if path.is_dir()
+                    && let Ok(sub) = std::fs::read_dir(&path) {
                         for se in sub.flatten() {
                             let sp = se.path();
-                            if sp.is_file() {
-                                if let Some(name) = sp.file_name().and_then(|n| n.to_str()) {
-                                    if candidates.iter().any(|c| name == *c) {
+                            if sp.is_file()
+                                && let Some(name) = sp.file_name().and_then(|n| n.to_str())
+                                    && candidates.contains(&name) {
                                         return Some(sp);
                                     }
-                                }
-                            }
-                            if sp.is_dir() {
-                                if let Ok(l3) = std::fs::read_dir(&sp) {
+                            if sp.is_dir()
+                                && let Ok(l3) = std::fs::read_dir(&sp) {
                                     for l3e in l3.flatten() {
                                         let l3p = l3e.path();
-                                        if l3p.is_file() {
-                                            if let Some(name) =
+                                        if l3p.is_file()
+                                            && let Some(name) =
                                                 l3p.file_name().and_then(|n| n.to_str())
-                                            {
-                                                if candidates.iter().any(|c| name == *c) {
+                                                && candidates.contains(&name) {
                                                     return Some(l3p);
                                                 }
-                                            }
-                                        }
                                     }
                                 }
-                            }
                         }
                     }
-                }
             }
         }
     }
@@ -327,6 +321,16 @@ fn resolve_color(color: ColorKind, scheme: &ColorScheme, is_fg: bool) -> [u8; 3]
 
 type ImgBuf = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
+struct RenderCtx<'a> {
+    fonts: &'a Fonts,
+    scale: PxScale,
+    cell_w: f32,
+    cell_h: f32,
+    ascent: f32,
+    padding: u32,
+    scheme: &'a ColorScheme,
+}
+
 pub fn render_terminal(
     data: &RenderData,
     theme: &str,
@@ -353,23 +357,13 @@ pub fn render_terminal(
         Rgba([scheme.bg[0], scheme.bg[1], scheme.bg[2], 255]),
     );
 
+    let ctx = RenderCtx { fonts: &fonts, scale, cell_w, cell_h, ascent, padding, scheme };
+
     for (row_idx, row) in data.grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
             let x0 = padding as f32 + col_idx as f32 * cell_w;
             let y0 = padding as f32 + row_idx as f32 * cell_h;
-            render_cell(
-                &mut img,
-                cell,
-                x0,
-                y0,
-                cell_w,
-                cell_h,
-                &fonts,
-                scale,
-                ascent,
-                padding,
-                scheme,
-            );
+            render_cell(&mut img, cell, x0, y0, &ctx);
         }
     }
 
@@ -377,10 +371,7 @@ pub fn render_terminal(
         &mut img,
         data.cursor_row,
         data.cursor_col,
-        cell_w,
-        cell_h,
-        padding,
-        scheme,
+        &ctx,
     );
 
     let mut png_data = Vec::new();
@@ -394,17 +385,11 @@ fn render_cell(
     cell: &Cell,
     x0: f32,
     y0: f32,
-    cell_w: f32,
-    cell_h: f32,
-    fonts: &Fonts,
-    scale: PxScale,
-    ascent: f32,
-    padding: u32,
-    scheme: &ColorScheme,
+    ctx: &RenderCtx,
 ) {
-    let bg = resolve_color(cell.attrs.bg, scheme, false);
+    let bg = resolve_color(cell.attrs.bg, ctx.scheme, false);
 
-    let fg_raw = resolve_color(cell.attrs.fg, scheme, true);
+    let fg_raw = resolve_color(cell.attrs.fg, ctx.scheme, true);
     let fg = if cell.attrs.bold {
         [
             fg_raw[0].saturating_add(30),
@@ -417,8 +402,8 @@ fn render_cell(
 
     let px0 = x0.ceil() as u32;
     let py0 = y0.ceil() as u32;
-    let px1 = (x0 + cell_w).ceil() as u32;
-    let py1 = (y0 + cell_h).ceil() as u32;
+    let px1 = (x0 + ctx.cell_w).ceil() as u32;
+    let py1 = (y0 + ctx.cell_h).ceil() as u32;
     let iw = img.width();
     let ih = img.height();
 
@@ -447,9 +432,9 @@ fn render_cell(
     }
 
     let cw = unicode_width::UnicodeWidthChar::width(cell.ch).unwrap_or(1);
-    let _actual_cell_w = cell_w * cw as f32;
+    let _actual_cell_w = ctx.cell_w * cw as f32;
 
-    let glyph_id = fonts.mono.glyph_id(cell.ch);
+    let glyph_id = ctx.fonts.mono.glyph_id(cell.ch);
     let (has_mono, gid) = if glyph_id != GlyphId(0) {
         (true, glyph_id)
     } else {
@@ -459,21 +444,21 @@ fn render_cell(
     if has_mono {
         let glyph = ab_glyph::Glyph {
             id: gid,
-            scale,
-            position: point(x0, y0 + ascent),
+            scale: ctx.scale,
+            position: point(x0, y0 + ctx.ascent),
         };
-        draw_glyph_outline(&fonts.mono, glyph, img, fg, padding);
-    } else if let Some(ref cjk) = fonts.cjk {
+        draw_glyph_outline(&ctx.fonts.mono, glyph, img, fg);
+    } else if let Some(ref cjk) = ctx.fonts.cjk {
         let cjk_id = cjk.glyph_id(cell.ch);
         if cjk_id != GlyphId(0) {
-            let cjk_scale = PxScale::from(font_size_for_double(cw, cell_w, cell_h));
+            let cjk_scale = PxScale::from(font_size_for_double(cw, ctx.cell_w, ctx.cell_h));
             let cjk_ascent = cjk.as_scaled(cjk_scale).ascent();
             let glyph = ab_glyph::Glyph {
                 id: cjk_id,
                 scale: cjk_scale,
                 position: point(x0, y0 + cjk_ascent),
             };
-            draw_glyph_outline(cjk, glyph, img, fg, padding);
+            draw_glyph_outline(cjk, glyph, img, fg);
         }
     }
 }
@@ -481,7 +466,7 @@ fn render_cell(
 fn font_size_for_double(char_width: usize, cell_w: f32, cell_h: f32) -> f32 {
     let target_w = cell_w * char_width as f32;
     let ratio = target_w / cell_h;
-    15.0 * ratio.min(2.0).max(1.0)
+    15.0 * ratio.clamp(1.0, 2.0)
 }
 
 fn draw_glyph_outline<F: ab_glyph::Font>(
@@ -489,7 +474,6 @@ fn draw_glyph_outline<F: ab_glyph::Font>(
     glyph: ab_glyph::Glyph,
     img: &mut ImgBuf,
     fg: [u8; 3],
-    _padding: u32,
 ) {
     if let Some(outlined) = font.outline_glyph(glyph) {
         let bounds = outlined.px_bounds();
@@ -518,21 +502,18 @@ fn render_cursor(
     img: &mut ImgBuf,
     cursor_row: usize,
     cursor_col: usize,
-    cell_w: f32,
-    cell_h: f32,
-    padding: u32,
-    scheme: &ColorScheme,
+    ctx: &RenderCtx,
 ) {
-    let x0 = padding as f32 + cursor_col as f32 * cell_w;
-    let y0 = padding as f32 + cursor_row as f32 * cell_h;
+    let x0 = ctx.padding as f32 + cursor_col as f32 * ctx.cell_w;
+    let y0 = ctx.padding as f32 + cursor_row as f32 * ctx.cell_h;
     let px0 = x0.ceil() as u32;
     let py0 = y0.ceil() as u32;
-    let px1 = (x0 + cell_w).ceil() as u32;
-    let py1 = (y0 + cell_h).ceil() as u32;
+    let px1 = (x0 + ctx.cell_w).ceil() as u32;
+    let py1 = (y0 + ctx.cell_h).ceil() as u32;
     let iw = img.width();
     let ih = img.height();
 
-    let cc = scheme.cursor;
+    let cc = ctx.scheme.cursor;
     for y in py0..py1.min(ih) {
         for x in px0..px1.min(iw) {
             let p = img.get_pixel(x, y);
