@@ -194,7 +194,11 @@ impl VttySession {
 
     #[cfg(feature = "vtty-visual")]
     pub fn visual_screenshot(&self, theme: &str) -> Result<Vec<u8>, String> {
-        let rd = self.screen.lock().map(|s| s.get_render_data()).map_err(|e| e.to_string())?;
+        let rd = self
+            .screen
+            .lock()
+            .map(|s| s.get_render_data())
+            .map_err(|e| e.to_string())?;
         render::render_terminal(&rd, theme)
     }
 
@@ -266,9 +270,10 @@ impl VttySession {
         self.alive.store(false, Ordering::Relaxed);
         self.reader_running.store(false, Ordering::Relaxed);
         if let Ok(mut guard) = self.reader_handle.lock()
-            && let Some(handle) = guard.take() {
-                let _ = handle.join();
-            }
+            && let Some(handle) = guard.take()
+        {
+            let _ = handle.join();
+        }
         let mut guard = self
             .pty
             .lock()
