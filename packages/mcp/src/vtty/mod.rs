@@ -5,6 +5,9 @@ pub mod pty_unix;
 #[cfg(windows)]
 pub mod pty_win;
 
+#[cfg(feature = "vtty-visual")]
+pub mod render;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{
@@ -187,6 +190,12 @@ impl VttySession {
 
     pub fn screenshot(&self) -> String {
         self.screen.lock().map(|s| s.get_text()).unwrap_or_default()
+    }
+
+    #[cfg(feature = "vtty-visual")]
+    pub fn visual_screenshot(&self, theme: &str) -> Result<Vec<u8>, String> {
+        let rd = self.screen.lock().map(|s| s.get_render_data()).map_err(|e| e.to_string())?;
+        render::render_terminal(&rd, theme)
     }
 
     pub fn has_output(&self) -> bool {
