@@ -1,21 +1,44 @@
 use vte::{Params, Perform};
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ColorKind {
+    #[default]
+    Default,
+    Index(u8),
+    Rgb(u8, u8, u8),
+}
+
 #[derive(Clone, Copy, Default)]
-struct CellAttrs {
-    bold: bool,
-    italic: bool,
-    underline: bool,
+pub struct CellAttrs {
+    pub bold: bool,
+    pub italic: bool,
+    pub underline: bool,
+    pub fg: ColorKind,
+    pub bg: ColorKind,
 }
 
 #[derive(Clone)]
-struct Cell {
-    ch: char,
+pub struct Cell {
+    pub ch: char,
+    pub attrs: CellAttrs,
 }
 
 impl Default for Cell {
     fn default() -> Self {
-        Self { ch: ' ' }
+        Self {
+            ch: ' ',
+            attrs: CellAttrs::default(),
+        }
     }
+}
+
+#[derive(Clone)]
+pub struct RenderData {
+    pub rows: usize,
+    pub cols: usize,
+    pub cursor_row: usize,
+    pub cursor_col: usize,
+    pub grid: Vec<Vec<Cell>>,
 }
 
 pub struct Vt100Screen {
@@ -84,6 +107,7 @@ impl Vt100Screen {
         out.join("\n")
     }
 
+    #[allow(dead_code)]
     pub fn get_line(&self, row: usize) -> String {
         if row >= self.rows {
             return String::new();
@@ -107,9 +131,11 @@ impl Vt100Screen {
         r
     }
 
+    #[allow(dead_code)]
     pub fn line_count(&self) -> usize {
         self.rows
     }
+    #[allow(dead_code)]
     pub fn cols_count(&self) -> usize {
         self.cols
     }
@@ -145,6 +171,16 @@ impl Vt100Screen {
         }
     }
 
+    pub fn get_render_data(&self) -> RenderData {
+        RenderData {
+            rows: self.rows,
+            cols: self.cols,
+            cursor_row: self.cursor_row,
+            cursor_col: self.cursor_col,
+            grid: self.grid.clone(),
+        }
+    }
+
     fn scroll_up(&mut self, n: usize) {
         for _ in 0..n {
             self.scrollback.push(self.grid.remove(0));
@@ -175,7 +211,10 @@ impl Perform for Vt100Screen {
     fn print(&mut self, c: char) {
         self.ensure_cursor_in_bounds();
         if self.cursor_row < self.rows && self.cursor_col < self.cols {
-            self.grid[self.cursor_row][self.cursor_col] = Cell { ch: c };
+            self.grid[self.cursor_row][self.cursor_col] = Cell {
+                ch: c,
+                attrs: self.attrs,
+            };
         }
         self.cursor_col += 1;
     }
@@ -256,14 +295,73 @@ impl Perform for Vt100Screen {
                 _ => {}
             },
             'm' => {
-                for &v in &pv {
-                    match v {
+                let mut i = 0;
+                while i < pv.len() {
+                    match pv[i] {
                         0 => self.attrs = CellAttrs::default(),
                         1 => self.attrs.bold = true,
                         3 => self.attrs.italic = true,
                         4 => self.attrs.underline = true,
+                        7 => {}
+                        22 => self.attrs.bold = false,
+                        23 => self.attrs.italic = false,
+                        24 => self.attrs.underline = false,
+                        27 => {}
+                        30..=37 => {
+                            self.attrs.fg = ColorKind::Index((pv[i] - 30) as u8);
+                        }
+                        38 => {
+                            if i + 1 < pv.len() {
+                                match pv[i + 1] {
+                                    5 if i + 2 < pv.len() => {
+                                        self.attrs.fg = ColorKind::Index(pv[i + 2] as u8);
+                                        i += 2;
+                                    }
+                                    2 if i + 4 < pv.len() => {
+                                        self.attrs.fg = ColorKind::Rgb(
+                                            pv[i + 2] as u8,
+                                            pv[i + 3] as u8,
+                                            pv[i + 4] as u8,
+                                        );
+                                        i += 4;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        39 => self.attrs.fg = ColorKind::Default,
+                        40..=47 => {
+                            self.attrs.bg = ColorKind::Index((pv[i] - 40) as u8);
+                        }
+                        48 => {
+                            if i + 1 < pv.len() {
+                                match pv[i + 1] {
+                                    5 if i + 2 < pv.len() => {
+                                        self.attrs.bg = ColorKind::Index(pv[i + 2] as u8);
+                                        i += 2;
+                                    }
+                                    2 if i + 4 < pv.len() => {
+                                        self.attrs.bg = ColorKind::Rgb(
+                                            pv[i + 2] as u8,
+                                            pv[i + 3] as u8,
+                                            pv[i + 4] as u8,
+                                        );
+                                        i += 4;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        49 => self.attrs.bg = ColorKind::Default,
+                        90..=97 => {
+                            self.attrs.fg = ColorKind::Index((pv[i] - 90 + 8) as u8);
+                        }
+                        100..=107 => {
+                            self.attrs.bg = ColorKind::Index((pv[i] - 100 + 8) as u8);
+                        }
                         _ => {}
                     }
+                    i += 1;
                 }
             }
             's' => {
@@ -384,6 +482,47 @@ mod tests {
     }
 
     #[test]
+    fn test_sgr_foreground_ansi_colors() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[31mred\x1b[0m normal");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(1));
+        assert_eq!(rd.grid[0][4].attrs.fg, ColorKind::Default);
+    }
+
+    #[test]
+    fn test_sgr_256_color() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[38;5;196mX\x1b[0m");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(196));
+    }
+
+    #[test]
+    fn test_sgr_truecolor() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[38;2;255;100;0mX\x1b[0m");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Rgb(255, 100, 0));
+    }
+
+    #[test]
+    fn test_sgr_bright_colors() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[91mX\x1b[0m");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.fg, ColorKind::Index(9));
+    }
+
+    #[test]
+    fn test_sgr_background_colors() {
+        let mut s = Vt100Screen::new(40, 2);
+        s.process(b"\x1b[48;2;0;0;128mX\x1b[0m");
+        let rd = s.get_render_data();
+        assert_eq!(rd.grid[0][0].attrs.bg, ColorKind::Rgb(0, 0, 128));
+    }
+
+    #[test]
     fn test_empty_screen() {
         let s = Vt100Screen::new(10, 3);
         assert_eq!(s.get_text(), "");
@@ -399,7 +538,7 @@ mod tests {
     fn test_cursor_up_down_left_right() {
         let mut s = Vt100Screen::new(20, 4);
         s.process(b"row0\r\nrow1\r\nrow2");
-        s.process(b"\x1b[A"); // cursor up
+        s.process(b"\x1b[A");
         s.process(b"!");
         assert_eq!(s.get_line(1), "row1!");
     }

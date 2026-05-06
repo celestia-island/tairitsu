@@ -30,10 +30,15 @@ vte = { version = "^0.15", optional = true }
 portable-pty = { version = "^0.8", optional = true }
 schemars = "1"
 rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars"] }
+ab_glyph = { version = "^0.2", optional = true }
+image = { version = "^0.25", optional = true }
+base64 = { version = "^0.22", optional = true }
+unicode-width = { version = "^0.2", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "^0.2"
 
 [features]
-default = ["vtty"]
+default = ["vtty", "vtty-visual"]
 vtty = ["vte", "portable-pty"]
+vtty-visual = ["vtty", "dep:ab_glyph", "dep:image", "dep:base64", "dep:unicode-width"]
