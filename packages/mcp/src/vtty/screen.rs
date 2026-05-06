@@ -107,6 +107,7 @@ impl Vt100Screen {
         out.join("\n")
     }
 
+    #[allow(dead_code)]
     pub fn get_line(&self, row: usize) -> String {
         if row >= self.rows {
             return String::new();
@@ -130,9 +131,11 @@ impl Vt100Screen {
         r
     }
 
+    #[allow(dead_code)]
     pub fn line_count(&self) -> usize {
         self.rows
     }
+    #[allow(dead_code)]
     pub fn cols_count(&self) -> usize {
         self.cols
     }

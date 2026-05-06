@@ -64,12 +64,14 @@ struct ScreenshotArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct ClickArgs {
     element: Option<String>,
     target: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct TypeArgs {
     element: Option<String>,
     submit: Option<bool>,
@@ -81,12 +83,14 @@ struct TypeArgs {
 struct PressKeyArgs { key: String }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct HoverArgs {
     element: Option<String>,
     target: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct SelectOptionArgs {
     element: Option<String>,
     target: String,
@@ -94,6 +98,7 @@ struct SelectOptionArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct FillFormField {
     element: Option<String>,
     name: String,
@@ -107,6 +112,7 @@ struct FillFormField {
 struct FillFormArgs { fields: Vec<FillFormField> }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[allow(dead_code)]
 struct EvaluateArgs {
     element: Option<String>,
     function: String,
@@ -736,11 +742,10 @@ mod daemon {
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
             candidates.push(PathBuf::from(root).join("target"));
         }
-        if let Ok(exe) = std::env::current_exe() {
-            if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+        if let Ok(exe) = std::env::current_exe()
+            && let Some(parent) = exe.parent().and_then(|p| p.parent()) {
                 candidates.push(parent.join("target"));
             }
-        }
         candidates.dedup();
         candidates
     }
@@ -778,10 +783,7 @@ pub async fn run(config: McpConfig) -> Result<()> {
         let url = if !url_from_config.is_empty() {
             url_from_config
         } else {
-            match resolve_daemon_url().await {
-                Ok(u) => u,
-                Err(_) => String::new(),
-            }
+            resolve_daemon_url().await.unwrap_or_default()
         };
         *base_url_clone.write().await = url;
     });
