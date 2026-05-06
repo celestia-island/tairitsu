@@ -25,9 +25,9 @@ pub struct Server {
 }
 
 impl Server {
-    fn api(&self, path: &str) -> String {
-        let base = self.base_url.blocking_read();
-        format!("{}/__tairitsu_debug/{}", base, path)
+    async fn api_async(&self, path: &str) -> String {
+        let base = self.base_url.read().await.clone();
+        format!("{}/{}", base, path)
     }
 
     async fn ensure_daemon(&self) -> Result<String, McpError> {
@@ -57,9 +57,10 @@ impl Server {
         path: &str,
         body: serde_json::Value,
     ) -> Result<serde_json::Value, McpError> {
+        let url = self.api_async(path).await;
         let resp = self
             .http
-            .post(self.api(path))
+            .post(&url)
             .json(&body)
             .send()
             .await
@@ -87,9 +88,10 @@ impl Server {
         path: &str,
         body: serde_json::Value,
     ) -> Result<(), McpError> {
+        let url = self.api_async(path).await;
         let resp = self
             .http
-            .post(self.api(path))
+            .post(&url)
             .json(&body)
             .send()
             .await
@@ -1026,12 +1028,17 @@ mod daemon {
         if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
             && !url.is_empty()
         {
-            tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
             return Ok(url);
         }
         let searched = search_project_roots();
-        if let Some((port, _found_at)) = try_read_ready_port_from_candidates(&searched) {
-            return Ok(format!("http://localhost:{}", port));
+        if let Some((_port, debug_port, _found_at)) = try_read_ready_port_from_candidates(&searched)
+        {
+            if let Some(dp) = debug_port {
+                return Ok(format!("http://localhost:{dp}"));
+            }
+            return Err(anyhow!(
+                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+            ));
         }
         Err(anyhow!("No running tairitsu daemon found"))
     }
@@ -1041,7 +1048,7 @@ mod daemon {
         if let Ok(cwd) = std::env::current_dir() {
             candidates.push(cwd.join("target"));
             let mut dir = cwd.clone();
-            for _ in 0..5 {
+            for _ in 0..8 {
                 if dir.join("Cargo.toml").exists() {
                     candidates.push(dir.join("target"));
                 }
@@ -1049,9 +1056,27 @@ mod daemon {
                     break;
                 }
             }
+            add_target_tree(&mut candidates, &cwd, 3);
         }
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
-            candidates.push(PathBuf::from(root).join("target"));
+            let root_path = PathBuf::from(&root);
+            candidates.push(root_path.join("target"));
+            add_target_tree(&mut candidates, &root_path, 3);
+        }
+        for scan_dir in std::env::var("HOME")
+            .ok()
+            .map(|h| vec![PathBuf::from("/mnt/sdb1"), PathBuf::from(h)])
+            .unwrap_or_default()
+        {
+            if let Ok(entries) = std::fs::read_dir(&scan_dir) {
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if p.is_dir() {
+                        candidates.push(p.join("target"));
+                        add_target_tree(&mut candidates, &p, 2);
+                    }
+                }
+            }
         }
         if let Ok(exe) = std::env::current_exe()
             && let Some(parent) = exe.parent().and_then(|p| p.parent())
@@ -1062,17 +1087,38 @@ mod daemon {
         candidates
     }
 
-    fn try_read_ready_port_from_candidates(dirs: &[PathBuf]) -> Option<(u16, PathBuf)> {
+    fn add_target_tree(candidates: &mut Vec<PathBuf>, base: &PathBuf, depth: u32) {
+        if depth == 0 {
+            return;
+        }
+        if let Ok(entries) = std::fs::read_dir(base) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir() {
+                    candidates.push(p.join("target"));
+                    add_target_tree(candidates, &p, depth - 1);
+                }
+            }
+        }
+    }
+
+    fn try_read_ready_port_from_candidates(
+        dirs: &[PathBuf],
+    ) -> Option<(u16, Option<u16>, PathBuf)> {
         for dir in dirs {
             let ready_path = dir.join("tairitsu-packager.ready");
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
-                if let Some(port_str) = trimmed.strip_prefix("ready:") {
-                    if let Ok(port) = port_str.parse::<u16>() {
-                        return Some((port, ready_path));
+                if let Some(rest) = trimmed.strip_prefix("ready:") {
+                    let mut parts = rest.splitn(2, ':');
+                    if let Some(port_str) = parts.next()
+                        && let Ok(port) = port_str.parse::<u16>()
+                    {
+                        let debug_port = parts.next().and_then(|s| s.parse().ok());
+                        return Some((port, debug_port, ready_path));
                     }
                 } else if trimmed == "ready" {
-                    return Some((3000, ready_path));
+                    return Some((3000, None, ready_path));
                 }
             }
         }
