@@ -2278,7 +2278,11 @@ pub async fn dev_server(
     }
 
     if crate::daemon::is_daemon() {
-        let _ = crate::daemon::signal_ready(actual_port);
+        #[cfg(feature = "debug-browser")]
+        let dp = Some(effective_debug_port);
+        #[cfg(not(feature = "debug-browser"))]
+        let dp = None;
+        let _ = crate::daemon::signal_ready(actual_port, dp);
     }
 
     #[cfg(feature = "debug-browser")]
