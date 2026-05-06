@@ -2,13 +2,10 @@ use std::io::{self, Read, Write};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use portable_pty::{
-    CommandBuilder, native_pty_system, PtySize,
-    MasterPty, Child, ChildKiller,
-};
+use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, e.to_string())
+    io::Error::other(e.to_string())
 }
 
 pub struct UnixPty {
@@ -22,14 +19,19 @@ impl UnixPty {
     pub fn spawn(command: &str, cols: u16, rows: u16, cwd: Option<&str>) -> io::Result<Self> {
         let pty_system = native_pty_system();
         let size = PtySize {
-            rows, cols,
+            rows,
+            cols,
             pixel_width: 0,
             pixel_height: 0,
         };
         let pair = pty_system.openpty(size).map_err(to_io)?;
 
-        let mut cmd = CommandBuilder::new(command);
-        if let Some(dir) = cwd { cmd.cwd(dir); }
+        let mut cmd = CommandBuilder::new("/bin/bash");
+        cmd.arg("-c");
+        cmd.arg(command);
+        if let Some(dir) = cwd {
+            cmd.cwd(dir);
+        }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
 
         let killer = child.clone_killer();
@@ -43,7 +45,10 @@ impl UnixPty {
     }
 
     pub fn write(&self, data: &[u8]) -> io::Result<usize> {
-        let mut guard = self.writer.lock().map_err(|_| to_io("writer lock poisoned"))?;
+        let mut guard = self
+            .writer
+            .lock()
+            .map_err(|_| to_io("writer lock poisoned"))?;
         if guard.is_none() {
             *guard = Some(self.master.take_writer().map_err(to_io)?);
         }
@@ -76,9 +81,14 @@ impl UnixPty {
     }
 
     pub fn resize(&self, cols: u16, rows: u16) -> io::Result<()> {
-        self.master.resize(PtySize {
-            rows, cols, pixel_width: 0, pixel_height: 0,
-        }).map_err(to_io)
+        self.master
+            .resize(PtySize {
+                rows,
+                cols,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .map_err(to_io)
     }
 
     pub fn is_alive(&self) -> bool {
@@ -98,6 +108,10 @@ impl UnixPty {
     }
 
     pub fn pid(&self) -> u32 {
-        self.child.lock().ok().and_then(|c| c.process_id()).unwrap_or(0)
+        self.child
+            .lock()
+            .ok()
+            .and_then(|c| c.process_id())
+            .unwrap_or(0)
     }
 }

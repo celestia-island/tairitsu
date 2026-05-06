@@ -17,9 +17,7 @@
 #[macro_export]
 macro_rules! calc {
     // String literal - parse at runtime
-    ($lit:literal) => {{
-        $crate::CssLength::from_css_str($lit).expect("Invalid CSS length")
-    }};
+    ($lit:literal) => {{ $crate::CssLength::from_css_str($lit).expect("Invalid CSS length") }};
 
     // Direct value passthrough
     ($expr:expr) => {

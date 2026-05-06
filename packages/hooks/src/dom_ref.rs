@@ -35,7 +35,7 @@ pub struct DomRef {
 impl DomRef {
     /// Get the current [`DomHandle`], if the element has been mounted.
     pub fn get(&self) -> Option<DomHandle> {
-        let cached = self.inner.borrow().clone();
+        let cached = *self.inner.borrow();
         if cached.is_some() {
             return cached;
         }

@@ -59,7 +59,10 @@ impl AsyncOperationsTests {
             } else {
                 Ok(TestResult::failure(
                     "setTimeout",
-                    &format!("setTimeout did not complete as expected, result: '{}'", result_text),
+                    &format!(
+                        "setTimeout did not complete as expected, result: '{}'",
+                        result_text
+                    ),
                 ))
             }
         } else {
@@ -131,7 +134,10 @@ impl AsyncOperationsTests {
             } else {
                 Ok(TestResult::failure(
                     "setInterval",
-                    &format!("Counter did not increase over time: count1={}, count2={}", count1, count2),
+                    &format!(
+                        "Counter did not increase over time: count1={}, count2={}",
+                        count1, count2
+                    ),
                 ))
             }
         } else {
@@ -241,7 +247,10 @@ impl AsyncOperationsTests {
             } else {
                 Ok(TestResult::failure(
                     "Promise Handling",
-                    &format!("Promise did not resolve as expected, result: '{}'", result_text),
+                    &format!(
+                        "Promise did not resolve as expected, result: '{}'",
+                        result_text
+                    ),
                 ))
             }
         } else {
@@ -438,7 +447,8 @@ impl AsyncOperationsTests {
                 Ok(TestResult {
                     component: "Clipboard Read".to_string(),
                     status: crate::tests::TestStatus::Warning,
-                    message: "Clipboard read returned empty (may need permission grant)".to_string(),
+                    message: "Clipboard read returned empty (may need permission grant)"
+                        .to_string(),
                     duration_ms: duration,
                     screenshot_path: None,
                 })

@@ -186,9 +186,7 @@ impl ResourceRegistry {
     }
 
     fn get_resource_state(&self, id: ResourceId) -> Option<ResourceStateOp> {
-        self.resources
-            .get(&id)
-            .map(|arc| *arc.lock().unwrap())
+        self.resources.get(&id).map(|arc| *arc.lock().unwrap())
     }
 
     fn track_access(&mut self, resource_id: ResourceId) {
@@ -847,7 +845,6 @@ mod tests {
             ResourceState::Loading => {
                 // After Suspense render, resource might still be loading or done
                 // The Suspense boundary should have tracked the resource
-                assert!(true); // Test passed - Suspense mechanism worked
             }
             _ => {
                 // Resource already loaded, should show content

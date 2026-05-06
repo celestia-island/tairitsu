@@ -312,7 +312,8 @@ impl EventTests {
                     Ok(TestResult {
                         component: "Mouse Event Coordinates".to_string(),
                         status: TestStatus::Failure,
-                        message: "mousemove event did not fire or coordinates were not captured".to_string(),
+                        message: "mousemove event did not fire or coordinates were not captured"
+                            .to_string(),
                         duration_ms: duration,
                         screenshot_path: None,
                     })
@@ -445,7 +446,8 @@ impl EventTests {
                     Ok(TestResult {
                         component: "Form Submission".to_string(),
                         status: TestStatus::Success,
-                        message: "Form submit event fired and was intercepted correctly".to_string(),
+                        message: "Form submit event fired and was intercepted correctly"
+                            .to_string(),
                         duration_ms: duration,
                         screenshot_path: None,
                     })

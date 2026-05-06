@@ -31,6 +31,7 @@ macro_rules! define_typed_classes {
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
     use super::*;
     use crate::ClassesBuilder;

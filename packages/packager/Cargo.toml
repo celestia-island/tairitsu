@@ -41,8 +41,8 @@ notify = { version = "^6", optional = true }
 axum = { version = "^0.8", optional = true }
 tower-http = { version = "^0.6", features = ["fs", "cors", "compression-gzip"], optional = true }
 tokio-stream = { version = "^0.1", features = ["sync"], optional = true }
-wry = "^0.48"
-tao = "^0.30"
+wry = { version = "^0.48", optional = true }
+tao = { version = "^0.30", optional = true }
 grass = "^0.13"
 regex = "^1"
 wit-parser = "^0.243"
@@ -72,7 +72,7 @@ portable-pty = { version = "^0.8", optional = true }
 tempfile = "3"
 
 [features]
-default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-browser", "debug-api", "vtty", "visual-diff", "test-runner"]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "vtty", "visual-diff", "test-runner"]
 native = ["tokio", "crossterm"]
 dev-server = [
   "axum",
@@ -82,7 +82,7 @@ dev-server = [
   "tokio",
   "tokio-stream",
 ]
-debug-browser = ["dev-server", "reqwest"]
+debug-browser = ["dev-server", "reqwest", "wry", "tao"]
 debug-api = ["dev-server"]
 ssr = ["tairitsu-ssr", "tokio"]
 cli = ["clap"]

@@ -7,10 +7,7 @@ use std::io::{self, Read, Write};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use portable_pty::{
-    CommandBuilder, native_pty_system, PtySize,
-    MasterPty, Child, ChildKiller,
-};
+use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};
 
 fn to_io(e: impl std::fmt::Display) -> io::Error {
     io::Error::new(io::ErrorKind::Other, e.to_string())
@@ -26,10 +23,16 @@ pub struct ConPty {
 
 impl ConPty {
     /// Spawn a command in a new PTY session.
-    pub fn spawn(command: &str, cols: u16, rows: u16, cwd: Option<&str>) -> io::Result<(Self, u32)> {
+    pub fn spawn(
+        command: &str,
+        cols: u16,
+        rows: u16,
+        cwd: Option<&str>,
+    ) -> io::Result<(Self, u32)> {
         let pty_system = native_pty_system();
         let size = PtySize {
-            rows, cols,
+            rows,
+            cols,
             pixel_width: 0,
             pixel_height: 0,
         };
@@ -43,7 +46,9 @@ impl ConPty {
         } else {
             CommandBuilder::new(command)
         };
-        if let Some(dir) = cwd { cmd.cwd(dir); }
+        if let Some(dir) = cwd {
+            cmd.cwd(dir);
+        }
         let child = pair.slave.spawn_command(cmd).map_err(to_io)?;
 
         let pid = child.process_id().unwrap_or(0);
@@ -62,7 +67,10 @@ impl ConPty {
 
     /// Write data to the PTY input.
     pub fn write(&self, data: &[u8]) -> io::Result<usize> {
-        let mut guard = self.writer.lock().map_err(|_| to_io("writer lock poisoned"))?;
+        let mut guard = self
+            .writer
+            .lock()
+            .map_err(|_| to_io("writer lock poisoned"))?;
         if guard.is_none() {
             *guard = Some(self.master.take_writer().map_err(to_io)?);
         }
@@ -98,9 +106,14 @@ impl ConPty {
 
     /// Resize the PTY.
     pub fn resize(&self, cols: u16, rows: u16) -> io::Result<()> {
-        self.master.resize(PtySize {
-            rows, cols, pixel_width: 0, pixel_height: 0,
-        }).map_err(to_io)
+        self.master
+            .resize(PtySize {
+                rows,
+                cols,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .map_err(to_io)
     }
 
     /// Check if child process is still alive.
@@ -123,6 +136,10 @@ impl ConPty {
 
     /// Returns the PID of the child process.
     pub fn pid(&self) -> u32 {
-        self.child.lock().ok().and_then(|c| c.process_id()).unwrap_or(0)
+        self.child
+            .lock()
+            .ok()
+            .and_then(|c| c.process_id())
+            .unwrap_or(0)
     }
 }

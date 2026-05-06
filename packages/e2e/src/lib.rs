@@ -151,7 +151,10 @@ pub async fn run_all_tests(driver: &WebDriver) -> Result<Vec<TestResult>> {
         Err(e) => {
             eprintln!("Style integration test suite failed: {}", e);
             let error_msg: String = e.to_string();
-            results.push(TestResult::error("StyleIntegrationTests", error_msg.as_str()));
+            results.push(TestResult::error(
+                "StyleIntegrationTests",
+                error_msg.as_str(),
+            ));
         }
     }
 

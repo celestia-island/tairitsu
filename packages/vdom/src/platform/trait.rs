@@ -122,11 +122,7 @@ pub trait Platform: Sized + 'static {
         reference_node: Option<&Self::Element>,
     );
 
-    fn query_selector_on(
-        &self,
-        element: &Self::Element,
-        selector: &str,
-    ) -> Option<Self::Element>;
+    fn query_selector_on(&self, element: &Self::Element, selector: &str) -> Option<Self::Element>;
 
     fn video_play(&self, element: &Self::Element);
     fn video_pause(&self, element: &Self::Element);

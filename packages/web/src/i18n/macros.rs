@@ -52,7 +52,5 @@ macro_rules! t {
 /// Dot-separated path: `tr!("common.button.submit")`
 #[macro_export]
 macro_rules! tr {
-    ($key:expr) => {{
-        $crate::i18n::context::translate($key)
-    }};
+    ($key:expr) => {{ $crate::i18n::context::translate($key) }};
 }

@@ -233,7 +233,7 @@ mod tests {
         };
         assert_eq!(pkg.id, "test:pkg@1.0.0");
         assert_eq!(pkg.wit_dir, PathBuf::from("/test/path"));
-        assert_eq!(pkg.from_cache, true);
+        assert!(pkg.from_cache);
     }
 
     #[test]
@@ -257,7 +257,7 @@ mod tests {
         let opts = ResolveOptions::new(&target_dir);
         assert_eq!(opts.target_dir, target_dir);
         assert_eq!(opts.registry_url, DEFAULT_REGISTRY);
-        assert_eq!(opts.offline, false);
+        assert!(!opts.offline);
     }
 
     #[test]
@@ -288,7 +288,7 @@ mod tests {
         let resolver = Resolver::new(opts);
         assert_eq!(resolver.opts.target_dir, PathBuf::from("/tmp/target"));
         assert_eq!(resolver.opts.registry_url, DEFAULT_REGISTRY);
-        assert_eq!(resolver.opts.offline, false);
+        assert!(!resolver.opts.offline);
     }
 
     #[test]
@@ -301,7 +301,7 @@ mod tests {
         let resolver = Resolver::new(opts);
         assert_eq!(resolver.opts.target_dir, PathBuf::from("/custom/target"));
         assert_eq!(resolver.opts.registry_url, "https://custom.registry.com");
-        assert_eq!(resolver.opts.offline, true);
+        assert!(resolver.opts.offline);
     }
 
     // --- Environment variable tests ---
@@ -318,7 +318,7 @@ mod tests {
         }
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, "https://custom-registry.example.com");
-        assert_eq!(opts.offline, false);
+        assert!(!opts.offline);
         // Restore original value
         match original {
             Some(v) => unsafe { std::env::set_var("TAIRITSU_WIT_REGISTRY", v) },
@@ -334,7 +334,7 @@ mod tests {
         }
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, DEFAULT_REGISTRY);
-        assert_eq!(opts.offline, true);
+        assert!(opts.offline);
         match original {
             Some(v) => unsafe { std::env::set_var("TAIRITSU_WIT_OFFLINE", v) },
             None => unsafe { std::env::remove_var("TAIRITSU_WIT_OFFLINE") },
@@ -349,13 +349,13 @@ mod tests {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "TRUE");
         }
         let opts1 = ResolveOptions::new("/tmp/target");
-        assert_eq!(opts1.offline, true);
+        assert!(opts1.offline);
 
         unsafe {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "true");
         }
         let opts2 = ResolveOptions::new("/tmp/target");
-        assert_eq!(opts2.offline, true);
+        assert!(opts2.offline);
 
         match original {
             Some(v) => unsafe { std::env::set_var("TAIRITSU_WIT_OFFLINE", v) },
@@ -371,13 +371,13 @@ mod tests {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "0");
         }
         let opts1 = ResolveOptions::new("/tmp/target");
-        assert_eq!(opts1.offline, false);
+        assert!(!opts1.offline);
 
         unsafe {
             std::env::set_var("TAIRITSU_WIT_OFFLINE", "false");
         }
         let opts2 = ResolveOptions::new("/tmp/target");
-        assert_eq!(opts2.offline, false);
+        assert!(!opts2.offline);
 
         match original {
             Some(v) => unsafe { std::env::set_var("TAIRITSU_WIT_OFFLINE", v) },
@@ -396,7 +396,7 @@ mod tests {
         }
         let opts = ResolveOptions::new("/tmp/target");
         assert_eq!(opts.registry_url, "https://my-registry.com");
-        assert_eq!(opts.offline, true);
+        assert!(opts.offline);
 
         match original_reg {
             Some(v) => unsafe { std::env::set_var("TAIRITSU_WIT_REGISTRY", v) },

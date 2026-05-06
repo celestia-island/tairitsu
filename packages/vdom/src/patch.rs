@@ -24,19 +24,54 @@ impl std::fmt::Debug for Patch {
         match self {
             Patch::CreateNode { node } => f.debug_struct("CreateNode").field("node", node).finish(),
             Patch::RemoveNode => write!(f, "RemoveNode"),
-            Patch::ReplaceNode { node } => f.debug_struct("ReplaceNode").field("node", node).finish(),
+            Patch::ReplaceNode { node } => {
+                f.debug_struct("ReplaceNode").field("node", node).finish()
+            }
             Patch::UpdateText { text } => f.debug_struct("UpdateText").field("text", text).finish(),
-            Patch::UpdateAttribute { name, value } => f.debug_struct("UpdateAttribute").field("name", name).field("value", value).finish(),
-            Patch::AddAttribute { name, value } => f.debug_struct("AddAttribute").field("name", name).field("value", value).finish(),
-            Patch::RemoveAttribute { name } => f.debug_struct("RemoveAttribute").field("name", name).finish(),
-            Patch::UpdateStyle { style } => f.debug_struct("UpdateStyle").field("style", style).finish(),
-            Patch::UpdateClass { class } => f.debug_struct("UpdateClass").field("class", class).finish(),
-            Patch::InsertChild { index, node } => f.debug_struct("InsertChild").field("index", index).field("node", node).finish(),
-            Patch::RemoveChild { index } => f.debug_struct("RemoveChild").field("index", index).finish(),
-            Patch::UpdateChild { index, patches } => f.debug_struct("UpdateChild").field("index", index).field("patches", patches).finish(),
-            Patch::AddEvent { name, .. } => f.debug_struct("AddEvent").field("name", name).finish_non_exhaustive(),
-            Patch::UpdateEvent { name, .. } => f.debug_struct("UpdateEvent").field("name", name).finish_non_exhaustive(),
-            Patch::RemoveEvent { name } => f.debug_struct("RemoveEvent").field("name", name).finish(),
+            Patch::UpdateAttribute { name, value } => f
+                .debug_struct("UpdateAttribute")
+                .field("name", name)
+                .field("value", value)
+                .finish(),
+            Patch::AddAttribute { name, value } => f
+                .debug_struct("AddAttribute")
+                .field("name", name)
+                .field("value", value)
+                .finish(),
+            Patch::RemoveAttribute { name } => f
+                .debug_struct("RemoveAttribute")
+                .field("name", name)
+                .finish(),
+            Patch::UpdateStyle { style } => {
+                f.debug_struct("UpdateStyle").field("style", style).finish()
+            }
+            Patch::UpdateClass { class } => {
+                f.debug_struct("UpdateClass").field("class", class).finish()
+            }
+            Patch::InsertChild { index, node } => f
+                .debug_struct("InsertChild")
+                .field("index", index)
+                .field("node", node)
+                .finish(),
+            Patch::RemoveChild { index } => {
+                f.debug_struct("RemoveChild").field("index", index).finish()
+            }
+            Patch::UpdateChild { index, patches } => f
+                .debug_struct("UpdateChild")
+                .field("index", index)
+                .field("patches", patches)
+                .finish(),
+            Patch::AddEvent { name, .. } => f
+                .debug_struct("AddEvent")
+                .field("name", name)
+                .finish_non_exhaustive(),
+            Patch::UpdateEvent { name, .. } => f
+                .debug_struct("UpdateEvent")
+                .field("name", name)
+                .finish_non_exhaustive(),
+            Patch::RemoveEvent { name } => {
+                f.debug_struct("RemoveEvent").field("name", name).finish()
+            }
         }
     }
 }

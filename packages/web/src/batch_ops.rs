@@ -261,7 +261,7 @@ mod tests {
         let batch = BatchOps::new();
         let element = WitElement::from_raw(42);
 
-        batch.add_attr(element, "id", "test");
+        batch.add_attrs(element, [("id", "test")]);
         assert_eq!(batch.len(), 1);
     }
 
@@ -282,7 +282,7 @@ mod tests {
 
         batch.add_style(elem1, "color", "red");
         batch.add_style(elem2, "color", "blue");
-        batch.add_attr(elem1, "id", "elem1");
+        batch.add_attrs(elem1, [("id", "elem1")]);
 
         assert_eq!(batch.len(), 3);
     }
@@ -315,9 +315,8 @@ mod tests {
         let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
-        batch.add_attr(element, "id", "test");
+        batch.add_attrs(element, [("id", "test")]);
 
-        // Apply returns count of operations
         let count = batch.apply();
         assert_eq!(count, 2);
     }
@@ -328,7 +327,7 @@ mod tests {
         let element = WitElement::from_raw(42);
 
         batch.add_style(element, "color", "red");
-        batch.add_attr(element, "id", "test");
+        batch.add_attrs(element, [("id", "test")]);
 
         let count = batch.apply_and_clear();
         assert_eq!(count, 2);

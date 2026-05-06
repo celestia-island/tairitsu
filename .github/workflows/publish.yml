@@ -16,55 +16,49 @@ jobs:
         run: |
           TAG_VERSION="${{ steps.tag.outputs.version }}"
           FAIL=0
-          # Packages that should be published (must match release.toml)
           PACKAGES=(
-            "tairitsu-macros"
-            "tairitsu-browser-worlds"
-            "tairitsu-vdom"
-            "tairitsu"
-            "tairitsu-style"
-            "tairitsu-hooks"
-            "tairitsu-browser-wit-resolver"
-            "tairitsu-ssr"
-            "tairitsu-web"
-            "tairitsu-packager"
+            "tairitsu-macros:packages/macros"
+            "tairitsu-browser-worlds:packages/browser-worlds"
+            "tairitsu-vdom:packages/vdom"
+            "tairitsu:packages/runtime"
+            "tairitsu-style:packages/style"
+            "tairitsu-hooks:packages/hooks"
+            "tairitsu-browser-wit-resolver:packages/browser-wit-resolver"
+            "tairitsu-ssr:packages/ssr"
+            "tairitsu-packager:packages/packager"
+            "tairitsu-web:packages/web"
+            "tairitsu-mcp:packages/mcp"
           )
-          for PKG in "${PACKAGES[@]}"; do
-            case "$PKG" in
-              tairitsu)          DIR="packages/runtime" ;;
-              tairitsu-macros)   DIR="packages/macros" ;;
-              tairitsu-vdom)     DIR="packages/vdom" ;;
-              tairitsu-hooks)    DIR="packages/hooks" ;;
-              tairitsu-style)    DIR="packages/style" ;;
-              tairitsu-web)      DIR="packages/web" ;;
-              tairitsu-ssr)      DIR="packages/ssr" ;;
-              tairitsu-packager) DIR="packages/packager" ;;
-              tairitsu-browser-worlds)      DIR="packages/browser-worlds" ;;
-              tairitsu-browser-wit-resolver) DIR="packages/browser-wit-resolver" ;;
-              *)                 DIR="packages/$PKG" ;;
-            esac
-
-            # Check workspace.package version in root Cargo.toml
-            ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
-            if [ "$ROOT_VER" != "$TAG_VERSION" ]; then
-              echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG_VERSION) in Cargo.toml"
+          for ENTRY in "${PACKAGES[@]}"; do
+            PKG="${ENTRY%%:*}"
+            DIR="${ENTRY##*:}"
+            CARGO_TOML="$DIR/Cargo.toml"
+            if [ ! -f "$CARGO_TOML" ]; then
+              echo "::error::$CARGO_TOML not found"
               FAIL=1
+              continue
             fi
-
-            # Check individual package manifest (resolve workspace inheritance)
-            PKG_VER=$(cargo metadata --format-version 1 --no-deps 2>/dev/null \
-              | python3 -c "import sys,json; pkgs=json.load(sys.stdin)['packages']; \
-              p=[x for x in pkgs if x['name']=='$PKG']; \
-              print(p[0]['version'] if p else 'NOT_FOUND')")
-            if [ "$PKG_VER" != "$TAG_VERSION" ]; then
-              echo "::error::$PKG version ($PKG_VER) != tag ($TAG_VERSION)"
-              FAIL=1
+            VER=$(grep -oP '^version\s*=\s*"\K[^"]+' "$CARGO_TOML" 2>/dev/null || true)
+            if [ -z "$VER" ]; then
+              VER=$(grep -oP 'version\.workspace\s*=\s*true' "$CARGO_TOML" >/dev/null 2>&1 && echo "workspace" || echo "MISSING")
+            fi
+            if [ "$VER" = "workspace" ]; then
+              ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
+              echo "::notice::$PKG uses workspace version ($ROOT_VER) — OK"
+            elif [ "$VER" = "$TAG_VERSION" ]; then
+              echo "::notice::$PKG version ($VER) matches tag — OK"
             else
-              echo "::notice::$PKG version matches tag: $TAG_VERSION"
+              echo "::error::$PKG version ($VER) != tag ($TAG_VERSION) in $CARGO_TOML"
+              FAIL=1
             fi
           done
+          ROOT_VER=$(grep -oP '^version\s*=\s*"\K[^"]+' Cargo.toml | head -1)
+          if [ "$ROOT_VER" != "$TAG_VERSION" ]; then
+            echo "::error::workspace.package version ($ROOT_VER) != tag ($TAG_VERSION)"
+            FAIL=1
+          fi
           if [ "$FAIL" -ne 0 ]; then
-            echo "::error::Version mismatch detected. Bump workspace.package.version and run 'cargo check' before tagging."
+            echo "::error::Version mismatch detected."
             exit 1
           fi
           echo "All versions match tag v$TAG_VERSION"
@@ -80,18 +74,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - run: cargo install cargo-release
+      - run: rustc --version && cargo --version
       - run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      # Publish in dependency order (leaf packages first)
-      # cargo release handles ordering via release.toml, but we list explicitly for safety
-      - run: cargo publish -p tairitsu-macros         --allow-dirty
-      - run: cargo publish -p tairitsu-browser-worlds  --allow-dirty
-      - run: cargo publish -p tairitsu-vdom            --allow-dirty
-      - run: cargo publish -p tairitsu                  --allow-dirty
-      - run: cargo publish -p tairitsu-style            --allow-dirty
-      - run: cargo publish -p tairitsu-hooks            --allow-dirty
-      - run: cargo publish -p tairitsu-browser-wit-resolver --allow-dirty
-      - run: cargo publish -p tairitsu-ssr              --allow-dirty
-      - run: cargo publish -p tairitsu-web              --allow-dirty
-      - run: cargo publish -p tairitsu-packager         --allow-dirty --all-features
+      - run: cargo check -p tairitsu-macros 2>&1
+      - run: cargo publish -p tairitsu-macros         --allow-dirty -v
+      - run: cargo publish -p tairitsu-browser-worlds  --allow-dirty -v
+      - run: cargo publish -p tairitsu-vdom            --allow-dirty -v
+      - run: cargo publish -p tairitsu                  --allow-dirty -v
+      - run: cargo publish -p tairitsu-style            --allow-dirty -v
+      - run: cargo publish -p tairitsu-hooks            --allow-dirty -v
+      - run: cargo publish -p tairitsu-browser-wit-resolver --allow-dirty -v
+      - run: cargo publish -p tairitsu-ssr              --allow-dirty -v
+      - run: cargo publish -p tairitsu-packager         --allow-dirty -v
+      - run: cargo publish -p tairitsu-web              --allow-dirty -v
+      - run: cargo publish -p tairitsu-mcp              --allow-dirty -v

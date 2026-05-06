@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_style_injector_default() {
-        let injector = StyleInjector::default();
+        let injector = StyleInjector;
         let css = ".test { color: blue; }";
 
         let code = injector.generate_injection_code(css).unwrap();

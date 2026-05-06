@@ -6,15 +6,15 @@
 use anyhow::{Context as AnyhowContext, Result};
 
 use wasmtime::{
+    Store,
     component::{Component, Linker},
     error::Context,
-    Store,
 };
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+use crate::Image;
 #[cfg(feature = "dynamic")]
 use crate::dynamic::host_imports::HostImportRegistry;
-use crate::Image;
 
 /// Base trait for host state
 ///
