@@ -49,7 +49,11 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
         "{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/diagnostic\",\"params\":{{\"status\":\"starting\",\"pid\":{},\"ppid\":{},\"features\":\"{}\"}}}}",
         std::process::id(),
         std::os::unix::process::parent_id(),
-        if cfg!(feature = "vtty") { "vtty,browser" } else { "browser" }
+        if cfg!(feature = "vtty") {
+            "vtty,browser"
+        } else {
+            "browser"
+        }
     );
 
     let http = reqwest::Client::new();
@@ -173,10 +177,12 @@ struct McpState {
 }
 
 impl McpState {
+    #[allow(dead_code)]
     async fn get_base_url(&self) -> String {
         self.base_url.read().await.clone()
     }
 
+    #[allow(dead_code)]
     async fn require_daemon(&self) -> Result<String, String> {
         let url = self.base_url.read().await.clone();
         if url.is_empty() {
@@ -740,13 +746,10 @@ async fn invoke_tool(
     let base_url = state.base_url.read().await.clone();
     let api = |path: &str| format!("{}/__tairitsu_debug/{}", base_url, path);
 
-    if tool_name.starts_with("browser_") {
-        if base_url.is_empty() {
-            return Err(
-                "Browser tools require a running daemon. Start with: tairitsu dev --daemon"
-                    .to_string(),
-            );
-        }
+    if tool_name.starts_with("browser_") && base_url.is_empty() {
+        return Err(
+            "Browser tools require a running daemon. Start with: tairitsu dev --daemon".to_string(),
+        );
     }
 
     match tool_name {
@@ -1150,11 +1153,11 @@ async fn invoke_tool(
                     }
                     tokio::time::sleep(std::time::Duration::from_millis(300)).await;
                 }
-                let alive = session
-                    .lock()
-                    .map(|g| g.is_alive())
-                    .unwrap_or(false);
-                Ok(json!({"session_id": sid, "pattern": pattern, "found": found, "alive": alive}).to_string())
+                let alive = session.lock().map(|g| g.is_alive()).unwrap_or(false);
+                Ok(
+                    json!({"session_id": sid, "pattern": pattern, "found": found, "alive": alive})
+                        .to_string(),
+                )
             } else {
                 let wait_secs = secs.min(1800.0) as u64;
                 let mut alive = true;
@@ -1180,10 +1183,7 @@ async fn invoke_tool(
                 } else {
                     alive
                 };
-                Ok(
-                    json!({"session_id": sid, "seconds_waited": secs, "alive": alive})
-                        .to_string(),
-                )
+                Ok(json!({"session_id": sid, "seconds_waited": secs, "alive": alive}).to_string())
             }
         }
         #[cfg(feature = "vtty")]
@@ -1223,8 +1223,7 @@ async fn invoke_tool(
                 .and_then(|v| v.as_u64())
                 .unwrap_or(30000);
             let session = state.vtty.get(sid)?;
-            let deadline =
-                std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
+            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
             let mut has_output = false;
             while std::time::Instant::now() < deadline {
                 {

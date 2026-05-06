@@ -119,9 +119,8 @@ impl UnixPty {
     ) {
         let mut buf = vec![0u8; 65536];
         while running.load(Ordering::Relaxed) {
-            let n = unsafe {
-                libc::read(read_fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len())
-            };
+            let n =
+                unsafe { libc::read(read_fd, buf.as_mut_ptr() as *mut libc::c_void, buf.len()) };
             if n > 0 {
                 if let Ok(mut s) = screen.lock() {
                     s.process(&buf[..n as usize]);

@@ -21,22 +21,22 @@ pub const SOLARIZED_DARK: ColorScheme = ColorScheme {
     bg: [0, 43, 54],
     cursor: [220, 50, 47],
     palette: [
-        [7, 54, 66],    // 0  Black
-        [220, 50, 47],  // 1  Red
-        [133, 153, 0],  // 2  Green
-        [181, 137, 0],  // 3  Yellow
-        [38, 139, 210], // 4  Blue
-        [211, 54, 130], // 5  Magenta
-        [42, 161, 152], // 6  Cyan
-        [238, 232, 213],// 7  White
-        [0, 43, 54],    // 8  Bright Black
-        [203, 75, 22],  // 9  Bright Red
-        [88, 110, 117], // 10 Bright Green
-        [101, 123, 131],// 11 Bright Yellow
-        [131, 148, 150],// 12 Bright Blue
-        [108, 113, 196],// 13 Bright Magenta
-        [147, 161, 161],// 14 Bright Cyan
-        [253, 246, 227],// 15 Bright White
+        [7, 54, 66],     // 0  Black
+        [220, 50, 47],   // 1  Red
+        [133, 153, 0],   // 2  Green
+        [181, 137, 0],   // 3  Yellow
+        [38, 139, 210],  // 4  Blue
+        [211, 54, 130],  // 5  Magenta
+        [42, 161, 152],  // 6  Cyan
+        [238, 232, 213], // 7  White
+        [0, 43, 54],     // 8  Bright Black
+        [203, 75, 22],   // 9  Bright Red
+        [88, 110, 117],  // 10 Bright Green
+        [101, 123, 131], // 11 Bright Yellow
+        [131, 148, 150], // 12 Bright Blue
+        [108, 113, 196], // 13 Bright Magenta
+        [147, 161, 161], // 14 Bright Cyan
+        [253, 246, 227], // 15 Bright White
     ],
 };
 
@@ -203,7 +203,10 @@ fn font_search_dirs() -> Vec<std::path::PathBuf> {
         std::path::PathBuf::from("/usr/local/share/fonts"),
     ];
     if !home.is_empty() {
-        dirs.push(std::path::PathBuf::from(format!("{}/.local/share/fonts", home)));
+        dirs.push(std::path::PathBuf::from(format!(
+            "{}/.local/share/fonts",
+            home
+        )));
         dirs.push(std::path::PathBuf::from(format!("{}/.fonts", home)));
     }
     dirs.push(std::path::PathBuf::from("/System/Library/Fonts"));
@@ -228,32 +231,36 @@ fn find_font_file(candidates: &[&str]) -> Option<std::path::PathBuf> {
                 let path = entry.path();
                 if path.is_file() {
                     if let Some(name) = path.file_name().and_then(|n| n.to_str())
-                        && candidates.contains(&name) {
-                            return Some(path);
-                        }
+                        && candidates.contains(&name)
+                    {
+                        return Some(path);
+                    }
                 } else if path.is_dir()
-                    && let Ok(sub) = std::fs::read_dir(&path) {
-                        for se in sub.flatten() {
-                            let sp = se.path();
-                            if sp.is_file()
-                                && let Some(name) = sp.file_name().and_then(|n| n.to_str())
-                                    && candidates.contains(&name) {
-                                        return Some(sp);
-                                    }
-                            if sp.is_dir()
-                                && let Ok(l3) = std::fs::read_dir(&sp) {
-                                    for l3e in l3.flatten() {
-                                        let l3p = l3e.path();
-                                        if l3p.is_file()
-                                            && let Some(name) =
-                                                l3p.file_name().and_then(|n| n.to_str())
-                                                && candidates.contains(&name) {
-                                                    return Some(l3p);
-                                                }
-                                    }
+                    && let Ok(sub) = std::fs::read_dir(&path)
+                {
+                    for se in sub.flatten() {
+                        let sp = se.path();
+                        if sp.is_file()
+                            && let Some(name) = sp.file_name().and_then(|n| n.to_str())
+                            && candidates.contains(&name)
+                        {
+                            return Some(sp);
+                        }
+                        if sp.is_dir()
+                            && let Ok(l3) = std::fs::read_dir(&sp)
+                        {
+                            for l3e in l3.flatten() {
+                                let l3p = l3e.path();
+                                if l3p.is_file()
+                                    && let Some(name) = l3p.file_name().and_then(|n| n.to_str())
+                                    && candidates.contains(&name)
+                                {
+                                    return Some(l3p);
                                 }
+                            }
                         }
                     }
+                }
             }
         }
     }
@@ -261,10 +268,8 @@ fn find_font_file(candidates: &[&str]) -> Option<std::path::PathBuf> {
 }
 
 fn load_font_from(path: &std::path::Path) -> Result<FontVec, String> {
-    let data =
-        std::fs::read(path).map_err(|e| format!("read {}: {}", path.display(), e))?;
-    FontVec::try_from_vec(data)
-        .map_err(|e| format!("parse font {}: {}", path.display(), e))
+    let data = std::fs::read(path).map_err(|e| format!("read {}: {}", path.display(), e))?;
+    FontVec::try_from_vec(data).map_err(|e| format!("parse font {}: {}", path.display(), e))
 }
 
 impl Fonts {
@@ -276,8 +281,7 @@ impl Fonts {
             )
         })?;
         let mono = load_font_from(&mono_path)?;
-        let cjk = find_font_file(CJK_CANDIDATES)
-            .and_then(|p| load_font_from(&p).ok());
+        let cjk = find_font_file(CJK_CANDIDATES).and_then(|p| load_font_from(&p).ok());
         Ok(Self { mono, cjk })
     }
 }
@@ -290,11 +294,7 @@ fn index_to_rgb(index: u8, scheme: &ColorScheme) -> [u8; 3] {
         16..=231 => {
             let i = (index - 16) as usize;
             let cube = [0u8, 95, 135, 175, 215, 255];
-            [
-                cube[i / 36],
-                cube[(i % 36) / 6],
-                cube[i % 6],
-            ]
+            [cube[i / 36], cube[(i % 36) / 6], cube[i % 6]]
         }
         232..=255 => {
             let v = 8 + (index - 232) * 10;
@@ -331,10 +331,7 @@ struct RenderCtx<'a> {
     scheme: &'a ColorScheme,
 }
 
-pub fn render_terminal(
-    data: &RenderData,
-    theme: &str,
-) -> Result<Vec<u8>, String> {
+pub fn render_terminal(data: &RenderData, theme: &str) -> Result<Vec<u8>, String> {
     let scheme = get_scheme(theme);
     let fonts = Fonts::load()?;
 
@@ -357,7 +354,15 @@ pub fn render_terminal(
         Rgba([scheme.bg[0], scheme.bg[1], scheme.bg[2], 255]),
     );
 
-    let ctx = RenderCtx { fonts: &fonts, scale, cell_w, cell_h, ascent, padding, scheme };
+    let ctx = RenderCtx {
+        fonts: &fonts,
+        scale,
+        cell_w,
+        cell_h,
+        ascent,
+        padding,
+        scheme,
+    };
 
     for (row_idx, row) in data.grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
@@ -367,12 +372,7 @@ pub fn render_terminal(
         }
     }
 
-    render_cursor(
-        &mut img,
-        data.cursor_row,
-        data.cursor_col,
-        &ctx,
-    );
+    render_cursor(&mut img, data.cursor_row, data.cursor_col, &ctx);
 
     let mut png_data = Vec::new();
     img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)
@@ -380,13 +380,7 @@ pub fn render_terminal(
     Ok(png_data)
 }
 
-fn render_cell(
-    img: &mut ImgBuf,
-    cell: &Cell,
-    x0: f32,
-    y0: f32,
-    ctx: &RenderCtx,
-) {
+fn render_cell(img: &mut ImgBuf, cell: &Cell, x0: f32, y0: f32, ctx: &RenderCtx) {
     let bg = resolve_color(cell.attrs.bg, ctx.scheme, false);
 
     let fg_raw = resolve_color(cell.attrs.fg, ctx.scheme, true);
@@ -498,12 +492,7 @@ fn draw_glyph_outline<F: ab_glyph::Font>(
     }
 }
 
-fn render_cursor(
-    img: &mut ImgBuf,
-    cursor_row: usize,
-    cursor_col: usize,
-    ctx: &RenderCtx,
-) {
+fn render_cursor(img: &mut ImgBuf, cursor_row: usize, cursor_col: usize, ctx: &RenderCtx) {
     let x0 = ctx.padding as f32 + cursor_col as f32 * ctx.cell_w;
     let y0 = ctx.padding as f32 + cursor_row as f32 * ctx.cell_h;
     let px0 = x0.ceil() as u32;
@@ -589,6 +578,9 @@ mod tests {
         let s = get_scheme("solarized-dark");
         assert_eq!(resolve_color(ColorKind::Default, s, true), s.fg);
         assert_eq!(resolve_color(ColorKind::Default, s, false), s.bg);
-        assert_eq!(resolve_color(ColorKind::Rgb(100, 200, 50), s, true), [100, 200, 50]);
+        assert_eq!(
+            resolve_color(ColorKind::Rgb(100, 200, 50), s, true),
+            [100, 200, 50]
+        );
     }
 }

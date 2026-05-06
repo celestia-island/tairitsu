@@ -6,7 +6,9 @@ fn main() {
         )
         .init();
 
-    let config = tairitsu_mcp::McpConfig { base_url: String::new() };
+    let config = tairitsu_mcp::McpConfig {
+        base_url: String::new(),
+    };
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
