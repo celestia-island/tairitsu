@@ -4,10 +4,8 @@
 use anyhow::Result;
 use rmcp::{
     ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
-    handler::server::wrapper::Parameters,
-    model::*,
-    service::RequestContext,
-    tool, tool_router, tool_handler,
+    handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
+    tool_router,
 };
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -49,10 +47,14 @@ impl Server {
 // ── Tool argument structs ────────────────────────────
 
 #[derive(Debug, Deserialize, JsonSchema)]
-struct BrowserNavigateArgs { url: String }
+struct BrowserNavigateArgs {
+    url: String,
+}
 
 #[derive(Debug, Deserialize, JsonSchema)]
-struct SnapshotArgs { target: Option<String> }
+struct SnapshotArgs {
+    target: Option<String>,
+}
 
 #[derive(Debug, Deserialize, JsonSchema)]
 struct ScreenshotArgs {
@@ -80,7 +82,9 @@ struct TypeArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-struct PressKeyArgs { key: String }
+struct PressKeyArgs {
+    key: String,
+}
 
 #[derive(Debug, Deserialize, JsonSchema)]
 #[allow(dead_code)]
@@ -109,7 +113,9 @@ struct FillFormField {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-struct FillFormArgs { fields: Vec<FillFormField> }
+struct FillFormArgs {
+    fields: Vec<FillFormField>,
+}
 
 #[derive(Debug, Deserialize, JsonSchema)]
 #[allow(dead_code)]
@@ -229,8 +235,15 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        let _resp = self.http.post(self.api("navigate")).json(&json!({"url": args.url})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        let _resp = self
+            .http
+            .post(self.api("navigate"))
+            .json(&json!({"url": args.url}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
     }
 
@@ -239,7 +252,9 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result("(navigate-back: not yet implemented on headless wry)"))
+        Ok(Self::tool_result(
+            "(navigate-back: not yet implemented on headless wry)",
+        ))
     }
 
     #[tool(description = "Go forward to the next page")]
@@ -247,40 +262,85 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        Ok(Self::tool_result("(navigate-forward: not yet implemented on headless wry)"))
+        Ok(Self::tool_result(
+            "(navigate-forward: not yet implemented on headless wry)",
+        ))
     }
 
-    #[tool(description = "Capture accessibility snapshot of the current page (DOM tree with roles, names, text). Better than screenshot for understanding page structure.")]
+    #[tool(
+        description = "Capture accessibility snapshot of the current page (DOM tree with roles, names, text). Better than screenshot for understanding page structure."
+    )]
     async fn browser_snapshot(
         &self,
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(t) = &args.target { body["selector"] = json!(t); }
-        let resp = self.http.post(self.api("snapshot")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let text = resp.json::<serde_json::Value>().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let out = text.get("snapshot").and_then(|v| v.as_str()).unwrap_or("{}");
+        if let Some(t) = &args.target {
+            body["selector"] = json!(t);
+        }
+        let resp = self
+            .http
+            .post(self.api("snapshot"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let text = resp
+            .json::<serde_json::Value>()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let out = text
+            .get("snapshot")
+            .and_then(|v| v.as_str())
+            .unwrap_or("{}");
         Ok(Self::tool_result(out.to_string()))
     }
 
-    #[tool(description = "Take a screenshot of the current viewport as PNG (returns base64 data URL)")]
+    #[tool(
+        description = "Take a screenshot of the current viewport as PNG (returns base64 data URL)"
+    )]
     async fn browser_screenshot(
         &self,
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(el) = &args.element { body["selector"] = json!(el); }
-        if let Some(fp) = args.full_page { body["fullPage"] = json!(fp); }
-        if let Some(t) = &args.image_type { body["type"] = json!(t); }
-        let resp = self.http.post(self.api("screenshot")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp.json().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(el) = &args.element {
+            body["selector"] = json!(el);
+        }
+        if let Some(fp) = args.full_page {
+            body["fullPage"] = json!(fp);
+        }
+        if let Some(t) = &args.image_type {
+            body["type"] = json!(t);
+        }
+        let resp = self
+            .http
+            .post(self.api("screenshot"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         let success = v.get("success").and_then(|s| s.as_bool()).unwrap_or(false);
-        let data = v.get("data").and_then(|d| d.as_str()).unwrap_or("").to_string();
-        let err = v.get("error").and_then(|e| e.as_str()).unwrap_or("unknown").to_string();
+        let data = v
+            .get("data")
+            .and_then(|d| d.as_str())
+            .unwrap_or("")
+            .to_string();
+        let err = v
+            .get("error")
+            .and_then(|e| e.as_str())
+            .unwrap_or("unknown")
+            .to_string();
         if success {
             Ok(Self::tool_result(data))
         } else {
@@ -294,8 +354,14 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("click")).json(&json!({"selector": args.target})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("click"))
+            .json(&json!({"selector": args.target}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
     }
 
@@ -305,9 +371,24 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        let js = format!("const e=document.querySelector('{}');if(e){{e.focus();e.value='{}';e.dispatchEvent(new Event('input',{{bubbles:true}}));}}{}", args.target, args.text.replace('\'', "\\'"), if args.submit.unwrap_or(false) { "e.form?.submit();" } else { "" });
-        self.http.post(self.api("evaluate")).json(&json!({"function": js})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        let js = format!(
+            "const e=document.querySelector('{}');if(e){{e.focus();e.value='{}';e.dispatchEvent(new Event('input',{{bubbles:true}}));}}{}",
+            args.target,
+            args.text.replace('\'', "\\'"),
+            if args.submit.unwrap_or(false) {
+                "e.form?.submit();"
+            } else {
+                ""
+            }
+        );
+        self.http
+            .post(self.api("evaluate"))
+            .json(&json!({"function": js}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Typed: {}", args.text)))
     }
 
@@ -317,8 +398,14 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("press-key")).json(&json!({"key": args.key})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("press-key"))
+            .json(&json!({"key": args.key}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
     }
 
@@ -328,8 +415,14 @@ impl Server {
         Parameters(args): Parameters<HoverArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("hover")).json(&json!({"selector": args.target})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("hover"))
+            .json(&json!({"selector": args.target}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Hovered: {}", args.target)))
     }
 
@@ -339,8 +432,14 @@ impl Server {
         Parameters(args): Parameters<SelectOptionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("select-option")).json(&json!({"selector": args.target, "values": args.values})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("select-option"))
+            .json(&json!({"selector": args.target, "values": args.values}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(format!("Selected in: {}", args.target)))
     }
 
@@ -350,9 +449,15 @@ impl Server {
         Parameters(args): Parameters<FillFormArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let v: Vec<_> = args.fields.iter().map(|f| json!({"target": f.target, "name": f.name, "type": f.field_type, "value": f.value})).collect();
-        self.http.post(self.api("fill-form")).json(&json!({"fields": v})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.http
+            .post(self.api("fill-form"))
+            .json(&json!({"fields": v}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result("Form filled".to_string()))
     }
 
@@ -362,12 +467,29 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({"function": args.function});
-        if let Some(t) = &args.target { body["target"] = json!(t); }
-        let resp = self.http.post(self.api("evaluate")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp.json().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(v.get("result").and_then(|r| r.as_str()).unwrap_or("").to_string()))
+        if let Some(t) = &args.target {
+            body["target"] = json!(t);
+        }
+        let resp = self
+            .http
+            .post(self.api("evaluate"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        Ok(Self::tool_result(
+            v.get("result")
+                .and_then(|r| r.as_str())
+                .unwrap_or("")
+                .to_string(),
+        ))
     }
 
     #[tool(description = "Get console log entries (error/warning/info/debug) from the page")]
@@ -376,12 +498,26 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(a) = args.all { body["all"] = json!(a); }
-        if let Some(l) = &args.level { body["level"] = json!(l); }
-        let resp = self.http.post(self.api("console-messages")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp.json().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(a) = args.all {
+            body["all"] = json!(a);
+        }
+        if let Some(l) = &args.level {
+            body["level"] = json!(l);
+        }
+        let resp = self
+            .http
+            .post(self.api("console-messages"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(v.to_string()))
     }
 
@@ -391,12 +527,26 @@ impl Server {
         Parameters(args): Parameters<NetworkRequestsArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(f) = &args.filter { body["filter"] = json!(f); }
-        if let Some(s) = args.is_static { body["static"] = json!(s); }
-        let resp = self.http.post(self.api("network-requests")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp.json().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(f) = &args.filter {
+            body["filter"] = json!(f);
+        }
+        if let Some(s) = args.is_static {
+            body["static"] = json!(s);
+        }
+        let resp = self
+            .http
+            .post(self.api("network-requests"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(v.to_string()))
     }
 
@@ -406,28 +556,58 @@ impl Server {
         Parameters(args): Parameters<BrowserTabsArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(a) = &args.action { body["action"] = json!(a); }
-        if let Some(i) = args.index { body["index"] = json!(i); }
-        if let Some(u) = &args.url { body["url"] = json!(u); }
-        let resp = self.http.post(self.api("tabs")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp.json().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(a) = &args.action {
+            body["action"] = json!(a);
+        }
+        if let Some(i) = args.index {
+            body["index"] = json!(i);
+        }
+        if let Some(u) = &args.url {
+            body["url"] = json!(u);
+        }
+        let resp = self
+            .http
+            .post(self.api("tabs"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result(v.to_string()))
     }
 
-    #[tool(description = "Wait for a condition: time (seconds), text appearance, or text disappearance")]
+    #[tool(
+        description = "Wait for a condition: time (seconds), text appearance, or text disappearance"
+    )]
     async fn browser_wait_for(
         &self,
         Parameters(args): Parameters<WaitForArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
         let mut body = json!({});
-        if let Some(t) = &args.text { body["text"] = json!(t); }
-        if let Some(tg) = &args.text_gone { body["textGone"] = json!(tg); }
-        if let Some(t) = args.time { body["time"] = json!(t); }
-        self.http.post(self.api("wait-for")).json(&body).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(t) = &args.text {
+            body["text"] = json!(t);
+        }
+        if let Some(tg) = &args.text_gone {
+            body["textGone"] = json!(tg);
+        }
+        if let Some(t) = args.time {
+            body["time"] = json!(t);
+        }
+        self.http
+            .post(self.api("wait-for"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result("Wait condition satisfied".to_string()))
     }
 
@@ -436,8 +616,13 @@ impl Server {
         &self,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("close")).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("close"))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(Self::tool_result("Browser closed".to_string()))
     }
 
@@ -447,9 +632,18 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon().map_err(|e| McpError::internal_error(e, None))?;
-        self.http.post(self.api("resize")).json(&json!({"width": args.width, "height": args.height})).send().await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(format!("Resized to {}x{}", args.width, args.height)))
+        self.check_daemon()
+            .map_err(|e| McpError::internal_error(e, None))?;
+        self.http
+            .post(self.api("resize"))
+            .json(&json!({"width": args.width, "height": args.height}))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        Ok(Self::tool_result(format!(
+            "Resized to {}x{}",
+            args.width, args.height
+        )))
     }
 
     // ── VTty tools ─────────────────────────────────────
@@ -459,17 +653,26 @@ impl Server {
     async fn vtty_launch(
         &self,
         Parameters(args): Parameters<VttyLaunchArgs>,
-        _context: RequestContext<RoleServer>,
+        context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let info = self.vtty.launch(
-            &args.command,
-            args.cols.unwrap_or(120) as u16,
-            args.rows.unwrap_or(40) as u16,
-            args.env.as_deref().unwrap_or(""),
-            args.cwd.as_deref(),
-            args.name.as_deref().unwrap_or(""),
-        ).map_err(|e| McpError::internal_error(e, None))?;
-        Ok(Self::tool_result(serde_json::to_string_pretty(&info).unwrap_or_default()))
+        let resolved_cwd = match args.cwd.as_deref() {
+            Some(c) => Some(c.to_string()),
+            None => resolve_default_cwd(&context).await,
+        };
+        let info = self
+            .vtty
+            .launch(
+                &args.command,
+                args.cols.unwrap_or(120) as u16,
+                args.rows.unwrap_or(40) as u16,
+                args.env.as_deref().unwrap_or(""),
+                resolved_cwd.as_deref(),
+                args.name.as_deref().unwrap_or(""),
+            )
+            .map_err(|e| McpError::internal_error(e, None))?;
+        Ok(Self::tool_result(
+            serde_json::to_string_pretty(&info).unwrap_or_default(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
@@ -479,28 +682,46 @@ impl Server {
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let info = self.vtty.kill(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
-        Ok(Self::tool_result(serde_json::to_string_pretty(&info).unwrap_or_default()))
+        let info = self
+            .vtty
+            .kill(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
+        Ok(Self::tool_result(
+            serde_json::to_string_pretty(&info).unwrap_or_default(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Send key sequences to a virtual terminal. Supports Enter, Tab, Escape, Backspace, Delete, Arrow keys, Home/End, PageUp/PageDown, F1-F12, Ctrl+X, Alt+X")]
+    #[tool(
+        description = "Send key sequences to a virtual terminal. Supports Enter, Tab, Escape, Backspace, Delete, Arrow keys, Home/End, PageUp/PageDown, F1-F12, Ctrl+X, Alt+X"
+    )]
     async fn vtty_send_keys(
         &self,
         Parameters(args): Parameters<VttySendKeysArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
         {
-            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            guard.send_keys(&args.keys).map_err(|e| McpError::internal_error(e, None))?;
+            let guard = session
+                .lock()
+                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            guard
+                .send_keys(&args.keys)
+                .map_err(|e| McpError::internal_error(e, None))?;
         }
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         {
-            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            let guard = session
+                .lock()
+                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
             let _ = guard.read_and_update();
         }
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "keys": args.keys, "sent": true}).to_string()))
+        Ok(Self::tool_result(
+            json!({"session_id": args.session_id, "keys": args.keys, "sent": true}).to_string(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
@@ -510,79 +731,114 @@ impl Server {
         Parameters(args): Parameters<VttySendTextArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
         {
-            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-            guard.send_text(&args.text).map_err(|e| McpError::internal_error(e, None))?;
+            let guard = session
+                .lock()
+                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            guard
+                .send_text(&args.text)
+                .map_err(|e| McpError::internal_error(e, None))?;
         }
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         {
-            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            let guard = session
+                .lock()
+                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
             let _ = guard.read_and_update();
         }
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "length": args.text.len(), "sent": true}).to_string()))
+        Ok(Self::tool_result(
+            json!({"session_id": args.session_id, "length": args.text.len(), "sent": true})
+                .to_string(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Capture current terminal screen content as text (text-only models) and/or as a rendered PNG image (vision-capable models). \
+    #[tool(
+        description = "Capture current terminal screen content as text (text-only models) and/or as a rendered PNG image (vision-capable models). \
         The 'format' parameter controls output: 'text' (default) returns plain text, 'image' returns a rendered PNG, 'both' returns both. \
-        The 'theme' parameter sets the color scheme: solarized-dark (default), solarized-light, one-half-dark, one-half-light, ibm-5153.")]
+        The 'theme' parameter sets the color scheme: solarized-dark (default), solarized-light, one-half-dark, one-half-light, ibm-5153."
+    )]
     async fn vtty_screenshot(
         &self,
         Parameters(args): Parameters<VttyScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
         let fmt = args.format.as_deref().unwrap_or("text");
         let theme = args.theme.as_deref().unwrap_or("solarized-dark");
 
         let (text, alive, rows, cols) = {
-            let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+            let guard = session
+                .lock()
+                .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
             (guard.screenshot(), guard.is_alive(), guard.rows, guard.cols)
         };
 
         match fmt {
-            "text" => {
-                Ok(Self::tool_result(json!({
+            "text" => Ok(Self::tool_result(
+                json!({
                     "session_id": args.session_id,
                     "alive": alive,
                     "rows": rows,
                     "cols": cols,
                     "text": text
-                }).to_string()))
-            }
+                })
+                .to_string(),
+            )),
             #[cfg(feature = "vtty-visual")]
             "image" => {
-                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let png_data = guard.visual_screenshot(theme).map_err(|e| McpError::internal_error(e, None))?;
+                let guard = session
+                    .lock()
+                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                let png_data = guard
+                    .visual_screenshot(theme)
+                    .map_err(|e| McpError::internal_error(e, None))?;
                 let b64 = vtty::render::encode_base64(&png_data);
-                Ok(CallToolResult::success(vec![Content::image(b64, "image/png")]))
+                Ok(CallToolResult::success(vec![Content::image(
+                    b64,
+                    "image/png",
+                )]))
             }
             #[cfg(feature = "vtty-visual")]
             "both" => {
-                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                let png_data = guard.visual_screenshot(theme).map_err(|e| McpError::internal_error(e, None))?;
+                let guard = session
+                    .lock()
+                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                let png_data = guard
+                    .visual_screenshot(theme)
+                    .map_err(|e| McpError::internal_error(e, None))?;
                 let b64 = vtty::render::encode_base64(&png_data);
                 Ok(CallToolResult::success(vec![
-                    Content::text(json!({
-                        "session_id": args.session_id,
-                        "alive": alive,
-                        "rows": rows,
-                        "cols": cols,
-                        "text": text
-                    }).to_string()),
+                    Content::text(
+                        json!({
+                            "session_id": args.session_id,
+                            "alive": alive,
+                            "rows": rows,
+                            "cols": cols,
+                            "text": text
+                        })
+                        .to_string(),
+                    ),
                     Content::image(b64, "image/png"),
                 ]))
             }
-            _ => {
-                Ok(Self::tool_result(json!({
+            _ => Ok(Self::tool_result(
+                json!({
                     "session_id": args.session_id,
                     "alive": alive,
                     "rows": rows,
                     "cols": cols,
                     "text": text
-                }).to_string()))
-            }
+                })
+                .to_string(),
+            )),
         }
     }
 
@@ -593,23 +849,35 @@ impl Server {
         Parameters(args): Parameters<VttyWaitArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
         let secs = args.seconds.unwrap_or(5.0);
         let pattern = args.pattern.unwrap_or_default();
         if !pattern.is_empty() {
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
+            let deadline =
+                std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
             let mut found = false;
             while std::time::Instant::now() < deadline {
                 let alive = {
-                    let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                    if !guard.is_alive() { false } else {
+                    let guard = session
+                        .lock()
+                        .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                    if !guard.is_alive() {
+                        false
+                    } else {
                         let _ = guard.read_and_update();
                         let f = !guard.find_text(&pattern).is_empty();
-                        if f { found = true; }
+                        if f {
+                            found = true;
+                        }
                         guard.is_alive()
                     }
                 };
-                if found || !alive { break; }
+                if found || !alive {
+                    break;
+                }
                 tokio::time::sleep(std::time::Duration::from_millis(300)).await;
             }
             let alive = session.lock().map(|g| g.is_alive()).unwrap_or(false);
@@ -619,53 +887,88 @@ impl Server {
             let mut alive = true;
             for _ in 0..(wait_secs * 20) {
                 alive = {
-                    let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                    if !guard.is_alive() { false } else { let _ = guard.read_and_update(); guard.is_alive() }
+                    let guard = session
+                        .lock()
+                        .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                    if !guard.is_alive() {
+                        false
+                    } else {
+                        let _ = guard.read_and_update();
+                        guard.is_alive()
+                    }
                 };
-                if !alive { break; }
+                if !alive {
+                    break;
+                }
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
             }
             if alive {
-                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                let guard = session
+                    .lock()
+                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
                 let _ = guard.read_and_update();
                 alive = guard.is_alive();
             }
-            Ok(Self::tool_result(json!({"session_id": args.session_id, "seconds_waited": secs, "alive": alive}).to_string()))
+            Ok(Self::tool_result(
+                json!({"session_id": args.session_id, "seconds_waited": secs, "alive": alive})
+                    .to_string(),
+            ))
         }
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Wait until a VTty session has screen output (useful after vtty_launch for slow-starting commands). Returns immediately if output is already present.")]
+    #[tool(
+        description = "Wait until a VTty session has screen output (useful after vtty_launch for slow-starting commands). Returns immediately if output is already present."
+    )]
     async fn vtty_ready(
         &self,
         Parameters(args): Parameters<VttyReadyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let timeout_ms = args.timeout_ms.unwrap_or(30000);
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
         let mut ready = false;
         while std::time::Instant::now() < deadline {
             {
-                let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
-                if guard.has_output() { ready = true; break; }
+                let guard = session
+                    .lock()
+                    .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+                if guard.has_output() {
+                    ready = true;
+                    break;
+                }
             }
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "ready": ready}).to_string()))
+        Ok(Self::tool_result(
+            json!({"session_id": args.session_id, "ready": ready}).to_string(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Get the scrollback buffer (history) of a virtual terminal session, including current screen content")]
+    #[tool(
+        description = "Get the scrollback buffer (history) of a virtual terminal session, including current screen content"
+    )]
     async fn vtty_scrollback(
         &self,
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
+        let guard = session
+            .lock()
+            .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
         let text = guard.scrollback();
-        Ok(Self::tool_result(json!({"session_id": args.session_id, "text": text}).to_string()))
+        Ok(Self::tool_result(
+            json!({"session_id": args.session_id, "text": text}).to_string(),
+        ))
     }
 
     #[cfg(feature = "vtty")]
@@ -675,10 +978,17 @@ impl Server {
         Parameters(args): Parameters<VttyResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let session = self.vtty.get(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
-        let guard = session.lock().map_err(|e| McpError::internal_error(format!("{}", e), None))?;
+        let session = self
+            .vtty
+            .get(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
+        let guard = session
+            .lock()
+            .map_err(|e| McpError::internal_error(format!("{}", e), None))?;
         let old = (guard.cols, guard.rows);
-        guard.resize(args.cols as u16, args.rows as u16).map_err(|e| McpError::internal_error(e, None))?;
+        guard
+            .resize(args.cols as u16, args.rows as u16)
+            .map_err(|e| McpError::internal_error(e, None))?;
         Ok(Self::tool_result(json!({"session_id": args.session_id, "old": {"cols": old.0, "rows": old.1}, "new": {"cols": args.cols, "rows": args.rows}}).to_string()))
     }
 
@@ -689,36 +999,82 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let sessions = self.vtty.list();
-        Ok(Self::tool_result(serde_json::to_string_pretty(&sessions).unwrap_or_else(|_| "[]".to_string())))
+        Ok(Self::tool_result(
+            serde_json::to_string_pretty(&sessions).unwrap_or_else(|_| "[]".to_string()),
+        ))
     }
 
     #[cfg(feature = "vtty")]
-    #[tool(description = "Check if a VTty session's child process is still alive and refresh screen state")]
+    #[tool(
+        description = "Check if a VTty session's child process is still alive and refresh screen state"
+    )]
     async fn vtty_ping(
         &self,
         Parameters(args): Parameters<VttySessionArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        let info = self.vtty.ping(&args.session_id).map_err(|e| McpError::internal_error(e, None))?;
-        Ok(Self::tool_result(serde_json::to_string_pretty(&info).unwrap_or_default()))
+        let info = self
+            .vtty
+            .ping(&args.session_id)
+            .map_err(|e| McpError::internal_error(e, None))?;
+        Ok(Self::tool_result(
+            serde_json::to_string_pretty(&info).unwrap_or_default(),
+        ))
     }
 }
-
-// ── ServerHandler ────────────────────────────────────
 
 // ── ServerHandler ────────────────────────────────────
 
 #[tool_handler(router = Server::tool_router())]
 impl ServerHandler for Server {}
 
-// ── daemon resolution (unchanged) ────────────────────
+// ── default CWD resolution ──────────────────────────
+
+#[cfg(feature = "vtty")]
+async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<String> {
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+        if !root.is_empty() {
+            return Some(root);
+        }
+    }
+
+    if let Some(info) = context.peer.peer_info() {
+        if info.capabilities.roots.is_some() {
+            if let Ok(result) = context.peer.list_roots().await {
+                if let Some(root) = result.roots.first() {
+                    let uri = &root.uri;
+                    let path = if let Some(p) = uri.strip_prefix("file://") {
+                        p.to_string()
+                    } else if let Some(p) = uri.strip_prefix("file:") {
+                        p.to_string()
+                    } else {
+                        uri.clone()
+                    };
+                    if !path.is_empty() {
+                        return Some(path);
+                    }
+                }
+            }
+        }
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        return Some(cwd.to_string_lossy().to_string());
+    }
+
+    None
+}
+
+// ── daemon resolution ───────────────────────────────
 
 mod daemon {
     use anyhow::anyhow;
     use std::path::PathBuf;
 
     pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
-        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") && !url.is_empty() {
+        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
+            && !url.is_empty()
+        {
             tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
             return Ok(url);
         }
@@ -735,17 +1091,22 @@ mod daemon {
             candidates.push(cwd.join("target"));
             let mut dir = cwd.clone();
             for _ in 0..5 {
-                if dir.join("Cargo.toml").exists() { candidates.push(dir.join("target")); }
-                if !dir.pop() { break; }
+                if dir.join("Cargo.toml").exists() {
+                    candidates.push(dir.join("target"));
+                }
+                if !dir.pop() {
+                    break;
+                }
             }
         }
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
             candidates.push(PathBuf::from(root).join("target"));
         }
         if let Ok(exe) = std::env::current_exe()
-            && let Some(parent) = exe.parent().and_then(|p| p.parent()) {
-                candidates.push(parent.join("target"));
-            }
+            && let Some(parent) = exe.parent().and_then(|p| p.parent())
+        {
+            candidates.push(parent.join("target"));
+        }
         candidates.dedup();
         candidates
     }
@@ -756,8 +1117,12 @@ mod daemon {
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
                 if let Some(port_str) = trimmed.strip_prefix("ready:") {
-                    if let Ok(port) = port_str.parse::<u16>() { return Some((port, ready_path)); }
-                } else if trimmed == "ready" { return Some((3000, ready_path)); }
+                    if let Ok(port) = port_str.parse::<u16>() {
+                        return Some((port, ready_path));
+                    }
+                } else if trimmed == "ready" {
+                    return Some((3000, ready_path));
+                }
             }
         }
         None
