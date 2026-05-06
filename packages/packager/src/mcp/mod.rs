@@ -25,22 +25,32 @@ pub struct McpConfig {
 }
 
 pub async fn run(config: McpConfig) -> crate::Result<()> {
-    let base_url = if config.base_url.is_empty() {
-        match resolve_daemon_url().await {
-            Ok(url) => url,
-            Err(e) => {
-                #[cfg(feature = "vtty")]
-                {
+    let base_url: std::sync::Arc<tokio::sync::RwLock<String>> =
+        std::sync::Arc::new(tokio::sync::RwLock::new(String::new()));
+    let base_url_for_resolve = base_url.clone();
+    let config_url = config.base_url;
+
+    let resolve_handle = tokio::spawn(async move {
+        let url = if config_url.is_empty() {
+            match resolve_daemon_url().await {
+                Ok(url) => url,
+                Err(e) => {
                     tracing::debug!("[tairitsu-mcp] Warning: {}", e);
                     String::new()
                 }
-                #[cfg(not(feature = "vtty"))]
-                return Err(e);
             }
-        }
-    } else {
-        config.base_url
-    };
+        } else {
+            config_url
+        };
+        *base_url_for_resolve.write().await = url;
+    });
+
+    eprintln!(
+        "{{\"jsonrpc\":\"2.0\",\"method\":\"notifications/diagnostic\",\"params\":{{\"status\":\"starting\",\"pid\":{},\"ppid\":{},\"features\":\"{}\"}}}}",
+        std::process::id(),
+        std::os::unix::process::parent_id(),
+        if cfg!(feature = "vtty") { "vtty,browser" } else { "browser" }
+    );
 
     let http = reqwest::Client::new();
     #[cfg(feature = "vtty")]
@@ -58,6 +68,7 @@ pub async fn run(config: McpConfig) -> crate::Result<()> {
     );
 
     run_jsonrpc_loop(state).await;
+    let _ = resolve_handle.await;
 
     Ok(())
 }
@@ -155,21 +166,26 @@ fn try_read_ready_port_from_candidates(
 }
 
 struct McpState {
-    base_url: String,
+    base_url: std::sync::Arc<tokio::sync::RwLock<String>>,
     http: reqwest::Client,
     #[cfg(feature = "vtty")]
     vtty: std::sync::Arc<crate::vtty::VttyManager>,
 }
 
 impl McpState {
-    fn require_daemon(&self) -> Result<(), String> {
-        if self.base_url.is_empty() {
+    async fn get_base_url(&self) -> String {
+        self.base_url.read().await.clone()
+    }
+
+    async fn require_daemon(&self) -> Result<String, String> {
+        let url = self.base_url.read().await.clone();
+        if url.is_empty() {
             Err(
                 "Browser tools require a running daemon. Start with: tairitsu dev --daemon"
                     .to_string(),
             )
         } else {
-            Ok(())
+            Ok(url)
         }
     }
 }
@@ -555,6 +571,31 @@ fn tool_list() -> Vec<serde_json::Value> {
                 "required": ["session_id"]
             }),
         ),
+        #[cfg(feature = "vtty")]
+        tool(
+            "vtty_ready",
+            "Wait until a VTty session has screen output (useful after vtty_launch for slow-starting commands). Returns immediately if output is already present.",
+            json!({
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "string", "description": "Session ID"},
+                    "timeout_ms": {"type": "number", "description": "Max wait time in milliseconds (default 30000, 30s)"}
+                },
+                "required": ["session_id"]
+            }),
+        ),
+        #[cfg(feature = "vtty")]
+        tool(
+            "vtty_scrollback",
+            "Get the scrollback buffer (history) of a virtual terminal session, including current screen content",
+            json!({
+                "type": "object",
+                "properties": {
+                    "session_id": {"type": "string", "description": "Session ID"}
+                },
+                "required": ["session_id"]
+            }),
+        ),
     ]
 }
 
@@ -696,10 +737,16 @@ async fn invoke_tool(
     tool_name: &str,
     args: &serde_json::Value,
 ) -> Result<String, String> {
-    let api = |path: &str| format!("{}/__tairitsu_debug/{}", state.base_url, path);
+    let base_url = state.base_url.read().await.clone();
+    let api = |path: &str| format!("{}/__tairitsu_debug/{}", base_url, path);
 
     if tool_name.starts_with("browser_") {
-        state.require_daemon()?;
+        if base_url.is_empty() {
+            return Err(
+                "Browser tools require a running daemon. Start with: tairitsu dev --daemon"
+                    .to_string(),
+            );
+        }
     }
 
     match tool_name {
@@ -1037,10 +1084,15 @@ async fn invoke_tool(
             let sid = arg_str(args, "session_id")?;
             let keys = arg_str(args, "keys")?;
             let session = state.vtty.get(sid)?;
-            let guard = session.lock().map_err(|e| format!("{}", e))?;
-            guard.send_keys(keys).map_err(|e| e.to_string())?;
-            std::thread::sleep(std::time::Duration::from_millis(50));
-            let _ = guard.read_and_update();
+            {
+                let guard = session.lock().map_err(|e| format!("{}", e))?;
+                guard.send_keys(keys).map_err(|e| e.to_string())?;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            {
+                let guard = session.lock().map_err(|e| format!("{}", e))?;
+                let _ = guard.read_and_update();
+            }
             Ok(json!({"session_id": sid, "keys": keys, "sent": true}).to_string())
         }
         #[cfg(feature = "vtty")]
@@ -1048,10 +1100,15 @@ async fn invoke_tool(
             let sid = arg_str(args, "session_id")?;
             let text = arg_str(args, "text")?;
             let session = state.vtty.get(sid)?;
-            let guard = session.lock().map_err(|e| format!("{}", e))?;
-            guard.send_text(text).map_err(|e| e.to_string())?;
-            std::thread::sleep(std::time::Duration::from_millis(50));
-            let _ = guard.read_and_update();
+            {
+                let guard = session.lock().map_err(|e| format!("{}", e))?;
+                guard.send_text(text).map_err(|e| e.to_string())?;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            {
+                let guard = session.lock().map_err(|e| format!("{}", e))?;
+                let _ = guard.read_and_update();
+            }
             Ok(json!({"session_id": sid, "length": text.len(), "sent": true}).to_string())
         }
         #[cfg(feature = "vtty")]
@@ -1070,29 +1127,61 @@ async fn invoke_tool(
             let secs = args.get("seconds").and_then(|v| v.as_f64()).unwrap_or(5.0);
             let pattern = args.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
             let session = state.vtty.get(sid)?;
-            let guard = session.lock().map_err(|e| format!("{}", e))?;
             if !pattern.is_empty() {
                 let deadline = std::time::Instant::now()
                     + std::time::Duration::from_secs_f64(secs.min(1800.0));
-                while std::time::Instant::now() < deadline && guard.is_alive() {
-                    let _ = guard.read_and_update();
-                    if !guard.find_text(pattern).is_empty() {
-                        return Ok(json!({"session_id": sid, "pattern": pattern, "found": true, "alive": true}).to_string());
-                    }
-                    std::thread::sleep(std::time::Duration::from_millis(300));
-                }
-                Ok(json!({"session_id": sid, "pattern": pattern, "found": false, "alive": guard.is_alive()}).to_string())
-            } else {
-                let wait_secs = secs.min(1800.0) as u64;
-                for _ in 0..(wait_secs * 20) {
-                    // 50ms intervals
-                    if !guard.is_alive() {
+                let mut found = false;
+                while std::time::Instant::now() < deadline {
+                    let alive = {
+                        let guard = session.lock().map_err(|e| format!("{}", e))?;
+                        if !guard.is_alive() {
+                            false
+                        } else {
+                            let _ = guard.read_and_update();
+                            let found_now = !guard.find_text(pattern).is_empty();
+                            if found_now {
+                                found = true;
+                            }
+                            guard.is_alive()
+                        }
+                    };
+                    if found || !alive {
                         break;
                     }
-                    std::thread::sleep(std::time::Duration::from_millis(50));
+                    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
                 }
+                let alive = session
+                    .lock()
+                    .map(|g| g.is_alive())
+                    .unwrap_or(false);
+                Ok(json!({"session_id": sid, "pattern": pattern, "found": found, "alive": alive}).to_string())
+            } else {
+                let wait_secs = secs.min(1800.0) as u64;
+                let mut alive = true;
+                for _i in 0..(wait_secs * 20) {
+                    alive = {
+                        let guard = session.lock().map_err(|e| format!("{}", e))?;
+                        if !guard.is_alive() {
+                            false
+                        } else {
+                            let _ = guard.read_and_update();
+                            guard.is_alive()
+                        }
+                    };
+                    if !alive {
+                        break;
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                }
+                let alive = if alive {
+                    let guard = session.lock().map_err(|e| format!("{}", e))?;
+                    let _ = guard.read_and_update();
+                    guard.is_alive()
+                } else {
+                    alive
+                };
                 Ok(
-                    json!({"session_id": sid, "seconds_waited": secs, "alive": guard.is_alive()})
+                    json!({"session_id": sid, "seconds_waited": secs, "alive": alive})
                         .to_string(),
                 )
             }
@@ -1125,6 +1214,42 @@ async fn invoke_tool(
             let sid = arg_str(args, "session_id")?;
             let info = state.vtty.ping(sid).map_err(|e| e.to_string())?;
             Ok(serde_json::to_string_pretty(&info).unwrap_or_default())
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_ready" => {
+            let sid = arg_str(args, "session_id")?;
+            let timeout_ms = args
+                .get("timeout_ms")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(30000);
+            let session = state.vtty.get(sid)?;
+            let deadline =
+                std::time::Instant::now() + std::time::Duration::from_millis(timeout_ms);
+            let mut has_output = false;
+            while std::time::Instant::now() < deadline {
+                {
+                    let guard = session.lock().map_err(|e| format!("{}", e))?;
+                    if guard.has_output() {
+                        has_output = true;
+                        break;
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+            Ok(
+                json!({"session_id": sid, "ready": has_output, "elapsed_ms": timeout_ms.saturating_sub(
+                    (deadline - std::time::Instant::now()).as_millis() as u64
+                )})
+                .to_string(),
+            )
+        }
+        #[cfg(feature = "vtty")]
+        "vtty_scrollback" => {
+            let sid = arg_str(args, "session_id")?;
+            let session = state.vtty.get(sid)?;
+            let guard = session.lock().map_err(|e| format!("{}", e))?;
+            let text = guard.scrollback();
+            Ok(json!({"session_id": sid, "text": text}).to_string())
         }
 
         _ => Err(format!("Unknown tool: {}", tool_name)),
