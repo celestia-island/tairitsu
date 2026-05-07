@@ -83,6 +83,37 @@ impl Server {
         Ok(v)
     }
 
+    async fn http_get(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+    ) -> Result<serde_json::Value, McpError> {
+        let url = self.api_async(path).await;
+        let resp = self
+            .http
+            .get(&url)
+            .query(query)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
+        if !status.is_success() {
+            let msg = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("unknown error");
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {msg}"),
+                None,
+            ));
+        }
+        Ok(v)
+    }
+
     async fn http_post_fire_and_forget(
         &self,
         path: &str,
@@ -248,7 +279,7 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         Ok(Self::tool_result(
-            "(navigate-back: not yet implemented on headless wry)",
+            "(navigate-back: not yet supported via debug API)",
         ))
     }
 
@@ -258,7 +289,7 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         Ok(Self::tool_result(
-            "(navigate-forward: not yet implemented on headless wry)",
+            "(navigate-forward: not yet supported via debug API)",
         ))
     }
 
@@ -271,28 +302,17 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         self.ensure_daemon().await?;
-        let url = self.api_async("a11y").await;
-        let resp = self
-            .http
-            .get(&url)
-            .query(&[("selector", args.target.as_deref().unwrap_or(""))])
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
-        let status = resp.status();
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
-        if !status.is_success() {
-            let err = v.get("error").and_then(|e| e.as_str()).unwrap_or("unknown");
-            return Err(McpError::internal_error(err.to_string(), None));
-        }
+        let query: Vec<(&str, &str)> = args
+            .target
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(|s| vec![("selector", s)])
+            .unwrap_or_default();
+        let v = self.http_get("a11y", &query).await?;
         Ok(Self::tool_result(
             v.get("data")
-                .and_then(|d| d.as_str())
-                .unwrap_or("{}")
-                .to_string(),
+                .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
+                .unwrap_or_else(|| "{}".into()),
         ))
     }
 
@@ -317,10 +337,31 @@ impl Server {
         if ok {
             let data = v
                 .get("data")
-                .and_then(|d| d.as_str())
-                .unwrap_or("")
-                .to_string();
-            Ok(Self::tool_result(data))
+                .and_then(|d| {
+                    d.as_str()
+                        .map(|s| s.to_string())
+                        .or_else(|| {
+                            d.get("data")
+                                .and_then(|dd| dd.as_str())
+                                .map(|s| s.to_string())
+                        })
+                        .or_else(|| {
+                            d.as_object()
+                                .map(|_| serde_json::to_string(d).unwrap_or_default())
+                        })
+                })
+                .unwrap_or_default();
+            let mime = v
+                .get("data")
+                .and_then(|d| d.get("mime_type"))
+                .and_then(|m| m.as_str())
+                .unwrap_or("image/png");
+            let data_url = if data.starts_with("data:") {
+                data
+            } else {
+                format!("data:{mime};base64,{data}")
+            };
+            Ok(Self::tool_result(data_url))
         } else {
             let err = v
                 .get("error")
@@ -385,12 +426,20 @@ impl Server {
         let v = self
             .http_post("evaluate", json!({"expression": args.function}))
             .await?;
-        Ok(Self::tool_result(
-            v.get("data")
-                .and_then(|r| r.as_str())
-                .unwrap_or("")
-                .to_string(),
-        ))
+        let result = v
+            .get("data")
+            .and_then(|d| {
+                d.as_str()
+                    .map(|s| s.to_string())
+                    .or_else(|| {
+                        d.get("result")
+                            .and_then(|r| r.as_str())
+                            .map(|s| s.to_string())
+                    })
+                    .or_else(|| Some(serde_json::to_string(d).unwrap_or_default()))
+            })
+            .unwrap_or_default();
+        Ok(Self::tool_result(result))
     }
 
     #[tool(description = "Get console log entries (error/warning/info/debug) from the page")]
@@ -400,18 +449,8 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         self.ensure_daemon().await?;
-        let url = self.api_async("console").await;
-        let resp = self
-            .http
-            .get(&url)
-            .query(&[("level", args.level.as_deref().unwrap_or(""))])
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
+        let level = args.level.as_deref().unwrap_or("");
+        let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
     }
 
