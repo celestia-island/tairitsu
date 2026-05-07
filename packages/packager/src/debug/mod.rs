@@ -499,21 +499,12 @@ mod engine {
         let connected = Arc::new(RwLock::new(false));
         let conn = connected.clone();
 
-        crate::log_info!("Debug browser engine: chromium (headless CDP)");
-
         let config = resolve_browser_config().await?;
         let (browser, mut handler) = Browser::launch(config)
             .await
             .map_err(|e| format!("Failed to launch Chrome: {e}"))?;
 
-        let page = browser
-            .new_page(&base_url)
-            .await
-            .map_err(|e| format!("Failed to create page: {e}"))?;
-
-        crate::log_ok!("Debug browser connected via chromium CDP");
-
-        let _handler_join = tokio::spawn(async move {
+        let _handler_guard = tokio::spawn(async move {
             while let Some(event) = handler.next().await {
                 if event.is_err() {
                     break;
@@ -521,18 +512,29 @@ mod engine {
             }
         });
 
+        let page = browser
+            .new_page(&base_url)
+            .await
+            .map_err(|e| format!("Failed to create page: {e}"))?;
+
         *connected.write().await = true;
+        crate::log_ok!("Debug browser connected (chromium CDP)");
 
         let page = Arc::new(page);
+        let browser = Arc::new(browser);
 
-        tokio::spawn(async move {
-            while let Some(cmd) = cmd_rx.recv().await {
-                let p = page.clone();
-                tokio::spawn(async move {
-                    dispatch_command(&p, cmd).await;
-                });
+        tokio::spawn({
+            let browser = browser.clone();
+            async move {
+                while let Some(cmd) = cmd_rx.recv().await {
+                    let p = page.clone();
+                    tokio::spawn(async move {
+                        dispatch_command(&p, cmd).await;
+                    });
+                }
+                *conn.write().await = false;
+                drop(browser);
             }
-            *conn.write().await = false;
         });
 
         Ok(BrowserHandle {
@@ -544,18 +546,26 @@ mod engine {
     async fn resolve_browser_config() -> Result<BrowserConfig, String> {
         let mut builder = BrowserConfig::builder()
             .window_size(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H)
-            .with_head();
+            .arg("--no-sandbox")
+            .arg("--disable-dev-shm-usage")
+            .arg("--disable-gpu");
 
-        if let Ok(exe) = std::env::var("CHROME_PATH") && !exe.is_empty() {
+        if let Ok(exe) = std::env::var("CHROME_PATH")
+            && !exe.is_empty()
+        {
             crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
             builder = builder.chrome_executable(exe);
-            return builder.build().map_err(|e| format!("Bad browser config: {e}"));
+            return builder
+                .build()
+                .map_err(|e| format!("Bad browser config: {e}"));
         }
 
         if let Ok(exe) = which_chromium() {
             crate::log_info!("[debug-browser] Found browser: {}", exe);
             builder = builder.chrome_executable(exe);
-            return builder.build().map_err(|e| format!("Bad browser config: {e}"));
+            return builder
+                .build()
+                .map_err(|e| format!("Bad browser config: {e}"));
         }
 
         crate::log_info!("[debug-browser] No browser found, auto-downloading Chromium...");
@@ -564,18 +574,30 @@ mod engine {
                 .build()
                 .map_err(|e| format!("Fetcher config: {e}"))?,
         );
-        let info = fetcher.fetch().await.map_err(|e| format!("Fetcher download: {e}"))?;
-        crate::log_ok!("[debug-browser] Chromium downloaded: {}", info.executable_path.display());
+        let info = fetcher
+            .fetch()
+            .await
+            .map_err(|e| format!("Fetcher download: {e}"))?;
+        crate::log_ok!(
+            "[debug-browser] Chromium downloaded: {}",
+            info.executable_path.display()
+        );
         builder = builder.chrome_executable(&info.executable_path);
-        builder.build().map_err(|e| format!("Bad browser config: {e}"))
+        builder
+            .build()
+            .map_err(|e| format!("Bad browser config: {e}"))
     }
 
     fn which_chromium() -> Result<String, ()> {
-        let candidates = ["chromium-browser", "chromium", "google-chrome", "google-chrome-stable", "chrome"];
+        let candidates = [
+            "chromium-browser",
+            "chromium",
+            "google-chrome",
+            "google-chrome-stable",
+            "chrome",
+        ];
         for name in &candidates {
-            if let Ok(output) = std::process::Command::new("which")
-                .arg(name)
-                .output()
+            if let Ok(output) = std::process::Command::new("which").arg(name).output()
                 && output.status.success()
             {
                 let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1085,26 +1107,33 @@ pub async fn start_debug_server(
     let console_log = Arc::new(RwLock::new(Vec::new()));
 
     #[cfg(feature = "debug-browser")]
-    let browser = engine::spawn_browser(base_url.clone(), None, console_log.clone())
+    let (browser, browser_engine) = {
+        crate::log_info!("Debug browser engine: chromium (headless CDP)");
+        match tokio::time::timeout(
+            Duration::from_secs(30),
+            engine::spawn_browser(base_url.clone(), None, console_log.clone()),
+        )
         .await
-        .ok()
-        .map(Arc::new);
+        {
+            Ok(Ok(b)) => (Some(Arc::new(b)), "chromium".to_string()),
+            Ok(Err(e)) => {
+                crate::log_fail!("[debug-browser] Failed: {e}");
+                (None, "none".to_string())
+            }
+            Err(_) => {
+                crate::log_fail!("[debug-browser] Timed out after 30s");
+                (None, "none".to_string())
+            }
+        }
+    };
     #[cfg(not(feature = "debug-browser"))]
-    let browser: Option<Arc<BrowserHandle>> = None;
+    let (browser, browser_engine): (Option<Arc<BrowserHandle>>, String) = (None, "none".into());
 
     let browser_engine = if browser.is_some() {
-        #[cfg(feature = "debug-browser")]
-        {
-            "chromium"
-        }
-        #[cfg(not(feature = "debug-browser"))]
-        {
-            "none"
-        }
+        browser_engine
     } else {
-        "none"
-    }
-    .to_string();
+        "none".into()
+    };
 
     let state = DebugState {
         config: config.clone(),
