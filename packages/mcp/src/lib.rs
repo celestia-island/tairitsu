@@ -901,9 +901,38 @@ mod daemon {
         {
             return Ok(url);
         }
-        let searched = search_project_roots();
-        if let Some((_port, debug_port, _found_at)) = try_read_ready_port_from_candidates(&searched)
-        {
+
+        let priority_dirs: Vec<PathBuf> = {
+            let mut v = Vec::new();
+            if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+                let p = PathBuf::from(&root);
+                v.push(p.join("target"));
+            }
+            if let Ok(cwd) = std::env::current_dir() {
+                v.push(cwd.join("target"));
+                let mut dir = cwd.clone();
+                for _ in 0..8 {
+                    if dir.join("Cargo.toml").exists() {
+                        v.push(dir.join("target"));
+                    }
+                    if !dir.pop() {
+                        break;
+                    }
+                }
+            }
+            v
+        };
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
+            if let Some(dp) = debug_port {
+                return Ok(format!("http://localhost:{dp}"));
+            }
+            return Err(anyhow!(
+                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+            ));
+        }
+
+        let searched = search_project_roots_fallback();
+        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -914,25 +943,14 @@ mod daemon {
         Err(anyhow!("No running tairitsu daemon found"))
     }
 
-    fn search_project_roots() -> Vec<PathBuf> {
+    fn search_project_roots_fallback() -> Vec<PathBuf> {
         let mut candidates = Vec::new();
         if let Ok(cwd) = std::env::current_dir() {
-            candidates.push(cwd.join("target"));
-            let mut dir = cwd.clone();
-            for _ in 0..8 {
-                if dir.join("Cargo.toml").exists() {
-                    candidates.push(dir.join("target"));
-                }
-                if !dir.pop() {
-                    break;
-                }
-            }
-            add_target_tree(&mut candidates, &cwd, 3);
+            add_target_tree(&mut candidates, &cwd, 2);
         }
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
             let root_path = PathBuf::from(&root);
-            candidates.push(root_path.join("target"));
-            add_target_tree(&mut candidates, &root_path, 3);
+            add_target_tree(&mut candidates, &root_path, 2);
         }
         for scan_dir in std::env::var("HOME")
             .ok()
@@ -944,7 +962,6 @@ mod daemon {
                     let p = entry.path();
                     if p.is_dir() {
                         candidates.push(p.join("target"));
-                        add_target_tree(&mut candidates, &p, 2);
                     }
                 }
             }
