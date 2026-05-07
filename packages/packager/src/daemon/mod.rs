@@ -44,11 +44,15 @@ fn ready_file_path() -> PathBuf {
 
 /// Write the daemon readiness signal with the actual bound port.
 /// Called by child once the HTTP server is listening.
-pub fn signal_ready(port: u16) -> std::io::Result<()> {
+pub fn signal_ready(port: u16, debug_port: Option<u16>) -> std::io::Result<()> {
     if let Some(parent) = ready_file_path().parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(ready_file_path(), format!("ready:{port}"))
+    let content = match debug_port {
+        Some(dp) => format!("ready:{port}:{dp}"),
+        None => format!("ready:{port}"),
+    };
+    fs::write(ready_file_path(), content)
 }
 
 /// Write the daemon failure signal (called by child when initial build fails)
@@ -61,12 +65,15 @@ pub fn signal_failed(error: &str) -> std::io::Result<()> {
 
 /// Try to parse ready-file content into a port number.
 /// Returns `Some(port)` for `"ready"` or `"ready:<port>"`, `None` for error messages.
-fn parse_ready_port(content: &str) -> Option<u16> {
+fn parse_ready_port(content: &str) -> Option<(u16, Option<u16>)> {
     let trimmed = content.trim();
-    if let Some(port_str) = trimmed.strip_prefix("ready:") {
-        port_str.parse().ok()
+    if let Some(rest) = trimmed.strip_prefix("ready:") {
+        let mut parts = rest.splitn(2, ':');
+        let port = parts.next().and_then(|s| s.parse().ok())?;
+        let debug_port = parts.next().and_then(|s| s.parse().ok());
+        Some((port, debug_port))
     } else if trimmed == "ready" {
-        Some(0)
+        Some((0, None))
     } else {
         None
     }
@@ -103,9 +110,8 @@ pub fn wait_for_child_signal(
         stream_new_content(&stdout_path, &mut log_cursor);
 
         if let Ok(content) = fs::read_to_string(&ready_path) {
-            let _ = fs::remove_file(&ready_path);
             stream_new_content(&stdout_path, &mut log_cursor);
-            if let Some(port) = parse_ready_port(&content) {
+            if let Some((port, _debug_port)) = parse_ready_port(&content) {
                 return Ok(Some(port));
             }
             print_signal_failure(&content);
@@ -118,14 +124,12 @@ pub fn wait_for_child_signal(
             std::thread::sleep(std::time::Duration::from_millis(500));
             stream_new_content(&stdout_path, &mut log_cursor);
             if let Ok(content) = fs::read_to_string(&ready_path) {
-                let _ = fs::remove_file(&ready_path);
-                if let Some(port) = parse_ready_port(&content) {
+                if let Some((port, _debug_port)) = parse_ready_port(&content) {
                     return Ok(Some(port));
                 }
                 print_signal_failure(&content);
                 return Ok(None);
             }
-            let _ = fs::remove_file(&ready_path);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::UnexpectedEof,
                 format!(
@@ -139,7 +143,6 @@ pub fn wait_for_child_signal(
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
-    let _ = fs::remove_file(&ready_path);
     Err(std::io::Error::new(
         std::io::ErrorKind::TimedOut,
         format!(
@@ -497,6 +500,7 @@ pub fn kill_daemon() -> std::io::Result<bool> {
     {
         kill_process_by_pid(pid);
         let _ = fs::remove_file(pid_file_path());
+        let _ = fs::remove_file(ready_file_path());
         return Ok(true);
     }
     Ok(false)

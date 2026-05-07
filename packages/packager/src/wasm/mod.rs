@@ -2157,11 +2157,6 @@ pub async fn dev_server(
     let reload_tx_for_route = reload_tx.clone();
     let dist_state = std::sync::Arc::new(dist_dir.clone());
 
-    #[cfg(feature = "debug-browser")]
-    let debug_state = crate::debug_api::DebugApiState::new(0);
-    #[cfg(feature = "debug-browser")]
-    let debug_state_clone = debug_state.clone();
-
     let app = Router::new()
         .route(
             "/__tairitsu_reload",
@@ -2208,44 +2203,6 @@ pub async fn dev_server(
             }),
         );
 
-    #[cfg(feature = "debug-browser")]
-    let app = {
-        let app_debug_state = debug_state.clone();
-        app.nest(
-            "/__tairitsu_debug",
-            axum::Router::new()
-                .route(
-                    "/status",
-                    axum::routing::get(crate::debug_api::handle_status),
-                )
-                .route(
-                    "/navigate",
-                    axum::routing::post(crate::debug_api::handle_navigate),
-                )
-                .route(
-                    "/snapshot",
-                    axum::routing::get(crate::debug_api::handle_snapshot),
-                )
-                .route(
-                    "/click",
-                    axum::routing::post(crate::debug_api::handle_click),
-                )
-                .route(
-                    "/evaluate",
-                    axum::routing::post(crate::debug_api::handle_evaluate),
-                )
-                .route(
-                    "/screenshot",
-                    axum::routing::get(crate::debug_api::handle_screenshot),
-                )
-                .route(
-                    "/console",
-                    axum::routing::get(crate::debug_api::handle_console),
-                )
-                .with_state(app_debug_state),
-        )
-    };
-
     let app = app
         .fallback_service(ServeDir::new(dist_dir).fallback(spa_fallback))
         .layer(middleware::from_fn_with_state(
@@ -2272,29 +2229,14 @@ pub async fn dev_server(
         );
     }
 
-    #[cfg(feature = "debug-browser")]
-    {
-        debug_state.set_port(actual_port).await;
-    }
-
     if crate::daemon::is_daemon() {
-        let _ = crate::daemon::signal_ready(actual_port);
+        #[cfg(feature = "debug-browser")]
+        let dp = Some(effective_debug_port);
+        #[cfg(not(feature = "debug-browser"))]
+        let dp = None;
+        let _ = crate::daemon::signal_ready(actual_port, dp);
     }
 
-    #[cfg(feature = "debug-browser")]
-    {
-        if crate::daemon::is_daemon() {
-            let app_url = format!("http://localhost:{}", actual_port);
-            let debug = debug_state_clone;
-            tokio::spawn(async move {
-                use std::time::Duration;
-                tokio::time::sleep(Duration::from_millis(500)).await;
-                if let Err(e) = debug.launch_browser(&app_url).await {
-                    crate::log_warn!("Debug browser launch failed: {}", e);
-                }
-            });
-        }
-    }
     let mut last_build_line = format_last_build_line(true, initial_elapsed, None);
 
     let port_switched = if actual_port != port {
