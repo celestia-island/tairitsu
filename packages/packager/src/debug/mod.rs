@@ -500,6 +500,9 @@ mod engine {
         let conn = connected.clone();
 
         let config = resolve_browser_config().await?;
+
+        let _ = std::fs::remove_file("/tmp/chromiumoxide-runner/SingletonLock");
+
         let (browser, mut handler) = Browser::launch(config)
             .await
             .map_err(|e| format!("Failed to launch Chrome: {e}"))?;

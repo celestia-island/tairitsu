@@ -110,7 +110,6 @@ pub fn wait_for_child_signal(
         stream_new_content(&stdout_path, &mut log_cursor);
 
         if let Ok(content) = fs::read_to_string(&ready_path) {
-            let _ = fs::remove_file(&ready_path);
             stream_new_content(&stdout_path, &mut log_cursor);
             if let Some((port, _debug_port)) = parse_ready_port(&content) {
                 return Ok(Some(port));
@@ -125,14 +124,12 @@ pub fn wait_for_child_signal(
             std::thread::sleep(std::time::Duration::from_millis(500));
             stream_new_content(&stdout_path, &mut log_cursor);
             if let Ok(content) = fs::read_to_string(&ready_path) {
-                let _ = fs::remove_file(&ready_path);
                 if let Some((port, _debug_port)) = parse_ready_port(&content) {
                     return Ok(Some(port));
                 }
                 print_signal_failure(&content);
                 return Ok(None);
             }
-            let _ = fs::remove_file(&ready_path);
             return Err(std::io::Error::new(
                 std::io::ErrorKind::UnexpectedEof,
                 format!(
@@ -146,7 +143,6 @@ pub fn wait_for_child_signal(
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
-    let _ = fs::remove_file(&ready_path);
     Err(std::io::Error::new(
         std::io::ErrorKind::TimedOut,
         format!(
@@ -504,6 +500,7 @@ pub fn kill_daemon() -> std::io::Result<bool> {
     {
         kill_process_by_pid(pid);
         let _ = fs::remove_file(pid_file_path());
+        let _ = fs::remove_file(ready_file_path());
         return Ok(true);
     }
     Ok(false)
