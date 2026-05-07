@@ -10,8 +10,6 @@ pub mod config;
 pub mod daemon;
 #[cfg(feature = "dev-server")]
 pub mod debug;
-#[cfg(feature = "debug-browser")]
-pub mod debug_api;
 pub mod i18n;
 pub mod icons;
 pub mod logfmt;
