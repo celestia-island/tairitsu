@@ -501,7 +501,7 @@ mod engine {
 
         crate::log_info!("Debug browser engine: chromium (headless CDP)");
 
-        let config = build_browser_config()?;
+        let config = resolve_browser_config().await?;
         let (browser, mut handler) = Browser::launch(config)
             .await
             .map_err(|e| format!("Failed to launch Chrome: {e}"))?;
@@ -541,20 +541,50 @@ mod engine {
         })
     }
 
-    fn build_browser_config() -> Result<BrowserConfig, String> {
+    async fn resolve_browser_config() -> Result<BrowserConfig, String> {
         let mut builder = BrowserConfig::builder()
             .window_size(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H)
             .with_head();
 
-        if let Ok(exe) = std::env::var("CHROME_PATH")
-            && !exe.is_empty()
-        {
+        if let Ok(exe) = std::env::var("CHROME_PATH") && !exe.is_empty() {
+            crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
             builder = builder.chrome_executable(exe);
+            return builder.build().map_err(|e| format!("Bad browser config: {e}"));
         }
 
-        builder
-            .build()
-            .map_err(|e| format!("Bad browser config: {e}"))
+        if let Ok(exe) = which_chromium() {
+            crate::log_info!("[debug-browser] Found browser: {}", exe);
+            builder = builder.chrome_executable(exe);
+            return builder.build().map_err(|e| format!("Bad browser config: {e}"));
+        }
+
+        crate::log_info!("[debug-browser] No browser found, auto-downloading Chromium...");
+        let fetcher = chromiumoxide::fetcher::BrowserFetcher::new(
+            chromiumoxide::fetcher::BrowserFetcherOptions::builder()
+                .build()
+                .map_err(|e| format!("Fetcher config: {e}"))?,
+        );
+        let info = fetcher.fetch().await.map_err(|e| format!("Fetcher download: {e}"))?;
+        crate::log_ok!("[debug-browser] Chromium downloaded: {}", info.executable_path.display());
+        builder = builder.chrome_executable(&info.executable_path);
+        builder.build().map_err(|e| format!("Bad browser config: {e}"))
+    }
+
+    fn which_chromium() -> Result<String, ()> {
+        let candidates = ["chromium-browser", "chromium", "google-chrome", "google-chrome-stable", "chrome"];
+        for name in &candidates {
+            if let Ok(output) = std::process::Command::new("which")
+                .arg(name)
+                .output()
+                && output.status.success()
+            {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Ok(path);
+                }
+            }
+        }
+        Err(())
     }
 
     async fn dispatch_command(page: &chromiumoxide::Page, cmd: BrowserCommand) {
