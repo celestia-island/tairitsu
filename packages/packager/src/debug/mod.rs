@@ -478,34 +478,67 @@ impl BrowserHandle {
     }
 }
 
-// ── Wry-based Browser Engine ─────────────────────────────────────────────
+// ── Chromium-based Browser Engine (CDP) ─────────────────────────────────────
 
 #[cfg(feature = "debug-browser")]
 mod engine {
     use super::*;
-    use std::collections::HashMap;
-    use std::sync::{Arc as StdArc, Mutex};
+    use base64::Engine;
+    use chromiumoxide::browser::{Browser, BrowserConfig};
+    use chromiumoxide::cdp::browser_protocol::emulation::SetDeviceMetricsOverrideParams;
+    use chromiumoxide::cdp::browser_protocol::page::CaptureScreenshotFormat;
+    use chromiumoxide::page::ScreenshotParams;
+    use futures::StreamExt;
 
-    type PendingCallback = Box<dyn Send + FnOnce(Result<String, String>)>;
-    type PendingMap = StdArc<Mutex<HashMap<i32, PendingCallback>>>;
-
-    pub(super) fn spawn_browser(
+    pub(super) async fn spawn_browser(
         base_url: String,
         _initial_url: Option<String>,
         _console_log: Arc<RwLock<Vec<ConsoleEntry>>>,
     ) -> Result<BrowserHandle, String> {
-        let (cmd_tx, cmd_rx) = mpsc::channel::<BrowserCommand>(64);
+        let (cmd_tx, mut cmd_rx) = mpsc::channel::<BrowserCommand>(64);
         let connected = Arc::new(RwLock::new(false));
         let conn = connected.clone();
 
-        crate::log_info!("Debug browser engine: wry (cross-platform WebView)");
+        let config = resolve_browser_config().await?;
 
-        std::thread::Builder::new()
-            .name("tairitsu-debug-wry".into())
-            .spawn(move || {
-                run_wry_engine(base_url, cmd_rx, conn);
-            })
-            .map_err(|e| format!("Failed to spawn browser thread: {}", e))?;
+        let _ = std::fs::remove_file("/tmp/chromiumoxide-runner/SingletonLock");
+
+        let (browser, mut handler) = Browser::launch(config)
+            .await
+            .map_err(|e| format!("Failed to launch Chrome: {e}"))?;
+
+        let _handler_guard = tokio::spawn(async move {
+            while let Some(event) = handler.next().await {
+                if event.is_err() {
+                    break;
+                }
+            }
+        });
+
+        let page = browser
+            .new_page(&base_url)
+            .await
+            .map_err(|e| format!("Failed to create page: {e}"))?;
+
+        *connected.write().await = true;
+        crate::log_ok!("Debug browser connected (chromium CDP)");
+
+        let page = Arc::new(page);
+        let browser = Arc::new(browser);
+
+        tokio::spawn({
+            let browser = browser.clone();
+            async move {
+                while let Some(cmd) = cmd_rx.recv().await {
+                    let p = page.clone();
+                    tokio::spawn(async move {
+                        dispatch_command(&p, cmd).await;
+                    });
+                }
+                *conn.write().await = false;
+                drop(browser);
+            }
+        });
 
         Ok(BrowserHandle {
             tx: cmd_tx,
@@ -513,400 +546,429 @@ mod engine {
         })
     }
 
-    fn run_wry_engine(
-        base_url: String,
-        mut cmd_rx: mpsc::Receiver<BrowserCommand>,
-        connected: Arc<RwLock<bool>>,
-    ) {
-        use tao::event::{Event, WindowEvent};
-        use tao::event_loop::{ControlFlow, EventLoopBuilder};
-        #[cfg(unix)]
-        use tao::platform::unix::EventLoopBuilderExtUnix;
-        #[cfg(windows)]
-        use tao::platform::windows::EventLoopBuilderExtWindows;
-        use tao::window::WindowBuilder;
-        use wry::WebViewBuilder;
+    async fn resolve_browser_config() -> Result<BrowserConfig, String> {
+        let mut builder = BrowserConfig::builder()
+            .window_size(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H)
+            .arg("--no-sandbox")
+            .arg("--disable-dev-shm-usage")
+            .arg("--disable-gpu");
 
-        crate::log_info!("[wry] Creating event loop...");
-        let mut event_loop_builder = EventLoopBuilder::<BrowserCommand>::with_user_event();
-        #[cfg(unix)]
-        event_loop_builder.with_any_thread(true);
-        #[cfg(windows)]
-        event_loop_builder.with_any_thread(true);
-        let event_loop = event_loop_builder.build();
-        let proxy = event_loop.create_proxy();
-
-        std::thread::spawn(move || {
-            while let Some(cmd) = cmd_rx.blocking_recv() {
-                if proxy.send_event(cmd).is_err() {
-                    break;
-                }
-            }
-        });
-
-        crate::log_info!("[wry] Creating offscreen window...");
-        let window = match WindowBuilder::new()
-            .with_visible(true)
-            .with_inner_size(tao::dpi::LogicalSize::new(
-                DEFAULT_VIEWPORT_W,
-                DEFAULT_VIEWPORT_H,
-            ))
-            .with_title("Tairitsu Debug Browser")
-            .build(&event_loop)
+        if let Ok(exe) = std::env::var("CHROME_PATH")
+            && !exe.is_empty()
         {
-            Ok(w) => w,
-            Err(e) => {
-                crate::log_fail!("[wry] Failed to create window: {}", e);
-                return;
-            }
-        };
-        crate::log_info!("[wry] Window created OK");
+            crate::log_info!("[debug-browser] Using CHROME_PATH={}", exe);
+            builder = builder.chrome_executable(exe);
+            return builder
+                .build()
+                .map_err(|e| format!("Bad browser config: {e}"));
+        }
 
-        let pending: PendingMap = StdArc::new(Mutex::new(HashMap::new()));
-        let pending_ipc = pending.clone();
+        if let Ok(exe) = which_chromium() {
+            crate::log_info!("[debug-browser] Found browser: {}", exe);
+            builder = builder.chrome_executable(exe);
+            return builder
+                .build()
+                .map_err(|e| format!("Bad browser config: {e}"));
+        }
 
-        crate::log_info!("[wry] Creating WebView with URL {}...", base_url);
-        let webview = match WebViewBuilder::new()
-            .with_url(&base_url)
-            .with_ipc_handler(move |request| {
-                let body = request.body();
-                if let Ok(msg) = serde_json::from_str::<serde_json::Value>(body) {
-                    let id = msg.get("id").and_then(|v| v.as_i64()).unwrap_or(-1) as i32;
-                    let mut map = pending_ipc.lock().unwrap();
-                    if let Some(cb) = map.remove(&id) {
-                        if msg.get("ok").and_then(|v| v.as_bool()).unwrap_or(false) {
-                            let data = msg
-                                .get("data")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("")
-                                .to_string();
-                            cb(Ok(data));
-                        } else {
-                            let err = msg
-                                .get("error")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("Unknown error")
-                                .to_string();
-                            cb(Err(err));
-                        }
-                    }
-                }
-            })
-            .build(&window)
-        {
-            Ok(wv) => wv,
-            Err(e) => {
-                crate::log_fail!("[wry] Failed to create WebView: {}", e);
-                return;
-            }
-        };
-        crate::log_info!("[wry] WebView created OK");
-
-        *connected.blocking_write() = true;
-        crate::log_ok!("Debug browser connected via wry");
-
-        let mut next_id: i32 = 1;
-
-        event_loop.run(move |event, _, control_flow| {
-            *control_flow = ControlFlow::Wait;
-
-            match event {
-                Event::UserEvent(cmd) => {
-                    match cmd {
-                        BrowserCommand::Navigate { url, wait_for, resp } => {
-                            let target = if url.starts_with("http") { url.clone() } else { format!("{}{}", base_url, url) };
-                            let js = format!("window.location.href={:?}", target);
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(500));
-                            if matches!(wait_for.as_deref(), Some("hydration") | Some("ready")) {
-                                for _ in 0..15 {
-                                    std::thread::sleep(Duration::from_millis(300));
-                                }
-                            } else if matches!(wait_for.as_deref(), Some("load")) {
-                                std::thread::sleep(Duration::from_millis(500));
-                            }
-                            let _ = resp.send(Ok(NavigateResponse { url: target, title: String::new() }));
-                        }
-                        BrowserCommand::Screenshot { selector, full_page, resp } => {
-                            let id = next_id; next_id += 1;
-                            let eval_js = build_screenshot_eval_js(selector.as_deref(), full_page);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => { let _ = r.send(Ok(ScreenshotResponse { data, mime_type: "image/png".into(), width: DEFAULT_VIEWPORT_W, height: DEFAULT_VIEWPORT_H })); }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let wrapper = format!(
-                                r#"(()=>{{try{{var r=({eval_js});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
-                            );
-                            let _ = webview.evaluate_script(&wrapper);
-                        }
-                        BrowserCommand::Click { selector, resp } => {
-                            let js = format!(r#"(()=>{{var el=document.querySelector({:?});if(!el)return;el.click()}})()"#, selector);
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(100));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::TypeText { selector, text, clear_first, submit, resp } => {
-                            let js = format!(
-                                r#"(()=>{{var el=document.querySelector({:?});if(!el)return;if({})el.value='';var s=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;s.call(el,{:?});el.dispatchEvent(new Event('input',{{bubbles:true}}));el.dispatchEvent(new Event('change',{{bubbles:true}}));if({})el.form?.submit()}})()"#,
-                                selector, clear_first, text, submit
-                            );
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(100));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::Evaluate { expression, await_promise, resp } => {
-                            let id = next_id; next_id += 1;
-                            let e = expression.replace('\\', "\\\\").replace('`', "\\`");
-                            let js = if await_promise {
-                                format!(r#"(async()=>{{try{{var r=await({e});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r==null?null:typeof r==='object'?JSON.stringify(r):String(r)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#)
-                            } else {
-                                format!(r#"(()=>{{try{{var r=({e});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r==null?null:typeof r==='object'?JSON.stringify(r):String(r)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#)
-                            };
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        let (result_val, type_name) = parse_eval_result(&data);
-                                        let _ = r.send(Ok(EvaluateResponse { result: result_val, r#type: type_name.into() }));
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::DomQuery { selector, attribute, computed, resp } => {
-                            let id = next_id; next_id += 1;
-                            let computed_js = if let Some(ref props) = computed {
-                                let arr = serde_json::to_string(props).unwrap_or_else(|_| "[]".into());
-                                format!("var cprops={};var cs=getComputedStyle(el);var cdata={{}};cprops.forEach(function(p){{cdata[p]=cs.getPropertyValue(p)}});", arr)
-                            } else {
-                                String::new()
-                            };
-                            let js = if let Some(attr) = &attribute {
-                                format!(
-                                    r#"(()=>{{try{{var el=document.querySelector({:?});var r=el?.getAttribute({:?})??null;window.ipc.postMessage(JSON.stringify({{id:{},ok:true,data:JSON.stringify({{tag:el?.tagName?.toLowerCase(),text:r,count:el?1:0}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{},ok:false,error:e.message}}))}}}})()"#,
-                                    selector, attr, id, id
-                                )
-                            } else {
-                                format!(
-                                    r#"(()=>{{try{{var els=document.querySelectorAll({:?});if(!els.length)throw'not found';var el=els[0],r=el.getBoundingClientRect();{computed_js}var d={{tag:el.tagName.toLowerCase(),text:el.textContent?.trim()?.substring(0,2000)??null,html:el.outerHTML.substring(0,5000),attrs:Array.from(el.attributes).reduce((a,x)=>(a[x.name]=x.value,a),{{}}),visible:r.width>0&&r.height>0,count:els.length,rect:{{x:r.x,y:r.y,width:r.width,height:r.height}}}};window.ipc.postMessage(JSON.stringify({{id:{},ok:true,data:JSON.stringify(d)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{},ok:false,error:String(e)}}))}}}})()"#,
-                                    selector, id, id
-                                )
-                            };
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<DomNodeResponse>(&data) {
-                                            Ok(dr) => { let _ = r.send(Ok(dr)); }
-                                            Err(_) => { let _ = r.send(Err(format!("DOM parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::IsReady { resp } => {
-                            let id = next_id; next_id += 1;
-                            let js = format!(r#"(()=>{{try{{var w=!!globalThis.__wasmExports;var h=document.documentElement.dataset.tairitsuReady==="hydrated";window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{ready:w&&h,wasm_loaded:w,hydrated:h,url:location.href}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<ReadyResponse>(&data) {
-                                            Ok(rr) => { let _ = r.send(Ok(rr)); }
-                                            Err(_) => { let _ = r.send(Err(format!("ready parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::Press { key, modifiers, count, resp } => {
-                            let mod_str = modifiers.iter().map(|m| format!("{:?}:true", m.to_lowercase())).collect::<Vec<_>>().join(",");
-                            let js = format!(r#"(()=>{{for(var i=0;i<{count};i++)document.dispatchEvent(new KeyboardEvent('keydown',{{key:{key:?},code:{key:?},{mod_str},bubbles:true}}));for(var i=0;i<{count};i++)document.dispatchEvent(new KeyboardEvent('keyup',{{key:{key:?},code:{key:?},{mod_str},bubbles:true}}))}})()"#);
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(50));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::Scroll { selector, x, y, resp } => {
-                            let js = if let Some(sel) = &selector {
-                                format!(r#"(()=>{{var el=document.querySelector({:?});if(el)el.scrollBy({x},{y})}})()"#, sel)
-                            } else {
-                                format!(r#"window.scrollBy({},{})"#, x, y)
-                            };
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(100));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::Resize { width, height, resp } => {
-                            let _ = webview.evaluate_script(&format!("window.resizeTo({},{})", width, height));
-                            std::thread::sleep(Duration::from_millis(200));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::Viewport { resp } => {
-                            let id = next_id; next_id += 1;
-                            let js = format!(r#"(()=>{{try{{var dpr=window.devicePixelRatio||1;window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{width:window.innerWidth,height:window.innerHeight,device_pixel_ratio:dpr}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<ViewportResponse>(&data) {
-                                            Ok(v) => { let _ = r.send(Ok(v)); }
-                                            Err(_) => { let _ = r.send(Err(format!("viewport parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::Drag { from_selector, to_selector, steps, resp } => {
-                            let js = format!(r#"(()=>{{try{{var src=document.querySelector({from:?});var dst=document.querySelector({to:?});if(!src||!dst){{window.ipc.postMessage(JSON.stringify({{id:-1,ok:false,error:'element not found'}}));return}}var sr=src.getBoundingClientRect();var dr=dst.getBoundingClientRect();var sx=sr.x+sr.width/2,sy=sr.y+sr.height/2;var dx=dr.x+dr.width/2,dy=dr.y+dr.height/2;src.dispatchEvent(new MouseEvent('mousedown',{{clientX:sx,clientY:sy,bubbles:true}}));for(var i=1;i<={steps};i++){{var t=i/{steps};var cx=sx+(dx-sx)*t,cy=sy+(dy-sy)*t;document.dispatchEvent(new MouseEvent('mousemove',{{clientX:cx,clientY:cy,bubbles:true}}))}}dst.dispatchEvent(new MouseEvent('mouseup',{{clientX:dx,clientY:dy,bubbles:true}}));dst.dispatchEvent(new MouseEvent('drop',{{clientX:dx,clientY:dy,bubbles:true}}))}}catch(e){{}}}})()"#,
-                                from = from_selector, to = to_selector, steps = steps);
-                            let _ = webview.evaluate_script(&js);
-                            std::thread::sleep(Duration::from_millis(200));
-                            let _ = resp.send(Ok(()));
-                        }
-                        BrowserCommand::A11y { selector, depth, resp } => {
-                            let id = next_id; next_id += 1;
-                            let sel_js = match &selector {
-                                Some(s) => format!("document.querySelector({:?})", s),
-                                None => "document.body".to_string(),
-                            };
-                            let js = build_a11y_js(id, &sel_js, depth);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<Vec<A11yNode>>(&data) {
-                                            Ok(nodes) => { let _ = r.send(Ok(nodes)); }
-                                            Err(_) => { let _ = r.send(Err(format!("a11y parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::Network { resp } => {
-                            let id = next_id; next_id += 1;
-                            let js = format!(r#"(()=>{{try{{var entries=performance.getEntriesByType('resource').slice(0,100).map(function(e){{return{{name:e.name,type:e.initiatorType||'unknown',duration:Math.round(e.duration*100)/100,size:e.transferSize||0,url:e.name}}}});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{resources:entries}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<NetworkResponse>(&data) {
-                                            Ok(n) => { let _ = r.send(Ok(n)); }
-                                            Err(_) => { let _ = r.send(Err(format!("network parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::Performance { resp } => {
-                            let id = next_id; next_id += 1;
-                            let js = build_performance_js(id);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<PerformanceMetrics>(&data) {
-                                            Ok(p) => { let _ = r.send(Ok(p)); }
-                                            Err(_) => { let _ = r.send(Err(format!("perf parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::WebSocket { resp } => {
-                            let id = next_id; next_id += 1;
-                            let js = build_websocket_js(id);
-                            let r = resp;
-                            pending.lock().unwrap().insert(id, Box::new(move |result| {
-                                match result {
-                                    Ok(data) => {
-                                        match serde_json::from_str::<WebSocketInfo>(&data) {
-                                            Ok(w) => { let _ = r.send(Ok(w)); }
-                                            Err(_) => { let _ = r.send(Err(format!("ws parse: {}", data))); }
-                                        }
-                                    }
-                                    Err(e) => { let _ = r.send(Err(e)); }
-                                }
-                            }));
-                            let _ = webview.evaluate_script(&js);
-                        }
-                        BrowserCommand::Shutdown => {
-                            *connected.blocking_write() = false;
-                            *control_flow = ControlFlow::Exit;
-                        }
-                    }
-                }
-                Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
-                    *connected.blocking_write() = false;
-                    *control_flow = ControlFlow::Exit;
-                }
-                _ => {}
-            }
-        });
+        crate::log_info!("[debug-browser] No browser found, auto-downloading Chromium...");
+        let fetcher = chromiumoxide::fetcher::BrowserFetcher::new(
+            chromiumoxide::fetcher::BrowserFetcherOptions::builder()
+                .build()
+                .map_err(|e| format!("Fetcher config: {e}"))?,
+        );
+        let info = fetcher
+            .fetch()
+            .await
+            .map_err(|e| format!("Fetcher download: {e}"))?;
+        crate::log_ok!(
+            "[debug-browser] Chromium downloaded: {}",
+            info.executable_path.display()
+        );
+        builder = builder.chrome_executable(&info.executable_path);
+        builder
+            .build()
+            .map_err(|e| format!("Bad browser config: {e}"))
     }
 
-    fn parse_eval_result(data: &str) -> (serde_json::Value, &'static str) {
-        if data == "null" || data.is_empty() {
-            return (serde_json::Value::Null, "null");
+    fn which_chromium() -> Result<String, ()> {
+        let candidates = [
+            "chromium-browser",
+            "chromium",
+            "google-chrome",
+            "google-chrome-stable",
+            "chrome",
+        ];
+        for name in &candidates {
+            if let Ok(output) = std::process::Command::new("which").arg(name).output()
+                && output.status.success()
+            {
+                let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !path.is_empty() {
+                    return Ok(path);
+                }
+            }
         }
-        if data.starts_with('"') {
-            return (
-                serde_json::Value::String(data.trim_matches('"').to_string()),
-                "string",
+        Err(())
+    }
+
+    async fn dispatch_command(page: &chromiumoxide::Page, cmd: BrowserCommand) {
+        match cmd {
+            BrowserCommand::Navigate {
+                url,
+                wait_for,
+                resp,
+            } => {
+                let r = cmd_navigate(page, &url, wait_for.as_deref()).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Screenshot {
+                selector,
+                full_page,
+                resp,
+            } => {
+                let r = cmd_screenshot(page, selector.as_deref(), full_page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Click { selector, resp } => {
+                let r = cmd_click(page, &selector).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::TypeText {
+                selector,
+                text,
+                clear_first,
+                submit,
+                resp,
+            } => {
+                let r = cmd_type(page, &selector, &text, clear_first, submit).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Evaluate {
+                expression,
+                await_promise,
+                resp,
+            } => {
+                let r = cmd_evaluate(page, &expression, await_promise).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::DomQuery {
+                selector,
+                attribute,
+                computed,
+                resp,
+            } => {
+                let r =
+                    cmd_dom_query(page, &selector, attribute.as_deref(), computed.as_deref()).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::IsReady { resp } => {
+                let r = cmd_is_ready(page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Press { key, resp, .. } => {
+                let r = cmd_press(page, &key).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Scroll {
+                selector,
+                x,
+                y,
+                resp,
+            } => {
+                let r = cmd_scroll(page, selector.as_deref(), x, y).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Resize {
+                width,
+                height,
+                resp,
+            } => {
+                let r = cmd_resize(page, width, height).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Viewport { resp } => {
+                let r = cmd_viewport(page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::A11y {
+                selector,
+                depth,
+                resp,
+            } => {
+                let r = cmd_a11y(page, selector.as_deref(), depth).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Network { resp } => {
+                let r = cmd_network(page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Performance { resp } => {
+                let r = cmd_performance(page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Drag {
+                from_selector,
+                to_selector,
+                steps,
+                resp,
+            } => {
+                let r = cmd_drag(page, &from_selector, &to_selector, steps).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::WebSocket { resp } => {
+                let r = cmd_websocket(page).await;
+                let _ = resp.send(r);
+            }
+            BrowserCommand::Shutdown => {}
+        }
+    }
+
+    async fn cmd_navigate(
+        page: &chromiumoxide::Page,
+        url: &str,
+        wait_for: Option<&str>,
+    ) -> Result<NavigateResponse, String> {
+        page.goto(url).await.map_err(|e| format!("navigate: {e}"))?;
+        if matches!(wait_for, Some("hydration") | Some("ready")) {
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        } else if matches!(wait_for, Some("load")) {
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+        let title = page.get_title().await.ok().flatten().unwrap_or_default();
+        Ok(NavigateResponse {
+            url: url.to_string(),
+            title,
+        })
+    }
+
+    async fn cmd_screenshot(
+        page: &chromiumoxide::Page,
+        selector: Option<&str>,
+        full_page: bool,
+    ) -> Result<ScreenshotResponse, String> {
+        if let Some(sel) = selector {
+            let element = page
+                .find_element(sel)
+                .await
+                .map_err(|e| format!("element not found: {e}"))?;
+            let png = element
+                .screenshot(CaptureScreenshotFormat::Png)
+                .await
+                .map_err(|e| format!("screenshot element: {e}"))?;
+            let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
+            return Ok(ScreenshotResponse {
+                data: b64,
+                mime_type: "image/png".into(),
+                width: 0,
+                height: 0,
+            });
+        }
+        let mut params = ScreenshotParams::builder()
+            .format(CaptureScreenshotFormat::Png)
+            .omit_background(false);
+        if full_page {
+            params = params.full_page(true);
+        }
+        let png = page
+            .screenshot(params.build())
+            .await
+            .map_err(|e| format!("screenshot: {e}"))?;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
+        Ok(ScreenshotResponse {
+            data: b64,
+            mime_type: "image/png".into(),
+            width: DEFAULT_VIEWPORT_W,
+            height: DEFAULT_VIEWPORT_H,
+        })
+    }
+
+    async fn cmd_click(page: &chromiumoxide::Page, selector: &str) -> Result<(), String> {
+        page.find_element(selector)
+            .await
+            .map_err(|e| format!("click: element not found: {e}"))?
+            .click()
+            .await
+            .map_err(|e| format!("click: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        Ok(())
+    }
+
+    async fn cmd_type(
+        page: &chromiumoxide::Page,
+        selector: &str,
+        text: &str,
+        clear_first: bool,
+        _submit: bool,
+    ) -> Result<(), String> {
+        let el = page
+            .find_element(selector)
+            .await
+            .map_err(|e| format!("type: element not found: {e}"))?;
+        el.click().await.map_err(|e| format!("type click: {e}"))?;
+        if clear_first {
+            let js = format!(
+                r#"(() => {{ const el = document.querySelector({selector:?}); if (el) {{ el.value = ''; el.dispatchEvent(new Event('input', {{bubbles: true}})); }} }})()"#,
             );
+            page.evaluate(js)
+                .await
+                .map_err(|e| format!("type clear: {e}"))?;
         }
-        if data == "true" || data == "false" {
-            return (serde_json::Value::Bool(data == "true"), "boolean");
-        }
-        if let Ok(n) = data.parse::<f64>() {
-            return (
-                serde_json::Value::Number(
-                    serde_json::Number::from_f64(n).unwrap_or_else(|| serde_json::Number::from(0)),
-                ),
-                "number",
+        el.type_str(text).await.map_err(|e| format!("type: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        Ok(())
+    }
+
+    async fn cmd_evaluate(
+        page: &chromiumoxide::Page,
+        expression: &str,
+        _await_promise: bool,
+    ) -> Result<EvaluateResponse, String> {
+        let result = page
+            .evaluate(expression.to_string())
+            .await
+            .map_err(|e| format!("evaluate: {e}"))?;
+
+        let val: serde_json::Value = result.into_value().unwrap_or(serde_json::Value::Null);
+
+        let type_name = match &val {
+            serde_json::Value::Null => "null",
+            serde_json::Value::Bool(_) => "boolean",
+            serde_json::Value::Number(_) => "number",
+            serde_json::Value::String(_) => "string",
+            serde_json::Value::Array(_) | serde_json::Value::Object(_) => "object",
+        };
+        Ok(EvaluateResponse {
+            result: val,
+            r#type: type_name.into(),
+        })
+    }
+
+    async fn cmd_dom_query(
+        page: &chromiumoxide::Page,
+        selector: &str,
+        attribute: Option<&str>,
+        _computed: Option<&[String]>,
+    ) -> Result<DomNodeResponse, String> {
+        if let Some(attr) = attribute {
+            let js = format!(
+                "(() => {{ const el = document.querySelector({sel:?}); if (!el) return null; return el.getAttribute({attr:?}); }})()",
+                sel = selector,
+                attr = attr,
             );
+            let val = page
+                .evaluate(js)
+                .await
+                .map_err(|e| format!("dom query: {e}"))?;
+            let r: Option<String> = val.into_value().ok();
+            let count = if r.is_some() { 1 } else { 0 };
+            return Ok(DomNodeResponse {
+                tag: None,
+                text: r,
+                html: None,
+                attributes: None,
+                visible: None,
+                count,
+                rect: None,
+                computed: None,
+            });
         }
-        match serde_json::from_str::<serde_json::Value>(data) {
-            Ok(v) => (v, "object"),
-            Err(_) => (serde_json::Value::String(data.to_string()), "string"),
-        }
+        let js = format!(
+            r#"(() => {{ const els = document.querySelectorAll({sel:?}); if (!els.length) throw 'not found'; const el = els[0]; const r = el.getBoundingClientRect(); return JSON.stringify({{ tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().substring(0, 2000), html: el.outerHTML.substring(0, 5000), attrs: Object.fromEntries(Array.from(el.attributes).map(a => [a.name, a.value])), visible: r.width > 0 && r.height > 0, count: els.length, rect: {{ x: r.x, y: r.y, width: r.width, height: r.height }} }}); }})()"#,
+            sel = selector,
+        );
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("dom query: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("dom query parse: {e}"))?;
+        serde_json::from_str::<DomNodeResponse>(&json_str)
+            .map_err(|e| format!("dom query deserialize: {e}"))
     }
 
-    fn build_screenshot_eval_js(selector: Option<&str>, full_page: bool) -> String {
-        let h_expr = if full_page {
-            "Math.max(document.documentElement.scrollHeight,window.innerHeight)"
-        } else {
-            "window.innerHeight"
-        };
-        let capture_logic = if selector.is_some() {
-            "ctx.fillRect(0,0,w,h)".to_string()
-        } else {
-            r#"ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);var allEls=document.body.querySelectorAll('*');var els=[];for(var i=0;i<allEls.length;i++){var er=allEls[i].getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)continue;els.push(allEls[i])}els.forEach(function(e){var er=e.getBoundingClientRect();var cs=getComputedStyle(e);ctx.fillStyle=cs.backgroundColor;if(ctx.fillStyle!=='rgba(0, 0, 0, 0)'&&ctx.fillStyle!=='transparent'){ctx.fillRect(er.x,er.y,er.width,er.height)}ctx.fillStyle=cs.borderColor;if(ctx.fillStyle!=='rgba(0, 0, 0, 0)'&&ctx.fillStyle!=='transparent'){var bw=parseFloat(cs.borderWidth)||1;if(bw>0){ctx.fillRect(er.x,er.y,er.width,bw);ctx.fillRect(er.x,er.y+er.height-bw,er.width,bw);ctx.fillRect(er.x,er.y,bw,er.height);ctx.fillRect(er.x+er.width-bw,er.y,bw,er.height)}}if(e.shadowRoot)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){var txt=(e.childNodes[0].textContent||'').trim();if(txt&&txt.length<200){var fs=parseFloat(cs.fontSize)||16;ctx.font=cs.fontWeight+' '+fs+'px '+(cs.fontFamily||'sans-serif');ctx.fillStyle=cs.color||'#000';ctx.textBaseline='top';var maxW=er.width-4;if(maxW>0)ctx.fillText(txt.substring(0,100),er.x+2,er.y+2,maxW)}}})"#.to_string()
-        };
-        format!(
-            r#"function(){{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var c=document.createElement('canvas');c.width=w;c.height=h;var ctx=c.getContext('2d');{capture_logic};return c.toDataURL('image/png').split(',')[1]}}()"#
-        )
+    async fn cmd_is_ready(page: &chromiumoxide::Page) -> Result<ReadyResponse, String> {
+        let js = r#"(() => { const w = !!globalThis.__wasmExports; const h = document.documentElement.dataset.tairitsuReady === 'hydrated'; return JSON.stringify({ ready: w && h, wasm_loaded: w, hydrated: h, url: location.href }); })()"#;
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("is_ready: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("is_ready parse: {e}"))?;
+        serde_json::from_str::<ReadyResponse>(&json_str)
+            .map_err(|e| format!("is_ready deserialize: {e}"))
     }
 
-    fn build_a11y_js(id: i32, sel_js: &str, depth: u32) -> String {
+    async fn cmd_press(page: &chromiumoxide::Page, key: &str) -> Result<(), String> {
+        let js = format!(
+            r#"(() => {{ document.dispatchEvent(new KeyboardEvent('keydown', {{key: {key:?}, code: {key:?}, bubbles: true}})); document.dispatchEvent(new KeyboardEvent('keyup', {{key: {key:?}, code: {key:?}, bubbles: true}})); }})()"#,
+        );
+        page.evaluate(js).await.map_err(|e| format!("press: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        Ok(())
+    }
+
+    async fn cmd_scroll(
+        page: &chromiumoxide::Page,
+        selector: Option<&str>,
+        x: f64,
+        y: f64,
+    ) -> Result<(), String> {
+        let js = if let Some(sel) = selector {
+            format!(
+                r#"(() => {{ const el = document.querySelector({sel:?}); if (el) el.scrollBy({x}, {y}); }})()"#,
+            )
+        } else {
+            format!(r#"window.scrollBy({x}, {y})"#)
+        };
+        page.evaluate(js)
+            .await
+            .map_err(|e| format!("scroll: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        Ok(())
+    }
+
+    async fn cmd_resize(page: &chromiumoxide::Page, width: u32, height: u32) -> Result<(), String> {
+        let params = SetDeviceMetricsOverrideParams::builder()
+            .width(width as i64)
+            .height(height as i64)
+            .device_scale_factor(1.0)
+            .mobile(false)
+            .build()
+            .map_err(|e| format!("resize build: {e}"))?;
+        page.execute(params)
+            .await
+            .map_err(|e| format!("resize: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        Ok(())
+    }
+
+    async fn cmd_viewport(page: &chromiumoxide::Page) -> Result<ViewportResponse, String> {
+        let js = r#"(() => { const dpr = window.devicePixelRatio || 1; return JSON.stringify({ width: window.innerWidth, height: window.innerHeight, device_pixel_ratio: dpr }); })()"#;
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("viewport: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("viewport parse: {e}"))?;
+        serde_json::from_str::<ViewportResponse>(&json_str)
+            .map_err(|e| format!("viewport deserialize: {e}"))
+    }
+
+    async fn cmd_a11y(
+        page: &chromiumoxide::Page,
+        selector: Option<&str>,
+        depth: u32,
+    ) -> Result<Vec<A11yNode>, String> {
+        let sel_js = match selector {
+            Some(s) => format!("document.querySelector({s:?})"),
+            None => "document.body".to_string(),
+        };
         let js_body = r#"
 (function(){
-try{
 function getA11y(el,d,maxD){
 if(!el||d>maxD)return null;
 var tagRoles={BUTTON:'button',SELECT:'listbox',OPTION:'option',A:'link',H1:'heading',H2:'heading',H3:'heading',H4:'heading',H5:'heading',H6:'heading',NAV:'navigation',MAIN:'main',HEADER:'banner',FOOTER:'contentinfo',ASIDE:'complementary',FORM:'form',TABLE:'table',UL:'list',OL:'list',LI:'listitem',IMG:'img',SVG:'img',PROGRESS:'progressbar',METER:'meter',DIALOG:'dialog',DETAILS:'group',SUMMARY:'button',FIELDSET:'group'};
@@ -930,46 +992,73 @@ var root=SEL_JS;
 if(!root)throw'element not found';
 var tree=getA11y(root,0,DEPTH);
 return JSON.stringify([tree])
-}catch(e){throw e}
-})()"#;
-        let eval_js = js_body
-            .replace("SEL_JS", sel_js)
-            .replace("DEPTH", &depth.to_string());
-        format!(
-            r#"(()=>{{try{{var r=({eval_js});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:r}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
-        )
+})()
+"#.replace("SEL_JS", &sel_js)
+           .replace("DEPTH", &depth.to_string());
+
+        let val = page
+            .evaluate(js_body)
+            .await
+            .map_err(|e| format!("a11y: {e}"))?;
+        let json_str: String = val.into_value().map_err(|e| format!("a11y parse: {e}"))?;
+        serde_json::from_str::<Vec<A11yNode>>(&json_str)
+            .map_err(|e| format!("a11y deserialize: {e}"))
     }
 
-    #[allow(dead_code)]
-    fn build_screenshot_js(id: i32, selector: Option<&str>, full_page: bool) -> String {
-        let h_expr = if full_page {
-            "Math.max(document.documentElement.scrollHeight,window.innerHeight)"
-        } else {
-            "window.innerHeight"
-        };
-        let capture_logic = if let Some(sel) = selector {
-            format!(
-                r#"var el=document.querySelector({:?});if(!el){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:'element not found'}}));return}}var r=el.getBoundingClientRect();c.width=Math.ceil(r.width*dpr);c.height=Math.ceil(r.height*dpr);ctx.scale(dpr,dpr);ctx.translate(-r.x,-r.y);document.querySelectorAll('*').forEach(function(e){{var er=e.getBoundingClientRect();ctx.fillStyle=getComputedStyle(e).backgroundColor;if(er.width>0&&er.height>0)ctx.fillRect(er.x,er.y,er.width,er.height)}})"#,
-                sel
-            )
-        } else {
-            r#"c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();if(er.width<1||er.height<1||er.bottom<0||er.right<0||er.top>h||er.left>w)return;var s=getComputedStyle(e);ctx.fillStyle=s.backgroundColor||'transparent';ctx.fillRect(er.x,er.y,er.width,er.height)}});Array.from(document.body.querySelectorAll('*')).slice(0,500).forEach(function(e){{var er=e.getBoundingClientRect();var s=getComputedStyle(e);if(er.width<1||er.height<1)return;if(e.childNodes.length===1&&e.childNodes[0].nodeType===3){{ctx.font=(s.fontSize||'16px')+' '+(s.fontFamily||'sans-serif');ctx.fillStyle=s.color||'#000';ctx.textBaseline='top';var txt=(e.childNodes[0].textContent||'').trim();if(txt)ctx.fillText(txt.substring(0,Math.floor(er.width/8)),er.x,er.y)}}}})"#.to_string()
-        };
-        format!(
-            r#"(()=>{{try{{var w=Math.max(document.documentElement.clientWidth,window.innerWidth||1280);var h={h_expr}||720;var dpr=window.devicePixelRatio||1;var c=document.createElement('canvas');var ctx=c.getContext('2d');{capture_logic}var base64=c.toDataURL('image/png').split(',')[1];window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:base64}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
-        )
+    async fn cmd_network(page: &chromiumoxide::Page) -> Result<NetworkResponse, String> {
+        let js = r#"(() => { var entries = performance.getEntriesByType('resource').slice(0, 100).map(function(e) { return { name: e.name, type: e.initiatorType || 'unknown', duration: Math.round(e.duration * 100) / 100, size: e.transferSize || 0, url: e.name }; }); return JSON.stringify({ resources: entries }); })()"#;
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("network: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("network parse: {e}"))?;
+        serde_json::from_str::<NetworkResponse>(&json_str)
+            .map_err(|e| format!("network deserialize: {e}"))
     }
 
-    fn build_performance_js(id: i32) -> String {
-        format!(
-            r#"(()=>{{try{{var nav=performance.getEntriesByType('navigation')[0]||{{}};var fcp=null;try{{fcp=performance.getEntriesByName('first-contentful-paint')[0].startTime||null}}catch(e){{}}var dn=document.querySelectorAll('*').length;var heap=null;try{{heap=Math.round((performance.memory?performance.memory.usedJSHeapSize:0)/1048576*100)/100}}catch(e){{}}var d={{dom_content_loaded_ms:Math.round((nav.domContentLoadedEventEnd-nav.startTime)*100)/100||null,dom_complete_ms:Math.round((nav.domComplete-nav.startTime)*100)/100||null,load_event_ms:Math.round((nav.loadEventEnd-nav.startTime)*100)/100||null,fcp_ms:fcp?Math.round(fcp*100)/100:null,lcp_ms:null,cls:null,dom_nodes:dn,js_heap_used_mb:heap,wasm_loaded:!!globalThis.__wasmExports,hydrated:document.documentElement.dataset.tairitsuReady==='hydrated',timestamp:new Date().toISOString()}};window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify(d)}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
-        )
+    async fn cmd_performance(page: &chromiumoxide::Page) -> Result<PerformanceMetrics, String> {
+        let js = r#"(() => { var nav = performance.getEntriesByType('navigation')[0] || {}; var fcp = null; try { fcp = performance.getEntriesByName('first-contentful-paint')[0].startTime || null; } catch(e) {} var dn = document.querySelectorAll('*').length; var heap = null; try { heap = Math.round((performance.memory ? performance.memory.usedJSHeapSize : 0) / 1048576 * 100) / 100; } catch(e) {} return JSON.stringify({ dom_content_loaded_ms: Math.round((nav.domContentLoadedEventEnd - nav.startTime) * 100) / 100 || null, dom_complete_ms: Math.round((nav.domComplete - nav.startTime) * 100) / 100 || null, load_event_ms: Math.round((nav.loadEventEnd - nav.startTime) * 100) / 100 || null, fcp_ms: fcp ? Math.round(fcp * 100) / 100 : null, lcp_ms: null, cls: null, dom_nodes: dn, js_heap_used_mb: heap, wasm_loaded: !!globalThis.__wasmExports, hydrated: document.documentElement.dataset.tairitsuReady === 'hydrated', timestamp: new Date().toISOString() }); })()"#;
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("performance: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("performance parse: {e}"))?;
+        serde_json::from_str::<PerformanceMetrics>(&json_str)
+            .map_err(|e| format!("performance deserialize: {e}"))
     }
 
-    fn build_websocket_js(id: i32) -> String {
-        format!(
-            r#"(()=>{{try{{var c=0;var conns=[];var t=window._wsTracker||[];t.forEach(function(ws){{c++;conns.push({{url:ws.url||'unknown',state:ws.readyState===0?'connecting':ws.readyState===1?'open':ws.readyState===2?'closing':'closed',created_at_ms:null}})}});window.ipc.postMessage(JSON.stringify({{id:{id},ok:true,data:JSON.stringify({{active_count:c,connections:conns}})}}))}}catch(e){{window.ipc.postMessage(JSON.stringify({{id:{id},ok:false,error:e.message}}))}}}})()"#
-        )
+    async fn cmd_drag(
+        page: &chromiumoxide::Page,
+        from_selector: &str,
+        to_selector: &str,
+        steps: u32,
+    ) -> Result<(), String> {
+        let js = format!(
+            r#"(() => {{ var src = document.querySelector({from:?}); var dst = document.querySelector({to:?}); if (!src || !dst) throw 'element not found'; var sr = src.getBoundingClientRect(); var dr = dst.getBoundingClientRect(); var sx = sr.x + sr.width/2, sy = sr.y + sr.height/2; var dx = dr.x + dr.width/2, dy = dr.y + dr.height/2; src.dispatchEvent(new MouseEvent('mousedown', {{clientX: sx, clientY: sy, bubbles: true}})); for (var i = 1; i <= {steps}; i++) {{ var t = i/{steps}; var cx = sx + (dx - sx)*t, cy = sy + (dy - sy)*t; document.dispatchEvent(new MouseEvent('mousemove', {{clientX: cx, clientY: cy, bubbles: true}})); }} dst.dispatchEvent(new MouseEvent('mouseup', {{clientX: dx, clientY: dy, bubbles: true}})); dst.dispatchEvent(new MouseEvent('drop', {{clientX: dx, clientY: dy, bubbles: true}})); }})()"#,
+            from = from_selector,
+            to = to_selector,
+            steps = steps,
+        );
+        page.evaluate(js).await.map_err(|e| format!("drag: {e}"))?;
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        Ok(())
+    }
+
+    async fn cmd_websocket(page: &chromiumoxide::Page) -> Result<WebSocketInfo, String> {
+        let js = r#"(() => { var c = 0; var conns = []; var t = window._wsTracker || []; t.forEach(function(ws) { c++; conns.push({ url: ws.url || 'unknown', state: ws.readyState === 0 ? 'connecting' : ws.readyState === 1 ? 'open' : ws.readyState === 2 ? 'closing' : 'closed', created_at_ms: null }); }); return JSON.stringify({ active_count: c, connections: conns }); })()"#;
+        let val = page
+            .evaluate(js)
+            .await
+            .map_err(|e| format!("websocket: {e}"))?;
+        let json_str: String = val
+            .into_value()
+            .map_err(|e| format!("websocket parse: {e}"))?;
+        serde_json::from_str::<WebSocketInfo>(&json_str)
+            .map_err(|e| format!("websocket deserialize: {e}"))
     }
 }
 
@@ -1020,81 +1109,34 @@ pub async fn start_debug_server(
     let base_url = format!("http://localhost:{}", dev_port);
     let console_log = Arc::new(RwLock::new(Vec::new()));
 
-    #[cfg(target_os = "linux")]
-    {
-        if std::env::var("DISPLAY")
-            .map(|d| d.is_empty())
-            .unwrap_or(true)
+    #[cfg(feature = "debug-browser")]
+    let (browser, browser_engine) = {
+        crate::log_info!("Debug browser engine: chromium (headless CDP)");
+        match tokio::time::timeout(
+            Duration::from_secs(30),
+            engine::spawn_browser(base_url.clone(), None, console_log.clone()),
+        )
+        .await
         {
-            crate::log_info!("[debug-headless] DISPLAY not set, auto-detecting Xvfb...");
-            let check = std::process::Command::new("xdpyinfo")
-                .env("DISPLAY", ":99")
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .status();
-            if check.map(|s| s.success()).unwrap_or(false) {
-                unsafe {
-                    std::env::set_var("DISPLAY", ":99");
-                }
-                crate::log_ok!("[debug-headless] Using DISPLAY=:99 (Xvfb detected)");
-            } else {
-                crate::log_info!("[debug-headless] No Xvfb on :99, attempting to start...");
-                let started = std::process::Command::new("Xvfb")
-                    .args([
-                        ":99",
-                        "-screen",
-                        "0",
-                        "1920x1080x24",
-                        "-ac",
-                        "-nolisten",
-                        "tcp",
-                    ])
-                    .stdout(std::process::Stdio::null())
-                    .stderr(std::process::Stdio::null())
-                    .spawn()
-                    .map(|mut c| {
-                        std::thread::sleep(Duration::from_millis(500));
-                        c.try_wait()
-                            .ok()
-                            .flatten()
-                            .map(|s| s.success())
-                            .unwrap_or(true)
-                    })
-                    .unwrap_or(false);
-                if started {
-                    unsafe {
-                        std::env::set_var("DISPLAY", ":99");
-                    }
-                    crate::log_ok!("[debug-headless] Xvfb started on :99");
-                } else {
-                    crate::log_fail!(
-                        "[debug-headless] Failed to start Xvfb. Install: apt install xvfb"
-                    );
-                }
+            Ok(Ok(b)) => (Some(Arc::new(b)), "chromium".to_string()),
+            Ok(Err(e)) => {
+                crate::log_fail!("[debug-browser] Failed: {e}");
+                (None, "none".to_string())
+            }
+            Err(_) => {
+                crate::log_fail!("[debug-browser] Timed out after 30s");
+                (None, "none".to_string())
             }
         }
-    }
-
-    #[cfg(feature = "debug-browser")]
-    let browser = engine::spawn_browser(base_url.clone(), None, console_log.clone())
-        .ok()
-        .map(Arc::new);
+    };
     #[cfg(not(feature = "debug-browser"))]
-    let browser: Option<Arc<BrowserHandle>> = None;
+    let (browser, browser_engine): (Option<Arc<BrowserHandle>>, String) = (None, "none".into());
 
     let browser_engine = if browser.is_some() {
-        #[cfg(feature = "debug-browser")]
-        {
-            "wry"
-        }
-        #[cfg(not(feature = "debug-browser"))]
-        {
-            "none"
-        }
+        browser_engine
     } else {
-        "none"
-    }
-    .to_string();
+        "none".into()
+    };
 
     let state = DebugState {
         config: config.clone(),

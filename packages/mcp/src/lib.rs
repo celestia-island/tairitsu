@@ -25,22 +25,117 @@ pub struct Server {
 }
 
 impl Server {
-    fn api(&self, path: &str) -> String {
-        let base = self.base_url.blocking_read();
-        format!("{}/__tairitsu_debug/{}", base, path)
+    async fn api_async(&self, path: &str) -> String {
+        let base = self.base_url.read().await.clone();
+        format!("{}/{}", base, path)
     }
 
-    fn check_daemon(&self) -> Result<String, String> {
-        let url = self.base_url.blocking_read().clone();
-        if url.is_empty() {
-            Err("Browser tools require a running daemon. Start with: tairitsu dev --daemon".into())
-        } else {
-            Ok(url)
+    async fn ensure_daemon(&self) -> Result<String, McpError> {
+        {
+            let url = self.base_url.read().await.clone();
+            if !url.is_empty() {
+                return Ok(url);
+            }
         }
+        let resolved = resolve_daemon_url().await.unwrap_or_default();
+        if resolved.is_empty() {
+            return Err(McpError::internal_error(
+                "Browser tools require a running daemon. Start with: tairitsu dev --daemon",
+                None,
+            ));
+        }
+        *self.base_url.write().await = resolved.clone();
+        Ok(resolved)
     }
 
     fn tool_result(text: impl Into<String>) -> CallToolResult {
         CallToolResult::success(vec![Content::text(text)])
+    }
+
+    async fn http_post(
+        &self,
+        path: &str,
+        body: serde_json::Value,
+    ) -> Result<serde_json::Value, McpError> {
+        let url = self.api_async(path).await;
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
+        if !status.is_success() {
+            let msg = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("unknown error");
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {msg}"),
+                None,
+            ));
+        }
+        Ok(v)
+    }
+
+    async fn http_get(
+        &self,
+        path: &str,
+        query: &[(&str, &str)],
+    ) -> Result<serde_json::Value, McpError> {
+        let url = self.api_async(path).await;
+        let resp = self
+            .http
+            .get(&url)
+            .query(query)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        let v: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("Bad response body: {e}"), None))?;
+        if !status.is_success() {
+            let msg = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("unknown error");
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {msg}"),
+                None,
+            ));
+        }
+        Ok(v)
+    }
+
+    async fn http_post_fire_and_forget(
+        &self,
+        path: &str,
+        body: serde_json::Value,
+    ) -> Result<(), McpError> {
+        let url = self.api_async(path).await;
+        let resp = self
+            .http
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("HTTP request failed: {e}"), None))?;
+        let status = resp.status();
+        if !status.is_success() {
+            let text = resp.text().await.unwrap_or_default();
+            return Err(McpError::internal_error(
+                format!("daemon returned {status}: {text}"),
+                None,
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -61,21 +156,15 @@ struct ScreenshotArgs {
     element: Option<String>,
     #[serde(rename = "fullPage")]
     full_page: Option<bool>,
-    #[serde(rename = "type")]
-    image_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
 struct ClickArgs {
-    element: Option<String>,
     target: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
 struct TypeArgs {
-    element: Option<String>,
     submit: Option<bool>,
     target: String,
     text: String,
@@ -87,70 +176,13 @@ struct PressKeyArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct HoverArgs {
-    element: Option<String>,
-    target: String,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct SelectOptionArgs {
-    element: Option<String>,
-    target: String,
-    values: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
-struct FillFormField {
-    element: Option<String>,
-    name: String,
-    target: String,
-    #[serde(rename = "type")]
-    field_type: String,
-    value: serde_json::Value,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-struct FillFormArgs {
-    fields: Vec<FillFormField>,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-#[allow(dead_code)]
 struct EvaluateArgs {
-    element: Option<String>,
     function: String,
-    target: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
 struct ConsoleMessagesArgs {
-    all: Option<bool>,
     level: Option<String>,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-struct NetworkRequestsArgs {
-    filter: Option<String>,
-    #[serde(rename = "static")]
-    is_static: Option<bool>,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-struct BrowserTabsArgs {
-    action: Option<String>,
-    index: Option<u32>,
-    url: Option<String>,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-struct WaitForArgs {
-    text: Option<String>,
-    #[serde(rename = "textGone")]
-    text_gone: Option<String>,
-    time: Option<f64>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -235,15 +267,9 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let _resp = self
-            .http
-            .post(self.api("navigate"))
-            .json(&json!({"url": args.url}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
+            .await?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
     }
 
@@ -253,7 +279,7 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         Ok(Self::tool_result(
-            "(navigate-back: not yet implemented on headless wry)",
+            "(navigate-back: not yet supported via debug API)",
         ))
     }
 
@@ -263,7 +289,7 @@ impl Server {
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         Ok(Self::tool_result(
-            "(navigate-forward: not yet implemented on headless wry)",
+            "(navigate-forward: not yet supported via debug API)",
         ))
     }
 
@@ -275,28 +301,19 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({});
-        if let Some(t) = &args.target {
-            body["selector"] = json!(t);
-        }
-        let resp = self
-            .http
-            .post(self.api("snapshot"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let text = resp
-            .json::<serde_json::Value>()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let out = text
-            .get("snapshot")
-            .and_then(|v| v.as_str())
-            .unwrap_or("{}");
-        Ok(Self::tool_result(out.to_string()))
+        self.ensure_daemon().await?;
+        let query: Vec<(&str, &str)> = args
+            .target
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(|s| vec![("selector", s)])
+            .unwrap_or_default();
+        let v = self.http_get("a11y", &query).await?;
+        Ok(Self::tool_result(
+            v.get("data")
+                .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
+                .unwrap_or_else(|| "{}".into()),
+        ))
     }
 
     #[tool(
@@ -307,43 +324,50 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
+        self.ensure_daemon().await?;
         let mut body = json!({});
         if let Some(el) = &args.element {
             body["selector"] = json!(el);
         }
         if let Some(fp) = args.full_page {
-            body["fullPage"] = json!(fp);
+            body["full_page"] = json!(fp);
         }
-        if let Some(t) = &args.image_type {
-            body["type"] = json!(t);
-        }
-        let resp = self
-            .http
-            .post(self.api("screenshot"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let success = v.get("success").and_then(|s| s.as_bool()).unwrap_or(false);
-        let data = v
-            .get("data")
-            .and_then(|d| d.as_str())
-            .unwrap_or("")
-            .to_string();
-        let err = v
-            .get("error")
-            .and_then(|e| e.as_str())
-            .unwrap_or("unknown")
-            .to_string();
-        if success {
-            Ok(Self::tool_result(data))
+        let v = self.http_post("screenshot", body).await?;
+        let ok = v.get("ok").and_then(|s| s.as_bool()).unwrap_or(false);
+        if ok {
+            let data = v
+                .get("data")
+                .and_then(|d| {
+                    d.as_str()
+                        .map(|s| s.to_string())
+                        .or_else(|| {
+                            d.get("data")
+                                .and_then(|dd| dd.as_str())
+                                .map(|s| s.to_string())
+                        })
+                        .or_else(|| {
+                            d.as_object()
+                                .map(|_| serde_json::to_string(d).unwrap_or_default())
+                        })
+                })
+                .unwrap_or_default();
+            let mime = v
+                .get("data")
+                .and_then(|d| d.get("mime_type"))
+                .and_then(|m| m.as_str())
+                .unwrap_or("image/png");
+            let data_url = if data.starts_with("data:") {
+                data
+            } else {
+                format!("data:{mime};base64,{data}")
+            };
+            Ok(Self::tool_result(data_url))
         } else {
+            let err = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("unknown")
+                .to_string();
             Err(McpError::internal_error(err, None))
         }
     }
@@ -354,14 +378,9 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("click"))
-            .json(&json!({"selector": args.target}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("click", json!({"selector": args.target}))
+            .await?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
     }
 
@@ -371,24 +390,17 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let js = format!(
-            "const e=document.querySelector('{}');if(e){{e.focus();e.value='{}';e.dispatchEvent(new Event('input',{{bubbles:true}}));}}{}",
-            args.target,
-            args.text.replace('\'', "\\'"),
-            if args.submit.unwrap_or(false) {
-                "e.form?.submit();"
-            } else {
-                ""
-            }
-        );
-        self.http
-            .post(self.api("evaluate"))
-            .json(&json!({"function": js}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget(
+            "type",
+            json!({
+                "selector": args.target,
+                "text": args.text,
+                "clear_first": false,
+                "submit": args.submit.unwrap_or(false)
+            }),
+        )
+        .await?;
         Ok(Self::tool_result(format!("Typed: {}", args.text)))
     }
 
@@ -398,67 +410,10 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("press-key"))
-            .json(&json!({"key": args.key}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget("press", json!({"key": args.key}))
+            .await?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
-    }
-
-    #[tool(description = "Hover mouse over an element (triggers tooltips, dropdowns, etc.)")]
-    async fn browser_hover(
-        &self,
-        Parameters(args): Parameters<HoverArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("hover"))
-            .json(&json!({"selector": args.target}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(format!("Hovered: {}", args.target)))
-    }
-
-    #[tool(description = "Select option(s) in a <select> dropdown")]
-    async fn browser_select_option(
-        &self,
-        Parameters(args): Parameters<SelectOptionArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("select-option"))
-            .json(&json!({"selector": args.target, "values": args.values}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(format!("Selected in: {}", args.target)))
-    }
-
-    #[tool(description = "Fill multiple form fields at once")]
-    async fn browser_fill_form(
-        &self,
-        Parameters(args): Parameters<FillFormArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let v: Vec<_> = args.fields.iter().map(|f| json!({"target": f.target, "name": f.name, "type": f.field_type, "value": f.value})).collect();
-        self.http
-            .post(self.api("fill-form"))
-            .json(&json!({"fields": v}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result("Form filled".to_string()))
     }
 
     #[tool(description = "Evaluate JavaScript expression in the page context and return result")]
@@ -467,29 +422,24 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({"function": args.function});
-        if let Some(t) = &args.target {
-            body["target"] = json!(t);
-        }
-        let resp = self
-            .http
-            .post(self.api("evaluate"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(
-            v.get("result")
-                .and_then(|r| r.as_str())
-                .unwrap_or("")
-                .to_string(),
-        ))
+        self.ensure_daemon().await?;
+        let v = self
+            .http_post("evaluate", json!({"expression": args.function}))
+            .await?;
+        let result = v
+            .get("data")
+            .and_then(|d| {
+                d.as_str()
+                    .map(|s| s.to_string())
+                    .or_else(|| {
+                        d.get("result")
+                            .and_then(|r| r.as_str())
+                            .map(|s| s.to_string())
+                    })
+                    .or_else(|| Some(serde_json::to_string(d).unwrap_or_default()))
+            })
+            .unwrap_or_default();
+        Ok(Self::tool_result(result))
     }
 
     #[tool(description = "Get console log entries (error/warning/info/debug) from the page")]
@@ -498,132 +448,10 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({});
-        if let Some(a) = args.all {
-            body["all"] = json!(a);
-        }
-        if let Some(l) = &args.level {
-            body["level"] = json!(l);
-        }
-        let resp = self
-            .http
-            .post(self.api("console-messages"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        let level = args.level.as_deref().unwrap_or("");
+        let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
-    }
-
-    #[tool(description = "List HTTP network requests made by the page since last navigation")]
-    async fn browser_network_requests(
-        &self,
-        Parameters(args): Parameters<NetworkRequestsArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({});
-        if let Some(f) = &args.filter {
-            body["filter"] = json!(f);
-        }
-        if let Some(s) = args.is_static {
-            body["static"] = json!(s);
-        }
-        let resp = self
-            .http
-            .post(self.api("network-requests"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(v.to_string()))
-    }
-
-    #[tool(description = "List, create, close, or switch browser tabs")]
-    async fn browser_tabs(
-        &self,
-        Parameters(args): Parameters<BrowserTabsArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({});
-        if let Some(a) = &args.action {
-            body["action"] = json!(a);
-        }
-        if let Some(i) = args.index {
-            body["index"] = json!(i);
-        }
-        if let Some(u) = &args.url {
-            body["url"] = json!(u);
-        }
-        let resp = self
-            .http
-            .post(self.api("tabs"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let v: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result(v.to_string()))
-    }
-
-    #[tool(
-        description = "Wait for a condition: time (seconds), text appearance, or text disappearance"
-    )]
-    async fn browser_wait_for(
-        &self,
-        Parameters(args): Parameters<WaitForArgs>,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        let mut body = json!({});
-        if let Some(t) = &args.text {
-            body["text"] = json!(t);
-        }
-        if let Some(tg) = &args.text_gone {
-            body["textGone"] = json!(tg);
-        }
-        if let Some(t) = args.time {
-            body["time"] = json!(t);
-        }
-        self.http
-            .post(self.api("wait-for"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result("Wait condition satisfied".to_string()))
-    }
-
-    #[tool(description = "Close the current tab or entire browser session")]
-    async fn browser_close(
-        &self,
-        _context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("close"))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        Ok(Self::tool_result("Browser closed".to_string()))
     }
 
     #[tool(description = "Resize the browser window")]
@@ -632,14 +460,12 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.check_daemon()
-            .map_err(|e| McpError::internal_error(e, None))?;
-        self.http
-            .post(self.api("resize"))
-            .json(&json!({"width": args.width, "height": args.height}))
-            .send()
-            .await
-            .map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        self.ensure_daemon().await?;
+        self.http_post_fire_and_forget(
+            "resize",
+            json!({"width": args.width, "height": args.height}),
+        )
+        .await?;
         Ok(Self::tool_result(format!(
             "Resized to {}x{}",
             args.width, args.height
@@ -1073,12 +899,17 @@ mod daemon {
         if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
             && !url.is_empty()
         {
-            tracing::debug!("[tairitsu-mcp] Using TAIRITSU_DAEMON_URL={}", url);
             return Ok(url);
         }
         let searched = search_project_roots();
-        if let Some((port, _found_at)) = try_read_ready_port_from_candidates(&searched) {
-            return Ok(format!("http://localhost:{}", port));
+        if let Some((_port, debug_port, _found_at)) = try_read_ready_port_from_candidates(&searched)
+        {
+            if let Some(dp) = debug_port {
+                return Ok(format!("http://localhost:{dp}"));
+            }
+            return Err(anyhow!(
+                "Daemon found but debug API not enabled. Start with: tairitsu dev --daemon --debug"
+            ));
         }
         Err(anyhow!("No running tairitsu daemon found"))
     }
@@ -1088,7 +919,7 @@ mod daemon {
         if let Ok(cwd) = std::env::current_dir() {
             candidates.push(cwd.join("target"));
             let mut dir = cwd.clone();
-            for _ in 0..5 {
+            for _ in 0..8 {
                 if dir.join("Cargo.toml").exists() {
                     candidates.push(dir.join("target"));
                 }
@@ -1096,9 +927,27 @@ mod daemon {
                     break;
                 }
             }
+            add_target_tree(&mut candidates, &cwd, 3);
         }
         if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
-            candidates.push(PathBuf::from(root).join("target"));
+            let root_path = PathBuf::from(&root);
+            candidates.push(root_path.join("target"));
+            add_target_tree(&mut candidates, &root_path, 3);
+        }
+        for scan_dir in std::env::var("HOME")
+            .ok()
+            .map(|h| vec![PathBuf::from("/mnt/sdb1"), PathBuf::from(h)])
+            .unwrap_or_default()
+        {
+            if let Ok(entries) = std::fs::read_dir(&scan_dir) {
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if p.is_dir() {
+                        candidates.push(p.join("target"));
+                        add_target_tree(&mut candidates, &p, 2);
+                    }
+                }
+            }
         }
         if let Ok(exe) = std::env::current_exe()
             && let Some(parent) = exe.parent().and_then(|p| p.parent())
@@ -1109,17 +958,38 @@ mod daemon {
         candidates
     }
 
-    fn try_read_ready_port_from_candidates(dirs: &[PathBuf]) -> Option<(u16, PathBuf)> {
+    fn add_target_tree(candidates: &mut Vec<PathBuf>, base: &PathBuf, depth: u32) {
+        if depth == 0 {
+            return;
+        }
+        if let Ok(entries) = std::fs::read_dir(base) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir() {
+                    candidates.push(p.join("target"));
+                    add_target_tree(candidates, &p, depth - 1);
+                }
+            }
+        }
+    }
+
+    fn try_read_ready_port_from_candidates(
+        dirs: &[PathBuf],
+    ) -> Option<(u16, Option<u16>, PathBuf)> {
         for dir in dirs {
             let ready_path = dir.join("tairitsu-packager.ready");
             if let Ok(content) = std::fs::read_to_string(&ready_path) {
                 let trimmed = content.trim();
-                if let Some(port_str) = trimmed.strip_prefix("ready:") {
-                    if let Ok(port) = port_str.parse::<u16>() {
-                        return Some((port, ready_path));
+                if let Some(rest) = trimmed.strip_prefix("ready:") {
+                    let mut parts = rest.splitn(2, ':');
+                    if let Some(port_str) = parts.next()
+                        && let Ok(port) = port_str.parse::<u16>()
+                    {
+                        let debug_port = parts.next().and_then(|s| s.parse().ok());
+                        return Some((port, debug_port, ready_path));
                     }
                 } else if trimmed == "ready" {
-                    return Some((3000, ready_path));
+                    return Some((3000, None, ready_path));
                 }
             }
         }
@@ -1153,7 +1023,11 @@ pub async fn run(config: McpConfig) -> Result<()> {
 
     let server = Server {
         base_url: base_url.clone(),
-        http: reqwest::Client::new(),
+        http: reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .connect_timeout(std::time::Duration::from_secs(5))
+            .build()
+            .unwrap_or_default(),
         #[cfg(feature = "vtty")]
         vtty: std::sync::Arc::new(vtty::VttyManager::new()),
     };
