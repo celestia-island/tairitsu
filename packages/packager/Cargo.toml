@@ -72,12 +72,14 @@ base64 = { version = "^0.22", optional = true }
 include_dir = "^0.7"
 vte = { version = "^0.15", optional = true }
 portable-pty = { version = "^0.8", optional = true }
+tairitsu-shared = { workspace = true, optional = true }
+interprocess = { version = "^2", features = ["tokio"], optional = true }
 
 [dev-dependencies]
 tempfile = "3"
 
 [features]
-default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "vtty", "visual-diff", "test-runner"]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "vtty", "visual-diff", "test-runner", "plugin-loader"]
 native = ["tokio", "crossterm"]
 dev-server = [
   "axum",
@@ -95,6 +97,7 @@ icon-fetch = ["reqwest", "zip"]
 visual-diff = ["image", "base64"]
 test-runner = ["reqwest", "image", "base64"]
 vtty = ["vte", "portable-pty"]
+plugin-loader = ["tairitsu-shared", "interprocess", "reqwest", "tokio/process"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
  libc = "0.2"

@@ -245,6 +245,32 @@ enum Commands {
         /// Base URL of the tairitsu daemon debug API (auto-detected if omitted)
         #[arg(short, long)]
         url: Option<String>,
+
+        #[command(subcommand)]
+        action: Option<McpCommands>,
+    },
+}
+
+#[derive(Subcommand)]
+enum McpCommands {
+    /// Download and initialise all runtime plugins (debug-browser, visual-diff, etc.)
+    /// Required for Docker/CI builds; otherwise plugins auto-download on first use.
+    Init {
+        /// Disable China mirror fallback — only try official GitHub source
+        #[arg(long)]
+        no_mirror: bool,
+
+        /// Custom plugin registry URL (default: tairitsu GitHub releases)
+        #[arg(long)]
+        registry: Option<String>,
+
+        /// Force re-download even if plugin already exists locally
+        #[arg(long)]
+        force: bool,
+
+        /// List of specific plugins to download (default: all)
+        #[arg(short, long)]
+        plugins: Vec<String>,
     },
 }
 
@@ -915,7 +941,12 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             }
         }
         #[allow(unused_variables)]
-        Some(Commands::Mcp { url }) => {
+        Some(Commands::Mcp { url, action }) => {
+            if let Some(ref act) = action {
+                if let McpCommands::Init { no_mirror, registry, force, plugins } = act {
+                    return crate::plugins::cmd_mcp_init(*no_mirror, registry.as_deref(), *force, &plugins).await;
+                }
+            }
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
             };
