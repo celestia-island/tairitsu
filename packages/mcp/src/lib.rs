@@ -1,7 +1,10 @@
-//! Standalone Tairitsu MCP server — browser automation + VTty for AI coding assistants.
-//! Built on `rmcp` — the official Rust MCP SDK.
+use std::sync::Arc;
 
 use anyhow::Result;
+use interprocess::local_socket::{
+    tokio::{prelude::*, Stream as LocalSocketStream},
+    GenericFilePath, ToFsName,
+};
 use rmcp::{
     ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
     handler::server::wrapper::Parameters, model::*, service::RequestContext, tool, tool_handler,
@@ -10,18 +13,100 @@ use rmcp::{
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::json;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::{Child, Command};
+use tokio::sync::RwLock;
 
 #[cfg(feature = "vtty")]
 mod vtty;
 
+// ── Plugin IPC types (local aliases to avoid conflict with rmcp::model) ──────
+
+use tairitsu_shared::{
+    caps, Handshake, HandshakeAck, Message as PluginMessage, PROTOCOL_VERSION,
+};
+
+struct PluginHandle {
+    stream: Arc<tokio::sync::Mutex<BufReader<LocalSocketStream>>>,
+    next_id: Arc<tokio::sync::Mutex<u64>>,
+    _child: Child,
+}
+
+impl PluginHandle {
+    async fn call(
+        &self,
+        method: &str,
+        params: Option<serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let id = {
+            let mut n = self.next_id.lock().await;
+            let id = *n;
+            *n += 1;
+            id
+        };
+
+        let req = PluginMessage::Request(tairitsu_shared::Request {
+            id,
+            method: method.to_string(),
+            params,
+        });
+        let req_json =
+            serde_json::to_string(&req).map_err(|e| format!("serialize: {}", e))?;
+
+        {
+            let mut stream = self.stream.lock().await;
+            stream
+                .get_mut()
+                .write_all(req_json.as_bytes())
+                .await
+                .map_err(|e| format!("write: {}", e))?;
+            stream
+                .get_mut()
+                .write_all(b"\n")
+                .await
+                .map_err(|e| format!("write newline: {}", e))?;
+            stream
+                .get_mut()
+                .flush()
+                .await
+                .map_err(|e| format!("flush: {}", e))?;
+        }
+
+        let mut line = String::new();
+        {
+            let mut stream = self.stream.lock().await;
+            stream
+                .read_line(&mut line)
+                .await
+                .map_err(|e| format!("read: {}", e))?;
+        }
+
+        let resp: PluginMessage = serde_json::from_str(line.trim())
+            .map_err(|e| format!("parse response: {} — got: {}", e, line.trim()))?;
+
+        match resp {
+            PluginMessage::Response(r) => {
+                r.result
+                    .ok_or_else(|| format!("Empty response for request {}", id))
+            }
+            PluginMessage::Error(e) => Err(format!(
+                "Plugin error (code {}): {}",
+                e.error.code, e.error.message
+            )),
+            other => Err(format!("Unexpected message: {:?}", other)),
+        }
+    }
+}
+
 // ── Server state ────────────────────────────────────
 
-#[derive(Clone)]
-pub struct Server {
-    base_url: std::sync::Arc<tokio::sync::RwLock<String>>,
+struct Server {
+    base_url: Arc<RwLock<String>>,
     http: reqwest::Client,
     #[cfg(feature = "vtty")]
-    vtty: std::sync::Arc<vtty::VttyManager>,
+    vtty: Arc<vtty::VttyManager>,
+    browser_plugin: Arc<RwLock<Option<PluginHandle>>>,
+    disabled_plugins: Vec<String>,
 }
 
 impl Server {
@@ -50,6 +135,56 @@ impl Server {
 
     fn tool_result(text: impl Into<String>) -> CallToolResult {
         CallToolResult::success(vec![Content::text(text)])
+    }
+
+    fn is_plugin_disabled(&self, name: &str) -> bool {
+        self.disabled_plugins.iter().any(|d| d == name)
+    }
+
+    async fn ensure_browser_plugin(&self) -> Result<(), McpError> {
+        if self.is_plugin_disabled("virtual-browser") {
+            return Err(McpError::internal_error(
+                "Browser plugin is disabled. Run: tairitsu-mcp --enable virtual-browser",
+                None,
+            ));
+        }
+
+        {
+            let guard: tokio::sync::RwLockReadGuard<'_, Option<PluginHandle>> =
+                self.browser_plugin.read().await;
+            if guard.is_some() {
+                return Ok(());
+            }
+        }
+
+        let mut write_guard: tokio::sync::RwLockWriteGuard<'_, Option<PluginHandle>> =
+            self.browser_plugin.write().await;
+        if write_guard.is_some() {
+            return Ok(());
+        }
+
+        let handle = spawn_browser_plugin().await?;
+        *write_guard = Some(handle);
+        Ok(())
+    }
+
+    async fn plugin_call(
+        &self,
+        method: &str,
+        params: Option<serde_json::Value>,
+    ) -> Result<serde_json::Value, McpError> {
+        self.ensure_browser_plugin().await?;
+
+        let guard: tokio::sync::RwLockReadGuard<'_, Option<PluginHandle>> =
+            self.browser_plugin.read().await;
+        let plugin = guard
+            .as_ref()
+            .ok_or_else(|| McpError::internal_error("Browser plugin not available", None))?;
+
+        plugin
+            .call(method, params)
+            .await
+            .map_err(|e| McpError::internal_error(format!("Plugin error: {}", e), None))
     }
 
     async fn http_post(
@@ -191,8 +326,6 @@ struct BrowserResizeArgs {
     height: u32,
 }
 
-// ── VTty tool args ───────────────────────────────────
-
 #[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyLaunchArgs {
@@ -267,10 +400,25 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
-            .await?;
-        Ok(Self::tool_result(format!("Navigated to {}", args.url)))
+        match self
+            .plugin_call("browser.navigate", Some(json!({ "url": args.url })))
+            .await
+        {
+            Ok(v) => {
+                let url = v.get("url").and_then(|u| u.as_str()).unwrap_or("");
+                let title = v.get("title").and_then(|t| t.as_str()).unwrap_or("");
+                Ok(Self::tool_result(format!(
+                    "Navigated to {} (title: {})",
+                    url, title
+                )))
+            }
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
+                    .await?;
+                Ok(Self::tool_result(format!("Navigated to {}", args.url)))
+            }
+        }
     }
 
     #[tool(description = "Go back to the previous page")]
@@ -301,19 +449,31 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        let query: Vec<(&str, &str)> = args
-            .target
-            .as_deref()
-            .filter(|s| !s.is_empty())
-            .map(|s| vec![("selector", s)])
-            .unwrap_or_default();
-        let v = self.http_get("a11y", &query).await?;
-        Ok(Self::tool_result(
-            v.get("data")
-                .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
-                .unwrap_or_else(|| "{}".into()),
-        ))
+        let mut params = json!({});
+        if let Some(sel) = &args.target {
+            if !sel.is_empty() {
+                params["selector"] = json!(sel);
+            }
+        }
+
+        match self.plugin_call("browser.a11y", Some(params)).await {
+            Ok(v) => Ok(Self::tool_result(v.to_string())),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                let query: Vec<(&str, &str)> = args
+                    .target
+                    .as_deref()
+                    .filter(|s| !s.is_empty())
+                    .map(|s| vec![("selector", s)])
+                    .unwrap_or_default();
+                let v = self.http_get("a11y", &query).await?;
+                Ok(Self::tool_result(
+                    v.get("data")
+                        .map(|d| serde_json::to_string(d).unwrap_or_else(|_| "{}".into()))
+                        .unwrap_or_else(|| "{}".into()),
+                ))
+            }
+        }
     }
 
     #[tool(
@@ -324,51 +484,76 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        let mut body = json!({});
+        let mut params = json!({});
         if let Some(el) = &args.element {
-            body["selector"] = json!(el);
+            params["selector"] = json!(el);
         }
         if let Some(fp) = args.full_page {
-            body["full_page"] = json!(fp);
+            params["full_page"] = json!(fp);
         }
-        let v = self.http_post("screenshot", body).await?;
-        let ok = v.get("ok").and_then(|s| s.as_bool()).unwrap_or(false);
-        if ok {
-            let data = v
-                .get("data")
-                .and_then(|d| {
-                    d.as_str()
-                        .map(|s| s.to_string())
-                        .or_else(|| {
-                            d.get("data")
-                                .and_then(|dd| dd.as_str())
+
+        match self.plugin_call("browser.screenshot", Some(params)).await {
+            Ok(v) => {
+                let data = v.get("data").and_then(|d| d.as_str()).unwrap_or("");
+                let mime = v
+                    .get("mime_type")
+                    .and_then(|m| m.as_str())
+                    .unwrap_or("image/png");
+                let data_url = if data.starts_with("data:") {
+                    data.to_string()
+                } else {
+                    format!("data:{mime};base64,{data}")
+                };
+                Ok(CallToolResult::success(vec![Content::text(data_url)]))
+            }
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                let mut body = json!({});
+                if let Some(el) = &args.element {
+                    body["selector"] = json!(el);
+                }
+                if let Some(fp) = args.full_page {
+                    body["full_page"] = json!(fp);
+                }
+                let v = self.http_post("screenshot", body).await?;
+                let ok = v.get("ok").and_then(|s| s.as_bool()).unwrap_or(false);
+                if ok {
+                    let data = v
+                        .get("data")
+                        .and_then(|d| {
+                            d.as_str()
                                 .map(|s| s.to_string())
+                                .or_else(|| {
+                                    d.get("data")
+                                        .and_then(|dd| dd.as_str())
+                                        .map(|s| s.to_string())
+                                })
+                                .or_else(|| {
+                                    d.as_object()
+                                        .map(|_| serde_json::to_string(d).unwrap_or_default())
+                                })
                         })
-                        .or_else(|| {
-                            d.as_object()
-                                .map(|_| serde_json::to_string(d).unwrap_or_default())
-                        })
-                })
-                .unwrap_or_default();
-            let mime = v
-                .get("data")
-                .and_then(|d| d.get("mime_type"))
-                .and_then(|m| m.as_str())
-                .unwrap_or("image/png");
-            let data_url = if data.starts_with("data:") {
-                data
-            } else {
-                format!("data:{mime};base64,{data}")
-            };
-            Ok(Self::tool_result(data_url))
-        } else {
-            let err = v
-                .get("error")
-                .and_then(|e| e.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            Err(McpError::internal_error(err, None))
+                        .unwrap_or_default();
+                    let mime = v
+                        .get("data")
+                        .and_then(|d| d.get("mime_type"))
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("image/png");
+                    let data_url = if data.starts_with("data:") {
+                        data
+                    } else {
+                        format!("data:{mime};base64,{data}")
+                    };
+                    Ok(CallToolResult::success(vec![Content::text(data_url)]))
+                } else {
+                    let err = v
+                        .get("error")
+                        .and_then(|e| e.as_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+                    Err(McpError::internal_error(err, None))
+                }
+            }
         }
     }
 
@@ -378,10 +563,18 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        self.http_post_fire_and_forget("click", json!({"selector": args.target}))
-            .await?;
-        Ok(Self::tool_result(format!("Clicked: {}", args.target)))
+        match self
+            .plugin_call("browser.click", Some(json!({ "selector": args.target })))
+            .await
+        {
+            Ok(_) => Ok(Self::tool_result(format!("Clicked: {}", args.target))),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                self.http_post_fire_and_forget("click", json!({"selector": args.target}))
+                    .await?;
+                Ok(Self::tool_result(format!("Clicked: {}", args.target)))
+            }
+        }
     }
 
     #[tool(description = "Type text into an editable element (input, textarea, contenteditable)")]
@@ -390,18 +583,33 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        self.http_post_fire_and_forget(
-            "type",
-            json!({
-                "selector": args.target,
-                "text": args.text,
-                "clear_first": false,
-                "submit": args.submit.unwrap_or(false)
-            }),
-        )
-        .await?;
-        Ok(Self::tool_result(format!("Typed: {}", args.text)))
+        match self
+            .plugin_call(
+                "browser.type",
+                Some(json!({
+                    "selector": args.target,
+                    "text": args.text,
+                    "submit": args.submit.unwrap_or(false)
+                })),
+            )
+            .await
+        {
+            Ok(_) => Ok(Self::tool_result(format!("Typed: {}", args.text))),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                self.http_post_fire_and_forget(
+                    "type",
+                    json!({
+                        "selector": args.target,
+                        "text": args.text,
+                        "clear_first": false,
+                        "submit": args.submit.unwrap_or(false)
+                    }),
+                )
+                .await?;
+                Ok(Self::tool_result(format!("Typed: {}", args.text)))
+            }
+        }
     }
 
     #[tool(description = "Press a keyboard key (Enter, Tab, Escape, ArrowUp, etc.)")]
@@ -410,10 +618,18 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        self.http_post_fire_and_forget("press", json!({"key": args.key}))
-            .await?;
-        Ok(Self::tool_result(format!("Pressed: {}", args.key)))
+        match self
+            .plugin_call("browser.press", Some(json!({ "key": args.key })))
+            .await
+        {
+            Ok(_) => Ok(Self::tool_result(format!("Pressed: {}", args.key))),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                self.http_post_fire_and_forget("press", json!({"key": args.key}))
+                    .await?;
+                Ok(Self::tool_result(format!("Pressed: {}", args.key)))
+            }
+        }
     }
 
     #[tool(description = "Evaluate JavaScript expression in the page context and return result")]
@@ -422,24 +638,35 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        let v = self
-            .http_post("evaluate", json!({"expression": args.function}))
-            .await?;
-        let result = v
-            .get("data")
-            .and_then(|d| {
-                d.as_str()
-                    .map(|s| s.to_string())
-                    .or_else(|| {
-                        d.get("result")
-                            .and_then(|r| r.as_str())
+        match self
+            .plugin_call(
+                "browser.evaluate",
+                Some(json!({ "expression": args.function })),
+            )
+            .await
+        {
+            Ok(v) => Ok(Self::tool_result(v.to_string())),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                let v = self
+                    .http_post("evaluate", json!({"expression": args.function}))
+                    .await?;
+                let result = v
+                    .get("data")
+                    .and_then(|d| {
+                        d.as_str()
                             .map(|s| s.to_string())
+                            .or_else(|| {
+                                d.get("result")
+                                    .and_then(|r| r.as_str())
+                                    .map(|s| s.to_string())
+                            })
+                            .or_else(|| Some(serde_json::to_string(d).unwrap_or_default()))
                     })
-                    .or_else(|| Some(serde_json::to_string(d).unwrap_or_default()))
-            })
-            .unwrap_or_default();
-        Ok(Self::tool_result(result))
+                    .unwrap_or_default();
+                Ok(Self::tool_result(result))
+            }
+        }
     }
 
     #[tool(description = "Get console log entries (error/warning/info/debug) from the page")]
@@ -448,7 +675,7 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         let level = args.level.as_deref().unwrap_or("");
         let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
@@ -460,16 +687,30 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
-        self.http_post_fire_and_forget(
-            "resize",
-            json!({"width": args.width, "height": args.height}),
-        )
-        .await?;
-        Ok(Self::tool_result(format!(
-            "Resized to {}x{}",
-            args.width, args.height
-        )))
+        match self
+            .plugin_call(
+                "browser.resize",
+                Some(json!({ "width": args.width, "height": args.height })),
+            )
+            .await
+        {
+            Ok(_) => Ok(Self::tool_result(format!(
+                "Resized to {}x{}",
+                args.width, args.height
+            ))),
+            Err(_) => {
+                let _ = self.ensure_daemon().await;
+                self.http_post_fire_and_forget(
+                    "resize",
+                    json!({"width": args.width, "height": args.height}),
+                )
+                .await?;
+                Ok(Self::tool_result(format!(
+                    "Resized to {}x{}",
+                    args.width, args.height
+                )))
+            }
+        }
     }
 
     // ── VTty tools ─────────────────────────────────────
@@ -682,8 +923,8 @@ impl Server {
         let secs = args.seconds.unwrap_or(5.0);
         let pattern = args.pattern.unwrap_or_default();
         if !pattern.is_empty() {
-            let deadline =
-                std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
+            let deadline = std::time::Instant::now()
+                + std::time::Duration::from_secs_f64(secs.min(1800.0));
             let mut found = false;
             while std::time::Instant::now() < deadline {
                 let alive = {
@@ -858,27 +1099,29 @@ impl ServerHandler for Server {}
 
 #[cfg(feature = "vtty")]
 async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<String> {
-    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT")
-        && !root.is_empty()
-    {
-        return Some(root);
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
+        if !root.is_empty() {
+            return Some(root);
+        }
     }
 
-    if let Some(info) = context.peer.peer_info()
-        && info.capabilities.roots.is_some()
-        && let Ok(result) = context.peer.list_roots().await
-        && let Some(root) = result.roots.first()
-    {
-        let uri = &root.uri;
-        let path = if let Some(p) = uri.strip_prefix("file://") {
-            p.to_string()
-        } else if let Some(p) = uri.strip_prefix("file:") {
-            p.to_string()
-        } else {
-            uri.clone()
-        };
-        if !path.is_empty() {
-            return Some(path);
+    if let Some(info) = context.peer.peer_info() {
+        if info.capabilities.roots.is_some() {
+            if let Ok(result) = context.peer.list_roots().await {
+                if let Some(root) = result.roots.first() {
+                    let uri = &root.uri;
+                    let path = if let Some(p) = uri.strip_prefix("file://") {
+                        p.to_string()
+                    } else if let Some(p) = uri.strip_prefix("file:") {
+                        p.to_string()
+                    } else {
+                        uri.clone()
+                    };
+                    if !path.is_empty() {
+                        return Some(path);
+                    }
+                }
+            }
         }
     }
 
@@ -896,10 +1139,10 @@ mod daemon {
     use std::path::PathBuf;
 
     pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
-        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
-            && !url.is_empty()
-        {
-            return Ok(url);
+        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
+            if !url.is_empty() {
+                return Ok(url);
+            }
         }
 
         let priority_dirs: Vec<PathBuf> = {
@@ -922,7 +1165,9 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&priority_dirs)
+        {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -932,7 +1177,9 @@ mod daemon {
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&searched)
+        {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -966,10 +1213,10 @@ mod daemon {
                 }
             }
         }
-        if let Ok(exe) = std::env::current_exe()
-            && let Some(parent) = exe.parent().and_then(|p| p.parent())
-        {
-            candidates.push(parent.join("target"));
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+                candidates.push(parent.join("target"));
+            }
         }
         candidates.dedup();
         candidates
@@ -999,11 +1246,11 @@ mod daemon {
                 let trimmed = content.trim();
                 if let Some(rest) = trimmed.strip_prefix("ready:") {
                     let mut parts = rest.splitn(2, ':');
-                    if let Some(port_str) = parts.next()
-                        && let Ok(port) = port_str.parse::<u16>()
-                    {
-                        let debug_port = parts.next().and_then(|s| s.parse().ok());
-                        return Some((port, debug_port, ready_path));
+                    if let Some(port_str) = parts.next() {
+                        if let Ok(port) = port_str.parse::<u16>() {
+                            let debug_port = parts.next().and_then(|s| s.parse().ok());
+                            return Some((port, debug_port, ready_path));
+                        }
                     }
                 } else if trimmed == "ready" {
                     return Some((3000, None, ready_path));
@@ -1016,17 +1263,207 @@ mod daemon {
 
 use daemon::resolve_daemon_url;
 
+// ── plugin spawning ─────────────────────────────────
+
+fn plugin_dirs_data_local() -> Option<std::path::PathBuf> {
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            return Some(std::path::PathBuf::from(home).join(".local/share"));
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            return Some(
+                std::path::PathBuf::from(home)
+                    .join("Library")
+                    .join("Application Support"),
+            );
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(appdata) = std::env::var("LOCALAPPDATA") {
+            return Some(std::path::PathBuf::from(appdata));
+        }
+    }
+    None
+}
+
+async fn find_plugin_binary() -> Option<std::path::PathBuf> {
+    let exe_name = format!(
+        "tairitsu-plugin-debug-browser{}",
+        std::env::consts::EXE_SUFFIX
+    );
+
+    if let Ok(dir) = std::env::var("TAIRITSU_PLUGIN_DIR") {
+        let candidate = std::path::PathBuf::from(dir).join(&exe_name);
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+
+    if let Some(base) = plugin_dirs_data_local() {
+        let dir = base.join("tairitsu").join("plugins");
+        let candidate = dir.join(&exe_name);
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        let dir = cwd.join("target").join("tairitsu").join("plugins");
+        let candidate = dir.join(&exe_name);
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let candidate = parent.join(&exe_name);
+            if candidate.exists() {
+                return Some(candidate);
+            }
+        }
+    }
+
+    None
+}
+
+async fn spawn_browser_plugin() -> Result<PluginHandle, McpError> {
+    let binary = find_plugin_binary().await.ok_or_else(|| {
+        McpError::internal_error(
+            "Browser plugin binary not found. Run: tairitsu mcp init -p debug-browser",
+            None,
+        )
+    })?;
+
+    let socket_dir = std::env::temp_dir().join("tairitsu-plugins");
+    let _ = std::fs::create_dir_all(&socket_dir);
+    let sock_path = socket_dir.join("tairitsu-plugin-debug-browser.sock");
+    let _ = std::fs::remove_file(&sock_path);
+
+    let child = Command::new(&binary)
+        .arg("--socket")
+        .arg(&sock_path)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(|e| {
+            McpError::internal_error(
+                format!("Failed to spawn plugin: {} — {}", binary.display(), e),
+                None,
+            )
+        })?;
+
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(15);
+    let stream = loop {
+        if tokio::time::Instant::now() > deadline {
+            return Err(McpError::internal_error(
+                "Timed out waiting for browser plugin socket",
+                None,
+            ));
+        }
+        match LocalSocketStream::connect(
+            sock_path
+                .clone()
+                .to_fs_name::<GenericFilePath>()
+                .map_err(|e| McpError::internal_error(format!("socket path: {}", e), None))?,
+        )
+        .await
+        {
+            Ok(s) => break s,
+            Err(_) => {
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            }
+        }
+    };
+
+    let mut reader = BufReader::new(stream);
+    let mut line = String::new();
+    let bytes = reader
+        .read_line(&mut line)
+        .await
+        .map_err(|e| McpError::internal_error(format!("read handshake: {}", e), None))?;
+
+    if bytes == 0 {
+        return Err(McpError::internal_error(
+            "Plugin closed socket before handshake",
+            None,
+        ));
+    }
+
+    let msg: PluginMessage = serde_json::from_str(line.trim())
+        .map_err(|e| McpError::internal_error(format!("parse handshake: {}", e), None))?;
+    match msg {
+        PluginMessage::Handshake(hs) => {
+            if hs.protocol_version != PROTOCOL_VERSION {
+                return Err(McpError::internal_error(
+                    format!(
+                        "Plugin protocol version {} != host {}",
+                        hs.protocol_version, PROTOCOL_VERSION
+                    ),
+                    None,
+                ));
+            }
+            tracing::info!(
+                "[mcp] Browser plugin ready: {} v{}",
+                hs.name,
+                hs.version
+            );
+        }
+        other => {
+            return Err(McpError::internal_error(
+                format!("Expected handshake, got: {:?}", other),
+                None,
+            ));
+        }
+    }
+
+    let ack = PluginMessage::HandshakeAck(HandshakeAck {
+        accepted: true,
+        reason: None,
+    });
+    let ack_json = serde_json::to_string(&ack)
+        .map_err(|e| McpError::internal_error(format!("serialize ack: {}", e), None))?;
+    reader
+        .get_mut()
+        .write_all(ack_json.as_bytes())
+        .await
+        .map_err(|e| McpError::internal_error(format!("write ack: {}", e), None))?;
+    reader
+        .get_mut()
+        .write_all(b"\n")
+        .await
+        .map_err(|e| McpError::internal_error(format!("write newline: {}", e), None))?;
+    reader
+        .get_mut()
+        .flush()
+        .await
+        .map_err(|e| McpError::internal_error(format!("flush ack: {}", e), None))?;
+
+    Ok(PluginHandle {
+        stream: Arc::new(tokio::sync::Mutex::new(reader)),
+        next_id: Arc::new(tokio::sync::Mutex::new(1)),
+        _child: child,
+    })
+}
+
 // ── public entry point ───────────────────────────────
 
 #[derive(Debug, Clone, Default)]
 pub struct McpConfig {
     pub base_url: String,
+    pub disabled_plugins: Vec<String>,
 }
 
 pub async fn run(config: McpConfig) -> Result<()> {
-    let base_url = std::sync::Arc::new(tokio::sync::RwLock::new(String::new()));
+    let base_url = Arc::new(RwLock::new(String::new()));
 
-    // Resolve daemon URL in background (browser tools need this)
     let base_url_clone = base_url.clone();
     let url_from_config = config.base_url.clone();
     tokio::spawn(async move {
@@ -1046,7 +1483,9 @@ pub async fn run(config: McpConfig) -> Result<()> {
             .build()
             .unwrap_or_default(),
         #[cfg(feature = "vtty")]
-        vtty: std::sync::Arc::new(vtty::VttyManager::new()),
+        vtty: Arc::new(vtty::VttyManager::new()),
+        browser_plugin: Arc::new(RwLock::new(None)),
+        disabled_plugins: config.disabled_plugins,
     };
 
     let transport = rmcp::transport::stdio();

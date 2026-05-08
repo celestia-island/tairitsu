@@ -27,6 +27,7 @@ jobs:
             "tairitsu-ssr:packages/ssr"
             "tairitsu-packager:packages/packager"
             "tairitsu-web:packages/web"
+            "tairitsu-shared:packages/shared"
             "tairitsu-mcp:packages/mcp"
           )
           for ENTRY in "${PACKAGES[@]}"; do
@@ -86,6 +87,7 @@ jobs:
       - run: cargo publish -p tairitsu-hooks            --allow-dirty -v
       - run: cargo publish -p tairitsu-browser-wit-resolver --allow-dirty -v
       - run: cargo publish -p tairitsu-ssr              --allow-dirty -v
+      - run: cargo publish -p tairitsu-shared           --allow-dirty -v
       - run: cargo publish -p tairitsu-packager         --allow-dirty -v
       - run: cargo publish -p tairitsu-web              --allow-dirty -v
       - run: cargo publish -p tairitsu-mcp              --allow-dirty -v

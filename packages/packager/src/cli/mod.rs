@@ -942,10 +942,9 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
         }
         #[allow(unused_variables)]
         Some(Commands::Mcp { url, action }) => {
-            if let Some(ref act) = action {
-                if let McpCommands::Init { no_mirror, registry, force, plugins } = act {
-                    return crate::plugins::cmd_mcp_init(*no_mirror, registry.as_deref(), *force, &plugins).await;
-                }
+            if let Some(act) = action {
+                let McpCommands::Init { no_mirror, registry, force, plugins } = act;
+                return crate::plugins::cmd_mcp_init(no_mirror, registry.as_deref(), force, &plugins).await;
             }
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
