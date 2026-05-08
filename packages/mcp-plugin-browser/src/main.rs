@@ -70,7 +70,7 @@ fn parse_args() -> anyhow::Result<PathBuf> {
 }
 
 async fn launch_browser() -> anyhow::Result<(Browser, chromiumoxide::Page)> {
-    let config = resolve_browser_config()?;
+    let config = resolve_browser_config().await?;
 
     let _ = std::fs::remove_file("/tmp/chromiumoxide-runner/SingletonLock");
 
@@ -95,7 +95,7 @@ async fn launch_browser() -> anyhow::Result<(Browser, chromiumoxide::Page)> {
     Ok((browser, page))
 }
 
-fn resolve_browser_config() -> anyhow::Result<BrowserConfig> {
+async fn resolve_browser_config() -> anyhow::Result<BrowserConfig> {
     let mut builder = BrowserConfig::builder()
         .window_size(DEFAULT_VIEWPORT_W, DEFAULT_VIEWPORT_H)
         .arg("--no-sandbox")
@@ -117,13 +117,13 @@ fn resolve_browser_config() -> anyhow::Result<BrowserConfig> {
     }
 
     tracing::info!("[{}] No browser found, auto-downloading Chromium...", PLUGIN_NAME);
-    let rt = tokio::runtime::Handle::current();
     let fetcher = chromiumoxide::fetcher::BrowserFetcher::new(
         chromiumoxide::fetcher::BrowserFetcherOptions::builder()
             .build()
             .map_err(|e| anyhow::anyhow!("Fetcher config: {e}"))?,
     );
-    let info = rt.block_on(fetcher.fetch())
+    let info = fetcher.fetch()
+        .await
         .map_err(|e| anyhow::anyhow!("Fetcher download: {e}"))?;
     tracing::info!("[{}] Chromium downloaded: {}", PLUGIN_NAME, info.executable_path.display());
     builder = builder.chrome_executable(&info.executable_path);
