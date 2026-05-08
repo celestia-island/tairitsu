@@ -187,6 +187,16 @@ impl Server {
             .map_err(|e| McpError::internal_error(format!("Plugin error: {}", e), None))
     }
 
+    fn check_not_disabled(&self) -> Result<(), McpError> {
+        if self.is_plugin_disabled("virtual-browser") {
+            return Err(McpError::internal_error(
+                "Browser plugin is disabled. Run: tairitsu-mcp --enable virtual-browser",
+                None,
+            ));
+        }
+        Ok(())
+    }
+
     async fn http_post(
         &self,
         path: &str,
@@ -400,6 +410,7 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call("browser.navigate", Some(json!({ "url": args.url })))
             .await
@@ -449,6 +460,7 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         let mut params = json!({});
         if let Some(sel) = &args.target {
             if !sel.is_empty() {
@@ -484,6 +496,7 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         let mut params = json!({});
         if let Some(el) = &args.element {
             params["selector"] = json!(el);
@@ -563,6 +576,7 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call("browser.click", Some(json!({ "selector": args.target })))
             .await
@@ -583,6 +597,7 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call(
                 "browser.type",
@@ -618,6 +633,7 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call("browser.press", Some(json!({ "key": args.key })))
             .await
@@ -638,6 +654,7 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call(
                 "browser.evaluate",
@@ -687,6 +704,7 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
+        self.check_not_disabled()?;
         match self
             .plugin_call(
                 "browser.resize",
@@ -1333,17 +1351,20 @@ async fn find_plugin_binary() -> Option<std::path::PathBuf> {
 }
 
 async fn spawn_browser_plugin() -> Result<PluginHandle, McpError> {
-    let binary = find_plugin_binary().await.ok_or_else(|| {
-        McpError::internal_error(
-            "Browser plugin binary not found. Run: tairitsu mcp init -p debug-browser",
-            None,
-        )
-    })?;
+    let binary = match find_plugin_binary().await {
+        Some(b) => b,
+        None => {
+            tracing::info!("[mcp] Plugin binary not found locally, auto-downloading...");
+            download_plugin("debug-browser").await?
+        }
+    };
 
     let socket_dir = std::env::temp_dir().join("tairitsu-plugins");
     let _ = std::fs::create_dir_all(&socket_dir);
     let sock_path = socket_dir.join("tairitsu-plugin-debug-browser.sock");
     let _ = std::fs::remove_file(&sock_path);
+
+    tracing::info!("[mcp] Spawning plugin: {}", binary.display());
 
     let child = Command::new(&binary)
         .arg("--socket")
@@ -1451,6 +1472,147 @@ async fn spawn_browser_plugin() -> Result<PluginHandle, McpError> {
         next_id: Arc::new(tokio::sync::Mutex::new(1)),
         _child: child,
     })
+}
+
+const PLUGIN_REGISTRY: &str =
+    "https://github.com/tairitsulabs/tairitsu/releases/latest/download";
+
+const CHINA_MIRRORS: &[&str] = &[
+    "https://mirror.ghproxy.com",
+    "https://gh-proxy.com",
+    "https://gh.api.99988866.xyz",
+    "https://ghfast.top",
+];
+
+fn plugin_dest_path(name: &str) -> std::path::PathBuf {
+    let exe_name = format!(
+        "tairitsu-plugin-{}{}",
+        name,
+        std::env::consts::EXE_SUFFIX
+    );
+    plugin_dirs_data_local()
+        .map(|b| b.join("tairitsu").join("plugins").join(&exe_name))
+        .unwrap_or_else(|| std::path::PathBuf::from(&exe_name))
+}
+
+fn target_triple() -> &'static str {
+    #[cfg(target_os = "linux")]
+    {
+        "linux-x86_64"
+    }
+    #[cfg(target_os = "macos")]
+    {
+        if cfg!(target_arch = "aarch64") {
+            "macos-aarch64"
+        } else {
+            "macos-x86_64"
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        "windows-x86_64"
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        "unknown"
+    }
+}
+
+fn is_likely_china() -> bool {
+    if std::env::var("TAIRITSU_NO_MIRROR").is_ok() {
+        return false;
+    }
+    if std::env::var("TAIRITSU_USE_MIRROR").is_ok() {
+        return true;
+    }
+    if let Ok(tz) = std::env::var("TZ") {
+        if tz.contains("Shanghai")
+            || tz.contains("Beijing")
+            || tz.contains("Hongkong")
+            || tz == "CST-8"
+            || tz.contains("Asia/")
+        {
+            return true;
+        }
+    }
+    false
+}
+
+async fn download_plugin(name: &str) -> Result<std::path::PathBuf, McpError> {
+    let dest = plugin_dest_path(name);
+    if let Some(parent) = dest.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    let exe_name = format!(
+        "tairitsu-plugin-{}{}",
+        name,
+        std::env::consts::EXE_SUFFIX
+    );
+    let platform = target_triple();
+
+    let mut urls = vec![format!(
+        "{}/plugins/{}/{}?platform={}",
+        PLUGIN_REGISTRY, name, exe_name, platform
+    )];
+    for mirror in CHINA_MIRRORS {
+        urls.push(format!(
+            "{}/tairitsulabs/tairitsu/releases/latest/download/plugins/{}/{}?platform={}",
+            mirror, name, exe_name, platform
+        ));
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+        .map_err(|e| McpError::internal_error(format!("HTTP client: {e}"), None))?;
+
+    let mut last_err = String::new();
+    for (i, url) in urls.iter().enumerate() {
+        tracing::info!("[mcp] Download attempt {}/{}: {}", i + 1, urls.len(), url);
+        match client.get(url).send().await {
+            Ok(resp) if resp.status().is_success() => {
+                let bytes = resp.bytes().await.map_err(|e| {
+                    McpError::internal_error(format!("read body: {e}"), None)
+                })?;
+                if bytes.len() < 1024 {
+                    last_err = format!("file too small ({} bytes)", bytes.len());
+                    continue;
+                }
+                std::fs::write(&dest, &bytes).map_err(|e| {
+                    McpError::internal_error(format!("write {}: {e}", dest.display()), None)
+                })?;
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = std::fs::set_permissions(&dest, std::fs::Permissions::from_mode(0o755));
+                }
+                tracing::info!(
+                    "[mcp] Downloaded {} ({:.1} KB)",
+                    name,
+                    bytes.len() as f64 / 1024.0
+                );
+                return Ok(dest);
+            }
+            Ok(resp) => {
+                last_err = format!("HTTP {}", resp.status());
+            }
+            Err(e) => {
+                last_err = format!("{e}");
+            }
+        }
+    }
+
+    Err(McpError::internal_error(
+        format!(
+            "Failed to download plugin '{}' from any source ({}). \
+             Set --disable virtual-browser to skip, or place binary at {}",
+            name,
+            last_err,
+            dest.display()
+        ),
+        None,
+    ))
 }
 
 // ── public entry point ───────────────────────────────
