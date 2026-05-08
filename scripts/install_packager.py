@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """
-Cross-platform installer for tairitsu CLI + MCP server + plugin binaries.
+Cross-platform dev installer for tairitsu CLI + MCP server + plugin binaries.
 
-Copies compiled binaries from target/release/ into the user's Cargo bin
-directory and the plugin directory.
+For CLI binaries (tairitsu, tairitsu-mcp): atomically copies to ~/.cargo/bin/
+(because symlinks may not work on all platforms for cargo-installed tools).
+
+For plugin binaries: creates symlinks from target/release/ into the plugin
+directory so that rebuilds are reflected immediately. The production
+tairitsu-mcp will replace these with downloaded binaries on first run
+(unless --disable virtual-browser is set).
 
 Usage:
-    python3 scripts/install_packager.py [--source <path>] [--quick]
+    python3 scripts/install_packager.py [--quick]
 """
 
 import os
 import shutil
 import stat
-import subprocess
 import sys
-import time
 from pathlib import Path
 
 
@@ -26,23 +29,6 @@ def cargo_bin_dir():
     if is_windows:
         return Path(os.environ.get("USERPROFILE", "")) / ".cargo" / "bin"
     return Path.home() / ".cargo" / "bin"
-
-
-def install_binary(source: Path, dest: Path, label: str):
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        tmp = dest.with_suffix(".tmp")
-        if tmp.exists():
-            tmp.unlink()
-        shutil.copy2(str(source), str(tmp))
-        os.replace(str(tmp), str(dest))
-    except PermissionError:
-        print(f"[ERROR] Cannot replace '{dest}' — permission denied.", file=sys.stderr)
-        sys.exit(1)
-    except OSError as e:
-        print(f"[ERROR] Cannot replace '{dest}' — {e}", file=sys.stderr)
-        sys.exit(1)
-    print(f"[OK] Installed '{label}' to {dest.parent}")
 
 
 def plugin_dir():
@@ -62,6 +48,44 @@ def plugin_dir():
     p = base / "tairitsu" / "plugins"
     p.mkdir(parents=True, exist_ok=True)
     return p
+
+
+def install_binary(source: Path, dest: Path, label: str):
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        tmp = dest.with_suffix(".tmp")
+        if tmp.exists():
+            tmp.unlink()
+        shutil.copy2(str(source), str(tmp))
+        os.replace(str(tmp), str(dest))
+    except PermissionError:
+        print(f"[ERROR] Cannot replace '{dest}' — permission denied.", file=sys.stderr)
+        sys.exit(1)
+    except OSError as e:
+        print(f"[ERROR] Cannot replace '{dest}' — {e}", file=sys.stderr)
+        sys.exit(1)
+    print(f"[OK] Installed '{label}' → {dest}")
+
+
+def symlink_plugin(source: Path, dest: Path, label: str):
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.is_symlink():
+        target = os.readlink(str(dest))
+        if dest.resolve() == source.resolve():
+            print(f"[OK] Symlink '{label}' already points to {source.name}")
+            return
+        dest.unlink()
+    elif dest.exists():
+        dest.unlink()
+    try:
+        os.symlink(str(source), str(dest))
+    except OSError as e:
+        print(f"[WARN] Symlink failed ({e}), falling back to copy")
+        shutil.copy2(str(source), str(dest))
+        if sys.platform != "win32":
+            st = dest.stat()
+            dest.chmod(st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    print(f"[OK] Symlink '{label}' → {source}")
 
 
 def main():
@@ -86,31 +110,29 @@ def main():
             print("[ERROR] tairitsu CLI not installed. Run without --quick first.")
             sys.exit(1)
 
-    # 1) tairitsu CLI
+    # 1) tairitsu CLI — copy (needs to be standalone binary in PATH)
     tairitsu_src = release / f"tairitsu{exe}"
     if tairitsu_src.exists():
         install_binary(tairitsu_src, cargo_bin_dir() / f"tairitsu{exe}", "tairitsu")
     else:
-        print(f"[WARN] tairitsu binary not found: {tairitsu_src}")
+        print(f"[WARN] tairitsu not found: {tairitsu_src}")
 
-    # 2) tairitsu-mcp
+    # 2) tairitsu-mcp — copy
     mcp_src = release / f"tairitsu-mcp{exe}"
     if mcp_src.exists():
         install_binary(mcp_src, cargo_bin_dir() / f"tairitsu-mcp{exe}", "tairitsu-mcp")
     else:
-        print(f"[WARN] tairitsu-mcp binary not found: {mcp_src}")
+        print(f"[WARN] tairitsu-mcp not found: {mcp_src}")
 
-    # 3) Plugin binaries
+    # 3) Plugin binaries — symlink (dev builds update automatically;
+    #    production tairitsu-mcp will replace with downloaded binary)
     pdir = plugin_dir()
     plugin_src = release / f"tairitsu-plugin-debug-browser{exe}"
     if plugin_src.exists():
         dest = pdir / f"tairitsu-plugin-debug-browser{exe}"
-        install_binary(plugin_src, dest, "plugin: debug-browser")
-        if not is_windows:
-            st = dest.stat()
-            dest.chmod(st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        symlink_plugin(plugin_src, dest, "plugin: debug-browser")
     else:
-        print(f"[WARN] Plugin binary not found: {plugin_src}")
+        print(f"[WARN] Plugin not found: {plugin_src}")
 
     stamp = project_root / "target" / ".tairitsu-install-stamp"
     stamp.write_text(str(release.resolve()))
