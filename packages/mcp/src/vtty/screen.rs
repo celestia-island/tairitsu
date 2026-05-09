@@ -1,5 +1,10 @@
 use vte::{Params, Perform};
 
+use super::graphics::{
+    InlineImageStore, KittyGraphicsState,
+    process_kitty_apc, process_osc_1337, process_sixel,
+};
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ColorKind {
     #[default]
@@ -39,6 +44,14 @@ pub struct RenderData {
     pub cursor_row: usize,
     pub cursor_col: usize,
     pub grid: Vec<Vec<Cell>>,
+    pub image_store: InlineImageStore,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DcsKind {
+    None,
+    Kitty,
+    Sixel,
 }
 
 pub struct Vt100Screen {
@@ -51,6 +64,10 @@ pub struct Vt100Screen {
     saved_row: usize,
     saved_col: usize,
     attrs: CellAttrs,
+    pub image_store: InlineImageStore,
+    kitty_state: KittyGraphicsState,
+    dcs_kind: DcsKind,
+    dcs_buffer: Vec<u8>,
 }
 
 impl Vt100Screen {
@@ -65,6 +82,10 @@ impl Vt100Screen {
             saved_row: 0,
             saved_col: 0,
             attrs: CellAttrs::default(),
+            image_store: InlineImageStore::new(),
+            kitty_state: KittyGraphicsState::new(),
+            dcs_kind: DcsKind::None,
+            dcs_buffer: Vec::new(),
         }
     }
 
@@ -178,6 +199,7 @@ impl Vt100Screen {
             cursor_row: self.cursor_row,
             cursor_col: self.cursor_col,
             grid: self.grid.clone(),
+            image_store: self.image_store.clone(),
         }
     }
 
@@ -242,10 +264,82 @@ impl Perform for Vt100Screen {
         }
     }
 
-    fn hook(&mut self, _: &Params, _: &[u8], _: bool, _: char) {}
-    fn put(&mut self, _: u8) {}
-    fn unhook(&mut self) {}
-    fn osc_dispatch(&mut self, _: &[&[u8]], _: bool) {}
+    fn hook(&mut self, params: &Params, _intermediates: &[u8], _ignore: bool, action: char) {
+        match action {
+            'G' => {
+                self.dcs_kind = DcsKind::Kitty;
+                self.kitty_state.reset();
+                if let Some(p) = params.iter().next() {
+                    let s: String = p
+                        .iter()
+                        .map(|&v| char::from_digit(v as u32, 10).unwrap_or('?'))
+                        .collect();
+                    let _ = s;
+                }
+            }
+            'q' => {
+                self.dcs_kind = DcsKind::Sixel;
+                self.dcs_buffer.clear();
+            }
+            _ => {
+                self.dcs_kind = DcsKind::None;
+            }
+        }
+    }
+
+    fn put(&mut self, byte: u8) {
+        match self.dcs_kind {
+            DcsKind::Kitty => {
+                self.dcs_buffer.push(byte);
+            }
+            DcsKind::Sixel => {
+                self.dcs_buffer.push(byte);
+            }
+            DcsKind::None => {}
+        }
+    }
+
+    fn unhook(&mut self) {
+        match self.dcs_kind {
+            DcsKind::Kitty => {
+                let data = std::mem::take(&mut self.dcs_buffer);
+                let (control, payload) = if let Some(idx) = data.iter().position(|&b| b == b';') {
+                    (String::from_utf8_lossy(&data[..idx]).to_string(), &data[idx + 1..])
+                } else {
+                    (String::from_utf8_lossy(&data).to_string(), &[][..])
+                };
+                process_kitty_apc(
+                    &mut self.kitty_state,
+                    &control,
+                    payload,
+                    self.cursor_row,
+                    self.cursor_col,
+                    &mut self.image_store,
+                );
+            }
+            DcsKind::Sixel => {
+                let data = std::mem::take(&mut self.dcs_buffer);
+                process_sixel(&data, self.cursor_row, self.cursor_col, &mut self.image_store);
+            }
+            DcsKind::None => {}
+        }
+        self.dcs_kind = DcsKind::None;
+    }
+
+    fn osc_dispatch(&mut self, params: &[&[u8]], _: bool) {
+        if params.is_empty() {
+            return;
+        }
+        let first = params[0];
+        if first == b"1337" {
+            process_osc_1337(
+                params,
+                self.cursor_row,
+                self.cursor_col,
+                &mut self.image_store,
+            );
+        }
+    }
 
     fn csi_dispatch(&mut self, params: &Params, intermediates: &[u8], _ignore: bool, action: char) {
         let pv: Vec<u16> = params.iter().flat_map(|p| p.iter().copied()).collect();
