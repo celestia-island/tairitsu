@@ -1,0 +1,13 @@
+[package]
+name = "vtty-graphics-demo"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[[bin]]
+name = "vtty-graphics-demo"
+path = "src/main.rs"
+
+[dependencies]
+image = "0.25"
+base64 = "0.22"

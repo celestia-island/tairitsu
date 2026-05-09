@@ -19,6 +19,7 @@ members = [
     "examples/wit-dynamic-advanced",
     "examples/wit-native-simple",
     "examples/wit-native-macro",
+    "examples/vtty-graphics-demo",
 ]
 resolver = "2"
 
