@@ -13,8 +13,7 @@ members = [
     "packages/browser-worlds",
     "packages/browser-test",
     "packages/ssr",
-    "packages/shared",
-    "packages/mcp-plugin-browser",
+
     "examples/wit-compile-time",
     "examples/wit-runtime",
     "examples/wit-dynamic-advanced",
@@ -67,5 +66,3 @@ tairitsu-browser-worlds = { version = "0.4.6", path = "packages/browser-worlds" 
 tairitsu-browser-wit-resolver = { version = "0.4.6", path = "packages/browser-wit-resolver" }
 tairitsu-packager = { version = "0.4.6", path = "packages/packager" }
 tairitsu-mcp = { version = "0.4.6", path = "packages/mcp" }
-tairitsu-shared = { version = "0.4.6", path = "packages/shared" }
-tairitsu-mcp-plugin-browser = { version = "0.4.6", path = "packages/mcp-plugin-browser" }

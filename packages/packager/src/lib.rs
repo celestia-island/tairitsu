@@ -26,8 +26,6 @@ pub mod utils;
 pub mod visual_diff;
 #[cfg(feature = "vtty")]
 pub mod vtty;
-#[cfg(feature = "plugin-loader")]
-pub mod plugins;
 #[cfg(feature = "tokio")]
 pub mod wasm;
 pub mod wit_check;
