@@ -245,8 +245,14 @@ enum Commands {
         /// Base URL of the tairitsu daemon debug API (auto-detected if omitted)
         #[arg(short, long)]
         url: Option<String>,
+
+        #[command(subcommand)]
+        action: Option<McpCommands>,
     },
 }
+
+#[derive(Subcommand)]
+enum McpCommands {}
 
 #[derive(Subcommand)]
 enum WitCommands {
@@ -915,7 +921,7 @@ async fn run_with_cli(cli: Cli) -> crate::Result<()> {
             }
         }
         #[allow(unused_variables)]
-        Some(Commands::Mcp { url }) => {
+        Some(Commands::Mcp { url, action }) => {
             let config = crate::mcp::McpConfig {
                 base_url: url.unwrap_or_default(),
             };
