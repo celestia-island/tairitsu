@@ -853,29 +853,27 @@ impl ServerHandler for Server {}
 
 #[cfg(feature = "vtty")]
 async fn resolve_default_cwd(context: &RequestContext<RoleServer>) -> Option<String> {
-    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT") {
-        if !root.is_empty() {
-            return Some(root);
-        }
+    if let Ok(root) = std::env::var("TAIRITSU_PROJECT_ROOT")
+        && !root.is_empty()
+    {
+        return Some(root);
     }
 
-    if let Some(info) = context.peer.peer_info() {
-        if info.capabilities.roots.is_some() {
-            if let Ok(result) = context.peer.list_roots().await {
-                if let Some(root) = result.roots.first() {
-                    let uri = &root.uri;
-                    let path = if let Some(p) = uri.strip_prefix("file://") {
-                        p.to_string()
-                    } else if let Some(p) = uri.strip_prefix("file:") {
-                        p.to_string()
-                    } else {
-                        uri.clone()
-                    };
-                    if !path.is_empty() {
-                        return Some(path);
-                    }
-                }
-            }
+    if let Some(info) = context.peer.peer_info()
+        && info.capabilities.roots.is_some()
+        && let Ok(result) = context.peer.list_roots().await
+        && let Some(root) = result.roots.first()
+    {
+        let uri = &root.uri;
+        let path = if let Some(p) = uri.strip_prefix("file://") {
+            p.to_string()
+        } else if let Some(p) = uri.strip_prefix("file:") {
+            p.to_string()
+        } else {
+            uri.clone()
+        };
+        if !path.is_empty() {
+            return Some(path);
         }
     }
 
@@ -893,10 +891,10 @@ mod daemon {
     use std::path::PathBuf;
 
     pub(super) async fn resolve_daemon_url() -> anyhow::Result<String> {
-        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL") {
-            if !url.is_empty() {
-                return Ok(url);
-            }
+        if let Ok(url) = std::env::var("TAIRITSU_DAEMON_URL")
+            && !url.is_empty()
+        {
+            return Ok(url);
         }
 
         let priority_dirs: Vec<PathBuf> = {
@@ -967,10 +965,10 @@ mod daemon {
                 }
             }
         }
-        if let Ok(exe) = std::env::current_exe() {
-            if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
-                candidates.push(parent.join("target"));
-            }
+        if let Ok(exe) = std::env::current_exe()
+            && let Some(parent) = exe.parent().and_then(|p| p.parent())
+        {
+            candidates.push(parent.join("target"));
         }
         candidates.dedup();
         candidates
@@ -1000,11 +998,11 @@ mod daemon {
                 let trimmed = content.trim();
                 if let Some(rest) = trimmed.strip_prefix("ready:") {
                     let mut parts = rest.splitn(2, ':');
-                    if let Some(port_str) = parts.next() {
-                        if let Ok(port) = port_str.parse::<u16>() {
-                            let debug_port = parts.next().and_then(|s| s.parse().ok());
-                            return Some((port, debug_port, ready_path));
-                        }
+                    if let Some(port_str) = parts.next()
+                        && let Ok(port) = port_str.parse::<u16>()
+                    {
+                        let debug_port = parts.next().and_then(|s| s.parse().ok());
+                        return Some((port, debug_port, ready_path));
                     }
                 } else if trimmed == "ready" {
                     return Some((3000, None, ready_path));
