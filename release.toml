@@ -46,6 +46,3 @@ publish = false
 
 [[package]]
 name = "tairitsu-packager"
-
-[[package]]
-name = "tairitsu-shared"

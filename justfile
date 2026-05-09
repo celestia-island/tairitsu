@@ -47,9 +47,9 @@ build-glue-runtime:
     mkdir -p packages/browser-glue/dist
     npx esbuild packages/browser-glue/src/runtime/index.ts --bundle --outfile=packages/browser-glue/dist/runtime.js --format=iife --platform=browser
 
-# Install tairitsu-packager CLI binary (tairitsu) + tairitsu-mcp + browser plugin
+# Install tairitsu-packager CLI binary (tairitsu) + tairitsu-mcp
 install-packager: (build-glue-runtime)
-    cargo build --release --package tairitsu-packager --package tairitsu-mcp --package tairitsu-mcp-plugin-browser
+    cargo build --release --package tairitsu-packager --package tairitsu-mcp
     {{python}} scripts/install_packager.py
 
 # Development environment setup (install tools and build)
