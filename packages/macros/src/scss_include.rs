@@ -31,7 +31,7 @@
 //! - Pseudo-selectors (`.class:hover`, `.class::before`)
 //! - Combinators (`>`, `+`, `~`, space)
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
@@ -44,6 +44,7 @@ struct IncludeScssInput {
     path: LitStr,
     prefix: Option<String>,
     enum_name: Option<syn::Ident>,
+    filter: Option<String>,
 }
 
 impl Parse for IncludeScssInput {
@@ -52,6 +53,7 @@ impl Parse for IncludeScssInput {
 
         let mut prefix = None;
         let mut enum_name = None;
+        let mut filter = None;
 
         while !input.is_empty() {
             input.parse::<syn::Token![,]>()?;
@@ -69,16 +71,20 @@ impl Parse for IncludeScssInput {
                     let id: syn::Ident = input.parse()?;
                     enum_name = Some(id);
                 }
+                "filter" => {
+                    let v: LitStr = input.parse()?;
+                    filter = Some(v.value());
+                }
                 other => {
                     return Err(syn::Error::new(
                         key.span(),
-                        format!("unknown option `{other}`, expected `prefix` or `enum_name`"),
+                        format!("unknown option `{other}`, expected `prefix`, `enum_name` or `filter`"),
                     ));
                 }
             }
         }
 
-        Ok(IncludeScssInput { path, prefix, enum_name })
+        Ok(IncludeScssInput { path, prefix, enum_name, filter })
     }
 }
 
@@ -107,7 +113,14 @@ pub fn expand_include_scss(input: TokenStream) -> TokenStream {
         }
     };
 
-    let classes = extract_classes(&scss_content);
+    let mut classes = extract_classes(&scss_content);
+
+    if let Some(ref prefix_filter) = input.filter {
+        let pf = prefix_filter.to_lowercase();
+        classes.retain(|c| {
+            c.to_lowercase().starts_with(&pf)
+        });
+    }
 
     if classes.is_empty() {
         let msg = format!(
@@ -404,26 +417,30 @@ fn generate_enum(
         None => derive_enum_name(file_path),
     };
 
-    let variant_tokens: Vec<proc_macro2::TokenStream> = classes
+    let mut variant_map: BTreeMap<syn::Ident, (String, &str)> = BTreeMap::new();
+
+    for class in classes.iter() {
+        let v = class_to_variant(class, prefix_override);
+        let doc = format!("CSS class `.{}`", class);
+        variant_map.entry(v)
+            .or_insert((doc, class.as_str()));
+    }
+
+    let variant_tokens: Vec<proc_macro2::TokenStream> = variant_map
         .iter()
-        .map(|class| {
-            let v = class_to_variant(class, prefix_override);
-            let doc = format!("CSS class `.{}`", class);
+        .map(|(v, (doc, _))| {
             quote! { #[doc = #doc] #v }
         })
         .collect();
 
-    let match_arms: Vec<proc_macro2::TokenStream> = classes
+    let match_arms: Vec<proc_macro2::TokenStream> = variant_map
         .iter()
-        .map(|class| {
-            let v = class_to_variant(class, prefix_override);
-            let v_name = syn::Ident::new(&format!("{}", v), v.span());
-            let s = class.as_str();
-            quote! { Self::#v_name => #s }
+        .map(|(v, (_, s))| {
+            quote! { Self::#v => #s }
         })
         .collect();
 
-    let count = classes.len();
+    let count = variant_map.len();
 
     quote! {
         /// Auto-generated enum of CSS classes extracted from SCSS source.
@@ -494,7 +511,11 @@ fn class_to_variant(class: &str, prefix_override: Option<&str>) -> syn::Ident {
 
     match prefix_override {
         Some(prefix) => {
-            let rest: String = parts[1..].iter().map(|p| capitalize(p)).collect();
+            let rest: String = if parts.len() > 1 {
+                parts[1..].iter().map(|p| capitalize(p)).collect()
+            } else {
+                String::new()
+            };
             format_ident!("{}{}", capitalize(prefix), rest)
         }
         None => {
