@@ -31,7 +31,7 @@ lto = true
 opt-level = 'z'
 codegen-units = 1
 panic = "unwind"
-debug = true
+strip = true
 
 [profile.dev-wasm]
 inherits = "release"
