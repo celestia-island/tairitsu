@@ -250,7 +250,7 @@ pub fn process_kitty_apc(
         let w_cols = cols.unwrap_or(1);
         let h_rows = rows.unwrap_or(1);
 
-        if action == "T" || action == "" {
+        if action == "T" || action.is_empty() {
             store.add_placement(ImagePlacement {
                 image_id: effective_id,
                 row: cursor_row,
@@ -556,20 +556,18 @@ pub fn process_osc_1337(
         }
     };
 
-    if let Some(data) = raw_data {
-        if let Some(rgba) = decode_png(&data) {
-            let id = store.next_auto_id;
-            store.next_auto_id += 1;
-            store.store(id, InlineImage { rgba });
-            store.add_placement(ImagePlacement {
-                image_id: id,
-                row: cursor_row,
-                col: cursor_col,
-                width_cols: 0,
-                height_rows: 0,
-                z_index: 0,
-            });
-        }
+    if let Some(rgba) = raw_data.and_then(|d| decode_png(&d)) {
+        let id = store.next_auto_id;
+        store.next_auto_id += 1;
+        store.store(id, InlineImage { rgba });
+        store.add_placement(ImagePlacement {
+            image_id: id,
+            row: cursor_row,
+            col: cursor_col,
+            width_cols: 0,
+            height_rows: 0,
+            z_index: 0,
+        });
     }
 }
 
