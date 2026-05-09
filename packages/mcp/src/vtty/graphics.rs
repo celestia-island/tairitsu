@@ -668,4 +668,94 @@ mod tests {
         process_kitty_apc(&mut state, "a=d,i=42", b"", 0, 0, &mut store);
         assert!(store.get_image(42).is_none());
     }
+
+    #[test]
+    fn test_full_kitty_pipeline_logo_render() {
+        let logo_w = 48u32;
+        let logo_h = 24u32;
+        let mut logo_img: ImageBuffer<Rgba<u8>, Vec<u8>> =
+            ImageBuffer::from_pixel(logo_w, logo_h, Rgba([0x00, 0x2b, 0x36, 255]));
+        let accent = Rgba([0xdc, 0x32, 0x2f, 255]);
+        for x in 4..44 {
+            logo_img.put_pixel(x, 3, accent);
+            logo_img.put_pixel(x, 4, accent);
+        }
+        let stem_x = 23u32;
+        for y in 5..20u32 {
+            logo_img.put_pixel(stem_x, y, Rgba([0xeb, 0xdb, 0xe2, 255]));
+            logo_img.put_pixel(stem_x + 1, y, Rgba([0xeb, 0xdb, 0xe2, 255]));
+            logo_img.put_pixel(stem_x + 2, y, Rgba([0xeb, 0xdb, 0xe2, 255]));
+        }
+
+        let mut png_bytes = Vec::new();
+        use std::io::Cursor;
+        logo_img
+            .write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
+            .unwrap();
+        let b64 = BASE64.encode(&png_bytes);
+
+        let control = "f=100,a=T,c=16,r=12";
+        let mut state = KittyGraphicsState::new();
+        let mut store = InlineImageStore::new();
+
+        if b64.len() > 4096 {
+            let mid = b64.len() / 2;
+            process_kitty_apc(
+                &mut state,
+                "f=100,a=T,m=1,c=16,r=12",
+                b64[..mid].as_bytes(),
+                6,
+                2,
+                &mut store,
+            );
+            process_kitty_apc(
+                &mut state,
+                "m=0",
+                b64[mid..].as_bytes(),
+                6,
+                2,
+                &mut store,
+            );
+        } else {
+            process_kitty_apc(
+                &mut state,
+                control,
+                b64.as_bytes(),
+                6,
+                2,
+                &mut store,
+            );
+        }
+
+        assert!(!store.images.is_empty(), "image should be stored");
+        assert!(!store.placements.is_empty(), "placement should exist");
+
+        let placement = &store.placements[0];
+        assert_eq!(placement.row, 6);
+        assert_eq!(placement.col, 2);
+        assert_eq!(placement.width_cols, 16);
+        assert_eq!(placement.height_rows, 12);
+
+        let img_id = placement.image_id;
+        let stored = store.get_image(img_id);
+        assert!(stored.is_some(), "stored image should be retrievable");
+
+        let rgba = stored.unwrap();
+        assert_eq!(rgba.rgba.width(), logo_w);
+        assert_eq!(rgba.rgba.height(), logo_h);
+
+        let px = rgba.rgba.get_pixel(10, 3);
+        assert_eq!(
+            *px,
+            Rgba([0xdc, 0x32, 0x2f, 255]),
+            "accent bar pixel should be red"
+        );
+
+        let stem_px = rgba.rgba.get_pixel(24, 10);
+        assert_eq!(
+            *stem_px,
+            Rgba([0xeb, 0xdb, 0xe2, 255]),
+            "stem pixel should be light"
+        );
+    }
 }
