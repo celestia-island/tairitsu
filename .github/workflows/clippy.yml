@@ -8,7 +8,7 @@ on:
       - 'examples/**/*'
       - 'Cargo.toml'
   push:
-    branches: [master]
+    branches: [master, dev]
 
 jobs:
   clippy:
