@@ -7,6 +7,7 @@ pub mod pty_win;
 
 #[cfg(feature = "vtty-visual")]
 pub mod render;
+pub mod graphics;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,5 +1,10 @@
 use vte::{Params, Perform};
 
+use super::graphics::{
+    InlineImageStore, KittyGraphicsState,
+    process_kitty_apc, process_osc_1337, process_sixel,
+};
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ColorKind {
     #[default]
@@ -39,6 +44,13 @@ pub struct RenderData {
     pub cursor_row: usize,
     pub cursor_col: usize,
     pub grid: Vec<Vec<Cell>>,
+    pub image_store: InlineImageStore,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum DcsKind {
+    None,
+    Sixel,
 }
 
 pub struct Vt100Screen {
@@ -51,6 +63,10 @@ pub struct Vt100Screen {
     saved_row: usize,
     saved_col: usize,
     attrs: CellAttrs,
+    pub image_store: InlineImageStore,
+    kitty_state: KittyGraphicsState,
+    dcs_kind: DcsKind,
+    dcs_buffer: Vec<u8>,
 }
 
 impl Vt100Screen {
@@ -65,6 +81,10 @@ impl Vt100Screen {
             saved_row: 0,
             saved_col: 0,
             attrs: CellAttrs::default(),
+            image_store: InlineImageStore::new(),
+            kitty_state: KittyGraphicsState::new(),
+            dcs_kind: DcsKind::None,
+            dcs_buffer: Vec::new(),
         }
     }
 
@@ -81,11 +101,6 @@ impl Vt100Screen {
         self.rows = rows;
         self.cursor_row = self.cursor_row.min(rows.saturating_sub(1));
         self.cursor_col = self.cursor_col.min(cols.saturating_sub(1));
-    }
-
-    pub fn process(&mut self, data: &[u8]) {
-        let mut parser = vte::Parser::new();
-        parser.advance(self, data);
     }
 
     pub fn get_text(&self) -> String {
@@ -178,6 +193,7 @@ impl Vt100Screen {
             cursor_row: self.cursor_row,
             cursor_col: self.cursor_col,
             grid: self.grid.clone(),
+            image_store: self.image_store.clone(),
         }
     }
 
@@ -242,10 +258,46 @@ impl Perform for Vt100Screen {
         }
     }
 
-    fn hook(&mut self, _: &Params, _: &[u8], _: bool, _: char) {}
-    fn put(&mut self, _: u8) {}
-    fn unhook(&mut self) {}
-    fn osc_dispatch(&mut self, _: &[&[u8]], _: bool) {}
+    fn hook(&mut self, _params: &Params, _intermediates: &[u8], _ignore: bool, action: char) {
+        match action {
+            'q' => {
+                self.dcs_kind = DcsKind::Sixel;
+                self.dcs_buffer.clear();
+            }
+            _ => {
+                self.dcs_kind = DcsKind::None;
+            }
+        }
+    }
+
+    fn put(&mut self, byte: u8) {
+        if matches!(self.dcs_kind, DcsKind::Sixel) {
+            self.dcs_buffer.push(byte);
+        }
+    }
+
+    fn unhook(&mut self) {
+        if matches!(self.dcs_kind, DcsKind::Sixel) {
+            let data = std::mem::take(&mut self.dcs_buffer);
+            process_sixel(&data, self.cursor_row, self.cursor_col, &mut self.image_store);
+        }
+        self.dcs_kind = DcsKind::None;
+    }
+
+    fn osc_dispatch(&mut self, params: &[&[u8]], _: bool) {
+        if params.is_empty() {
+            return;
+        }
+        let first = params[0];
+        if first == b"1337" {
+            process_osc_1337(
+                params,
+                self.cursor_row,
+                self.cursor_col,
+                &mut self.image_store,
+            );
+        }
+    }
 
     fn csi_dispatch(&mut self, params: &Params, intermediates: &[u8], _ignore: bool, action: char) {
         let pv: Vec<u16> = params.iter().flat_map(|p| p.iter().copied()).collect();
@@ -377,7 +429,58 @@ impl Perform for Vt100Screen {
         }
     }
 
-    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {}
+    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {
+    }
+}
+
+impl Vt100Screen {
+    fn extract_kitty_apcs(data: &[u8]) -> Vec<(usize, usize, String, Vec<u8>)> {
+        let mut results = Vec::new();
+        let mut i = 0;
+        while i < data.len().saturating_sub(3) {
+            if data[i] == 0x1B && data[i + 1] == b'_' && data[i + 2] == b'G' {
+                let start = i;
+                let payload_start = i + 3;
+                let mut j = payload_start;
+                while j < data.len().saturating_sub(1) {
+                    if data[j] == 0x1B && data[j + 1] == b'\\' {
+                        let raw = &data[payload_start..j];
+                        let (control, payload) = if let Some(idx) = raw.iter().position(|&b| b == b';') {
+                            (String::from_utf8_lossy(&raw[..idx]).to_string(), raw[idx + 1..].to_vec())
+                        } else {
+                            (String::from_utf8_lossy(raw).to_string(), Vec::new())
+                        };
+                        results.push((start, j + 2, control, payload));
+                        i = j + 2;
+                        break;
+                    }
+                    j += 1;
+                }
+                if j >= data.len().saturating_sub(1) {
+                    i += 1;
+                }
+            } else {
+                i += 1;
+            }
+        }
+        results
+    }
+
+    pub fn process(&mut self, data: &[u8]) {
+        let apcs = Self::extract_kitty_apcs(data);
+        for (_, _, control, payload) in &apcs {
+            process_kitty_apc(
+                &mut self.kitty_state,
+                control,
+                payload,
+                self.cursor_row,
+                self.cursor_col,
+                &mut self.image_store,
+            );
+        }
+        let mut parser = vte::Parser::new();
+        parser.advance(self, data);
+    }
 }
 
 #[cfg(test)]
@@ -541,5 +644,126 @@ mod tests {
         s.process(b"\x1b[A");
         s.process(b"!");
         assert_eq!(s.get_line(1), "row1!");
+    }
+
+    #[cfg(feature = "vtty-visual")]
+    #[test]
+    fn test_kitty_apc_end_to_end() {
+        use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
+        use image::ImageBuffer;
+        use image::Rgba;
+        use crate::vtty::graphics::{InlineImageStore, KittyGraphicsState, process_kitty_apc};
+
+        let mut logo = ImageBuffer::from_pixel(
+            16u32,
+            8u32,
+            Rgba([0x00u8, 0x2bu8, 0x36u8, 255u8]),
+        );
+        logo.put_pixel(4, 4, Rgba([255u8, 0u8, 0u8, 255u8]));
+
+        let mut png_bytes = Vec::new();
+        use std::io::Cursor;
+        logo
+            .write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
+            .unwrap();
+        let b64 = BASE64.encode(&png_bytes);
+
+        {
+            let mut store = InlineImageStore::new();
+            let mut state = KittyGraphicsState::new();
+            process_kitty_apc(
+                &mut state,
+                "a=T,f=100,c=4,r=2",
+                b64.as_bytes(),
+                3,
+                5,
+                &mut store,
+            );
+            assert!(
+                !store.placements().is_empty(),
+                "direct call with a=T should produce placements"
+            );
+        }
+
+        {
+            let mut store = InlineImageStore::new();
+            let mut state = KittyGraphicsState::new();
+            process_kitty_apc(
+                &mut state,
+                "f=100,i=42",
+                b64.as_bytes(),
+                3,
+                5,
+                &mut store,
+            );
+            assert!(
+                !store.placements().is_empty(),
+                "direct call without a=T should produce placements"
+            );
+        }
+
+        let apc_seq_no_t = format!("\x1b_Gf=100,i=42;{}\x1b\\", b64);
+
+        let mut s = Vt100Screen::new(40, 12);
+        s.process(b"\x1b[3;5HT\x1b[0m Logo:\r\n");
+        s.process(apc_seq_no_t.as_bytes());
+        s.process(b"\r\n\x1b[37mDone.\x1b[0m");
+
+        assert!(s.get_text().contains("Logo:"));
+        assert!(s.get_text().contains("Done."));
+
+        let rd = s.get_render_data();
+        let pc = rd.image_store.placements().len();
+        assert!(
+            pc > 0,
+            "kitty APC via vte should produce placements (got {})",
+            pc,
+        );
+
+        let png_data =
+            crate::vtty::render::render_terminal(&rd, "solarized-dark").expect("render should succeed");
+        assert!(png_data.len() > 100, "PNG should be non-trivial");
+        assert_eq!(&png_data[0..4], &[0x89, 0x50, 0x4e, 0x47]);
+    }
+
+    #[test]
+    fn test_sixel_dcs_end_to_end() {
+        let sixel_seq = b"\x1bPq#1;2;100;0;0!6~\x1b\\";
+
+        let mut s = Vt100Screen::new(40, 12);
+        s.process(b"Sixel test:\r\n");
+        s.process(sixel_seq);
+        s.process(b"\r\n");
+
+        let rd = s.get_render_data();
+        assert!(
+            !rd.image_store.placements().is_empty(),
+            "sixel image should be captured"
+        );
+    }
+
+    #[test]
+    fn test_apc_hook_put_unhook_chain() {
+        let mut s = Vt100Screen::new(40, 10);
+        s.process(b"before\x1b_Gf=100,i=1;AAAA\x1b\\after");
+
+        assert_eq!(s.get_text(), "beforeafter");
+    }
+
+    #[test]
+    fn test_vte_apc_buffer_content() {
+        use base64::Engine;
+        use std::io::Cursor;
+        let mut s = Vt100Screen::new(40, 10);
+        let png = image::RgbaImage::from_pixel(2, 2, image::Rgba([255, 0, 0, 255]));
+        let mut png_bytes = Vec::new();
+        png.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
+            .unwrap();
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&png_bytes);
+        let apc = format!("\x1b_Gf=100,a=T;{}\x1b\\", b64);
+        s.process(apc.as_bytes());
+
+        assert_eq!(s.get_text(), "");
+        assert_eq!(s.image_store.placements().len(), 1, "should have one placement from Kitty APC");
     }
 }

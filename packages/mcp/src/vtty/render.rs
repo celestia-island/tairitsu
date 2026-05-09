@@ -364,12 +364,33 @@ pub fn render_terminal(data: &RenderData, theme: &str) -> Result<Vec<u8>, String
         scheme,
     };
 
+    let mut placements_below: Vec<(i32, &super::graphics::ImagePlacement)> = Vec::new();
+    let mut placements_above: Vec<(i32, &super::graphics::ImagePlacement)> = Vec::new();
+
+    for p in data.image_store.placements() {
+        if p.z_index < 0 {
+            placements_below.push((p.z_index, p));
+        } else {
+            placements_above.push((p.z_index, p));
+        }
+    }
+    placements_below.sort_by_key(|(z, _)| *z);
+    placements_above.sort_by_key(|(z, _)| *z);
+
+    for (_z, placement) in &placements_below {
+        composite_placement(&mut img, placement, &data.image_store, &ctx);
+    }
+
     for (row_idx, row) in data.grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
             let x0 = padding as f32 + col_idx as f32 * cell_w;
             let y0 = padding as f32 + row_idx as f32 * cell_h;
             render_cell(&mut img, cell, x0, y0, &ctx);
         }
+    }
+
+    for (_z, placement) in &placements_above {
+        composite_placement(&mut img, placement, &data.image_store, &ctx);
     }
 
     render_cursor(&mut img, data.cursor_row, data.cursor_col, &ctx);
@@ -512,6 +533,68 @@ fn render_cursor(img: &mut ImgBuf, cursor_row: usize, cursor_col: usize, ctx: &R
             let g = (cc[1] as u16 * a + p[1] as u16 * inv) / 255;
             let b = (cc[2] as u16 * a + p[2] as u16 * inv) / 255;
             img.put_pixel(x, y, Rgba([r as u8, g as u8, b as u8, 255]));
+        }
+    }
+}
+
+fn composite_placement(
+    img: &mut ImgBuf,
+    placement: &super::graphics::ImagePlacement,
+    store: &super::graphics::InlineImageStore,
+    ctx: &RenderCtx,
+) {
+    let source = match store.get_image(placement.image_id) {
+        Some(img) => img,
+        None => return,
+    };
+
+    let target_w = if placement.width_cols > 0 {
+        (ctx.cell_w * placement.width_cols as f32).ceil() as u32
+    } else {
+        source.rgba.width()
+    };
+    let target_h = if placement.height_rows > 0 {
+        (ctx.cell_h * placement.height_rows as f32).ceil() as u32
+    } else {
+        source.rgba.height()
+    };
+
+    let x0 = (ctx.padding as f32 + placement.col as f32 * ctx.cell_w).ceil() as u32;
+    let y0 = (ctx.padding as f32 + placement.row as f32 * ctx.cell_h).ceil() as u32;
+
+    let src_w = source.rgba.width();
+    let src_h = source.rgba.height();
+
+    let iw = img.width();
+    let ih = img.height();
+
+    for dy in 0..target_h {
+        for dx in 0..target_w {
+            let px = x0 + dx;
+            let py = y0 + dy;
+            if px >= iw || py >= ih {
+                continue;
+            }
+            let sx = (dx as u64 * src_w as u64 / target_w.max(1) as u64) as u32;
+            let sy = (dy as u64 * src_h as u64 / target_h.max(1) as u64) as u32;
+            if sx >= src_w || sy >= src_h {
+                continue;
+            }
+            let src_pixel = source.rgba.get_pixel(sx, sy);
+            let alpha = src_pixel[3] as u16;
+            if alpha == 0 {
+                continue;
+            }
+            let dst_pixel = img.get_pixel(px, py);
+            if alpha >= 255 {
+                img.put_pixel(px, py, *src_pixel);
+            } else {
+                let inv = 255 - alpha;
+                let r = (src_pixel[0] as u16 * alpha + dst_pixel[0] as u16 * inv) / 255;
+                let g = (src_pixel[1] as u16 * alpha + dst_pixel[1] as u16 * inv) / 255;
+                let b = (src_pixel[2] as u16 * alpha + dst_pixel[2] as u16 * inv) / 255;
+                img.put_pixel(px, py, Rgba([r as u8, g as u8, b as u8, 255]));
+            }
         }
     }
 }

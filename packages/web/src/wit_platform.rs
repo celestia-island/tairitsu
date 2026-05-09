@@ -586,13 +586,12 @@ pub mod wasm_impl {
 
     impl bindings::exports::tairitsu_browser::full::animation_callbacks::Guest for BrowserComponent {
         fn on_frame(callback_id: u64, timestamp: f64) {
-            ANIMATION_CALLBACKS.with(|m| {
-                if let Some(callback) = m.borrow_mut().remove(&callback_id) {
-                    if let Some(cb) = callback {
-                        cb(timestamp);
-                    }
-                }
+            let callback = ANIMATION_CALLBACKS.with(|m| {
+                m.borrow_mut().remove(&callback_id).flatten()
             });
+            if let Some(cb) = callback {
+                cb(timestamp);
+            }
         }
     }
 

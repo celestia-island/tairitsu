@@ -77,7 +77,7 @@ portable-pty = { version = "^0.8", optional = true }
 tempfile = "3"
 
 [features]
-default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "vtty", "visual-diff", "test-runner"]
+default = ["tokio", "native", "cli", "dev-server", "ssr", "icon-fetch", "debug-api", "debug-browser", "vtty", "visual-diff", "test-runner"]
 native = ["tokio", "crossterm"]
 dev-server = [
   "axum",

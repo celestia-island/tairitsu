@@ -1,9 +1,21 @@
 // @ts-nocheck
 
-let _timeoutCallbacks = new Map();
-let _nextTimeoutId = 1;
-let _animationCallbacks = new Map();
-let _nextAnimationId = 1;
+// State stored on globalThis so that when generateModuleCode() stringifies
+// these functions into a blob module, the state is still accessible.
+// (Blob modules have their own scope — closure variables from this file are
+// invisible inside the blob.)
+if (!globalThis.__tairitsuTimerState) {
+  globalThis.__tairitsuTimerState = {
+    timeoutCallbacks: new Map(),
+    nextTimeoutId: 1,
+  };
+}
+if (!globalThis.__tairitsuAnimState) {
+  globalThis.__tairitsuAnimState = {
+    animationCallbacks: new Map(),
+    nextAnimationId: 1,
+  };
+}
 
 export const platformHelpers_exports = {
   innerWidth() {
@@ -13,35 +25,41 @@ export const platformHelpers_exports = {
     return window.innerHeight;
   },
   setTimeout(callbackId, ms) {
-    const id = _nextTimeoutId++;
-    const timeoutId = setTimeout(() => {
+    const s = globalThis.__tairitsuTimerState;
+    const id = s.nextTimeoutId++;
+    const timeoutId = window.setTimeout(() => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"]?.on_timeout?.(callbackId);
+        const exp = globalThis.__wasmExports["tairitsu-browser:full/timer-callbacks@0.2.0"];
+        (exp.onTimeout || exp.on_timeout)?.(callbackId);
       }
     }, ms);
-    _timeoutCallbacks.set(id, timeoutId);
+    s.timeoutCallbacks.set(id, timeoutId);
     return id;
   },
   clearTimeout(id) {
-    if (_timeoutCallbacks.has(id)) {
-      clearTimeout(_timeoutCallbacks.get(id));
-      _timeoutCallbacks.delete(id);
+    const s = globalThis.__tairitsuTimerState;
+    if (s.timeoutCallbacks.has(id)) {
+      window.clearTimeout(s.timeoutCallbacks.get(id));
+      s.timeoutCallbacks.delete(id);
     }
   },
   requestAnimationFrame(callbackId) {
-    const id = _nextAnimationId++;
-    const animationId = requestAnimationFrame((timestamp) => {
+    const s = globalThis.__tairitsuAnimState;
+    const id = s.nextAnimationId++;
+    const animationId = window.requestAnimationFrame((timestamp) => {
       if (globalThis.__wasmExports && globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]) {
-        globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"]?.on_animation_frame?.(callbackId, timestamp);
+        const exp = globalThis.__wasmExports["tairitsu-browser:full/animation-callbacks@0.2.0"];
+        (exp.onFrame || exp.on_animation_frame)?.(callbackId, timestamp);
       }
     });
-    _animationCallbacks.set(id, animationId);
+    s.animationCallbacks.set(id, animationId);
     return id;
   },
   cancelAnimationFrame(id) {
-    if (_animationCallbacks.has(id)) {
-      cancelAnimationFrame(_animationCallbacks.get(id));
-      _animationCallbacks.delete(id);
+    const s = globalThis.__tairitsuAnimState;
+    if (s.animationCallbacks.has(id)) {
+      window.cancelAnimationFrame(s.animationCallbacks.get(id));
+      s.animationCallbacks.delete(id);
     }
   },
   getBoundingClientRect(element) {

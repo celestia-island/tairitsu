@@ -1,5 +1,4 @@
-//! Standalone Tairitsu MCP server — browser automation + VTty for AI coding assistants.
-//! Built on `rmcp` — the official Rust MCP SDK.
+use std::sync::Arc;
 
 use anyhow::Result;
 use rmcp::{
@@ -10,18 +9,16 @@ use rmcp::{
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::json;
+use tokio::sync::RwLock;
 
 #[cfg(feature = "vtty")]
 mod vtty;
 
-// ── Server state ────────────────────────────────────
-
-#[derive(Clone)]
-pub struct Server {
-    base_url: std::sync::Arc<tokio::sync::RwLock<String>>,
+struct Server {
+    base_url: Arc<RwLock<String>>,
     http: reqwest::Client,
     #[cfg(feature = "vtty")]
-    vtty: std::sync::Arc<vtty::VttyManager>,
+    vtty: Arc<vtty::VttyManager>,
 }
 
 impl Server {
@@ -40,7 +37,7 @@ impl Server {
         let resolved = resolve_daemon_url().await.unwrap_or_default();
         if resolved.is_empty() {
             return Err(McpError::internal_error(
-                "Browser tools require a running daemon. Start with: tairitsu dev --daemon",
+                "Browser tools require a running daemon. Start with: tairitsu dev --daemon --debug",
                 None,
             ));
         }
@@ -191,8 +188,6 @@ struct BrowserResizeArgs {
     height: u32,
 }
 
-// ── VTty tool args ───────────────────────────────────
-
 #[cfg(feature = "vtty")]
 #[derive(Debug, Deserialize, JsonSchema)]
 struct VttyLaunchArgs {
@@ -267,7 +262,7 @@ impl Server {
         Parameters(args): Parameters<BrowserNavigateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         self.http_post_fire_and_forget("navigate", json!({"url": args.url}))
             .await?;
         Ok(Self::tool_result(format!("Navigated to {}", args.url)))
@@ -301,7 +296,7 @@ impl Server {
         Parameters(args): Parameters<SnapshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         let query: Vec<(&str, &str)> = args
             .target
             .as_deref()
@@ -324,7 +319,7 @@ impl Server {
         Parameters(args): Parameters<ScreenshotArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         let mut body = json!({});
         if let Some(el) = &args.element {
             body["selector"] = json!(el);
@@ -361,7 +356,7 @@ impl Server {
             } else {
                 format!("data:{mime};base64,{data}")
             };
-            Ok(Self::tool_result(data_url))
+            Ok(CallToolResult::success(vec![Content::text(data_url)]))
         } else {
             let err = v
                 .get("error")
@@ -378,7 +373,7 @@ impl Server {
         Parameters(args): Parameters<ClickArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         self.http_post_fire_and_forget("click", json!({"selector": args.target}))
             .await?;
         Ok(Self::tool_result(format!("Clicked: {}", args.target)))
@@ -390,7 +385,7 @@ impl Server {
         Parameters(args): Parameters<TypeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         self.http_post_fire_and_forget(
             "type",
             json!({
@@ -410,7 +405,7 @@ impl Server {
         Parameters(args): Parameters<PressKeyArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         self.http_post_fire_and_forget("press", json!({"key": args.key}))
             .await?;
         Ok(Self::tool_result(format!("Pressed: {}", args.key)))
@@ -422,7 +417,7 @@ impl Server {
         Parameters(args): Parameters<EvaluateArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         let v = self
             .http_post("evaluate", json!({"expression": args.function}))
             .await?;
@@ -448,7 +443,7 @@ impl Server {
         Parameters(args): Parameters<ConsoleMessagesArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         let level = args.level.as_deref().unwrap_or("");
         let v = self.http_get("console", &[("level", level)]).await?;
         Ok(Self::tool_result(v.to_string()))
@@ -460,7 +455,7 @@ impl Server {
         Parameters(args): Parameters<BrowserResizeArgs>,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
-        self.ensure_daemon().await?;
+        let _ = self.ensure_daemon().await;
         self.http_post_fire_and_forget(
             "resize",
             json!({"width": args.width, "height": args.height}),
@@ -682,8 +677,8 @@ impl Server {
         let secs = args.seconds.unwrap_or(5.0);
         let pattern = args.pattern.unwrap_or_default();
         if !pattern.is_empty() {
-            let deadline =
-                std::time::Instant::now() + std::time::Duration::from_secs_f64(secs.min(1800.0));
+            let deadline = std::time::Instant::now()
+                + std::time::Duration::from_secs_f64(secs.min(1800.0));
             let mut found = false;
             while std::time::Instant::now() < deadline {
                 let alive = {
@@ -922,7 +917,9 @@ mod daemon {
             }
             v
         };
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&priority_dirs) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&priority_dirs)
+        {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -932,7 +929,9 @@ mod daemon {
         }
 
         let searched = search_project_roots_fallback();
-        if let Some((_port, debug_port, _)) = try_read_ready_port_from_candidates(&searched) {
+        if let Some((_port, debug_port, _)) =
+            try_read_ready_port_from_candidates(&searched)
+        {
             if let Some(dp) = debug_port {
                 return Ok(format!("http://localhost:{dp}"));
             }
@@ -1024,9 +1023,8 @@ pub struct McpConfig {
 }
 
 pub async fn run(config: McpConfig) -> Result<()> {
-    let base_url = std::sync::Arc::new(tokio::sync::RwLock::new(String::new()));
+    let base_url = Arc::new(RwLock::new(String::new()));
 
-    // Resolve daemon URL in background (browser tools need this)
     let base_url_clone = base_url.clone();
     let url_from_config = config.base_url.clone();
     tokio::spawn(async move {
@@ -1046,7 +1044,7 @@ pub async fn run(config: McpConfig) -> Result<()> {
             .build()
             .unwrap_or_default(),
         #[cfg(feature = "vtty")]
-        vtty: std::sync::Arc::new(vtty::VttyManager::new()),
+        vtty: Arc::new(vtty::VttyManager::new()),
     };
 
     let transport = rmcp::transport::stdio();

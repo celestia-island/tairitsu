@@ -127,7 +127,7 @@ pub fn update_render_function(id: ComponentId, render_fn: impl FnMut() -> VNode 
 
 /// Mark a component as dirty and schedule a re-render.
 pub fn mark_dirty(id: ComponentId) {
-    RUNTIME.with(|runtime| {
+    let should_flush_sync = RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
 
         if !rt.dirty_components.contains(&id) {
@@ -135,8 +135,29 @@ pub fn mark_dirty(id: ComponentId) {
             trace!("Marked component {} as dirty", id);
         }
 
-        schedule_render(&mut rt);
+        if rt.scheduled {
+            return false;
+        }
+
+        rt.scheduled = true;
+
+        if let Some(schedule_cb) = &rt.schedule_callback {
+            let cb = Rc::clone(schedule_cb);
+            let render_fn = Box::new(|| {
+                flush_render();
+            });
+            (cb.borrow_mut())(render_fn);
+            trace!("Scheduled render via callback");
+            false
+        } else {
+            rt.scheduled = false;
+            true
+        }
     });
+
+    if should_flush_sync {
+        flush_render();
+    }
 }
 
 /// Set the active component for dependency tracking.
@@ -176,29 +197,6 @@ pub fn track_signal(signal_ptr: usize) {
     });
 }
 
-/// Schedule a render using the platform's scheduling mechanism.
-fn schedule_render(rt: &mut RuntimeInner) {
-    if rt.scheduled {
-        return;
-    }
-
-    rt.scheduled = true;
-
-    if let Some(schedule_cb) = &rt.schedule_callback {
-        let cb = Rc::clone(schedule_cb);
-        let render_fn = Box::new(|| {
-            flush_render();
-        });
-        (cb.borrow_mut())(render_fn);
-        trace!("Scheduled render via callback");
-    } else {
-        rt.scheduled = false;
-        let _ = rt;
-        flush_render();
-        trace!("Flushed render synchronously (no scheduler)");
-    }
-}
-
 /// Flush pending renders and apply patches.
 pub fn flush_render() {
     RUNTIME.with(|runtime| {
@@ -220,60 +218,71 @@ pub fn flush_render() {
 }
 
 /// Render a single component and apply patches.
+///
+/// Carefully structured to avoid holding `borrow_mut()` across user code
+/// (the render function / apply-patches callback) which may trigger signal
+/// writes that call `notify_signal` → `borrow()`.
 fn render_component(id: ComponentId) {
-    RUNTIME.with(|runtime| {
+    // Phase 1: extract what we need while borrowed, then release.
+    struct Extracted {
+        render_fn: RenderFn,
+        old_vnode: Option<VNode>,
+        apply_patches_cb: Option<ApplyPatchesCallback>,
+    }
+
+    let extracted: Option<Extracted> = RUNTIME.with(|runtime| {
         let mut rt = runtime.borrow_mut();
 
-        // Get the render function
-        let render_fn = if let Some(render_fn) = rt.render_functions.get(&id) {
-            render_fn.clone()
-        } else {
-            trace!("No render function for component {}", id);
-            return;
+        let render_fn = match rt.render_functions.get(&id) {
+            Some(f) => f.clone(),
+            None => {
+                trace!("No render function for component {}", id);
+                return None;
+            }
         };
 
-        // Set as active component
         let prev = rt.active_component;
         rt.active_component = Some(id);
+        let _ = prev;
 
-        // Get the old VNode
         let old_vnode = rt.component_vnodes.get(&id).cloned();
+        let apply_patches_cb = rt.apply_patches_callback.clone();
 
-        // Call the render function
-        let new_vnode = (render_fn.borrow_mut())();
+        Some(Extracted { render_fn, old_vnode, apply_patches_cb })
+    });
 
-        // Restore active component
-        rt.active_component = prev;
+    let Some(ext) = extracted else {
+        return;
+    };
 
-        // Store the new VNode
+    // Phase 2: call the render function — no borrow held.
+    let new_vnode = (ext.render_fn.borrow_mut())();
+
+    // Phase 3: store the new VNode (brief borrow).
+    RUNTIME.with(|runtime| {
+        let mut rt = runtime.borrow_mut();
+        rt.active_component = None;
         rt.component_vnodes.insert(id, new_vnode.clone());
+    });
 
-        // If we had an old VNode, compute patches
-        if let Some(old) = old_vnode {
-            let patches = crate::diff::diff(Some(&old), &new_vnode);
-
-            if !patches.is_empty() {
-                trace!("Component {} generated {} patches", id, patches.len());
-
-                // Apply patches through the callback
-                if let Some(apply_patches_cb) = &rt.apply_patches_callback {
-                    let cb = Rc::clone(apply_patches_cb);
-                    (cb.borrow_mut())(id, patches);
-                    trace!("Applied patches for component {}", id);
-                } else {
-                    trace!("Apply patches callback not set, patches not applied");
-                }
-            }
-        } else {
-            trace!("Initial render for component {}", id);
-            let patches = vec![Patch::CreateNode { node: new_vnode }];
-            if let Some(apply_patches_cb) = &rt.apply_patches_callback {
-                let cb = Rc::clone(apply_patches_cb);
-                (cb.borrow_mut())(id, patches);
-                trace!("Applied initial render patches for component {}", id);
+    // Phase 4: compute & apply patches.
+    if let Some(old) = ext.old_vnode {
+        let patches = crate::diff::diff(Some(&old), &new_vnode);
+        if !patches.is_empty() {
+            trace!("Component {} generated {} patches", id, patches.len());
+            if let Some(cb) = &ext.apply_patches_cb {
+                let mut guard = cb.borrow_mut();
+                guard(id, patches);
             }
         }
-    });
+    } else {
+        trace!("Initial render for component {}", id);
+        let patches = vec![Patch::CreateNode { node: new_vnode }];
+        if let Some(cb) = &ext.apply_patches_cb {
+            let mut guard = cb.borrow_mut();
+            guard(id, patches);
+        }
+    }
 }
 
 pub fn store_initial_vnode(id: ComponentId, vnode: VNode) {
