@@ -124,11 +124,23 @@ pub fn scss(input: TokenStream) -> TokenStream {
 ///   generated enum is just `Copy` data with `const fn as_str()`.
 /// - **BEM-aware naming**: `hi-button--primary` → `HiButtonPrimary`,
 ///   `menu__item--active` → `MenuItemActive`.
+/// - **Filter support**: Use `filter: "hi-"` to only include classes
+///   starting with that prefix (useful for large SCSS files).
 ///
 /// # Example
 /// ```ignore
-/// tairitsu_macros::include_scss!("src/styles/components/button.scss");
-/// // Generates ButtonClasses enum with HiButton, HiButtonPrimary, etc.
+/// // Per-component (small files, fast compilation):
+/// tairitsu_macros::include_scss!("styles/button.scss");
+/// // → ButtonClasses { HiButton, HiButtonPrimary, ... }
+///
+/// // With filter (large monolithic file):
+/// tairitsu_macros::include_scss!("styles/spa.scss", filter: "hi-button-");
+/// // → SpaClasses { HiButtonPrimary, HiButtonSm, HiButtonLg, ... }
+///
+/// // Custom enum name + prefix override:
+/// tairitsu_macros::include_scss!("styles.scss", enum_name: MyStyles);
+///
+/// // Usage in rsx!:
 /// rsx! { button { class: ButtonClasses::HiButton.as_str() } }
 /// ```
 #[proc_macro]
