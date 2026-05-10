@@ -2,6 +2,7 @@ mod component;
 mod props_dsl;
 mod rsx;
 mod scss;
+mod scss_include;
 mod svg;
 
 use component::expand_component;
@@ -106,6 +107,45 @@ pub fn rsx(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn scss(input: TokenStream) -> TokenStream {
     expand_scss(input)
+}
+
+/// Compile-time SCSS class extraction & type-safe enum generation.
+///
+/// Reads a SCSS file at compile time, extracts all `.class-name` selectors
+/// using a recursive descent parser that faithfully implements the grammar
+/// defined in `scss_classes.pest`, and generates a Rust enum with one variant
+/// per class. Each variant maps back to its original class string.
+///
+/// # Features
+/// - **Grammar-faithful parsing**: Handles SCSS nesting (`&.class`), comments,
+///   strings, @-rules correctly — no false positives from property values.
+/// - **Type-safe classes**: Typos in class names are caught at compile time.
+/// - **Zero runtime cost**: All extraction happens at compile time; the
+///   generated enum is just `Copy` data with `const fn as_str()`.
+/// - **BEM-aware naming**: `hi-button--primary` → `HiButtonPrimary`,
+///   `menu__item--active` → `MenuItemActive`.
+/// - **Filter support**: Use `filter: "hi-"` to only include classes
+///   starting with that prefix (useful for large SCSS files).
+///
+/// # Example
+/// ```ignore
+/// // Per-component (small files, fast compilation):
+/// tairitsu_macros::include_scss!("styles/button.scss");
+/// // → ButtonClasses { HiButton, HiButtonPrimary, ... }
+///
+/// // With filter (large monolithic file):
+/// tairitsu_macros::include_scss!("styles/spa.scss", filter: "hi-button-");
+/// // → SpaClasses { HiButtonPrimary, HiButtonSm, HiButtonLg, ... }
+///
+/// // Custom enum name + prefix override:
+/// tairitsu_macros::include_scss!("styles.scss", enum_name: MyStyles);
+///
+/// // Usage in rsx!:
+/// rsx! { button { class: ButtonClasses::HiButton.as_str() } }
+/// ```
+#[proc_macro]
+pub fn include_scss(input: TokenStream) -> TokenStream {
+    scss_include::expand_include_scss(input)
 }
 
 /// SVG macro for compile-time SVG embedding with XSS protection

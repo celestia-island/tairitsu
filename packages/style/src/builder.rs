@@ -136,7 +136,7 @@ impl StyleStringBuilder {
     ///
     /// ```
     /// use tairitsu_style::{CssProperty, StyleStringBuilder};
-    /// use super::values::CssLength;
+    /// use tairitsu_style::CssLength;
     ///
     /// let style = StyleStringBuilder::new()
     ///     .add_length(CssProperty::Width, CssLength::px(100))
@@ -156,7 +156,7 @@ impl StyleStringBuilder {
     ///
     /// ```
     /// use tairitsu_style::StyleStringBuilder;
-    /// use super::values::CssLength;
+    /// use tairitsu_style::CssLength;
     ///
     /// let style = StyleStringBuilder::new()
     ///     .add_var_with_length("glow-x", CssLength::percent(50))
@@ -337,7 +337,7 @@ impl StyleBuilder {
     ///
     /// ```
     /// use tairitsu_style::{CssProperty, StyleBuilder};
-    /// use super::values::CssLength;
+    /// use tairitsu_style::CssLength;
     ///
     /// let style = StyleBuilder::new()
     ///     .add_length(CssProperty::Width, CssLength::px(100))
@@ -357,7 +357,7 @@ impl StyleBuilder {
     ///
     /// ```
     /// use tairitsu_style::StyleBuilder;
-    /// use super::values::CssLength;
+    /// use tairitsu_style::CssLength;
     ///
     /// let style = StyleBuilder::new()
     ///     .add_var_with_length("glow-x", CssLength::percent(50))
