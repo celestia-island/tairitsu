@@ -75,7 +75,7 @@ fn test_pty_write_and_read() {
         output.contains("HELLO_VTTY_TEST") || n > 0,
         "Should have some output from echo, got {} bytes: {:?}",
         n,
-        &output
+        output
     );
 
     pty.kill().ok();
@@ -108,7 +108,7 @@ fn test_pty_write_and_read() {
         output.contains("HELLO_VTTY_TEST") || n > 0,
         "Should have some output from echo, got {} bytes: {:?}",
         n,
-        &output
+        output
     );
 
     pty.kill().ok();
