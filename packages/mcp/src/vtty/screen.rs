@@ -362,46 +362,42 @@ impl Perform for Vt100Screen {
                         30..=37 => {
                             self.attrs.fg = ColorKind::Index((pv[i] - 30) as u8);
                         }
-                        38 => {
-                            if i + 1 < pv.len() {
-                                match pv[i + 1] {
-                                    5 if i + 2 < pv.len() => {
-                                        self.attrs.fg = ColorKind::Index(pv[i + 2] as u8);
-                                        i += 2;
-                                    }
-                                    2 if i + 4 < pv.len() => {
-                                        self.attrs.fg = ColorKind::Rgb(
-                                            pv[i + 2] as u8,
-                                            pv[i + 3] as u8,
-                                            pv[i + 4] as u8,
-                                        );
-                                        i += 4;
-                                    }
-                                    _ => {}
+                        38 if i + 1 < pv.len() => {
+                            match pv[i + 1] {
+                                5 if i + 2 < pv.len() => {
+                                    self.attrs.fg = ColorKind::Index(pv[i + 2] as u8);
+                                    i += 2;
                                 }
+                                2 if i + 4 < pv.len() => {
+                                    self.attrs.fg = ColorKind::Rgb(
+                                        pv[i + 2] as u8,
+                                        pv[i + 3] as u8,
+                                        pv[i + 4] as u8,
+                                    );
+                                    i += 4;
+                                }
+                                _ => {}
                             }
                         }
                         39 => self.attrs.fg = ColorKind::Default,
                         40..=47 => {
                             self.attrs.bg = ColorKind::Index((pv[i] - 40) as u8);
                         }
-                        48 => {
-                            if i + 1 < pv.len() {
-                                match pv[i + 1] {
-                                    5 if i + 2 < pv.len() => {
-                                        self.attrs.bg = ColorKind::Index(pv[i + 2] as u8);
-                                        i += 2;
-                                    }
-                                    2 if i + 4 < pv.len() => {
-                                        self.attrs.bg = ColorKind::Rgb(
-                                            pv[i + 2] as u8,
-                                            pv[i + 3] as u8,
-                                            pv[i + 4] as u8,
-                                        );
-                                        i += 4;
-                                    }
-                                    _ => {}
+                        48 if i + 1 < pv.len() => {
+                            match pv[i + 1] {
+                                5 if i + 2 < pv.len() => {
+                                    self.attrs.bg = ColorKind::Index(pv[i + 2] as u8);
+                                    i += 2;
                                 }
+                                2 if i + 4 < pv.len() => {
+                                    self.attrs.bg = ColorKind::Rgb(
+                                        pv[i + 2] as u8,
+                                        pv[i + 3] as u8,
+                                        pv[i + 4] as u8,
+                                    );
+                                    i += 4;
+                                }
+                                _ => {}
                             }
                         }
                         49 => self.attrs.bg = ColorKind::Default,
