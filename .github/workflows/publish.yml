@@ -27,7 +27,7 @@ jobs:
             "tairitsu-ssr:packages/ssr"
             "tairitsu-packager:packages/packager"
             "tairitsu-web:packages/web"
-"tairitsu-mcp:packages/mcp"
+            "tairitsu-mcp:packages/mcp"
           )
           for ENTRY in "${PACKAGES[@]}"; do
             PKG="${ENTRY%%:*}"
