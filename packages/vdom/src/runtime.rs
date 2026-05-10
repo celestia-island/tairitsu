@@ -248,7 +248,11 @@ fn render_component(id: ComponentId) {
         let old_vnode = rt.component_vnodes.get(&id).cloned();
         let apply_patches_cb = rt.apply_patches_callback.clone();
 
-        Some(Extracted { render_fn, old_vnode, apply_patches_cb })
+        Some(Extracted {
+            render_fn,
+            old_vnode,
+            apply_patches_cb,
+        })
     });
 
     let Some(ext) = extracted else {

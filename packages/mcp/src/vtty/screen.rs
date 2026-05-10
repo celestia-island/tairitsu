@@ -1,8 +1,7 @@
 use vte::{Params, Perform};
 
 use super::graphics::{
-    InlineImageStore, KittyGraphicsState,
-    process_kitty_apc, process_osc_1337, process_sixel,
+    InlineImageStore, KittyGraphicsState, process_kitty_apc, process_osc_1337, process_sixel,
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -279,7 +278,12 @@ impl Perform for Vt100Screen {
     fn unhook(&mut self) {
         if matches!(self.dcs_kind, DcsKind::Sixel) {
             let data = std::mem::take(&mut self.dcs_buffer);
-            process_sixel(&data, self.cursor_row, self.cursor_col, &mut self.image_store);
+            process_sixel(
+                &data,
+                self.cursor_row,
+                self.cursor_col,
+                &mut self.image_store,
+            );
         }
         self.dcs_kind = DcsKind::None;
     }
@@ -362,48 +366,40 @@ impl Perform for Vt100Screen {
                         30..=37 => {
                             self.attrs.fg = ColorKind::Index((pv[i] - 30) as u8);
                         }
-                        38 => {
-                            if i + 1 < pv.len() {
-                                match pv[i + 1] {
-                                    5 if i + 2 < pv.len() => {
-                                        self.attrs.fg = ColorKind::Index(pv[i + 2] as u8);
-                                        i += 2;
-                                    }
-                                    2 if i + 4 < pv.len() => {
-                                        self.attrs.fg = ColorKind::Rgb(
-                                            pv[i + 2] as u8,
-                                            pv[i + 3] as u8,
-                                            pv[i + 4] as u8,
-                                        );
-                                        i += 4;
-                                    }
-                                    _ => {}
-                                }
+                        38 if i + 1 < pv.len() => match pv[i + 1] {
+                            5 if i + 2 < pv.len() => {
+                                self.attrs.fg = ColorKind::Index(pv[i + 2] as u8);
+                                i += 2;
                             }
-                        }
+                            2 if i + 4 < pv.len() => {
+                                self.attrs.fg = ColorKind::Rgb(
+                                    pv[i + 2] as u8,
+                                    pv[i + 3] as u8,
+                                    pv[i + 4] as u8,
+                                );
+                                i += 4;
+                            }
+                            _ => {}
+                        },
                         39 => self.attrs.fg = ColorKind::Default,
                         40..=47 => {
                             self.attrs.bg = ColorKind::Index((pv[i] - 40) as u8);
                         }
-                        48 => {
-                            if i + 1 < pv.len() {
-                                match pv[i + 1] {
-                                    5 if i + 2 < pv.len() => {
-                                        self.attrs.bg = ColorKind::Index(pv[i + 2] as u8);
-                                        i += 2;
-                                    }
-                                    2 if i + 4 < pv.len() => {
-                                        self.attrs.bg = ColorKind::Rgb(
-                                            pv[i + 2] as u8,
-                                            pv[i + 3] as u8,
-                                            pv[i + 4] as u8,
-                                        );
-                                        i += 4;
-                                    }
-                                    _ => {}
-                                }
+                        48 if i + 1 < pv.len() => match pv[i + 1] {
+                            5 if i + 2 < pv.len() => {
+                                self.attrs.bg = ColorKind::Index(pv[i + 2] as u8);
+                                i += 2;
                             }
-                        }
+                            2 if i + 4 < pv.len() => {
+                                self.attrs.bg = ColorKind::Rgb(
+                                    pv[i + 2] as u8,
+                                    pv[i + 3] as u8,
+                                    pv[i + 4] as u8,
+                                );
+                                i += 4;
+                            }
+                            _ => {}
+                        },
                         49 => self.attrs.bg = ColorKind::Default,
                         90..=97 => {
                             self.attrs.fg = ColorKind::Index((pv[i] - 90 + 8) as u8);
@@ -429,8 +425,7 @@ impl Perform for Vt100Screen {
         }
     }
 
-    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {
-    }
+    fn esc_dispatch(&mut self, _intermediates: &[u8], _ignore: bool, _byte: u8) {}
 }
 
 impl Vt100Screen {
@@ -445,11 +440,15 @@ impl Vt100Screen {
                 while j < data.len().saturating_sub(1) {
                     if data[j] == 0x1B && data[j + 1] == b'\\' {
                         let raw = &data[payload_start..j];
-                        let (control, payload) = if let Some(idx) = raw.iter().position(|&b| b == b';') {
-                            (String::from_utf8_lossy(&raw[..idx]).to_string(), raw[idx + 1..].to_vec())
-                        } else {
-                            (String::from_utf8_lossy(raw).to_string(), Vec::new())
-                        };
+                        let (control, payload) =
+                            if let Some(idx) = raw.iter().position(|&b| b == b';') {
+                                (
+                                    String::from_utf8_lossy(&raw[..idx]).to_string(),
+                                    raw[idx + 1..].to_vec(),
+                                )
+                            } else {
+                                (String::from_utf8_lossy(raw).to_string(), Vec::new())
+                            };
                         results.push((start, j + 2, control, payload));
                         i = j + 2;
                         break;
@@ -649,22 +648,17 @@ mod tests {
     #[cfg(feature = "vtty-visual")]
     #[test]
     fn test_kitty_apc_end_to_end() {
+        use crate::vtty::graphics::{InlineImageStore, KittyGraphicsState, process_kitty_apc};
         use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
         use image::ImageBuffer;
         use image::Rgba;
-        use crate::vtty::graphics::{InlineImageStore, KittyGraphicsState, process_kitty_apc};
 
-        let mut logo = ImageBuffer::from_pixel(
-            16u32,
-            8u32,
-            Rgba([0x00u8, 0x2bu8, 0x36u8, 255u8]),
-        );
+        let mut logo = ImageBuffer::from_pixel(16u32, 8u32, Rgba([0x00u8, 0x2bu8, 0x36u8, 255u8]));
         logo.put_pixel(4, 4, Rgba([255u8, 0u8, 0u8, 255u8]));
 
         let mut png_bytes = Vec::new();
         use std::io::Cursor;
-        logo
-            .write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
+        logo.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)
             .unwrap();
         let b64 = BASE64.encode(&png_bytes);
 
@@ -688,14 +682,7 @@ mod tests {
         {
             let mut store = InlineImageStore::new();
             let mut state = KittyGraphicsState::new();
-            process_kitty_apc(
-                &mut state,
-                "f=100,i=42",
-                b64.as_bytes(),
-                3,
-                5,
-                &mut store,
-            );
+            process_kitty_apc(&mut state, "f=100,i=42", b64.as_bytes(), 3, 5, &mut store);
             assert!(
                 !store.placements().is_empty(),
                 "direct call without a=T should produce placements"
@@ -720,8 +707,8 @@ mod tests {
             pc,
         );
 
-        let png_data =
-            crate::vtty::render::render_terminal(&rd, "solarized-dark").expect("render should succeed");
+        let png_data = crate::vtty::render::render_terminal(&rd, "solarized-dark")
+            .expect("render should succeed");
         assert!(png_data.len() > 100, "PNG should be non-trivial");
         assert_eq!(&png_data[0..4], &[0x89, 0x50, 0x4e, 0x47]);
     }
@@ -764,6 +751,10 @@ mod tests {
         s.process(apc.as_bytes());
 
         assert_eq!(s.get_text(), "");
-        assert_eq!(s.image_store.placements().len(), 1, "should have one placement from Kitty APC");
+        assert_eq!(
+            s.image_store.placements().len(),
+            1,
+            "should have one placement from Kitty APC"
+        );
     }
 }

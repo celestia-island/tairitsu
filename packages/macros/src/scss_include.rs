@@ -35,8 +35,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::parse::{Parse, ParseStream};
 use syn::LitStr;
+use syn::parse::{Parse, ParseStream};
 
 // ─── Input syntax ──────────────────────────────────────────────────────
 
@@ -57,7 +57,9 @@ impl Parse for IncludeScssInput {
 
         while !input.is_empty() {
             input.parse::<syn::Token![,]>()?;
-            if input.is_empty() { break; }
+            if input.is_empty() {
+                break;
+            }
 
             let key: syn::Ident = input.parse()?;
             input.parse::<syn::Token![:]>()?;
@@ -78,13 +80,20 @@ impl Parse for IncludeScssInput {
                 other => {
                     return Err(syn::Error::new(
                         key.span(),
-                        format!("unknown option `{other}`, expected `prefix`, `enum_name` or `filter`"),
+                        format!(
+                            "unknown option `{other}`, expected `prefix`, `enum_name` or `filter`"
+                        ),
                     ));
                 }
             }
         }
 
-        Ok(IncludeScssInput { path, prefix, enum_name, filter })
+        Ok(IncludeScssInput {
+            path,
+            prefix,
+            enum_name,
+            filter,
+        })
     }
 }
 
@@ -117,9 +126,7 @@ pub fn expand_include_scss(input: TokenStream) -> TokenStream {
 
     if let Some(ref prefix_filter) = input.filter {
         let pf = prefix_filter.to_lowercase();
-        classes.retain(|c| {
-            c.to_lowercase().starts_with(&pf)
-        });
+        classes.retain(|c| c.to_lowercase().starts_with(&pf));
     }
 
     if classes.is_empty() {
@@ -130,7 +137,13 @@ pub fn expand_include_scss(input: TokenStream) -> TokenStream {
         return quote! { compile_error!(#msg) }.into();
     }
 
-    generate_enum(&classes, &input.path.value(), input.prefix.as_deref(), input.enum_name.as_ref()).into()
+    generate_enum(
+        &classes,
+        &input.path.value(),
+        input.prefix.as_deref(),
+        input.enum_name.as_ref(),
+    )
+    .into()
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -165,22 +178,36 @@ impl ScssExtractor {
         self.classes
     }
 
-    fn remaining(&self) -> bool { self.pos < self.len }
+    fn remaining(&self) -> bool {
+        self.pos < self.len
+    }
 
     fn ch(&self) -> char {
-        if self.pos < self.len { self.chars[self.pos] } else { '\0' }
+        if self.pos < self.len {
+            self.chars[self.pos]
+        } else {
+            '\0'
+        }
     }
 
     fn ch_at(&self, offset: usize) -> char {
         let idx = self.pos + offset;
-        if idx < self.len { self.chars[idx] } else { '\0' }
+        if idx < self.len {
+            self.chars[idx]
+        } else {
+            '\0'
+        }
     }
 
-    fn advance(&mut self, n: usize) { self.pos += n; }
+    fn advance(&mut self, n: usize) {
+        self.pos += n;
+    }
 
     fn starts_with(&self, s: &str) -> bool {
         let target: Vec<char> = s.chars().collect();
-        if self.pos + target.len() > self.len { return false; }
+        if self.pos + target.len() > self.len {
+            return false;
+        }
         self.chars[self.pos..].starts_with(&target)
     }
 
@@ -189,7 +216,10 @@ impl ScssExtractor {
         while self.remaining() {
             match self.ch() {
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => { self.advance(2); self.skip_to_eol(); }
+                '/' if self.ch_at(1) != '\0' => {
+                    self.advance(2);
+                    self.skip_to_eol();
+                }
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 '@' => self.skip_at_rule(),
@@ -214,12 +244,21 @@ impl ScssExtractor {
         self.advance(1);
         while self.remaining() && depth > 0 {
             match self.ch() {
-                '{' => { depth += 1; self.advance(1); }
-                '}' => { depth -= 1; self.advance(1); }
+                '{' => {
+                    depth += 1;
+                    self.advance(1);
+                }
+                '}' => {
+                    depth -= 1;
+                    self.advance(1);
+                }
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
-                '/' if self.ch_at(1) != '\0' => { self.advance(2); self.skip_to_eol(); }
+                '/' if self.ch_at(1) != '\0' => {
+                    self.advance(2);
+                    self.skip_to_eol();
+                }
                 _ => self.advance(1),
             }
         }
@@ -232,12 +271,22 @@ impl ScssExtractor {
         while self.remaining() {
             match self.ch() {
                 '{' | '}' | ';' | ')' => return,
-                ',' => { self.advance(1); self.skip_ws(); }
-                '\n' | '\r' | '\t' | ' ' => { self.advance(1); }
+                ',' => {
+                    self.advance(1);
+                    self.skip_ws();
+                }
+                '\n' | '\r' | '\t' | ' ' => {
+                    self.advance(1);
+                }
                 '"' | '\'' => return,
                 '/' if self.ch_at(1) == '*' || self.ch_at(1) != '\0' => return,
                 '.' => self.consume_class_selector(),
-                '#' => { self.advance(1); while self.remaining() && is_ident_char(self.ch()) { self.advance(1); } }
+                '#' => {
+                    self.advance(1);
+                    while self.remaining() && is_ident_char(self.ch()) {
+                        self.advance(1);
+                    }
+                }
                 '[' => self.skip_bracketed(),
                 ':' => self.skip_pseudo(),
                 '&' => {
@@ -247,8 +296,14 @@ impl ScssExtractor {
                     }
                 }
                 _ => {
-                    if self.ch().is_alphabetic() || self.ch() == '_' || self.ch() == '-' || self.ch() == '*' {
-                        while self.remaining() && (is_ident_char(self.ch()) || self.ch() == '-') { self.advance(1); }
+                    if self.ch().is_alphabetic()
+                        || self.ch() == '_'
+                        || self.ch() == '-'
+                        || self.ch() == '*'
+                    {
+                        while self.remaining() && (is_ident_char(self.ch()) || self.ch() == '-') {
+                            self.advance(1);
+                        }
                     } else {
                         self.advance(1);
                     }
@@ -287,13 +342,18 @@ impl ScssExtractor {
         debug_assert!(self.starts_with("/*"));
         self.advance(2);
         while self.remaining() {
-            if self.starts_with("*/") { self.advance(2); return; }
+            if self.starts_with("*/") {
+                self.advance(2);
+                return;
+            }
             self.advance(1);
         }
     }
 
     fn skip_to_eol(&mut self) {
-        while self.remaining() && self.ch() != '\n' { self.advance(1); }
+        while self.remaining() && self.ch() != '\n' {
+            self.advance(1);
+        }
     }
 
     fn skip_string_double(&mut self) {
@@ -301,8 +361,13 @@ impl ScssExtractor {
         self.advance(1);
         while self.remaining() {
             match self.ch() {
-                '\\' if self.ch_at(1) != '\0' => { self.advance(2); }
-                '"' => { self.advance(1); return; }
+                '\\' if self.ch_at(1) != '\0' => {
+                    self.advance(2);
+                }
+                '"' => {
+                    self.advance(1);
+                    return;
+                }
                 _ => self.advance(1),
             }
         }
@@ -313,8 +378,13 @@ impl ScssExtractor {
         self.advance(1);
         while self.remaining() {
             match self.ch() {
-                '\\' if self.ch_at(1) != '\0' => { self.advance(2); }
-                '\'' => { self.advance(1); return; }
+                '\\' if self.ch_at(1) != '\0' => {
+                    self.advance(2);
+                }
+                '\'' => {
+                    self.advance(1);
+                    return;
+                }
                 _ => self.advance(1),
             }
         }
@@ -332,9 +402,18 @@ impl ScssExtractor {
     fn skip_at_rule_body(&mut self, depth: u32) {
         while self.remaining() {
             match self.ch() {
-                ';' if depth == 0 => { self.advance(1); return; }
-                '{' => { self.advance(1); self.skip_at_rule_body(depth + 1); }
-                '}' if depth > 0 => { self.advance(1); return; }
+                ';' if depth == 0 => {
+                    self.advance(1);
+                    return;
+                }
+                '{' => {
+                    self.advance(1);
+                    self.skip_at_rule_body(depth + 1);
+                }
+                '}' if depth > 0 => {
+                    self.advance(1);
+                    return;
+                }
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 '/' if self.ch_at(1) == '*' => self.skip_block_comment(),
@@ -349,8 +428,14 @@ impl ScssExtractor {
         let mut depth = 1u32;
         while self.remaining() && depth > 0 {
             match self.ch() {
-                '[' => { depth += 1; self.advance(1); }
-                ']' => { depth -= 1; self.advance(1); }
+                '[' => {
+                    depth += 1;
+                    self.advance(1);
+                }
+                ']' => {
+                    depth -= 1;
+                    self.advance(1);
+                }
                 '"' => self.skip_string_double(),
                 '\'' => self.skip_string_single(),
                 _ => self.advance(1),
@@ -362,7 +447,9 @@ impl ScssExtractor {
     fn skip_pseudo(&mut self) {
         debug_assert_eq!(self.ch(), ':');
         self.advance(1);
-        if self.remaining() && self.ch() == ':' { self.advance(1); }
+        if self.remaining() && self.ch() == ':' {
+            self.advance(1);
+        }
         while self.remaining() && is_ident_char(self.ch()) {
             self.advance(1);
         }
@@ -371,8 +458,14 @@ impl ScssExtractor {
             let mut depth = 1u32;
             while self.remaining() && depth > 0 {
                 match self.ch() {
-                    '(' => { depth += 1; self.advance(1); }
-                    ')' => { depth -= 1; self.advance(1); }
+                    '(' => {
+                        depth += 1;
+                        self.advance(1);
+                    }
+                    ')' => {
+                        depth -= 1;
+                        self.advance(1);
+                    }
                     '"' => self.skip_string_double(),
                     '\'' => self.skip_string_single(),
                     _ => self.advance(1),
@@ -422,8 +515,7 @@ fn generate_enum(
     for class in classes.iter() {
         let v = class_to_variant(class, prefix_override);
         let doc = format!("CSS class `.{}`", class);
-        variant_map.entry(v)
-            .or_insert((doc, class.as_str()));
+        variant_map.entry(v).or_insert((doc, class.as_str()));
     }
 
     let variant_tokens: Vec<proc_macro2::TokenStream> = variant_map
@@ -519,7 +611,11 @@ fn class_to_variant(class: &str, prefix_override: Option<&str>) -> syn::Ident {
             format_ident!("{}{}", capitalize(prefix), rest)
         }
         None => {
-            let full: String = parts.iter().map(|p| capitalize(p)).collect::<Vec<_>>().join("");
+            let full: String = parts
+                .iter()
+                .map(|p| capitalize(p))
+                .collect::<Vec<_>>()
+                .join("");
             format_ident!("{}", full)
         }
     }

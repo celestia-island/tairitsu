@@ -51,11 +51,9 @@ impl InlineImageStore {
     }
 
     pub fn add_placement(&mut self, placement: ImagePlacement) {
-        if let Some(existing) = self
-            .placements
-            .iter_mut()
-            .find(|p| p.image_id == placement.image_id && p.row == placement.row && p.col == placement.col)
-        {
+        if let Some(existing) = self.placements.iter_mut().find(|p| {
+            p.image_id == placement.image_id && p.row == placement.row && p.col == placement.col
+        }) {
             *existing = placement;
         } else {
             self.placements.push(placement);
@@ -205,7 +203,10 @@ pub fn process_kitty_apc(
         Err(_) => return,
     };
 
-    let format = params.get("f").and_then(|v| v.parse::<u32>().ok()).unwrap_or(32);
+    let format = params
+        .get("f")
+        .and_then(|v| v.parse::<u32>().ok())
+        .unwrap_or(32);
     let transmission = params.get("t").map(|s| s.as_str()).unwrap_or("d");
 
     if transmission != "d" && transmission != "f" && transmission != "t" && transmission != "s" {
@@ -232,12 +233,8 @@ pub fn process_kitty_apc(
 
         store.store(effective_id, inline);
 
-        let cols = params
-            .get("c")
-            .and_then(|v| v.parse::<usize>().ok());
-        let rows = params
-            .get("r")
-            .and_then(|v| v.parse::<usize>().ok());
+        let cols = params.get("c").and_then(|v| v.parse::<usize>().ok());
+        let rows = params.get("r").and_then(|v| v.parse::<usize>().ok());
         let z = params
             .get("z")
             .and_then(|v| v.parse::<i32>().ok())
@@ -638,14 +635,7 @@ mod tests {
         );
         assert!(store.images.is_empty());
 
-        process_kitty_apc(
-            &mut state,
-            "m=0",
-            chunk2.as_bytes(),
-            0,
-            0,
-            &mut store,
-        );
+        process_kitty_apc(&mut state, "m=0", chunk2.as_bytes(), 0, 0, &mut store);
         assert!(!store.images.is_empty());
     }
 
@@ -660,7 +650,14 @@ mod tests {
         let b64 = BASE64.encode(&png_bytes);
 
         let mut state = KittyGraphicsState::new();
-        process_kitty_apc(&mut state, "f=100,a=T,i=42", b64.as_bytes(), 0, 0, &mut store);
+        process_kitty_apc(
+            &mut state,
+            "f=100,a=T,i=42",
+            b64.as_bytes(),
+            0,
+            0,
+            &mut store,
+        );
         assert!(store.get_image(42).is_some());
 
         process_kitty_apc(&mut state, "a=d,i=42", b"", 0, 0, &mut store);
@@ -706,23 +703,9 @@ mod tests {
                 2,
                 &mut store,
             );
-            process_kitty_apc(
-                &mut state,
-                "m=0",
-                &b64.as_bytes()[mid..],
-                6,
-                2,
-                &mut store,
-            );
+            process_kitty_apc(&mut state, "m=0", &b64.as_bytes()[mid..], 6, 2, &mut store);
         } else {
-            process_kitty_apc(
-                &mut state,
-                control,
-                b64.as_bytes(),
-                6,
-                2,
-                &mut store,
-            );
+            process_kitty_apc(&mut state, control, b64.as_bytes(), 6, 2, &mut store);
         }
 
         assert!(!store.images.is_empty(), "image should be stored");
