@@ -44,7 +44,7 @@ fn emit_kitty_png(img: &ImageBuffer<Rgba<u8>, Vec<u8>>, stdout: &mut std::io::St
     let control = "f=100,a=T,c=16,r=12";
     let chunk_size = 4096;
 
-    let chunks: Vec<&str> = b64.as_str().as_bytes().chunks(chunk_size)
+    let chunks: Vec<&str> = b64.as_bytes().chunks(chunk_size)
         .map(|c| std::str::from_utf8(c).unwrap())
         .collect();
 

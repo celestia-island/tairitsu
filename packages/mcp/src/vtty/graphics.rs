@@ -610,7 +610,7 @@ mod tests {
         let mut state = KittyGraphicsState::new();
         process_kitty_apc(&mut state, control, b64.as_bytes(), 0, 0, &mut store);
 
-        assert!(store.images.len() >= 1);
+        assert!(!store.images.is_empty());
         assert!(!store.placements.is_empty());
     }
 
@@ -646,7 +646,7 @@ mod tests {
             0,
             &mut store,
         );
-        assert!(store.images.len() >= 1);
+        assert!(!store.images.is_empty());
     }
 
     #[test]
@@ -701,7 +701,7 @@ mod tests {
             process_kitty_apc(
                 &mut state,
                 "f=100,a=T,m=1,c=16,r=12",
-                b64[..mid].as_bytes(),
+                &b64.as_bytes()[..mid],
                 6,
                 2,
                 &mut store,
@@ -709,7 +709,7 @@ mod tests {
             process_kitty_apc(
                 &mut state,
                 "m=0",
-                b64[mid..].as_bytes(),
+                &b64.as_bytes()[mid..],
                 6,
                 2,
                 &mut store,

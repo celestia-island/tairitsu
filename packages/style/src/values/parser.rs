@@ -19,7 +19,7 @@ impl CssLength {
     /// # Example
     ///
     /// ```
-    /// use tairitsu_css_values::CssLength;
+    /// use tairitsu_style::CssLength;
     ///
     /// let length = CssLength::from_css_str("100px").unwrap();
     /// assert_eq!(length, CssLength::px(100));

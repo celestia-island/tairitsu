@@ -1,0 +1,80 @@
+/// Pest grammar for extracting CSS class names from SCSS sources.
+///
+/// This grammar is designed to be lenient — it only needs to find tokens that
+/// LOOK like class selectors (`.identifier`), not validate full SCSS syntax.
+/// It skips comments, strings, @-rules, and property values.
+
+scss = { SOI ~ scss_content* ~ EOI }
+
+scss_content = {
+    | block_comment
+    | line_comment
+    | string_double
+    | string_single
+    | at_rule
+    | rule_block
+    | WHITESPACE / NEWLINE
+}
+
+/// Block comment /* ... */ — consume entirely
+block_comment = { "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+
+/// Line comment // ... \n
+line_comment = { "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }
+
+/// Double-quoted string "..." — skip (may contain dots)
+string_double = { "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+/// Single-quoted string '...' — skip
+string_single = { "'" ~ (!"'" ~ ANY)* ~ "'" }
+
+/// @rule like @media, @import, @keyframes, @mixin, etc.
+at_rule = { "@" ~ IDENT ~ until_semi_or_block }
+
+/// A CSS/SCSS rule block: selector(s) { ... }
+rule_block = { selectors ~ "{" ~ scss_content* ~ "}" }
+
+/// One or more selectors separated by commas
+selectors = { selector (~ "," ~ selector)* }
+
+/// A single selector — we care about ones containing .class references
+selector = {
+    | combinators
+    | simple_selector+
+}
+
+combinators = {
+    (simple_selector / combinator_char / WHITESPACE)+
+}
+
+combinator_char = { [" >+~|"] }
+
+simple_selector = {
+    | class_selector     // ← primary target
+    | id_selector        // #id — skip but must recognize to avoid false positives
+    | universal_selector // * — skip
+    | type_selector      // tag name — skip
+    | attribute_selector // [attr] — skip
+    | pseudo_selector    // :pseudo or ::pseudo — skip
+}
+
+/// THE KEY RULE: .class-name (possibly with leading & for SCSS nesting)
+class_selector = { ("&" ~)? ~ "." ~ class_name }
+
+/// Class name token: identifier chars including hyphens, underscores
+class_name = { (IDENT / "-" / "_" )+ }
+
+id_selector = { "#" ~ IDENT }
+universal_selector = { "*" }
+type_selector = { IDENT | "*" }
+attribute_selector = { "[" ~ (!"]" ~ ANY)* ~ "]" }
+pseudo_selector = { (":" | "::" ~ IDENT) }
+
+/// Helper: consume until semicolon or opening brace
+until_semi_or_block = { (!(";" | "{") ~ ANY)* ~ (";" | "{")? }
+
+WHITESPACE = _{ " " | "\t" | "\r" }
+NEWLINE = _{ "\n" }
+IDENT = _{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "-" | "_")* }
+ASCII_ALPHA = _{ 'a'..'z' | 'A'..'Z' }
+ASCII_ALPHANUMERIC = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' }
