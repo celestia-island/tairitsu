@@ -327,7 +327,7 @@ fn longest_increasing_subsequence_set(arr: &[usize]) -> Vec<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vnode::{VElement, VText};
+    use crate::vnode::{Classes, Style, VElement, VText};
 
     #[test]
     fn test_diff_text() {
@@ -455,5 +455,289 @@ mod tests {
         for window in lis_values.windows(2) {
             assert!(window[0] < window[1], "LIS should be strictly increasing");
         }
+    }
+
+    #[test]
+    fn test_diff_element_different_tag_replaces() {
+        let old = VNode::Element(VElement::new("div"));
+        let new = VNode::Element(VElement::new("span"));
+
+        let patches = diff(Some(&old), &new);
+
+        assert_eq!(patches.len(), 1);
+        match &patches[0] {
+            Patch::ReplaceNode { node } => match node {
+                VNode::Element(elem) => assert_eq!(elem.tag, "span"),
+                _ => panic!("Expected Element node in ReplaceNode"),
+            },
+            _ => panic!("Expected ReplaceNode, got {:?}", patches[0]),
+        }
+    }
+
+    #[test]
+    fn test_diff_element_attribute_addition() {
+        let old = VNode::Element(VElement::new("div"));
+        let new = VNode::Element(VElement::new("div").attr("id", "app").attr("data-x", "1"));
+
+        let patches = diff(Some(&old), &new);
+
+        let add_attrs: Vec<_> = patches
+            .iter()
+            .filter_map(|p| match p {
+                Patch::AddAttribute { name, value } => Some((name.clone(), value.clone())),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(add_attrs.len(), 2);
+        assert!(
+            add_attrs.contains(&("id".to_string(), "app".to_string())),
+            "should add id attribute"
+        );
+        assert!(
+            add_attrs.contains(&("data-x".to_string(), "1".to_string())),
+            "should add data-x attribute"
+        );
+    }
+
+    #[test]
+    fn test_diff_element_attribute_removal() {
+        let old = VNode::Element(
+            VElement::new("div")
+                .attr("id", "app")
+                .attr("data-x", "1")
+                .attr("role", "main"),
+        );
+        let new = VNode::Element(VElement::new("div").attr("id", "app"));
+
+        let patches = diff(Some(&old), &new);
+
+        let removed: Vec<_> = patches
+            .iter()
+            .filter_map(|p| match p {
+                Patch::RemoveAttribute { name } => Some(name.clone()),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(removed.len(), 2);
+        assert!(removed.contains(&"data-x".to_string()));
+        assert!(removed.contains(&"role".to_string()));
+    }
+
+    #[test]
+    fn test_diff_element_attribute_update() {
+        let old = VNode::Element(VElement::new("div").attr("class", "old").attr("id", "x"));
+        let new = VNode::Element(VElement::new("div").attr("class", "new").attr("id", "x"));
+
+        let patches = diff(Some(&old), &new);
+
+        let updated: Vec<_> = patches
+            .iter()
+            .filter_map(|p| match p {
+                Patch::UpdateAttribute { name, value } => Some((name.clone(), value.clone())),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(updated.len(), 1);
+        assert_eq!(updated[0], ("class".to_string(), "new".to_string()));
+    }
+
+    #[test]
+    fn test_diff_element_style_changes() {
+        let old = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
+        let new = VNode::Element(
+            VElement::new("div").style(Style::new().add("color", "blue").add("font-size", "16px")),
+        );
+
+        let patches = diff(Some(&old), &new);
+
+        let style_patches: Vec<_> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::UpdateStyle { .. }))
+            .collect();
+
+        assert_eq!(style_patches.len(), 1);
+        match &style_patches[0] {
+            Patch::UpdateStyle { style } => {
+                assert!(style.static_styles.contains("color:blue"));
+                assert!(style.static_styles.contains("font-size:16px"));
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_diff_element_style_no_change() {
+        let old = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
+        let new = VNode::Element(VElement::new("div").style(Style::new().add("color", "red")));
+
+        let patches = diff(Some(&old), &new);
+
+        assert!(
+            !patches.iter().any(|p| matches!(p, Patch::UpdateStyle { .. })),
+            "no UpdateStyle when styles are identical"
+        );
+    }
+
+    #[test]
+    fn test_diff_element_class_changes() {
+        let old = VNode::Element(VElement::new("div").class(Classes::new().add("a").add("b")));
+        let new = VNode::Element(VElement::new("div").class(Classes::new().add("a").add("c")));
+
+        let patches = diff(Some(&old), &new);
+
+        let class_patches: Vec<_> = patches
+            .iter()
+            .filter(|p| matches!(p, Patch::UpdateClass { .. }))
+            .collect();
+
+        assert_eq!(class_patches.len(), 1);
+        match &class_patches[0] {
+            Patch::UpdateClass { class } => {
+                assert_eq!(class.static_classes, "a c");
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_diff_element_class_no_change() {
+        let old = VNode::Element(VElement::new("div").class(Classes::new().add("foo")));
+        let new = VNode::Element(VElement::new("div").class(Classes::new().add("foo")));
+
+        let patches = diff(Some(&old), &new);
+
+        assert!(
+            !patches.iter().any(|p| matches!(p, Patch::UpdateClass { .. })),
+            "no UpdateClass when classes are identical"
+        );
+    }
+
+    #[test]
+    fn test_diff_children_mixed_keyed_unkeyed() {
+        let old = vec![
+            VNode::Element(VElement::new("li").key("a")),
+            VNode::Text(VText::new("unkeyed")),
+            VNode::Element(VElement::new("li").key("b")),
+        ];
+
+        let new = vec![
+            VNode::Element(VElement::new("li").key("b")),
+            VNode::Text(VText::new("unkeyed-changed")),
+        ];
+
+        let mut patches = Vec::new();
+        diff_children(&old, &new, &mut patches);
+
+        assert!(
+            !patches.is_empty(),
+            "mixing keyed and unkeyed should produce patches"
+        );
+    }
+
+    #[test]
+    fn test_diff_children_remove_all() {
+        let old = vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("b")),
+            VNode::Text(VText::new("c")),
+        ];
+        let new: Vec<VNode> = vec![];
+
+        let mut patches = Vec::new();
+        diff_children(&old, &new, &mut patches);
+
+        let removes: Vec<_> = patches
+            .iter()
+            .filter_map(|p| match p {
+                Patch::RemoveChild { index } => Some(*index),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(removes.len(), 3);
+        assert!(removes.contains(&0));
+        assert!(removes.contains(&1));
+        assert!(removes.contains(&2));
+    }
+
+    #[test]
+    fn test_diff_children_replace_all() {
+        let old = vec![
+            VNode::Text(VText::new("a")),
+            VNode::Text(VText::new("b")),
+        ];
+        let new = vec![
+            VNode::Element(VElement::new("span")),
+            VNode::Element(VElement::new("div")),
+        ];
+
+        let mut patches = Vec::new();
+        diff_children(&old, &new, &mut patches);
+
+        let updates: Vec<_> = patches
+            .iter()
+            .filter_map(|p| match p {
+                Patch::UpdateChild { index, .. } => Some(*index),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(updates.len(), 2, "both children should be updated");
+        assert!(updates.contains(&0));
+        assert!(updates.contains(&1));
+
+        for p in &patches {
+            if let Patch::UpdateChild { index, patches: child_patches } = p {
+                assert!(!child_patches.is_empty(), "child {} should have patches", index);
+                match index {
+                    0 => assert!(
+                        child_patches.iter().any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
+                        "text->element should be ReplaceNode"
+                    ),
+                    1 => assert!(
+                        child_patches.iter().any(|cp| matches!(cp, Patch::ReplaceNode { .. })),
+                        "text->element should be ReplaceNode"
+                    ),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_diff_none_creates_node() {
+        let new = VNode::Text(VText::new("hello"));
+        let patches = diff(None, &new);
+
+        assert_eq!(patches.len(), 1);
+        match &patches[0] {
+            Patch::CreateNode { node } => match node {
+                VNode::Text(t) => assert_eq!(t.text, "hello"),
+                _ => panic!("Expected text node"),
+            },
+            _ => panic!("Expected CreateNode"),
+        }
+    }
+
+    #[test]
+    fn test_diff_same_text_no_patches() {
+        let old = VNode::Text(VText::new("same"));
+        let new = VNode::Text(VText::new("same"));
+
+        let patches = diff(Some(&old), &new);
+        assert!(patches.is_empty());
+    }
+
+    #[test]
+    fn test_diff_type_change_replaces() {
+        let old = VNode::Text(VText::new("text"));
+        let new = VNode::Element(VElement::new("div"));
+
+        let patches = diff(Some(&old), &new);
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(&patches[0], Patch::ReplaceNode { .. }));
     }
 }
