@@ -50,3 +50,4 @@ pub use context::{
 };
 pub use keys::*;
 pub use language::*;
+pub use loader::{load_toml, load_toml_flat, load_toml_static};

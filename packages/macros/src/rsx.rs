@@ -116,7 +116,10 @@ impl Parse for RsxElement {
 
                     let attr = if is_shorthand {
                         // Shorthand: name, means name: name
-                        let value: Expr = syn::parse_str(&name).unwrap();
+                        let value: Expr = match syn::parse_str(&name) {
+                            Ok(e) => e,
+                            Err(_) => syn::parse_quote!(#name),
+                        };
                         RsxAttr::Other {
                             name: name.clone(),
                             value,

@@ -1,6 +1,10 @@
-use std::net::SocketAddr;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
+use serde::{Deserialize, Serialize};
+use std::{
+    net::SocketAddr,
+    sync::Arc,
+    time::{Duration, Instant},
+};
+use tokio::sync::{RwLock, mpsc, oneshot};
 
 use axum::{
     Router,
@@ -9,10 +13,10 @@ use axum::{
     response::{IntoResponse, Json as ResponseJson},
     routing::{delete, get, post},
 };
-use serde::{Deserialize, Serialize};
-use tokio::sync::{RwLock, mpsc, oneshot};
-use tower_http::compression::CompressionLayer;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    compression::CompressionLayer,
+    cors::{Any, CorsLayer},
+};
 
 use crate::config::Config;
 

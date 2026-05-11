@@ -2,21 +2,63 @@ use crate::vnode::{Classes, EventHandler, Style, VNode};
 
 #[derive(Clone)]
 pub enum Patch {
-    CreateNode { node: VNode },
+    CreateNode {
+        node: VNode,
+    },
     RemoveNode,
-    ReplaceNode { node: VNode },
-    UpdateText { text: String },
-    UpdateAttribute { name: String, value: String },
-    AddAttribute { name: String, value: String },
-    RemoveAttribute { name: String },
-    UpdateStyle { style: Style },
-    UpdateClass { class: Classes },
-    InsertChild { index: usize, node: VNode },
-    RemoveChild { index: usize },
-    UpdateChild { index: usize, patches: Vec<Patch> },
-    AddEvent { name: String, handler: EventHandler },
-    UpdateEvent { name: String, handler: EventHandler },
-    RemoveEvent { name: String },
+    ReplaceNode {
+        node: VNode,
+    },
+    UpdateText {
+        text: String,
+    },
+    UpdateAttribute {
+        name: String,
+        value: String,
+    },
+    AddAttribute {
+        name: String,
+        value: String,
+    },
+    RemoveAttribute {
+        name: String,
+    },
+    UpdateStyle {
+        style: Style,
+    },
+    UpdateClass {
+        class: Classes,
+    },
+    InsertChild {
+        index: usize,
+        node: VNode,
+    },
+    RemoveChild {
+        index: usize,
+    },
+    MoveChild {
+        from: usize,
+        to: usize,
+    },
+    UpdateChild {
+        index: usize,
+        patches: Vec<Patch>,
+    },
+    AddEvent {
+        name: String,
+        handler: EventHandler,
+    },
+    UpdateEvent {
+        name: String,
+        handler: EventHandler,
+    },
+    RemoveEvent {
+        name: String,
+    },
+    ReorderChildren {
+        removals: Vec<usize>,
+        moves: Vec<(usize, usize)>,
+    },
 }
 
 impl std::fmt::Debug for Patch {
@@ -56,6 +98,16 @@ impl std::fmt::Debug for Patch {
             Patch::RemoveChild { index } => {
                 f.debug_struct("RemoveChild").field("index", index).finish()
             }
+            Patch::MoveChild { from, to } => f
+                .debug_struct("MoveChild")
+                .field("from", from)
+                .field("to", to)
+                .finish(),
+            Patch::ReorderChildren { removals, moves } => f
+                .debug_struct("ReorderChildren")
+                .field("removals", &format!("{:?}", removals))
+                .field("moves", &format!("{:?}", moves))
+                .finish(),
             Patch::UpdateChild { index, patches } => f
                 .debug_struct("UpdateChild")
                 .field("index", index)

@@ -3,10 +3,12 @@
 //! Verifies style package build artifacts, CSS generation correctness,
 //! and browser-side style application via WebDriver.
 
-use std::path::PathBuf;
-use std::time::{Duration, Instant};
-
 use anyhow::{Context, Result};
+use std::{
+    path::PathBuf,
+    time::{Duration, Instant},
+};
+
 use thirtyfour::WebDriver;
 use tracing::info;
 

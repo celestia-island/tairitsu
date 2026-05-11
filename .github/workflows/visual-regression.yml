@@ -9,7 +9,7 @@ on:
       - 'packages/vdom/**'
       - '.github/workflows/visual-regression.yml'
   push:
-    branches: [main, dev]
+    branches: [master, dev]
 
 concurrency:
   group: visual-regression-${{ github.ref }}

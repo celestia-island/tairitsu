@@ -1,6 +1,7 @@
 use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
-use image::{ImageBuffer, Rgba};
 use std::io::Write;
+
+use image::{ImageBuffer, Rgba};
 
 fn generate_logo() -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let w = 48u32;
