@@ -62,7 +62,9 @@ impl HostState {
 
 impl Default for HostState {
     fn default() -> Self {
-        Self::new().expect("Failed to create default HostState")
+        let wasi = WasiCtxBuilder::new().build();
+        let table = ResourceTable::new();
+        Self { wasi, table }
     }
 }
 
