@@ -235,13 +235,44 @@ fn process_class_names(scss: &str, hash: &str, class_map: &mut HashMap<String, S
     let mut result = String::new();
     let mut current_class = String::new();
     let mut in_class_context = false;
+    let mut in_url = false;
+    let chars: Vec<char> = scss.chars().collect();
 
-    for ch in scss.chars() {
+    for (idx, &ch) in chars.iter().enumerate() {
+        if in_url {
+            result.push(ch);
+            if ch == ')' {
+                in_url = false;
+            }
+            continue;
+        }
+
+        if ch == 'u' || ch == 'U' {
+            let rest: String = chars[idx..].iter().take(4).collect();
+            if rest.eq_ignore_ascii_case("url(") {
+                in_url = true;
+                result.push(ch);
+                continue;
+            }
+        }
+
         if ch == '.' && !in_class_context {
             in_class_context = true;
             current_class.clear();
         } else if in_class_context {
-            if ch.is_whitespace() || ch == '{' {
+            if ch == '.' {
+                if !current_class.is_empty() {
+                    let hashed_class = format!("{}_{}", current_class, hash);
+                    class_map.insert(current_class.clone(), hashed_class.clone());
+                    result.push_str(&hashed_class);
+                }
+                result.push(' ');
+                current_class.clear();
+            } else if ch == '&' {
+                current_class.clear();
+                in_class_context = false;
+                result.push(ch);
+            } else if ch.is_whitespace() || ch == '{' || ch == ',' || ch == '>' || ch == '+' || ch == ':' {
                 if !current_class.is_empty() {
                     let hashed_class = format!("{}_{}", current_class, hash);
                     class_map.insert(current_class.clone(), hashed_class.clone());
@@ -255,6 +286,12 @@ fn process_class_names(scss: &str, hash: &str, class_map: &mut HashMap<String, S
         } else {
             result.push(ch);
         }
+    }
+
+    if in_class_context && !current_class.is_empty() {
+        let hashed_class = format!("{}_{}", current_class, hash);
+        class_map.insert(current_class.clone(), hashed_class.clone());
+        result.push_str(&hashed_class);
     }
 
     result
@@ -309,5 +346,38 @@ mod tests {
         let (_css2, map2) = compile_scss_with_hashing(scss, Some("component2"));
 
         assert_ne!(map1.get("button").unwrap(), map2.get("button").unwrap());
+    }
+
+    #[test]
+    fn test_url_with_dots() {
+        let scss = r#"
+            .card {
+                background-image: url(http://example.com/image.png);
+            }
+        "#;
+
+        let (css, class_map) = compile_scss_with_hashing(scss, None);
+
+        assert!(css.contains("url("));
+        assert!(class_map.contains_key("card"));
+        assert!(!class_map.contains_key("png"));
+    }
+
+    #[test]
+    fn test_chained_selectors() {
+        let scss = r#"
+            .foo.bar {
+                color: red;
+            }
+        "#;
+
+        let (css, class_map) = compile_scss_with_hashing(scss, None);
+
+        assert!(class_map.contains_key("foo"));
+        assert!(class_map.contains_key("bar"));
+        let foo_hashed = class_map.get("foo").unwrap();
+        let bar_hashed = class_map.get("bar").unwrap();
+        assert!(css.contains(foo_hashed));
+        assert!(css.contains(bar_hashed));
     }
 }
