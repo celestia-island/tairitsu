@@ -1,8 +1,10 @@
-use std::io::{self, Read, Write};
-use std::os::unix::io::RawFd;
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    io::{self, Read, Write},
+    os::unix::io::RawFd,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
 };
 
 use portable_pty::{Child, ChildKiller, CommandBuilder, MasterPty, PtySize, native_pty_system};

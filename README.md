@@ -122,8 +122,8 @@ This project uses [just](https://github.com/casey/just) as a build system.
 
 ## Documentation
 
-- Simplified Chinese baseline: [docs/zh-CHS/guides/index.md](docs/zh-CHS/guides/index.md)
-- English baseline: [docs/en-US/guides/index.md](docs/en-US/guides/index.md)
+- Simplified Chinese baseline: [docs/zhs/guides/index.md](docs/zhs/guides/index.md)
+- English baseline: [docs/en/guides/index.md](docs/en/guides/index.md)
 
 ### Run Examples
 
@@ -600,7 +600,7 @@ This makes Tairitsu suitable for **any** WASM component-based application.
 6. **Define clear interfaces** - Well-designed WIT interfaces make your system more maintainable
 7. **Test in isolation** - Test handlers independently before integrating with WASM
 
-## What's New in 0.3.0
+## What's New in 0.4.5
 
 - 🚀 **Dynamic WASM Component Invocation**
   - Runtime guest export calls with `call_guest_raw_desc()` (RON)

@@ -1,15 +1,16 @@
-pub mod screen;
-
 #[cfg(unix)]
 pub mod pty_unix;
 #[cfg(windows)]
 pub mod pty_win;
+pub mod screen;
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicU32, Ordering},
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU32, Ordering},
+    },
 };
 
 use screen::Vt100Screen;

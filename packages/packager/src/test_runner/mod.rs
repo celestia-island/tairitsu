@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-use std::time::Duration;
-
 use anyhow::{Context, Result};
 use base64::Engine;
 use serde::Deserialize;
+use std::{path::PathBuf, time::Duration};
 
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 const DEFAULT_NAVIGATE_WAIT_MS: u64 = 800;

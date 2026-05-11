@@ -1,19 +1,19 @@
-pub mod screen;
-
+pub mod graphics;
 #[cfg(unix)]
 pub mod pty_unix;
 #[cfg(windows)]
 pub mod pty_win;
-
-pub mod graphics;
 #[cfg(feature = "vtty-visual")]
 pub mod render;
+pub mod screen;
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
 };
 
 use screen::Vt100Screen;

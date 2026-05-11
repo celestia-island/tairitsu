@@ -1,11 +1,9 @@
 //! Home page — tairitsu framework documentation site.
 
 use tairitsu_vdom::{VElement, VNode, el, txt};
-
-use crate::components::{glow_wrapper, svg_icon};
-use crate::i18n::{self, Language};
 use hikari_icons::MdiIcon;
 
+use crate::{components::{glow_wrapper, svg_icon}, i18n::{Language, self}};
 
 fn glow_btn(href: &str, class: &str, text: &str, arrow: Option<&str>) -> VNode {
     let mut btn = VElement::new("a")

@@ -1,5 +1,5 @@
 use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Parser, Tag, TagEnd};
-use tairitsu_vdom::{el, txt, VElement, VNode};
+use tairitsu_vdom::{VElement, VNode, el, txt};
 
 pub fn render_markdown(md: &str) -> VNode {
     let parser = Parser::new(md);

@@ -1,12 +1,11 @@
 mod metadata;
 mod routes;
 
-pub use routes::{DiscoveredRoute, discover_routes};
-
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 pub use metadata::TairitsuMetadata;
+pub use routes::{DiscoveredRoute, discover_routes};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {

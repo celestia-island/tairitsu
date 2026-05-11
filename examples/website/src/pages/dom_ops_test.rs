@@ -6,7 +6,7 @@
 //! 3. get_bounding_client_rect returns correct values
 
 use tairitsu_macros::rsx;
-use tairitsu_vdom::{get_bounding_client_rect, set_attribute, set_style, DomHandle, MouseEvent, VNode};
+use tairitsu_vdom::{DomHandle, MouseEvent, VNode, get_bounding_client_rect, set_attribute, set_style};
 
 /// Render the DOM operations test page.
 pub fn render() -> VNode {

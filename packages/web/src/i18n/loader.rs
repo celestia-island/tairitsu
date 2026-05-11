@@ -6,9 +6,8 @@
 //! - **Typed**: `load_toml()` → `I18nKeys` (backward-compatible, requires exact struct match)
 //! - **Flat**: `load_toml_flat()` → `HashMap<String, String>` (dot-path keys, used by `t!()` macro)
 
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
+use std::collections::HashMap;
 
 use crate::i18n::keys::I18nKeys;
 

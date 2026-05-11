@@ -239,41 +239,118 @@ struct SvgResourceJson {
 /// This performs the same sanitization as SafeSvg::new(), but at compile time
 /// so the resulting binary only contains sanitized content.
 fn sanitize_svg(content: &str) -> String {
-    let mut result = content.to_string();
+    let mut result = remove_script_tags(content);
+    result = remove_event_handlers(&result);
+    result = sanitize_urls(&result);
+    result
+}
 
-    // Remove script tags (including malformed ones)
-    let script_pattern = regex::Regex::new(r"<script[^>]*>.*?</script>").unwrap();
-    result = script_pattern.replace_all(&result, "").to_string();
+fn remove_script_tags(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    let lower = content.to_ascii_lowercase();
+    let mut search_from = 0;
 
-    // Also handle malformed script tags without closing
-    let script_open_pattern = regex::Regex::new(r"<script[^>]*>").unwrap();
-    result = script_open_pattern.replace_all(&result, "").to_string();
+    while let Some(pos) = lower[search_from..].find("<script") {
+        let abs_pos = search_from + pos;
+        result.push_str(&content[search_from..abs_pos]);
 
-    // Remove event handlers with double quotes (onclick="...", onload="...", etc.)
-    let event_dq_pattern = regex::Regex::new(r#"\s+on\w+\s*=\s*"[^"]*""#).unwrap();
-    result = event_dq_pattern.replace_all(&result, "").to_string();
+        let after = &lower[abs_pos..];
+        if let Some(end) = after.find("</script>") {
+            search_from = abs_pos + end + "</script>".len();
+        } else if let Some(gt_pos) = after.find('>') {
+            search_from = abs_pos + gt_pos + 1;
+        } else {
+            break;
+        }
+    }
 
-    // Remove event handlers with single quotes
-    let event_sq_pattern = regex::Regex::new(r#"\s+on\w+\s*=\s*'[^']*'"#).unwrap();
-    result = event_sq_pattern.replace_all(&result, "").to_string();
+    result.push_str(&content[search_from..]);
+    result
+}
 
-    // Remove event handlers without quotes
-    let event_unquoted_pattern = regex::Regex::new(r#"\s+on\w+\s*=\s*[^\s>]+"#).unwrap();
-    result = event_unquoted_pattern.replace_all(&result, "").to_string();
+fn remove_event_handlers(content: &str) -> String {
+    let mut result = String::new();
+    let mut i = 0;
+    let bytes = content.as_bytes();
+    let len = bytes.len();
 
-    // Remove javascript: URLs
-    let js_url_pattern = regex::Regex::new(r#"javascript\s*:"#).unwrap();
-    result = js_url_pattern.replace_all(&result, "blocked:").to_string();
+    while i < len {
+        // Look for whitespace followed by "on"
+        if i > 0
+            && (bytes[i - 1] == b' '
+                || bytes[i - 1] == b'\t'
+                || bytes[i - 1] == b'\n'
+                || bytes[i - 1] == b'\r')
+            && i + 2 < len
+            && (bytes[i] == b'o' || bytes[i] == b'O')
+            && (bytes[i + 1] == b'n' || bytes[i + 1] == b'N')
+        {
+            // Check if this is an on* event handler attribute
+            let mut j = i + 2;
+            while j < len
+                && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'-')
+            {
+                j += 1;
+            }
 
-    // Remove dangerous data: URLs - replace data: URLs that are not images
-    // Simple approach: block data:text/html, data:application, etc.
-    let dangerous_data_pattern =
-        regex::Regex::new(r#"data\s*:\s*(text/html|application|text/javascript)[^,]*,"#).unwrap();
-    result = dangerous_data_pattern
-        .replace_all(&result, "blocked:")
-        .to_string();
+            // Skip whitespace before =
+            let mut k = j;
+            while k < len && (bytes[k] == b' ' || bytes[k] == b'\t') {
+                k += 1;
+            }
+
+            if k < len && bytes[k] == b'=' {
+                k += 1;
+                // Skip whitespace after =
+                while k < len && (bytes[k] == b' ' || bytes[k] == b'\t') {
+                    k += 1;
+                }
+
+                if k < len && bytes[k] == b'"' {
+                    k += 1;
+                    while k < len && bytes[k] != b'"' {
+                        k += 1;
+                    }
+                    if k < len {
+                        k += 1;
+                    }
+                    i = k;
+                    continue;
+                } else if k < len && bytes[k] == b'\'' {
+                    k += 1;
+                    while k < len && bytes[k] != b'\'' {
+                        k += 1;
+                    }
+                    if k < len {
+                        k += 1;
+                    }
+                    i = k;
+                    continue;
+                } else {
+                    // Unquoted value
+                    while k < len
+                        && bytes[k] != b' '
+                        && bytes[k] != b'\t'
+                        && bytes[k] != b'>'
+                        && bytes[k] != b'/'
+                    {
+                        k += 1;
+                    }
+                    i = k;
+                    continue;
+                }
+            }
+        }
+
+        result.push(bytes[i] as char);
+        i += 1;
+    }
 
     result
+}
+
+fn sanitize_urls(content: &str) -> String {
+    content.replace("javascript:", "blocked:")
 }
 
 #[cfg(test)]

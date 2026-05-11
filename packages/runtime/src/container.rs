@@ -62,7 +62,9 @@ impl HostState {
 
 impl Default for HostState {
     fn default() -> Self {
-        Self::new().expect("Failed to create default HostState")
+        let wasi = WasiCtxBuilder::new().build();
+        let table = ResourceTable::new();
+        Self { wasi, table }
     }
 }
 
@@ -774,5 +776,68 @@ fn ron_value_to_val(
 impl<T: HostStateImpl> std::fmt::Debug for Container<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Container").finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_host_state_new_succeeds() {
+        let state = HostState::new();
+        assert!(state.is_ok(), "HostState::new() should succeed");
+    }
+
+    #[test]
+    fn test_host_state_default_does_not_panic() {
+        let state = HostState::default();
+        let _ = state;
+    }
+
+    #[test]
+    fn test_guest_instance_new_and_downcast_ref() {
+        let instance: GuestInstance = GuestInstance::new(42i32);
+        let val = instance.downcast_ref::<i32>();
+        assert!(val.is_some());
+        assert_eq!(*val.unwrap(), 42);
+
+        let wrong = instance.downcast_ref::<String>();
+        assert!(wrong.is_none());
+    }
+
+    #[test]
+    fn test_guest_instance_downcast_mut() {
+        let mut instance: GuestInstance = GuestInstance::new(vec![1, 2, 3]);
+        {
+            let v = instance.downcast_mut::<Vec<i32>>();
+            assert!(v.is_some());
+            v.unwrap().push(4);
+        }
+        let v = instance.downcast_ref::<Vec<i32>>();
+        assert_eq!(v.unwrap(), &vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_guest_instance_with_string_type() {
+        let instance: GuestInstance = GuestInstance::new(String::from("hello"));
+        let val = instance.downcast_ref::<String>();
+        assert_eq!(val.unwrap(), "hello");
+
+        let mut instance = instance;
+        instance
+            .downcast_mut::<String>()
+            .unwrap()
+            .push_str(" world");
+        assert_eq!(instance.downcast_ref::<String>().unwrap(), "hello world");
+    }
+
+    #[test]
+    fn test_host_state_with_wasi_custom() {
+        let state = HostState::with_wasi(|builder| {
+            builder.arg("test").env("KEY", "VALUE");
+            builder
+        });
+        assert!(state.is_ok());
     }
 }

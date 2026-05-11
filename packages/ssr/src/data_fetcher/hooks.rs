@@ -1,9 +1,8 @@
 //! React hooks for data fetching
 
-use std::{cell::RefCell, rc::Rc};
-
 #[cfg(feature = "data-fetcher")]
 use std::sync::Arc;
+use std::{cell::RefCell, rc::Rc};
 
 use tairitsu_vdom::runtime;
 

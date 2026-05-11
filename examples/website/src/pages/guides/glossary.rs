@@ -1,8 +1,7 @@
 use tairitsu_macros::rsx;
 use tairitsu_vdom::VNode;
 
-use crate::components::breadcrumb;
-use crate::markdown::markdown_content;
+use crate::{components::breadcrumb, markdown::markdown_content};
 
 const GLOSSARY_MD: &str = r#"
 Tairitsu 项目中使用的术语和概念说明。

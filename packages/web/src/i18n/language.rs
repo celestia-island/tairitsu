@@ -1,5 +1,7 @@
-use std::hash::{Hash, Hasher};
-use std::sync::LazyLock;
+use std::{
+    hash::{Hash, Hasher},
+    sync::LazyLock,
+};
 
 use iso639_enum::{IsoCompat, Language as IsoLang};
 

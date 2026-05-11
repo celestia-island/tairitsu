@@ -96,49 +96,82 @@ mod basic {
 
     pub fn deserialize_u8(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::U8(n.as_i64().context("U8 expected")? as u8)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("U8 expected")?;
+                u8::try_from(v)
+                    .map(Val::U8)
+                    .context(format!("U8 out of range: {}", v))
+            }
             _ => bail!("Expected number for u8, got {:?}", ron),
         }
     }
 
     pub fn deserialize_u16(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::U16(n.as_i64().context("U16 expected")? as u16)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("U16 expected")?;
+                u16::try_from(v)
+                    .map(Val::U16)
+                    .context(format!("U16 out of range: {}", v))
+            }
             _ => bail!("Expected number for u16, got {:?}", ron),
         }
     }
 
     pub fn deserialize_u32(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::U32(n.as_i64().context("U32 expected")? as u32)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("U32 expected")?;
+                u32::try_from(v)
+                    .map(Val::U32)
+                    .context(format!("U32 out of range: {}", v))
+            }
             _ => bail!("Expected number for u32, got {:?}", ron),
         }
     }
 
     pub fn deserialize_u64(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::U64(n.as_i64().context("U64 expected")? as u64)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("U64 expected")?;
+                Ok(Val::U64(v as u64))
+            }
             _ => bail!("Expected number for u64, got {:?}", ron),
         }
     }
 
     pub fn deserialize_s8(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::S8(n.as_i64().context("S8 expected")? as i8)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("S8 expected")?;
+                i8::try_from(v)
+                    .map(Val::S8)
+                    .context(format!("S8 out of range: {}", v))
+            }
             _ => bail!("Expected number for s8, got {:?}", ron),
         }
     }
 
     pub fn deserialize_s16(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::S16(n.as_i64().context("S16 expected")? as i16)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("S16 expected")?;
+                i16::try_from(v)
+                    .map(Val::S16)
+                    .context(format!("S16 out of range: {}", v))
+            }
             _ => bail!("Expected number for s16, got {:?}", ron),
         }
     }
 
     pub fn deserialize_s32(ron: RonValue) -> Result<Val> {
         match ron {
-            RonValue::Number(n) => Ok(Val::S32(n.as_i64().context("S32 expected")? as i32)),
+            RonValue::Number(n) => {
+                let v = n.as_i64().context("S32 expected")?;
+                i32::try_from(v)
+                    .map(Val::S32)
+                    .context(format!("S32 out of range: {}", v))
+            }
             _ => bail!("Expected number for s32, got {:?}", ron),
         }
     }

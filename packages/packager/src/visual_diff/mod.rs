@@ -1,9 +1,11 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use anyhow::{Context, Result};
-use image::{GenericImageView, ImageBuffer, Rgba};
 use serde::Serialize;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
+use image::{GenericImageView, ImageBuffer, Rgba};
 
 pub struct DiffConfig {
     pub tolerance: f32,

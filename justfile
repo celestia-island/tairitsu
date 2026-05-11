@@ -72,45 +72,31 @@ init:
 clean:
     cargo clean
 
-# Clean the downloaded WebIDL cache (forces re-fetch on next gen-wit-fetch)
+# Clean the downloaded WebIDL cache (forces re-fetch on next wit-gen)
 clean-idl-cache:
-    @echo "Removing IDL cache..."
+    @echo "Removing IDL caches..."
     rm -rf scripts/idl-cache
+    rm -rf target/tairitsu-wit/webidl-cache
 
 # ============================================================================
-# W3C WebIDL → WIT generation
+# W3C WebIDL → WIT generation (legacy aliases → unified pipeline below)
 # ============================================================================
 
-# Fetch WebIDL specs from W3C WebRef (https://github.com/w3c/webref, curated branch)
-# Downloads IDL files for: dom, fetch, html, websockets, streams, service-workers,
-# file-api, indexed-db, geolocation, observers, web-animations, and more.
-# Output: scripts/idl-cache/*.idl
+# [Deprecated] Use wit-gen instead
 gen-wit-fetch:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Fetching W3C WebIDL specs from webref..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    {{python}} scripts/fetch_w3c_idl.py
+    @just wit-fetch-idl
 
-# Re-fetch all specs (ignore cache)
+# [Deprecated] Use wit-fetch-force instead
 gen-wit-fetch-force:
-    {{python}} scripts/fetch_w3c_idl.py --force
+    @just wit-fetch-force
 
-# Generate WIT interface files from cached WebIDL specs.
-# Reads:  scripts/idl-cache/*.idl
-# Writes: packages/browser-worlds/wit/generated/*.wit
-# Run gen-wit-fetch first if the cache is empty.
+# [Deprecated] Use wit-gen-wit instead
 gen-wit:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "Generating WIT interfaces from W3C WebIDL..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    {{python}} scripts/webidl_to_wit.py
+    @just wit-gen-wit
 
-# Full pipeline: fetch WebIDL specs then generate WIT files.
-gen-wit-all: gen-wit-fetch gen-wit
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "✅ WebIDL → WIT pipeline complete!"
-    @echo "   Generated WIT: packages/browser-worlds/wit/generated/"
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# [Deprecated] Use wit-gen instead
+gen-wit-all:
+    @just wit-gen
 
 # ============================================================================
 # Build tasks

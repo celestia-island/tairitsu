@@ -1,6 +1,7 @@
+use std::io::Cursor;
+
 use ab_glyph::{Font, FontVec, GlyphId, PxScale, ScaleFont, point};
 use image::{ImageBuffer, Rgba};
-use std::io::Cursor;
 
 use super::screen::{Cell, ColorKind, RenderData};
 
